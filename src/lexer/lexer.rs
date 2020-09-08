@@ -35,3 +35,9 @@ pub struct Lexer {
     _tokens: Vec<Token>,
     _comments: Vec<Comment>
 }
+
+impl Lexer {
+    pub fn emit(&mut self, token: &str, token_type: &str, s: usize, e: usize) {
+        unimplemented!("{} {} {} {}", token, token_type, s, e)
+    }
+}
