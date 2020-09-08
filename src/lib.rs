@@ -4,3 +4,4 @@ extern crate regex;
 extern crate lazy_static;
 
 pub mod source;
+pub mod lexer;

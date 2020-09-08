@@ -5,7 +5,7 @@ fn it_detects_explicit_koi_r() {
     let buffer = Buffer::new_from_file("test.rb", "tests/source/fixtures/valid/koi8_r.rb").unwrap();
 
     assert_eq!(buffer.name(), "test.rb");
-    assert_eq!(buffer.lines(), &vec![
+    assert_eq!(buffer.lines, vec![
         String::from("# encoding: koi8-r"),
         String::from(""),
         String::from("s = \'привет\'"),
@@ -18,7 +18,7 @@ fn it_detects_explicit_utf_8() {
     let buffer = Buffer::new_from_file("test.rb", "tests/source/fixtures/valid/utf_8.rb").unwrap();
 
     assert_eq!(buffer.name(), "test.rb");
-    assert_eq!(buffer.lines(), &vec![
+    assert_eq!(buffer.lines, vec![
         String::from("# coding: utf-8"),
         String::from(""),
         String::from("\"🥰\""),
@@ -31,7 +31,7 @@ fn it_detects_fallback_utf_8() {
     let buffer = Buffer::new_from_file("test.rb", "tests/source/fixtures/valid/unknown.rb").unwrap();
 
     assert_eq!(buffer.name(), "test.rb");
-    assert_eq!(buffer.lines(), &vec![
+    assert_eq!(buffer.lines, vec![
         String::from("42"),
     ]);
     assert_eq!(buffer.encoding(), "utf-8")
@@ -58,13 +58,15 @@ fn it_handles_missing_file() {
     assert_eq!(err, BufferError::InputFileDoesNotExit)
 }
 
-lazy_static! {
-    static ref TEST_BUFFER: Buffer = Buffer::new_from_source("(eval)", "100 + 200").unwrap();
+fn make_test_buffer() -> Buffer {
+    Buffer::new_from_source("(eval)", "100 + 200").unwrap()
 }
 
 
 #[test]
 fn it_returns_subsource_using_slice_method() {
-    assert_eq!(TEST_BUFFER.slice(1..5), &['0', '0', ' ', '+']);
-    assert_eq!(TEST_BUFFER.slice(100..200), &[] as &[char]);
+    let test_buffer = make_test_buffer();
+
+    assert_eq!(test_buffer.slice(1..5), Some(&['0', '0', ' ', '+'] as &[char]));
+    assert_eq!(test_buffer.slice(100..200), None);
 }
