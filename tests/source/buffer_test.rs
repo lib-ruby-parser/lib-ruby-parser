@@ -1,4 +1,4 @@
-use ruby_parser::source::buffer::{Buffer, BufferError};
+use ruby_parser::source::{Buffer, BufferError};
 
 #[test]
 fn it_detects_explicit_koi_r() {

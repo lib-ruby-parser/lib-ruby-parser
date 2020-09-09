@@ -5,3 +5,4 @@ extern crate lazy_static;
 
 pub mod source;
 pub mod lexer;
+pub mod meta;
