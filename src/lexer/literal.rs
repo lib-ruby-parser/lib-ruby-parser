@@ -56,7 +56,7 @@ lazy_static! {
 }
 
 pub struct Literal<'a> {
-    lexer: &'a mut Lexer,
+    lexer: &'a mut Lexer<'a>,
     nesting: usize,
     str_type: String,
     str_s: usize,
@@ -80,7 +80,7 @@ pub struct Literal<'a> {
 
 
 impl<'a> Literal<'a> {
-    pub fn new(lexer: &'a mut Lexer, str_type: &str, delimiter: &'a str, str_s: usize, heredoc_e: Option<usize>, indent: bool, dedent_body: bool, label_allowed: bool) -> Option<Self> {
+    pub fn new(lexer: &'a mut Lexer<'a>, str_type: &str, delimiter: &'a str, str_s: usize, heredoc_e: Option<usize>, indent: bool, dedent_body: bool, label_allowed: bool) -> Option<Self> {
         let (start_tok, interpolate) = TYPES.get(str_type).map(&|entry: &(StartToken, bool)| entry.clone() )?;
         let start_delim: Option<&'static str> = DELIMITERS.get(delimiter).map(|v| *v);
         let end_delim: &'a str = DELIMITERS.get(delimiter).map(|v| *v).unwrap_or(delimiter);

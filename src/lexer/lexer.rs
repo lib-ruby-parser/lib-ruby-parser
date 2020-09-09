@@ -2,6 +2,7 @@ use std::rc::Rc;
 
 use crate::source::buffer::Buffer;
 use crate::lexer::{StackState};
+use crate::StaticEnvironment;
 
 enum TokenType {}
 
@@ -20,11 +21,11 @@ struct Comment {}
 
 struct Context {}
 
-pub struct Lexer {
+pub struct Lexer<'a> {
     _buffer: Buffer,
 
     // diagnostics: Rc<dyn Diagnostics>,
-    // static_env: Rc<StaticEnv>,
+    _static_env: Rc<StaticEnvironment<'a>>,
 
     _cond: StackState,
     _cmdarg: StackState,
@@ -36,7 +37,7 @@ pub struct Lexer {
     _comments: Vec<Comment>
 }
 
-impl Lexer {
+impl<'a> Lexer<'a> {
     pub fn emit(&mut self, token: &str, token_type: &str, s: usize, e: usize) {
         unimplemented!("{} {} {} {}", token, token_type, s, e)
     }
