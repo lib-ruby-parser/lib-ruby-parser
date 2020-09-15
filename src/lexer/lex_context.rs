@@ -1,4 +1,4 @@
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 enum Item {
     Class,
     Module,
@@ -11,6 +11,7 @@ enum Item {
     Defined,
 }
 
+#[derive(Debug, Clone, Default)]
 pub struct LexContext {
     stack: Vec<Item>
 }

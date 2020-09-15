@@ -1,6 +1,6 @@
-#[allow(dead_code, non_snake_case)]
+#[allow(non_snake_case)]
 mod lexer;
-pub use lexer::Lexer;
+pub use lexer::{Lexer};
 
 #[allow(dead_code)]
 mod str_term;
@@ -24,3 +24,10 @@ pub use token_type::TokenType;
 
 #[allow(dead_code, non_upper_case_globals)]
 mod strings;
+
+mod lex_char;
+
+mod parse_numeric;
+
+mod token;
+pub use token::Token;

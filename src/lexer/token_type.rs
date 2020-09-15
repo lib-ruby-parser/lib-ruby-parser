@@ -1,4 +1,4 @@
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum TokenType { // enum yytokentype
     END_OF_INPUT,
     keyword_class,
@@ -120,6 +120,8 @@ pub enum TokenType { // enum yytokentype
     tLOWEST,
     tUMINUS_NUM,
     tLAST_TOKEN,
+
+    ERROR(String),
 
     tNL,
     tIGNORED_NL,

@@ -1,9 +1,13 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct LexState {
     value: usize
 }
 
 impl LexState {
+    pub fn new() -> Self {
+        Self { value: lex_states::EXPR_BEG }
+    }
+
     pub fn is_some(&self, states: usize) -> bool {
         (self.value & states) != 0
     }

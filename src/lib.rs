@@ -7,7 +7,7 @@ extern crate lazy_static;
 
 pub mod source;
 
-mod lexer;
+pub mod lexer;
 pub use lexer::Lexer;
 
 pub mod meta;

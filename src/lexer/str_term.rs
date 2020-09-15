@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct StringLiteral { // struct rb_strterm_literal_struct
     nest: Option<usize>,
     func: Option<usize>,
@@ -6,7 +6,7 @@ pub struct StringLiteral { // struct rb_strterm_literal_struct
     term: Option<usize>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct HeredocLiteral {
     lastline: String,   /* the string of line that contains `<<"END"` */
     offset: usize,      /* the column of END in `<<"END"` */
@@ -17,6 +17,7 @@ pub struct HeredocLiteral {
     func: usize,
 }
 
+#[derive(Debug, Clone)]
 pub enum StrTerm { // struct rb_strterm_struct
     Literal(StringLiteral),
     Heredoc(HeredocLiteral)
