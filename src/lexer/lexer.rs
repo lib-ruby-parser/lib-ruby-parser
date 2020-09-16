@@ -7,6 +7,7 @@ use crate::lexer::TokenType;
 use crate::lexer::strings;
 use crate::lexer::lex_char::LexChar;
 use crate::lexer::Token;
+use crate::StaticEnvironment;
 
 #[derive(Debug, Clone, Default)]
 struct SourceLine {
@@ -41,11 +42,11 @@ pub struct ParserParamsLex {
     nextline_idx: Option<usize>,
     pbeg: usize,
     pub pcur: usize,
-    pend: usize,
+    pub pend: usize,
     ptok: usize,
-    state: LexState,
+    pub state: LexState,
     paren_nest: i32,
-    lpar_beg: i32,
+    pub lpar_beg: i32,
     brace_nest: i32,
 }
 
@@ -86,8 +87,8 @@ pub struct ParserParams {
 
     ctxt: LexContext,
 
-    command_start: bool,
-    eofp: bool,
+    pub command_start: bool,
+    pub eofp: bool,
     ruby__end__seen: bool,
     debug: usize,
     has_shebang: bool,
@@ -101,6 +102,8 @@ pub struct ParserParams {
     do_loop: usize,
     do_chomp: usize,
     do_split: usize,
+
+    pub static_env: StaticEnvironment,
 
     // NODE *eval_tree_begin;
     // NODE *eval_tree;
@@ -471,7 +474,7 @@ impl Lexer {
                 },
 
                 LexChar::Some('"') => {
-                    label = if self.is_label_possible() { strings::str_label } else { 0 };
+                    label = if self.is_label_possible(cmd_state) { strings::str_label } else { 0 };
                     self.p.lex.strterm = self.new_strterm(strings::str_dquote | label, '"', 0);
                     self.p.lex.ptok = self.p.lex.pcur - 1;
                     return TokenType::tSTRING_BEG;
@@ -495,7 +498,7 @@ impl Lexer {
                 },
 
                 LexChar::Some('\'') => {
-                    label = if self.is_label_possible() { strings::str_label } else { 0 };
+                    label = if self.is_label_possible(cmd_state) { strings::str_label } else { 0 };
                     self.p.lex.strterm = self.new_strterm(strings::str_squote | label, '\'', 0);
                     return TokenType::tSTRING_BEG;
                 },
@@ -914,7 +917,7 @@ impl Lexer {
                 },
 
                 _ => {
-                    if !self.is_identchar() {
+                    if !self.parser_is_identchar() {
                         self.compile_error(&format!("Invalid char `{}' in expression", c.unwrap()));
                         self.token_flush();
                         continue 'retrying;
@@ -1010,6 +1013,7 @@ impl Lexer {
     pub fn nextc(&mut self) -> LexChar {
         if self.p.lex.pcur == self.p.lex.pend || self.p.eofp || self.p.lex.nextline_idx.is_some() {
             let n = self.nextline();
+            println!("nextline = {:?}", n);
             if n.is_err() {
                 return LexChar::EOF;
             }
@@ -1019,6 +1023,7 @@ impl Lexer {
         if c == '\r' {
             c = self.parser_cr(c);
         }
+        println!("nextc = {:?}", c);
         return LexChar::Some(c);
     }
 
@@ -1040,8 +1045,19 @@ impl Lexer {
         self.p.lex.pcur = self.p.lex.pend;
     }
 
+    pub fn lex_eol_p(&self) -> bool {
+        self.p.lex.pcur >= self.p.lex.pend
+    }
+
+    pub fn lex_eol_n_p(&self, n: usize) -> bool {
+        self.p.lex.pcur + n >= self.p.lex.pend
+    }
+
     pub fn emit_normal_line(&self) { unimplemented!("emit_normal_line") }
     pub fn peek(&self, _c: char) -> bool { unimplemented!("peek") }
+    pub fn peek_n(&self, c: char, n: usize) -> bool {
+        !self.lex_eol_n_p(n) && c == self.p.lex.input[self.p.lex.pcur + n]
+    }
 
     pub fn set_yylval_id(&mut self, id: &str) {
         println!("set_yylval_id({})", id);
@@ -1069,7 +1085,10 @@ impl Lexer {
 
     pub fn was_bol(&self) -> bool { unimplemented!("was_bol") }
     pub fn is_word_match(&self, _word: &str) -> bool { unimplemented!("is_word_match") }
-    pub fn compile_error(&self, _message: &str) { unimplemented!("compile_error") }
+
+    pub fn compile_error(&self, message: &str) {
+        panic!("Compile error: {}", message)
+    }
 
     pub fn is_end(&self) -> bool {
         self.is_lex_state_some(EXPR_END_ANY)
@@ -1080,7 +1099,12 @@ impl Lexer {
     }
 
     pub fn heredoc_identifier(&self) -> TokenType { unimplemented!("heredoc_identifier") }
-    pub fn is_label_possible(&self) -> bool { unimplemented!("is_label_possible") }
+
+    pub fn is_label_possible(&self, cmd_state: bool) -> bool {
+        (self.is_lex_state_some(EXPR_LABEL|EXPR_ENDFN) && !cmd_state) ||
+            self.is_arg()
+    }
+
     pub fn new_strterm(&self, _flag: i32, _term: char, _indent: i32) -> Option<StrTerm> { unimplemented!("new_strterm") }
     pub fn parse_qmark(&self, _space_seen: bool) -> TokenType { unimplemented!("parse_qmark") }
     pub fn arg_ambiguous(&self, _arg: char) -> bool { unimplemented!("arg_ambiguous") }
@@ -1107,7 +1131,11 @@ impl Lexer {
     pub fn cond_pop(&mut self) { unimplemented!("cond_pop") }
     pub fn cmdarg_pop(&mut self) { unimplemented!("cmdarg_pop") }
     pub fn is_space(&self, _c: &LexChar) -> bool { unimplemented!("is_space") }
-    pub fn is_lambda_beginning(&self) -> bool { unimplemented!("is_lambda_beginning") }
+
+    pub fn is_lambda_beginning(&self) -> bool {
+        self.p.lex.lpar_beg == self.p.lex.paren_nest
+    }
+
     pub fn cond_push(&self, _value: usize) { unimplemented!("cond_push") }
     pub fn cmdarg_push(&self, _value: usize) { unimplemented!("cond_pop") }
     pub fn parse_percent(&self, _space_seen: bool, _last_state: LexState) -> TokenType { unimplemented!("parse_percent") }
@@ -1115,18 +1143,44 @@ impl Lexer {
     pub fn parse_atmark(&self, _last_state: LexState) -> TokenType { unimplemented!("parse_atmark") }
     pub fn is_whole_match(&self, _pattern: &str, _indent: usize) -> bool { unimplemented!("is_whole_match") }
 
+    pub fn is_cond_active(&self) -> bool { unimplemented!("is_cond_active") }
+    pub fn is_cmdarg_active(&self) -> bool { unimplemented!("is_cmdarg_active") }
+
     pub fn newtok(&mut self) {
         self.p.tokidx = 0;
         self.p.tokline = self.p.ruby_sourceline;
         self.p.tokenbuf = "".into();
     }
 
-    pub fn is_identchar(&self) -> bool { unimplemented!("is_identchar") }
-    pub fn parse_ident(&self, _c: &LexChar, _cmd_state: bool) -> TokenType { unimplemented!("parse_ident") }
+    pub fn is_identchar(&self, begin: usize, _end: usize) -> bool {
+        self.p.lex.input[begin].is_alphanumeric() ||
+            self.p.lex.input[begin] == '_' ||
+            !self.p.lex.input[begin].is_ascii()
+    }
+
     pub fn literal_flush(&mut self, _some_value: usize) { unimplemented!("literal_flush") }
 
     pub fn set_yylval_literal(&mut self, value: &str) {
         println!("set_yylval_literal({})", value);
         self.p.lval = Some(value.into());
+    }
+
+    pub fn tokadd_mbchar(&mut self, c: &LexChar) -> Result<(), ()> {
+        match c {
+            LexChar::EOF => Err(()),
+            _ => {
+                self.tokadd(&c);
+                Ok(())
+            }
+        }
+    }
+
+    pub fn is_label_suffix(&mut self, n: usize) -> bool {
+        self.peek_n(':', n) && !self.peek_n(':', n+1)
+    }
+
+    pub fn set_yyval_name(&mut self, name: &str) {
+        println!("set_yyval_name({})", name);
+        self.p.lval = Some(name.into());
     }
 }

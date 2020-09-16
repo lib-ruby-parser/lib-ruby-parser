@@ -8,6 +8,10 @@ impl LexState {
         Self { value: lex_states::EXPR_BEG }
     }
 
+    pub fn is(&self, value: usize) -> bool {
+        self.value == value
+    }
+
     pub fn is_some(&self, states: usize) -> bool {
         (self.value & states) != 0
     }

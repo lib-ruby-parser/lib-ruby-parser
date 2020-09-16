@@ -28,6 +28,10 @@ mod strings;
 mod lex_char;
 
 mod parse_numeric;
+mod parse_ident;
+mod reserved_words;
+pub use reserved_words::{ReservedWord, reserved_word};
+mod locals;
 
 mod token;
 pub use token::Token;
