@@ -146,7 +146,7 @@ impl Lexer {
         if !line.is_empty() {
             lines.push(line);
         }
-        println!("lines = {:#?}", lines);
+        // println!("lines = {:#?}", lines);
 
         self.p.lex.input = chars;
         self.p.lex.lines = lines;
@@ -172,7 +172,7 @@ impl Lexer {
             }
         };
 
-        println!("yylex {:#?}", token_type);
+        // println!("yylex {:#?}", token_type);
 
         Token { token_type, token_value: Some(token_value), begin: self.p.lex.ptok, end: self.p.lex.pcur }
     }
@@ -1013,7 +1013,7 @@ impl Lexer {
     pub fn nextc(&mut self) -> LexChar {
         if self.p.lex.pcur == self.p.lex.pend || self.p.eofp || self.p.lex.nextline_idx.is_some() {
             let n = self.nextline();
-            println!("nextline = {:?}", n);
+            // println!("nextline = {:?}", n);
             if n.is_err() {
                 return LexChar::EOF;
             }
@@ -1023,7 +1023,7 @@ impl Lexer {
         if c == '\r' {
             c = self.parser_cr(c);
         }
-        println!("nextc = {:?}", c);
+        // println!("nextc = {:?}", c);
         return LexChar::Some(c);
     }
 
@@ -1060,7 +1060,7 @@ impl Lexer {
     }
 
     pub fn set_yylval_id(&mut self, id: &str) {
-        println!("set_yylval_id({})", id);
+        // println!("set_yylval_id({})", id);
         self.p.lval = Some(id.into());
     }
 
@@ -1161,7 +1161,7 @@ impl Lexer {
     pub fn literal_flush(&mut self, _some_value: usize) { unimplemented!("literal_flush") }
 
     pub fn set_yylval_literal(&mut self, value: &str) {
-        println!("set_yylval_literal({})", value);
+        // println!("set_yylval_literal({})", value);
         self.p.lval = Some(value.into());
     }
 
@@ -1180,7 +1180,7 @@ impl Lexer {
     }
 
     pub fn set_yyval_name(&mut self, name: &str) {
-        println!("set_yyval_name({})", name);
+        // println!("set_yyval_name({})", name);
         self.p.lval = Some(name.into());
     }
 }

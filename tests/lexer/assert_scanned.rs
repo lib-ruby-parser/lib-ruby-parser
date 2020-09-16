@@ -41,7 +41,7 @@ macro_rules! assert_scanned {
     ($lexer:expr, $input:expr, $(:$token_type:tt, $value:expr, [$begin:expr, $end:expr]),*) => {
         {
             use ruby_parser::lexer::{Token, TokenType};
-            let actual_tokens = assert_scanned::tokenize($lexer, $input);
+            let actual_tokens = tokenize($lexer, $input);
 
             let token_types : Vec<TokenType>    = vec![$(TokenType::$token_type),*];
             let token_values: Vec<Option<&'static str>> = vec![$($value),*];
