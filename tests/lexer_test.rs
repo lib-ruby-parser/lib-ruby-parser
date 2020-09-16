@@ -112,6 +112,11 @@ fn test_backtick_case_0() {
                     :tSTRING_END,     Some("`"),  [3, 4]);
 }
 
+#[test]
+fn test_backtick_cmdarg_case_0() {
+    assert_scanned!("\n`",
+                    :tBACK_REF2, Some("`"), [1, 2]);
+}
 
 #[test]
 fn test_backtick_dot_case_0() {
@@ -277,6 +282,12 @@ fn test_bug_expr_arg_lt_lt_case_1() {
                     :tNL,         None,         [6, 7]);
 }
 
+#[test]
+fn test_bug_expr_arg_newline_case_0() {
+    assert_scanned!("\nfoo",
+                    :tNL,         None,        [0, 1],
+                    :tIDENTIFIER, Some("foo"), [1, 4]);
+}
 
 #[test]
 fn test_bug_expr_arg_newline_case_1() {
@@ -358,6 +369,14 @@ fn test_bug_expr_arg_slash_case_3() {
                     :tINTEGER, Some("1"), [3, 4]);
 }
 
+#[test]
+fn test_bug_expr_beg_backspace_nl_case_0() {
+    assert_scanned!("\n/foo/",
+                    :tREGEXP_BEG,     Some("/"),   [1, 2],
+                    :tSTRING_CONTENT, Some("foo"), [2, 5],
+                    :tSTRING_END,     Some("/"),   [5, 6],
+                    :tREGEXP_OPT,     Some(""),    [6, 6]);
+}
 
 #[test]
 fn test_bug_expr_beg_div_case_0() {
@@ -3418,6 +3437,12 @@ fn test_whitespace_arg_case_1() {
                     :tUPLUS, Some("+"), [1, 2]);
 }
 
+#[test]
+fn test_whitespace_arg_case_2() {
+    assert_scanned!("\n+",
+                    :tNL,    None,      [0, 1],
+                    :tUPLUS, Some("+"), [1, 2]);
+}
 
 #[test]
 fn test_whitespace_arg_case_3() {
@@ -3450,6 +3475,11 @@ fn test_whitespace_beg_case_1() {
                     :tUPLUS, Some("+"), [1, 2]);
 }
 
+#[test]
+fn test_whitespace_beg_case_2() {
+    assert_scanned!("\n+",
+                    :tUPLUS, Some("+"), [1, 2]);
+}
 
 #[test]
 fn test_whitespace_beg_case_3() {
@@ -3484,6 +3514,11 @@ fn test_whitespace_dot_case_1() {
                     :tIDENTIFIER, Some("class"), [1, 6]);
 }
 
+#[test]
+fn test_whitespace_dot_case_2() {
+    assert_scanned!("\nclass",
+                    :tIDENTIFIER, Some("class"), [1, 6]);
+}
 
 #[test]
 fn test_whitespace_dot_case_3() {
@@ -3511,6 +3546,13 @@ fn test_whitespace_end_case_1() {
                     :tINTEGER, Some("1"), [3, 4]);
 }
 
+#[test]
+fn test_whitespace_end_case_2() {
+    assert_scanned!("\n+ 1",
+                    :tNL,        None,      [0, 1],
+                    :tUNARY_NUM, Some("+"), [1, 2],
+                    :tINTEGER,   Some("1"), [3, 4]);
+}
 
 #[test]
 fn test_whitespace_end_case_3() {
@@ -3539,6 +3581,12 @@ fn test_whitespace_endarg_case_1() {
                     :tLBRACE_ARG, Some("{"), [1, 2]);
 }
 
+#[test]
+fn test_whitespace_endarg_case_2() {
+    assert_scanned!("\n{",
+                    :tNL,     None,      [0, 1],
+                    :tLBRACE, Some("{"), [1, 2]);
+}
 
 #[test]
 fn test_whitespace_endarg_case_3() {
@@ -3565,7 +3613,21 @@ fn test_whitespace_endfn_case_1() {
                     :tLABEL, Some("foo"), [1, 5]);
 }
 
+#[test]
+fn test_whitespace_endfn_case_2() {
+    assert_scanned!("\nfoo:",
+                    :tNL,         None,        [0, 1],
+                    :tIDENTIFIER, Some("foo"), [1, 4],
+                    :tCOLON,      Some(":"),   [4, 5]);
+}
 
+#[test]
+fn test_whitespace_endfn_case_3() {
+    assert_scanned!("\nfoo: ",
+                    :tNL,         None,        [0, 1],
+                    :tIDENTIFIER, Some("foo"), [1, 4],
+                    :tCOLON,      Some(":"),   [4, 5]);
+}
 
 #[test]
 fn test_whitespace_endfn_case_4() {
@@ -3601,6 +3663,11 @@ fn test_whitespace_fname_case_1() {
                     :kCLASS, Some("class"), [1, 6]);
 }
 
+#[test]
+fn test_whitespace_fname_case_2() {
+    assert_scanned!("\nclass",
+                    :kCLASS, Some("class"), [1, 6]);
+}
 
 #[test]
 fn test_whitespace_fname_case_3() {
@@ -3626,6 +3693,12 @@ fn test_whitespace_mid_case_1() {
                     :tUPLUS, Some("+"), [1, 2]);
 }
 
+#[test]
+fn test_whitespace_mid_case_2() {
+    assert_scanned!("\n+",
+                    :tNL,    None,      [0, 1],
+                    :tUPLUS, Some("+"), [1, 2]);
+}
 
 #[test]
 fn test_whitespace_mid_case_3() {
@@ -3654,6 +3727,12 @@ fn test_whitespace_value_case_1() {
                     :tSYMBOL,     Some("b"), [2, 4]);
 }
 
+#[test]
+fn test_whitespace_value_case_2() {
+    assert_scanned!("\na:b",
+                    :tIDENTIFIER, Some("a"), [1, 2],
+                    :tSYMBOL,     Some("b"), [2, 4]);
+}
 
 #[test]
 fn test_whitespace_value_case_3() {

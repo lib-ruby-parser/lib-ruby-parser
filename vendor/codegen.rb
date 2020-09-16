@@ -81,24 +81,6 @@ rustify_string = ->(input) {
 }
 
 $output = $lex.map do |(mid, (input, tokens))|
-  if [
-    :test_backtick_cmdarg_case_0,
-    :test_bug_expr_beg_backspace_nl_case_0,
-    :test_whitespace_arg_case_2,
-    :test_whitespace_beg_case_2,
-    :test_bug_expr_arg_newline_case_0,
-    :test_whitespace_dot_case_2,
-    :test_whitespace_end_case_2,
-    :test_whitespace_endarg_case_2,
-    :test_whitespace_endfn_case_2,
-    :test_whitespace_endfn_case_3,
-    :test_whitespace_fname_case_2,
-    :test_whitespace_mid_case_2,
-    :test_whitespace_value_case_2,
-  ].include?(mid.to_sym)
-    next
-  end
-
   input = input.dup.force_encoding('utf-8')
   next unless input.valid_encoding?
   input = rustify_string[input.inspect]
