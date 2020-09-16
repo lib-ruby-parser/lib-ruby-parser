@@ -35,6 +35,21 @@ class TestLexer
 
   def assert_scanned(input, *tokens)
     $current_rust_test.input = input
+
+    tokens = tokens
+      .each_slice(3)
+      .to_a
+      .map { |(name, value, range)|
+        t = Token.new
+        t.source = input
+        t.range = range
+        t.value = value
+        t.name = name
+        t
+      }
+
+    tokens = Tokens.new(tokens)
+
     $current_rust_test.tokens = tokens
     $rust_tests << $current_rust_test
     $current_rust_test = RustTest.new
@@ -75,6 +90,11 @@ class TestLexer
   def test_bug_interp_expr_value; end
   def test_integer_oct_o_not_bad_none; end
   def test_dot3; end
+
+  # these tests expect us to parse number,
+  # but we return string representation
+  def test_integer_oct_O; end
+  def test_integer_oct_o; end
 end
 
 class String
@@ -90,12 +110,25 @@ class String
   end
 end
 
-class Token < Struct.new(:name, :value, :range)
+class Token < Struct.new(:name, :value, :range, :source)
+  UNPARSABLE_TOKENS = %i[tRATIONAL tFLOAT tCOMPLEX tIMAGINARY]
+
   def name=(name)
+    case name
+    when :tINTEGER
+      if (raw_value = source[range[0]...range[1]]) && raw_value.start_with?('0')
+        self.value = raw_value
+      else
+        self.value = @raw_value.to_s
+      end
+    when *UNPARSABLE_TOKENS
+      self.value = source[range[0]...range[1]]
+    end
     super("#{name.inspect}, ")
   end
 
   def value=(value)
+    @raw_value = value
     if value.is_a?(Numeric)
       value = value.to_s
     end
@@ -153,8 +186,28 @@ class RustTest < Struct.new(:lex_state, :input, :tokens, :mid)
     'test_whitespace_endfn_case_3',
     'test_whitespace_mid_case_2',
 
-    # bugs
-    'test_float_pos_case_0', # '+1.0' is a literal, there's no unary plus
+    # That's the difference between MRI lexer and parser gem
+    # when "||" is used without arguments.
+    'test_or2_after_27_case_0',
+
+    # bugs:
+    # 1. '+1.0' is a literal, there's no unary plus
+    'test_float_pos_case_0',
+    'test_float_dot_e_pos_case_0',
+    'test_float_dot_e_upper_pos_case_0',
+    'test_float_e_pos_case_0',
+    'test_float_e_pos_minus_case_0',
+    'test_minus_unary_whitespace_number_case_0',
+    'test_plus_unary_number_case_0',
+    'test_plus_unary_whitespace_number_case_0',
+    'test_float_e_pos_plus_case_0',
+    # these are recordings for olrder rubies
+    'test_float_suffix_case_0',
+    'test_float_suffix_case_3',
+    'test_float_suffix_case_6',
+    'test_int_suffix_case_0',
+    'test_int_suffix_case_2',
+    'test_int_suffix_case_4',
   ]
 
   def mid=(mid)
@@ -167,21 +220,6 @@ class RustTest < Struct.new(:lex_state, :input, :tokens, :mid)
       input = input.inspect.rustify
     end
     super(input)
-  end
-
-  def tokens=(tokens)
-    tokens = tokens
-      .each_slice(3)
-      .to_a
-      .map { |(name, value, range)|
-        t = Token.new
-        t.name = name
-        t.value = value
-        t.range = range
-        t
-      }
-
-    super(Tokens.new(tokens))
   end
 
   def lex_state=(lex_state)

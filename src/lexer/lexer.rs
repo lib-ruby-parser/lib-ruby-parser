@@ -546,7 +546,7 @@ impl Lexer {
                         self.set_lex_state(EXPR_BEG);
                         c = self.nextc();
                         if c == '=' {
-                            self.set_yylval_id("idOROP");
+                            self.set_yylval_id("||");
                             self.set_lex_state(EXPR_BEG);
                             return TokenType::tOP_ASGN;
                         }
@@ -1091,7 +1091,7 @@ impl Lexer {
     }
 
     pub fn toklen(&self) -> usize {
-        self.p.tokidx
+        self.p.tokenbuf.len()
      }
 
     pub fn tokfix(&self) {
