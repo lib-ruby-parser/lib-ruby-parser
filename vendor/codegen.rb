@@ -130,6 +130,9 @@ class RustTest < Struct.new(:lex_state, :input, :tokens, :mid)
     'test_whitespace_endfn_case_2',
     'test_whitespace_endfn_case_3',
     'test_whitespace_mid_case_2',
+
+    # bugs
+    'test_float_pos_case_0', # '+1.0' is a literal, there's no unary plus
   ]
 
   def mid=(mid)

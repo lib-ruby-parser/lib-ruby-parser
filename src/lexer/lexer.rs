@@ -9,14 +9,36 @@ use crate::lexer::lex_char::LexChar;
 use crate::lexer::Token;
 
 #[derive(Debug, Clone, Default)]
+struct SourceLine {
+    start: usize,
+    end: usize,
+}
+
+impl SourceLine {
+    #[allow(dead_code)]
+    fn source(&self, source: &Vec<char>) -> String {
+        let chars = &source[self.start..self.end].to_owned();
+        return chars.iter().collect()
+    }
+
+    fn len(&self) -> usize {
+        self.end - self.start
+    }
+
+    fn is_empty(&self) -> bool {
+        self.start == self.end
+    }
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct ParserParamsLex {
     strterm: Option<StrTerm>,
     input: Vec<char>,
-    lines: Vec<Vec<char>>,
-    prevline: Option<String>,
-    lastline: Option<String>,
+    lines: Vec<SourceLine>,
+    prevline_idx: Option<usize>,
+    lastline_idx: Option<usize>,
     lastline_start: usize,
-    nextline: Option<String>,
+    nextline_idx: Option<usize>,
     pbeg: usize,
     pub pcur: usize,
     pend: usize,
@@ -100,17 +122,29 @@ const VTAB_CHAR  : char = 0x0b as char;
 
 impl Lexer {
     pub fn new(source: &str) -> Self {
-        let chars: Vec<char> = source.chars().collect();
-        let lines: Vec<Vec<char>> = source.lines().map(|line| line.chars().collect()).collect();
-
-        let lex = ParserParamsLex { input: chars, lines, state: LexState::new(), ..Default::default() };
-        let p = ParserParams { lex, ..Default::default() };
-        Lexer { p }
+        let mut result = Lexer::default();
+        result.set_source(source);
+        result
     }
 
     pub fn set_source(&mut self, source: &str) {
         let chars: Vec<char> = source.chars().collect();
-        let lines: Vec<Vec<char>> = source.lines().map(|line| line.chars().collect()).collect();
+        let mut line = SourceLine { start: 0, end: 0 };
+        let mut lines: Vec<SourceLine> = vec![];
+
+        for (idx, c) in chars.iter().enumerate() {
+            line.end = idx + 1;
+            if *c == '\n' {
+                lines.push(line);
+                line = SourceLine { start: idx + 1, end: 0 }
+            }
+        };
+        line.end = chars.len();
+        if !line.is_empty() {
+            lines.push(line);
+        }
+        println!("lines = {:#?}", lines);
+
         self.p.lex.input = chars;
         self.p.lex.lines = lines;
     }
@@ -135,7 +169,7 @@ impl Lexer {
             }
         };
 
-        println!("yylex {:#?}, lexer = {:#?}", token_type, self);
+        println!("yylex {:#?}", token_type);
 
         Token { token_type, token_value: Some(token_value), begin: self.p.lex.ptok, end: self.p.lex.pcur }
     }
@@ -208,7 +242,9 @@ impl Lexer {
                     let cc = self.is_lex_state_some( EXPR_BEG|EXPR_CLASS|EXPR_FNAME|EXPR_DOT) && !self.is_lex_state_some(EXPR_LABELED);
                     if cc || self.is_lex_state_all(EXPR_ARG|EXPR_LABELED) {
                         if !cc && self.p.ctxt.is_in_kwargs() {
-                            self.emit_normal_line();
+                            self.p.command_start = true;
+                            self.set_lex_state(EXPR_BEG);
+                            return TokenType::tNL;
                         }
                         continue 'retrying;
                     }
@@ -234,25 +270,40 @@ impl Lexer {
                                     continue 'retrying;
                                 }
                                 self.p.ruby_sourceline -= 1;
-                                self.p.lex.nextline = self.p.lex.lastline.clone();
+                                self.p.lex.nextline_idx = self.p.lex.lastline_idx;
                             },
                             LexChar::EOF => {
                                 // EOF no decrement
-                                if self.p.lex.prevline.is_some() && !self.p.eofp {
-                                    self.p.lex.lastline = self.p.lex.prevline.clone();
+                                if self.p.lex.prevline_idx.is_some() && !self.p.eofp {
+                                    self.p.lex.lastline_idx = self.p.lex.prevline_idx.clone();
                                 }
 
                                 self.p.lex.pbeg = self.p.lex.lastline_start;
-                                self.p.lex.pend = self.p.lex.pbeg + self.p.lex.lastline.clone().unwrap_or_else(|| panic!("err: lastline is empty") ).len();
+                                self.p.lex.pend = self.p.lex.pbeg + self.p.lex.lines[self.p.lex.lastline_idx.unwrap()].len();
                                 self.p.lex.pcur = self.p.lex.pend;
                                 self.pushback(&LexChar::Some(1 as char));
                                 self.p.lex.ptok = self.p.lex.pcur;
-                                self.emit_normal_line();
-                                return TokenType::tNL
+
+                                self.p.command_start = true;
+                                self.set_lex_state(EXPR_BEG);
+                                return TokenType::tNL;
                             },
                             _ => {
                                 self.p.ruby_sourceline -= 1;
-                                self.p.lex.nextline = self.p.lex.lastline.clone();
+                                self.p.lex.nextline_idx = self.p.lex.lastline_idx;
+                                if self.p.lex.prevline_idx.is_some() && !self.p.eofp {
+                                    self.p.lex.lastline_idx = self.p.lex.prevline_idx.clone();
+                                }
+
+                                self.p.lex.pbeg = self.p.lex.lastline_start;
+                                self.p.lex.pend = self.p.lex.pbeg + self.p.lex.lines[self.p.lex.lastline_idx.unwrap()].len();
+                                self.p.lex.pcur = self.p.lex.pend;
+                                self.pushback(&LexChar::Some(1 as char));
+                                self.p.lex.ptok = self.p.lex.pcur;
+
+                                self.p.command_start = true;
+                                self.set_lex_state(EXPR_BEG);
+                                return TokenType::tNL;
                             },
                         }
                     }
@@ -461,7 +512,7 @@ impl Lexer {
                         self.set_lex_state(EXPR_BEG);
                         c = self.nextc();
                         if c == '=' {
-                            self.set_yylval_id("idANDOP");
+                            self.set_yylval_id("&&");
                             self.set_lex_state(EXPR_BEG);
                             return TokenType::tOP_ASGN;
                         }
@@ -472,7 +523,7 @@ impl Lexer {
                         self.set_lex_state(EXPR_BEG);
                         return TokenType::tOP_ASGN;
                     } else if c == '.' {
-                        self.set_yylval_id("idANDDOT");
+                        self.set_yylval_id("&.");
                         self.set_lex_state(EXPR_DOT);
                         return TokenType::tANDDOT;
                     }
@@ -481,7 +532,7 @@ impl Lexer {
                         // TODO: check for some warnings here
                         result = TokenType::tAMPER;
                     } else if self.is_beg() {
-                        result = TokenType::tAMPER2;
+                        result = TokenType::tAMPER;
                     } else {
                         result = self.warn_balanced(TokenType::tAMPER2, "&", "argument prefix", &c, space_seen, &last_state);
                     }
@@ -566,7 +617,8 @@ impl Lexer {
                         self.set_lex_state(EXPR_BEG);
                         self.pushback(&c);
                         if !c.is_eof() && c.is_digit() {
-                            return TokenType::tUMINUS_NUM;
+                            // panic!("here");
+                            return TokenType::tUNARY_NUM;
                         }
                         return TokenType::tUMINUS;
                     }
@@ -897,22 +949,25 @@ impl Lexer {
         self.p.lex.ptok = self.p.lex.pcur;
     }
 
-    pub fn lex_getline(&mut self) -> Option<String> {
-        let line = self.p.lex.lines.get(self.p.line_count)?;
-        self.p.line_count += 1;
-        Some(line.iter().collect())
+    pub fn lex_getline(&mut self) -> Option<usize> {
+        if self.p.line_count < self.p.lex.lines.len() {
+            self.p.line_count += 1;
+            Some(self.p.line_count - 1)
+        } else {
+            None
+        }
     }
 
     pub fn nextline(&mut self) -> Result<(), ()> {
-        let mut v = self.p.lex.nextline.clone();
-        self.p.lex.nextline = None;
+        let mut v = self.p.lex.nextline_idx;
+        self.p.lex.nextline_idx = None;
 
         if v.is_none() {
             if self.p.eofp {
                 return Err(());
             }
 
-            if self.p.lex.pend > self.p.lex.pbeg && self.p.lex.input[self.p.lex.pend - 1] == '\n' {
+            if self.p.lex.pend > self.p.lex.pbeg && self.p.lex.input[self.p.lex.pend - 1] != '\n' {
                 self.p.eofp = true;
                 self.lex_goto_eol();
                 return Err(());
@@ -924,23 +979,26 @@ impl Lexer {
                 self.lex_goto_eol();
                 return Err(());
             }
+
             self.p.cr_seen = false;
         }
         // TODO: after here-document without terminator
 
         let v = v.unwrap();
+        let line = &self.p.lex.lines[v];
 
         if self.p.heredoc_end > 0 {
             self.p.ruby_sourceline = self.p.heredoc_end;
             self.p.heredoc_end = 0;
         }
         self.p.ruby_sourceline += 1;
-        self.p.lex.pbeg = self.p.lex.pend;
-        self.p.lex.pcur = self.p.lex.pend;
-        self.p.lex.pend = self.p.lex.pcur + v.len();
+        self.p.lex.pbeg = line.start;
+        self.p.lex.pcur = line.start;
+        self.p.lex.pend = line.end;
         self.token_flush();
-        self.p.lex.prevline = self.p.lex.lastline.clone();
-        self.p.lex.lastline = Some(v);
+        self.p.lex.prevline_idx = self.p.lex.lastline_idx;
+        self.p.lex.lastline_idx = Some(v);
+
 
         Ok(())
     }
@@ -950,19 +1008,17 @@ impl Lexer {
     }
 
     pub fn nextc(&mut self) -> LexChar {
-        if self.p.lex.pcur == self.p.lex.pend || self.p.eofp || self.p.lex.nextline.is_some() {
-            if self.nextline().is_err() {
-                println!("nextc: Returning EOF");
+        if self.p.lex.pcur == self.p.lex.pend || self.p.eofp || self.p.lex.nextline_idx.is_some() {
+            let n = self.nextline();
+            if n.is_err() {
                 return LexChar::EOF;
             }
         }
-        println!("nextc: pcur = {}", self.p.lex.pcur);
         let mut c: char = self.p.lex.input[self.p.lex.pcur];
         self.p.lex.pcur += 1;
         if c == '\r' {
             c = self.parser_cr(c);
         }
-        println!("nextc: Returning {:#?}, pcur is {}", c, self.p.lex.pcur);
         return LexChar::Some(c);
     }
 
@@ -970,7 +1026,6 @@ impl Lexer {
 
     pub fn pushback(&mut self, c: &LexChar) {
         if c.is_eof() { return };
-        println!("pushbck({:#?})", c.unwrap());
         self.p.lex.pcur -= 1;
         if self.p.lex.pcur > self.p.lex.pbeg && self.p.lex.input[self.p.lex.pcur] == '\n' && self.p.lex.input[self.p.lex.pcur - 1] == '\r' {
             self.p.lex.pcur -= 1;
@@ -987,7 +1042,11 @@ impl Lexer {
 
     pub fn emit_normal_line(&self) { unimplemented!("emit_normal_line") }
     pub fn peek(&self, _c: char) -> bool { unimplemented!("peek") }
-    pub fn set_yylval_id(&self, _id: &str) { unimplemented!("set_yylval_id") }
+
+    pub fn set_yylval_id(&mut self, id: &str) {
+        println!("set_yylval_id({})", id);
+        self.p.lval = Some(id.into());
+    }
 
     pub fn is_spacearg(&self, c: &LexChar, space_seen: bool) -> bool {
         self.is_arg() && space_seen && !c.is_space()

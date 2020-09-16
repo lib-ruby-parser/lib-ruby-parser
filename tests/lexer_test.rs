@@ -1652,14 +1652,7 @@ fn test_float_neg_case_0() {
                     :tFLOAT,     Some("1.0"), [1, 4]);
 }
 
-#[test]
-fn test_float_pos_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "+1.0",
-                    :tUNARY_NUM, Some("+"),   [0, 1],
-                    :tFLOAT,     Some("1.0"), [1, 4]);
-}
+// skipping test_float_pos_case_0
 
 #[test]
 fn test_float_suffix_case_0() {

@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct LexState {
     value: usize
 }
@@ -18,6 +18,12 @@ impl LexState {
 
     pub fn set(&mut self, value: usize) {
         self.value = value
+    }
+}
+
+impl Default for LexState {
+    fn default() -> Self {
+        Self { value: lex_states::EXPR_BEG }
     }
 }
 
