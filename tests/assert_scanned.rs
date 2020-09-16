@@ -1,9 +1,9 @@
 use ruby_parser::Lexer;
 use ruby_parser::lexer::{Token, TokenType};
 
-pub fn tokenize(source: &str) -> Vec<Token> {
+pub fn tokenize(lexer: &mut Lexer, source: &str) -> Vec<Token> {
     let mut tokens = vec![];
-    let mut lexer = Lexer::new(source);
+    lexer.set_source(source);
 
     loop {
         let token = lexer.yylex();
@@ -17,11 +17,31 @@ pub fn tokenize(source: &str) -> Vec<Token> {
 }
 
 #[macro_export]
+macro_rules! setup_lexer {
+    () => {
+        {
+            use ruby_parser::Lexer;
+            Lexer::new("")
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! set_lex_state {
+    ($lexer:ident, $state:ident) => {
+        {
+            use ruby_parser::lexer::lex_states::*;
+            $lexer.set_lex_state($state);
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! assert_scanned {
-    ($input:expr, $(:$token_type:tt, $value:expr, [$begin:expr, $end:expr]),*) => {
+    ($lexer:expr, $input:expr, $(:$token_type:tt, $value:expr, [$begin:expr, $end:expr]),*) => {
         {
             use ruby_parser::lexer::{Token, TokenType};
-            let actual_tokens = assert_scanned::tokenize($input);
+            let actual_tokens = assert_scanned::tokenize($lexer, $input);
 
             let token_types : Vec<TokenType>    = vec![$(TokenType::$token_type),*];
             let token_values: Vec<Option<&'static str>> = vec![$($value),*];

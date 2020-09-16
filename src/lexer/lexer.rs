@@ -108,16 +108,16 @@ impl Lexer {
         Lexer { p }
     }
 
+    pub fn set_source(&mut self, source: &str) {
+        let chars: Vec<char> = source.chars().collect();
+        let lines: Vec<Vec<char>> = source.lines().map(|line| line.chars().collect()).collect();
+        self.p.lex.input = chars;
+        self.p.lex.lines = lines;
+    }
+
     pub fn yylex(&mut self) -> Token {
-        let pcur_before = self.p.lex.pcur;
         self.p.lval = None;
         let token_type = self.parser_yylex();
-
-        if self.p.lex.pcur == pcur_before {
-            panic!("[BUG] token consumed without moving the cursor, entering infinite loop")
-        } else {
-            println!("{} -> {}", self.p.lex.pcur, pcur_before)
-        }
 
         let begin = self.p.lex.ptok;
         let end = self.p.lex.pcur;
