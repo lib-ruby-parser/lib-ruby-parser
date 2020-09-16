@@ -53,6 +53,28 @@ class TestLexer
   def test_comment_end_space_and_text(*); end
   def test_comment_eos(*); end
   def test_bug_hidden_eof_case_5(*); end
+
+  # these guys are wrong in 3.0 moe
+  def test_bug_ragel_stack; end
+  def test_string_pct_W_interp; end
+  def test_string_double_interp_label; end
+  def test_or2; end
+  def test_label_in_params__18; end
+  def test_numbers; end
+  def test_integer_oct_O_not_bad_none; end
+  def test_bug_expr_endarg_braces; end
+  def test_label__18; end
+  def test_string_pct_w_backslash_interp_nl; end
+  def test_heredoc_empty; end
+  def test_ternary; end
+  def test_bug_eh_symbol_no_newline; end
+  def test_string_double_interp; end
+  def test_dot2; end
+  def test_bug_interleaved_heredoc; end
+  def test_heredoc_double_interp; end
+  def test_bug_interp_expr_value; end
+  def test_integer_oct_o_not_bad_none; end
+  def test_dot3; end
 end
 
 class String

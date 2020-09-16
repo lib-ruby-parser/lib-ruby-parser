@@ -480,7 +480,7 @@ impl Lexer {
                 LexChar::Some('`') => {
                     if self.is_lex_state_some(EXPR_FNAME) {
                         self.set_lex_state(EXPR_ENDFN);
-                        return TokenType::tSTRING_CONTENT; // FIXME (unclear)
+                        return TokenType::tBACK_REF2;
                     }
                     if self.is_lex_state_some(EXPR_DOT) {
                         if cmd_state {
@@ -488,7 +488,7 @@ impl Lexer {
                         } else {
                             self.set_lex_state(EXPR_ARG);
                         }
-                        return TokenType::tSTRING_CONTENT; // FIXME (unclear)
+                        return TokenType::tBACK_REF2;
                     }
                     self.p.lex.strterm = self.new_strterm(strings::str_xquote, '`', 0);
                     return TokenType::tXSTRING_BEG;

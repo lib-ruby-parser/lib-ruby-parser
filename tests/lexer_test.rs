@@ -301,16 +301,6 @@ fn test_bug_const_expr_end_case_0() {
 }
 
 #[test]
-fn test_bug_eh_symbol_no_newline_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "?\"\nfoo",
-                    :tINTEGER,    Some("34"),  [0, 2],
-                    :tNL,         None,        [2, 3],
-                    :tIDENTIFIER, Some("foo"), [3, 6]);
-}
-
-#[test]
 fn test_bug_eql_end_case_0() {
     let mut lexer = setup_lexer!();
     assert_scanned!(&mut lexer,
@@ -654,17 +644,6 @@ fn test_bug_expr_end_colon_case_0() {
 }
 
 #[test]
-fn test_bug_expr_endarg_braces_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "let [] {",
-                    :tIDENTIFIER, Some("let"), [0, 3],
-                    :tLBRACK,     Some("["),   [4, 5],
-                    :tRBRACK,     Some("]"),   [5, 6],
-                    :tLBRACE_ARG, Some("{"),   [7, 8]);
-}
-
-#[test]
 fn test_bug_expr_mid_bareword_case_0() {
     let mut lexer = setup_lexer!();
     assert_scanned!(&mut lexer,
@@ -829,65 +808,6 @@ fn test_bug_hidden_eof_case_4() {
 // skipping test_bug_hidden_eof_case_5
 
 #[test]
-fn test_bug_interleaved_heredoc_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "<<w; \"\nfoo\nw\n\"",
-                    :tSTRING_BEG,     Some("<<\""),  [0, 3],
-                    :tSTRING_CONTENT, Some("foo\n"), [7, 11],
-                    :tSTRING_END,     Some("w"),     [11, 12],
-                    :tSEMI,           Some(";"),     [3, 4],
-                    :tSTRING_BEG,     Some("\""),    [5, 6],
-                    :tSTRING_CONTENT, Some("\n"),    [6, 7],
-                    :tSTRING_END,     Some("\""),    [13, 14]);
-}
-
-#[test]
-fn test_bug_interleaved_heredoc_case_1() {
-    let mut lexer = setup_lexer!();
-    set_lex_state!(lexer, EXPR_BEG);
-    assert_scanned!(&mut lexer,
-                    "<<w; %w[\nfoo\nw\n1]",
-                    :tSTRING_BEG,     Some("<<\""),  [0, 3],
-                    :tSTRING_CONTENT, Some("foo\n"), [9, 13],
-                    :tSTRING_END,     Some("w"),     [13, 14],
-                    :tSEMI,           Some(";"),     [3, 4],
-                    :tQWORDS_BEG,     Some("%w["),   [5, 8],
-                    :tSTRING_CONTENT, Some("1"),     [15, 16],
-                    :tSPACE,          None,          [16, 16],
-                    :tSTRING_END,     Some("]"),     [16, 17]);
-}
-
-#[test]
-fn test_bug_interleaved_heredoc_case_2() {
-    let mut lexer = setup_lexer!();
-    set_lex_state!(lexer, EXPR_BEG);
-    assert_scanned!(&mut lexer,
-                    "<<w; \"#{\nfoo\nw\n}\"",
-                    :tSTRING_BEG,     Some("<<\""),  [0, 3],
-                    :tSTRING_CONTENT, Some("foo\n"), [9, 13],
-                    :tSTRING_END,     Some("w"),     [13, 14],
-                    :tSEMI,           Some(";"),     [3, 4],
-                    :tSTRING_BEG,     Some("\""),    [5, 6],
-                    :tSTRING_DBEG,    Some("#{"),    [6, 8],
-                    :tRCURLY,         Some("}"),     [15, 16],
-                    :tSTRING_END,     Some("\""),    [16, 17]);
-}
-
-#[test]
-fn test_bug_interp_expr_value_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "\"#{f:a}\"",
-                    :tSTRING_BEG,  Some("\""), [0, 1],
-                    :tSTRING_DBEG, Some("#{"), [1, 3],
-                    :tIDENTIFIER,  Some("f"),  [3, 4],
-                    :tSYMBOL,      Some("a"),  [4, 6],
-                    :tRCURLY,      Some("}"),  [6, 7],
-                    :tSTRING_END,  Some("\""), [7, 8]);
-}
-
-#[test]
 fn test_bug_line_begin_label_case_0() {
     let mut lexer = setup_lexer!();
     assert_scanned!(&mut lexer,
@@ -924,22 +844,6 @@ fn test_bug_num_adj_kw_case_1() {
                     "1.0if",
                     :tFLOAT,  Some("1.0"), [0, 3],
                     :kIF_MOD, Some("if"),  [3, 5]);
-}
-
-#[test]
-fn test_bug_ragel_stack_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "\"#{$2 ? $2 : 1}\"",
-                    :tSTRING_BEG,  Some("\""), [0, 1],
-                    :tSTRING_DBEG, Some("#{"), [1, 3],
-                    :tNTH_REF,     Some("2"),  [3, 5],
-                    :tEH,          Some("?"),  [6, 7],
-                    :tNTH_REF,     Some("2"),  [8, 10],
-                    :tCOLON,       Some(":"),  [11, 12],
-                    :tINTEGER,     Some("1"),  [13, 14],
-                    :tRCURLY,      Some("}"),  [14, 15],
-                    :tSTRING_END,  Some("\""), [15, 16]);
 }
 
 #[test]
@@ -1376,22 +1280,6 @@ fn test_dot_case_0() {
     assert_scanned!(&mut lexer,
                     ".",
                     :tDOT, Some("."), [0, 1]);
-}
-
-#[test]
-fn test_dot2_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "..",
-                    :tDOT2, Some(".."), [0, 2]);
-}
-
-#[test]
-fn test_dot3_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "...",
-                    :tDOT3, Some("..."), [0, 3]);
 }
 
 #[test]
@@ -2036,44 +1924,6 @@ fn test_heredoc_double_dash_case_0() {
 }
 
 #[test]
-fn test_heredoc_double_interp_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "a = <<\"EOF\"\n#x a #@a b #$b c #{3} \nEOF\n",
-                    :tIDENTIFIER,     Some("a"),     [0, 1],
-                    :tEQL,            Some("="),     [2, 3],
-                    :tSTRING_BEG,     Some("<<\""),  [4, 11],
-                    :tSTRING_CONTENT, Some("#x a "), [12, 17],
-                    :tSTRING_DVAR,    None,          [17, 18],
-                    :tIVAR,           Some("@a"),    [18, 20],
-                    :tSTRING_CONTENT, Some(" b "),   [20, 23],
-                    :tSTRING_DVAR,    None,          [23, 24],
-                    :tGVAR,           Some("$b"),    [24, 26],
-                    :tSTRING_CONTENT, Some(" c "),   [26, 29],
-                    :tSTRING_DBEG,    Some("#{"),    [29, 31],
-                    :tINTEGER,        Some("3"),     [31, 32],
-                    :tRCURLY,         Some("}"),     [32, 33],
-                    :tSTRING_CONTENT, Some(" \n"),   [33, 35],
-                    :tSTRING_END,     Some("EOF"),   [35, 38],
-                    :tNL,             None,          [11, 12]);
-}
-
-#[test]
-fn test_heredoc_empty_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "<<\"\"\n#{x}\nblah2\n\n",
-                    :tSTRING_BEG,     Some("<<\""),    [0, 4],
-                    :tSTRING_DBEG,    Some("#{"),      [5, 7],
-                    :tIDENTIFIER,     Some("x"),       [7, 8],
-                    :tRCURLY,         Some("}"),       [8, 9],
-                    :tSTRING_CONTENT, Some("\n"),      [9, 10],
-                    :tSTRING_CONTENT, Some("blah2\n"), [10, 16],
-                    :tSTRING_END,     Some(""),        [16, 16],
-                    :tNL,             None,            [4, 5]);
-}
-
-#[test]
 fn test_heredoc_none_case_0() {
     let mut lexer = setup_lexer!();
     assert_scanned!(&mut lexer,
@@ -2404,27 +2254,11 @@ fn test_integer_oct_o_upper_case_0() {
 }
 
 #[test]
-fn test_integer_oct_o_upper_not_bad_none_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0O ",
-                    :tINTEGER, Some("0"), [0, 2]);
-}
-
-#[test]
 fn test_integer_oct_o_case_0() {
     let mut lexer = setup_lexer!();
     assert_scanned!(&mut lexer,
                     "0o52",
                     :tINTEGER, Some("42"), [0, 4]);
-}
-
-#[test]
-fn test_integer_oct_o_not_bad_none_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0o ",
-                    :tINTEGER, Some("0"), [0, 2]);
 }
 
 #[test]
@@ -2471,16 +2305,6 @@ fn test_keyword_expr_case_0() {
 }
 
 #[test]
-fn test_label_18_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "{a:b",
-                    :tLBRACE,     Some("{"), [0, 1],
-                    :tIDENTIFIER, Some("a"), [1, 2],
-                    :tSYMBOL,     Some("b"), [2, 4]);
-}
-
-#[test]
 fn test_label_19_case_0() {
     let mut lexer = setup_lexer!();
     assert_scanned!(&mut lexer,
@@ -2519,17 +2343,6 @@ fn test_label_fid_19_case_0() {
                     :tLBRACE, Some("{"),    [0, 1],
                     :tLABEL,  Some("a?"),   [1, 4],
                     :kTRUE,   Some("true"), [4, 8]);
-}
-
-#[test]
-fn test_label_in_params_18_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "foo(a:b",
-                    :tIDENTIFIER, Some("foo"), [0, 3],
-                    :tLPAREN2,    Some("("),   [3, 4],
-                    :tIDENTIFIER, Some("a"),   [4, 5],
-                    :tSYMBOL,     Some("b"),   [5, 7]);
 }
 
 #[test]
@@ -2715,118 +2528,6 @@ fn test_nth_ref_case_0() {
 }
 
 #[test]
-fn test_numbers_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0b10",
-                    :tINTEGER, Some("2"), [0, 4]);
-}
-
-#[test]
-fn test_numbers_case_1() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0B10",
-                    :tINTEGER, Some("2"), [0, 4]);
-}
-
-#[test]
-fn test_numbers_case_2() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0d10",
-                    :tINTEGER, Some("10"), [0, 4]);
-}
-
-#[test]
-fn test_numbers_case_3() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0D10",
-                    :tINTEGER, Some("10"), [0, 4]);
-}
-
-#[test]
-fn test_numbers_case_4() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0x10",
-                    :tINTEGER, Some("16"), [0, 4]);
-}
-
-#[test]
-fn test_numbers_case_5() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0X10",
-                    :tINTEGER, Some("16"), [0, 4]);
-}
-
-#[test]
-fn test_numbers_case_6() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0o10",
-                    :tINTEGER, Some("8"), [0, 4]);
-}
-
-#[test]
-fn test_numbers_case_7() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0O10",
-                    :tINTEGER, Some("8"), [0, 4]);
-}
-
-#[test]
-fn test_numbers_case_8() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0o",
-                    :tINTEGER, Some("0"), [0, 2]);
-}
-
-#[test]
-fn test_numbers_case_9() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0O",
-                    :tINTEGER, Some("0"), [0, 2]);
-}
-
-#[test]
-fn test_numbers_case_10() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0o",
-                    :tINTEGER, Some("0"), [0, 2]);
-}
-
-#[test]
-fn test_numbers_case_11() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0O",
-                    :tINTEGER, Some("0"), [0, 2]);
-}
-
-#[test]
-fn test_numbers_case_12() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0777_333",
-                    :tINTEGER, Some("261851"), [0, 8]);
-}
-
-#[test]
-fn test_numbers_case_13() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "0",
-                    :tINTEGER, Some("0"), [0, 1]);
-}
-
-#[test]
 fn test_open_bracket_case_0() {
     let mut lexer = setup_lexer!();
     assert_scanned!(&mut lexer,
@@ -2924,14 +2625,6 @@ fn test_or_case_0() {
     assert_scanned!(&mut lexer,
                     "|",
                     :tPIPE, Some("|"), [0, 1]);
-}
-
-#[test]
-fn test_or2_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "||",
-                    :tOROP, Some("||"), [0, 2]);
 }
 
 #[test]
@@ -3871,39 +3564,6 @@ fn test_string_double_escape_octal_case_0() {
 // skipping test_string_double_escape_octal_wrap_case_0
 
 #[test]
-fn test_string_double_interp_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "\"blah #x a #@a b #$b c #{3} # \"",
-                    :tSTRING_BEG,     Some("\""),         [0, 1],
-                    :tSTRING_CONTENT, Some("blah #x a "), [1, 11],
-                    :tSTRING_DVAR,    None,               [11, 12],
-                    :tIVAR,           Some("@a"),         [12, 14],
-                    :tSTRING_CONTENT, Some(" b "),        [14, 17],
-                    :tSTRING_DVAR,    None,               [17, 18],
-                    :tGVAR,           Some("$b"),         [18, 20],
-                    :tSTRING_CONTENT, Some(" c "),        [20, 23],
-                    :tSTRING_DBEG,    Some("#{"),         [23, 25],
-                    :tINTEGER,        Some("3"),          [25, 26],
-                    :tRCURLY,         Some("}"),          [26, 27],
-                    :tSTRING_CONTENT, Some(" # "),        [27, 30],
-                    :tSTRING_END,     Some("\""),         [30, 31]);
-}
-
-#[test]
-fn test_string_double_interp_label_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "\"#{foo:bar}\"",
-                    :tSTRING_BEG,  Some("\""),  [0, 1],
-                    :tSTRING_DBEG, Some("#{"),  [1, 3],
-                    :tIDENTIFIER,  Some("foo"), [3, 6],
-                    :tSYMBOL,      Some("bar"), [6, 10],
-                    :tRCURLY,      Some("}"),   [10, 11],
-                    :tSTRING_END,  Some("\""),  [11, 12]);
-}
-
-#[test]
 fn test_string_double_nested_curlies_case_0() {
     let mut lexer = setup_lexer!();
     assert_scanned!(&mut lexer,
@@ -3999,25 +3659,6 @@ fn test_string_pct_w_upper_bs_nl_case_0() {
 }
 
 #[test]
-fn test_string_pct_w_upper_interp_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "%W[#{1}#{2} #@a]",
-                    :tWORDS_BEG,   Some("%W["), [0, 3],
-                    :tSTRING_DBEG, Some("#{"),  [3, 5],
-                    :tINTEGER,     Some("1"),   [5, 6],
-                    :tRCURLY,      Some("}"),   [6, 7],
-                    :tSTRING_DBEG, Some("#{"),  [7, 9],
-                    :tINTEGER,     Some("2"),   [9, 10],
-                    :tRCURLY,      Some("}"),   [10, 11],
-                    :tSPACE,       None,        [11, 12],
-                    :tSTRING_DVAR, None,        [12, 13],
-                    :tIVAR,        Some("@a"),  [13, 15],
-                    :tSPACE,       None,        [15, 15],
-                    :tSTRING_END,  Some("]"),   [15, 16]);
-}
-
-#[test]
 fn test_string_pct_angle_case_0() {
     let mut lexer = setup_lexer!();
     assert_scanned!(&mut lexer,
@@ -4109,37 +3750,6 @@ fn test_string_pct_w_backslash_case_0() {
                     :tSTRING_CONTENT, Some("s2"),   [6, 8],
                     :tSPACE,          None,         [8, 9],
                     :tSTRING_END,     Some("\\"),   [9, 10]);
-}
-
-#[test]
-fn test_string_pct_w_backslash_interp_nl_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "%W\\x08lah #x a #@a b #$b c #{3} # \\",
-                    :tWORDS_BEG,      Some("%W\\"), [0, 3],
-                    :tSTRING_CONTENT, Some("blah"), [3, 7],
-                    :tSPACE,          None,         [7, 8],
-                    :tSTRING_CONTENT, Some("#x"),   [8, 10],
-                    :tSPACE,          None,         [10, 11],
-                    :tSTRING_CONTENT, Some("a"),    [11, 12],
-                    :tSPACE,          None,         [12, 13],
-                    :tSTRING_DVAR,    None,         [13, 14],
-                    :tIVAR,           Some("@a"),   [14, 16],
-                    :tSPACE,          None,         [16, 17],
-                    :tSTRING_CONTENT, Some("b"),    [17, 18],
-                    :tSPACE,          None,         [18, 19],
-                    :tSTRING_DVAR,    None,         [19, 20],
-                    :tGVAR,           Some("$b"),   [20, 22],
-                    :tSPACE,          None,         [22, 23],
-                    :tSTRING_CONTENT, Some("c"),    [23, 24],
-                    :tSPACE,          None,         [24, 25],
-                    :tSTRING_DBEG,    Some("#{"),   [25, 27],
-                    :tINTEGER,        Some("3"),    [27, 28],
-                    :tRCURLY,         Some("}"),    [28, 29],
-                    :tSPACE,          None,         [29, 30],
-                    :tSTRING_CONTENT, Some("#"),    [30, 31],
-                    :tSPACE,          None,         [31, 32],
-                    :tSTRING_END,     Some("\\"),   [32, 33]);
 }
 
 #[test]
@@ -4248,50 +3858,6 @@ fn test_symbol_single_case_0() {
                     :tSYMBEG,         Some(":'"),     [0, 2],
                     :tSTRING_CONTENT, Some("symbol"), [2, 8],
                     :tSTRING_END,     Some("'"),      [8, 9]);
-}
-
-#[test]
-fn test_ternary_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "a ? b : c",
-                    :tIDENTIFIER, Some("a"), [0, 1],
-                    :tEH,         Some("?"), [2, 3],
-                    :tIDENTIFIER, Some("b"), [4, 5],
-                    :tCOLON,      Some(":"), [6, 7],
-                    :tIDENTIFIER, Some("c"), [8, 9]);
-}
-
-#[test]
-fn test_ternary_case_1() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "a ?b : c",
-                    :tIDENTIFIER, Some("a"),  [0, 1],
-                    :tINTEGER,    Some("98"), [2, 4],
-                    :tCOLON,      Some(":"),  [5, 6],
-                    :tIDENTIFIER, Some("c"),  [7, 8]);
-}
-
-#[test]
-fn test_ternary_case_2() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "a ?bb : c",
-                    :tIDENTIFIER, Some("a"),  [0, 1],
-                    :tEH,         Some("?"),  [2, 3],
-                    :tIDENTIFIER, Some("bb"), [3, 5],
-                    :tCOLON,      Some(":"),  [6, 7],
-                    :tIDENTIFIER, Some("c"),  [8, 9]);
-}
-
-#[test]
-fn test_ternary_case_3() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "42 ?",
-                    :tINTEGER, Some("42"), [0, 2],
-                    :tEH,      Some("?"),  [3, 4]);
 }
 
 #[test]
