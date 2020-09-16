@@ -3,7 +3,7 @@ use crate::lexer::TokenType;
 #[derive(Clone, Eq, PartialEq)]
 pub struct Token {
     pub token_type: TokenType,
-    pub token_value: String,
+    pub token_value: Option<String>,
     pub begin: usize,
     pub end: usize,
 }
