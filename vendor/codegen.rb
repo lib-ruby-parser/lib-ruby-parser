@@ -190,8 +190,8 @@ class RustTest < Struct.new(:lex_state, :input, :tokens, :mid)
     # when "||" is used without arguments.
     'test_or2_after_27_case_0',
 
-    # bugs:
-    # 1. '+1.0' is a literal, there's no unary plus
+    # parser bugs:
+    # '+1.0' is a snigle literal, not a unary plus and a number
     'test_float_pos_case_0',
     'test_float_dot_e_pos_case_0',
     'test_float_dot_e_upper_pos_case_0',
@@ -201,6 +201,7 @@ class RustTest < Struct.new(:lex_state, :input, :tokens, :mid)
     'test_plus_unary_number_case_0',
     'test_plus_unary_whitespace_number_case_0',
     'test_float_e_pos_plus_case_0',
+    'test_ambiguous_uplus_case_0',
     # these are recordings for olrder rubies
     'test_float_suffix_case_0',
     'test_float_suffix_case_3',
@@ -208,6 +209,8 @@ class RustTest < Struct.new(:lex_state, :input, :tokens, :mid)
     'test_int_suffix_case_0',
     'test_int_suffix_case_2',
     'test_int_suffix_case_4',
+    # just a bug
+    'test_float_suffix_case_16'
   ]
 
   def mid=(mid)

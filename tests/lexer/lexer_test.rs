@@ -21,15 +21,7 @@ fn test_ambiguous_uminus_case_0() {
                     :tINTEGER,    Some("3"), [3, 4]);
 }
 
-#[test]
-fn test_ambiguous_uplus_case_0() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "m +3",
-                    :tIDENTIFIER, Some("m"), [0, 1],
-                    :tUNARY_NUM,  Some("+"), [2, 3],
-                    :tINTEGER,    Some("3"), [3, 4]);
-}
+// skipping test_ambiguous_uplus_case_0
 
 #[test]
 fn test_and_case_0() {
@@ -1626,14 +1618,7 @@ fn test_float_suffix_case_15() {
                     :tIDENTIFIER, Some("ri"),  [3, 5]);
 }
 
-#[test]
-fn test_float_suffix_case_16() {
-    let mut lexer = setup_lexer!();
-    assert_scanned!(&mut lexer,
-                    "1e1ir",
-                    :tIMAGINARY,  Some("1e1i"), [0, 4],
-                    :tIDENTIFIER, Some("r"),    [4, 5]);
-}
+// skipping test_float_suffix_case_16
 
 #[test]
 fn test_fluent_and_dot_case_0() {

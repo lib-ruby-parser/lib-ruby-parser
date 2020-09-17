@@ -298,13 +298,18 @@ impl Lexer {
         token_type
     }
 
-    pub fn no_digits(&self) -> TokenType { unimplemented!("no_digits") }
+    pub fn no_digits(&mut self) -> TokenType {
+        self.yyerror0("numeric literal without digits");
+        if self.peek('_') { self.nextc(); }
+        self.set_integer_literal("0", 0)
+    }
 
     pub fn number_literal_suffix(&mut self, mask: i8) -> i8 {
         let mut c: LexChar;
         let mut mask = mask;
         let mut result: i8 = 0;
         let lastp = self.p.lex.pcur;
+        println!("dumping self = {:#?}", self);
 
         loop {
             c = self.nextc();
@@ -324,7 +329,7 @@ impl Lexer {
             }
             if !c.is_ascii() || c.is_alpha() || c == '_' {
                 self.p.lex.pcur = lastp;
-                self.literal_flush(self.p.lex.pcur);
+                // self.literal_flush(self.p.lex.pcur);
                 return 0;
             }
             self.pushback(&c);

@@ -35,3 +35,6 @@ mod locals;
 
 mod token;
 pub use token::Token;
+
+mod stack_state;
+pub use stack_state::StackState;

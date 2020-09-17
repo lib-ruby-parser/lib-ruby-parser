@@ -1,3 +1,5 @@
+use std::convert::TryFrom;
+
 use crate::lexer::{StrTerm, StringLiteral, HeredocLiteral};
 use crate::lexer::lex_state::{lex_states, LexState};
 use lex_states::*;
@@ -8,6 +10,7 @@ use crate::lexer::strings;
 use crate::lexer::lex_char::LexChar;
 use crate::lexer::Token;
 use crate::StaticEnvironment;
+use crate::lexer::StackState;
 
 #[derive(Debug, Clone, Default)]
 struct SourceLine {
@@ -54,8 +57,8 @@ pub struct ParserParamsLex {
 pub struct ParserParams {
     lval: Option<String>,
     pub lex: ParserParamsLex,
-    cond_stack: usize,
-    cmdarg_stack: usize,
+    cond_stack: StackState,
+    cmdarg_stack: StackState,
     tokidx: usize,
     toksize: usize,
     tokline: usize,
@@ -126,6 +129,8 @@ const VTAB_CHAR  : char = 0x0b as char;
 impl Lexer {
     pub fn new(source: &str) -> Self {
         let mut result = Lexer::default();
+        result.p.cond_stack = StackState::new("cond");
+        result.p.cmdarg_stack = StackState::new("cmdarg");
         result.set_source(source);
         result
     }
@@ -146,7 +151,7 @@ impl Lexer {
         if !line.is_empty() {
             lines.push(line);
         }
-        // println!("lines = {:#?}", lines);
+        println!("lines = {:#?}", lines);
 
         self.p.lex.input = chars;
         self.p.lex.lines = lines;
@@ -156,11 +161,13 @@ impl Lexer {
         self.p.lval = None;
         let token_type = self.parser_yylex();
 
+        println!("{:#?}", self);
+
         let begin = self.p.lex.ptok;
-        let end = self.p.lex.pcur;
-        let token_value = self.p.lval.clone().unwrap_or_else(||
+        let mut end = self.p.lex.pcur;
+        let mut token_value = self.p.lval.clone().or_else(||
             // take raw value if nothing was manually captured
-            self.p.lex.input[begin..end].iter().collect()
+            Some(self.p.lex.input[begin..end].iter().collect())
         );
 
         match self.p.lex.strterm {
@@ -172,9 +179,14 @@ impl Lexer {
             }
         };
 
-        // println!("yylex {:#?}", token_type);
+        if token_type == TokenType::tNL {
+            token_value = None;
+            end = begin + 1;
+        }
 
-        Token { token_type, token_value: Some(token_value), begin: self.p.lex.ptok, end: self.p.lex.pcur }
+        println!("yylex {:#?}", token_type);
+
+        Token { token_type, token_value, begin, end }
     }
 
     pub fn parser_yylex(&mut self) -> TokenType {
@@ -620,7 +632,6 @@ impl Lexer {
                         self.set_lex_state(EXPR_BEG);
                         self.pushback(&c);
                         if !c.is_eof() && c.is_digit() {
-                            // panic!("here");
                             return TokenType::tUNARY_NUM;
                         }
                         return TokenType::tUMINUS;
@@ -637,7 +648,7 @@ impl Lexer {
                     if c == '.' {
                         c = self.nextc();
                         if c == '.' {
-                            if self.p.lex.paren_nest == 0 && self.looking_at_eol_p() {
+                            if self.p.lex.paren_nest == 0 && self.is_looking_at_eol() {
                                 self.warn("... at EOL, should be parenthesized?");
                             } else if self.p.lex.lpar_beg >= 0 && self.p.lex.lpar_beg + 1 == self.p.lex.paren_nest {
                                 if last_state.is_some(EXPR_LABEL) {
@@ -724,7 +735,7 @@ impl Lexer {
                             self.set_lex_state(EXPR_BEG);
                             return TokenType::tCOLON3;
                         }
-                        self.set_yylval_id("idCOLON2");
+                        self.set_yylval_id("::");
                         self.set_lex_state(EXPR_DOT);
                         return TokenType::tCOLON2;
                     }
@@ -815,8 +826,8 @@ impl Lexer {
                     }
 
                     self.p.lex.paren_nest += 1;
-                    self.cond_push(0);
-                    self.cmdarg_push(0);
+                    self.cond_push(false);
+                    self.cmdarg_push(false);
                     self.set_lex_state(EXPR_BEG|EXPR_LABEL);
 
                     return result;
@@ -846,8 +857,8 @@ impl Lexer {
                         result = TokenType::tLBRACK;
                     }
                     self.set_lex_state(EXPR_BEG|EXPR_LABEL);
-                    self.cond_push(0);
-                    self.cmdarg_push(0);
+                    self.cond_push(false);
+                    self.cmdarg_push(false);
                     return result;
                 },
 
@@ -874,8 +885,8 @@ impl Lexer {
                     }
 
                     self.p.lex.paren_nest += 1;
-                    self.cond_push(0);
-                    self.cmdarg_push(0);
+                    self.cond_push(false);
+                    self.cmdarg_push(false);
                     return result;
                 },
 
@@ -1013,7 +1024,7 @@ impl Lexer {
     pub fn nextc(&mut self) -> LexChar {
         if self.p.lex.pcur == self.p.lex.pend || self.p.eofp || self.p.lex.nextline_idx.is_some() {
             let n = self.nextline();
-            // println!("nextline = {:?}", n);
+            println!("nextline = {:?}", n);
             if n.is_err() {
                 return LexChar::EOF;
             }
@@ -1023,11 +1034,29 @@ impl Lexer {
         if c == '\r' {
             c = self.parser_cr(c);
         }
-        // println!("nextc = {:?}", c);
+        println!("nextc = {:?}", c);
         return LexChar::Some(c);
     }
 
-    pub fn warn(&self, _message: &str) { unimplemented!("warn") }
+    pub fn char_at(&self, idx: usize) -> LexChar {
+        if let Some(c) = self.p.lex.input.get(idx) {
+            LexChar::Some(c.clone())
+        } else {
+            LexChar::EOF
+        }
+    }
+
+    pub fn substr_at(&self, start: usize, end: usize) -> Option<String> {
+        if start < end && end < self.p.lex.input.len() {
+            Some(self.p.lex.input[start..end].iter().collect())
+        } else {
+            None
+        }
+    }
+
+    pub fn warn(&self, message: &str) {
+        println!("WARNING: {}", message)
+    }
 
     pub fn pushback(&mut self, c: &LexChar) {
         if c.is_eof() { return };
@@ -1045,22 +1074,23 @@ impl Lexer {
         self.p.lex.pcur = self.p.lex.pend;
     }
 
-    pub fn lex_eol_p(&self) -> bool {
+    pub fn is_lex_eol(&self) -> bool {
         self.p.lex.pcur >= self.p.lex.pend
     }
 
-    pub fn lex_eol_n_p(&self, n: usize) -> bool {
+    pub fn is_lex_eol_n(&self, n: usize) -> bool {
         self.p.lex.pcur + n >= self.p.lex.pend
     }
 
-    pub fn emit_normal_line(&self) { unimplemented!("emit_normal_line") }
-    pub fn peek(&self, _c: char) -> bool { unimplemented!("peek") }
+    pub fn peek(&self, c: char) -> bool {
+        self.peek_n(c, 0)
+    }
     pub fn peek_n(&self, c: char, n: usize) -> bool {
-        !self.lex_eol_n_p(n) && c == self.p.lex.input[self.p.lex.pcur + n]
+        !self.is_lex_eol_n(n) && c == self.p.lex.input[self.p.lex.pcur + n]
     }
 
     pub fn set_yylval_id(&mut self, id: &str) {
-        // println!("set_yylval_id({})", id);
+        println!("set_yylval_id({})", id);
         self.p.lval = Some(id.into());
     }
 
@@ -1083,11 +1113,25 @@ impl Lexer {
         self.is_lex_state_some(EXPR_FNAME|EXPR_DOT)
     }
 
-    pub fn was_bol(&self) -> bool { unimplemented!("was_bol") }
-    pub fn is_word_match(&self, _word: &str) -> bool { unimplemented!("is_word_match") }
+    pub fn was_bol(&self) -> bool {
+        self.p.lex.pcur == self.p.lex.pbeg + 1
+    }
+
+    pub fn is_word_match(&self, word: &str) -> bool {
+        let len = word.len();
+
+        if self.substr_at(self.p.lex.pcur, self.p.lex.pcur + len) == Some(word.to_owned()) { return false }
+        if self.p.lex.pcur + len == self.p.lex.pend { return true }
+        let c = self.char_at(self.p.lex.pcur + len);
+        if c.is_space() { return true }
+        if c == '\0' || c == '\u{0004}' || c == '\u{001A}' {
+            return true;
+        }
+        false
+    }
 
     pub fn compile_error(&self, message: &str) {
-        panic!("Compile error: {}", message)
+        println!("Compile error: {}", message)
     }
 
     pub fn is_end(&self) -> bool {
@@ -1107,7 +1151,11 @@ impl Lexer {
 
     pub fn new_strterm(&self, _flag: i32, _term: char, _indent: i32) -> Option<StrTerm> { unimplemented!("new_strterm") }
     pub fn parse_qmark(&self, _space_seen: bool) -> TokenType { unimplemented!("parse_qmark") }
-    pub fn arg_ambiguous(&self, _arg: char) -> bool { unimplemented!("arg_ambiguous") }
+
+    pub fn arg_ambiguous(&self, c: char) -> bool {
+        self.warn(&format!("ambiguous first argument; put parentheses or a space even after `{}' operator", c));
+        true
+    }
 
     pub fn tokadd(&mut self, c: &LexChar) {
         let c = c.unwrap();
@@ -1126,25 +1174,86 @@ impl Lexer {
         self.p.tokenbuf.clone()
     }
 
-    pub fn looking_at_eol_p(&self) -> bool { unimplemented!("looking_at_eol_p") }
-    pub fn yyerror0(&self, _message: &str) { unimplemented!("yyerror0") }
-    pub fn cond_pop(&mut self) { unimplemented!("cond_pop") }
-    pub fn cmdarg_pop(&mut self) { unimplemented!("cmdarg_pop") }
+    pub fn is_looking_at_eol(&self) -> bool {
+        let mut ptr = self.p.lex.pcur;
+        while ptr < self.p.lex.pend {
+            let c = self.p.lex.input.get(ptr);
+            ptr += 1;
+            if let Some(c) = c {
+                let eol = *c == '\n' || *c == '#';
+                if eol || !c.is_ascii_whitespace() {
+                    return eol
+                }
+            };
+        };
+        true
+    }
+
+    pub fn yyerror0(&self, message: &str) {
+        println!("yyerror0: {}", message)
+    }
+
     pub fn is_space(&self, _c: &LexChar) -> bool { unimplemented!("is_space") }
 
     pub fn is_lambda_beginning(&self) -> bool {
         self.p.lex.lpar_beg == self.p.lex.paren_nest
     }
 
-    pub fn cond_push(&self, _value: usize) { unimplemented!("cond_push") }
-    pub fn cmdarg_push(&self, _value: usize) { unimplemented!("cond_pop") }
+    pub fn cond_push(&mut self, value: bool) {
+        self.p.cond_stack.push(value)
+    }
+
+    pub fn cond_pop(&mut self) {
+        self.p.cond_stack.pop()
+    }
+
+    pub fn is_cond_active(&self) -> bool {
+        self.p.cond_stack.is_active()
+    }
+
+    pub fn cmdarg_push(&mut self, value: bool) {
+        self.p.cmdarg_stack.push(value)
+    }
+
+    pub fn cmdarg_pop(&mut self) {
+        self.p.cmdarg_stack.pop()
+    }
+
+    pub fn is_cmdarg_active(&self) -> bool {
+        self.p.cmdarg_stack.is_active()
+    }
+
     pub fn parse_percent(&self, _space_seen: bool, _last_state: LexState) -> TokenType { unimplemented!("parse_percent") }
     pub fn parse_gvar(&self, _last_state: LexState) -> TokenType { unimplemented!("parse_gvar") }
     pub fn parse_atmark(&self, _last_state: LexState) -> TokenType { unimplemented!("parse_atmark") }
-    pub fn is_whole_match(&self, _pattern: &str, _indent: usize) -> bool { unimplemented!("is_whole_match") }
 
-    pub fn is_cond_active(&self) -> bool { unimplemented!("is_cond_active") }
-    pub fn is_cmdarg_active(&self) -> bool { unimplemented!("is_cmdarg_active") }
+    pub fn is_whole_match(&self, eos: &str, indent: usize) -> bool {
+        let mut ptr = self.p.lex.pbeg;
+        let len = eos.len();
+
+        if indent > 0 {
+            while let Some(c) = self.p.lex.input.get(ptr) {
+                if !c.is_ascii_whitespace() { break }
+                ptr += 1;
+            }
+        }
+
+        if let Ok(n) = isize::try_from(self.p.lex.pend - (ptr + len)) {
+            if n < 0 { return false }
+            let last_char = self.p.lex.input.get(ptr + len);
+            let char_after_last_char = self.p.lex.input.get(ptr + len + 1);
+
+            if n > 0 && last_char != Some(&'\n') {
+                if last_char != Some(&'\r') { return false }
+                if n <= 1 || char_after_last_char != Some(&'\n') { return false }
+            }
+
+            let next_len_chars: String = self.p.lex.input[ptr..ptr+len].iter().collect();
+            return eos == next_len_chars
+        } else {
+            return false
+        }
+    }
 
     pub fn newtok(&mut self) {
         self.p.tokidx = 0;
@@ -1158,10 +1267,13 @@ impl Lexer {
             !self.p.lex.input[begin].is_ascii()
     }
 
-    pub fn literal_flush(&mut self, _some_value: usize) { unimplemented!("literal_flush") }
+    pub fn literal_flush(&mut self, ptok: usize) {
+        println!("literal_flush(ptok = {})", ptok);
+        self.p.lex.ptok = ptok;
+    }
 
     pub fn set_yylval_literal(&mut self, value: &str) {
-        // println!("set_yylval_literal({})", value);
+        println!("set_yylval_literal({}) ptok = {}, pcur = {}", value, self.p.lex.ptok, self.p.lex.pcur);
         self.p.lval = Some(value.into());
     }
 
@@ -1180,7 +1292,7 @@ impl Lexer {
     }
 
     pub fn set_yyval_name(&mut self, name: &str) {
-        // println!("set_yyval_name({})", name);
+        println!("set_yyval_name({})", name);
         self.p.lval = Some(name.into());
     }
 }
