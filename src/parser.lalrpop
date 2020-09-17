@@ -1,0 +1,27 @@
+use crate::lexer::Token;
+use crate::lexer::{LexError, TokenData};
+
+#[LALR]
+grammar;
+
+extern {
+    type Location = usize;
+    type Error = LexError;
+
+    enum Token {
+        "tINTEGER" => Token::tINTEGER(<String>, <usize>, <usize>),
+        "tPLUS" => Token::tPLUS(<String>, <usize>, <usize>),
+    }
+}
+
+pub Program: String = {
+    <n:number> <p:"tPLUS"> <n2:number> => format!("{:?} + {:?} + {:?}", n, p, n2)
+};
+
+number: TokenData = {
+    <n:"tINTEGER"> => n
+}
+
+op: TokenData = {
+    "tPLUS"
+}

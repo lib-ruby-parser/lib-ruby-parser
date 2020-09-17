@@ -1,7 +1,7 @@
 use std::env;
 use std::fs;
 use ruby_parser::Lexer;
-use ruby_parser::lexer::{TokenType, Token};
+use ruby_parser::lexer::Token;
 
 fn print_usage() -> ! {
     println!("
@@ -12,7 +12,7 @@ USAGE:
     std::process::exit(1)
 }
 
-fn rpad<T: Sized + std::fmt::Debug>(value: T, total_width: usize) -> String {
+fn rpad<T: Sized + std::fmt::Debug>(value: &T, total_width: usize) -> String {
     format!("{:width$}", format!("{:?}, ", value), width = total_width)
 }
 
@@ -33,19 +33,19 @@ fn main() {
     loop {
         let token = lexer.yylex();
         match token {
-            Token { token_type: TokenType::END_OF_INPUT, .. } => break,
+            Token::END_OF_INPUT(..) => break,
             _ => tokens.push(token)
         }
     }
 
-    let tok_type_length  = tokens.iter().map(|tok| format!("{:?}", tok.token_type).len()).max().unwrap_or(0) + 2;
-    let tok_value_length = tokens.iter().map(|tok| format!("{:?}", tok.token_value).len()).max().unwrap_or(0) + 2;
+    let tok_name_length  = tokens.iter().map(|tok| format!("{:?}", tok.name()).len()).max().unwrap_or(0) + 2;
+    let tok_value_length = tokens.iter().map(|tok| format!("{:?}", tok.value()).len()).max().unwrap_or(0) + 2;
 
     println!("[");
     for token in tokens {
-        let token_type = rpad(token.token_type, tok_type_length);
-        let token_value = rpad(token.token_value, tok_value_length);
-        println!("    :{}{}[{}, {}]", token_type, token_value, token.begin, token.end);
+        let name = rpad(&token.name(), tok_name_length);
+        let value = rpad(&token.value(), tok_value_length);
+        println!("    :{}{}[{}, {}]", name, value, token.begin(), token.end());
     }
     println!("]");
 }

@@ -10,6 +10,10 @@ edition = "2018"
 encoding = "0.2"
 regex = "1.3.9"
 lazy_static = "1.4.0"
+lalrpop-util = "0.19.0"
 
 [[example]]
 name = "tokenize"
+
+[build-dependencies]
+lalrpop = { version = "0.19.0", features = ["lexer"] }

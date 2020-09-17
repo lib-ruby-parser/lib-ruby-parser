@@ -1,5 +1,5 @@
 use crate::Lexer;
-use crate::lexer::{StringLiteral, TokenType};
+use crate::lexer::{StringLiteral, Token, TokenType};
 use crate::lexer::lex_char::LexChar;
 use crate::lexer::lex_states::*;
 use crate::lexer::str_types::*;
@@ -19,9 +19,9 @@ impl Lexer {
             self.set_lex_state(EXPR_END);
             self.p.lex.strterm = None;
             if (func & STR_FUNC_REGEXP) != 0 {
-                return TokenType::tREGEXP_END
+                return Token::tREGEXP_END
             } else {
-                return TokenType::tSTRING_END;
+                return Token::tSTRING_END;
             }
         }
         c = self.nextc();
@@ -41,13 +41,13 @@ impl Lexer {
             if (func & STR_FUNC_QWORDS) != 0 {
                 quote.func &= STR_FUNC_TERM;
                 self.pushback(&c); /* dispatch the term at tSTRING_END */
-                return TokenType::tSP;
+                return Token::tSP;
             }
             return self.parser_string_term(func);
         }
         if space {
             self.pushback(&c);
-            return TokenType::tSP;
+            return Token::tSP;
         }
         self.newtok();
         if ((func & STR_FUNC_EXPAND) != 0) && c == '#' {
@@ -66,7 +66,7 @@ impl Lexer {
                     /* no content to add, bailing out here */
                     self.yyerror0("unterminated list meets end of file");
                     self.p.lex.strterm = None;
-                    return TokenType::tSTRING_END;
+                    return Token::tSTRING_END;
                 }
                 if (func & STR_FUNC_REGEXP) != 0 {
                     self.yyerror0("unterminated regexp meets end of file");
@@ -86,7 +86,7 @@ impl Lexer {
         //         panic!("dead");
         //     }
         // }
-        TokenType::tSTRING_CONTENT
+        Token::tSTRING_CONTENT
     }
 
     pub fn parser_string_term(&mut self, func: usize) -> TokenType {
@@ -95,15 +95,15 @@ impl Lexer {
             let regx_options = self.regx_options();
             self.set_yylval_num(&regx_options);
             self.set_lex_state(EXPR_END);
-            return TokenType::tREGEXP_END;
+            return Token::tREGEXP_END;
         }
         if (func & STR_FUNC_LABEL) != 0 && self.is_label_suffix(0) {
             self.nextc();
             self.set_lex_state(EXPR_BEG|EXPR_LABEL);
-            return TokenType::tLABEL_END;
+            return Token::tLABEL_END;
         }
         self.set_lex_state(EXPR_END);
-        return TokenType::tSTRING_END;
+        return Token::tSTRING_END;
     }
 
     pub fn set_yylval_num(&mut self, _num: &str) { unimplemented!("set_yylval_num") }
@@ -125,7 +125,7 @@ impl Lexer {
                     if ptr >= self.p.lex.pend { return None }
                     // c = self.char_at(ptr);
                 } else if c.is_global_name_punct() || c.is_digit() {
-                    return Some(TokenType::tSTRING_DVAR);
+                    return Some(Token::tSTRING_DVAR);
                 }
             },
 
@@ -141,7 +141,7 @@ impl Lexer {
             LexChar::Some('{') => {
                 self.p.lex.pcur = ptr;
                 self.p.command_start = true;
-                return Some(TokenType::tSTRING_DBEG)
+                return Some(Token::tSTRING_DBEG)
             },
 
             _ => return None

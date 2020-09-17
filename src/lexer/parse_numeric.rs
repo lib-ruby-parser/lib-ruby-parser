@@ -1,6 +1,6 @@
 use crate::Lexer;
 use crate::lexer::lex_states::*;
-use crate::lexer::TokenType;
+use crate::lexer::{Token, TokenType};
 use crate::lexer::lex_char::LexChar;
 
 impl Lexer {
@@ -244,13 +244,13 @@ impl Lexer {
 
     fn invalid_octal(&self) -> TokenType {
         // FIXME: yyerror0(...)
-        TokenType::ERROR("Invalid octal digit".into())
+        Token::END_OF_INPUT // ("Invalid octal digit".into())
     }
 
-    fn trailing_uc(&mut self, nondigit: &Option<LexChar>) -> TokenType {
+    fn trailing_uc(&mut self, _nondigit: &Option<LexChar>) -> TokenType {
         self.literal_flush(self.p.lex.pcur - 1);
         // FIXME: compile_error(p, "trailing `%c' in number", nondigit);
-        TokenType::ERROR(format!("trailing `{}' in number", nondigit.clone().unwrap().unwrap()))
+        Token::END_OF_INPUT // (format!("trailing `{}' in number", nondigit.clone().unwrap().unwrap()))
     }
 
     fn decode_num(&mut self, c: LexChar, nondigit: Option<LexChar>, is_float: bool, seen_e: bool, seen_point: Option<usize>) -> TokenType {
@@ -264,13 +264,13 @@ impl Lexer {
     fn parse_numeric_footer(&mut self, is_float: bool, seen_e: bool, seen_point: Option<usize>) -> TokenType {
         self.tokfix();
         if is_float {
-            let mut token_type = TokenType::tFLOAT;
+            let mut token_type: TokenType = Token::tFLOAT;
             let v: String;
 
             let suffix = self.number_literal_suffix(if seen_e { Self::NUM_SUFFIX_I } else { Self::NUM_SUFFIX_ALL });
             if (suffix & Self::NUM_SUFFIX_R) != 0 {
                 let value = format!("{}r", self.tok());
-                token_type = TokenType::tRATIONAL;
+                token_type = Token::tRATIONAL;
                 v = self.parse_rational(&value, self.toklen(), seen_point);
             } else {
                 // we don't parse the number
@@ -291,7 +291,7 @@ impl Lexer {
         let mut value = value.to_owned();
         if suffix & Self::NUM_SUFFIX_I != 0 {
             value = format!("{}i", value);
-            token_type = TokenType::tIMAGINARY;
+            token_type = Token::tIMAGINARY;
         }
         self.set_yylval_literal(&value);
         self.set_lex_state(EXPR_END);
@@ -339,11 +339,11 @@ impl Lexer {
     }
 
     pub fn set_integer_literal(&mut self, value: &str, suffix: i8) -> TokenType {
-        let mut token_type = TokenType::tINTEGER;
+        let mut token_type: TokenType = Token::tINTEGER;
         let mut value = value.to_owned();
         if suffix & Self::NUM_SUFFIX_R != 0 {
             value = format!("{}r", value);
-            token_type = TokenType::tRATIONAL;
+            token_type = Token::tRATIONAL;
         }
         self.set_number_literal(&value, token_type, suffix)
     }

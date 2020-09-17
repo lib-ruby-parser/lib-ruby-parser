@@ -1,6 +1,6 @@
 #[allow(non_snake_case)]
 mod lexer;
-pub use lexer::{Lexer};
+pub use lexer::{Lexer, LexError};
 
 #[allow(dead_code, non_upper_case_globals)]
 pub mod str_term;
@@ -19,8 +19,8 @@ mod lex_context;
 pub use lex_context::LexContext;
 
 #[allow(non_camel_case_types)]
-mod token_type;
-pub use token_type::TokenType;
+mod token;
+pub use token::{Token, TokenType, TokenData};
 
 mod lex_char;
 pub use lex_char::LexChar;
@@ -31,9 +31,6 @@ mod parse_string;
 mod reserved_words;
 pub use reserved_words::{ReservedWord, reserved_word};
 mod locals;
-
-mod token;
-pub use token::Token;
 
 mod stack_state;
 pub use stack_state::StackState;

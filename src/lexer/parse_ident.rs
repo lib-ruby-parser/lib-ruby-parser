@@ -1,5 +1,5 @@
 use crate::Lexer;
-use crate::lexer::{TokenType, LexState};
+use crate::lexer::{Token, TokenType, LexState};
 use crate::lexer::lex_char::LexChar;
 use crate::lexer::lex_states::*;
 use crate::lexer::reserved_word;
@@ -34,21 +34,21 @@ impl Lexer {
 
         loop {
             if !c.is_ascii() { /* mb = ENC_CODERANGE_UNKNOWN */ }
-            if self.tokadd_mbchar(&c).is_err() { return TokenType::END_OF_INPUT }
+            if self.tokadd_mbchar(&c).is_err() { return Token::END_OF_INPUT }
             c = self.nextc();
 
             if !self.parser_is_identchar() { break }
         }
 
         if (c == '!' || c == '?') && !self.peek('=') {
-            result = TokenType::tFID;
+            result = Token::tFID;
             self.tokadd(&c);
         } else if c == '=' && self.is_lex_state_some(EXPR_FNAME) &&
                 (!self.peek('~') && !self.peek('>') && (!self.peek('=') || (self.peek_n('>', 1)))) {
-            result = TokenType::tIDENTIFIER;
+            result = Token::tIDENTIFIER;
             self.tokadd(&c)
         } else {
-            result = TokenType::tCONSTANT; /* assume provisionally */
+            result = Token::tCONSTANT; /* assume provisionally */
             self.pushback(&c)
         }
         self.tokfix();
@@ -58,7 +58,7 @@ impl Lexer {
                 self.set_lex_state(EXPR_ARG|EXPR_LABELED);
                 self.nextc();
                 self.set_yyval_name(&self.tok());
-                return TokenType::tLABEL;
+                return Token::tLABEL;
             }
         }
         if /* mb == ENC_CODERANGE_7BIT && */ !self.is_lex_state_some(EXPR_DOT) {
@@ -73,16 +73,16 @@ impl Lexer {
                 if self.is_lex_state_some(EXPR_BEG) {
                     self.p.command_start = true
                 }
-                if kw.id == TokenType::kDO {
+                if kw.id == Token::kDO {
                     if self.is_lambda_beginning() {
                         self.p.lex.lpar_beg = -1; /* make lambda_beginning_p() == FALSE in the body of "-> do ... end" */
-                        return TokenType::kDO_LAMBDA
+                        return Token::kDO_LAMBDA
                     }
-                    if self.is_cond_active() { return TokenType::kDO_COND }
+                    if self.is_cond_active() { return Token::kDO_COND }
                     if self.is_cmdarg_active() && !state.is_some(EXPR_CMDARG) {
-                        return TokenType::kDO_BLOCK
+                        return Token::kDO_BLOCK
                     }
-                    return TokenType::kDO
+                    return Token::kDO
                 }
                 if state.is_some(EXPR_BEG | EXPR_LABELED) {
                     return kw.id.clone()
@@ -108,9 +108,9 @@ impl Lexer {
         }
 
         ident = self.tokenize_ident(&last_state);
-        if result == TokenType::tCONSTANT && self.is_var_name(&ident) { result = TokenType::tIDENTIFIER }
+        if result == Token::tCONSTANT && self.is_var_name(&ident) { result = Token::tIDENTIFIER }
         if !last_state.is_some(EXPR_DOT|EXPR_FNAME) &&
-            result == TokenType::tIDENTIFIER && /* not EXPR_FNAME, not attrasgn */
+            result == Token::tIDENTIFIER && /* not EXPR_FNAME, not attrasgn */
             self.is_lvar_defined(&ident) {
             self.set_lex_state(EXPR_END|EXPR_LABEL);
         }
