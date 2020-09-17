@@ -1,4 +1,6 @@
 use std::convert::TryFrom;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 use crate::lexer::{StrTerm, StringLiteral, HeredocLiteral, str_types};
 use crate::lexer::lex_state::{lex_states, LexState};
@@ -125,13 +127,13 @@ const LF_CHAR    : char = 0x0c as char;
 const VTAB_CHAR  : char = 0x0b as char;
 
 impl State {
-    pub fn new(source: &str) -> Self {
+    pub fn new(source: &str) -> Rc<RefCell<Self>> {
         let mut result = State::default();
         result.p.cond_stack = StackState::new("cond");
         result.p.cmdarg_stack = StackState::new("cmdarg");
         result.p.lex.lpar_beg = -1; /* make lambda_beginning_p() == FALSE at first */
         result.set_source(source);
-        result
+        Rc::new(RefCell::new(result))
     }
 
     pub fn set_source(&mut self, source: &str) {
@@ -1312,24 +1314,5 @@ impl State {
     pub fn set_yyval_name(&mut self, name: &str) {
         println!("set_yyval_name({})", name);
         self.p.lval = Some(name.into());
-    }
-}
-
-#[derive(Debug)]
-pub struct LexError {}
-
-impl Iterator for State {
-    type Item = Result<(usize, Token, usize), LexError>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let token = self.yylex();
-        match token {
-            Token::END_OF_INPUT(..) => None,
-            _ => {
-                let begin = *token.begin();
-                let end = *token.end();
-                Some(Ok((begin, token, end)))
-            }
-        }
     }
 }

@@ -9,6 +9,7 @@ pub mod source;
 
 pub mod lexer;
 pub use lexer::State;
+pub use lexer::Lexer;
 
 pub mod meta;
 
@@ -25,13 +26,15 @@ lalrpop_mod!(pub parser); // synthesized by LALRPOP
 #[cfg(test)]
 mod test {
     use super::parser::ProgramParser;
-    use super::State;
+    use super::{State, Lexer};
+    use std::rc::Rc;
 
     #[test]
     fn test_parser() {
         let parser = ProgramParser::new();
-        let lexer = State::new("1_000_000 + 2");
-        let a = parser.parse(lexer.into_iter()).unwrap();
+        let state = State::new("1_000_000 + 2");
+        let lexer = Lexer::new(Rc::clone(&state));
+        let a = parser.parse(&state, lexer.into_iter()).unwrap();
         println!("{:#?}", a);
         assert_eq!(3, 4);
     }

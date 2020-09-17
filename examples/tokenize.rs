@@ -27,11 +27,11 @@ fn main() {
             _ => print_usage()
         };
 
-    let mut lexer = State::new(&source);
+    let lexer = State::new(&source);
     let mut tokens = vec![];
 
     loop {
-        let token = lexer.yylex();
+        let token = lexer.borrow_mut().yylex();
         match token {
             Token::END_OF_INPUT(..) => break,
             _ => tokens.push(token)
