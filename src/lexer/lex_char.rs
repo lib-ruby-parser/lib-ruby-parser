@@ -52,6 +52,12 @@ impl LexChar {
     pub fn is_space(&self) -> bool {
         if let LexChar::Some(c) = self { c.is_ascii_whitespace() || c == &Self::VTAB } else { false }
     }
+
+    const PUNCT: [char; 21] = ['!', '"', '$', '&', '\'', '*', '+', ',', '.', '/', '0', ':', ';', '<', '=', '>', '?', '@', '\\', '`', '~'];
+
+    pub fn is_global_name_punct(&self) -> bool {
+        if let LexChar::Some(c) = self { Self::PUNCT.contains(c) } else { false }
+    }
 }
 
 impl PartialEq<char> for LexChar {
@@ -59,6 +65,15 @@ impl PartialEq<char> for LexChar {
         match self {
             LexChar::Some(char) => char == other,
             LexChar::EOF => false
+        }
+    }
+}
+
+impl PartialEq<Option<char>> for LexChar {
+    fn eq(&self, other: &Option<char>) -> bool {
+        match other {
+            Some(c) => self == c,
+            _ => false
         }
     }
 }

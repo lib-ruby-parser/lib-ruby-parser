@@ -1,12 +1,11 @@
 use std::convert::TryFrom;
 
-use crate::lexer::{StrTerm, StringLiteral, HeredocLiteral};
+use crate::lexer::{StrTerm, StringLiteral, HeredocLiteral, str_types};
 use crate::lexer::lex_state::{lex_states, LexState};
 use lex_states::*;
 use crate::lexer::LocalsTable;
 use crate::lexer::LexContext;
 use crate::lexer::TokenType;
-use crate::lexer::strings;
 use crate::lexer::lex_char::LexChar;
 use crate::lexer::Token;
 use crate::StaticEnvironment;
@@ -36,7 +35,7 @@ impl SourceLine {
 
 #[derive(Debug, Clone, Default)]
 pub struct ParserParamsLex {
-    strterm: Option<StrTerm>,
+    pub strterm: Option<StrTerm>,
     input: Vec<char>,
     lines: Vec<SourceLine>,
     prevline_idx: Option<usize>,
@@ -46,7 +45,7 @@ pub struct ParserParamsLex {
     pbeg: usize,
     pub pcur: usize,
     pub pend: usize,
-    ptok: usize,
+    pub ptok: usize,
     pub state: LexState,
     paren_nest: i32,
     pub lpar_beg: i32,
@@ -55,7 +54,7 @@ pub struct ParserParamsLex {
 
 #[derive(Debug, Clone, Default)]
 pub struct ParserParams {
-    lval: Option<String>,
+    pub lval: Option<String>,
     pub lex: ParserParamsLex,
     cond_stack: StackState,
     cmdarg_stack: StackState,
@@ -63,7 +62,7 @@ pub struct ParserParams {
     toksize: usize,
     tokline: usize,
     heredoc_end: usize,
-    heredoc_indent: usize,
+    pub heredoc_indent: usize,
     heredoc_line_indent: usize,
     tokenbuf: String,
     lvtbl: LocalsTable,
@@ -185,7 +184,7 @@ impl Lexer {
             end = begin + 1;
         }
 
-        println!("yylex {:#?}", token_type);
+        println!("yylex {:#?} {:?} {}..{}", token_type, token_value, begin, end);
 
         Token { token_type, token_value, begin, end }
     }
@@ -194,14 +193,20 @@ impl Lexer {
         let mut c: LexChar;
         let mut space_seen: bool = false;
         let cmd_state: bool;
-        let label: i32;
+        let label: usize;
         let mut last_state: LexState;
         let token_seen = self.p.token_seen;
 
-        if let Some(strterm) = &self.p.lex.strterm {
+        if let Some(strterm) = self.p.lex.strterm.clone() {
             match strterm {
-                StrTerm::Heredoc(heredoc) => return self.here_document(heredoc),
-                StrTerm::Literal(string) => return self.parse_string(string)
+                StrTerm::Heredoc(mut heredoc) => {
+                    return self.here_document(&mut heredoc)
+                },
+
+                StrTerm::Literal(mut string) => {
+                    self.token_flush();
+                    return self.parse_string(&mut string)
+                }
             }
         }
 
@@ -298,7 +303,7 @@ impl Lexer {
                                 self.p.lex.pend = self.p.lex.pbeg + self.p.lex.lines[self.p.lex.lastline_idx.unwrap()].len();
                                 self.p.lex.pcur = self.p.lex.pend;
                                 self.pushback(&LexChar::Some(1 as char));
-                                self.p.lex.ptok = self.p.lex.pcur;
+                                self.set_ptok(self.p.lex.pcur);
 
                                 self.p.command_start = true;
                                 self.set_lex_state(EXPR_BEG);
@@ -315,7 +320,7 @@ impl Lexer {
                                 self.p.lex.pend = self.p.lex.pbeg + self.p.lex.lines[self.p.lex.lastline_idx.unwrap()].len();
                                 self.p.lex.pcur = self.p.lex.pend;
                                 self.pushback(&LexChar::Some(1 as char));
-                                self.p.lex.ptok = self.p.lex.pcur;
+                                self.set_ptok(self.p.lex.pcur);
 
                                 self.p.command_start = true;
                                 self.set_lex_state(EXPR_BEG);
@@ -489,9 +494,9 @@ impl Lexer {
                 },
 
                 LexChar::Some('"') => {
-                    label = if self.is_label_possible(cmd_state) { strings::str_label } else { 0 };
-                    self.p.lex.strterm = self.new_strterm(strings::str_dquote | label, '"', 0);
-                    self.p.lex.ptok = self.p.lex.pcur - 1;
+                    label = if self.is_label_possible(cmd_state) { str_types::str_label } else { 0 };
+                    self.p.lex.strterm = self.new_strterm(str_types::str_dquote | label, '"', None);
+                    self.set_ptok(self.p.lex.pcur - 1);
                     return TokenType::tSTRING_BEG;
                 },
 
@@ -508,13 +513,14 @@ impl Lexer {
                         }
                         return TokenType::tBACK_REF2;
                     }
-                    self.p.lex.strterm = self.new_strterm(strings::str_xquote, '`', 0);
+                    self.p.lex.strterm = self.new_strterm(str_types::str_xquote, '`', None);
                     return TokenType::tXSTRING_BEG;
                 },
 
                 LexChar::Some('\'') => {
-                    label = if self.is_label_possible(cmd_state) { strings::str_label } else { 0 };
-                    self.p.lex.strterm = self.new_strterm(strings::str_squote | label, '\'', 0);
+                    label = if self.is_label_possible(cmd_state) { str_types::str_label } else { 0 };
+                    self.p.lex.strterm = self.new_strterm(str_types::str_squote | label, '\'', None);
+                    self.set_ptok(self.p.lex.pcur - 1);
                     return TokenType::tSTRING_BEG;
                 },
 
@@ -678,7 +684,7 @@ impl Lexer {
                             self.yyerror0("no .<digit> floating literal anymore; put 0 before dot");
                         }
                         self.set_lex_state(EXPR_END);
-                        self.p.lex.ptok = self.p.lex.pcur;
+                        self.set_ptok(self.p.lex.pcur);
                         continue 'retrying;
                     }
                     self.set_yylval_id(".");
@@ -743,15 +749,15 @@ impl Lexer {
                         self.set_lex_state(EXPR_DOT);
                         return TokenType::tCOLON2;
                     }
-                    if self.is_end() || self.is_space(&c) || c == LexChar::Some('#') {
+                    if self.is_end() || c.is_space() || c == LexChar::Some('#') {
                         self.pushback(&c);
                         let result = self.warn_balanced(TokenType::tCOLON, ":", "symbol literal", &c, space_seen, &last_state);
                         self.set_lex_state(EXPR_BEG);
                         return result;
                     }
                     match c {
-                        LexChar::Some('\'') => self.p.lex.strterm = self.new_strterm(strings::str_ssym, c.unwrap(), 0),
-                        LexChar::Some('"')  => self.p.lex.strterm = self.new_strterm(strings::str_dsym, c.unwrap(), 0),
+                        LexChar::Some('\'') => self.p.lex.strterm = self.new_strterm(str_types::str_ssym, c.unwrap(), None),
+                        LexChar::Some('"')  => self.p.lex.strterm = self.new_strterm(str_types::str_dsym, c.unwrap(), None),
                         _ => self.pushback(&c)
                     }
                     self.set_lex_state(EXPR_FNAME);
@@ -760,7 +766,7 @@ impl Lexer {
 
                 LexChar::Some('/') => {
                     if self.is_beg() {
-                        self.p.lex.strterm = self.new_strterm(strings::str_regexp, '/', 0);
+                        self.p.lex.strterm = self.new_strterm(str_types::str_regexp, '/', None);
                         return TokenType::tREGEXP_BEG;
                     }
                     c = self.nextc();
@@ -772,7 +778,7 @@ impl Lexer {
                     self.pushback(&c);
                     if self.is_spacearg(&c, space_seen) {
                         self.arg_ambiguous('/');
-                        self.p.lex.strterm = self.new_strterm(strings::str_regexp, '/', 0);
+                        self.p.lex.strterm = self.new_strterm(str_types::str_regexp, '/', None);
                         return TokenType::tREGEXP_END;
                     }
                     self.set_lex_state(if self.is_after_operator() { EXPR_ARG } else { EXPR_END });
@@ -905,7 +911,7 @@ impl Lexer {
                     if c == ' ' {
                         return TokenType::tSP;
                     }
-                    if self.is_space(&c) {
+                    if c.is_space() {
                         panic!("unclear what to return for \\");
                     }
                     self.pushback(&c);
@@ -950,6 +956,11 @@ impl Lexer {
         return self.parse_ident(&c, cmd_state);
     }
 
+    pub fn set_ptok(&mut self, ptok: usize) {
+        println!("set_ptok({})", ptok);
+        self.p.lex.ptok = ptok;
+    }
+
     pub fn set_lex_state(&mut self, states: usize) {
         self.p.lex.state.set(states)
     }
@@ -963,10 +974,9 @@ impl Lexer {
     }
 
     pub fn here_document(&self, _heredoc: &HeredocLiteral) -> TokenType { unimplemented!("here_document") }
-    pub fn parse_string(&self, _string: &StringLiteral) -> TokenType { unimplemented!("parse_string") }
 
     pub fn token_flush(&mut self) {
-        self.p.lex.ptok = self.p.lex.pcur;
+        self.set_ptok(self.p.lex.pcur);
     }
 
     pub fn lex_getline(&mut self) -> Option<usize> {
@@ -1070,6 +1080,7 @@ impl Lexer {
         if self.p.lex.pcur > self.p.lex.pbeg && self.p.lex.input[self.p.lex.pcur] == '\n' && self.p.lex.input[self.p.lex.pcur - 1] == '\r' {
             self.p.lex.pcur -= 1;
         }
+        println!("pushback({:?}) pcur = {}", c, self.p.lex.pcur);
     }
 
     pub fn parser_magic_comment(&self) -> bool { unimplemented!("parser_magic_comment") }
@@ -1155,7 +1166,10 @@ impl Lexer {
             self.is_arg()
     }
 
-    pub fn new_strterm(&self, _flag: i32, _term: char, _indent: i32) -> Option<StrTerm> { unimplemented!("new_strterm") }
+    pub fn new_strterm(&self, func: usize, term: char, paren: Option<char>) -> Option<StrTerm> {
+        Some(StrTerm::Literal(StringLiteral { nest: 0, func, paren, term }))
+    }
+
     pub fn parse_qmark(&self, _space_seen: bool) -> TokenType { unimplemented!("parse_qmark") }
 
     pub fn arg_ambiguous(&self, c: char) -> bool {
@@ -1199,7 +1213,7 @@ impl Lexer {
         println!("yyerror0: {}", message)
     }
 
-    pub fn is_space(&self, _c: &LexChar) -> bool { unimplemented!("is_space") }
+    // pub fn is_space(&self, _c: &LexChar) -> bool { unimplemented!("is_space") }
 
     pub fn is_lambda_beginning(&self) -> bool {
         self.p.lex.lpar_beg == self.p.lex.paren_nest
@@ -1274,7 +1288,7 @@ impl Lexer {
     }
 
     pub fn literal_flush(&mut self, ptok: usize) {
-        self.p.lex.ptok = ptok;
+        self.set_ptok(ptok);
     }
 
     pub fn set_yylval_literal(&mut self, value: &str) {

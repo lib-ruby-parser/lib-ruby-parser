@@ -2,9 +2,9 @@
 mod lexer;
 pub use lexer::{Lexer};
 
-#[allow(dead_code)]
-mod str_term;
-pub use str_term::{StrTerm, StringLiteral, HeredocLiteral};
+#[allow(dead_code, non_upper_case_globals)]
+pub mod str_term;
+pub use str_term::{str_types, StrTerm, StringLiteral, HeredocLiteral};
 
 #[allow(dead_code)]
 mod lex_state;
@@ -22,13 +22,12 @@ pub use lex_context::LexContext;
 mod token_type;
 pub use token_type::TokenType;
 
-#[allow(dead_code, non_upper_case_globals)]
-mod strings;
-
 mod lex_char;
+pub use lex_char::LexChar;
 
 mod parse_numeric;
 mod parse_ident;
+mod parse_string;
 mod reserved_words;
 pub use reserved_words::{ReservedWord, reserved_word};
 mod locals;
