@@ -178,14 +178,6 @@ end
 
 class RustTest < Struct.new(:lex_state, :input, :tokens, :mid)
   IGNORED_MIDS = [
-    'test_bug_expr_arg_newline_case_0',
-    'test_whitespace_arg_case_2',
-    'test_whitespace_end_case_2',
-    'test_whitespace_endarg_case_2',
-    'test_whitespace_endfn_case_2',
-    'test_whitespace_endfn_case_3',
-    'test_whitespace_mid_case_2',
-
     # That's the difference between MRI lexer and parser gem
     # when "||" is used without arguments.
     'test_or2_after_27_case_0',

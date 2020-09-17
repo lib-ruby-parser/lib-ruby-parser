@@ -360,7 +360,15 @@ fn test_bug_expr_arg_lt_lt_case_1() {
                     :tNL,         None,         [6, 7]);
 }
 
-// skipping test_bug_expr_arg_newline_case_0
+#[test]
+fn test_bug_expr_arg_newline_case_0() {
+    let mut lexer = setup_lexer!();
+    set_lex_state!(lexer, EXPR_ARG);
+    assert_scanned!(&mut lexer,
+                    "\nfoo",
+                    :tNL,         None,        [0, 1],
+                    :tIDENTIFIER, Some("foo"), [1, 4]);
+}
 
 #[test]
 fn test_bug_expr_arg_newline_case_1() {
@@ -3829,7 +3837,15 @@ fn test_whitespace_arg_case_1() {
                     :tUPLUS, Some("+"), [1, 2]);
 }
 
-// skipping test_whitespace_arg_case_2
+#[test]
+fn test_whitespace_arg_case_2() {
+    let mut lexer = setup_lexer!();
+    set_lex_state!(lexer, EXPR_ARG);
+    assert_scanned!(&mut lexer,
+                    "\n+",
+                    :tNL,    None,      [0, 1],
+                    :tUPLUS, Some("+"), [1, 2]);
+}
 
 #[test]
 fn test_whitespace_arg_case_3() {
@@ -3980,7 +3996,16 @@ fn test_whitespace_end_case_1() {
                     :tINTEGER, Some("1"), [3, 4]);
 }
 
-// skipping test_whitespace_end_case_2
+#[test]
+fn test_whitespace_end_case_2() {
+    let mut lexer = setup_lexer!();
+    set_lex_state!(lexer, EXPR_END);
+    assert_scanned!(&mut lexer,
+                    "\n+ 1",
+                    :tNL,        None,      [0, 1],
+                    :tUNARY_NUM, Some("+"), [1, 2],
+                    :tINTEGER,   Some("1"), [3, 4]);
+}
 
 #[test]
 fn test_whitespace_end_case_3() {
@@ -4021,7 +4046,15 @@ fn test_whitespace_endarg_case_1() {
                     :tLBRACE_ARG, Some("{"), [1, 2]);
 }
 
-// skipping test_whitespace_endarg_case_2
+#[test]
+fn test_whitespace_endarg_case_2() {
+    let mut lexer = setup_lexer!();
+    set_lex_state!(lexer, EXPR_ENDARG);
+    assert_scanned!(&mut lexer,
+                    "\n{",
+                    :tNL,     None,      [0, 1],
+                    :tLBRACE, Some("{"), [1, 2]);
+}
 
 #[test]
 fn test_whitespace_endarg_case_3() {
@@ -4060,9 +4093,27 @@ fn test_whitespace_endfn_case_1() {
                     :tLABEL, Some("foo"), [1, 5]);
 }
 
-// skipping test_whitespace_endfn_case_2
+#[test]
+fn test_whitespace_endfn_case_2() {
+    let mut lexer = setup_lexer!();
+    set_lex_state!(lexer, EXPR_ENDFN);
+    assert_scanned!(&mut lexer,
+                    "\nfoo:",
+                    :tNL,         None,        [0, 1],
+                    :tIDENTIFIER, Some("foo"), [1, 4],
+                    :tCOLON,      Some(":"),   [4, 5]);
+}
 
-// skipping test_whitespace_endfn_case_3
+#[test]
+fn test_whitespace_endfn_case_3() {
+    let mut lexer = setup_lexer!();
+    set_lex_state!(lexer, EXPR_ENDFN);
+    assert_scanned!(&mut lexer,
+                    "\nfoo: ",
+                    :tNL,         None,        [0, 1],
+                    :tIDENTIFIER, Some("foo"), [1, 4],
+                    :tCOLON,      Some(":"),   [4, 5]);
+}
 
 #[test]
 fn test_whitespace_endfn_case_4() {
@@ -4158,7 +4209,15 @@ fn test_whitespace_mid_case_1() {
                     :tUPLUS, Some("+"), [1, 2]);
 }
 
-// skipping test_whitespace_mid_case_2
+#[test]
+fn test_whitespace_mid_case_2() {
+    let mut lexer = setup_lexer!();
+    set_lex_state!(lexer, EXPR_MID);
+    assert_scanned!(&mut lexer,
+                    "\n+",
+                    :tNL,    None,      [0, 1],
+                    :tUPLUS, Some("+"), [1, 2]);
+}
 
 #[test]
 fn test_whitespace_mid_case_3() {
