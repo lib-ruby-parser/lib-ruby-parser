@@ -32,14 +32,10 @@ impl StackState {
     pub fn is_empty(&self) -> bool {
         self.stack == 0
     }
-
-    pub fn to_s(&self) -> String {
-        format!("[{:b} <= {}", self.stack, self.name)
-    }
 }
 
 impl std::fmt::Debug for StackState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!("[{:b} <= {}", self.stack, self.name))
+        f.write_str(&format!("[{:b} <= {}]", self.stack, self.name))
     }
 }

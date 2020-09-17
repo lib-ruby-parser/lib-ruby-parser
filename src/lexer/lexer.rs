@@ -131,6 +131,7 @@ impl Lexer {
         let mut result = Lexer::default();
         result.p.cond_stack = StackState::new("cond");
         result.p.cmdarg_stack = StackState::new("cmdarg");
+        result.p.lex.lpar_beg = -1; /* make lambda_beginning_p() == FALSE at first */
         result.set_source(source);
         result
     }
@@ -159,9 +160,9 @@ impl Lexer {
 
     pub fn yylex(&mut self) -> Token {
         self.p.lval = None;
-        let token_type = self.parser_yylex();
+        println!("before yylex: {:#?}", self);
 
-        println!("{:#?}", self);
+        let token_type = self.parser_yylex();
 
         let begin = self.p.lex.ptok;
         let mut end = self.p.lex.pcur;
@@ -332,7 +333,7 @@ impl Lexer {
                     if c == '*' {
                         c = self.nextc();
                         if c == '=' {
-                            self.set_yylval_id("idPow");
+                            self.set_yylval_id("**");
                             self.set_lex_state(EXPR_BEG);
                             return TokenType::tOP_ASGN;
                         }
@@ -358,7 +359,7 @@ impl Lexer {
                         } else if self.is_beg() {
                             result = TokenType::tSTAR;
                         } else {
-                            result = self.warn_balanced(TokenType::tSTAR, "*", "argument prefix", &c, space_seen, &last_state);
+                            result = self.warn_balanced(TokenType::tSTAR2, "*", "argument prefix", &c, space_seen, &last_state);
                         }
                     }
 
@@ -424,7 +425,7 @@ impl Lexer {
                         return TokenType::tASSOC;
                     }
                     self.pushback(&c);
-                    return TokenType::tEQ;
+                    return TokenType::tEQL;
                 },
 
                 LexChar::Some('<') => {
@@ -454,13 +455,15 @@ impl Lexer {
                     if c == '<' {
                         c = self.nextc();
                         if c == '=' {
-                            self.set_yylval_id("idLTLT");
+                            self.set_yylval_id("<<");
                             self.set_lex_state(EXPR_BEG);
                             return TokenType::tOP_ASGN;
                         }
                         self.pushback(&c);
-                        return TokenType::tLT;
+                        return self.warn_balanced(TokenType::tLSHFT, "<<", "here document", &c, space_seen, &last_state);
                     }
+                    self.pushback(&c);
+                    return TokenType::tLT
                 },
 
                 LexChar::Some('>') => {
@@ -474,7 +477,7 @@ impl Lexer {
                     if c == '>' {
                         c = self.nextc();
                         if c == '=' {
-                            self.set_yylval_id("idGTGT");
+                            self.set_yylval_id(">>");
                             self.set_lex_state(EXPR_BEG);
                             return TokenType::tOP_ASGN;
                         }
@@ -716,10 +719,11 @@ impl Lexer {
 
                 LexChar::Some('}') => {
                     // tSTRING_DEND does COND_POP and CMDARG_POP in the yacc's rule (lalrpop here)
-                    self.p.lex.brace_nest -= 1;
                     if self.p.lex.brace_nest == 0 {
+                        self.p.lex.brace_nest -= 1;
                         return TokenType::tSTRING_DEND;
                     }
+                    self.p.lex.brace_nest -= 1;
                     self.cond_pop();
                     self.cmdarg_pop();
                     self.set_lex_state(EXPR_END);
@@ -863,6 +867,8 @@ impl Lexer {
                 },
 
                 LexChar::Some('{') => {
+                    self.p.lex.brace_nest += 1;
+
                     let result: TokenType;
 
                     if self.is_lambda_beginning() {
@@ -1120,7 +1126,7 @@ impl Lexer {
     pub fn is_word_match(&self, word: &str) -> bool {
         let len = word.len();
 
-        if self.substr_at(self.p.lex.pcur, self.p.lex.pcur + len) == Some(word.to_owned()) { return false }
+        if self.substr_at(self.p.lex.pcur, self.p.lex.pcur + len) != Some(word.to_owned()) { return false }
         if self.p.lex.pcur + len == self.p.lex.pend { return true }
         let c = self.char_at(self.p.lex.pcur + len);
         if c.is_space() { return true }
@@ -1268,7 +1274,6 @@ impl Lexer {
     }
 
     pub fn literal_flush(&mut self, ptok: usize) {
-        println!("literal_flush(ptok = {})", ptok);
         self.p.lex.ptok = ptok;
     }
 

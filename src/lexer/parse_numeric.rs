@@ -309,7 +309,6 @@ impl Lexer {
         let mut mask = mask;
         let mut result: i8 = 0;
         let lastp = self.p.lex.pcur;
-        println!("dumping self = {:#?}", self);
 
         loop {
             c = self.nextc();
