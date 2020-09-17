@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use ruby_parser::Lexer;
+use ruby_parser::State;
 use ruby_parser::lexer::Token;
 
 fn print_usage() -> ! {
@@ -27,7 +27,7 @@ fn main() {
             _ => print_usage()
         };
 
-    let mut lexer = Lexer::new(&source);
+    let mut lexer = State::new(&source);
     let mut tokens = vec![];
 
     loop {

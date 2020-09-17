@@ -1,14 +1,15 @@
-use ruby_parser::Lexer;
+use ruby_parser::State;
 use ruby_parser::lexer::{Token, TokenType};
 
-pub fn tokenize(lexer: &mut Lexer, source: &str) -> Vec<Token> {
+#[allow(dead_code)]
+pub fn tokenize(lexer: &mut State, source: &str) -> Vec<Token> {
     let mut tokens = vec![];
     lexer.set_source(source);
 
     loop {
         let token = lexer.yylex();
         match token {
-            Token { token_type: TokenType::END_OF_INPUT, .. } => break,
+            Token::END_OF_INPUT(..) => break,
             _ => tokens.push(token)
         }
     }

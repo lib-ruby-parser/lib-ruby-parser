@@ -1,6 +1,6 @@
 #[allow(non_snake_case)]
-mod lexer;
-pub use lexer::{Lexer, LexError};
+mod state;
+pub use state::{State, LexError};
 
 #[allow(dead_code, non_upper_case_globals)]
 pub mod str_term;
