@@ -1,7 +1,6 @@
 use std::env;
 use std::fs;
 use ruby_parser::State;
-use ruby_parser::lexer::Token;
 
 fn print_usage() -> ! {
     println!("
@@ -27,16 +26,8 @@ fn main() {
             _ => print_usage()
         };
 
-    let lexer = State::new(&source);
-    let mut tokens = vec![];
-
-    loop {
-        let token = lexer.borrow_mut().yylex();
-        match token {
-            Token::END_OF_INPUT(..) => break,
-            _ => tokens.push(token)
-        }
-    }
+    let mut lexer = State::new(&source);
+    let tokens = lexer.tokenize_until_eof();
 
     let tok_name_length  = tokens.iter().map(|tok| format!("{:?}", tok.name()).len()).max().unwrap_or(0) + 2;
     let tok_value_length = tokens.iter().map(|tok| format!("{:?}", tok.value()).len()).max().unwrap_or(0) + 2;

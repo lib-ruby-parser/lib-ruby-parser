@@ -28,11 +28,12 @@ mod test {
     use super::parser::ProgramParser;
     use super::{State, Lexer};
     use std::rc::Rc;
+    use std::cell::RefCell;
 
     #[test]
     fn test_parser() {
         let parser = ProgramParser::new();
-        let state = State::new("1_000_000 + 2");
+        let state = Rc::new(RefCell::new(State::new("1_000_000 + 2")));
         let lexer = Lexer::new(Rc::clone(&state));
         let a = parser.parse(&state, lexer.into_iter()).unwrap();
         println!("{:#?}", a);

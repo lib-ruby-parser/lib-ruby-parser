@@ -1,63 +1,45 @@
-use ruby_parser::State;
-use ruby_parser::lexer::{Token, TokenType};
-
-#[allow(dead_code)]
-pub fn tokenize(lexer: &mut State, source: &str) -> Vec<Token> {
-    let mut tokens = vec![];
-    lexer.set_source(source);
-
-    loop {
-        let token = lexer.yylex();
-        match token {
-            Token::END_OF_INPUT(..) => break,
-            _ => tokens.push(token)
-        }
-    }
-
-    tokens
-}
-
 #[macro_export]
 macro_rules! setup_lexer {
     () => {
         {
-            use ruby_parser::Lexer;
-            Lexer::new("")
+            use ruby_parser::lexer::State;
+            State::new("")
         }
     };
 }
 
 #[macro_export]
 macro_rules! set_lex_state {
-    ($lexer:ident, $state:ident) => {
+    ($state:ident, $lex_state:ident) => {
         {
             use ruby_parser::lexer::lex_states::*;
-            $lexer.set_lex_state($state);
+            $state.set_lex_state($lex_state);
         }
     };
 }
 
 #[macro_export]
 macro_rules! assert_scanned {
-    ($lexer:expr, $input:expr, $(:$token_type:tt, $value:expr, [$begin:expr, $end:expr]),*) => {
+    ($state:expr, $input:expr, $(:$token_type:tt, $value:expr, [$begin:expr, $end:expr]),*) => {
         {
             use ruby_parser::lexer::{Token, TokenType};
-            let actual_tokens = tokenize($lexer, $input);
+            $state.set_source($input);
+            let actual_tokens = $state.tokenize_until_eof();
 
-            let token_types : Vec<TokenType>    = vec![$(TokenType::$token_type),*];
-            let token_values: Vec<Option<&'static str>> = vec![$($value),*];
-            let begins      : Vec<usize>        = vec![$($begin),*];
-            let ends        : Vec<usize>        = vec![$($end),*];
+            let token_types: Vec<TokenType>     = vec![$(Token::$token_type),*];
+            let token_values: Vec<&str>         = vec![$($value),*];
+            let begins: Vec<usize>              = vec![$($begin),*];
+            let ends: Vec<usize>                = vec![$($end),*];
 
             let mut expected_tokens: Vec<Token> = vec![];
 
             for (idx, token_type) in token_types.iter().enumerate() {
                 let token_type = token_type.clone();
-                let token_value = token_values[idx].map(|v| v.to_owned());
+                let token_value = token_values[idx].to_owned();
                 let begin = begins[idx];
                 let end = ends[idx];
 
-                let token = Token { token_type, token_value, begin, end };
+                let token = token_type(token_value, begin, end);
                 expected_tokens.push(token);
             }
 
