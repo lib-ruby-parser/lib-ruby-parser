@@ -17,7 +17,7 @@ extern {
 }
 
 pub Program: String = {
-    <n:number> <p:"tPLUS"> <n2:number> => format!("{:?} + {:?} + {:?}", n, p, n2)
+    <n:number> <p:"tPLUS"> <n2:number> => format!("{:?} + {:?} + {:?} {:#?}", n, p, n2, state.borrow())
 };
 
 number: TokenData = {
