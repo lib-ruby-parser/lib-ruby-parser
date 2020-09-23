@@ -1,7 +1,7 @@
 %expect 0
 
 %define api.parser.struct { Parser }
-%define api.location.type Loc
+%define api.location.type { Loc }
 %define api.value.type { Value }
 %define api.parser.result_type { String }
 
@@ -19,7 +19,7 @@
 
 
 /* Bison Declarations */
-%token <id>
+%token <token>
     kCLASS         "`class'"
     kMODULE        "`module'"
     kDEF           "`def'"
@@ -70,13 +70,13 @@
     k__FILE__      "`__FILE__'"
     k__ENCODING__  "`__ENCODING__'"
 
-%token <id>   tIDENTIFIER     "local variable or method"
-%token <id>   tFID            "method"
-%token <id>   tGVAR           "global variable"
-%token <id>   tIVAR           "instance variable"
-%token <id>   tCONSTANT       "constant"
-%token <id>   tCVAR           "class variable"
-%token <id>   tLABEL          "label"
+%token <token>   tIDENTIFIER     "local variable or method"
+%token <token>   tFID            "method"
+%token <token>   tGVAR           "global variable"
+%token <token>   tIVAR           "instance variable"
+%token <token>   tCONSTANT       "constant"
+%token <token>   tCVAR           "class variable"
+%token <token>   tLABEL          "label"
 %token <node> tINTEGER        "integer literal"
 %token <node> tFLOAT          "float literal"
 %token <node> tRATIONAL       "rational literal"
@@ -102,7 +102,7 @@
 %type <node> command_asgn mrhs mrhs_arg superclass block_call block_command
 %type <node> f_block_optarg f_block_opt
 %type <node> f_arglist f_paren_args f_args f_arg f_arg_item f_optarg f_marg f_marg_list f_margs f_rest_marg
-%type <node> assoc_list assocs assoc undef_list backref string_dvar for_var
+%type <node> assoc undef_list backref string_dvar for_var
 %type <node> block_param opt_block_param block_param_def f_opt
 %type <node> f_kwarg f_kw f_block_kwarg f_block_kw
 %type <node> bv_decls opt_bv_decl bvar
@@ -114,94 +114,102 @@
 %type <node> p_args p_args_head p_args_tail p_args_post p_arg
 %type <node> p_value p_primitive p_variable p_var_ref p_const
 %type <node> p_kwargs p_kwarg p_kw
-%type <id>   keyword_variable user_variable sym operation operation2 operation3
-%type <id>   cname fname op f_rest_arg f_block_arg opt_f_block_arg f_norm_arg f_bad_arg
-%type <id>   f_kwrest f_label f_arg_asgn call_op call_op2 reswords relop dot_or_colon
-%type <id>   p_rest p_kwrest p_kwnorest p_any_kwrest p_kw_label
-%type <id>   f_no_kwarg f_any_kwrest args_forward excessed_comma
-%token END_OF_INPUT 0   "end-of-input"
-%token <id> tDOT
-/* escaped chars, should be ignored otherwise */
-%token <id> '\\'        "backslash"
-%token tSP              "escaped space"
-%token <id> '\t'        "escaped horizontal tab"
-%token <id> '\f'        "escaped form feed"
-%token <id> '\r'        "escaped carriage return"
-%token <id> '\13'       "escaped vertical tab"
-%token <id> tUPLUS           "unary+"
-%token <id> tUMINUS          "unary-"
-%token <id> tPOW             "**"
-%token <id> tCMP        "<=>"
-%token <id> tEQ         "=="
-%token <id> tEQQ        "==="
-%token <id> tNEQ        "!="
-%token <id> tGEQ        ">="
-%token <id> tLEQ        "<="
-%token <id> tANDOP           "&&"
-%token <id> tOROP            "||"
-%token <id> tMATCH      "=~"
-%token <id> tNMATCH     "!~"
-%token <id> tDOT2            ".."
-%token <id> tDOT3            "..."
-%token <id> tBDOT2           "(.."
-%token <id> tBDOT3           "(..."
-%token <id> tAREF            "[]"
-%token <id> tASET            "[]="
-%token <id> tLSHFT      "<<"
-%token <id> tRSHFT      ">>"
-%token <id> tANDDOT     "&."
-%token <id> tCOLON2     "::"
-%token <id> tCOLON3          ":: at EXPR_BEG"
-%token <id> tOP_ASGN    "operator-assignment" /* +=, -=  etc. */
-%token <id> tASSOC           "=>"
-%token <id> tLPAREN          "("
-%token <id> tLPAREN_ARG      "( arg"
-%token <id> tRPAREN          ")"
-%token <id> tLBRACK          "["
-%token <id> tLBRACE          "{"
-%token <id> tLBRACE_ARG      "{ arg"
-%token <id> tSTAR            "*"
-%token <id> tDSTAR           "**arg"
-%token <id> tAMPER           "&"
-%token <id> tLAMBDA          "->"
-%token <id> tSYMBEG          "symbol literal"
-%token <id> tSTRING_BEG      "string literal"
-%token <id> tXSTRING_BEG     "backtick literal"
-%token <id> tREGEXP_BEG      "regexp literal"
-%token <id> tWORDS_BEG       "word list"
-%token <id> tQWORDS_BEG      "verbatim word list"
-%token <id> tSYMBOLS_BEG     "symbol list"
-%token <id> tQSYMBOLS_BEG    "verbatim symbol list"
-%token <id> tSTRING_END      "terminator"
-%token <id> tSTRING_DEND     "tRCURLY"
-%token <id> tSTRING_DBEG
-%token <id> tSTRING_DVAR
-%token <id> tLAMBEG
-%token <id> tLABEL_END
+%type <node> f_block_arg
 
-%token <id> tCOMMA           ","
-%token <id> tLCURLY          "{ (tLCURLY)"
-%token <id> tRCURLY          "}"
-%token <id> tLBRACK2         "[ (tLBRACK2)"
-%token <id> tEQL             "="
-%token <id> tPIPE            "|"
-%token <id> tAMPER2          "& (tAMPER2)"
-%token <id> tGT              ">"
-%token <id> tLT              "<"
-%token <id> tBACK_REF2       "`"
-%token <id> tCARET           "^"
-%token <id> tLPAREN2         "( (tLPAREN2)"
-%token <id> tRBRACK          "]"
-%token <id> tSEMI            ";"
-%token <id> tSPACE            " "
-%token <id> tNL              "\n"
-%token <id> tPLUS            "+"
-%token <id> tMINUS           "-"
-%token <id> tSTAR2           "* (tSTAR2)"
-%token <id> tDIVIDE          "/"
-%token <id> tPERCENT         "%"
-%token <id> tTILDE           "~"
-%token <id> tBANG            "!"
+%type <node_list> assocs assoc_list
+
+%type <token>   keyword_variable user_variable sym operation operation2 operation3
+%type <token>   cname fname op f_rest_arg f_norm_arg f_bad_arg
+%type <token>   f_kwrest f_label f_arg_asgn call_op call_op2 reswords relop dot_or_colon
+%type <token>   p_rest p_kwrest p_kwnorest p_any_kwrest p_kw_label
+%type <token>   f_no_kwarg f_any_kwrest args_forward excessed_comma
+%type <token>   rbrace rparen rbracket
+
+%type <token_list> terms opt_f_block_arg
+
+%token END_OF_INPUT 0   "end-of-input"
+%token <token> tDOT
+/* escaped chars, should be ignored otherwise */
+%token <token> '\\'        "backslash"
+%token tSP              "escaped space"
+%token <token> '\t'        "escaped horizontal tab"
+%token <token> '\f'        "escaped form feed"
+%token <token> '\r'        "escaped carriage return"
+%token <token> '\13'       "escaped vertical tab"
+%token <token> tUPLUS           "unary+"
+%token <token> tUMINUS          "unary-"
+%token <token> tPOW             "**"
+%token <token> tCMP        "<=>"
+%token <token> tEQ         "=="
+%token <token> tEQQ        "==="
+%token <token> tNEQ        "!="
+%token <token> tGEQ        ">="
+%token <token> tLEQ        "<="
+%token <token> tANDOP           "&&"
+%token <token> tOROP            "||"
+%token <token> tMATCH      "=~"
+%token <token> tNMATCH     "!~"
+%token <token> tDOT2            ".."
+%token <token> tDOT3            "..."
+%token <token> tBDOT2           "(.."
+%token <token> tBDOT3           "(..."
+%token <token> tAREF            "[]"
+%token <token> tASET            "[]="
+%token <token> tLSHFT      "<<"
+%token <token> tRSHFT      ">>"
+%token <token> tANDDOT     "&."
+%token <token> tCOLON2     "::"
+%token <token> tCOLON3          ":: at EXPR_BEG"
+%token <token> tOP_ASGN    "operator-assignment" /* +=, -=  etc. */
+%token <token> tASSOC           "=>"
+%token <token> tLPAREN          "("
+%token <token> tLPAREN_ARG      "( arg"
+%token <token> tRPAREN          ")"
+%token <token> tLBRACK          "["
+%token <token> tLBRACE          "{"
+%token <token> tLBRACE_ARG      "{ arg"
+%token <token> tSTAR            "*"
+%token <token> tDSTAR           "**arg"
+%token <token> tAMPER           "&"
+%token <token> tLAMBDA          "->"
+%token <token> tSYMBEG          "symbol literal"
+%token <token> tSTRING_BEG      "string literal"
+%token <token> tXSTRING_BEG     "backtick literal"
+%token <token> tREGEXP_BEG      "regexp literal"
+%token <token> tWORDS_BEG       "word list"
+%token <token> tQWORDS_BEG      "verbatim word list"
+%token <token> tSYMBOLS_BEG     "symbol list"
+%token <token> tQSYMBOLS_BEG    "verbatim symbol list"
+%token <token> tSTRING_END      "terminator"
+%token <token> tSTRING_DEND     "tRCURLY"
+%token <token> tSTRING_DBEG
+%token <token> tSTRING_DVAR
+%token <token> tLAMBEG
+%token <token> tLABEL_END
+
+%token <token> tCOMMA           ","
+%token <token> tLCURLY          "{ (tLCURLY)"
+%token <token> tRCURLY          "}"
+%token <token> tLBRACK2         "[ (tLBRACK2)"
+%token <token> tEQL             "="
+%token <token> tPIPE            "|"
+%token <token> tAMPER2          "& (tAMPER2)"
+%token <token> tGT              ">"
+%token <token> tLT              "<"
+%token <token> tBACK_REF2       "`"
+%token <token> tCARET           "^"
+%token <token> tLPAREN2         "( (tLPAREN2)"
+%token <token> tRBRACK          "]"
+%token <token> tSEMI            ";"
+%token <token> tSPACE            " "
+%token <token> tNL              "\n"
+%token <token> tPLUS            "+"
+%token <token> tMINUS           "-"
+%token <token> tSTAR2           "* (tSTAR2)"
+%token <token> tDIVIDE          "/"
+%token <token> tPERCENT         "%"
+%token <token> tTILDE           "~"
+%token <token> tBANG            "!"
 
 /*
  *	precedence table
@@ -789,36 +797,36 @@
                     }
                 ;
 
-              op: tPIPE      { $$ = $1.clone(); }
-                | tCARET     { $$ = $1.clone(); }
-                | tAMPER2    { $$ = $1.clone(); }
-                | tCMP       { $$ = $1.clone(); }
-                | tEQ        { $$ = $1.clone(); }
-                | tEQQ       { $$ = $1.clone(); }
-                | tMATCH     { $$ = $1.clone(); }
-                | tNMATCH    { $$ = $1.clone(); }
-                | tGT        { $$ = $1.clone(); }
-                | tGEQ       { $$ = $1.clone(); }
-                | tLT        { $$ = $1.clone(); }
-                | tLEQ       { $$ = $1.clone(); }
-                | tNEQ       { $$ = $1.clone(); }
-                | tLSHFT     { $$ = $1.clone(); }
-                | tRSHFT     { $$ = $1.clone(); }
-                | tPLUS      { $$ = $1.clone(); }
-                | tMINUS     { $$ = $1.clone(); }
-                | tSTAR2     { $$ = $1.clone(); }
-                | tSTAR      { $$ = $1.clone(); }
-                | tDIVIDE    { $$ = $1.clone(); }
-                | tPERCENT   { $$ = $1.clone(); }
-                | tPOW       { $$ = $1.clone(); }
-                | tDSTAR     { $$ = $1.clone(); }
-                | tBANG      { $$ = $1.clone(); }
-                | tTILDE     { $$ = $1.clone(); }
-                | tUPLUS     { $$ = $1.clone(); }
-                | tUMINUS    { $$ = $1.clone(); }
-                | tAREF      { $$ = $1.clone(); }
-                | tASET      { $$ = $1.clone(); }
-                | tBACK_REF2 { $$ = $1.clone(); }
+              op: tPIPE      { $$ = $1; }
+                | tCARET     { $$ = $1; }
+                | tAMPER2    { $$ = $1; }
+                | tCMP       { $$ = $1; }
+                | tEQ        { $$ = $1; }
+                | tEQQ       { $$ = $1; }
+                | tMATCH     { $$ = $1; }
+                | tNMATCH    { $$ = $1; }
+                | tGT        { $$ = $1; }
+                | tGEQ       { $$ = $1; }
+                | tLT        { $$ = $1; }
+                | tLEQ       { $$ = $1; }
+                | tNEQ       { $$ = $1; }
+                | tLSHFT     { $$ = $1; }
+                | tRSHFT     { $$ = $1; }
+                | tPLUS      { $$ = $1; }
+                | tMINUS     { $$ = $1; }
+                | tSTAR2     { $$ = $1; }
+                | tSTAR      { $$ = $1; }
+                | tDIVIDE    { $$ = $1; }
+                | tPERCENT   { $$ = $1; }
+                | tPOW       { $$ = $1; }
+                | tDSTAR     { $$ = $1; }
+                | tBANG      { $$ = $1; }
+                | tTILDE     { $$ = $1; }
+                | tUPLUS     { $$ = $1; }
+                | tUMINUS    { $$ = $1; }
+                | tAREF      { $$ = $1; }
+                | tASET      { $$ = $1; }
+                | tBACK_REF2 { $$ = $1; }
                 ;
 
         reswords: k__LINE__ | k__FILE__ | k__ENCODING__ | klBEGIN | klEND
@@ -2368,41 +2376,60 @@ keyword_variable: kNIL
 
  opt_f_block_arg: tCOMMA f_block_arg
                     {
-
+                        $$ = Value::NodeList( vec![ $<Node>2 ] )
                     }
                 | none
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 ;
 
        singleton: var_ref
                 | tLPAREN2 expr rparen
                     {
-
+                        $$ = $<RAW>1;
                     }
                 ;
 
       assoc_list: none
+                    {
+                        $$ = Value::NodeList(vec![]);
+                    }
                 | assocs trailer
                 ;
 
           assocs: assoc
+                    {
+                        println!("YYSTACK: {:#?}", yystack.value_stack);
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | assocs tCOMMA assoc
+                    {
+                        let mut assocs = $<NodeList>1;
+                        assocs.push($<Node>2);
+                        $$ = Value::NodeList( assocs );
+                    }
                 ;
 
            assoc: arg_value tASSOC arg_value
+                    {
+                        // result = @builder.pair(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tLABEL arg_value
                     {
-
+                        // result = @builder.pair_keyword(val[0], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 | tSTRING_BEG string_contents tLABEL_END arg_value
                     {
-
+                        println!("self.builder.pair_quoted({:#?} {:#?} {:#?} {:#?})", $<Token>1, $<TokenList>2, $<Token>3, $<Node>4);
+                        $$ = Value::Node(Node::None);
                     }
                 | tDSTAR arg_value
                     {
-
+                        println!("self.builder.kwsplat({:#?} {:#?})", $<RAW>1, $<RAW>2);
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
@@ -2443,12 +2470,21 @@ keyword_variable: kNIL
                 ;
 
           rparen: opt_nl tRPAREN
+                    {
+                        $$ = $<RAW>1;
+                    }
                 ;
 
         rbracket: opt_nl tRBRACK
+                    {
+                        $$ = $<RAW>1;
+                    }
                 ;
 
           rbrace: opt_nl tRCURLY
+                    {
+                        $$ = $<RAW>1;
+                    }
                 ;
 
          trailer: /* none */
@@ -2461,20 +2497,36 @@ keyword_variable: kNIL
                 ;
 
            terms: term
+                    {
+                        $$ = Value::TokenList(vec![]);
+                    }
                 | terms tSEMI
+                    {
+                        $$ = Value::TokenList(vec![]);
+                    }
                 ;
 
             none: /* empty */
+                  {
+                        $$ = Value::None;
+                  }
                 ;
 
 %%
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Node {
+    None,
+}
 
 #[derive(Clone, PartialEq)]
 pub enum Value {
+    Stolen,
     None,
     Token(Token),
-    Expr(String)
+    TokenList(Vec<Token>),
+    Node(Node),
+    NodeList(Vec<Node>)
 }
 
 impl Value {
@@ -2486,11 +2538,18 @@ impl Value {
 impl std::fmt::Debug for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { //'
         match self {
-            Value::None => f.write_str("<No Token>"),
+            Value::None => f.write_str("Token::None"),
+            Value::Stolen => f.write_str("Token::Stolen"),
             Value::Token((token_type, token_value, loc)) => {
-              f.write_fmt(format_args!("Token({}, {:?}, {:?})", token_type, token_value, loc))
+                f.write_fmt(format_args!("Token({}, {:?}, {:?})", token_type, token_value, loc))
             },
-            Value::Expr(expr) => f.write_fmt(format_args!("Expr({})", expr))
+            Value::TokenList(tokens) => {
+                f.write_fmt(format_args!("TokenList({:?})", tokens))
+            },
+            Value::Node(node) => f.write_fmt(format_args!("Node({:?})", node)),
+            Value::NodeList(nodes) => {
+                f.write_fmt(format_args!("NodeList({:?})", nodes))
+            }
         }
     }
 }
