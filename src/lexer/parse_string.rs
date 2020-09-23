@@ -1,10 +1,10 @@
-use crate::State;
+use crate::Lexer;
 use crate::lexer::{StringLiteral, Token, TokenType};
 use crate::lexer::lex_char::LexChar;
 use crate::lexer::lex_states::*;
 use crate::lexer::str_types::*;
 
-impl State {
+impl Lexer {
     pub fn parse_string(&mut self, quote: &mut StringLiteral) -> TokenType {
         let func = quote.func;
         let term = quote.term;

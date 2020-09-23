@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use ruby_parser::State;
+use ruby_parser::Lexer;
 
 fn print_usage() -> ! {
     println!("
@@ -26,7 +26,7 @@ fn main() {
             _ => print_usage()
         };
 
-    let mut lexer = State::new(&source);
+    let mut lexer = Lexer::new(&source);
     let tokens = lexer.tokenize_until_eof();
 
     let tok_name_length  = tokens.iter().map(|tok| format!("{:?}", tok.name()).len()).max().unwrap_or(0) + 2;

@@ -1,10 +1,10 @@
-use crate::State;
+use crate::Lexer;
 use crate::lexer::{Token, TokenType, LexState};
 use crate::lexer::lex_char::LexChar;
 use crate::lexer::lex_states::*;
 use crate::lexer::reserved_word;
 
-impl State {
+impl Lexer {
     pub fn parser_is_identchar(&self) -> bool {
         !self.p.eofp && self.is_identchar(self.p.lex.pcur - 1, self.p.lex.pend)
     }

@@ -1,6 +1,6 @@
-use crate::State;
+use crate::Lexer;
 
-impl State {
+impl Lexer {
     pub fn is_lvar_defined(&self, name: &str) -> bool {
         self.p.static_env.is_declared(name)
     }

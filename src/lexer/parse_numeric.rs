@@ -1,9 +1,9 @@
-use crate::State;
+use crate::Lexer;
 use crate::lexer::lex_states::*;
 use crate::lexer::{Token, TokenType};
 use crate::lexer::lex_char::LexChar;
 
-impl State {
+impl Lexer {
     const NUM_SUFFIX_R: i8 = 1 << 0;
     const NUM_SUFFIX_I: i8 = 1 << 1;
     const NUM_SUFFIX_ALL: i8 = 3;

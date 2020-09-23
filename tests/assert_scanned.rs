@@ -2,29 +2,29 @@
 macro_rules! setup_lexer {
     () => {
         {
-            use ruby_parser::lexer::State;
-            State::new("")
+            use ruby_parser::lexer::Lexer;
+            Lexer::new("")
         }
     };
 }
 
 #[macro_export]
 macro_rules! set_lex_state {
-    ($state:ident, $lex_state:ident) => {
+    ($lexer:ident, $lex_state:ident) => {
         {
             use ruby_parser::lexer::lex_states::*;
-            $state.set_lex_state($lex_state);
+            $lexer.set_lex_state($lex_state);
         }
     };
 }
 
 #[macro_export]
 macro_rules! assert_scanned {
-    ($state:expr, $input:expr, $(:$token_type:tt, $value:expr, [$begin:expr, $end:expr]),*) => {
+    ($lexer:expr, $input:expr, $(:$token_type:tt, $value:expr, [$begin:expr, $end:expr]),*) => {
         {
             use ruby_parser::lexer::{Token, TokenType};
-            $state.set_source($input);
-            let actual_tokens = $state.tokenize_until_eof();
+            $lexer.set_source($input);
+            let actual_tokens = $lexer.tokenize_until_eof();
 
             let token_types: Vec<TokenType>     = vec![$(Token::$token_type),*];
             let token_values: Vec<&str>         = vec![$($value),*];
