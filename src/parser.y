@@ -10,13 +10,12 @@
 
 
 %code use {
-  use crate::Lexer;
+    use crate::Lexer;
 }
 
 %code {
-  // code
+    // pre-code
 }
-
 
 /* Bison Declarations */
 %token <token>
@@ -96,15 +95,15 @@
 %type <node> expr_value expr_value_do arg_value primary_value fcall rel_expr
 %type <node> if_tail opt_else case_body case_args cases opt_rescue exc_list exc_var opt_ensure
 %type <node> args call_args opt_call_args
-%type <node> paren_args opt_paren_args args_tail opt_args_tail block_args_tail opt_block_args_tail
+%type <node> paren_args opt_paren_args block_args_tail opt_block_args_tail
 %type <node> command_args aref_args opt_block_arg block_arg var_ref var_lhs
 %type <node> command_rhs arg_rhs
-%type <node> command_asgn mrhs mrhs_arg superclass block_call block_command
-%type <node> f_block_optarg f_block_opt
-%type <node> f_arglist f_paren_args f_args f_arg f_arg_item f_optarg f_marg f_marg_list f_margs f_rest_marg
+%type <node> command_asgn mrhs mrhs_arg block_call block_command
+%type <node> f_block_opt
+%type <node> f_arglist f_paren_args f_arg_item f_marg f_marg_list f_margs f_rest_marg
 %type <node> assoc undef_list backref string_dvar for_var
 %type <node> block_param opt_block_param block_param_def f_opt
-%type <node> f_kwarg f_kw f_block_kwarg f_block_kw
+%type <node> f_kw f_block_kw
 %type <node> bv_decls opt_bv_decl bvar
 %type <node> lambda f_larglist lambda_body brace_body do_body
 %type <node> brace_block cmd_brace_block do_block lhs none fitem
@@ -114,18 +113,22 @@
 %type <node> p_args p_args_head p_args_tail p_args_post p_arg
 %type <node> p_value p_primitive p_variable p_var_ref p_const
 %type <node> p_kwargs p_kwarg p_kw
-%type <node> f_block_arg
+%type <node> f_block_arg keyword_variable user_variable
 
-%type <node_list> assocs assoc_list
+%type <node_list> assocs assoc_list opt_f_block_arg f_rest_arg f_optarg f_args
+%type <node_list> f_block_optarg f_kwrest f_no_kwarg f_kwarg f_block_kwarg f_arg
+%type <node_list> opt_args_tail args_tail
 
-%type <token>   keyword_variable user_variable sym operation operation2 operation3
-%type <token>   cname fname op f_rest_arg f_norm_arg f_bad_arg
-%type <token>   f_kwrest f_label f_arg_asgn call_op call_op2 reswords relop dot_or_colon
+%type <token_and_node> superclass
+
+%type <token>   sym operation operation2 operation3
+%type <token>   cname fname op f_norm_arg f_bad_arg
+%type <token>   f_label f_arg_asgn call_op call_op2 reswords relop dot_or_colon
 %type <token>   p_rest p_kwrest p_kwnorest p_any_kwrest p_kw_label
-%type <token>   f_no_kwarg f_any_kwrest args_forward excessed_comma
+%type <token>   f_any_kwrest args_forward excessed_comma
 %type <token>   rbrace rparen rbracket
 
-%type <token_list> terms opt_f_block_arg
+%type <token_list> terms
 
 %token END_OF_INPUT 0   "end-of-input"
 %token <token> tDOT
@@ -675,7 +678,7 @@
 
        mlhs_node: user_variable
                     {
-
+                        // NOTE: user_variable can be Value::IDENT
                     }
                 | keyword_variable
                     {
@@ -713,7 +716,7 @@
 
              lhs: user_variable
                     {
-
+                        // NOTE: user_variable can be Value::IDENT
                     }
                 | keyword_variable
                     {
@@ -1338,12 +1341,32 @@
                     }
                 | k_class cpath superclass
                     {
-
+                        // @static_env.extend_static
+                        // @lexer.cmdarg.push(false)
+                        // @lexer.cond.push(false)
+                        // @context.push(:class)
                     }
                   bodystmt
                   k_end
                     {
+                        // unless @context.class_definition_allowed?
+                        //     diagnostic :error, :class_in_def, nil, val[0]
+                        // end
 
+                        let superclass = $<RAW>3;
+                        let (lt_t, superclass) = match superclass {
+                            Value::TokenAndNode((token, node)) => (Some(token), Some(node)),
+                            Value::None => (None, None),
+                            _ => panic!("Expected TokenAndNode, got {:#?}", superclass)
+                        };
+                        // result = @builder.def_class(val[0], val[1],
+                        //                             lt_t, superclass,
+                        //                             val[4], val[5])
+
+                        // @lexer.cmdarg.pop
+                        // @lexer.cond.pop
+                        // @static_env.unextend
+                        // @context.pop
                     }
                 | k_class tLSHFT expr
                     {
@@ -1621,6 +1644,9 @@ opt_block_args_tail:
 
                     }
                 | f_args
+                    {
+
+                    }
                 ;
 
      lambda_body: tLAMBEG compstmt tRCURLY
@@ -2098,7 +2124,9 @@ xstring_contents: /* none */
 
             ssym: tSYMBEG sym
                     {
-
+                        // @lexer.state = :expr_end
+                        // result = @builder.symbol(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
@@ -2110,140 +2138,311 @@ xstring_contents: /* none */
 
             dsym: tSYMBEG string_contents tSTRING_END
                     {
-
+                        // @lexer.state = :expr_end
+                        // result = @builder.symbol_compose(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
          numeric: simple_numeric
                 | tUMINUS_NUM simple_numeric   %prec tLOWEST
                     {
-
+                        // result = @builder.unary_num(val[0], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
   simple_numeric: tINTEGER
+                    {
+                        // @lexer.state = :expr_end
+                        // result = @builder.integer(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tFLOAT
+                    {
+                        // @lexer.state = :expr_end
+                        // result = @builder.float(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tRATIONAL
+                    {
+                        // @lexer.state = :expr_end
+                        // result = @builder.rational(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tIMAGINARY
+                    {
+                        // @lexer.state = :expr_end
+                        // result = @builder.complex(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 ;
 
    user_variable: tIDENTIFIER
+                    {
+                        // !! this rule returns different value types
+                        // ugly, but this way we don't have Node::Ident
+                        // result = @builder.ident(val[0])
+                        $$ = Value::Ident($<Token>1);
+                    }
                 | tIVAR
+                    {
+                        // result = @builder.ivar(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tGVAR
+                    {
+                        // result = @builder.gvar(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tCONSTANT
+                    {
+                        // result = @builder.const(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tCVAR
+                    {
+                        // result = @builder.cvar(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 ;
 
 keyword_variable: kNIL
+                    {
+                        // result = @builder.nil($<Token>1)
+                        $$ = Value::Node(Node::None);
+                    }
                 | kSELF
+                    {
+                        // result = @builder.self($<Token>1)
+                        $$ = Value::Node(Node::None);
+                    }
                 | kTRUE
+                    {
+                        // result = @builder.true($<Token>1)
+                        $$ = Value::Node(Node::None);
+                    }
                 | kFALSE
+                    {
+                        // result = @builder.false($<Token>1)
+                        $$ = Value::Node(Node::None);
+                    }
                 | k__FILE__
+                    {
+                        // result = @builder.__file__($<Token>1)
+                        $$ = Value::Node(Node::None);
+                    }
                 | k__LINE__
+                    {
+                        // result = @builder.__line__($<Token>1)
+                        $$ = Value::Node(Node::None);
+                    }
                 | k__ENCODING__
+                    {
+                        // result = @builder.__encoding__($<Token>1)
+                        $$ = Value::Node(Node::None);
+                    }
                 ;
 
          var_ref: user_variable
                     {
-
+                        // FIXME: error handling here is INSANE
+                        // NOTE: user_variable can be Value::IDENT
+                        // result = @builder.assignable(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | keyword_variable
                     {
-
+                        // result = @builder.assignable(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
          var_lhs: user_variable
                     {
-
+                        // NOTE: user_variable can be Value::IDENT
+                        // result = @builder.assignable(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | keyword_variable
                     {
-
+                        // result = @builder.assignable(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
          backref: tNTH_REF
+                    {
+                        // result = @builder.nth_ref(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tBACK_REF
+                    {
+                        // result = @builder.back_ref(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 ;
 
       superclass: tLT
                     {
-
+                        // @lexer.state = :expr_value
                     }
                   expr_value term
                     {
-
+                        let token = $<Token>1;
+                        let node  = $<Node>3;
+                        $$ = Value::TokenAndNode( (token, node) );
                     }
                 | /* none */
                     {
-
+                        $$ = Value::None;
                     }
                 ;
 
     f_paren_args: tLPAREN2 f_args rparen
                     {
+                        // result = @builder.args(val[0], val[1], val[2])
+                        // @lexer.state = :expr_value
 
+                        $$ = Value::Node(Node::None);
                     }
                 | tLPAREN2 f_arg tCOMMA args_forward rparen
                     {
+                        // args = [ *val[1], @builder.forward_arg(val[3]) ]
+                        // result = @builder.args(val[0], args, val[4])
+                        // @static_env.declare_forward_args
 
+                        $$ = Value::Node(Node::None);
                     }
                 | tLPAREN2 args_forward rparen
                     {
+                        // result = @builder.forward_only_args(val[0], val[1], val[2])
+                        // @static_env.declare_forward_args
+                        // @lexer.state = :expr_value
 
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
        f_arglist: f_paren_args
+                    {
+                        // result = @lexer.in_kwarg
+                        // @lexer.in_kwarg = true
+                    }
                 | f_args term
+                    {
+                        // @lexer.in_kwarg = val[0]
+                        // result = @builder.args(nil, val[1], nil)
+                        $$ = Value::Node(Node::None);
+                    }
                 ;
 
        args_tail: f_kwarg tCOMMA f_kwrest opt_f_block_arg
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_kwarg opt_f_block_arg
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_any_kwrest opt_f_block_arg
                     {
-
+                        let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 | f_block_arg
                     {
-
+                        $$ = Value::NodeList(vec![ $<Node>1 ]);
                     }
                 ;
 
    opt_args_tail: tCOMMA args_tail
                     {
-
+                        // $$ = $<RAW>2;
+                        $$ = Value::NodeList( vec![] );
                     }
                 | /* none */
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 ;
 
           f_args: f_arg tCOMMA f_optarg tCOMMA f_rest_arg opt_args_tail
+                    {
+                        // println!("YYSTACK: {:#?}", yystack.value_stack);
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg tCOMMA f_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4, $<NodeList>7, $<NodeList>8 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg tCOMMA f_optarg opt_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg tCOMMA f_optarg tCOMMA f_arg opt_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg tCOMMA f_rest_arg opt_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg opt_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_optarg tCOMMA f_rest_arg opt_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>2, $<NodeList>3 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>2, $<NodeList>3, $<NodeList>4 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_optarg opt_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_optarg tCOMMA f_arg opt_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>2, $<NodeList>3 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_rest_arg opt_args_tail
                     {
-
+                        let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 | f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-
+                        let nodes = [ $<NodeList>1, $<NodeList>2, $<NodeList>3 ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 | args_tail
+                    {
+                        let nodes = [ $<NodeList>1 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | /* none */
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 ;
 
@@ -2251,63 +2450,134 @@ keyword_variable: kNIL
                 ;
 
        f_bad_arg: tCONSTANT
+                    {
+                        // diagnostic :error, :argument_const, nil, val[0]
+                        $$ = $<RAW>1;
+                    }
                 | tIVAR
+                    {
+                        // diagnostic :error, :argument_const, nil, val[0]
+                        $$ = $<RAW>1;
+                    }
                 | tGVAR
+                    {
+                        // diagnostic :error, :argument_const, nil, val[0]
+                        $$ = $<RAW>1;
+                    }
                 | tCVAR
+                    {
+                        // diagnostic :error, :argument_const, nil, val[0]
+                        $$ = $<RAW>1;
+                    }
                 ;
 
       f_norm_arg: f_bad_arg
                 | tIDENTIFIER
+                    {
+                        // @static_env.declare val[0][0]
+                        // @max_numparam_stack.has_ordinary_params!
+                        $$ = $<RAW>1;
+                    }
                 ;
 
       f_arg_asgn: f_norm_arg
+                    {
+                        // @current_arg_stack.set(val[0][0])
+                        $$ = $<RAW>1;
+                    }
                 ;
 
       f_arg_item: f_arg_asgn
                     {
-
+                        // @current_arg_stack.set(0)
+                        // result = @builder.arg(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | tLPAREN f_margs rparen
                     {
-
+                        // result = @builder.multi_lhs(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
            f_arg: f_arg_item
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | f_arg tCOMMA f_arg_item
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
 
          f_label: tLABEL
+                    {
+                        // check_kwarg_name(val[0])
+
+                        // @static_env.declare val[0][0]
+
+                        // @max_numparam_stack.has_ordinary_params!
+
+                        // @current_arg_stack.set(val[0][0])
+
+                        // result = val[0]
+
+                        $$ = $<RAW>1;
+                    }
                 ;
 
             f_kw: f_label arg_value
                     {
-
+                        // @current_arg_stack.set(nil)
+                        // result = @builder.kwoptarg(val[0], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 | f_label
                     {
-
+                        // @current_arg_stack.set(nil)
+                        // result = @builder.kwarg(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
       f_block_kw: f_label primary_value
                     {
-
+                        // result = @builder.kwoptarg(val[0], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 | f_label
                     {
-
+                        // result = @builder.kwarg(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
    f_block_kwarg: f_block_kw
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | f_block_kwarg tCOMMA f_block_kw
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
 
          f_kwarg: f_kw
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | f_kwarg tCOMMA f_kw
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
      kwrest_mark: tPOW
@@ -2316,38 +2586,62 @@ keyword_variable: kNIL
 
       f_no_kwarg: kwrest_mark kNIL
                     {
-
+                        // result = [ @builder.kwnilarg(val[0], val[1]) ]
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
                 ;
 
         f_kwrest: kwrest_mark tIDENTIFIER
                     {
-
+                        // @static_env.declare val[1][0]
+                        // result = [ @builder.kwrestarg(val[0], val[1]) ]
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
                 | kwrest_mark
                     {
-
+                        // result = [ @builder.kwrestarg(val[0]) ]
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
                 ;
 
            f_opt: f_arg_asgn tEQL arg_value
                     {
-
+                        // @current_arg_stack.set(0)
+                        // result = @builder.optarg(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
      f_block_opt: f_arg_asgn tEQL primary_value
                     {
-
+                        // @current_arg_stack.set(0)
+                        // result = @builder.optarg(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
   f_block_optarg: f_block_opt
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | f_block_optarg tCOMMA f_block_opt
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
         f_optarg: f_opt
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | f_optarg tCOMMA f_opt
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
     restarg_mark: tSTAR2
@@ -2356,11 +2650,15 @@ keyword_variable: kNIL
 
       f_rest_arg: restarg_mark tIDENTIFIER
                     {
+                        // @static_env.declare val[1][0]
+                        // result = [ @builder.restarg(val[0], val[1]) ]
 
+                        $$ = Value::NodeList( vec![] );
                     }
                 | restarg_mark
                     {
-
+                        // result = [ @builder.restarg(val[0]) ]
+                        $$ = Value::NodeList( vec![] );
                     }
                 ;
 
@@ -2370,7 +2668,9 @@ keyword_variable: kNIL
 
      f_block_arg: blkarg_mark tIDENTIFIER
                     {
-
+                        // @static_env.declare val[1][0]
+                        // result = @builder.blockarg(val[0], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
@@ -2400,14 +2700,13 @@ keyword_variable: kNIL
 
           assocs: assoc
                     {
-                        println!("YYSTACK: {:#?}", yystack.value_stack);
                         $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
                 | assocs tCOMMA assoc
                     {
-                        let mut assocs = $<NodeList>1;
-                        assocs.push($<Node>2);
-                        $$ = Value::NodeList( assocs );
+                        let mut nodes = $<NodeList>1;
+                        nodes.push($<Node>3);
+                        $$ = Value::NodeList( nodes );
                     }
                 ;
 
@@ -2526,7 +2825,11 @@ pub enum Value {
     Token(Token),
     TokenList(Vec<Token>),
     Node(Node),
-    NodeList(Vec<Node>)
+    NodeList(Vec<Node>),
+    /* For superclass rule */
+    TokenAndNode((Token, Node)),
+    /* For user_variable rule */
+    Ident(Token),
 }
 
 impl Value {
@@ -2549,6 +2852,12 @@ impl std::fmt::Debug for Value {
             Value::Node(node) => f.write_fmt(format_args!("Node({:?})", node)),
             Value::NodeList(nodes) => {
                 f.write_fmt(format_args!("NodeList({:?})", nodes))
+            },
+            Value::TokenAndNode((token, node)) => {
+                f.write_fmt(format_args!("TokenAndNode({:?}, {:?})", token, node))
+            },
+            Value::Ident(token) => {
+                f.write_fmt(format_args!("Ident({:?})", token))
             }
         }
     }
