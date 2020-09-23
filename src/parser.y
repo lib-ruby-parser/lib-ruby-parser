@@ -1,8 +1,9 @@
 %expect 0
 
-%define api.parser.struct {Parser}
-%define api.location.type {Loc}
-%define api.value.type { Value }
+%define api.parser.struct Parser
+%define api.location.type Loc
+%define api.value.type Value
+%define api.parser.result_type String
 
 %define parse.error custom
 %define parse.trace
@@ -10,10 +11,6 @@
 
 %code use {
   // all use goes here
-}
-
-%code parser_struct_fields {
-  result: Option<String>
 }
 
 %code {
@@ -107,28 +104,18 @@ impl std::fmt::Debug for Value {
 }
 
 impl Parser {
-  #[allow(dead_code)]
-  pub fn new(tokens: Vec<Token>) -> Self {
-      let mut parser = Self::build();
-      parser.yylexer.tokens = tokens;
-      parser.result = None;
-      parser
-  }
-
-  #[allow(dead_code)]
   pub fn do_parse(mut self) -> Option<String> {
       self.parse();
       self.result
   }
 }
 
-#[derive(Default)]
 pub struct Lexer {
     tokens: Vec<Token>
 }
 
-impl Lexer {
-    pub fn yylex(&mut self) -> Token {
+impl Lex for Lexer {
+    fn yylex(&mut self) -> Token {
         self.tokens.remove(0)
     }
 
@@ -138,5 +125,11 @@ impl Lexer {
 
     fn yyerror(&mut self, loc: &Loc, msg: &str) {
         eprintln!("{:#?} {:#?}", loc, msg)
+    }
+}
+
+impl Lexer {
+    pub fn new(tokens: Vec<Token>) -> Self {
+        Self { tokens }
     }
 }
