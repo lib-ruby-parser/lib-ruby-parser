@@ -19,4 +19,4 @@ name = "tokenize"
 name = "parse"
 
 [build-dependencies]
-rust-bison-skeleton = "0.3.0"
+rust-bison-skeleton = { path = "../rust-bison-skeleton/rust-bison-skeleton/" }
