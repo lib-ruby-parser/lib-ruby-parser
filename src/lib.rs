@@ -17,3 +17,5 @@ pub use messages::Message;
 
 mod static_environment;
 pub use static_environment::StaticEnvironment;
+
+mod parser;
