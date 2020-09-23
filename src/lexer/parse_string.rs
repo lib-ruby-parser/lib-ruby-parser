@@ -1,11 +1,11 @@
 use crate::Lexer;
-use crate::lexer::{StringLiteral, Token, TokenType};
+use crate::lexer::{StringLiteral};
 use crate::lexer::lex_char::LexChar;
 use crate::lexer::lex_states::*;
 use crate::lexer::str_types::*;
 
 impl Lexer {
-    pub fn parse_string(&mut self, quote: &mut StringLiteral) -> TokenType {
+    pub fn parse_string(&mut self, quote: &mut StringLiteral) -> i32 {
         let func = quote.func;
         let term = quote.term;
         let paren = quote.paren;
@@ -19,9 +19,9 @@ impl Lexer {
             self.set_lex_state(EXPR_END);
             self.p.lex.strterm = None;
             if (func & STR_FUNC_REGEXP) != 0 {
-                return Token::tREGEXP_END
+                return Self::tREGEXP_END
             } else {
-                return Token::tSTRING_END;
+                return Self::tSTRING_END;
             }
         }
         c = self.nextc();
@@ -41,13 +41,13 @@ impl Lexer {
             if (func & STR_FUNC_QWORDS) != 0 {
                 quote.func &= STR_FUNC_TERM;
                 self.pushback(&c); /* dispatch the term at tSTRING_END */
-                return Token::tSP;
+                return Self::tSP;
             }
             return self.parser_string_term(func);
         }
         if space {
             self.pushback(&c);
-            return Token::tSP;
+            return Self::tSP;
         }
         self.newtok();
         if ((func & STR_FUNC_EXPAND) != 0) && c == '#' {
@@ -66,7 +66,7 @@ impl Lexer {
                     /* no content to add, bailing out here */
                     self.yyerror0("unterminated list meets end of file");
                     self.p.lex.strterm = None;
-                    return Token::tSTRING_END;
+                    return Self::tSTRING_END;
                 }
                 if (func & STR_FUNC_REGEXP) != 0 {
                     self.yyerror0("unterminated regexp meets end of file");
@@ -86,30 +86,30 @@ impl Lexer {
         //         panic!("dead");
         //     }
         // }
-        Token::tSTRING_CONTENT
+        Self::tSTRING_CONTENT
     }
 
-    pub fn parser_string_term(&mut self, func: usize) -> TokenType {
+    pub fn parser_string_term(&mut self, func: usize) -> i32 {
         self.p.lex.strterm = None;
         if (func & STR_FUNC_REGEXP) != 0 {
             let regx_options = self.regx_options();
             self.set_yylval_num(&regx_options);
             self.set_lex_state(EXPR_END);
-            return Token::tREGEXP_END;
+            return Self::tREGEXP_END;
         }
         if (func & STR_FUNC_LABEL) != 0 && self.is_label_suffix(0) {
             self.nextc();
             self.set_lex_state(EXPR_BEG|EXPR_LABEL);
-            return Token::tLABEL_END;
+            return Self::tLABEL_END;
         }
         self.set_lex_state(EXPR_END);
-        return Token::tSTRING_END;
+        return Self::tSTRING_END;
     }
 
     pub fn set_yylval_num(&mut self, _num: &str) { unimplemented!("set_yylval_num") }
     pub fn regx_options(&mut self) -> String { unimplemented!("regx_options") }
 
-    pub fn parser_peek_variable_name(&mut self) -> Option<TokenType> {
+    pub fn parser_peek_variable_name(&mut self) -> Option<i32> {
         let mut c: LexChar;
         let mut ptr: usize = self.p.lex.pcur;
 
@@ -125,7 +125,7 @@ impl Lexer {
                     if ptr >= self.p.lex.pend { return None }
                     // c = self.char_at(ptr);
                 } else if c.is_global_name_punct() || c.is_digit() {
-                    return Some(Token::tSTRING_DVAR);
+                    return Some(Self::tSTRING_DVAR);
                 }
             },
 
@@ -141,7 +141,7 @@ impl Lexer {
             LexChar::Some('{') => {
                 self.p.lex.pcur = ptr;
                 self.p.command_start = true;
-                return Some(Token::tSTRING_DBEG)
+                return Some(Self::tSTRING_DBEG)
             },
 
             _ => return None

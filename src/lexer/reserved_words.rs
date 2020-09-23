@@ -1,10 +1,10 @@
 use crate::lexer::lex_states::*;
-use crate::lexer::{Token, TokenType};
+use crate::Lexer;
 
 pub struct ReservedWord {
     pub name: &'static str,
-    pub id: TokenType,
-    pub modifier_id: TokenType,
+    pub id: i32,
+    pub modifier_id: i32,
     pub state: usize
 }
 
@@ -12,248 +12,248 @@ pub struct ReservedWord {
 pub const RESERVED_WORDS: [ReservedWord; 41] = [
     ReservedWord {
         name: "__ENCODING__",
-        id: Token::k__ENCODING__,
-        modifier_id: Token::k__ENCODING__,
+        id: Lexer::k__ENCODING__,
+        modifier_id: Lexer::k__ENCODING__,
         state: EXPR_END
     },
     ReservedWord {
         name: "__LINE__",
-        id: Token::k__LINE__,
-        modifier_id: Token::k__LINE__,
+        id: Lexer::k__LINE__,
+        modifier_id: Lexer::k__LINE__,
         state: EXPR_END
     },
     ReservedWord {
         name: "__FILE__",
-        id: Token::k__FILE__,
-        modifier_id: Token::k__FILE__,
+        id: Lexer::k__FILE__,
+        modifier_id: Lexer::k__FILE__,
         state: EXPR_END
     },
     ReservedWord {
         name: "BEGIN",
-        id: Token::klBEGIN,
-        modifier_id: Token::klBEGIN,
+        id: Lexer::klBEGIN,
+        modifier_id: Lexer::klBEGIN,
         state: EXPR_END
     },
     ReservedWord {
         name: "END",
-        id: Token::klEND,
-        modifier_id: Token::klEND,
+        id: Lexer::klEND,
+        modifier_id: Lexer::klEND,
         state: EXPR_END
     },
     ReservedWord {
         name: "alias",
-        id: Token::kALIAS,
-        modifier_id: Token::kALIAS,
+        id: Lexer::kALIAS,
+        modifier_id: Lexer::kALIAS,
         state: EXPR_FNAME|EXPR_FITEM
     },
     ReservedWord {
         name: "and",
-        id: Token::kAND,
-        modifier_id: Token::kAND,
+        id: Lexer::kAND,
+        modifier_id: Lexer::kAND,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "begin",
-        id: Token::kBEGIN,
-        modifier_id: Token::kBEGIN,
+        id: Lexer::kBEGIN,
+        modifier_id: Lexer::kBEGIN,
         state: EXPR_BEG
     },
     ReservedWord {
         name: "break",
-        id: Token::kBREAK,
-        modifier_id: Token::kBREAK,
+        id: Lexer::kBREAK,
+        modifier_id: Lexer::kBREAK,
         state: EXPR_MID
     },
     ReservedWord {
         name: "case",
-        id: Token::kCASE,
-        modifier_id: Token::kCASE,
+        id: Lexer::kCASE,
+        modifier_id: Lexer::kCASE,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "class",
-        id: Token::kCLASS,
-        modifier_id: Token::kCLASS,
+        id: Lexer::kCLASS,
+        modifier_id: Lexer::kCLASS,
         state: EXPR_CLASS
     },
     ReservedWord {
         name: "def",
-        id: Token::kDEF,
-        modifier_id: Token::kDEF,
+        id: Lexer::kDEF,
+        modifier_id: Lexer::kDEF,
         state: EXPR_FNAME
     },
     ReservedWord {
         name: "defined?",
-        id: Token::kDEFINED,
-        modifier_id: Token::kDEFINED,
+        id: Lexer::kDEFINED,
+        modifier_id: Lexer::kDEFINED,
         state: EXPR_ARG
     },
     ReservedWord {
         name: "do",
-        id: Token::kDO,
-        modifier_id: Token::kDO,
+        id: Lexer::kDO,
+        modifier_id: Lexer::kDO,
         state: EXPR_BEG
     },
     ReservedWord {
         name: "else",
-        id: Token::kELSE,
-        modifier_id: Token::kELSE,
+        id: Lexer::kELSE,
+        modifier_id: Lexer::kELSE,
         state: EXPR_BEG
     },
     ReservedWord {
         name: "elsif",
-        id: Token::kELSIF,
-        modifier_id: Token::kELSIF,
+        id: Lexer::kELSIF,
+        modifier_id: Lexer::kELSIF,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "end",
-        id: Token::kEND,
-        modifier_id: Token::kEND,
+        id: Lexer::kEND,
+        modifier_id: Lexer::kEND,
         state: EXPR_END
     },
     ReservedWord {
         name: "ensure",
-        id: Token::kENSURE,
-        modifier_id: Token::kENSURE,
+        id: Lexer::kENSURE,
+        modifier_id: Lexer::kENSURE,
         state: EXPR_BEG
     },
     ReservedWord {
         name: "false",
-        id: Token::kFALSE,
-        modifier_id: Token::kFALSE,
+        id: Lexer::kFALSE,
+        modifier_id: Lexer::kFALSE,
         state: EXPR_END
     },
     ReservedWord {
         name: "for",
-        id: Token::kFOR,
-        modifier_id: Token::kFOR,
+        id: Lexer::kFOR,
+        modifier_id: Lexer::kFOR,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "if",
-        id: Token::kIF,
-        modifier_id: Token::kIF_MOD,
+        id: Lexer::kIF,
+        modifier_id: Lexer::kIF_MOD,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "in",
-        id: Token::kIN,
-        modifier_id: Token::kIN,
+        id: Lexer::kIN,
+        modifier_id: Lexer::kIN,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "module",
-        id: Token::kMODULE,
-        modifier_id: Token::kMODULE,
+        id: Lexer::kMODULE,
+        modifier_id: Lexer::kMODULE,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "next",
-        id: Token::kNEXT,
-        modifier_id: Token::kNEXT,
+        id: Lexer::kNEXT,
+        modifier_id: Lexer::kNEXT,
         state: EXPR_MID
     },
     ReservedWord {
         name: "nil",
-        id: Token::kNIL,
-        modifier_id: Token::kNIL,
+        id: Lexer::kNIL,
+        modifier_id: Lexer::kNIL,
         state: EXPR_END
     },
     ReservedWord {
         name: "not",
-        id: Token::kNOT,
-        modifier_id: Token::kNOT,
+        id: Lexer::kNOT,
+        modifier_id: Lexer::kNOT,
         state: EXPR_ARG
     },
     ReservedWord {
         name: "or",
-        id: Token::kOR,
-        modifier_id: Token::kOR,
+        id: Lexer::kOR,
+        modifier_id: Lexer::kOR,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "redo",
-        id: Token::kREDO,
-        modifier_id: Token::kREDO,
+        id: Lexer::kREDO,
+        modifier_id: Lexer::kREDO,
         state: EXPR_END
     },
     ReservedWord {
         name: "rescue",
-        id: Token::kRESCUE,
-        modifier_id: Token::kRESCUE_MOD,
+        id: Lexer::kRESCUE,
+        modifier_id: Lexer::kRESCUE_MOD,
         state: EXPR_MID
     },
     ReservedWord {
         name: "retry",
-        id: Token::kRETRY,
-        modifier_id: Token::kRETRY,
+        id: Lexer::kRETRY,
+        modifier_id: Lexer::kRETRY,
         state: EXPR_END
     },
     ReservedWord {
         name: "return",
-        id: Token::kRETURN,
-        modifier_id: Token::kRETURN,
+        id: Lexer::kRETURN,
+        modifier_id: Lexer::kRETURN,
         state: EXPR_MID
     },
     ReservedWord {
         name: "self",
-        id: Token::kSELF,
-        modifier_id: Token::kSELF,
+        id: Lexer::kSELF,
+        modifier_id: Lexer::kSELF,
         state: EXPR_END
     },
     ReservedWord {
         name: "super",
-        id: Token::kSUPER,
-        modifier_id: Token::kSUPER,
+        id: Lexer::kSUPER,
+        modifier_id: Lexer::kSUPER,
         state: EXPR_ARG
     },
     ReservedWord {
         name: "then",
-        id: Token::kTHEN,
-        modifier_id: Token::kTHEN,
+        id: Lexer::kTHEN,
+        modifier_id: Lexer::kTHEN,
         state: EXPR_BEG
     },
     ReservedWord {
         name: "true",
-        id: Token::kTRUE,
-        modifier_id: Token::kTRUE,
+        id: Lexer::kTRUE,
+        modifier_id: Lexer::kTRUE,
         state: EXPR_END
     },
     ReservedWord {
         name: "undef",
-        id: Token::kUNDEF,
-        modifier_id: Token::kUNDEF,
+        id: Lexer::kUNDEF,
+        modifier_id: Lexer::kUNDEF,
         state: EXPR_FNAME|EXPR_FITEM
     },
     ReservedWord {
         name: "unless",
-        id: Token::kUNLESS,
-        modifier_id: Token::kUNLESS_MOD,
+        id: Lexer::kUNLESS,
+        modifier_id: Lexer::kUNLESS_MOD,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "until",
-        id: Token::kUNTIL,
-        modifier_id: Token::kUNTIL_MOD,
+        id: Lexer::kUNTIL,
+        modifier_id: Lexer::kUNTIL_MOD,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "when",
-        id: Token::kWHEN,
-        modifier_id: Token::kWHEN,
+        id: Lexer::kWHEN,
+        modifier_id: Lexer::kWHEN,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "while",
-        id: Token::kWHILE,
-        modifier_id: Token::kWHILE_MOD,
+        id: Lexer::kWHILE,
+        modifier_id: Lexer::kWHILE_MOD,
         state: EXPR_VALUE
     },
     ReservedWord {
         name: "yield",
-        id: Token::kYIELD,
-        modifier_id: Token::kYIELD,
+        id: Lexer::kYIELD,
+        modifier_id: Lexer::kYIELD,
         state: EXPR_ARG
     },
 ];

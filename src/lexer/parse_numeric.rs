@@ -1,6 +1,5 @@
 use crate::Lexer;
 use crate::lexer::lex_states::*;
-use crate::lexer::{Token, TokenType};
 use crate::lexer::lex_char::LexChar;
 
 impl Lexer {
@@ -8,7 +7,7 @@ impl Lexer {
     const NUM_SUFFIX_I: i8 = 1 << 1;
     const NUM_SUFFIX_ALL: i8 = 3;
 
-    pub fn parse_numeric(&mut self, prefix: char) -> TokenType {
+    pub fn parse_numeric(&mut self, prefix: char) -> i32 {
         let mut c = LexChar::Some(prefix);
 
         let mut is_float: bool = false;
@@ -211,7 +210,7 @@ impl Lexer {
         }
     }
 
-    pub fn parse_octal(&mut self, c: &mut LexChar, nondigit: &mut Option<LexChar>, start: usize) -> Option<TokenType> {
+    pub fn parse_octal(&mut self, c: &mut LexChar, nondigit: &mut Option<LexChar>, start: usize) -> Option<i32> {
         loop {
             if *c == '_' {
                 if nondigit.is_some() { break }
@@ -242,18 +241,18 @@ impl Lexer {
         None
     }
 
-    fn invalid_octal(&self) -> TokenType {
+    fn invalid_octal(&self) -> i32 {
         // FIXME: yyerror0(...)
-        Token::END_OF_INPUT // ("Invalid octal digit".into())
+        Self::END_OF_INPUT // ("Invalid octal digit".into())
     }
 
-    fn trailing_uc(&mut self, _nondigit: &Option<LexChar>) -> TokenType {
+    fn trailing_uc(&mut self, _nondigit: &Option<LexChar>) -> i32 {
         self.literal_flush(self.p.lex.pcur - 1);
         // FIXME: compile_error(p, "trailing `%c' in number", nondigit);
-        Token::END_OF_INPUT // (format!("trailing `{}' in number", nondigit.clone().unwrap().unwrap()))
+        Self::END_OF_INPUT // (format!("trailing `{}' in number", nondigit.clone().unwrap().unwrap()))
     }
 
-    fn decode_num(&mut self, c: LexChar, nondigit: Option<LexChar>, is_float: bool, seen_e: bool, seen_point: Option<usize>) -> TokenType {
+    fn decode_num(&mut self, c: LexChar, nondigit: Option<LexChar>, is_float: bool, seen_e: bool, seen_point: Option<usize>) -> i32 {
         self.pushback(&c);
         if nondigit.is_some() {
             self.trailing_uc(&nondigit);
@@ -261,16 +260,16 @@ impl Lexer {
         return self.parse_numeric_footer(is_float, seen_e, seen_point);
     }
 
-    fn parse_numeric_footer(&mut self, is_float: bool, seen_e: bool, seen_point: Option<usize>) -> TokenType {
+    fn parse_numeric_footer(&mut self, is_float: bool, seen_e: bool, seen_point: Option<usize>) -> i32 {
         self.tokfix();
         if is_float {
-            let mut token_type: TokenType = Token::tFLOAT;
+            let mut token_type: i32 = Self::tFLOAT;
             let v: String;
 
             let suffix = self.number_literal_suffix(if seen_e { Self::NUM_SUFFIX_I } else { Self::NUM_SUFFIX_ALL });
             if (suffix & Self::NUM_SUFFIX_R) != 0 {
                 let value = format!("{}r", self.tok());
-                token_type = Token::tRATIONAL;
+                token_type = Self::tRATIONAL;
                 v = self.parse_rational(&value, self.toklen(), seen_point);
             } else {
                 // we don't parse the number
@@ -286,19 +285,19 @@ impl Lexer {
         tok.into()
     }
 
-    fn set_number_literal(&mut self, value: &str, token_type: TokenType, suffix: i8) -> TokenType {
+    fn set_number_literal(&mut self, value: &str, token_type: i32, suffix: i8) -> i32 {
         let mut token_type = token_type;
         let mut value = value.to_owned();
         if suffix & Self::NUM_SUFFIX_I != 0 {
             value = format!("{}i", value);
-            token_type = Token::tIMAGINARY;
+            token_type = Self::tIMAGINARY;
         }
         self.set_yylval_literal(&value);
         self.set_lex_state(EXPR_END);
         token_type
     }
 
-    pub fn no_digits(&mut self) -> TokenType {
+    pub fn no_digits(&mut self) -> i32 {
         self.yyerror0("numeric literal without digits");
         if self.peek('_') { self.nextc(); }
         self.set_integer_literal("0", 0)
@@ -338,12 +337,12 @@ impl Lexer {
         result
     }
 
-    pub fn set_integer_literal(&mut self, value: &str, suffix: i8) -> TokenType {
-        let mut token_type: TokenType = Token::tINTEGER;
+    pub fn set_integer_literal(&mut self, value: &str, suffix: i8) -> i32 {
+        let mut token_type: i32 = Self::tINTEGER;
         let mut value = value.to_owned();
         if suffix & Self::NUM_SUFFIX_R != 0 {
             value = format!("{}r", value);
-            token_type = Token::tRATIONAL;
+            token_type = Self::tRATIONAL;
         }
         self.set_number_literal(&value, token_type, suffix)
     }

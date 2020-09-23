@@ -18,10 +18,6 @@ pub use locals_table::LocalsTable;
 mod lex_context;
 pub use lex_context::LexContext;
 
-#[allow(non_camel_case_types)]
-mod token;
-pub use token::{Token, TokenType, TokenData};
-
 mod lex_char;
 pub use lex_char::LexChar;
 

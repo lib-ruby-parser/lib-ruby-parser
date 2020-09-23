@@ -19,4 +19,4 @@ mod static_environment;
 pub use static_environment::StaticEnvironment;
 
 mod parser;
-pub use parser::{Parser, Loc, Lexer as DummyLexer};
+pub use parser::{Parser, Loc, SymbolKind, Token};

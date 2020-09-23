@@ -1,4 +1,4 @@
-use ruby_parser::{Parser, Loc, DummyLexer};
+use ruby_parser::{Parser, Lexer};
 use std::env;
 use std::fs;
 
@@ -15,43 +15,16 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let args: Vec<&str> = args.iter().skip(1).map(|e| &e[..]).collect();
 
-    let _source =
+    let source =
         match args[..] {
             ["-e", code] => code.to_owned(),
             [filepath] => fs::read_to_string(filepath).expect("Failed to read file"),
             _ => print_usage()
         };
 
-    let tokens = vec![
-        (
-            DummyLexer::NUM,
-            String::from("42"),
-            Loc { begin: 0, end: 2 },
-        ),
-        (
-            DummyLexer::PLUS,
-            String::from("+"),
-            Loc { begin: 2, end: 3 },
-        ),
-        (
-            DummyLexer::NUM,
-            String::from("17"),
-            Loc { begin: 3, end: 5 },
-        ),
-        (
-            DummyLexer::EOL,
-            String::from("\n"),
-            Loc { begin: 5, end: 6 },
-        ),
-        (
-            DummyLexer::YYEOF,
-            String::from(""),
-            Loc { begin: 6, end: 6 },
-        ),
-    ];
-
-    let lexer = DummyLexer::new(tokens);
-    let parser = Parser::new(Box::new(lexer));
+    let lexer = Lexer::new(&source);
+    let mut parser = Parser::new(lexer);
+    parser.yydebug = 1;
 
     println!("{:#?}", parser.do_parse())
 }
