@@ -86,49 +86,59 @@
 %token <node> tSTRING_CONTENT "literal content"
 %token <num>  tREGEXP_END
 
-%type <node> singleton strings string string1 xstring regexp
-%type <node> string_contents xstring_contents regexp_contents string_content
-%type <node> words symbols symbol_list qwords qsymbols word_list qword_list qsym_list word
+%type <node> singleton strings string1 xstring regexp
+%type <node> string_content
+%type <node> words symbols qwords qsymbols
 %type <node> literal numeric simple_numeric ssym dsym symbol cpath def_name defn_head defs_head
 %type <node> top_compstmt top_stmts top_stmt begin_block rassign
 %type <node> bodystmt compstmt stmts stmt_or_begin stmt expr arg primary command command_call method_call
 %type <node> expr_value expr_value_do arg_value primary_value fcall rel_expr
-%type <node> if_tail opt_else case_body case_args cases opt_rescue exc_list exc_var opt_ensure
 %type <node> args call_args opt_call_args
-%type <node> paren_args opt_paren_args block_args_tail opt_block_args_tail
+%type <node> paren_args opt_paren_args
 %type <node> command_args aref_args opt_block_arg block_arg var_ref var_lhs
 %type <node> command_rhs arg_rhs
 %type <node> command_asgn mrhs mrhs_arg block_call block_command
 %type <node> f_block_opt
-%type <node> f_arglist f_paren_args f_arg_item f_marg f_marg_list f_margs f_rest_marg
+%type <node> f_arglist f_paren_args f_arg_item f_marg f_rest_marg
 %type <node> assoc undef_list backref string_dvar for_var
-%type <node> block_param opt_block_param block_param_def f_opt
+%type <node> opt_block_param block_param_def f_opt
 %type <node> f_kw f_block_kw
-%type <node> bv_decls opt_bv_decl bvar
-%type <node> lambda f_larglist lambda_body brace_body do_body
-%type <node> brace_block cmd_brace_block do_block lhs none fitem
+%type <node> bvar
+%type <node> lambda f_larglist
+%type <node> cmd_brace_block lhs fitem
 %type <node> mlhs mlhs_head mlhs_basic mlhs_item mlhs_node mlhs_post mlhs_inner
-%type <node> p_case_body p_cases p_top_expr p_top_expr_body
-%type <node> p_expr p_as p_alt p_expr_basic p_find
-%type <node> p_args p_args_head p_args_tail p_args_post p_arg
+%type <node> p_top_expr_body
+%type <node> p_expr p_as p_alt p_expr_basic
+%type <node> p_arg
 %type <node> p_value p_primitive p_variable p_var_ref p_const
-%type <node> p_kwargs p_kwarg p_kw
+%type <node> p_kw
 %type <node> f_block_arg keyword_variable user_variable
 
 %type <node_list> assocs assoc_list opt_f_block_arg f_rest_arg f_optarg f_args
 %type <node_list> f_block_optarg f_kwrest f_no_kwarg f_kwarg f_block_kwarg f_arg
 %type <node_list> opt_args_tail args_tail
+%type <node_list> regexp_contents xstring_contents string_contents
+%type <node_list> qsym_list qword_list symbol_list word word_list
+%type <node_list> string exc_list opt_rescue
+%type <node_list> p_kwnorest p_kwrest p_any_kwrest p_kwarg p_kwargs p_args_post
+%type <node_list> p_find p_args_tail p_args_head p_args p_top_expr p_case_body p_cases
+%type <node_list> case_body cases case_args brace_body do_body bv_decls opt_bv_decl
+%type <node_list> block_param opt_block_args_tail block_args_tail f_any_kwrest f_margs f_marg_list
 
-%type <token_and_node> superclass
+%type <token_and_node> superclass opt_ensure exc_var opt_else if_tail
 
 %type <token>   sym operation operation2 operation3
 %type <token>   cname fname op f_norm_arg f_bad_arg
 %type <token>   f_label f_arg_asgn call_op call_op2 reswords relop dot_or_colon
-%type <token>   p_rest p_kwrest p_kwnorest p_any_kwrest p_kw_label
-%type <token>   f_any_kwrest args_forward excessed_comma
-%type <token>   rbrace rparen rbracket
+%type <token>   p_rest p_kw_label
+%type <token>   args_forward excessed_comma
+%type <token>   rbrace rparen rbracket p_lparen p_lbracket k_return then
+
+%type <body> brace_block do_block lambda_body
 
 %type <token_list> terms
+
+%type <none> none
 
 %token END_OF_INPUT 0   "end-of-input"
 %token <token> tDOT
@@ -298,13 +308,23 @@
                   compstmt
                   opt_ensure
                     {
-
+                        let opt_ensure = $<RAW>2;
+                        let (ensure_t, ensure) = match opt_ensure {
+                            Value::TokenAndNode((token, node)) => ( Some(token), Some(node) ),
+                            Value::None => (None, None),
+                            _ => panic!("Expected TokenAndNode/None, got {:#?}", opt_ensure)
+                        };
                     }
                 | compstmt
                   opt_rescue
                   opt_ensure
                     {
-
+                        let opt_ensure = $<RAW>2;
+                        let (ensure_t, ensure) = match opt_ensure {
+                            Value::TokenAndNode((token, node)) => ( Some(token), Some(node) ),
+                            Value::None => (None, None),
+                            _ => panic!("Expected TokenAndNode/None, got {:#?}", opt_ensure)
+                        };
                     }
                 ;
 
@@ -1203,141 +1223,193 @@
                 | backref
                 | tFID
                     {
-
+                        // result = @builder.call_method(nil, nil, val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | k_begin
                     {
-
+                        // @lexer.cmdarg.push(false)
                     }
                   bodystmt
                   k_end
                     {
+                        // @lexer.cmdarg.pop
 
+                        // result = @builder.begin_keyword(val[0], val[2], val[3])
+                        $$ = Value::Node(Node::None);
                     }
-                | tLPAREN_ARG {} rparen
+                | tLPAREN_ARG { /* @lexer.state = :expr_endarg */ } rparen
                     {
-
+                        // result = @builder.begin(val[0], val[1], val[3])
+                        $$ = Value::Node(Node::None);
                     }
-                | tLPAREN_ARG stmt {} rparen
+                | tLPAREN_ARG stmt { /* @lexer.state = :expr_endarg */ } rparen
                     {
-
+                        // result = @builder.begin(val[0], val[1], val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 | tLPAREN compstmt tRPAREN
                     {
-
+                        // result = @builder.begin(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 | primary_value tCOLON2 tCONSTANT
                     {
-
+                        // result = @builder.const_fetch(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 | tCOLON3 tCONSTANT
                     {
-
+                        // result = @builder.const_global(val[0], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 | tLBRACK aref_args tRBRACK
                     {
-
+                        // result = @builder.array(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 | tLBRACE assoc_list tRCURLY
                     {
-
+                        // result = @builder.associate(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 | k_return
                     {
-
+                        // result = @builder.keyword_cmd(:return, val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | kYIELD tLPAREN2 call_args rparen
                     {
-
+                        // result = @builder.keyword_cmd(:yield, val[0], val[1], val[2], val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 | kYIELD tLPAREN2 rparen
                     {
-
+                        // result = @builder.keyword_cmd(:yield, val[0], val[1], [], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 | kYIELD
                     {
-
+                        // result = @builder.keyword_cmd(:yield, val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | kDEFINED opt_nl tLPAREN2 {} expr rparen
                     {
-
+                        // result = @builder.keyword_cmd(:defined?, val[0],
+                        //                             val[2], [ val[3] ], val[4])
+                        $$ = Value::Node(Node::None);
                     }
                 | kNOT tLPAREN2 expr rparen
                     {
-
+                        // result = @builder.not_op(val[0], val[1], val[2], val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 | kNOT tLPAREN2 rparen
                     {
-
+                        // result = @builder.not_op(val[0], val[1], nil, val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 | fcall brace_block
                     {
+                        // method_call = @builder.call_method(nil, nil, val[0])
 
+                        // begin_t, args, body, end_t = val[1]
+                        // result      = @builder.block(method_call,
+                        //                 begin_t, args, body, end_t)
+                        $$ = Value::Node(Node::None);
                     }
                 | method_call
                 | method_call brace_block
                     {
-
+                        // begin_t, args, body, end_t = val[1]
+                        // result      = @builder.block(val[0],
+                        //                 begin_t, args, body, end_t)
+                        $$ = Value::Node(Node::None);
                     }
                 | lambda
-                    {
-
-                    }
                 | k_if expr_value then
                   compstmt
                   if_tail
                   k_end
                     {
-
+                        // else_t, else_ = val[4]
+                        // result = @builder.condition(val[0], val[1], val[2],
+                        //                             val[3], else_t,
+                        //                             else_,  val[5])
+                        $$ = Value::Node(Node::None);
                     }
                 | k_unless expr_value then
                   compstmt
                   opt_else
                   k_end
                     {
-
+                        // else_t, else_ = val[4]
+                        // result = @builder.condition(val[0], val[1], val[2],
+                        //                             else_,  else_t,
+                        //                             val[3], val[5])
+                        $$ = Value::Node(Node::None);
                     }
                 | k_while expr_value_do
                   compstmt
                   k_end
                     {
-
+                        // result = @builder.loop(:while, val[0], *val[1], val[2], val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 | k_until expr_value_do
                   compstmt
                   k_end
                     {
-
+                        // result = @builder.loop(:until, val[0], *val[1], val[2], val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 | k_case expr_value opt_terms
                     {
-
+                        // TODO: there's a warning that wq/parser doesn't trigger,
+                        // search for `p->case_labels`
                     }
                   case_body
                   k_end
                     {
+                        // *when_bodies, (else_t, else_body) = *val[3]
 
+                        // result = @builder.case(val[0], val[1],
+                        //                         when_bodies, else_t, else_body,
+                        //                         val[4])
+                        $$ = Value::Node(Node::None);
                     }
                 | k_case opt_terms
                     {
-
+                        // TODO: there's a warning that wq/parser doesn't trigger,
+                        // search for `p->case_labels`
                     }
                   case_body
                   k_end
                     {
+                        // *when_bodies, (else_t, else_body) = *val[2]
 
+                        // result = @builder.case(val[0], nil,
+                        //                         when_bodies, else_t, else_body,
+                        //                         val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 | k_case expr_value opt_terms
                   p_case_body
                   k_end
                     {
+                        // *in_bodies, (else_t, else_body) = *val[3]
 
+                        // result = @builder.case_match(val[0], val[1],
+                        //                         in_bodies, else_t, else_body,
+                        //                         val[4])
+                        $$ = Value::Node(Node::None);
                     }
                 | k_for for_var kIN expr_value_do
                   compstmt
                   k_end
                     {
-
+                        // result = @builder.for(val[0], val[1], val[2], *val[3], val[4], val[5])
+                        $$ = Value::Node(Node::None);
                     }
                 | k_class cpath superclass
                     {
@@ -1367,55 +1439,98 @@
                         // @lexer.cond.pop
                         // @static_env.unextend
                         // @context.pop
+                        $$ = Value::Node(Node::None);
                     }
                 | k_class tLSHFT expr
                     {
-
+                        // @static_env.extend_static
+                        // @lexer.cmdarg.push(false)
+                        // @lexer.cond.push(false)
+                        // @context.push(:sclass)
                     }
                   term
                   bodystmt
                   k_end
                     {
+                        // result = @builder.def_sclass(val[0], val[1], val[2],
+                        //                            val[5], val[6])
 
+                        // @lexer.cmdarg.pop
+                        // @lexer.cond.pop
+                        // @static_env.unextend
+                        // @context.pop
+                        $$ = Value::Node(Node::None);
                     }
                 | k_module cpath
                     {
-
+                        // @static_env.extend_static
+                        // @lexer.cmdarg.push(false)
+                        // @context.push(:module)
                     }
                   bodystmt
                   k_end
                     {
+                        // unless @context.module_definition_allowed?
+                        //     diagnostic :error, :module_in_def, nil, val[0]
+                        // end
 
+                        // result = @builder.def_module(val[0], val[1],
+                        //                             val[3], val[4])
+
+                        // @lexer.cmdarg.pop
+                        // @static_env.unextend
+                        // @context.pop
+                        $$ = Value::Node(Node::None);
                     }
                 | defn_head
                   f_arglist
                   bodystmt
                   k_end
                     {
+                        // result = @builder.def_method(*val[0], val[1],
+                        //           val[2], val[3])
 
+                        // @lexer.cmdarg.pop
+                        // @lexer.cond.pop
+                        // @static_env.unextend
+                        // @context.pop
+                        // @current_arg_stack.pop
+                        $$ = Value::Node(Node::None);
                     }
                 | defs_head
                   f_arglist
                   bodystmt
                   k_end
                     {
+                        // result = @builder.def_singleton(*val[0], val[1],
+                        //           val[2], val[3])
 
+                        // @lexer.cmdarg.pop
+                        // @lexer.cond.pop
+                        // @static_env.unextend
+                        // @context.pop
+                        // @current_arg_stack.pop
+                        $$ = Value::Node(Node::None);
                     }
                 | kBREAK
                     {
-
+                        // result = @builder.keyword_cmd(:break, val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | kNEXT
                     {
-
+                        // result = @builder.keyword_cmd(:next, val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | kREDO
                     {
-
+                        // result = @builder.keyword_cmd(:redo, val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | kRETRY
                     {
-
+                        // result = @builder.keyword_cmd(:retry, val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
@@ -1477,11 +1592,20 @@
                 ;
 
         k_return: kRETURN
+                    {
+                        // if @context.in_class?
+                        //     diagnostic :error, :invalid_return, nil, val[0]
+                        // end
+                        $$ = $<RAW>1;
+                    }
                 ;
 
             then: term
                 | kTHEN
                 | term kTHEN
+                    {
+                        $$ = $<RAW>2;
+                    }
                 ;
 
               do: term
@@ -1493,14 +1617,30 @@
                   compstmt
                   if_tail
                     {
-
+                        let opt_else = $<RAW>5;
+                        let (else_t, else_) = match opt_else {
+                            Value::TokenAndNode((token, node)) => (Some(token), Some(node)),
+                            Value::None => (None, None),
+                            _ => panic!("Expected TokenAndNode/None, got {:#?}", opt_else)
+                        };
+                        // result = [ val[0],
+                        //             @builder.condition(val[0], val[1], val[2],
+                        //                                 val[3], else_t,
+                        //                                 else_,  nil),
+                        //         ]
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
         opt_else: none
+                    {
+                        $$ = Value::None;
+                    }
                 | k_else compstmt
                     {
-
+                        let token = $<Token>1;
+                        let node  = $<Node>2;
+                        $$ = Value::TokenAndNode((token, node));
                     }
                 ;
 
@@ -1510,32 +1650,60 @@
 
           f_marg: f_norm_arg
                     {
-
+                        // result = @builder.arg(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | tLPAREN f_margs rparen
                     {
-
+                        // result = @builder.multi_lhs(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
      f_marg_list: f_marg
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | f_marg_list tCOMMA f_marg
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
          f_margs: f_marg_list
                 | f_marg_list tCOMMA f_rest_marg
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_marg_list tCOMMA f_rest_marg tCOMMA f_marg_list
+                    {
+                        let nodes = [ $<NodeList>1, vec![ $<Node>3 ], $<NodeList>5 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_rest_marg
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | f_rest_marg tCOMMA f_marg_list
+                    {
+                        let nodes = [ vec![ $<Node>1 ], $<NodeList>3 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
      f_rest_marg: tSTAR f_norm_arg
                     {
-
+                        // result = @builder.restarg(val[0], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 | tSTAR
                     {
-
+                        // result = @builder.restarg(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
@@ -1544,25 +1712,34 @@
                 ;
 
  block_args_tail: f_block_kwarg tCOMMA f_kwrest opt_f_block_arg
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_block_kwarg opt_f_block_arg
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_any_kwrest opt_f_block_arg
                     {
-
+                        let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 | f_block_arg
                     {
-
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
                 ;
 
 opt_block_args_tail:
                   tCOMMA block_args_tail
                     {
-
+                        $$ = $<RAW>2;
                     }
                 | /* none */
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 ;
 
@@ -1570,322 +1747,809 @@ opt_block_args_tail:
                 ;
 
      block_param: f_arg tCOMMA f_block_optarg tCOMMA f_rest_arg opt_block_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg tCOMMA f_block_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>7, $<NodeList>8 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg tCOMMA f_block_optarg opt_block_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg tCOMMA f_block_optarg tCOMMA f_arg opt_block_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4, $<NodeList>5 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg tCOMMA f_rest_arg opt_block_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg excessed_comma
                 | f_arg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_arg opt_block_args_tail
+                    {
+                        // if val[1].empty? && val[0].size == 1
+                        //     result = [@builder.procarg0(val[0][0])]
+                        // else
+                        //     result = val[0].concat(val[1])
+                        // end
+                        $$ = Value::NodeList(vec![]);
+                    }
                 | f_block_optarg tCOMMA f_rest_arg opt_block_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>2, $<NodeList>3 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_block_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_block_optarg opt_block_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_block_optarg tCOMMA f_arg opt_block_args_tail
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | f_rest_arg opt_block_args_tail
                     {
-
+                        let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 | f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
-
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 | block_args_tail
                 ;
 
  opt_block_param: none
+                    {
+                        // result = @builder.args(nil, [], nil)
+                        $$ = Value::Node(Node::None);
+                    }
                 | block_param_def
+                    {
+                        // @lexer.state = :expr_value
+                        $$ = $<RAW>1;
+                    }
                 ;
 
  block_param_def: tPIPE opt_bv_decl tPIPE
                     {
-
+                        // @max_numparam_stack.has_ordinary_params!
+                        // @current_arg_stack.set(nil)
+                        // result = @builder.args(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 | tPIPE block_param opt_bv_decl tPIPE
                     {
-
+                        // @max_numparam_stack.has_ordinary_params!
+                        // @current_arg_stack.set(nil)
+                        // result = @builder.args(val[0], val[1].concat(val[2]), val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
 
      opt_bv_decl: opt_nl
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 | opt_nl tSEMI bv_decls opt_nl
                     {
-
+                        $$ = $<RAW>3;
                     }
                 ;
 
         bv_decls: bvar
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | bv_decls tCOMMA bvar
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
             bvar: tIDENTIFIER
                     {
-
+                        // @static_env.declare val[0][0]
+                        // result = @builder.shadowarg(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | f_bad_arg
                     {
-
+                        // FIXME;
+                        $$ = Value::None;
                     }
                 ;
 
           lambda: tLAMBDA
+                    {
+                        // @static_env.extend_dynamic
+                        // @max_numparam_stack.push
+                        // @context.push(:lambda)
+                    }
                   f_larglist
+                    {
+                        // @context.pop
+                        // @lexer.cmdarg.push(false)
+                    }
                   lambda_body
                     {
+                        // lambda_call = @builder.call_lambda(val[0])
+                        // args = @max_numparam_stack.has_numparams? ? @builder.numargs(@max_numparam_stack.top) : val[2]
+                        // begin_t, body, end_t = val[4]
 
+                        // @max_numparam_stack.pop
+                        // @static_env.unextend
+                        // @lexer.cmdarg.pop
+
+                        // result      = @builder.block(lambda_call,
+                        //                 begin_t, args, body, end_t)
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
       f_larglist: tLPAREN2 f_args opt_bv_decl tRPAREN
                     {
-
+                        // @max_numparam_stack.has_ordinary_params!
+                        // result = @builder.args(val[0], val[1].concat(val[2]), val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 | f_args
                     {
-
+                        // if val[0].any?
+                        //     @max_numparam_stack.has_ordinary_params!
+                        // end
+                        // result = @builder.args(nil, val[0], nil)
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
-     lambda_body: tLAMBEG compstmt tRCURLY
+     lambda_body: tLAMBEG
                     {
-
+                        // @context.push(:lambda)
                     }
-                | kDO_LAMBDA bodystmt k_end
+                  compstmt tRCURLY
                     {
-
+                        // result = [ val[0], val[2], val[3] ]
+                        // @context.pop
+                        $$ = Value::Body(( $<Token>1, $<NodeList>3, $<Token>4 ));
+                    }
+                | kDO_LAMBDA
+                    {
+                        // @context.push(:lambda)
+                    }
+                  bodystmt k_end
+                    {
+                        // result = [ val[0], val[2], val[3] ]
+                        // @context.pop
+                        $$ = Value::Body(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 ;
 
-        do_block: k_do_block do_body k_end
+        do_block: k_do_block
                     {
-
+                        // @context.push(:block)
+                    }
+                  do_body k_end
+                    {
+                        // result = [ val[0], *val[2], val[3] ]
+                        // @context.pop
+                        $$ = Value::Body(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 ;
 
       block_call: command do_block
+                    {
+                        // begin_t, block_args, body, end_t = val[1]
+                        // result      = @builder.block(val[0],
+                        //                 begin_t, block_args, body, end_t)
+                        $$ = Value::Node(Node::None);
+                    }
                 | block_call call_op2 operation2 opt_paren_args
+                    {
+                        // lparen_t, args, rparen_t = val[3]
+                        // result = @builder.call_method(val[0], val[1], val[2],
+                        //             lparen_t, args, rparen_t)
+                        $$ = Value::Node(Node::None);
+                    }
                 | block_call call_op2 operation2 opt_paren_args brace_block
+                    {
+                        // lparen_t, args, rparen_t = val[3]
+                        // method_call = @builder.call_method(val[0], val[1], val[2],
+                        //                 lparen_t, args, rparen_t)
+
+                        // begin_t, args, body, end_t = val[4]
+                        // result      = @builder.block(method_call,
+                        //                 begin_t, args, body, end_t)
+                        $$ = Value::Node(Node::None);
+                    }
                 | block_call call_op2 operation2 command_args do_block
+                    {
+                        // method_call = @builder.call_method(val[0], val[1], val[2],
+                        //                 nil, val[3], nil)
+
+                        // begin_t, args, body, end_t = val[4]
+                        // result      = @builder.block(method_call,
+                        //                 begin_t, args, body, end_t)
+                        $$ = Value::Node(Node::None);
+                    }
                 ;
 
      method_call: fcall paren_args
+                    {
+                        // lparen_t, args, rparen_t = val[1]
+                        // result = @builder.call_method(nil, nil, val[0],
+                        //             lparen_t, args, rparen_t)
+                        $$ = Value::Node(Node::None);
+                    }
                 | primary_value call_op operation2 opt_paren_args
+                    {
+                        // lparen_t, args, rparen_t = val[3]
+                        // result = @builder.call_method(val[0], val[1], val[2],
+                        //             lparen_t, args, rparen_t)
+                        $$ = Value::Node(Node::None);
+                    }
                 | primary_value tCOLON2 operation2 paren_args
+                    {
+                        // lparen_t, args, rparen_t = val[3]
+                        // result = @builder.call_method(val[0], val[1], val[2],
+                        //           lparen_t, args, rparen_t)
+                        $$ = Value::Node(Node::None);
+                    }
                 | primary_value tCOLON2 operation3
+                    {
+                        // result = @builder.call_method(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
+                    }
                 | primary_value call_op paren_args
+                    {
+                        // lparen_t, args, rparen_t = val[2]
+                        // result = @builder.call_method(val[0], val[1], nil,
+                        //             lparen_t, args, rparen_t)
+                        $$ = Value::Node(Node::None);
+                    }
                 | primary_value tCOLON2 paren_args
+                    {
+                        // lparen_t, args, rparen_t = val[2]
+                        // result = @builder.call_method(val[0], val[1], nil,
+                        //             lparen_t, args, rparen_t)
+                        $$ = Value::Node(Node::None);
+                    }
                 | kSUPER paren_args
                     {
-
+                        // lparen_t, args, rparen_t = val[1]
+                        // result = @builder.keyword_cmd(:super, val[0],
+                        //             lparen_t, args, rparen_t)
+                        $$ = Value::Node(Node::None);
                     }
                 | kSUPER
                     {
-
+                        // result = @builder.keyword_cmd(:zsuper, val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
-                ;
-
-     brace_block: tLCURLY brace_body tRCURLY
                     {
-
-                    }
-                | k_do do_body k_end
-                    {
-
+                        // result = @builder.index(val[0], val[1], val[2], val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
-      brace_body: opt_block_param compstmt
+     brace_block: tLCURLY
+                    {
+                        // @context.push(:block)
+                    }
+                  brace_body tRCURLY
+                    {
+                        // result = [ val[0], *val[2], val[3] ]
+                        // @context.pop
+
+                        $$ = Value::Body(( $<Token>1, $<NodeList>3, $<Token>4 ));
+                    }
+                | k_do
+                    {
+                        // @context.push(:block)
+                    }
+                  do_body k_end
+                    {
+                        // result = [ val[0], *val[2], val[3] ]
+                        // @context.pop
+
+                        $$ = Value::Body(( $<Token>1, $<NodeList>3, $<Token>4 ));
+                    }
                 ;
 
-         do_body: opt_block_param bodystmt
+      brace_body:   {
+                        // @static_env.extend_dynamic
+                        // @max_numparam_stack.push
+                    }
+                  opt_block_param compstmt
+                    {
+                        // args = @max_numparam_stack.has_numparams? ? @builder.numargs(@max_numparam_stack.top) : val[1]
+                        // result = [ args, val[2] ]
+
+                        // @max_numparam_stack.pop
+                        // @static_env.unextend
+
+                        $$ = Value::NodeList(vec![]);
+                    }
+                ;
+
+         do_body:   {
+                        // @static_env.extend_dynamic
+                        // @max_numparam_stack.push
+                        // @lexer.cmdarg.push(false)
+                    }
+                  opt_block_param bodystmt
+                    {
+                        // args = @max_numparam_stack.has_numparams? ? @builder.numargs(@max_numparam_stack.top) : val[2]
+                        // result = [ args, val[3] ]
+
+                        // @max_numparam_stack.pop
+                        // @static_env.unextend
+                        // @lexer.cmdarg.pop
+
+                        $$ = Value::NodeList(vec![]);
+                    }
                 ;
 
        case_args: arg_value
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | tSTAR arg_value
                     {
-
+                        // result = [ @builder.splat(val[0], val[1]) ]
+                        $$ = Value::NodeList( vec![] );
                     }
                 | case_args tCOMMA arg_value
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 | case_args tCOMMA tSTAR arg_value
+                    {
+                        // result = val[0] << @builder.splat(val[2], val[3])
+                        $$ = Value::NodeList( vec![] );
+                    }
                 ;
 
        case_body: k_when case_args then
                   compstmt
                   cases
                     {
-
+                        // @builder.when(val[0], val[1], val[2], val[3])
+                        let when = Node::None;
+                        let nodes = [ vec![when], $<NodeList>5 ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 ;
 
            cases: opt_else
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | case_body
                 ;
 
      p_case_body: kIN
+                    {
+                        // @lexer.state = :expr_beg
+                        // @lexer.command_start = false
+                        // @pattern_variables.push
+                        // @pattern_hash_keys.push
+
+                        // result = @lexer.in_kwarg
+                        // @lexer.in_kwarg = true
+                    }
                   p_top_expr then
+                    {
+                        // @lexer.in_kwarg = val[1]
+                    }
                   compstmt
                   p_cases
                     {
-
+                        // @builder.in_pattern(val[0], *val[2], val[3], val[5])
+                        let pattern = Node::None;
+                        let nodes = [ vec![pattern], $<NodeList>7 ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 ;
 
          p_cases: opt_else
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | p_case_body
                 ;
 
       p_top_expr: p_top_expr_body
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | p_top_expr_body kIF_MOD expr_value
+                    {
+                        // @builder.if_guard(val[1], val[2])
+                        let guard = Node::None;
+                        $$ = Value::NodeList( vec![ $<Node>1, guard ] );
+                    }
                 | p_top_expr_body kUNLESS_MOD expr_value
+                    {
+                        // @builder.unless_guard(val[1], val[2])
+                        let guard = Node::None;
+                        $$ = Value::NodeList( vec![ $<Node>1, guard ] );
+                    }
                 ;
 
  p_top_expr_body: p_expr
                 | p_expr tCOMMA
+                    {
+                        // array patterns that end with comma
+                        // like 1, 2,
+                        // must be emitted as `array_pattern_with_tail`
+                        // item = @builder.match_with_trailing_comma(val[0], val[1])
+                        // result = @builder.array_pattern(nil, [ item ], nil)
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_expr tCOMMA p_args
+                    {
+                        // result = @builder.array_pattern(nil, [val[0]].concat(val[2]), nil)
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_find
+                    {
+                        // result = @builder.find_pattern(nil, val[0], nil)
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_args_tail
+                    {
+                        // result = @builder.array_pattern(nil, val[0], nil)
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_kwargs
+                    {
+                        // result = @builder.hash_pattern(nil, val[0], nil)
+                        $$ = Value::Node(Node::None);
+                    }
                 ;
 
           p_expr: p_as
                 ;
 
             p_as: p_expr tASSOC p_variable
+                    {
+                        // result = @builder.match_as(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_alt
                 ;
 
            p_alt: p_alt tPIPE p_expr_basic
+                    {
+                        // result = @builder.match_alt(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_expr_basic
                 ;
 
         p_lparen: tLPAREN2
+                    {
+                        $$ = $<RAW>1;
+                        // @pattern_hash_keys.push
+                    }
                 ;
 
       p_lbracket: tLBRACK2
+                    {
+                        $$ = $<RAW>1;
+                        // @pattern_hash_keys.push
+                    }
                 ;
 
     p_expr_basic: p_value
                 | p_const p_lparen p_args rparen
+                    {
+                        // @pattern_hash_keys.pop
+                        // pattern = @builder.array_pattern(nil, val[2], nil)
+                        // result = @builder.const_pattern(val[0], val[1], pattern, val[3])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_const p_lparen p_find rparen
+                    {
+                        // @pattern_hash_keys.pop
+                        // pattern = @builder.find_pattern(nil, val[2], nil)
+                        // result = @builder.const_pattern(val[0], val[1], pattern, val[3])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_const p_lparen p_kwargs rparen
+                    {
+                        // @pattern_hash_keys.pop
+                        // pattern = @builder.hash_pattern(nil, val[2], nil)
+                        // result = @builder.const_pattern(val[0], val[1], pattern, val[3])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_const tLPAREN2 rparen
+                    {
+                        // pattern = @builder.array_pattern(val[1], nil, val[2])
+                        // result = @builder.const_pattern(val[0], val[1], pattern, val[2])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_const p_lbracket p_args rbracket
+                    {
+                        // @pattern_hash_keys.pop
+                        // pattern = @builder.array_pattern(nil, val[2], nil)
+                        // result = @builder.const_pattern(val[0], val[1], pattern, val[3])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_const p_lbracket p_find rbracket
+                    {
+                        // @pattern_hash_keys.pop
+                        // pattern = @builder.find_pattern(nil, val[2], nil)
+                        // result = @builder.const_pattern(val[0], val[1], pattern, val[3])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_const p_lbracket p_kwargs rbracket
+                    {
+                        // @pattern_hash_keys.pop
+                        // pattern = @builder.hash_pattern(nil, val[2], nil)
+                        // result = @builder.const_pattern(val[0], val[1], pattern, val[3])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_const tLBRACK2 rbracket
+                    {
+                        // pattern = @builder.array_pattern(val[1], nil, val[2])
+                        // result = @builder.const_pattern(val[0], val[1], pattern, val[2])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tLBRACK p_args rbracket
                     {
-
+                        // result = @builder.array_pattern(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 | tLBRACK p_find rbracket
                     {
-
+                        // result = @builder.find_pattern(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 | tLBRACK rbracket
                     {
-
+                        // result = @builder.array_pattern(val[0], [], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 | tLBRACE
+                    {
+                        // @pattern_hash_keys.push
+                        // result = @lexer.in_kwarg
+                        // @lexer.in_kwarg = false
+                    }
                   p_kwargs rbrace
                     {
-
+                        // @pattern_hash_keys.pop
+                        // @lexer.in_kwarg = val[1]
+                        // result = @builder.hash_pattern(val[0], val[2], val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 | tLBRACE rbrace
                     {
-
+                        // result = @builder.hash_pattern(val[0], [], val[1])
+                        $$ = Value::Node(Node::None);
                     }
-                | tLPAREN p_expr rparen
+                | tLPAREN
                     {
-
+                        // @pattern_hash_keys.push
+                    }
+                  p_expr rparen
+                    {
+                        // @pattern_hash_keys.pop
+                        // result = @builder.begin(val[0], val[2], val[3])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
           p_args: p_expr
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | p_args_head
                 | p_args_head p_arg
+                    {
+                        let nodes = [ $<NodeList>1, vec![ $<Node>2 ] ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | p_args_head tSTAR tIDENTIFIER
+                    {
+                        // match_rest = @builder.match_rest(val[1], val[2])
+                        // result = [ *val[0], match_rest ]
+                        $$ = Value::NodeList( vec![] );
+                    }
                 | p_args_head tSTAR tIDENTIFIER tCOMMA p_args_post
+                    {
+                        // match_rest = @builder.match_rest(val[1], val[2])
+                        // result = [ *val[0], match_rest, *val[4] ]
+                        $$ = Value::NodeList( vec![] );
+                    }
                 | p_args_head tSTAR
+                    {
+                        // result = [ *val[0], @builder.match_rest(val[1]) ]
+                        $$ = Value::NodeList( vec![] );
+                    }
                 | p_args_head tSTAR tCOMMA p_args_post
+                    {
+                        // result = [ *val[0], @builder.match_rest(val[1]), *val[3] ]
+                        $$ = Value::NodeList( vec![] );
+                    }
                 | p_args_tail
                 ;
 
      p_args_head: p_arg tCOMMA
+                    {
+                        // array patterns that end with comma
+                        // like [1, 2,]
+                        // must be emitted as `array_pattern_with_tail`
+                        // item = @builder.match_with_trailing_comma(val[0], val[1])
+                        // result = [ item ]
+                        $$ = Value::NodeList( vec![] );
+                    }
                 | p_args_head p_arg tCOMMA
+                    {
+                        // array patterns that end with comma
+                        // like [1, 2,]
+                        // must be emitted as `array_pattern_with_tail`
+                        // last_item = @builder.match_with_trailing_comma(val[1], val[2])
+                        // result = [ *val[0], last_item ]
+                        $$ = Value::NodeList( vec![] );
+                    }
                 ;
 
      p_args_tail: p_rest
                     {
-
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
                 | p_rest tCOMMA p_args_post
                     {
-
+                        let nodes = [ vec![ $<Node>1 ], $<NodeList>3 ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 ;
 
           p_find: p_rest tCOMMA p_args_post tCOMMA p_rest
                     {
-
+                        let nodes = [ vec![ $<Node>1 ], $<NodeList>3, vec![ $<Node>5 ] ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 ;
 
 
           p_rest: tSTAR tIDENTIFIER
+                    {
+                        // result = @builder.match_rest(val[0], val[1])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tSTAR
+                    {
+                        // result = @builder.match_rest(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 ;
 
      p_args_post: p_arg
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | p_args_post tCOMMA p_arg
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
            p_arg: p_expr
                 ;
 
         p_kwargs: p_kwarg tCOMMA p_any_kwrest
+                    {
+                        let nodes = [ $<NodeList>1, $<NodeList>3 ].concat();
+                        $$ = Value::NodeList(nodes);
+                    }
                 | p_kwarg
                 | p_kwarg tCOMMA
                 | p_any_kwrest
-                    {
-
-                    }
                 ;
 
          p_kwarg: p_kw
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | p_kwarg tCOMMA p_kw
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>3 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
             p_kw: p_kw_label p_expr
                     {
-
+                        let p_kw_label = $<RAW>1;
+                        let p_expr = $<Node>2;
+                        match p_kw_label {
+                            Value::PlainLabel(label_t) => {
+                                // result = @builder.match_plain_label_pair(label_t, p_expr);
+                                $$ = Value::Node(Node::None);
+                            },
+                            Value::QuotedLabel((begin_t, parts, end_t)) => {
+                                // result = @builder.match_quoted_label_pair(begin_t, parts, end_t, p_expr);
+                                $$ = Value::Node(Node::None);
+                            },
+                            _ => panic!("Expected PlainLabel/QuotedLabel, got {:#?}", p_kw_label)
+                        }
                     }
                 | p_kw_label
                     {
-
+                        let p_kw_label = $<RAW>1;
+                        match p_kw_label {
+                            Value::PlainLabel(label_t) => {
+                                // result = @builder.match_plain_label(label_t);
+                                $$ = Value::Node(Node::None);
+                            },
+                            Value::QuotedLabel((begin_t, parts, end_t)) => {
+                                // result = @builder.match_quoted_label(begin_t, parts, end_t);
+                                $$ = Value::Node(Node::None);
+                            },
+                            _ => panic!("Expected PlainLabel/QuotedLabel, got {:#?}", p_kw_label)
+                        }
                     }
                 ;
 
       p_kw_label: tLABEL
+                    {
+                        $$ = Value::PlainLabel($<Token>1);
+                    }
                 | tSTRING_BEG string_contents tLABEL_END
+                    {
+                        $$ = Value::QuotedLabel( ($<Token>1, $<NodeList>2, $<Token>3) );
+                    }
                 ;
 
         p_kwrest: kwrest_mark tIDENTIFIER
                     {
-
+                        // result = [ @builder.match_rest(val[0], val[1]) ]
+                        $$ = Value::NodeList( vec![] );
                     }
                 | kwrest_mark
                     {
-
+                        // result = [ @builder.match_rest(val[0], nil) ]
+                        $$ = Value::NodeList( vec![] );
                     }
                 ;
 
       p_kwnorest: kwrest_mark kNIL
                     {
-
+                        // result = [ @builder.match_nil_pattern(val[0], val[1]) ]
+                        $$ = Value::NodeList( vec![] );
                     }
                 ;
 
@@ -1895,19 +2559,37 @@ opt_block_args_tail:
 
          p_value: p_primitive
                 | p_primitive tDOT2 p_primitive
+                    {
+                        // result = @builder.range_inclusive(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_primitive tDOT3 p_primitive
+                    {
+                        // result = @builder.range_exclusive(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_primitive tDOT2
+                    {
+                        // result = @builder.range_inclusive(val[0], val[1], nil)
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_primitive tDOT3
+                    {
+                        // result = @builder.range_exclusive(val[0], val[1], nil)
+                        $$ = Value::Node(Node::None);
+                    }
                 | p_variable
                 | p_var_ref
                 | p_const
                 | tBDOT2 p_primitive
                     {
-
+                        // result = @builder.range_inclusive(nil, val[0], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 | tBDOT3 p_primitive
                     {
-
+                        // result = @builder.range_exclusive(nil, val[0], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
@@ -1921,63 +2603,106 @@ opt_block_args_tail:
                 | qsymbols
                 | keyword_variable
                     {
-
+                        // result = @builder.accessible(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | lambda
                 ;
 
       p_variable: tIDENTIFIER
                     {
-
+                        // result = @builder.match_var(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
        p_var_ref: tCARET tIDENTIFIER
                     {
+                        // name = val[1][0]
+                        // unless static_env.declared?(name)
+                        //     diagnostic :error, :undefined_lvar, { :name => name }, val[1]
+                        // end
 
+                        // lvar = @builder.accessible(@builder.ident(val[1]))
+                        // result = @builder.pin(val[0], lvar)
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
          p_const: tCOLON3 cname
                     {
-
+                        // result = @builder.const_global(val[0], val[1])
+                        $$ = Value::Node(Node::None);
                     }
                 | p_const tCOLON2 cname
+                    {
+                        // result = @builder.const_fetch(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tCONSTANT
                     {
-
+                        // result = @builder.const(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
       opt_rescue: k_rescue exc_list exc_var then
-                    {
-
-                    }
                   compstmt
                   opt_rescue
                     {
+                        let exc_var = $<RAW>3;
+                        let (assoc_t, exc_var) = match exc_var {
+                            Value::TokenAndNode((token, node)) => ( Some(token), Some(node) ),
+                            Value::None => (None, None),
+                            _ => panic!("Expected TokenAndNode/None, got {:#?}", exc_var)
+                        };
 
+                        let exc_list = $<NodeList>2;
+                        let rescue_body = Node::None;
+                        let opt_rescue = $<NodeList>6;
+
+                        let rescues: Vec<Node> = [ vec![rescue_body], opt_rescue ].concat();
+                        $$ = Value::NodeList(rescues);
                     }
                 | none
+                    {
+                        $$ = Value::NodeList( vec![] );
+                    }
                 ;
 
         exc_list: arg_value
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | mrhs
                 | none
+                    {
+                        $$ = Value::NodeList( vec![] );
+                    }
                 ;
 
          exc_var: tASSOC lhs
                     {
-
+                        let token = $<Token>1;
+                        let node = $<Node>2;
+                        $$ = Value::TokenAndNode( (token, node) );
                     }
                 | none
+                    {
+                        $$ = Value::None;
+                    }
                 ;
 
       opt_ensure: k_ensure compstmt
                     {
-
+                        let token = $<Token>1;
+                        let node = $<Node>2;
+                        $$ = Value::TokenAndNode((token, node));
                     }
                 | none
+                    {
+                        $$ = Value::None;
+                    }
                 ;
 
          literal: numeric
@@ -1985,135 +2710,214 @@ opt_block_args_tail:
                 ;
 
          strings: string
+                    {
+                        // result = @builder.string_compose(nil, val[0], nil)
+                        $$ = Value::Node(Node::None);
+                    }
                 ;
 
           string: tCHAR
+                    {
+                        // result = [ @builder.character(val[0]) ]
+                        $$ = Value::NodeList( vec![] );
+                    }
                 | string1
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | string string1
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>2 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
          string1: tSTRING_BEG string_contents tSTRING_END
                     {
-
+                        // string = @builder.string_compose(val[0], val[1], val[2])
+                        // result = @builder.dedent_string(string, @lexer.dedent_level)
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
          xstring: tXSTRING_BEG xstring_contents tSTRING_END
                     {
-
+                        // string = @builder.xstring_compose(val[0], val[1], val[2])
+                        // result = @builder.dedent_string(string, @lexer.dedent_level)
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
           regexp: tREGEXP_BEG regexp_contents tREGEXP_END
                     {
-
+                        // opts   = @builder.regexp_options(val[3])
+                        // result = @builder.regexp_compose(val[0], val[1], val[2], opts)
+                        // TODO: handle regexp options
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
            words: tWORDS_BEG tSPACE word_list tSTRING_END
                     {
-
+                        // result = @builder.words_compose(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
        word_list: /* none */
                     {
+                        $$ = Value::NodeList( vec![] );
 
                     }
                 | word_list word tSPACE
+                    {
+                        let mut nodes = $<NodeList>1;
+                        // nodes.push( builder.word( $<Node>2 ) );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
             word: string_content
+                    {
+                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                    }
                 | word string_content
+                    {
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( $<Node>2 );
+                        $$ = Value::NodeList(nodes);
+                    }
                 ;
 
          symbols: tSYMBOLS_BEG tSPACE symbol_list tSTRING_END
                     {
-
+                        // result = @builder.symbols_compose(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
      symbol_list: /* none */
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 | symbol_list word tSPACE
+                    {
+                        let mut nodes = $<NodeList>1;
+                        // nodes.push(builder.word( $<Token>2 ));
+                        $$ = Value::NodeList( nodes );
+                    }
                 ;
 
           qwords: tQWORDS_BEG tSPACE qword_list tSTRING_END
                     {
-
+                        // result = @builder.words_compose(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
         qsymbols: tQSYMBOLS_BEG tSPACE qsym_list tSTRING_END
                     {
-
+                        // result = @builder.symbols_compose(val[0], val[1], val[2])
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
       qword_list: /* none */
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 | qword_list tSTRING_CONTENT tSPACE
+                    {
+                        let mut nodes = $<NodeList>1;
+                        // nodes.push(builder.string_internal( $<Token>2 ));
+                        $$ = Value::NodeList( nodes );
+                    }
                 ;
 
        qsym_list: /* none */
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 | qsym_list tSTRING_CONTENT tSPACE
+                    {
+                        let mut nodes = $<NodeList>1;
+                        // nodes.push(builder.symbol_internal( $<Token>2 ));
+                        $$ = Value::NodeList( nodes );
+                    }
                 ;
 
  string_contents: /* none */
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 | string_contents string_content
+                    {
+                        $$ = Value::NodeList( vec![] );
+                    }
                 ;
 
 xstring_contents: /* none */
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 | xstring_contents string_content
+                    {
+                        $$ = Value::NodeList( vec![] );
+                    }
                 ;
 
  regexp_contents: /* none */
                     {
-
+                        $$ = Value::NodeList( vec![] );
                     }
                 | regexp_contents string_content
+                    {
+                        let mut  nodes = $<NodeList>1;
+                        nodes.push( $<Node>2 );
+                        $$ = Value::NodeList( nodes );
+                    }
                 ;
 
   string_content: tSTRING_CONTENT
+                    {
+                        // result = @builder.string_internal(val[0])
+                        $$ = Value::Node(Node::None);
+                    }
                 | tSTRING_DVAR
+                    {
+                        // TODO: push terminal
+                    }
                   string_dvar
                     {
-
+                        // result = val[1]
+                        $$ = Value::Node(Node::None);
                     }
                 | tSTRING_DBEG
                     {
-
+                        // TODO: push terminal
                     }
                   compstmt tSTRING_DEND
                     {
-
+                        $$ = Value::Node(Node::None);
                     }
                 ;
 
      string_dvar: tGVAR
                     {
-
+                        // result = @builder.gvar(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | tIVAR
                     {
+                        // result = @builder.ivar(val[0])
+                        $$ = Value::Node(Node::None);
 
                     }
                 | tCVAR
                     {
-
+                        // result = @builder.cvar(val[0])
+                        $$ = Value::Node(Node::None);
                     }
                 | backref
                 ;
@@ -2826,10 +3630,17 @@ pub enum Value {
     TokenList(Vec<Token>),
     Node(Node),
     NodeList(Vec<Node>),
-    /* For superclass rule */
+    /* For superclass/opt_ensure/exc_var rule */
     TokenAndNode((Token, Node)),
     /* For user_variable rule */
     Ident(Token),
+    /* For p_kw_label rule */
+    PlainLabel(Token),
+    /* For p_kw_label rule */
+    QuotedLabel((Token, Vec<Node>, Token)),
+
+    /* */
+    Body((Token, Vec<Node>, Token)),
 }
 
 impl Value {
@@ -2841,15 +3652,21 @@ impl Value {
 impl std::fmt::Debug for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { //'
         match self {
-            Value::None => f.write_str("Token::None"),
-            Value::Stolen => f.write_str("Token::Stolen"),
+            Value::None => {
+                f.write_str("Token::None")
+            },
+            Value::Stolen => {
+                f.write_str("Token::Stolen")
+            },
             Value::Token((token_type, token_value, loc)) => {
                 f.write_fmt(format_args!("Token({}, {:?}, {:?})", token_type, token_value, loc))
             },
             Value::TokenList(tokens) => {
                 f.write_fmt(format_args!("TokenList({:?})", tokens))
             },
-            Value::Node(node) => f.write_fmt(format_args!("Node({:?})", node)),
+            Value::Node(node) => {
+                f.write_fmt(format_args!("Node({:?})", node))
+            },
             Value::NodeList(nodes) => {
                 f.write_fmt(format_args!("NodeList({:?})", nodes))
             },
@@ -2858,7 +3675,16 @@ impl std::fmt::Debug for Value {
             },
             Value::Ident(token) => {
                 f.write_fmt(format_args!("Ident({:?})", token))
-            }
+            },
+            Value::PlainLabel(token) => {
+                f.write_fmt(format_args!("PlainLabel({:?})", token))
+            },
+            Value::QuotedLabel((start, tokens, end)) => {
+                f.write_fmt(format_args!("QuotedLabel({:?}, {:?}, {:?})", start, tokens, end))
+            },
+            Value::Body((start, nodes, end)) => {
+                f.write_fmt(format_args!("Body({:?}, {:?}, {:?})", start, nodes, end))
+            },
         }
     }
 }
