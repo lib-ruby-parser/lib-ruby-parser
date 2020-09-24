@@ -125,10 +125,20 @@
 %type <node_list> args opt_block_arg command_args call_args opt_call_args aref_args
 %type <node_list> undef_list mlhs_post mlhs_head mlhs_basic stmts top_stmts
 
+%type <expr_value_do> expr_value_do
+%type <superclass> superclass
+%type <opt_ensure> opt_ensure
+%type <opt_else> opt_else
+%type <exc_var> exc_var
+%type <if_tail> if_tail
+%type <cmd_brace_block> cmd_brace_block
+%type <brace_block> brace_block
+%type <do_block> do_block
+%type <lambda_body> lambda_body
+%type <paren_args> paren_args
+%type <opt_paren_args> opt_paren_args
 %type <defn_head> defn_head
 %type <defs_head> defs_head
-
-%type <token_and_node> superclass opt_ensure exc_var opt_else if_tail expr_value_do
 
 %type <token>   sym operation operation2 operation3
 %type <token>   cname fname op f_norm_arg f_bad_arg
@@ -136,8 +146,6 @@
 %type <token>   p_rest p_kw_label
 %type <token>   args_forward excessed_comma def_name
 %type <token>   rbrace rparen rbracket p_lparen p_lbracket k_return then term fcall
-
-%type <body> brace_block do_block lambda_body paren_args opt_paren_args cmd_brace_block
 
 %type <token_list> terms
 
@@ -315,12 +323,7 @@
                   compstmt
                   opt_ensure
                     {
-                        let opt_ensure = $<RAW>2;
-                        let (ensure_t, ensure) = match opt_ensure {
-                            Value::TokenAndNode((token, node)) => ( Some(token), Some(node) ),
-                            Value::None => (None, None),
-                            _ => panic!("Expected TokenAndNode/None, got {:#?}", opt_ensure)
-                        };
+                        let opt_ensure = $<OptEnsure>2;
 
                         $$ = Value::Node(Node::None);
                     }
@@ -328,12 +331,8 @@
                   opt_rescue
                   opt_ensure
                     {
-                        let opt_ensure = $<RAW>2;
-                        let (ensure_t, ensure) = match opt_ensure {
-                            Value::TokenAndNode((token, node)) => ( Some(token), Some(node) ),
-                            Value::None => (None, None),
-                            _ => panic!("Expected TokenAndNode/None, got {:#?}", opt_ensure)
-                        };
+                        let opt_ensure = $<OptEnsure>2;
+
                         $$ = Value::Node(Node::None);
                     }
                 ;
@@ -650,7 +649,7 @@
                     {
                         // @lexer.cond.pop
                         // result = [ val[1], val[2] ]
-                        $$ = Value::TokenAndNode(( $<Token>3, $<Node>2 ));
+                        $$ = Value::ExprValueDo(( $<Token>3, $<Node>2 ));
                     }
                 ;
 
@@ -671,7 +670,7 @@
                     {
                         // result = [ val[0], *val[2], val[3] ]
                         // @context.pop
-                        $$ = Value::Body(( Some($<Token>1), $<NodeList>3, Some($<Token>4) ));
+                        $$ = Value::CmdBraceBlock(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 ;
 
@@ -1424,7 +1423,7 @@
 
       paren_args: tLPAREN2 opt_call_args rparen
                     {
-                        $$ = Value::Body(( Some($<Token>1), $<NodeList>2, Some($<Token>3) ));
+                        $$ = Value::ParenArgs(( $<Token>1, $<NodeList>2, $<Token>3 ));
                     }
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
@@ -1433,7 +1432,7 @@
                         // end
 
                         // result = [val[0], [*val[1], @builder.forwarded_args(val[3])], val[4]]
-                        $$ = Value::Body(( Some($<Token>1), vec![], Some($<Token>5) ));
+                        $$ = Value::ParenArgs(( $<Token>1, vec![], $<Token>5 ));
                     }
                 | tLPAREN2 args_forward rparen
                     {
@@ -1442,15 +1441,19 @@
                         // end
 
                         // result = [val[0], [@builder.forwarded_args(val[1])], val[2]]
-                        $$ = Value::Body(( Some($<Token>1), vec![], Some($<Token>3) ));
+                        $$ = Value::ParenArgs(( $<Token>1, vec![], $<Token>3 ));
                     }
                 ;
 
   opt_paren_args: none
                     {
-                        $$ = Value::Body(( None, vec![], None ));
+                        $$ = Value::OptParenArgs(( None, vec![], None ));
                     }
                 | paren_args
+                    {
+                        let (lparen, body, rparen) = $<ParenArgs>1;
+                        $$ = Value::OptParenArgs(( Some(lparen), body, Some(rparen) ));
+                    }
                 ;
 
    opt_call_args: none
@@ -1789,12 +1792,8 @@
                         //     diagnostic :error, :class_in_def, nil, val[0]
                         // end
 
-                        let superclass = $<RAW>3;
-                        let (lt_t, superclass) = match superclass {
-                            Value::TokenAndNode((token, node)) => (Some(token), Some(node)),
-                            Value::None => (None, None),
-                            _ => panic!("Expected TokenAndNode, got {:#?}", superclass)
-                        };
+                        let superclass = $<Superclass>3;
+
                         // result = @builder.def_class(val[0], val[1],
                         //                             lt_t, superclass,
                         //                             val[4], val[5])
@@ -1977,34 +1976,32 @@
                 ;
 
          if_tail: opt_else
+                    {
+                        $$ = Value::IfTail($<OptElse>1);
+                    }
                 | k_elsif expr_value then
                   compstmt
                   if_tail
                     {
-                        let opt_else = $<RAW>5;
-                        let (else_t, else_) = match opt_else {
-                            Value::TokenAndNode((token, node)) => (Some(token), Some(node)),
-                            Value::None => (None, None),
-                            _ => panic!("Expected TokenAndNode/None, got {:#?}", opt_else)
-                        };
+                        let opt_else = $<OptElse>5;
                         // result = [ val[0],
                         //             @builder.condition(val[0], val[1], val[2],
                         //                                 val[3], else_t,
                         //                                 else_,  nil),
                         //         ]
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::IfTail( Some(( $<Token>1, Node::None )) );
                     }
                 ;
 
         opt_else: none
                     {
-                        $$ = Value::None;
+                        $$ = Value::OptElse(None);
                     }
                 | k_else compstmt
                     {
                         let token = $<Token>1;
                         let node  = $<Node>2;
-                        $$ = Value::TokenAndNode((token, node));
+                        $$ = Value::OptElse( Some((token, node)) );
                     }
                 ;
 
@@ -2298,7 +2295,7 @@ opt_block_args_tail:
                     {
                         // result = [ val[0], val[2], val[3] ]
                         // @context.pop
-                        $$ = Value::Body(( Some($<Token>1), $<NodeList>3, Some($<Token>4) ));
+                        $$ = Value::LambdaBody(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 | kDO_LAMBDA
                     {
@@ -2308,7 +2305,7 @@ opt_block_args_tail:
                     {
                         // result = [ val[0], val[2], val[3] ]
                         // @context.pop
-                        $$ = Value::Body(( Some($<Token>1), $<NodeList>3, Some($<Token>4) ));
+                        $$ = Value::LambdaBody(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 ;
 
@@ -2320,7 +2317,7 @@ opt_block_args_tail:
                     {
                         // result = [ val[0], *val[2], val[3] ]
                         // @context.pop
-                        $$ = Value::Body(( Some($<Token>1), $<NodeList>3, Some($<Token>4) ));
+                        $$ = Value::DoBlock(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 ;
 
@@ -2429,7 +2426,7 @@ opt_block_args_tail:
                         // result = [ val[0], *val[2], val[3] ]
                         // @context.pop
 
-                        $$ = Value::Body(( Some($<Token>1), $<NodeList>3, Some($<Token>4) ));
+                        $$ = Value::BraceBlock(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 | k_do
                     {
@@ -2440,7 +2437,7 @@ opt_block_args_tail:
                         // result = [ val[0], *val[2], val[3] ]
                         // @context.pop
 
-                        $$ = Value::Body(( Some($<Token>1), $<NodeList>3, Some($<Token>4) ));
+                        $$ = Value::BraceBlock(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 ;
 
@@ -2544,6 +2541,7 @@ opt_block_args_tail:
 
          p_cases: opt_else
                     {
+                        // FIXME: opt_else is OptElse, not Node
                         $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
                 | p_case_body
@@ -3014,12 +3012,7 @@ opt_block_args_tail:
                   compstmt
                   opt_rescue
                     {
-                        let exc_var = $<RAW>3;
-                        let (assoc_t, exc_var) = match exc_var {
-                            Value::TokenAndNode((token, node)) => ( Some(token), Some(node) ),
-                            Value::None => (None, None),
-                            _ => panic!("Expected TokenAndNode/None, got {:#?}", exc_var)
-                        };
+                        let exc_var = $<ExcVar>3;
 
                         let exc_list = $<NodeList>2;
                         let rescue_body = Node::None;
@@ -3049,11 +3042,11 @@ opt_block_args_tail:
                     {
                         let token = $<Token>1;
                         let node = $<Node>2;
-                        $$ = Value::TokenAndNode( (token, node) );
+                        $$ = Value::ExcVar( Some((token, node)) );
                     }
                 | none
                     {
-                        $$ = Value::None;
+                        $$ = Value::ExcVar(None);
                     }
                 ;
 
@@ -3061,11 +3054,11 @@ opt_block_args_tail:
                     {
                         let token = $<Token>1;
                         let node = $<Node>2;
-                        $$ = Value::TokenAndNode((token, node));
+                        $$ = Value::OptEnsure( Some((token, node)) );
                     }
                 | none
                     {
-                        $$ = Value::None;
+                        $$ = Value::OptEnsure(None);
                     }
                 ;
 
@@ -3459,11 +3452,11 @@ keyword_variable: kNIL
                     {
                         let token = $<Token>1;
                         let node  = $<Node>3;
-                        $$ = Value::TokenAndNode( (token, node) );
+                        $$ = Value::Superclass( Some((token, node)) );
                     }
                 | /* none */
                     {
-                        $$ = Value::None;
+                        $$ = Value::Superclass(None);
                     }
                 ;
 
@@ -3994,25 +3987,59 @@ pub enum Value {
     TokenList(Vec<Token>),
     Node(Node),
     NodeList(Vec<Node>),
-    /* For superclass/opt_ensure/exc_var rule */
-    TokenAndNode((Token, Node)),
-    /* For user_variable rule */
+
+    /* For custom superclass rule */
+    Superclass(Option<(Token, Node)>),
+
+    /* For custom opt_ensure rule */
+    OptEnsure(Option<(Token, Node)>),
+
+    /* For custom opt_else rule */
+    OptElse(Option<(Token, Node)>),
+
+    /* For custom exc_var rule */
+    ExcVar(Option<(Token, Node)>),
+
+    /* For custom if_tail rule */
+    IfTail(Option<(Token, Node)>),
+
+    /* For custom expr_value_do rule */
+    ExprValueDo((Token, Node)),
+
+    /* For custom user_variable rule */
     Ident(Token),
-    /* For p_kw_label rule */
+
+    /* For custom p_kw_label rule */
     PlainLabel(Token),
-    /* For p_kw_label rule */
+
+    /* For custom p_kw_label rule */
     QuotedLabel((Token, Vec<Node>, Token)),
 
-    /* */
-    Body((Option<Token>, Vec<Node>, Option<Token>)),
+    /* For custom cmd_brace_block rule */
+    CmdBraceBlock((Token, Vec<Node>, Token)),
 
-    /* For defs_head rule */
+    /* For custom paren_args rule  */
+    ParenArgs((Token, Vec<Node>, Token)),
+
+    /* For custom opt_paren_args rule  */
+    OptParenArgs(( Option<Token>, Vec<Node>, Option<Token> )),
+
+    /* For custom lambda_body rule  */
+    LambdaBody(( Token, Vec<Node>, Token )),
+
+    /* For custom do_block rule  */
+    DoBlock(( Token, Vec<Node>, Token )),
+
+    /* For custom brace_block rule  */
+    BraceBlock(( Token, Vec<Node>, Token )),
+
+    /* For custom defs_head rule */
     DefsHead(( Token, Node, Token, Token )),
 
-    /* For defn_head rule */
+    /* For custom defn_head rule */
     DefnHead(( Token, Token )),
 
-    /* For begin_block rule  */
+    /* For custom begin_block rule  */
     BeginBlock((Token, Node, Token)),
 }
 
@@ -4043,8 +4070,23 @@ impl std::fmt::Debug for Value {
             Value::NodeList(nodes) => {
                 f.write_fmt(format_args!("NodeList({:?})", nodes))
             },
-            Value::TokenAndNode((token, node)) => {
-                f.write_fmt(format_args!("TokenAndNode({:?}, {:?})", token, node))
+            Value::Superclass(data) => {
+                f.write_fmt(format_args!("Superclass({:?})", data))
+            },
+            Value::OptEnsure(data) => {
+                f.write_fmt(format_args!("OptEnsure({:?})", data))
+            },
+            Value::OptElse(data) => {
+                f.write_fmt(format_args!("OptElse({:?})", data))
+            },
+            Value::ExcVar(data) => {
+                f.write_fmt(format_args!("ExcVar({:?})", data))
+            },
+            Value::IfTail(data) => {
+                f.write_fmt(format_args!("IfTail({:?})", data))
+            },
+            Value::ExprValueDo((token, node)) => {
+                f.write_fmt(format_args!("ExprValueDo({:?}, {:?})", token, node))
             },
             Value::Ident(token) => {
                 f.write_fmt(format_args!("Ident({:?})", token))
@@ -4055,8 +4097,23 @@ impl std::fmt::Debug for Value {
             Value::QuotedLabel((start, tokens, end)) => {
                 f.write_fmt(format_args!("QuotedLabel({:?}, {:?}, {:?})", start, tokens, end))
             },
-            Value::Body((start, nodes, end)) => {
-                f.write_fmt(format_args!("Body({:?}, {:?}, {:?})", start, nodes, end))
+            Value::CmdBraceBlock((start, nodes, end)) => {
+                f.write_fmt(format_args!("CmdBraceBlock({:?}, {:?}, {:?})", start, nodes, end))
+            },
+            Value::ParenArgs((start, nodes, end)) => {
+                f.write_fmt(format_args!("ParenArgs({:?}, {:?}, {:?})", start, nodes, end))
+            },
+            Value::OptParenArgs((start, nodes, end)) => {
+                f.write_fmt(format_args!("OptParenArgs({:?}, {:?}, {:?})", start, nodes, end))
+            },
+            Value::LambdaBody((start, nodes, end)) => {
+                f.write_fmt(format_args!("LambdaBody({:?}, {:?}, {:?})", start, nodes, end))
+            },
+            Value::DoBlock((start, nodes, end)) => {
+                f.write_fmt(format_args!("DoBlock({:?}, {:?}, {:?})", start, nodes, end))
+            },
+            Value::BraceBlock((start, nodes, end)) => {
+                f.write_fmt(format_args!("BraceBlock({:?}, {:?}, {:?})", start, nodes, end))
             },
             Value::DefsHead((def, singleton, dot, name)) => {
                 f.write_fmt(format_args!("DefsHead({:?}, {:?}, {:?}, {:?})", def, singleton, dot, name))

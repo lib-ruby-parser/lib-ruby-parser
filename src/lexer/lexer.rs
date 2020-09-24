@@ -173,7 +173,7 @@ impl Lexer {
 
     pub fn yylex(&mut self) -> Token {
         self.p.lval = None;
-        println!("before yylex: {:#?}", self);
+        // println!("before yylex: {:#?}", self);
 
         let token_type = self.parser_yylex();
 
