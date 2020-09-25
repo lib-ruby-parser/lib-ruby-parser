@@ -32,3 +32,21 @@ pub struct VariableMap {
     pub name: Range,
     pub operator: Option<Range>,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct KeywordMap {
+    pub expression: Range,
+    pub keyword: Range,
+    pub begin: Option<Range>,
+    pub end: Option<Range>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConditionMap {
+    pub expression: Range,
+    pub keyword: Option<Range>,
+    pub begin: Option<Range>,
+    pub end: Option<Range>,
+    pub else_: Option<Range>,
+}
+

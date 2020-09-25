@@ -236,31 +236,127 @@ pub fn keyword_cmd() {}
 
 // BEGIN, END
 
-pub fn preexe() {}
+pub fn preexe(preexe_t: Token, lbrace_t: Token, compstmt: Node, rbrace_t: Token) -> Node {
+    Node::Preexe {
+        body: Box::new(compstmt),
+        loc: keyword_map(&preexe_t, &Some(lbrace_t), &vec![], &Some(rbrace_t))
+    }
+}
 pub fn postexe() {}
 
 // Exception handling
 
 pub fn rescue_body() {}
-pub fn begin_body() {}
+pub fn begin_body(compound_stmt: Option<Node>, rescue_bodies: Vec<Node>, else_: Option<(Token, Node)>, ensure: Option<(Token, Node)>) -> Option<Node> {
+    let mut result: Option<Node>;
+
+    if !rescue_bodies.is_empty() {
+        if let Some((else_t, else_)) = else_ {
+            let loc = eh_keyword_map(&compound_stmt, None, &rescue_bodies, Some(&else_t), Some(&else_));
+            result = Some(
+                    Node::Rescue {
+                    body: compound_stmt.map(|node| Box::new(node)),
+                    rescue_bodies,
+                    else_: Some(Box::new(else_)),
+                    loc
+                }
+            )
+        } else {
+            let loc = eh_keyword_map(&compound_stmt, None, &rescue_bodies, None, None);
+            result = Some(
+                    Node::Rescue {
+                    body: compound_stmt.map(|node| Box::new(node)),
+                    rescue_bodies,
+                    else_: None,
+                    loc
+                }
+            )
+        }
+    } else if let Some((else_t, else_)) = else_ {
+        let mut statements: Vec<Node> = vec![];
+
+        match compound_stmt {
+            Some(Node::Begin { statements: begin_statements, .. }) => statements = begin_statements,
+            Some(compound_stmt) => statements.push(compound_stmt),
+            _ => {}
+        }
+        let else_ = vec![else_];
+        let loc = collection_map(&Some(else_t), &else_, &None);
+        statements.push(
+            Node::Begin {
+                statements: else_,
+                loc
+            }
+        );
+
+        let loc = collection_map(&None, &statements, &None);
+        result = Some(
+            Node::Begin {
+                statements,
+                loc
+            }
+        )
+    } else {
+        result = compound_stmt;
+    }
+
+    if let Some((ensure_t, ensure)) = ensure {
+        let loc = eh_keyword_map(&result, Some(&ensure_t), &vec![ensure.clone()], None, None);
+        result = Some(
+                Node::Ensure {
+                body: result.map(|node| Box::new(node)),
+                ensure: Box::new(ensure),
+                loc
+            }
+        )
+    }
+
+    result
+}
 
 //
 // Expression grouping
 //
 
-pub fn compstmt(mut statements: Vec<Node>) -> Node {
+pub fn compstmt(mut statements: Vec<Node>) -> Option<Node> {
     if statements.is_empty() {
-        Node::None
+        None
     } else if statements.len() == 1 {
-        statements.remove(0)
+        statements.pop()
     } else {
         let source_map = collection_map(&None, &statements, &None);
-        Node::Begin { statements, loc: source_map }
+        Some(Node::Begin { statements, loc: source_map })
     }
 }
 
 pub fn begin() {}
-pub fn begin_keyword() {}
+pub fn begin_keyword(begin_t: Token, body: Option<Node>, end_t: Token) -> Node {
+    match body {
+        None => {
+            // A nil expression: `begin end'.
+            Node::KwBegin  {
+                statements: vec![],
+                loc: collection_map(&Some(begin_t), &vec![], &Some(end_t))
+            }
+        },
+        Some(Node::Begin { statements, loc: CollectionMap { begin: None, end: None, .. }, .. }) => {
+            // Synthesized (begin) from compstmt "a; b".
+            let loc = collection_map(&Some(begin_t), &statements, &Some(end_t));
+            Node::KwBegin {
+                statements,
+                loc
+            }
+        },
+        Some(node) => {
+            let statements = vec![node];
+            let loc = collection_map(&Some(begin_t), &statements, &Some(end_t));
+            Node::KwBegin {
+                statements,
+                loc
+            }
+        }
+    }
+}
 
 //
 // Pattern matching
@@ -381,13 +477,71 @@ pub fn send_unary_op_map() {}
 pub fn index_map() {}
 pub fn send_index_map() {}
 pub fn block_map() {}
-pub fn keyword_map() {}
+
+pub fn keyword_map(keyword_t: &Token, begin_t: &Option<Token>, args: &Vec<Node>, end_t: &Option<Token>) -> KeywordMap {
+    let expr_end_l: Range;
+    let begin_l = if let Some(begin_t) = begin_t { Some(loc(&begin_t)) } else { None };
+    let end_l = if let Some(end_t) = end_t { Some(loc(&end_t)) } else { None };
+
+    if let Some(end_l) = &end_l {
+        expr_end_l = end_l.clone();
+    } else if let Some(last_arg) = args.iter().rev().nth(0) {
+        expr_end_l = last_arg.expression().clone();
+    } else if let Some(second_last_arg) = args.iter().rev().nth(1) {
+        expr_end_l = second_last_arg.expression().clone();
+    } else {
+        expr_end_l = loc(&keyword_t);
+    }
+
+    KeywordMap {
+        expression: loc(&keyword_t).join(&expr_end_l),
+        keyword: loc(&keyword_t),
+        begin: begin_l,
+        end: end_l
+    }
+}
+
 pub fn keyword_mod_map() {}
 pub fn condition_map() {}
 pub fn ternary_map() {}
 pub fn for_map() {}
 pub fn rescue_body_map() {}
-pub fn eh_keyword_map() {}
+
+pub fn eh_keyword_map(compstmt_e: &Option<Node>, keyword_t: Option<&Token>, body_es: &Vec<Node>, else_t: Option<&Token>, else_e: Option<&Node>) -> ConditionMap {
+    let begin_l: Range;
+    let end_l: Range;
+
+    if let Some(compstmt_e) = &compstmt_e {
+        begin_l = compstmt_e.expression().clone();
+    } else if let Some(keyword_t) = &keyword_t {
+        begin_l = loc(&keyword_t);
+    } else {
+        begin_l = body_es.first().unwrap().expression().clone();
+    }
+
+    if let Some(else_t) = &else_t {
+        if let Some(else_e) = &else_e {
+            end_l = else_e.expression().clone();
+        } else {
+            end_l = loc(&else_t);
+        }
+    } else if let Some(last_body_es) = body_es.last() {
+        end_l = last_body_es.expression().clone();
+    } else if let Some(keyword_t) = &keyword_t {
+        end_l = loc(&keyword_t);
+    } else {
+        panic!("bug");
+    }
+
+    ConditionMap {
+        expression: begin_l.join(&end_l),
+        keyword: keyword_t.map(|t| loc(&t)),
+        begin: None,
+        else_: else_t.map(|t| loc(&t)),
+        end: None
+    }
+}
+
 pub fn guard_map() {}
 
 //
