@@ -111,7 +111,7 @@
 %type <node> p_arg
 %type <node> p_value p_primitive p_variable p_var_ref p_const
 %type <node> p_kw
-%type <node> f_block_arg keyword_variable user_variable program
+%type <node> f_block_arg keyword_variable program
 
 %type <node_list> assocs assoc_list opt_f_block_arg f_rest_arg f_optarg f_args
 %type <node_list> f_block_optarg f_kwrest f_no_kwarg f_kwarg f_block_kwarg f_arg
@@ -145,6 +145,7 @@
 %type <case_body> case_body
 %type <p_cases> p_cases
 %type <p_case_body> p_case_body
+%type <user_variable> user_variable
 
 %type <maybe_node> compstmt bodystmt f_arglist f_paren_args
 
@@ -417,34 +418,37 @@
 
             stmt: kALIAS fitem
                     {
-                        // @lexer.state = :expr_fname
+                        self.yylexer.set_lex_state(EXPR_FNAME);
                     }
                   fitem
                     {
-                        // result = @builder.alias(val[0], val[1], val[3])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            builder::alias($<Token>1, $<Node>2, $<Node>3)
+                        );
                     }
                 | kALIAS tGVAR tGVAR
                     {
-                        // result = @builder.alias(val[0],
-                        //           @builder.gvar(val[1]),
-                        //           @builder.gvar(val[2]))
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            builder::alias(
+                                $<Token>1,
+                                builder::gvar($<Token>2),
+                                builder::gvar($<Token>3),
+                            )
+                        )
                     }
                 | kALIAS tGVAR tBACK_REF
                     {
-                        // result = @builder.alias(val[0],
-                        //           @builder.gvar(val[1]),
-                        //           @builder.back_ref(val[2]))
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            builder::alias(
+                                $<Token>1,
+                                builder::gvar($<Token>2),
+                                builder::back_ref($<Token>3),
+                            )
+                        )
                     }
                 | kALIAS tGVAR tNTH_REF
                     {
                         // diagnostic :error, :nth_ref_alias, nil, val[2]
-                        // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | kUNDEF undef_list
@@ -1028,10 +1032,19 @@
 
              lhs: user_variable
                     {
-                        // NOTE: user_variable can be Value::IDENT
-                        // result = @builder.assignable(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let user_variable = $<UserVariable>1;
+                        match user_variable {
+                            UserVariable::Ident(ident) => {
+                                $$ = Value::Node(
+                                    builder::assignable_ident(ident)
+                                );
+                            },
+                            UserVariable::Node(node) => {
+                                $$ = Value::Node(
+                                    builder::assignable(node)
+                                );
+                            }
+                        }
                     }
                 | keyword_variable
                     {
@@ -1126,9 +1139,9 @@
 
            fitem: fname
                     {
-                        // result = @builder.symbol_internal(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            builder::symbol_internal($<Token>1)
+                        );
                     }
                 | symbol
                 ;
@@ -3641,10 +3654,9 @@ xstring_contents: /* none */
 
    user_variable: tIDENTIFIER
                     {
-                        // !! this rule returns different value types
-                        // ugly, but this way we don't have Node::Ident
-                        // result = @builder.ident(val[0])
-                        $$ = Value::Ident($<Token>1);
+                        $$ = Value::UserVariable(
+                            UserVariable::Ident($<Token>1)
+                        );
                     }
                 | tIVAR
                     {
@@ -4336,9 +4348,6 @@ pub enum Value {
     /* For custom expr_value_do rule */
     ExprValueDo((Token, Node)),
 
-    /* For custom user_variable rule */
-    Ident(Token),
-
     /* For custom p_kw_label rule */
     PlainLabel(Token),
 
@@ -4386,6 +4395,15 @@ pub enum Value {
 
     /* For custom compstmt rule */
     MaybeNode( Option<Node> ),
+
+    /* For custom user_variable rule */
+    UserVariable( UserVariable ),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum UserVariable {
+    Node(Node),
+    Ident(Token)
 }
 
 impl Value {
@@ -4436,9 +4454,6 @@ impl std::fmt::Debug for Value {
             Value::ExprValueDo((token, node)) => {
                 f.write_fmt(format_args!("ExprValueDo({:?}, {:?})", token, node))
             },
-            Value::Ident(token) => {
-                f.write_fmt(format_args!("Ident({:?})", token))
-            },
             Value::PlainLabel(token) => {
                 f.write_fmt(format_args!("PlainLabel({:?})", token))
             },
@@ -4486,6 +4501,9 @@ impl std::fmt::Debug for Value {
             },
             Value::MaybeNode(maybe_node) => {
                 f.write_fmt(format_args!("MaybeNode({:?})", maybe_node))
+            },
+            Value::UserVariable(data) => {
+                f.write_fmt(format_args!("UserVariable({:?})", data))
             },
         }
     }

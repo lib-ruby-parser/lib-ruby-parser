@@ -65,7 +65,14 @@ pub fn __file__(file_t: Token) -> Node {
 // Symbols
 
 pub fn symbol() {}
-pub fn symbol_internal() {}
+
+pub fn symbol_internal(symbol_t: Token) -> Node {
+    Node::Sym {
+        name: value(&symbol_t),
+        loc: unquoted_map(&symbol_t)
+    }
+}
+
 pub fn symbol_compose() {}
 
 // Executable strings
@@ -113,12 +120,40 @@ pub fn self_(token: Token) -> Node {
     }
 }
 
-pub fn ident() {}
-pub fn ivar() {}
-pub fn gvar() {}
-pub fn cvar() {}
-pub fn back_ref() {}
-pub fn nth_ref() {}
+pub fn ivar(token: Token) -> Node {
+    Node::Ivar {
+        name: value(&token),
+        loc: variable_map(&token)
+    }
+}
+
+pub fn gvar(token: Token) -> Node {
+    Node::Gvar {
+        name: value(&token),
+        loc: variable_map(&token)
+    }
+}
+
+pub fn cvar(token: Token) -> Node {
+    Node::Cvar {
+        name: value(&token),
+        loc: variable_map(&token)
+    }
+}
+
+pub fn back_ref(token: Token) -> Node {
+    Node::BackRef {
+        name: value(&token),
+        loc: variable_map(&token)
+    }
+}
+
+pub fn nth_ref(token: Token) -> Node {
+    Node::NthRef {
+        name: value(&token),
+        loc: variable_map(&token)
+    }
+}
 pub fn accessible(_node: Node) -> Node {
     unimplemented!()
 }
@@ -136,7 +171,23 @@ pub fn __encoding__(_encoding_t: Token) -> Node {
 // Assignments
 //
 
-pub fn assignable() {}
+pub fn assignable(node: Node) -> Node {
+    unimplemented!()
+}
+pub fn assignable_ident(token: Token) -> Node {
+    let var_name = value(&token);
+    let name_loc = loc(&token);
+
+    check_assignment_to_numparam(&var_name, &name_loc);
+    check_reserved_for_numparam(&var_name, &name_loc);
+
+    // TODO: parser.static_env.declare(name)
+
+    Node::Lvasgn {
+        name: var_name,
+        loc: variable_map(&token)
+    }
+}
 pub fn const_op_assignable() {}
 pub fn assign() {}
 pub fn op_assign() {}
@@ -158,7 +209,7 @@ pub fn def_module() {}
 //
 
 pub fn def_method(def_t: Token, name_t: Token, args: Option<Node>, body: Option<Node>, end_t: Token) -> Result<Node, String> {
-    check_reserved_for_numparam(&name_t)?;
+    check_reserved_for_numparam(&value(&name_t), &loc(&name_t))?;
 
     let loc = definition_map(&def_t, None, &name_t, &end_t);
     Ok(
@@ -175,7 +226,15 @@ pub fn def_endless_method() {}
 pub fn def_singleton() {}
 pub fn def_endless_singleton() {}
 pub fn undef_method() {}
-pub fn alias() {}
+
+pub fn alias(alias_t: Token, to: Node, from: Node) -> Node {
+    let loc = keyword_map(&alias_t, &None, &vec![from.clone(), to.clone()], &None);
+    Node::Alias {
+        to: Box::new(to),
+        from: Box::new(from),
+        loc
+    }
+}
 
 //
 // Formal arguments
@@ -201,7 +260,7 @@ pub fn forward_only_args() {}
 pub fn forward_arg() {}
 
 pub fn arg(name_t: Token) -> Node {
-    check_reserved_for_numparam(&name_t);
+    check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
     Node::Arg {
         name: value(&name_t),
         loc: variable_map(&name_t)
@@ -425,11 +484,11 @@ pub fn match_label() {}
 pub fn check_condition() {}
 pub fn check_duplicate_args() {}
 pub fn check_duplicate_arg() {}
-pub fn check_assignment_to_numparam() {}
+pub fn check_assignment_to_numparam(name: &str, loc: &Range) -> Result<(), String> {
+    Ok(())
+}
 
-pub fn check_reserved_for_numparam(name_t: &Token) -> Result<(), String> {
-    let name = value(name_t);
-
+pub fn check_reserved_for_numparam(name: &str, loc: &Range) -> Result<(), String> {
     if name.len() != 2 { return Ok(()) }
 
     let c1 = name.chars().nth(1).unwrap();
@@ -461,7 +520,15 @@ pub fn token_map(token: &Token) -> Map {
 
 pub fn delimited_string_map() {}
 pub fn prefix_string_map() {}
-pub fn unquoted_map() {}
+
+pub fn unquoted_map(token: &Token) -> CollectionMap {
+    CollectionMap {
+        begin: None,
+        end: None,
+        expression: loc(&token)
+    }
+}
+
 pub fn pair_keyword_map() {}
 pub fn pair_quoted_map() {}
 pub fn expr_map() {}

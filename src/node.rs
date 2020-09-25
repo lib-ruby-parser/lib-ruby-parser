@@ -21,6 +21,14 @@ pub enum Node {
     Args { args: Vec<Node>, loc: CollectionMap },
     Def { name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
     Arg { name: String, loc: VariableMap },
+    Sym { name: String, loc: CollectionMap },
+    Alias { to: Box<Node>, from: Box<Node>, loc: KeywordMap },
+    Ivar { name: String, loc: VariableMap },
+    Gvar { name: String, loc: VariableMap },
+    Cvar { name: String, loc: VariableMap },
+    BackRef { name: String, loc: VariableMap },
+    NthRef { name: String, loc: VariableMap },
+    Lvasgn { name: String, loc: VariableMap },
 }
 
 impl Node {
@@ -44,6 +52,14 @@ impl Node {
             Self::Args { loc, .. } => &loc.expression,
             Self::Def { loc, .. } => &loc.expression,
             Self::Arg { loc, .. } => &loc.expression,
+            Self::Sym { loc, .. } => &loc.expression,
+            Self::Alias { loc, .. } => &loc.expression,
+            Self::Ivar { loc, .. } => &loc.expression,
+            Self::Gvar { loc, .. } => &loc.expression,
+            Self::Cvar { loc, .. } => &loc.expression,
+            Self::BackRef { loc, .. } => &loc.expression,
+            Self::NthRef { loc, .. } => &loc.expression,
+            Self::Lvasgn { loc, .. } => &loc.expression,
         }
     }
 }
