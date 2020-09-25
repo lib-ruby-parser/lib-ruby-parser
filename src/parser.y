@@ -119,8 +119,8 @@
 %type <node_list> qsym_list qword_list symbol_list word word_list
 %type <node_list> string exc_list opt_rescue
 %type <node_list> p_kwnorest p_kwrest p_any_kwrest p_kwarg p_kwargs p_args_post
-%type <node_list> p_find p_args_tail p_args_head p_args p_top_expr p_case_body p_cases
-%type <node_list> case_body cases case_args brace_body do_body bv_decls opt_bv_decl
+%type <node_list> p_find p_args_tail p_args_head p_args p_top_expr
+%type <node_list> case_args brace_body do_body bv_decls opt_bv_decl
 %type <node_list> block_param opt_block_args_tail block_args_tail f_any_kwrest f_margs f_marg_list mrhs
 %type <node_list> args opt_block_arg command_args call_args opt_call_args aref_args
 %type <node_list> undef_list mlhs_post mlhs_head mlhs_basic stmts top_stmts
@@ -139,6 +139,10 @@
 %type <opt_paren_args> opt_paren_args
 %type <defn_head> defn_head
 %type <defs_head> defs_head
+%type <cases> cases
+%type <case_body> case_body
+%type <p_cases> p_cases
+%type <p_case_body> p_case_body
 
 %type <token>   sym operation operation2 operation3
 %type <token>   cname fname op f_norm_arg f_bad_arg
@@ -2502,17 +2506,20 @@ opt_block_args_tail:
                   cases
                     {
                         // @builder.when(val[0], val[1], val[2], val[3])
-                        let when = Node::None;
-                        let nodes = [ vec![when], $<NodeList>5 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        let (whens, else_) = $<Cases>5;
+                        $$ = Value::CaseBody(( whens, else_ ));
                     }
                 ;
 
            cases: opt_else
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::Cases(( vec![], $<OptElse>1 ));
                     }
                 | case_body
+                    {
+                        let (whens, _) = $<CaseBody>1;
+                        $$ = Value::Cases(( whens, None ));
+                    }
                 ;
 
      p_case_body: kIN
@@ -2533,22 +2540,25 @@ opt_block_args_tail:
                   p_cases
                     {
                         // @builder.in_pattern(val[0], *val[2], val[3], val[5])
-                        let pattern = Node::None;
-                        let nodes = [ vec![pattern], $<NodeList>7 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        let (whens, else_) = $<PCases>7;
+                        $$ = Value::PCaseBody(( whens, else_ ));
                     }
                 ;
 
          p_cases: opt_else
                     {
-                        // FIXME: opt_else is OptElse, not Node
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::PCases(( vec![], $<OptElse>1 ));
                     }
                 | p_case_body
+                    {
+                        let (whens, _) = $<PCaseBody>1;
+                        $$ = Value::PCases(( whens, None ));
+                    }
                 ;
 
       p_top_expr: p_top_expr_body
                     {
+                        // FIXME: should be a custom node with (Node, Option<Node>)
                         $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
                 | p_top_expr_body kIF_MOD expr_value
@@ -4041,6 +4051,18 @@ pub enum Value {
 
     /* For custom begin_block rule  */
     BeginBlock((Token, Node, Token)),
+
+    /* For custom cases rule */
+    Cases(( Vec<Node>, Option<(Token, Node)> )),
+
+    /* For custom case_body rule */
+    CaseBody(( Vec<Node>, Option<(Token, Node)> )),
+
+    /* For custom p_cases rule */
+    PCases(( Vec<Node>, Option<(Token, Node)> )),
+
+    /* For custom p_case_body rule */
+    PCaseBody(( Vec<Node>, Option<(Token, Node)> )),
 }
 
 impl Value {
@@ -4122,7 +4144,19 @@ impl std::fmt::Debug for Value {
                 f.write_fmt(format_args!("DefnHead({:?}, {:?})", def, name))
             },
             Value::BeginBlock((start, body, end)) => {
-                f.write_fmt(format_args!("DefnHead({:?}, {:?}, {:?})", start, body, end))
+                f.write_fmt(format_args!("BeginBlock({:?}, {:?}, {:?})", start, body, end))
+            },
+            Value::Cases((whens, else_)) => {
+                f.write_fmt(format_args!("Cases({:?}, {:?})", whens, else_))
+            },
+            Value::CaseBody((whens, else_)) => {
+                f.write_fmt(format_args!("CaseBody({:?}, {:?})", whens, else_))
+            },
+            Value::PCases((whens, else_)) => {
+                f.write_fmt(format_args!("PCases({:?}, {:?})", whens, else_))
+            },
+            Value::PCaseBody((whens, else_)) => {
+                f.write_fmt(format_args!("PCaseBody({:?}, {:?})", whens, else_))
             },
         }
     }
