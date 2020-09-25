@@ -1,6 +1,6 @@
 use crate::source::Range;
-use crate::{Node, Token, Loc};
-use crate::node::*;
+use crate::{Node, Token};
+use crate::source::map::*;
 
 //
 // Literals
@@ -8,9 +8,23 @@ use crate::node::*;
 
 // Singletons
 
-pub fn nil() {}
-pub fn true_() {}
-pub fn false_() {}
+pub fn nil(nil_t: Token) -> Node {
+    Node::Nil {
+        loc: token_map(&nil_t)
+    }
+}
+
+pub fn true_(true_t: Token) -> Node {
+    Node::True {
+        loc: token_map(&true_t)
+    }
+}
+
+pub fn false_(false_t: Token) -> Node {
+    Node::False {
+        loc: token_map(&false_t)
+    }
+}
 
 // Numerics
 
@@ -28,7 +42,12 @@ pub fn float() {}
 pub fn rational() {}
 pub fn complex() {}
 pub fn unary_num() {}
-pub fn __line__() {}
+
+pub fn __line__(line_t: Token) -> Node {
+    Node::__LINE__ {
+        loc: token_map(&line_t)
+    }
+}
 
 // Strings
 
@@ -36,7 +55,12 @@ pub fn string() {}
 pub fn string_internal() {}
 pub fn string_compose() {}
 pub fn character() {}
-pub fn __file__() {}
+
+pub fn __file__(file_t: Token) -> Node {
+    Node::__FILE__ {
+        loc: token_map(&file_t)
+    }
+}
 
 // Symbols
 
@@ -83,18 +107,30 @@ pub fn range_exclusive() {}
 // Access
 //
 
-pub fn self_() {}
+pub fn self_(token: Token) -> Node {
+    Node::Self_ {
+        loc: token_map(&token)
+    }
+}
+
 pub fn ident() {}
 pub fn ivar() {}
 pub fn gvar() {}
 pub fn cvar() {}
 pub fn back_ref() {}
 pub fn nth_ref() {}
-pub fn accessible() {}
+pub fn accessible(_node: Node) -> Node {
+    unimplemented!()
+}
 pub fn const_() {}
 pub fn const_global() {}
 pub fn const_fetch() {}
-pub fn __encoding__() {}
+
+pub fn __encoding__(_encoding_t: Token) -> Node {
+    Node::__ENCODING__ {
+        loc: token_map(&_encoding_t)
+    }
+}
 
 //
 // Assignments
@@ -273,7 +309,10 @@ pub fn join_expr(left_expr: &Node, right_expr: &Node) -> Range {
     left_expr.expression().join(right_expr.expression())
 }
 
-pub fn token_map() {}
+pub fn token_map(token: &Token) -> Map {
+    Map { expression: loc(&token) }
+}
+
 pub fn delimited_string_map() {}
 pub fn prefix_string_map() {}
 pub fn unquoted_map() {}

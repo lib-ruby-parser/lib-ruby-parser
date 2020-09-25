@@ -1,25 +1,5 @@
 use crate::source::Range;
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct CollectionMap {
-    pub expression: Range,
-    pub begin: Option<Range>,
-    pub end: Option<Range>,
-}
-#[derive(Debug, Clone, PartialEq)]
-pub struct OperatorMap {
-    pub expression: Range,
-    pub operator: Option<Range>,
-}
-#[derive(Debug, Clone, PartialEq)]
-pub struct SendMap {
-    pub expression: Range,
-    pub dot: Option<Range>,
-    pub selector: Option<Range>,
-    pub operator: Option<Range>,
-    pub begin: Option<Range>,
-    pub end: Option<Range>,
-}
+use crate::source::map::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {
@@ -27,6 +7,15 @@ pub enum Node {
     Begin { statements: Vec<Node>, loc: CollectionMap },
     Int { value: String, loc: OperatorMap },
     Send { receiver: Option<Box<Node>>, operator: String, args: Vec<Node>, loc: SendMap },
+    Nil { loc: Map },
+    True { loc: Map },
+    False { loc: Map },
+    Self_ { loc: Map },
+    __FILE__ { loc: Map },
+    __LINE__ { loc: Map },
+    __ENCODING__ { loc: Map },
+    Lvar { name: String, loc: VariableMap },
+
 }
 
 impl Node {
@@ -36,6 +25,14 @@ impl Node {
             Self::Begin { loc, .. } => &loc.expression,
             Self::Int { loc, .. } => &loc.expression,
             Self::Send { loc, .. } => &loc.expression,
+            Self::Nil { loc, .. } => &loc.expression,
+            Self::True { loc, .. } => &loc.expression,
+            Self::False { loc, .. } => &loc.expression,
+            Self::Self_ { loc, .. } => &loc.expression,
+            Self::__FILE__ { loc, .. } => &loc.expression,
+            Self::__LINE__ { loc, .. } => &loc.expression,
+            Self::__ENCODING__ { loc, .. } => &loc.expression,
+            Self::Lvar { loc, .. } => &loc.expression,
         }
     }
 }

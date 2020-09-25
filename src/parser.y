@@ -3384,38 +3384,45 @@ xstring_contents: /* none */
 
 keyword_variable: kNIL
                     {
-                        // result = @builder.nil($<Token>1)
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::Node(
+                            builder::nil($<Token>1)
+                        );
                     }
                 | kSELF
                     {
-                        // result = @builder.self($<Token>1)
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::Node(
+                            builder::self_($<Token>1)
+                        );
                     }
                 | kTRUE
                     {
-                        // result = @builder.true($<Token>1)
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::Node(
+                            builder::true_($<Token>1)
+                        );
                     }
                 | kFALSE
                     {
-                        // result = @builder.false($<Token>1)
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::Node(
+                            builder::false_($<Token>1)
+                        );
                     }
                 | k__FILE__
                     {
-                        // result = @builder.__file__($<Token>1)
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::Node(
+                            builder::__file__($<Token>1)
+                        );
                     }
                 | k__LINE__
                     {
-                        // result = @builder.__line__($<Token>1)
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::Node(
+                            builder::__line__($<Token>1)
+                        );
                     }
                 | k__ENCODING__
                     {
-                        // result = @builder.__encoding__($<Token>1)
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::Node(
+                            builder::__encoding__($<Token>1)
+                        );
                     }
                 ;
 
@@ -3428,8 +3435,7 @@ keyword_variable: kNIL
                     }
                 | keyword_variable
                     {
-                        // result = @builder.assignable(val[0])
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::Node($<Node>1);
                     }
                 ;
 
