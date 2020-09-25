@@ -13,12 +13,14 @@ pub enum Node {
     __FILE__ { loc: Map },
     __LINE__ { loc: Map },
     __ENCODING__ { loc: Map },
-    Preexe { body: Box<Node>, loc: KeywordMap },
+    Preexe { body: Option<Box<Node>>, loc: KeywordMap },
     Lvar { name: String, loc: VariableMap },
     Rescue { body: Option<Box<Node>>, rescue_bodies: Vec<Node>, else_: Option<Box<Node>>, loc: ConditionMap },
     Ensure { body: Option<Box<Node>>, ensure: Box<Node>, loc: ConditionMap },
     KwBegin { statements: Vec<Node>, loc: CollectionMap },
-
+    Args { args: Vec<Node>, loc: CollectionMap },
+    Def { name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
+    Arg { name: String, loc: VariableMap },
 }
 
 impl Node {
@@ -39,6 +41,9 @@ impl Node {
             Self::Rescue { loc, .. } => &loc.expression,
             Self::Ensure { loc, .. } => &loc.expression,
             Self::KwBegin { loc, .. } => &loc.expression,
+            Self::Args { loc, .. } => &loc.expression,
+            Self::Def { loc, .. } => &loc.expression,
+            Self::Arg { loc, .. } => &loc.expression,
         }
     }
 }

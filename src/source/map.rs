@@ -29,8 +29,6 @@ pub struct SendMap {
 #[derive(Debug, Clone, PartialEq)]
 pub struct VariableMap {
     pub expression: Range,
-    pub name: Range,
-    pub operator: Option<Range>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -50,3 +48,12 @@ pub struct ConditionMap {
     pub else_: Option<Range>,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct MethodDefinitionMap {
+    pub keyword: Range,
+    pub operator: Option<Range>,
+    pub name: Range,
+    pub end: Option<Range>,
+    pub assignment: Option<Range>,
+    pub expression: Range,
+}

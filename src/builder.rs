@@ -157,7 +157,20 @@ pub fn def_module() {}
 // Method (un)definition
 //
 
-pub fn def_method() {}
+pub fn def_method(def_t: Token, name_t: Token, args: Option<Node>, body: Option<Node>, end_t: Token) -> Result<Node, String> {
+    check_reserved_for_numparam(&name_t)?;
+
+    let loc = definition_map(&def_t, None, &name_t, &end_t);
+    Ok(
+        Node::Def {
+            name: value(&name_t),
+            args: args.map(|node| Box::new(node)),
+            body: body.map(|node| Box::new(node)),
+            loc
+        }
+    )
+}
+
 pub fn def_endless_method() {}
 pub fn def_singleton() {}
 pub fn def_endless_singleton() {}
@@ -168,11 +181,33 @@ pub fn alias() {}
 // Formal arguments
 //
 
-pub fn args() {}
+pub fn args(begin_t: Option<Token>, args: Vec<Node>, end_t: Option<Token>) -> Option<Node> {
+    match (&begin_t, args.len(), &end_t) {
+        (None, 0, None) => None,
+        _ => {
+            let loc = collection_map(&begin_t, &args, &end_t);
+            Some(
+                Node::Args {
+                    args,
+                    loc
+                }
+            )
+        }
+    }
+}
+
 pub fn numargs() {}
 pub fn forward_only_args() {}
 pub fn forward_arg() {}
-pub fn arg() {}
+
+pub fn arg(name_t: Token) -> Node {
+    check_reserved_for_numparam(&name_t);
+    Node::Arg {
+        name: value(&name_t),
+        loc: variable_map(&name_t)
+    }
+}
+
 pub fn optarg() {}
 pub fn restarg() {}
 pub fn kwarg() {}
@@ -236,9 +271,9 @@ pub fn keyword_cmd() {}
 
 // BEGIN, END
 
-pub fn preexe(preexe_t: Token, lbrace_t: Token, compstmt: Node, rbrace_t: Token) -> Node {
+pub fn preexe(preexe_t: Token, lbrace_t: Token, compstmt: Option<Node>, rbrace_t: Token) -> Node {
     Node::Preexe {
-        body: Box::new(compstmt),
+        body: compstmt.map(|node| Box::new(node)),
         loc: keyword_map(&preexe_t, &Some(lbrace_t), &vec![], &Some(rbrace_t))
     }
 }
@@ -391,7 +426,22 @@ pub fn check_condition() {}
 pub fn check_duplicate_args() {}
 pub fn check_duplicate_arg() {}
 pub fn check_assignment_to_numparam() {}
-pub fn check_reserved_for_numparam() {}
+
+pub fn check_reserved_for_numparam(name_t: &Token) -> Result<(), String> {
+    let name = value(name_t);
+
+    if name.len() != 2 { return Ok(()) }
+
+    let c1 = name.chars().nth(1).unwrap();
+    let c2 = name.chars().nth(2).unwrap();
+
+    if c1 == '0' && (c2 >= '1' && c2 <= '9') {
+        return Err("reserved_for_numparam".to_owned())
+    }
+
+    Ok(())
+}
+
 pub fn arg_name_collides() {}
 pub fn check_lvar_name() {}
 pub fn check_duplicate_pattern_variable() {}
@@ -436,7 +486,7 @@ pub fn collection_map(begin_t: &Option<Token>, parts: &Vec<Node>, end_t: &Option
             expr_l = end_l.clone();
         },
         (None, None, false) => {
-            panic!("empty collection without begin_t/end_t, can't build source map")
+            panic!("empty collection without begin_t/end_t, can't build source map");
         }
     }
 
@@ -450,14 +500,29 @@ pub fn collection_map(begin_t: &Option<Token>, parts: &Vec<Node>, end_t: &Option
 pub fn string_map() {}
 pub fn regexp_map() {}
 pub fn constant_map() {}
-pub fn variable_map() {}
+
+pub fn variable_map(name_t: &Token) -> VariableMap {
+    VariableMap { expression: loc(name_t) }
+}
+
 pub fn binary_op_map() {}
 pub fn unary_op_map() {}
 pub fn range_map() {}
 pub fn arg_prefix_map() {}
 pub fn kwarg_map() {}
 pub fn module_definition_map() {}
-pub fn definition_map() {}
+
+pub fn definition_map(keyword_t: &Token, operator_t: Option<Token>, name_t: &Token, end_t: &Token) -> MethodDefinitionMap {
+    MethodDefinitionMap {
+        keyword: loc(keyword_t),
+        operator: operator_t.map(|op| loc(&op)),
+        name: loc(name_t),
+        end: Some(loc(end_t)),
+        assignment: None,
+        expression: loc(keyword_t).join(&loc(end_t))
+    }
+}
+
 pub fn endless_definition_map() {}
 pub fn send_map() {}
 pub fn var_send_map() {}

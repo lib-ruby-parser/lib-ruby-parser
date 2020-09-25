@@ -87,7 +87,8 @@ pub struct ParserState {
 
     max_numparam: usize,
 
-    ctxt: LexContext,
+    pub ctxt: LexContext,
+    pub in_kwarg: bool,
 
     pub command_start: bool,
     pub eofp: bool,
@@ -276,7 +277,7 @@ impl Lexer {
                     self.p.token_seen = token_seen;
                     let cc = self.is_lex_state_some( EXPR_BEG|EXPR_CLASS|EXPR_FNAME|EXPR_DOT) && !self.is_lex_state_some(EXPR_LABELED);
                     if cc || self.is_lex_state_all(EXPR_ARG|EXPR_LABELED) {
-                        if !cc && self.p.ctxt.is_in_kwargs() {
+                        if !cc && self.p.in_kwarg {
                             self.p.command_start = true;
                             self.set_lex_state(EXPR_BEG);
                             return Self::tNL;

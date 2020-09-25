@@ -7,7 +7,6 @@ enum Item {
     Defs,
     Block,
     Lambda,
-    Kwargs,
     Defined,
 }
 
@@ -40,7 +39,6 @@ impl LexContext {
     has_state!(push_fn = push_defs,    is_fn = is_in_defs,    variant = Item::Defs);
     has_state!(push_fn = push_block,   is_fn = is_in_block,   variant = Item::Block);
     has_state!(push_fn = push_lambda,  is_fn = is_in_lambda,  variant = Item::Lambda);
-    has_state!(push_fn = push_kwargs,  is_fn = is_in_kwargs,  variant = Item::Kwargs);
     has_state!(push_fn = push_defined, is_fn = is_in_defined, variant = Item::Defined);
 
     pub fn pop(&mut self) { self.stack.pop(); }
