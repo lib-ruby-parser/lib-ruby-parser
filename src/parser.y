@@ -3,7 +3,7 @@
 %define api.parser.struct { Parser }
 %define api.location.type { Loc }
 %define api.value.type { Value }
-%define api.parser.result_type { String }
+%define api.parser.result_type { Node }
 
 %define parse.error custom
 %define parse.trace
@@ -277,7 +277,7 @@
                   top_compstmt
                     {
                         let _trigger_locs = @2;
-                        $$ = $<RAW>2;
+                        self.result = Some($<Node>2);
                     }
                 ;
 
@@ -3984,10 +3984,7 @@ keyword_variable: kNIL
 
 %%
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Node {
-    None,
-}
+use crate::Node;
 
 #[derive(Clone, PartialEq)]
 pub enum Value {
@@ -4163,7 +4160,7 @@ impl std::fmt::Debug for Value {
 }
 
 impl Parser {
-  pub fn do_parse(mut self) -> Option<String> {
+  pub fn do_parse(mut self) -> Option<Node> {
       self.parse();
       self.result
   }

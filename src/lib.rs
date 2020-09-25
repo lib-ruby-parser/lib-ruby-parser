@@ -21,6 +21,11 @@ pub use static_environment::StaticEnvironment;
 mod parser;
 pub use parser::{Parser, Loc, SymbolKind, Token};
 
+pub mod node;
+pub use node::Node;
+mod builder;
+pub use builder::Builder;
+
 #[cfg(test)]
 mod tests {
     fn test() -> Vec<i32> {
