@@ -10,7 +10,8 @@
 
 
 %code use {
-    use crate::Lexer;
+    use crate::{Lexer, builder};
+    use crate::lexer::lex_states::*;
 }
 
 %code {
@@ -283,8 +284,9 @@
 
     top_compstmt: top_stmts opt_terms
                     {
-                        // result = @builder.compstmt(val[0])
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::Node(
+                            builder::compstmt($<NodeList>1)
+                        );
                     }
                 ;
 
@@ -1174,8 +1176,9 @@
                     }
                 | arg tPLUS arg
                     {
-                        // result = @builder.binary_op(val[0], val[1], val[2])
-                        $$ = Value::Node(Node::None);
+                        $$ = Value::Node(
+                            builder::binary_op($<Node>1, $<Token>2, $<Node>3)
+                        );
                     }
                 | arg tMINUS arg
                     {
@@ -3325,9 +3328,10 @@ xstring_contents: /* none */
 
   simple_numeric: tINTEGER
                     {
-                        // @lexer.state = :expr_end
-                        // result = @builder.integer(val[0])
-                        $$ = Value::Node(Node::None);
+                        self.yylexer.set_lex_state(EXPR_END);
+                        $$ = Value::Node(
+                            builder::integer($<Token>1)
+                        );
                     }
                 | tFLOAT
                     {

@@ -1,6 +1,6 @@
 use crate::source::Range;
 
-pub struct Comment<'a> {
+pub struct Comment {
     _text: String,
-    _location: Range<'a>
+    _location: Range
 }

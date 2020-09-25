@@ -140,7 +140,6 @@ impl Buffer {
                 (Some(begin_pos), Some(end_pos)) => {
                     Some(
                         source::Range::new(
-                            self,
                             begin_pos,
                             end_pos
                         )
@@ -152,7 +151,7 @@ impl Buffer {
     }
 
     pub fn source_range(&self) -> source::Range {
-        source::Range::new(self, 0, self.source.len())
+        source::Range::new(0, self.source.len())
     }
 
     pub fn last_line(&self) -> usize {
