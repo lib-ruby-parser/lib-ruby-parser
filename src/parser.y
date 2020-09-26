@@ -3,12 +3,12 @@
 %define api.parser.struct { Parser }
 %define api.location.type { Loc }
 %define api.value.type { Value }
-%define api.parser.result_type { Node }
 
 %define parse.error custom
 %define parse.trace
 
 %code parser_fields {
+    result: Option<Node>,
     builder: Builder,
 }
 
@@ -4541,8 +4541,14 @@ impl Lexer {
 
 impl Parser {
     pub fn new(lexer: Lexer) -> Self {
-        let mut result = Parser::default();
-        result.yylexer = lexer;
-        result
+        Self {
+          yy_error_verbose: true,
+          yynerrs: 0,
+          yydebug: 0,
+          yyerrstatus_: 0,
+          yylexer: lexer,
+          result: None,
+          builder: Builder::new(),
+      }
     }
 }

@@ -4,10 +4,13 @@ use crate::source::map::*;
 
 #[derive(Debug, Default)]
 pub struct Builder {
-
 }
 
 impl Builder {
+    pub fn new() -> Self {
+        Self {}
+    }
+
     //
     // Literals
     //
