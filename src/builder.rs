@@ -3,6 +3,15 @@ use std::cell::RefCell;
 use crate::source::Range;
 use crate::{Node, Token, StaticEnvironment, Context};
 use crate::source::map::*;
+use crate::parser::UserVariable;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PartialAssignment {
+    Node(Node),
+    Ident(Token),
+    IndexAsgn((Node, Token, Vec<Node>, Token)), // a[b, c]
+    AttrAsgn((Node, Token, Token)), // A::B
+}
 
 #[derive(Debug, Default)]
 pub struct Builder {
@@ -179,8 +188,13 @@ impl Builder {
         }
     }
 
-    pub fn const_global() {}
-    pub fn const_fetch() {}
+    pub fn const_global(&self, t_colon3: Token, name_t: Token) -> Node {
+        unimplemented!()
+    }
+
+    pub fn const_fetch(&self, scope: Node, t_colon2: Token, name_t: Token) -> Node {
+        unimplemented!()
+    }
 
     pub fn __encoding__(&self, _encoding_t: Token) -> Node {
         Node::__ENCODING__ {
@@ -192,23 +206,52 @@ impl Builder {
     // Assignments
     //
 
-    pub fn assignable(&self, node: Node) -> Node {
-        unimplemented!()
-    }
-    pub fn assignable_ident(&self, token: Token) -> Node {
-        let var_name = self.value(&token);
-        let name_loc = self.loc(&token);
+    pub fn assignable_ident(&self, ident_t: Token) -> PartialAssignment {
+        // wq/parser :ident handling
+        let var_name = self.value(&ident_t);
+        let name_loc = self.loc(&ident_t);
 
         self.check_assignment_to_numparam(&var_name, &name_loc);
         self.check_reserved_for_numparam(&var_name, &name_loc);
 
         self.static_env.declare(&var_name);
 
-        Node::Lvasgn {
-            name: var_name,
-            loc: self.variable_map(&token)
-        }
+        PartialAssignment::Ident(ident_t)
     }
+
+    pub fn assignable_node(&self, node: Node) -> PartialAssignment {
+        match &node {
+            Node::Cvar {..}
+            | Node::Ivar { .. }
+            | Node::Gvar { .. } => {
+                // ok
+            },
+            Node::Const { loc, .. } => {
+                if !self.context.is_dynamic_const_definition_allowed() {
+                    // diagnostic :error, :dynamic_const, nil, node.loc.expression
+                }
+            },
+            Node::Nil { .. }
+            | Node::Self_ { .. }
+            | Node::True { .. }
+            | Node::False { .. }
+            | Node::__FILE__ { .. }
+            | Node::__LINE__ { .. }
+            | Node::__ENCODING__  { .. } => {
+                // diagnostic :error, :invalid_assignment, nil, node.loc.expression
+            },
+            Node::BackRef { .. }
+            | Node::NthRef { .. } => {
+                // diagnostic :error, :backref_assignment, nil, node.loc.expression
+            },
+            _ => {
+                panic!("Unsupported assignable node {:#?}", node)
+            }
+        }
+
+        PartialAssignment::Node(node)
+    }
+
     pub fn const_op_assignable() {}
     pub fn assign() {}
     pub fn op_assign() {}

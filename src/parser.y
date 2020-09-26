@@ -16,6 +16,7 @@
     use crate::{Lexer, Builder};
     use crate::lexer::lex_states::*;
     use crate::lexer::{ContextItem};
+    use crate::builder::PartialAssignment;
 }
 
 %code {
@@ -98,7 +99,7 @@
 %type <node> top_compstmt top_stmt rassign
 %type <node> stmt_or_begin stmt expr arg primary command command_call method_call
 %type <node> expr_value arg_value primary_value rel_expr
-%type <node> block_arg var_ref var_lhs
+%type <node> block_arg var_ref
 %type <node> command_rhs arg_rhs
 %type <node> command_asgn mrhs_arg block_call block_command
 %type <node> f_block_opt
@@ -108,8 +109,8 @@
 %type <node> f_kw f_block_kw
 %type <node> bvar
 %type <node> lambda f_larglist
-%type <node> lhs fitem
-%type <node> mlhs mlhs_item mlhs_node mlhs_inner
+%type <node> fitem
+%type <node> mlhs mlhs_item mlhs_inner
 %type <node> p_top_expr_body
 %type <node> p_expr p_as p_alt p_expr_basic
 %type <node> p_arg
@@ -150,6 +151,7 @@
 %type <p_cases> p_cases
 %type <p_case_body> p_case_body
 %type <user_variable> user_variable
+%type <partial_assignment> var_lhs lhs mlhs_node
 
 %type <maybe_node> compstmt bodystmt f_arglist f_paren_args
 
@@ -969,22 +971,29 @@
 
        mlhs_node: user_variable
                     {
-                        // NOTE: user_variable can be Value::IDENT
-                        // result = @builder.assignable(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let assignable = match $<UserVariable>1 {
+                            UserVariable::Node(node) => self.builder.assignable_node(node),
+                            UserVariable::Ident(ident_t) => self.builder.assignable_ident(ident_t),
+                        };
+
+                        $$ = Value::PartialAssignment(assignable);
                     }
                 | keyword_variable
                     {
-                        // result = @builder.assignable(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            self.builder.assignable_node($<Node>1)
+                        );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
-                        // result = @builder.index_asgn(val[0], val[1], val[2], val[3])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            PartialAssignment::IndexAsgn((
+                                $<Node>1,
+                                $<Token>2,
+                                $<NodeList>3,
+                                $<Token>4
+                            ))
+                        );
                     }
                 | primary_value call_op tIDENTIFIER
                     {
@@ -992,15 +1001,23 @@
                         //     diagnostic :error, :csend_in_lhs_of_masgn, nil, val[1]
                         // end
 
-                        // result = @builder.attr_asgn(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            PartialAssignment::AttrAsgn((
+                                $<Node>1,
+                                $<Token>2,
+                                $<Token>3
+                            ))
+                        );
                     }
                 | primary_value tCOLON2 tIDENTIFIER
                     {
-                        // result = @builder.attr_asgn(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            PartialAssignment::AttrAsgn((
+                                $<Node>1,
+                                $<Token>2,
+                                $<Token>3
+                            ))
+                        );
                     }
                 | primary_value call_op tCONSTANT
                     {
@@ -1008,97 +1025,133 @@
                         //     diagnostic :error, :csend_in_lhs_of_masgn, nil, val[1]
                         // end
 
-                        // result = @builder.attr_asgn(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            PartialAssignment::AttrAsgn((
+                                $<Node>1,
+                                $<Token>2,
+                                $<Token>3
+                            ))
+                        );
                     }
                 | primary_value tCOLON2 tCONSTANT
                     {
-                        // result = @builder.assignable(
-                        //           @builder.const_fetch(val[0], val[1], val[2]))
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            self.builder.assignable_node(
+                                self.builder.const_fetch(
+                                    $<Node>1,
+                                    $<Token>2,
+                                    $<Token>3
+                                )
+                            )
+                        );
                     }
                 | tCOLON3 tCONSTANT
                     {
-                        // result = @builder.assignable(
-                        //           @builder.const_global(val[0], val[1]))
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            self.builder.assignable_node(
+                                self.builder.const_global(
+                                    $<Token>1,
+                                    $<Token>2
+                                )
+                            )
+                        );
                     }
                 | backref
                     {
-                        // result = @builder.assignable(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            self.builder.assignable_node(
+                                $<Node>1
+                            )
+                        );
                     }
                 ;
 
              lhs: user_variable
                     {
-                        let user_variable = $<UserVariable>1;
-                        match user_variable {
-                            UserVariable::Ident(ident) => {
-                                $$ = Value::Node(
-                                    self.builder.assignable_ident(ident)
-                                );
-                            },
-                            UserVariable::Node(node) => {
-                                $$ = Value::Node(
-                                    self.builder.assignable(node)
-                                );
-                            }
-                        }
+                        let assignable = match $<UserVariable>1 {
+                            UserVariable::Node(node) => self.builder.assignable_node(node),
+                            UserVariable::Ident(ident_t) => self.builder.assignable_ident(ident_t)
+                        };
+
+                        $$ = Value::PartialAssignment(assignable);
                     }
                 | keyword_variable
                     {
-                        // result = @builder.assignable(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            self.builder.assignable_node($<Node>1)
+                        );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
-                        // result = @builder.index_asgn(val[0], val[1], val[2], val[3])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            PartialAssignment::IndexAsgn((
+                                $<Node>1,
+                                $<Token>2,
+                                $<NodeList>3,
+                                $<Token>4
+                            ))
+                        )
                     }
                 | primary_value call_op tIDENTIFIER
                     {
-                        // result = @builder.attr_asgn(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            PartialAssignment::AttrAsgn((
+                                $<Node>1,
+                                $<Token>2,
+                                $<Token>3
+                            ))
+                        );
                     }
                 | primary_value tCOLON2 tIDENTIFIER
                     {
-                        // result = @builder.attr_asgn(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            PartialAssignment::AttrAsgn((
+                                $<Node>1,
+                                $<Token>2,
+                                $<Token>3
+                            ))
+                        );
                     }
                 | primary_value call_op tCONSTANT
                     {
-                        // result = @builder.attr_asgn(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            PartialAssignment::AttrAsgn((
+                                $<Node>1,
+                                $<Token>2,
+                                $<Token>3
+                            ))
+                        );
                     }
                 | primary_value tCOLON2 tCONSTANT
                     {
-                        // result = @builder.assignable(
-                        //           @builder.const_fetch(val[0], val[1], val[2]))
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            self.builder.assignable_node(
+                                self.builder.const_fetch(
+                                    $<Node>1,
+                                    $<Token>2,
+                                    $<Token>3,
+                                )
+                            )
+                        );
                     }
                 | tCOLON3 tCONSTANT
                     {
-                        // result = @builder.assignable(
-                        //           @builder.const_global(val[0], val[1]))
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            self.builder.assignable_node(
+                                self.builder.const_global(
+                                    $<Token>1,
+                                    $<Token>2,
+                                )
+                            )
+                        );
                     }
                 | backref
                     {
-                        // result = @builder.assignable(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            self.builder.assignable_node(
+                                $<Node>1
+                            )
+                        );
                     }
                 ;
 
@@ -3740,29 +3793,33 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         // FIXME: error handling here is INSANE
-                        // NOTE: user_variable can be Value::IDENT
-                        // result = @builder.assignable(val[0])
+                        let user_variable = $<UserVariable>1;
+
+                        // result = @builder.accessible(val[0])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | keyword_variable
                     {
+                        // result = @builder.accessible(val[0])
                         $$ = Value::Node($<Node>1);
                     }
                 ;
 
          var_lhs: user_variable
                     {
-                        // NOTE: user_variable can be Value::IDENT
-                        // result = @builder.assignable(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let assignable = match $<UserVariable>1 {
+                            UserVariable::Node(node) => self.builder.assignable_node(node),
+                            UserVariable::Ident(ident_t) => self.builder.assignable_ident(ident_t)
+                        };
+
+                        $$ = Value::PartialAssignment(assignable);
                     }
                 | keyword_variable
                     {
-                        // result = @builder.assignable(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::PartialAssignment(
+                            self.builder.assignable_node($<Node>1)
+                        );
                     }
                 ;
 
@@ -4407,6 +4464,8 @@ pub enum Value {
 
     /* For custom user_variable rule */
     UserVariable( UserVariable ),
+
+    PartialAssignment( PartialAssignment ),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -4513,6 +4572,9 @@ impl std::fmt::Debug for Value {
             },
             Value::UserVariable(data) => {
                 f.write_fmt(format_args!("UserVariable({:?})", data))
+            },
+            Value::PartialAssignment(data) => {
+                f.write_fmt(format_args!("PartialAssignment({:?})", data))
             },
         }
     }
