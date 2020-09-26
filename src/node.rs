@@ -29,6 +29,7 @@ pub enum Node {
     BackRef { name: String, loc: VariableMap },
     NthRef { name: String, loc: VariableMap },
     Lvasgn { name: String, loc: VariableMap },
+    Const { scope: Option<Box<Node>>, name: String, loc: ConstantMap },
 }
 
 impl Node {
@@ -60,6 +61,7 @@ impl Node {
             Self::BackRef { loc, .. } => &loc.expression,
             Self::NthRef { loc, .. } => &loc.expression,
             Self::Lvasgn { loc, .. } => &loc.expression,
+            Self::Const { loc, .. } => &loc.expression,
         }
     }
 }

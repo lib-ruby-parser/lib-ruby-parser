@@ -170,7 +170,15 @@ impl Builder {
     pub fn accessible(_node: Node) -> Node {
         unimplemented!()
     }
-    pub fn const_() {}
+
+    pub fn const_(&self, name_t: Token) -> Node {
+        Node::Const {
+            scope: None,
+            name: self.value(&name_t),
+            loc: self.constant_map(&None, &None, &name_t)
+        }
+    }
+
     pub fn const_global() {}
     pub fn const_fetch() {}
 
@@ -194,7 +202,7 @@ impl Builder {
         self.check_assignment_to_numparam(&var_name, &name_loc);
         self.check_reserved_for_numparam(&var_name, &name_loc);
 
-        // TODO: parser.static_env.declare(name)
+        self.static_env.declare(&var_name);
 
         Node::Lvasgn {
             name: var_name,
@@ -221,18 +229,16 @@ impl Builder {
     // Method (un)definition
     //
 
-    pub fn def_method(&self, def_t: Token, name_t: Token, args: Option<Node>, body: Option<Node>, end_t: Token) -> Result<Node, String> {
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t))?;
+    pub fn def_method(&self, def_t: Token, name_t: Token, args: Option<Node>, body: Option<Node>, end_t: Token) -> Node {
+        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
 
-        let loc = self.definition_map(&def_t, None, &name_t, &end_t);
-        Ok(
-            Node::Def {
-                name: self.value(&name_t),
-                args: args.map(|node| Box::new(node)),
-                body: body.map(|node| Box::new(node)),
-                loc
-            }
-        )
+        let loc = self.definition_map(&def_t, &None, &name_t, &end_t);
+        Node::Def {
+            name: self.value(&name_t),
+            args: args.map(|node| Box::new(node)),
+            body: body.map(|node| Box::new(node)),
+            loc
+        }
     }
 
     pub fn def_endless_method() {}
@@ -359,7 +365,7 @@ impl Builder {
 
         if !rescue_bodies.is_empty() {
             if let Some((else_t, else_)) = else_ {
-                let loc = self.eh_keyword_map(&compound_stmt, None, &rescue_bodies, Some(&else_t), Some(&else_));
+                let loc = self.eh_keyword_map(&compound_stmt, &None, &rescue_bodies, &Some(else_t.clone()), &Some(else_.clone()));
                 result = Some(
                         Node::Rescue {
                         body: compound_stmt.map(|node| Box::new(node)),
@@ -369,7 +375,7 @@ impl Builder {
                     }
                 )
             } else {
-                let loc = self.eh_keyword_map(&compound_stmt, None, &rescue_bodies, None, None);
+                let loc = self.eh_keyword_map(&compound_stmt, &None, &rescue_bodies, &None, &None);
                 result = Some(
                         Node::Rescue {
                         body: compound_stmt.map(|node| Box::new(node)),
@@ -408,7 +414,7 @@ impl Builder {
         }
 
         if let Some((ensure_t, ensure)) = ensure {
-            let loc = self.eh_keyword_map(&result, Some(&ensure_t), &vec![ensure.clone()], None, None);
+            let loc = self.eh_keyword_map(&result, &Some(ensure_t.clone()), &vec![ensure.clone()], &None, &None);
             result = Some(
                     Node::Ensure {
                     body: result.map(|node| Box::new(node)),
@@ -497,21 +503,18 @@ impl Builder {
     pub fn check_condition() {}
     pub fn check_duplicate_args() {}
     pub fn check_duplicate_arg() {}
-    pub fn check_assignment_to_numparam(&self, name: &str, loc: &Range) -> Result<(), String> {
-        Ok(())
+    pub fn check_assignment_to_numparam(&self, name: &str, loc: &Range){
     }
 
-    pub fn check_reserved_for_numparam(&self, name: &str, loc: &Range) -> Result<(), String> {
-        if name.len() != 2 { return Ok(()) }
+    pub fn check_reserved_for_numparam(&self, name: &str, loc: &Range) {
+        if name.len() != 2 { return }
 
         let c1 = name.chars().nth(1).unwrap();
         let c2 = name.chars().nth(2).unwrap();
 
         if c1 == '0' && (c2 >= '1' && c2 <= '9') {
-            return Err("reserved_for_numparam".to_owned())
+            // diagnostic :error, "reserved_for_numparam"
         }
-
-        Ok(())
     }
 
     pub fn arg_name_collides() {}
@@ -579,7 +582,21 @@ impl Builder {
 
     pub fn string_map() {}
     pub fn regexp_map() {}
-    pub fn constant_map() {}
+    pub fn constant_map(&self, scope: &Option<Node>, colon2_t: &Option<Token>, name_t: &Token) -> ConstantMap {
+        let expr_l: Range;
+        if let Some(scope) = scope {
+            expr_l = scope.expression().join(&self.loc(name_t));
+        } else {
+            expr_l = self.loc(name_t);
+        }
+
+        ConstantMap {
+            double_colon: colon2_t.clone().map(|t| self.loc(&t)),
+            name: self.loc(&name_t),
+            operator: None,
+            expression: expr_l,
+        }
+    }
 
     pub fn variable_map(&self, name_t: &Token) -> VariableMap {
         VariableMap { expression: self.loc(name_t) }
@@ -592,10 +609,10 @@ impl Builder {
     pub fn kwarg_map() {}
     pub fn module_definition_map() {}
 
-    pub fn definition_map(&self, keyword_t: &Token, operator_t: Option<Token>, name_t: &Token, end_t: &Token) -> MethodDefinitionMap {
+    pub fn definition_map(&self, keyword_t: &Token, operator_t: &Option<Token>, name_t: &Token, end_t: &Token) -> MethodDefinitionMap {
         MethodDefinitionMap {
             keyword: self.loc(keyword_t),
-            operator: operator_t.map(|op| self.loc(&op)),
+            operator: operator_t.clone().map(|op| self.loc(&op)),
             name: self.loc(name_t),
             end: Some(self.loc(end_t)),
             assignment: None,
@@ -652,7 +669,7 @@ impl Builder {
     pub fn for_map() {}
     pub fn rescue_body_map() {}
 
-    pub fn eh_keyword_map(&self, compstmt_e: &Option<Node>, keyword_t: Option<&Token>, body_es: &Vec<Node>, else_t: Option<&Token>, else_e: Option<&Node>) -> ConditionMap {
+    pub fn eh_keyword_map(&self, compstmt_e: &Option<Node>, keyword_t: &Option<Token>, body_es: &Vec<Node>, else_t: &Option<Token>, else_e: &Option<Node>) -> ConditionMap {
         let begin_l: Range;
         let end_l: Range;
 
@@ -680,9 +697,9 @@ impl Builder {
 
         ConditionMap {
             expression: begin_l.join(&end_l),
-            keyword: keyword_t.map(|t| self.loc(&t)),
+            keyword: keyword_t.clone().map(|t| self.loc(&t)),
             begin: None,
-            else_: else_t.map(|t| self.loc(&t)),
+            else_: else_t.clone().map(|t| self.loc(&t)),
             end: None
         }
     }

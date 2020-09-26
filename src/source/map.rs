@@ -57,3 +57,11 @@ pub struct MethodDefinitionMap {
     pub assignment: Option<Range>,
     pub expression: Range,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ConstantMap {
+    pub double_colon: Option<Range>,
+    pub name: Range,
+    pub operator: Option<Range>,
+    pub expression: Range,
+}

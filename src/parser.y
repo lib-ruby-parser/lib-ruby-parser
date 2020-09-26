@@ -2059,18 +2059,15 @@
                     {
                         let (def_t, name_t) = $<DefnHead>1;
 
-                        let def = self.builder.def_method(
-                            def_t,
-                            name_t,
-                            $<MaybeNode>2,
-                            $<MaybeNode>3,
-                            $<Token>4
+                        $$ = Value::Node(
+                            self.builder.def_method(
+                                def_t,
+                                name_t,
+                                $<MaybeNode>2,
+                                $<MaybeNode>3,
+                                $<Token>4
+                            )
                         );
-
-                        match def {
-                            Ok(def) => $$ = Value::Node(def),
-                            Err(err) => {} // self.yyerror("def error")
-                        }
 
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
@@ -3664,27 +3661,35 @@ xstring_contents: /* none */
                     }
                 | tIVAR
                     {
-                        // result = @builder.ivar(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::UserVariable(
+                            UserVariable::Node(
+                                self.builder.ivar($<Token>1)
+                            )
+                        );
                     }
                 | tGVAR
                     {
-                        // result = @builder.gvar(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::UserVariable(
+                            UserVariable::Node(
+                                self.builder.gvar($<Token>1)
+                            )
+                        );
                     }
                 | tCONSTANT
                     {
-                        // result = @builder.const(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::UserVariable(
+                            UserVariable::Node(
+                                self.builder.const_($<Token>1)
+                            )
+                        );
                     }
                 | tCVAR
                     {
-                        // result = @builder.cvar(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::UserVariable(
+                            UserVariable::Node(
+                                self.builder.cvar($<Token>1)
+                            )
+                        );
                     }
                 ;
 
