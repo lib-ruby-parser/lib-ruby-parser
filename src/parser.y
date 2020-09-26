@@ -214,14 +214,14 @@
 %token <token> tAMPER           "&"
 %token <token> tLAMBDA          "->"
 %token <token> tSYMBEG          "symbol literal"
-%token <token> tSTRING_BEG      "string literal"
+%token <token> tSTRING_BEG      "string begin"
 %token <token> tXSTRING_BEG     "backtick literal"
 %token <token> tREGEXP_BEG      "regexp literal"
 %token <token> tWORDS_BEG       "word list"
 %token <token> tQWORDS_BEG      "verbatim word list"
 %token <token> tSYMBOLS_BEG     "symbol list"
 %token <token> tQSYMBOLS_BEG    "verbatim symbol list"
-%token <token> tSTRING_END      "terminator"
+%token <token> tSTRING_END      "string end"
 %token <token> tSTRING_DEND     "tRCURLY"
 %token <token> tSTRING_DBEG
 %token <token> tSTRING_DVAR
@@ -3432,9 +3432,13 @@ opt_block_args_tail:
 
          strings: string
                     {
-                        // result = @builder.string_compose(nil, val[0], nil)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.string_compose(
+                                None,
+                                $<NodeList>1,
+                                None
+                            )
+                        );
                     }
                 ;
 
@@ -3457,10 +3461,9 @@ opt_block_args_tail:
 
          string1: tSTRING_BEG string_contents tSTRING_END
                     {
-                        // string = @builder.string_compose(val[0], val[1], val[2])
+                        let string = self.builder.string_compose(Some($<Token>1), $<NodeList>2, Some($<Token>3));
                         // result = @builder.dedent_string(string, @lexer.dedent_level)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(string);
                     }
                 ;
 
@@ -3582,7 +3585,9 @@ opt_block_args_tail:
                     }
                 | string_contents string_content
                     {
-                        $$ = Value::NodeList( vec![] );
+                        let mut nodes = $<NodeList>1;
+                        nodes.push($<Node>2);
+                        $$ = Value::NodeList(nodes);
                     }
                 ;
 
@@ -3610,9 +3615,9 @@ xstring_contents: /* none */
 
   string_content: tSTRING_CONTENT
                     {
-                        // result = @builder.string_internal(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.string_internal($<Token>1)
+                        );
                     }
                 | tSTRING_DVAR
                     {

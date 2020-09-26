@@ -1,4 +1,4 @@
-use std::env;
+use std::{convert::TryInto, env};
 use std::fs;
 use ruby_parser::{Lexer, SymbolKind, Token};
 use std::convert::TryFrom;
@@ -14,7 +14,9 @@ USAGE:
 
 fn token_name(token: &Token) -> String {
     let (id, _, _) = token;
-    SymbolKind::get(usize::try_from(id.clone()).unwrap()).name()
+    let first_token: usize = Lexer::YYerror.try_into().unwrap();
+    let id_usize: usize = (*id).try_into().unwrap(); // minus first token ID
+    Lexer::TOKEN_NAMES[id_usize - first_token + 1].to_owned()
 }
 
 fn token_value(token: &Token) -> String {
@@ -22,7 +24,11 @@ fn token_value(token: &Token) -> String {
     value.clone()
 }
 
-fn rpad<T: Sized + std::fmt::Debug>(value: &T, total_width: usize) -> String {
+fn rpad1<T: Sized + std::fmt::Display>(value: &T, total_width: usize) -> String {
+    format!("{:width$}", format!("{}, ", value), width = total_width)
+}
+
+fn rpad2<T: Sized + std::fmt::Debug>(value: &T, total_width: usize) -> String {
     format!("{:width$}", format!("{:?}, ", value), width = total_width)
 }
 
@@ -46,8 +52,8 @@ fn main() {
     println!("[");
     for token in tokens {
         let (_, _, loc) = &token;
-        let name = rpad(&token_name(&token), tok_name_length);
-        let value = rpad(&token_value(&token), tok_value_length);
+        let name = rpad1(&token_name(&token), tok_name_length);
+        let value = rpad2(&token_value(&token), tok_value_length);
         println!("    :{}{}[{}, {}]", name, value, loc.begin, loc.end);
     }
     println!("]");

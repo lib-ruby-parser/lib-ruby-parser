@@ -43,6 +43,8 @@ pub enum Node {
     Pair { key: Box<Node>, value: Box<Node>, loc: OperatorMap },
     Hash { pairs: Vec<Node>, loc: CollectionMap },
     Array { elements: Vec<Node>, loc: CollectionMap },
+    Str { value: String, loc: CollectionMap },
+    Dstr { children: Vec<Node>, loc: CollectionMap },
 }
 
 impl Node {
@@ -88,6 +90,8 @@ impl Node {
             Self::Pair { loc, .. } => &loc.expression,
             Self::Hash { loc, .. } => &loc.expression,
             Self::Array { loc, .. } => &loc.expression,
+            Self::Str { loc, .. } => &loc.expression,
+            Self::Dstr { loc, .. } => &loc.expression,
         }
     }
 }

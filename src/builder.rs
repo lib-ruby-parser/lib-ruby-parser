@@ -115,10 +115,46 @@ impl Builder {
 
     // Strings
 
-    pub fn string() {}
-    pub fn string_internal() {}
-    pub fn string_compose() {}
-    pub fn character() {}
+    pub fn string(&self) {}
+
+    pub fn string_internal(&self, string_t: Token) -> Node {
+        Node::Str {
+            value: self.value(&string_t),
+            loc: self.unquoted_map(&string_t)
+        }
+    }
+
+    pub fn string_compose(&self, begin_t: Option<Token>, parts: Vec<Node>, end_t: Option<Token>) -> Node {
+        if parts.len() == 1 {
+            let part = &parts[0];
+            match part {
+                Node::Str { .. } | Node::Dstr { .. } => {
+                    // collapse_string_parts? == true
+                    if begin_t.is_none() && end_t.is_none() {
+                        return part.clone();
+                    } else {
+                        match part {
+                            Node::Str { value, .. } => {
+                                return Node::Str {
+                                    value: value.clone(),
+                                    loc: self.string_map(&begin_t, &parts, &end_t)
+                                }
+                            },
+                            _ => panic!("unreachable")
+                        }
+                    }
+                },
+                _ => {}
+            }
+        }
+
+        Node::Dstr {
+            loc: self.string_map(&begin_t, &parts, &end_t),
+            children: parts,
+        }
+    }
+
+    pub fn character(&self) {}
 
     pub fn __file__(&self, file_t: Token) -> Node {
         Node::__FILE__ {
@@ -146,20 +182,20 @@ impl Builder {
         }
     }
 
-    pub fn symbol_compose() {}
+    pub fn symbol_compose(&self) {}
 
     // Executable strings
 
-    pub fn xstring_compose() {}
+    pub fn xstring_compose(&self) {}
 
     // Indented (interpolated, noninterpolated, executable) strings
 
-    pub fn dedent_string() {}
+    pub fn dedent_string(&self) {}
 
     // Regular expressions
 
-    pub fn regexp_options() {}
-    pub fn regexp_compose() {}
+    pub fn regexp_options(&self) {}
+    pub fn regexp_compose(&self) {}
 
     // Arrays
 
@@ -168,10 +204,10 @@ impl Builder {
         Node::Array { elements, loc }
     }
 
-    pub fn splat() {}
-    pub fn word() {}
-    pub fn words_compose() {}
-    pub fn symbols_compose() {}
+    pub fn splat(&self) {}
+    pub fn word(&self) {}
+    pub fn words_compose(&self) {}
+    pub fn symbols_compose(&self) {}
 
     // Hashes
 
@@ -183,7 +219,7 @@ impl Builder {
             loc
         }
     }
-    pub fn pair_list_18() {}
+    pub fn pair_list_18(&self) {}
 
     pub fn pair_keyword(&self, key_t: Token, value: Node) -> Node {
         let (key_map, pair_map) = self.pair_keyword_map(&key_t, &value);
@@ -198,8 +234,8 @@ impl Builder {
         }
     }
 
-    pub fn pair_quoted() {}
-    pub fn kwsplat() {}
+    pub fn pair_quoted(&self) {}
+    pub fn kwsplat(&self) {}
 
     pub fn associate(&self, begin_t: Token, pairs: Vec<Node>, end_t: Token) -> Node {
         let loc = self.collection_map(&Some(begin_t.clone()), &pairs, &Some(end_t.clone()));
@@ -211,8 +247,8 @@ impl Builder {
 
     // Ranges
 
-    pub fn range_inclusive() {}
-    pub fn range_exclusive() {}
+    pub fn range_inclusive(&self) {}
+    pub fn range_exclusive(&self) {}
 
     //
     // Access
@@ -359,7 +395,7 @@ impl Builder {
         PartialAssignment::Node(node)
     }
 
-    pub fn const_op_assignable() {}
+    pub fn const_op_assignable(&self) {}
 
     pub fn assign(&self, lhs: PartialAssignment, eql_t: Token, rhs: Node) -> Node {
         let operator_l = Some(self.loc(&eql_t));
@@ -433,19 +469,19 @@ impl Builder {
         lhs
     }
 
-    pub fn op_assign() {}
-    pub fn multi_lhs() {}
-    pub fn multi_assign() {}
-    pub fn rassign() {}
-    pub fn multi_rassign() {}
+    pub fn op_assign(&self) {}
+    pub fn multi_lhs(&self) {}
+    pub fn multi_assign(&self) {}
+    pub fn rassign(&self) {}
+    pub fn multi_rassign(&self) {}
 
     //
     // Class and module definition
     //
 
-    pub fn def_class() {}
-    pub fn def_sclass() {}
-    pub fn def_module() {}
+    pub fn def_class(&self) {}
+    pub fn def_sclass(&self) {}
+    pub fn def_module(&self) {}
 
     //
     // Method (un)definition
@@ -463,9 +499,9 @@ impl Builder {
         }
     }
 
-    pub fn def_endless_method() {}
-    pub fn def_singleton() {}
-    pub fn def_endless_singleton() {}
+    pub fn def_endless_method(&self) {}
+    pub fn def_singleton(&self) {}
+    pub fn def_endless_singleton(&self) {}
 
     pub fn undef_method(&self, undef_t: Token, names: Vec<Node>) -> Node {
         let loc = self.keyword_map(&undef_t, &None, &names, &None);
@@ -503,9 +539,9 @@ impl Builder {
         }
     }
 
-    pub fn numargs() {}
-    pub fn forward_only_args() {}
-    pub fn forward_arg() {}
+    pub fn numargs(&self) {}
+    pub fn forward_only_args(&self) {}
+    pub fn forward_arg(&self) {}
 
     pub fn arg(&self, name_t: Token) -> Node {
         self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
@@ -515,37 +551,37 @@ impl Builder {
         }
     }
 
-    pub fn optarg() {}
-    pub fn restarg() {}
-    pub fn kwarg() {}
-    pub fn kwoptarg() {}
-    pub fn kwrestarg() {}
-    pub fn kwnilarg() {}
-    pub fn shadowarg() {}
-    pub fn blockarg() {}
-    pub fn procarg0() {}
+    pub fn optarg(&self) {}
+    pub fn restarg(&self) {}
+    pub fn kwarg(&self) {}
+    pub fn kwoptarg(&self) {}
+    pub fn kwrestarg(&self) {}
+    pub fn kwnilarg(&self) {}
+    pub fn shadowarg(&self) {}
+    pub fn blockarg(&self) {}
+    pub fn procarg0(&self) {}
 
     //
     // Method calls
     //
 
-    pub fn forwarded_args() {}
-    pub fn call_method() {}
-    pub fn call_lambda() {}
-    pub fn block() {}
-    pub fn block_pass() {}
-    pub fn attr_asgn() {}
-    pub fn index() {}
-    pub fn index_asgn() {}
+    pub fn forwarded_args(&self) {}
+    pub fn call_method(&self) {}
+    pub fn call_lambda(&self) {}
+    pub fn block(&self) {}
+    pub fn block_pass(&self) {}
+    pub fn attr_asgn(&self) {}
+    pub fn index(&self) {}
+    pub fn index_asgn(&self) {}
 
     pub fn binary_op(&self, receiver: Node, operator_t: Token, arg: Node) -> Node {
         let source_map = self.send_binary_op_map(&receiver, &operator_t, &arg);
         Node::Send { receiver: Some(Box::new(receiver)), operator: self.value(&operator_t), args: vec![arg], loc: source_map }
     }
 
-    pub fn match_op() {}
-    pub fn unary_op() {}
-    pub fn not_op() {}
+    pub fn match_op(&self) {}
+    pub fn unary_op(&self) {}
+    pub fn not_op(&self) {}
 
     //
     // Control flow
@@ -553,28 +589,28 @@ impl Builder {
 
     // Logical operations: and, or
 
-    pub fn logical_op() {}
+    pub fn logical_op(&self) {}
 
     // Conditionals
 
-    pub fn condition() {}
-    pub fn condition_mod() {}
-    pub fn ternary() {}
+    pub fn condition(&self) {}
+    pub fn condition_mod(&self) {}
+    pub fn ternary(&self) {}
 
     // Case matching
 
-    pub fn when() {}
-    pub fn case() {}
+    pub fn when(&self) {}
+    pub fn case(&self) {}
 
     // Loops
 
-    pub fn loop_() {}
-    pub fn loop_mod() {}
-    pub fn for_() {}
+    pub fn loop_(&self) {}
+    pub fn loop_mod(&self) {}
+    pub fn for_(&self) {}
 
     // Keywords
 
-    pub fn keyword_cmd() {}
+    pub fn keyword_cmd(&self) {}
 
     // BEGIN, END
 
@@ -584,11 +620,11 @@ impl Builder {
             loc: self.keyword_map(&preexe_t, &Some(lbrace_t), &vec![], &Some(rbrace_t))
         }
     }
-    pub fn postexe() {}
+    pub fn postexe(&self) {}
 
     // Exception handling
 
-    pub fn rescue_body() {}
+    pub fn rescue_body(&self) {}
     pub fn begin_body(&self, compound_stmt: Option<Node>, rescue_bodies: Vec<Node>, else_: Option<(Token, Node)>, ensure: Option<(Token, Node)>) -> Option<Node> {
         let mut result: Option<Node>;
 
@@ -671,7 +707,7 @@ impl Builder {
         }
     }
 
-    pub fn begin() {}
+    pub fn begin(&self) {}
     pub fn begin_keyword(&self, begin_t: Token, body: Option<Node>, end_t: Token) -> Node {
         match body {
             None => {
@@ -704,34 +740,34 @@ impl Builder {
     // Pattern matching
     //
 
-    pub fn case_match() {}
-    pub fn in_match() {}
-    pub fn in_pattern() {}
-    pub fn if_guard() {}
-    pub fn unless_guard() {}
-    pub fn match_var() {}
-    pub fn match_hash_var() {}
-    pub fn match_hash_var_from_str() {}
-    pub fn match_rest() {}
-    pub fn hash_pattern() {}
-    pub fn array_pattern() {}
-    pub fn find_pattern() {}
-    pub fn match_with_trailing_comma() {}
-    pub fn const_pattern() {}
-    pub fn pin() {}
-    pub fn match_alt() {}
-    pub fn match_as() {}
-    pub fn match_nil_pattern() {}
-    pub fn match_pair() {}
-    pub fn match_label() {}
+    pub fn case_match(&self) {}
+    pub fn in_match(&self) {}
+    pub fn in_pattern(&self) {}
+    pub fn if_guard(&self) {}
+    pub fn unless_guard(&self) {}
+    pub fn match_var(&self) {}
+    pub fn match_hash_var(&self) {}
+    pub fn match_hash_var_from_str(&self) {}
+    pub fn match_rest(&self) {}
+    pub fn hash_pattern(&self) {}
+    pub fn array_pattern(&self) {}
+    pub fn find_pattern(&self) {}
+    pub fn match_with_trailing_comma(&self) {}
+    pub fn const_pattern(&self) {}
+    pub fn pin(&self) {}
+    pub fn match_alt(&self) {}
+    pub fn match_as(&self) {}
+    pub fn match_nil_pattern(&self) {}
+    pub fn match_pair(&self) {}
+    pub fn match_label(&self) {}
 
     //
     // Verification
     //
 
-    pub fn check_condition() {}
-    pub fn check_duplicate_args() {}
-    pub fn check_duplicate_arg() {}
+    pub fn check_condition(&self) {}
+    pub fn check_duplicate_args(&self) {}
+    pub fn check_duplicate_arg(&self) {}
     pub fn check_assignment_to_numparam(&self, name: &str, loc: &Range){
     }
 
@@ -746,10 +782,10 @@ impl Builder {
         }
     }
 
-    pub fn arg_name_collides() {}
-    pub fn check_lvar_name() {}
-    pub fn check_duplicate_pattern_variable() {}
-    pub fn check_duplicate_pattern_key() {}
+    pub fn arg_name_collides(&self) {}
+    pub fn check_lvar_name(&self) {}
+    pub fn check_duplicate_pattern_variable(&self) {}
+    pub fn check_duplicate_pattern_key(&self) {}
 
     //
     // Source maps
@@ -763,8 +799,8 @@ impl Builder {
         Map { expression: self.loc(&token) }
     }
 
-    pub fn delimited_string_map() {}
-    pub fn prefix_string_map() {}
+    pub fn delimited_string_map(&self) {}
+    pub fn prefix_string_map(&self) {}
 
     pub fn unquoted_map(&self, token: &Token) -> CollectionMap {
         CollectionMap {
@@ -792,8 +828,8 @@ impl Builder {
         )
     }
 
-    pub fn pair_quoted_map() {}
-    pub fn expr_map() {}
+    pub fn pair_quoted_map(&self) {}
+    pub fn expr_map(&self) {}
 
     pub fn collection_map(&self, begin_t: &Option<Token>, parts: &Vec<Node>, end_t: &Option<Token>) -> CollectionMap {
         let expr_l: Range;
@@ -826,8 +862,17 @@ impl Builder {
         }
     }
 
-    pub fn string_map() {}
-    pub fn regexp_map() {}
+    pub fn string_map(&self, begin_t: &Option<Token>, parts: &Vec<Node>, end_t: &Option<Token>) -> CollectionMap {
+        if let Some(begin_t) = begin_t {
+            if self.value(&begin_t).starts_with("<<") {
+                unimplemented!("heredoc map")
+            }
+        }
+
+        self.collection_map(begin_t, parts, end_t)
+    }
+
+    pub fn regexp_map(&self) {}
     pub fn constant_map(&self, scope: &Option<Node>, colon2_t: &Option<Token>, name_t: &Token) -> ConstantMap {
         let expr_l: Range;
         if let Some(scope) = scope {
@@ -855,11 +900,11 @@ impl Builder {
         }
     }
 
-    pub fn unary_op_map() {}
-    pub fn range_map() {}
-    pub fn arg_prefix_map() {}
-    pub fn kwarg_map() {}
-    pub fn module_definition_map() {}
+    pub fn unary_op_map(&self) {}
+    pub fn range_map(&self) {}
+    pub fn arg_prefix_map(&self) {}
+    pub fn kwarg_map(&self) {}
+    pub fn module_definition_map(&self) {}
 
     pub fn definition_map(&self, keyword_t: &Token, operator_t: &Option<Token>, name_t: &Token, end_t: &Token) -> MethodDefinitionMap {
         MethodDefinitionMap {
@@ -872,7 +917,7 @@ impl Builder {
         }
     }
 
-    pub fn endless_definition_map() {}
+    pub fn endless_definition_map(&self) {}
 
     pub fn send_map(&self, receiver_e: &Option<Node>, dot_t: &Token, selector_t: &Option<Token>, begin_t: &Option<Token>, args: &Vec<Node>, end_t: &Option<Token>) -> SendMap {
         let begin_l: Option<Range>;
@@ -931,7 +976,7 @@ impl Builder {
         }
     }
 
-    pub fn send_unary_op_map() {}
+    pub fn send_unary_op_map(&self) {}
 
     pub fn index_map(&self, receiver_e: &Node, lbrack_t: &Token, rbrack_t: &Token, operator_t: &Token) -> IndexMap {
         IndexMap {
@@ -941,9 +986,9 @@ impl Builder {
             operator: self.loc(operator_t)
         }
     }
-    pub fn send_index_map() {}
+    pub fn send_index_map(&self) {}
 
-    pub fn block_map() {}
+    pub fn block_map(&self) {}
 
     pub fn keyword_map(&self, keyword_t: &Token, begin_t: &Option<Token>, args: &Vec<Node>, end_t: &Option<Token>) -> KeywordMap {
         let expr_end_l: Range;
@@ -968,11 +1013,11 @@ impl Builder {
         }
     }
 
-    pub fn keyword_mod_map() {}
-    pub fn condition_map() {}
-    pub fn ternary_map() {}
-    pub fn for_map() {}
-    pub fn rescue_body_map() {}
+    pub fn keyword_mod_map(&self) {}
+    pub fn condition_map(&self) {}
+    pub fn ternary_map(&self) {}
+    pub fn for_map(&self) {}
+    pub fn rescue_body_map(&self) {}
 
     pub fn eh_keyword_map(&self, compstmt_e: &Option<Node>, keyword_t: &Option<Token>, body_es: &Vec<Node>, else_t: &Option<Token>, else_e: &Option<Node>) -> ConditionMap {
         let begin_l: Range;
@@ -1009,30 +1054,30 @@ impl Builder {
         }
     }
 
-    pub fn guard_map() {}
+    pub fn guard_map(&self) {}
 
     //
     // Helpers
     //
 
-    pub fn static_string() {}
-    pub fn static_regexp() {}
-    pub fn static_regexp_node() {}
-    pub fn collapse_string_parts() {}
+    pub fn static_string(&self) {}
+    pub fn static_regexp(&self) {}
+    pub fn static_regexp_node(&self) {}
+    pub fn collapse_string_parts(&self) {}
 
     pub fn value(&self, token: &Token) -> String {
         let (_, token_value, _) = token;
         token_value.clone()
     }
 
-    pub fn string_value() {}
+    pub fn string_value(&self) {}
 
     pub fn loc(&self, token: &Token) -> Range {
         let (_, _, loc) = token;
         Range::new(loc.begin, loc.end)
     }
 
-    pub fn diagnostic() {}
-    pub fn validate_definee() {}
+    pub fn diagnostic(&self) {}
+    pub fn validate_definee(&self) {}
 
 }
