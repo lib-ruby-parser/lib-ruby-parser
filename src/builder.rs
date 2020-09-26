@@ -87,7 +87,16 @@ impl Builder {
 
     // Symbols
 
-    pub fn symbol() {}
+    pub fn symbol(&self, start_t: Token, value_t: Token) -> Node {
+        Node::Sym {
+            name: self.value(&value_t),
+            loc: CollectionMap {
+                expression: self.loc(&start_t).join(&self.loc(&value_t)),
+                begin: Some(self.loc(&start_t)),
+                end: None
+            }
+        }
+    }
 
     pub fn symbol_internal(&self, symbol_t: Token) -> Node {
         Node::Sym {
@@ -385,7 +394,14 @@ impl Builder {
     pub fn def_endless_method() {}
     pub fn def_singleton() {}
     pub fn def_endless_singleton() {}
-    pub fn undef_method() {}
+
+    pub fn undef_method(&self, undef_t: Token, names: Vec<Node>) -> Node {
+        let loc = self.keyword_map(&undef_t, &None, &names, &None);
+        Node::Undef {
+            names,
+            loc
+        }
+    }
 
     pub fn alias(&self, alias_t: Token, to: Node, from: Node) -> Node {
         let loc = self.keyword_map(&alias_t, &None, &vec![from.clone(), to.clone()], &None);

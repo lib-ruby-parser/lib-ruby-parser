@@ -461,9 +461,12 @@
                     }
                 | kUNDEF undef_list
                     {
-                        // result = @builder.undef_method(val[0], val[1])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.undef_method(
+                                $<Token>1,
+                                $<NodeList>2
+                            )
+                        )
                     }
                 | stmt kIF_MOD expr_value
                     {
@@ -3652,10 +3655,10 @@ xstring_contents: /* none */
 
             ssym: tSYMBEG sym
                     {
-                        // @lexer.state = :expr_end
-                        // result = @builder.symbol(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        self.yylexer.set_lex_state(EXPR_END);
+                        $$ = Value::Node(
+                            self.builder.symbol($<Token>1, $<Token>2)
+                        );
                     }
                 ;
 

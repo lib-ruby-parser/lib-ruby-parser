@@ -35,7 +35,8 @@ pub enum Node {
     Gvasgn { name: String, rhs: Box<Node>, loc: VariableMap },
     Const { scope: Option<Box<Node>>, name: String, loc: ConstantMap },
     Casgn { name: String, rhs: Box<Node>, loc: VariableMap },
-    IndexAsgn { receiver: Box<Node>, indexes: Vec<Node>, rhs: Box<Node>, loc: IndexMap }
+    IndexAsgn { receiver: Box<Node>, indexes: Vec<Node>, rhs: Box<Node>, loc: IndexMap },
+    Undef { names: Vec<Node>, loc: KeywordMap },
 }
 
 impl Node {
@@ -74,6 +75,7 @@ impl Node {
             Self::Const { loc, .. } => &loc.expression,
             Self::Casgn { loc, .. } => &loc.expression,
             Self::IndexAsgn { loc, .. } => &loc.expression,
+            Self::Undef { loc, .. } => &loc.expression,
         }
     }
 }
