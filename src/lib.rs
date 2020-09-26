@@ -23,7 +23,8 @@ pub use parser::{Parser, Loc, SymbolKind, Token};
 
 pub mod node;
 pub use node::Node;
-pub mod builder;
+mod builder;
+pub use builder::Builder;
 
 #[cfg(test)]
 mod tests {

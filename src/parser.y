@@ -9,10 +9,11 @@
 %define parse.trace
 
 %code parser_fields {
+    builder: Builder,
 }
 
 %code use {
-    use crate::{Lexer, builder};
+    use crate::{Lexer, Builder};
     use crate::lexer::lex_states::*;
 }
 
@@ -291,7 +292,7 @@
     top_compstmt: top_stmts opt_terms
                     {
                         $$ = Value::MaybeNode(
-                            builder::compstmt($<NodeList>1)
+                            self.builder.compstmt($<NodeList>1)
                         );
                     }
                 ;
@@ -321,7 +322,7 @@
                     {
                         let (begin, stmt, end) = $<BeginBlock>2;
                         $$ = Value::Node(
-                            builder::preexe($<Token>1, begin, stmt, end)
+                            self.builder.preexe($<Token>1, begin, stmt, end)
                         );
                     }
                 ;
@@ -352,7 +353,7 @@
                         let ensure = $<OptEnsure>6;
 
                         $$ = Value::MaybeNode(
-                            builder::begin_body(
+                            self.builder.begin_body(
                                 compound_stmt,
                                 rescue_bodies,
                                 else_,
@@ -369,7 +370,7 @@
                         let ensure = $<OptEnsure>3;
 
                         $$ = Value::MaybeNode(
-                            builder::begin_body(
+                            self.builder.begin_body(
                                 compound_stmt,
                                 rescue_bodies,
                                 None,
@@ -382,7 +383,7 @@
         compstmt: stmts opt_terms
                     {
                         $$ = Value::MaybeNode(
-                            builder::compstmt($<NodeList>1)
+                            self.builder.compstmt($<NodeList>1)
                         );
                     }
                 ;
@@ -425,26 +426,26 @@
                   fitem
                     {
                         $$ = Value::Node(
-                            builder::alias($<Token>1, $<Node>2, $<Node>3)
+                            self.builder.alias($<Token>1, $<Node>2, $<Node>3)
                         );
                     }
                 | kALIAS tGVAR tGVAR
                     {
                         $$ = Value::Node(
-                            builder::alias(
+                            self.builder.alias(
                                 $<Token>1,
-                                builder::gvar($<Token>2),
-                                builder::gvar($<Token>3),
+                                self.builder.gvar($<Token>2),
+                                self.builder.gvar($<Token>3),
                             )
                         )
                     }
                 | kALIAS tGVAR tBACK_REF
                     {
                         $$ = Value::Node(
-                            builder::alias(
+                            self.builder.alias(
                                 $<Token>1,
-                                builder::gvar($<Token>2),
-                                builder::back_ref($<Token>3),
+                                self.builder.gvar($<Token>2),
+                                self.builder.back_ref($<Token>3),
                             )
                         )
                     }
@@ -1038,12 +1039,12 @@
                         match user_variable {
                             UserVariable::Ident(ident) => {
                                 $$ = Value::Node(
-                                    builder::assignable_ident(ident)
+                                    self.builder.assignable_ident(ident)
                                 );
                             },
                             UserVariable::Node(node) => {
                                 $$ = Value::Node(
-                                    builder::assignable(node)
+                                    self.builder.assignable(node)
                                 );
                             }
                         }
@@ -1142,7 +1143,7 @@
            fitem: fname
                     {
                         $$ = Value::Node(
-                            builder::symbol_internal($<Token>1)
+                            self.builder.symbol_internal($<Token>1)
                         );
                     }
                 | symbol
@@ -1312,7 +1313,7 @@
                 | arg tPLUS arg
                     {
                         $$ = Value::Node(
-                            builder::binary_op($<Node>1, $<Token>2, $<Node>3)
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)
                         );
                     }
                 | arg tMINUS arg
@@ -1780,7 +1781,7 @@
                         self.yylexer.cmdarg_pop();
 
                         $$ = Value::Node(
-                            builder::begin_keyword($<Token>1, $<MaybeNode>3, $<Token>4)
+                            self.builder.begin_keyword($<Token>1, $<MaybeNode>3, $<Token>4)
                         );
                     }
                 | tLPAREN_ARG { /* @lexer.state = :expr_endarg */ } rparen
@@ -2057,7 +2058,7 @@
                     {
                         let (def_t, name_t) = $<DefnHead>1;
 
-                        let def = builder::def_method(
+                        let def = self.builder.def_method(
                             def_t,
                             name_t,
                             $<MaybeNode>2,
@@ -3628,7 +3629,7 @@ xstring_contents: /* none */
                     {
                         self.yylexer.set_lex_state(EXPR_END);
                         $$ = Value::Node(
-                            builder::integer($<Token>1)
+                            self.builder.integer($<Token>1)
                         );
                     }
                 | tFLOAT
@@ -3689,43 +3690,43 @@ xstring_contents: /* none */
 keyword_variable: kNIL
                     {
                         $$ = Value::Node(
-                            builder::nil($<Token>1)
+                            self.builder.nil($<Token>1)
                         );
                     }
                 | kSELF
                     {
                         $$ = Value::Node(
-                            builder::self_($<Token>1)
+                            self.builder.self_($<Token>1)
                         );
                     }
                 | kTRUE
                     {
                         $$ = Value::Node(
-                            builder::true_($<Token>1)
+                            self.builder.true_($<Token>1)
                         );
                     }
                 | kFALSE
                     {
                         $$ = Value::Node(
-                            builder::false_($<Token>1)
+                            self.builder.false_($<Token>1)
                         );
                     }
                 | k__FILE__
                     {
                         $$ = Value::Node(
-                            builder::__file__($<Token>1)
+                            self.builder.__file__($<Token>1)
                         );
                     }
                 | k__LINE__
                     {
                         $$ = Value::Node(
-                            builder::__line__($<Token>1)
+                            self.builder.__line__($<Token>1)
                         );
                     }
                 | k__ENCODING__
                     {
                         $$ = Value::Node(
-                            builder::__encoding__($<Token>1)
+                            self.builder.__encoding__($<Token>1)
                         );
                     }
                 ;
@@ -3792,7 +3793,7 @@ keyword_variable: kNIL
     f_paren_args: tLPAREN2 f_args rparen
                     {
                         $$ = Value::MaybeNode(
-                            builder::args(Some($<Token>1), $<NodeList>2, Some($<Token>3))
+                            self.builder.args(Some($<Token>1), $<NodeList>2, Some($<Token>3))
                         );
 
                         self.yylexer.set_lex_state(EXPR_VALUE);
@@ -3826,7 +3827,7 @@ keyword_variable: kNIL
                     {
                         self.yylexer.p.in_kwarg = $<Bool>1;
                         $$ = Value::MaybeNode(
-                            builder::args(None, $<NodeList>2, None)
+                            self.builder.args(None, $<NodeList>2, None)
                         );
                     }
                 ;
@@ -3985,7 +3986,7 @@ keyword_variable: kNIL
                     {
                         // @current_arg_stack.set(0)
                         $$ = Value::Node(
-                            builder::arg($<Token>1)
+                            self.builder.arg($<Token>1)
                         );
                     }
                 | tLPAREN f_margs rparen
