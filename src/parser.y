@@ -1780,7 +1780,7 @@
                 | args tCOMMA arg_value
                     {
                         let mut nodes = $<NodeList>1;
-                        nodes.push( $<Node>2 );
+                        nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
                 | args tCOMMA tSTAR arg_value
@@ -1879,9 +1879,13 @@
                     }
                 | tLBRACK aref_args tRBRACK
                     {
-                        // result = @builder.array(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.array(
+                                $<Token>1,
+                                $<NodeList>2,
+                                $<Token>3
+                            )
+                        );
                     }
                 | tLBRACE assoc_list tRCURLY
                     {
@@ -3699,24 +3703,24 @@ xstring_contents: /* none */
                     }
                 | tFLOAT
                     {
-                        // @lexer.state = :expr_end
-                        // result = @builder.float(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        self.yylexer.set_lex_state(EXPR_END);
+                        $$ = Value::Node(
+                            self.builder.float($<Token>1)
+                        );
                     }
                 | tRATIONAL
                     {
-                        // @lexer.state = :expr_end
-                        // result = @builder.rational(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        self.yylexer.set_lex_state(EXPR_END);
+                        $$ = Value::Node(
+                            self.builder.rational($<Token>1)
+                        );
                     }
                 | tIMAGINARY
                     {
-                        // @lexer.state = :expr_end
-                        // result = @builder.complex(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        self.yylexer.set_lex_state(EXPR_END);
+                        $$ = Value::Node(
+                            self.builder.complex($<Token>1)
+                        );
                     }
                 ;
 

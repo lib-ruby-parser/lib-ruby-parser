@@ -61,9 +61,36 @@ impl Builder {
         }
     }
 
-    pub fn float() {}
-    pub fn rational() {}
-    pub fn complex() {}
+    pub fn float(&self, float_t: Token) -> Node {
+        Node::Float {
+            value: self.value(&float_t),
+            loc: OperatorMap {
+                expression: self.loc(&float_t),
+                operator: None,
+            }
+        }
+    }
+
+    pub fn rational(&self, rational_t: Token) -> Node {
+        Node::Rational {
+            value: self.value(&rational_t),
+            loc: OperatorMap {
+                expression: self.loc(&rational_t),
+                operator: None,
+            }
+        }
+    }
+
+    pub fn complex(&self, complex: Token) -> Node {
+        Node::Complex {
+            value: self.value(&complex),
+            loc: OperatorMap {
+                expression: self.loc(&complex),
+                operator: None,
+            }
+        }
+    }
+
     pub fn unary_num() {}
 
     pub fn __line__(&self, line_t: Token) -> Node {
@@ -122,7 +149,11 @@ impl Builder {
 
     // Arrays
 
-    pub fn array() {}
+    pub fn array(&self, begin_t: Token, elements: Vec<Node>, end_t: Token) -> Node {
+        let loc = self.collection_map(&Some(begin_t.clone()), &elements, &Some(end_t.clone()));
+        Node::Array { elements, loc }
+    }
+
     pub fn splat() {}
     pub fn word() {}
     pub fn words_compose() {}

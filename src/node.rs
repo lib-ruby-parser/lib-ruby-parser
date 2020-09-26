@@ -5,6 +5,9 @@ use crate::source::map::*;
 pub enum Node {
     Begin { statements: Vec<Node>, loc: CollectionMap },
     Int { value: String, loc: OperatorMap },
+    Float { value: String, loc: OperatorMap },
+    Rational { value: String, loc: OperatorMap },
+    Complex { value: String, loc: OperatorMap },
     Send { receiver: Option<Box<Node>>, operator: String, args: Vec<Node>, loc: SendMap },
     CSend { receiver: Option<Box<Node>>, operator: String, args: Vec<Node>, loc: SendMap },
     Nil { loc: Map },
@@ -39,6 +42,7 @@ pub enum Node {
     Undef { names: Vec<Node>, loc: KeywordMap },
     Pair { key: Box<Node>, value: Box<Node>, loc: OperatorMap },
     Hash { pairs: Vec<Node>, loc: CollectionMap },
+    Array { elements: Vec<Node>, loc: CollectionMap },
 }
 
 impl Node {
@@ -46,6 +50,9 @@ impl Node {
         match self {
             Self::Begin { loc, .. } => &loc.expression,
             Self::Int { loc, .. } => &loc.expression,
+            Self::Float { loc, .. } => &loc.expression,
+            Self::Rational { loc, .. } => &loc.expression,
+            Self::Complex { loc, .. } => &loc.expression,
             Self::Send { loc, .. } => &loc.expression,
             Self::CSend { loc, .. } => &loc.expression,
             Self::Nil { loc, .. } => &loc.expression,
@@ -80,6 +87,7 @@ impl Node {
             Self::Undef { loc, .. } => &loc.expression,
             Self::Pair { loc, .. } => &loc.expression,
             Self::Hash { loc, .. } => &loc.expression,
+            Self::Array { loc, .. } => &loc.expression,
         }
     }
 }
