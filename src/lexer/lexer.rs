@@ -4,7 +4,7 @@ use crate::lexer::{StrTerm, StringLiteral, HeredocLiteral, str_types};
 use crate::lexer::lex_state::{lex_states, LexState};
 use lex_states::*;
 use crate::lexer::LocalsTable;
-use crate::lexer::LexContext;
+use crate::lexer::{Context, ContextItem};
 use crate::parser::{Token, Loc};
 // use crate::lexer::{Token, TokenType};
 use crate::lexer::lex_char::LexChar;
@@ -87,7 +87,7 @@ pub struct ParserState {
 
     max_numparam: usize,
 
-    pub ctxt: LexContext,
+    pub context: Context,
     pub in_kwarg: bool,
 
     pub command_start: bool,

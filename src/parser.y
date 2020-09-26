@@ -15,6 +15,7 @@
 %code use {
     use crate::{Lexer, Builder};
     use crate::lexer::lex_states::*;
+    use crate::lexer::{ContextItem};
 }
 
 %code {
@@ -701,7 +702,7 @@
 
        defn_head: k_def def_name
                     {
-                        self.yylexer.p.ctxt.push_def();
+                        self.yylexer.p.context.push(ContextItem::Def);
                         // result = [ val[0], val[1] ]
                         $$ = Value::DefnHead(( $<Token>1, $<Token>2 ));
                     }
@@ -713,7 +714,7 @@
                     }
                   def_name
                     {
-                        self.yylexer.p.ctxt.push_defs();
+                        self.yylexer.p.context.push(ContextItem::Defs);
                         // result = [ val[0], val[1], val[2], val[4] ]
                         $$ = Value::DefsHead(( $<Token>1, $<Node>2, $<Token>3, $<Token>5 ));
                     }
@@ -744,12 +745,12 @@
 
  cmd_brace_block: tLBRACE_ARG
                     {
-                        self.yylexer.p.ctxt.push_block();
+                        self.yylexer.p.context.push(ContextItem::Block);
                     }
                   brace_body tRCURLY
                     {
                         // result = [ val[0], *val[2], val[3] ]
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         $$ = Value::CmdBraceBlock(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 ;
@@ -1484,7 +1485,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         // @static_env.unextend
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -1503,7 +1504,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         // @static_env.unextend
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -1516,7 +1517,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         // @static_env.unextend
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -1535,7 +1536,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         // @static_env.unextend
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -1986,7 +1987,7 @@
                         // @static_env.extend_static
                         self.yylexer.cmdarg_push(false);
                         self.yylexer.cond_push(false);
-                        self.yylexer.p.ctxt.push_class();
+                        self.yylexer.p.context.push(ContextItem::Class);
                     }
                   bodystmt
                   k_end
@@ -2004,7 +2005,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         // @static_env.unextend
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -2013,7 +2014,7 @@
                         // @static_env.extend_static
                         self.yylexer.cmdarg_push(false);
                         self.yylexer.cond_push(false);
-                        self.yylexer.p.ctxt.push_sclass();
+                        self.yylexer.p.context.push(ContextItem::Sclass);
                     }
                   term
                   bodystmt
@@ -2025,7 +2026,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         // @static_env.unextend
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -2033,7 +2034,7 @@
                     {
                         // @static_env.extend_static
                         self.yylexer.cmdarg_push(false);
-                        self.yylexer.p.ctxt.push_module();
+                        self.yylexer.p.context.push(ContextItem::Module);
                     }
                   bodystmt
                   k_end
@@ -2047,7 +2048,7 @@
 
                         self.yylexer.cmdarg_pop();
                         // @static_env.unextend
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -2074,7 +2075,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         // @static_env.unextend
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                     }
                 | defs_head
@@ -2088,7 +2089,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         // @static_env.unextend
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -2479,11 +2480,11 @@ opt_block_args_tail:
                     {
                         // @static_env.extend_dynamic
                         // @max_numparam_stack.push
-                        self.yylexer.p.ctxt.push_lambda();
+                        self.yylexer.p.context.push(ContextItem::Lambda);
                     }
                   f_larglist
                     {
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         self.yylexer.cmdarg_push(false);
                     }
                   lambda_body
@@ -2523,34 +2524,34 @@ opt_block_args_tail:
 
      lambda_body: tLAMBEG
                     {
-                        self.yylexer.p.ctxt.push_lambda();
+                        self.yylexer.p.context.push(ContextItem::Lambda);
                     }
                   compstmt tRCURLY
                     {
                         // result = [ val[0], val[2], val[3] ]
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         $$ = Value::LambdaBody(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 | kDO_LAMBDA
                     {
-                        self.yylexer.p.ctxt.push_lambda();
+                        self.yylexer.p.context.push(ContextItem::Lambda);
                     }
                   bodystmt k_end
                     {
                         // result = [ val[0], val[2], val[3] ]
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         $$ = Value::LambdaBody(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 ;
 
         do_block: k_do_block
                     {
-                        self.yylexer.p.ctxt.push_block();
+                        self.yylexer.p.context.push(ContextItem::Block);
                     }
                   do_body k_end
                     {
                         // result = [ val[0], *val[2], val[3] ]
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
                         $$ = Value::DoBlock(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 ;
@@ -2666,23 +2667,23 @@ opt_block_args_tail:
 
      brace_block: tLCURLY
                     {
-                        self.yylexer.p.ctxt.push_block();
+                        self.yylexer.p.context.push(ContextItem::Block);
                     }
                   brace_body tRCURLY
                     {
                         // result = [ val[0], *val[2], val[3] ]
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
 
                         $$ = Value::BraceBlock(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
                 | k_do
                     {
-                        self.yylexer.p.ctxt.push_block();
+                        self.yylexer.p.context.push(ContextItem::Block);
                     }
                   do_body k_end
                     {
                         // result = [ val[0], *val[2], val[3] ]
-                        self.yylexer.p.ctxt.pop();
+                        self.yylexer.p.context.pop();
 
                         $$ = Value::BraceBlock(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
@@ -4541,14 +4542,17 @@ impl Lexer {
 
 impl Parser {
     pub fn new(lexer: Lexer) -> Self {
+        let static_env = lexer.p.static_env.clone();
+        let context = lexer.p.context.clone();
+
         Self {
-          yy_error_verbose: true,
-          yynerrs: 0,
-          yydebug: 0,
-          yyerrstatus_: 0,
-          yylexer: lexer,
-          result: None,
-          builder: Builder::new(),
-      }
+            yy_error_verbose: true,
+            yynerrs: 0,
+            yydebug: 0,
+            yyerrstatus_: 0,
+            yylexer: lexer,
+            result: None,
+            builder: Builder::new(static_env, context),
+        }
     }
 }

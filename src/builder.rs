@@ -1,14 +1,18 @@
+use std::rc::Rc;
+use std::cell::RefCell;
 use crate::source::Range;
-use crate::{Node, Token};
+use crate::{Node, Token, StaticEnvironment, Context};
 use crate::source::map::*;
 
 #[derive(Debug, Default)]
 pub struct Builder {
+    static_env: StaticEnvironment,
+    context: Context
 }
 
 impl Builder {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(static_env: StaticEnvironment, context: Context) -> Self {
+        Self { static_env, context }
     }
 
     //

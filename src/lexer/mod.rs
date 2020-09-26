@@ -16,7 +16,7 @@ pub use locals_table::LocalsTable;
 
 #[allow(dead_code)]
 mod lex_context;
-pub use lex_context::LexContext;
+pub use lex_context::{Context, ContextItem};
 
 mod lex_char;
 pub use lex_char::LexChar;
