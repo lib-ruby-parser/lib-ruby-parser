@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Range {
     pub begin_pos: usize,
     pub end_pos: usize
@@ -82,5 +82,11 @@ impl Range {
 
     pub fn cmp(&self, _other: &Self) -> i8 {
         unimplemented!()
+    }
+}
+
+impl std::fmt::Debug for Range {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&format!("{}..{}", self.begin_pos, self.end_pos))
     }
 }
