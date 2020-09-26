@@ -8,6 +8,8 @@
 %define parse.error custom
 %define parse.trace
 
+%code parser_fields {
+}
 
 %code use {
     use crate::{Lexer, builder};
@@ -4534,4 +4536,12 @@ impl Lexer {
     pub const tUNARY_NUM: i32 = 1_002;
     pub const tREGEXP_OPT: i32 = 1_003;
     pub const tCHARACTER: i32 = 1_004;
+}
+
+impl Parser {
+    pub fn new(lexer: Lexer) -> Self {
+        let mut result = Parser::default();
+        result.yylexer = lexer;
+        result
+    }
 }
