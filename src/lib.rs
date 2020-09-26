@@ -26,6 +26,9 @@ pub use node::Node;
 mod builder;
 pub use builder::Builder;
 
+mod current_arg_stack;
+pub use current_arg_stack::CurrentArgStack;
+
 #[cfg(test)]
 mod tests {
     fn test() -> Vec<i32> {

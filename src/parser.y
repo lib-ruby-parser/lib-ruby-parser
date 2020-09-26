@@ -10,10 +10,11 @@
 %code parser_fields {
     result: Option<Node>,
     builder: Builder,
+    current_arg_stack: CurrentArgStack,
 }
 
 %code use {
-    use crate::{Lexer, Builder};
+    use crate::{Lexer, Builder, CurrentArgStack};
     use crate::lexer::lex_states::*;
     use crate::lexer::{ContextItem};
     use crate::builder::PartialAssignment;
@@ -1260,9 +1261,13 @@
 
              arg: lhs tEQL arg_rhs
                     {
-                        // result = @builder.assign(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.assign(
+                                $<PartialAssignment>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | var_lhs tOP_ASGN arg_rhs
                     {
@@ -3793,16 +3798,18 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         // FIXME: error handling here is INSANE
-                        let user_variable = $<UserVariable>1;
+                        let accessible = match $<UserVariable>1 {
+                            UserVariable::Ident(ident_t) => self.builder.accessible_ident(ident_t),
+                            UserVariable::Node(node) => self.builder.accessible_node(node),
+                        };
 
-                        // result = @builder.accessible(val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(accessible);
                     }
                 | keyword_variable
                     {
-                        // result = @builder.accessible(val[0])
-                        $$ = Value::Node($<Node>1);
+                        $$ = Value::Node(
+                            self.builder.accessible_node($<Node>1)
+                        );
                     }
                 ;
 
@@ -4611,6 +4618,7 @@ impl Parser {
     pub fn new(lexer: Lexer) -> Self {
         let static_env = lexer.p.static_env.clone();
         let context = lexer.p.context.clone();
+        let current_arg_stack = CurrentArgStack::new();
 
         Self {
             yy_error_verbose: true,
@@ -4619,7 +4627,8 @@ impl Parser {
             yyerrstatus_: 0,
             yylexer: lexer,
             result: None,
-            builder: Builder::new(static_env, context),
+            current_arg_stack: current_arg_stack.clone(),
+            builder: Builder::new(static_env, context, current_arg_stack.clone()),
         }
     }
 }
