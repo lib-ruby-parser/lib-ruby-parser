@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Range {
     pub begin_pos: usize,
@@ -33,11 +35,14 @@ impl Range {
         Self { begin_pos, end_pos }
     }
 
-    pub fn adjust(&self, begin_pos: usize, end_pos: usize) -> Self {
-        Self {
-            begin_pos: self.begin_pos + begin_pos,
-            end_pos: self.end_pos + end_pos
-        }
+    pub fn adjust(&self, begin_pos_d: i32, end_pos_d: i32) -> Self {
+        let begin_pos: i32 = self.begin_pos.try_into().unwrap();
+        let end_pos: i32 = self.end_pos.try_into().unwrap();
+
+        let begin_pos: usize = (begin_pos + begin_pos_d).try_into().unwrap();
+        let end_pos: usize = (end_pos + end_pos_d).try_into().unwrap();
+
+        Self { begin_pos, end_pos }
     }
 
     pub fn resize(&self, new_size: usize) -> Self {

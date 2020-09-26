@@ -37,6 +37,8 @@ pub enum Node {
     Casgn { name: String, rhs: Box<Node>, loc: VariableMap },
     IndexAsgn { receiver: Box<Node>, indexes: Vec<Node>, rhs: Box<Node>, loc: IndexMap },
     Undef { names: Vec<Node>, loc: KeywordMap },
+    Pair { key: Box<Node>, value: Box<Node>, loc: OperatorMap },
+    Hash { pairs: Vec<Node>, loc: CollectionMap },
 }
 
 impl Node {
@@ -76,6 +78,8 @@ impl Node {
             Self::Casgn { loc, .. } => &loc.expression,
             Self::IndexAsgn { loc, .. } => &loc.expression,
             Self::Undef { loc, .. } => &loc.expression,
+            Self::Pair { loc, .. } => &loc.expression,
+            Self::Hash { loc, .. } => &loc.expression,
         }
     }
 }

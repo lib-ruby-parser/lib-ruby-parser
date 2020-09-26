@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{convert::TryInto, rc::Rc};
 use std::cell::RefCell;
 use crate::source::Range;
 use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack};
@@ -130,12 +130,39 @@ impl Builder {
 
     // Hashes
 
-    pub fn pair() {}
+    pub fn pair(&self, key: Node, assoc_t: Token, value: Node) -> Node {
+        let loc = self.binary_op_map(&key, &assoc_t, &value);
+        Node::Pair {
+            key: Box::new(key),
+            value: Box::new(value),
+            loc
+        }
+    }
     pub fn pair_list_18() {}
-    pub fn pair_keyword() {}
+
+    pub fn pair_keyword(&self, key_t: Token, value: Node) -> Node {
+        let (key_map, pair_map) = self.pair_keyword_map(&key_t, &value);
+        let key = Node::Sym {
+            name: self.value(&key_t),
+            loc: key_map
+        };
+        Node::Pair {
+            key: Box::new(key),
+            value: Box::new(value),
+            loc: pair_map
+        }
+    }
+
     pub fn pair_quoted() {}
     pub fn kwsplat() {}
-    pub fn associate() {}
+
+    pub fn associate(&self, begin_t: Token, pairs: Vec<Node>, end_t: Token) -> Node {
+        let loc = self.collection_map(&Some(begin_t.clone()), &pairs, &Some(end_t.clone()));
+        Node::Hash {
+            pairs,
+            loc
+        }
+    }
 
     // Ranges
 
@@ -702,7 +729,24 @@ impl Builder {
         }
     }
 
-    pub fn pair_keyword_map() {}
+    pub fn pair_keyword_map(&self, key_t: &Token, value: &Node) -> (CollectionMap, OperatorMap) {
+        let key_range = self.loc(&key_t);
+        let key_l = key_range.adjust(0, -1);
+        let colon_l = key_range.adjust((key_range.end_pos - 1).try_into().unwrap(), 0);
+
+        (
+            CollectionMap {
+                begin: None,
+                end: None,
+                expression: key_l
+            },
+            OperatorMap {
+                operator: Some(colon_l),
+                expression: key_range.join(&value.expression())
+            }
+        )
+    }
+
     pub fn pair_quoted_map() {}
     pub fn expr_map() {}
 
@@ -759,7 +803,13 @@ impl Builder {
         VariableMap { expression: self.loc(name_t), operator: None }
     }
 
-    pub fn binary_op_map() {}
+    pub fn binary_op_map(&self, left_e: &Node, op_t: &Token, right_e: &Node) -> OperatorMap {
+        OperatorMap {
+            operator: Some(self.loc(op_t)),
+            expression: self.join_expr(&left_e, &right_e)
+        }
+    }
+
     pub fn unary_op_map() {}
     pub fn range_map() {}
     pub fn arg_prefix_map() {}

@@ -1885,9 +1885,13 @@
                     }
                 | tLBRACE assoc_list tRCURLY
                     {
-                        // result = @builder.associate(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.associate(
+                                $<Token>1,
+                                $<NodeList>2,
+                                $<Token>3
+                            )
+                        );
                     }
                 | k_return
                     {
@@ -4296,15 +4300,22 @@ keyword_variable: kNIL
 
            assoc: arg_value tASSOC arg_value
                     {
-                        // result = @builder.pair(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.pair(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | tLABEL arg_value
                     {
-                        // result = @builder.pair_keyword(val[0], val[1])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.pair_keyword(
+                                $<Token>1,
+                                $<Node>2
+                            )
+                        );
                     }
                 | tSTRING_BEG string_contents tLABEL_END arg_value
                     {
