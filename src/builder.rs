@@ -1,9 +1,7 @@
-use std::{convert::TryInto, rc::Rc};
-use std::cell::RefCell;
+use std::{convert::TryInto};
 use crate::source::Range;
 use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack};
 use crate::source::map::*;
-use crate::parser::UserVariable;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PartialAssignment {
@@ -91,7 +89,23 @@ impl Builder {
         }
     }
 
-    pub fn unary_num() {}
+    pub fn unary_num(&self, unary_t: Token, mut numeric: Node) -> Node {
+        let sign = self.value(&unary_t);
+        let operator_l = self.loc(&unary_t);
+
+        match &mut numeric {
+            Node::Int { value, loc }
+            | Node::Float { value, loc }
+            | Node::Rational { value, loc }
+            | Node::Complex { value, loc } => {
+                *value = sign + value;
+                loc.expression = operator_l.join(&loc.expression);
+                loc.operator = Some(operator_l);
+                numeric
+            },
+            _ => panic!("unreachable")
+        }
+    }
 
     pub fn __line__(&self, line_t: Token) -> Node {
         Node::__LINE__ {

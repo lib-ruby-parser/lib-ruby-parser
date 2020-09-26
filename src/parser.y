@@ -3688,9 +3688,12 @@ xstring_contents: /* none */
          numeric: simple_numeric
                 | tUMINUS_NUM simple_numeric   %prec tLOWEST
                     {
-                        // result = @builder.unary_num(val[0], val[1])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.unary_num(
+                                $<Token>1,
+                                $<Node>2
+                            )
+                        );
                     }
                 ;
 
