@@ -11,10 +11,11 @@
     result: Option<Node>,
     builder: Builder,
     current_arg_stack: CurrentArgStack,
+    static_env: StaticEnvironment,
 }
 
 %code use {
-    use crate::{Lexer, Builder, CurrentArgStack};
+    use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment};
     use crate::lexer::lex_states::*;
     use crate::lexer::{ContextItem};
     use crate::builder::PartialAssignment;
@@ -694,7 +695,7 @@
 
         def_name: fname
                     {
-                        // @static_env.extend_static
+                        self.static_env.extend_static();
                         self.yylexer.cmdarg_push(false);
                         self.yylexer.cond_push(false);
                         // @current_arg_stack.push(nil)
@@ -1542,7 +1543,7 @@
 
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                         // $$ = Value::Node(Node::None);
@@ -1561,7 +1562,7 @@
 
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                         // $$ = Value::Node(Node::None);
@@ -1574,7 +1575,7 @@
 
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                         // $$ = Value::Node(Node::None);
@@ -1593,7 +1594,7 @@
 
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                         // $$ = Value::Node(Node::None);
@@ -1661,7 +1662,7 @@
                     }
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
-                        // unless @static_env.declared_forward_args?
+                        // unless self.static_env.declared_forward_args?
                         //     diagnostic :error, :unexpected_token, { :token => 'tBDOT3' } , val[3]
                         // end
 
@@ -1670,7 +1671,7 @@
                     }
                 | tLPAREN2 args_forward rparen
                     {
-                        // unless @static_env.declared_forward_args?
+                        // unless self.static_env.declared_forward_args?
                         //     diagnostic :error, :unexpected_token, { :token => 'tBDOT3' } , val[1]
                         // end
 
@@ -2042,7 +2043,7 @@
                     }
                 | k_class cpath superclass
                     {
-                        // @static_env.extend_static
+                        self.static_env.extend_static();
                         self.yylexer.cmdarg_push(false);
                         self.yylexer.cond_push(false);
                         self.yylexer.p.context.push(ContextItem::Class);
@@ -2062,14 +2063,14 @@
 
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.p.context.pop();
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | k_class tLSHFT expr
                     {
-                        // @static_env.extend_static
+                        self.static_env.extend_static();
                         self.yylexer.cmdarg_push(false);
                         self.yylexer.cond_push(false);
                         self.yylexer.p.context.push(ContextItem::Sclass);
@@ -2083,14 +2084,14 @@
 
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.p.context.pop();
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | k_module cpath
                     {
-                        // @static_env.extend_static
+                        self.static_env.extend_static();
                         self.yylexer.cmdarg_push(false);
                         self.yylexer.p.context.push(ContextItem::Module);
                     }
@@ -2105,7 +2106,7 @@
                         //                             val[3], val[4])
 
                         self.yylexer.cmdarg_pop();
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.p.context.pop();
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -2129,7 +2130,7 @@
 
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                     }
@@ -2143,7 +2144,7 @@
 
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.p.context.pop();
                         // @current_arg_stack.pop
                         // $$ = Value::Node(Node::None);
@@ -2519,7 +2520,8 @@ opt_block_args_tail:
 
             bvar: tIDENTIFIER
                     {
-                        // @static_env.declare val[0][0]
+                        let ident_t = $<Token>1;
+                        self.static_env.declare(&ident_t.1);
                         // result = @builder.shadowarg(val[0])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -2533,7 +2535,7 @@ opt_block_args_tail:
 
           lambda: tLAMBDA
                     {
-                        // @static_env.extend_dynamic
+                        self.static_env.extend_dynamic();
                         // @max_numparam_stack.push
                         self.yylexer.p.context.push(ContextItem::Lambda);
                     }
@@ -2549,7 +2551,7 @@ opt_block_args_tail:
                         // begin_t, body, end_t = val[4]
 
                         // @max_numparam_stack.pop
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.cmdarg_pop();
 
                         // result      = @builder.block(lambda_call,
@@ -2745,7 +2747,7 @@ opt_block_args_tail:
                 ;
 
       brace_body:   {
-                        // @static_env.extend_dynamic
+                        self.static_env.extend_dynamic();
                         // @max_numparam_stack.push
                     }
                   opt_block_param compstmt
@@ -2754,14 +2756,14 @@ opt_block_args_tail:
                         // result = [ args, val[2] ]
 
                         // @max_numparam_stack.pop
-                        // @static_env.unextend
+                        self.static_env.unextend();
 
                         $$ = Value::NodeList(vec![]);
                     }
                 ;
 
          do_body:   {
-                        // @static_env.extend_dynamic
+                        self.static_env.extend_dynamic();
                         // @max_numparam_stack.push
                         self.yylexer.cmdarg_push(false);
                     }
@@ -2771,7 +2773,7 @@ opt_block_args_tail:
                         // result = [ args, val[3] ]
 
                         // @max_numparam_stack.pop
-                        // @static_env.unextend
+                        self.static_env.unextend();
                         self.yylexer.cmdarg_pop();
 
                         $$ = Value::NodeList(vec![]);
@@ -3872,7 +3874,7 @@ keyword_variable: kNIL
                     {
                         // args = [ *val[1], @builder.forward_arg(val[3]) ]
                         // result = @builder.args(val[0], args, val[4])
-                        // @static_env.declare_forward_args
+                        self.static_env.declare_forward_args();
 
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -3880,7 +3882,7 @@ keyword_variable: kNIL
                 | tLPAREN2 args_forward rparen
                     {
                         // result = @builder.forward_only_args(val[0], val[1], val[2])
-                        // @static_env.declare_forward_args
+                        self.static_env.declare_forward_args();
                         // @lexer.state = :expr_value
 
                         // $$ = Value::Node(Node::None);
@@ -4039,7 +4041,8 @@ keyword_variable: kNIL
       f_norm_arg: f_bad_arg
                 | tIDENTIFIER
                     {
-                        // @static_env.declare val[0][0]
+                        let ident_t = $<Borrow:Token>1;
+                        self.static_env.declare(&ident_t.1);
                         // @max_numparam_stack.has_ordinary_params!
                         $$ = $<RAW>1;
                     }
@@ -4082,9 +4085,10 @@ keyword_variable: kNIL
 
          f_label: tLABEL
                     {
+                        let ident_t = $<Borrow:Token>1;
                         // check_kwarg_name(val[0])
 
-                        // @static_env.declare val[0][0]
+                        self.static_env.declare(&ident_t.1);
 
                         // @max_numparam_stack.has_ordinary_params!
 
@@ -4164,7 +4168,8 @@ keyword_variable: kNIL
 
         f_kwrest: kwrest_mark tIDENTIFIER
                     {
-                        // @static_env.declare val[1][0]
+                        let ident_t = $<Token>1;
+                        self.static_env.declare(&ident_t.1);
                         // result = [ @builder.kwrestarg(val[0], val[1]) ]
                         $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
@@ -4223,7 +4228,8 @@ keyword_variable: kNIL
 
       f_rest_arg: restarg_mark tIDENTIFIER
                     {
-                        // @static_env.declare val[1][0]
+                        let ident_t = $<Token>1;
+                        self.static_env.declare(&ident_t.1);
                         // result = [ @builder.restarg(val[0], val[1]) ]
 
                         $$ = Value::NodeList( vec![] );
@@ -4241,7 +4247,8 @@ keyword_variable: kNIL
 
      f_block_arg: blkarg_mark tIDENTIFIER
                     {
-                        // @static_env.declare val[1][0]
+                        let ident_t = $<Token>1;
+                        self.static_env.declare(&ident_t.1);
                         // result = @builder.blockarg(val[0], val[1])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -4625,10 +4632,11 @@ impl Parser {
             yynerrs: 0,
             yydebug: 0,
             yyerrstatus_: 0,
-            yylexer: lexer,
             result: None,
-            current_arg_stack: current_arg_stack.clone(),
-            builder: Builder::new(static_env, context, current_arg_stack.clone()),
+            builder: Builder::new(static_env.clone(), context.clone(), current_arg_stack.clone()),
+            current_arg_stack: current_arg_stack,
+            static_env: static_env,
+            yylexer: lexer,
         }
     }
 }
