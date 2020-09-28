@@ -469,7 +469,51 @@ impl Builder {
         }
     }
 
-    pub fn op_assign(&self) {}
+    pub fn op_assign(&self, mut lhs: Node, op_t: Token, rhs: Node) -> Node {
+        let mut operator = self.value(&op_t);
+        // operator.pop();
+        let operator_l = self.loc(&op_t);
+        let expression_l = self.join_expr(&lhs, &rhs);
+
+        let loc = match lhs {
+            Node::Gvasgn { .. }
+            | Node::Ivasgn { .. }
+            | Node::Lvasgn { .. }
+            | Node::Cvasgn { .. }
+            | Node::Casgn { .. }
+            | Node::Send { .. }
+            | Node::CSend { .. } => {
+                OpAssignMap {
+                    expression: expression_l,
+                    operator: operator_l,
+                }
+            },
+            Node::Index { receiver, indexes, loc } => {
+                lhs = Node::IndexAsgn {
+                    receiver, indexes, rhs: None, loc
+                };
+                OpAssignMap {
+                    expression: expression_l,
+                    operator: operator_l,
+                }
+            },
+            Node::BackRef { .. }
+            | Node::NthRef { .. } => {
+                // diagnostic :error, :backref_assignment, nil, lhs.loc.expression
+                panic!("backref assignment")
+            }
+            _ => panic!("unsupported op_assign lhs {:#?}", lhs)
+        };
+
+        let lhs = Box::new(lhs);
+        let rhs = Box::new(rhs);
+
+        match &operator[..] {
+            "&&" => Node::AndAsgn { lhs, rhs, loc },
+            "||" => Node::OrAsgn { lhs, rhs, loc },
+            _ => Node::OpAsgn { lhs, rhs, operator, loc }
+        }
+    }
 
     pub fn multi_lhs(&self, begin_t: Option<Token>, items: Vec<Node>, end_t: Option<Token>) -> Node {
         Node::Mlhs {

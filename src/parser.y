@@ -648,15 +648,23 @@
 
     command_asgn: lhs tEQL command_rhs
                     {
-                        // result = @builder.assign(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.assign(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | var_lhs tOP_ASGN command_rhs
                     {
-                        // result = @builder.op_assign(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.op_assign(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket tOP_ASGN command_rhs
                     {
@@ -831,7 +839,6 @@
                     }
                   brace_body tRCURLY
                     {
-                        // result = [ val[0], *val[2], val[3] ]
                         self.yylexer.p.context.pop();
                         $$ = Value::CmdBraceBlock(( $<Token>1, $<NodeList>3, $<Token>4 ));
                     }
@@ -842,10 +849,16 @@
 
          command: fcall command_args       %prec tLOWEST
                     {
-                        // result = @builder.call_method(nil, nil, val[0],
-                        //           nil, val[1], nil)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.call_method(
+                                None,
+                                None,
+                                Some($<Token>1),
+                                None,
+                                $<NodeList>2,
+                                None
+                            )
+                        );
                     }
                 | fcall command_args cmd_brace_block
                     {

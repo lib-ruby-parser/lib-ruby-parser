@@ -66,6 +66,9 @@ pub enum Node {
     Super { args: Vec<Node>, loc: KeywordMap },
     Yield { args: Vec<Node>, loc: KeywordMap },
     Zsuper { args: Vec<Node>, loc: KeywordMap },
+    AndAsgn { lhs: Box<Node>, rhs: Box<Node>, loc: OpAssignMap },
+    OrAsgn { lhs: Box<Node>, rhs: Box<Node>, loc: OpAssignMap },
+    OpAsgn { lhs: Box<Node>, rhs: Box<Node>, operator: String, loc: OpAssignMap },
 }
 
 impl Node {
@@ -134,6 +137,9 @@ impl Node {
             Self::Super { loc, .. } => &loc.expression,
             Self::Yield { loc, .. } => &loc.expression,
             Self::Zsuper { loc, .. } => &loc.expression,
+            Self::AndAsgn { loc, .. } => &loc.expression,
+            Self::OrAsgn { loc, .. } => &loc.expression,
+            Self::OpAsgn { loc, .. } => &loc.expression,
         }
     }
 }

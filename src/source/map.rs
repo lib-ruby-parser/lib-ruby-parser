@@ -82,3 +82,9 @@ pub struct RescueBodyMap {
     pub assoc: Option<Range>,
     pub begin: Option<Range>,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct OpAssignMap {
+    pub expression: Range,
+    pub operator: Range,
+}
