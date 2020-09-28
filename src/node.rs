@@ -55,6 +55,7 @@ pub enum Node {
     Mlhs { items: Vec<Node>, loc: CollectionMap },
     Splat { arg: Option<Box<Node>>, loc: OperatorMap },
     Masgn { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
+    Cbase { loc: Map },
 }
 
 impl Node {
@@ -112,6 +113,7 @@ impl Node {
             Self::Mlhs { loc, .. } => &loc.expression,
             Self::Splat { loc, .. } => &loc.expression,
             Self::Masgn { loc, .. } => &loc.expression,
+            Self::Cbase { loc, .. } => &loc.expression,
         }
     }
 }

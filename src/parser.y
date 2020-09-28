@@ -1234,9 +1234,9 @@
 
            cpath: tCOLON3 cname
                     {
-                        // result = @builder.const_global(val[0], val[1])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.const_global($<Token>1, $<Token>2)
+                        );
                     }
                 | cname
                     {
@@ -1246,7 +1246,13 @@
                     }
                 | primary_value tCOLON2 cname
                     {
-                        // result = @builder.const_fetch(val[0], val[1], val[2])
+                        $$ = Value::Node(
+                            self.builder.const_fetch(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Token>3,
+                            )
+                        );
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -1931,15 +1937,19 @@
                     }
                 | primary_value tCOLON2 tCONSTANT
                     {
-                        // result = @builder.const_fetch(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.const_fetch(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Token>3,
+                            )
+                        );
                     }
                 | tCOLON3 tCONSTANT
                     {
-                        // result = @builder.const_global(val[0], val[1])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.const_global($<Token>1, $<Token>2)
+                        );
                     }
                 | tLBRACK aref_args tRBRACK
                     {
@@ -3417,13 +3427,19 @@ opt_block_args_tail:
 
          p_const: tCOLON3 cname
                     {
-                        // result = @builder.const_global(val[0], val[1])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.const_global($<Token>1, $<Token>2)
+                        );
                     }
                 | p_const tCOLON2 cname
                     {
-                        // result = @builder.const_fetch(val[0], val[1], val[2])
+                        $$ = Value::Node(
+                            self.builder.const_fetch(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Token>3,
+                            )
+                        );
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }

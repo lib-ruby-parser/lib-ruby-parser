@@ -332,7 +332,7 @@ impl Builder {
                     }
                 }
             },
-            _ => unimplemented!()
+            _ => node
         }
     }
 
@@ -349,11 +349,20 @@ impl Builder {
     }
 
     pub fn const_global(&self, t_colon3: Token, name_t: Token) -> Node {
-        unimplemented!()
+        let cbase = Node::Cbase { loc: self.token_map(&t_colon3) };
+        Node::Const {
+            loc: self.constant_map(&Some(&cbase), &Some(t_colon3), &name_t),
+            scope: Some(Box::new(cbase)),
+            name: self.value(&name_t)
+        }
     }
 
     pub fn const_fetch(&self, scope: Node, t_colon2: Token, name_t: Token) -> Node {
-        unimplemented!()
+        Node::Const {
+            loc: self.constant_map(&Some(&scope), &Some(t_colon2), &name_t),
+            scope: Some(Box::new(scope)),
+            name: self.value(&name_t)
+        }
     }
 
     pub fn __encoding__(&self, _encoding_t: Token) -> Node {
@@ -989,7 +998,7 @@ impl Builder {
     }
 
     pub fn regexp_map(&self) {}
-    pub fn constant_map(&self, scope: &Option<Node>, colon2_t: &Option<Token>, name_t: &Token) -> ConstantMap {
+    pub fn constant_map(&self, scope: &Option<&Node>, colon2_t: &Option<Token>, name_t: &Token) -> ConstantMap {
         let expr_l: Range;
         if let Some(scope) = scope {
             expr_l = scope.expression().join(&self.loc(name_t));
