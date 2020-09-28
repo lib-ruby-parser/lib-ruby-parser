@@ -18,7 +18,7 @@
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment};
     use crate::lexer::lex_states::*;
     use crate::lexer::{ContextItem};
-    use crate::builder::{PartialAssignment, LoopType};
+    use crate::builder::{LoopType};
 }
 
 %code {
@@ -106,19 +106,19 @@
 %type <node> command_asgn mrhs_arg block_call block_command
 %type <node> f_block_opt
 %type <node> f_arg_item f_marg f_rest_marg
-%type <node> assoc backref string_dvar for_var
+%type <node> assoc backref string_dvar
 %type <node> opt_block_param block_param_def f_opt
 %type <node> f_kw f_block_kw
 %type <node> bvar
 %type <node> lambda f_larglist
 %type <node> fitem
-%type <node> mlhs mlhs_item mlhs_inner
 %type <node> p_top_expr_body
 %type <node> p_expr p_as p_alt p_expr_basic
 %type <node> p_arg
 %type <node> p_value p_primitive p_variable p_var_ref p_const
 %type <node> p_kw
 %type <node> f_block_arg keyword_variable program
+%type <node> var_lhs lhs mlhs_node mlhs mlhs_item mlhs_inner for_var
 
 %type <node_list> assocs assoc_list opt_f_block_arg f_rest_arg f_optarg f_args
 %type <node_list> f_block_optarg f_kwrest f_no_kwarg f_kwarg f_block_kwarg f_arg
@@ -131,7 +131,7 @@
 %type <node_list> case_args brace_body do_body bv_decls opt_bv_decl
 %type <node_list> block_param opt_block_args_tail block_args_tail f_any_kwrest f_margs f_marg_list mrhs
 %type <node_list> args opt_block_arg command_args call_args opt_call_args aref_args
-%type <node_list> undef_list mlhs_post mlhs_head mlhs_basic stmts top_stmts
+%type <node_list> undef_list mlhs_post mlhs_head stmts top_stmts mlhs_basic
 
 %type <expr_value_do> expr_value_do
 %type <superclass> superclass
@@ -153,7 +153,6 @@
 %type <p_cases> p_cases
 %type <p_case_body> p_case_body
 %type <user_variable> user_variable
-%type <partial_assignment> var_lhs lhs mlhs_node
 
 %type <maybe_node> compstmt bodystmt f_arglist f_paren_args
 
@@ -570,9 +569,13 @@
                     }
                 | mlhs tEQL mrhs_arg
                     {
-                        // result = @builder.multi_assign(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.multi_assign(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | rassign
                 | expr
@@ -891,29 +894,45 @@
 
             mlhs: mlhs_basic
                     {
-                        // result = @builder.multi_lhs(nil, val[0], nil)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.multi_lhs(
+                                None,
+                                $<NodeList>1,
+                                None
+                            )
+                        );
                     }
                 | tLPAREN mlhs_inner rparen
                     {
-                        // result = @builder.multi_lhs(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.multi_lhs(
+                                Some($<Token>1),
+                                vec![ $<Node>2 ],
+                                Some($<Token>3)
+                            )
+                        );
                     }
                 ;
 
       mlhs_inner: mlhs_basic
                     {
-                        // result = @builder.multi_lhs(nil, val[0], nil)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.multi_lhs(
+                                None,
+                                $<NodeList>1,
+                                None
+                            )
+                        );
                     }
                 | tLPAREN mlhs_inner rparen
                     {
-                        // result = @builder.multi_lhs(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.multi_lhs(
+                                Some($<Token>1),
+                                vec![ $<Node>2 ],
+                                Some($<Token>3)
+                            )
+                        );
                     }
                 ;
 
@@ -926,66 +945,84 @@
                     }
                 | mlhs_head tSTAR mlhs_node
                     {
-                        // result = val[0].
-                        //           push(@builder.splat(val[1], val[2]))
-                        $$ = Value::NodeList( vec![] );
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( self.builder.splat($<Token>2, Some($<Node>3)) );
+                        $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR mlhs_node tCOMMA mlhs_post
                     {
-                        // result = val[0].
-                        //           push(@builder.splat(val[1], val[2])).
-                        //           concat(val[4])
-                        $$ = Value::NodeList( vec![] );
+                        let nodes = [
+                            $<NodeList>1,
+                            vec![ self.builder.splat($<Token>2, Some($<Node>3)) ],
+                            $<NodeList>5
+                        ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR
                     {
-                        // result = val[0].
-                        //           push(@builder.splat(val[1]))
-                        $$ = Value::NodeList( vec![] );
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( self.builder.splat($<Token>2, None) );
+                        $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR tCOMMA mlhs_post
                     {
-                        // result = val[0].
-                        //           push(@builder.splat(val[1])).
-                        //           concat(val[3])
-                        $$ = Value::NodeList( vec![] );
+                        let nodes = [
+                            $<NodeList>1,
+                            vec![ self.builder.splat($<Token>2, None) ],
+                            $<NodeList>4
+                        ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 | tSTAR mlhs_node
                     {
-                        // result = [ @builder.splat(val[0], val[1]) ]
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::NodeList(
+                            vec![
+                                self.builder.splat($<Token>1, Some($<Node>2))
+                            ]
+                        );
                     }
                 | tSTAR mlhs_node tCOMMA mlhs_post
                     {
-                        // result = [ @builder.splat(val[0], val[1]),
-                        //          *val[3] ]
-                        $$ = Value::NodeList( vec![] );
+                        let nodes = [
+                            vec![ self.builder.splat($<Token>1, Some($<Node>2)) ],
+                            $<NodeList>4
+                        ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 | tSTAR
                     {
-                        // result = [ @builder.splat(val[0]) ]
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::NodeList(
+                            vec![
+                                self.builder.splat($<Token>1, None)
+                            ]
+                        );
                     }
                 | tSTAR tCOMMA mlhs_post
                     {
-                        // result = [ @builder.splat(val[0]),
-                        //          *val[2] ]
-                        $$ = Value::NodeList( vec![] );
+                        let nodes = [
+                            vec![ self.builder.splat($<Token>1, None) ],
+                            $<NodeList>3
+                        ].concat();
+                        $$ = Value::NodeList(nodes);
                     }
                 ;
 
        mlhs_item: mlhs_node
                 | tLPAREN mlhs_inner rparen
                     {
-                        // result = @builder.begin(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.begin(
+                                $<Token>1,
+                                Some($<Node>2),
+                                $<Token>3
+                            )
+                        );
                     }
                 ;
 
        mlhs_head: mlhs_item tCOMMA
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::NodeList( vec![ $<Node>1 ]);
                     }
                 | mlhs_head mlhs_item tCOMMA
                     {
@@ -1009,28 +1046,25 @@
 
        mlhs_node: user_variable
                     {
-                        let assignable = match $<UserVariable>1 {
-                            UserVariable::Node(node) => self.builder.assignable_node(node),
-                            UserVariable::Ident(ident_t) => self.builder.assignable_ident(ident_t),
-                        };
-
-                        $$ = Value::PartialAssignment(assignable);
+                        $$ = Value::Node(
+                            self.builder.assignable($<Node>1)
+                        );
                     }
                 | keyword_variable
                     {
-                        $$ = Value::PartialAssignment(
-                            self.builder.assignable_node($<Node>1)
+                        $$ = Value::Node(
+                            self.builder.assignable($<Node>1)
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
-                        $$ = Value::PartialAssignment(
-                            PartialAssignment::IndexAsgn((
+                        $$ = Value::Node(
+                            self.builder.index_asgn(
                                 $<Node>1,
                                 $<Token>2,
                                 $<NodeList>3,
                                 $<Token>4
-                            ))
+                            )
                         );
                     }
                 | primary_value call_op tIDENTIFIER
@@ -1039,22 +1073,22 @@
                         //     diagnostic :error, :csend_in_lhs_of_masgn, nil, val[1]
                         // end
 
-                        $$ = Value::PartialAssignment(
-                            PartialAssignment::AttrAsgn((
+                        $$ = Value::Node(
+                            self.builder.attr_asgn(
                                 $<Node>1,
                                 $<Token>2,
                                 $<Token>3
-                            ))
+                            )
                         );
                     }
                 | primary_value tCOLON2 tIDENTIFIER
                     {
-                        $$ = Value::PartialAssignment(
-                            PartialAssignment::AttrAsgn((
+                        $$ = Value::Node(
+                            self.builder.attr_asgn(
                                 $<Node>1,
                                 $<Token>2,
                                 $<Token>3
-                            ))
+                            )
                         );
                     }
                 | primary_value call_op tCONSTANT
@@ -1063,18 +1097,18 @@
                         //     diagnostic :error, :csend_in_lhs_of_masgn, nil, val[1]
                         // end
 
-                        $$ = Value::PartialAssignment(
-                            PartialAssignment::AttrAsgn((
+                        $$ = Value::Node(
+                            self.builder.attr_asgn(
                                 $<Node>1,
                                 $<Token>2,
                                 $<Token>3
-                            ))
+                            )
                         );
                     }
                 | primary_value tCOLON2 tCONSTANT
                     {
-                        $$ = Value::PartialAssignment(
-                            self.builder.assignable_node(
+                        $$ = Value::Node(
+                            self.builder.assignable(
                                 self.builder.const_fetch(
                                     $<Node>1,
                                     $<Token>2,
@@ -1085,8 +1119,8 @@
                     }
                 | tCOLON3 tCONSTANT
                     {
-                        $$ = Value::PartialAssignment(
-                            self.builder.assignable_node(
+                        $$ = Value::Node(
+                            self.builder.assignable(
                                 self.builder.const_global(
                                     $<Token>1,
                                     $<Token>2
@@ -1096,8 +1130,8 @@
                     }
                 | backref
                     {
-                        $$ = Value::PartialAssignment(
-                            self.builder.assignable_node(
+                        $$ = Value::Node(
+                            self.builder.assignable(
                                 $<Node>1
                             )
                         );
@@ -1106,64 +1140,61 @@
 
              lhs: user_variable
                     {
-                        let assignable = match $<UserVariable>1 {
-                            UserVariable::Node(node) => self.builder.assignable_node(node),
-                            UserVariable::Ident(ident_t) => self.builder.assignable_ident(ident_t)
-                        };
-
-                        $$ = Value::PartialAssignment(assignable);
+                        $$ = Value::Node(
+                            self.builder.assignable($<Node>1)
+                        );
                     }
                 | keyword_variable
                     {
-                        $$ = Value::PartialAssignment(
-                            self.builder.assignable_node($<Node>1)
+                        $$ = Value::Node(
+                            self.builder.assignable($<Node>1)
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
-                        $$ = Value::PartialAssignment(
-                            PartialAssignment::IndexAsgn((
+                        $$ = Value::Node(
+                            self.builder.index_asgn(
                                 $<Node>1,
                                 $<Token>2,
                                 $<NodeList>3,
                                 $<Token>4
-                            ))
+                            )
                         )
                     }
                 | primary_value call_op tIDENTIFIER
                     {
-                        $$ = Value::PartialAssignment(
-                            PartialAssignment::AttrAsgn((
+                        $$ = Value::Node(
+                            self.builder.attr_asgn(
                                 $<Node>1,
                                 $<Token>2,
                                 $<Token>3
-                            ))
+                            )
                         );
                     }
                 | primary_value tCOLON2 tIDENTIFIER
                     {
-                        $$ = Value::PartialAssignment(
-                            PartialAssignment::AttrAsgn((
+                        $$ = Value::Node(
+                            self.builder.attr_asgn(
                                 $<Node>1,
                                 $<Token>2,
                                 $<Token>3
-                            ))
+                            )
                         );
                     }
                 | primary_value call_op tCONSTANT
                     {
-                        $$ = Value::PartialAssignment(
-                            PartialAssignment::AttrAsgn((
+                        $$ = Value::Node(
+                            self.builder.attr_asgn(
                                 $<Node>1,
                                 $<Token>2,
                                 $<Token>3
-                            ))
+                            )
                         );
                     }
                 | primary_value tCOLON2 tCONSTANT
                     {
-                        $$ = Value::PartialAssignment(
-                            self.builder.assignable_node(
+                        $$ = Value::Node(
+                            self.builder.assignable(
                                 self.builder.const_fetch(
                                     $<Node>1,
                                     $<Token>2,
@@ -1174,8 +1205,8 @@
                     }
                 | tCOLON3 tCONSTANT
                     {
-                        $$ = Value::PartialAssignment(
-                            self.builder.assignable_node(
+                        $$ = Value::Node(
+                            self.builder.assignable(
                                 self.builder.const_global(
                                     $<Token>1,
                                     $<Token>2,
@@ -1185,8 +1216,8 @@
                     }
                 | backref
                     {
-                        $$ = Value::PartialAssignment(
-                            self.builder.assignable_node(
+                        $$ = Value::Node(
+                            self.builder.assignable(
                                 $<Node>1
                             )
                         );
@@ -1300,7 +1331,7 @@
                     {
                         $$ = Value::Node(
                             self.builder.assign(
-                                $<PartialAssignment>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<Node>3
                             )
@@ -1825,9 +1856,9 @@
 
         mrhs_arg: mrhs
                     {
-                        // result = @builder.array(nil, val[0], nil)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.array(None, $<NodeList>1, None)
+                        );
                     }
                 | arg_value
                 ;
@@ -1914,9 +1945,9 @@
                     {
                         $$ = Value::Node(
                             self.builder.array(
-                                $<Token>1,
+                                Some($<Token>1),
                                 $<NodeList>2,
-                                $<Token>3
+                                Some($<Token>3)
                             )
                         );
                     }
@@ -3767,40 +3798,32 @@ xstring_contents: /* none */
 
    user_variable: tIDENTIFIER
                     {
-                        $$ = Value::UserVariable(
-                            UserVariable::Ident($<Token>1)
+                        $$ = Value::Node(
+                            self.builder.lvar($<Token>1)
                         );
                     }
                 | tIVAR
                     {
-                        $$ = Value::UserVariable(
-                            UserVariable::Node(
-                                self.builder.ivar($<Token>1)
-                            )
+                        $$ = Value::Node(
+                            self.builder.ivar($<Token>1)
                         );
                     }
                 | tGVAR
                     {
-                        $$ = Value::UserVariable(
-                            UserVariable::Node(
-                                self.builder.gvar($<Token>1)
-                            )
+                        $$ = Value::Node(
+                            self.builder.gvar($<Token>1)
                         );
                     }
                 | tCONSTANT
                     {
-                        $$ = Value::UserVariable(
-                            UserVariable::Node(
-                                self.builder.const_($<Token>1)
-                            )
+                        $$ = Value::Node(
+                            self.builder.const_($<Token>1)
                         );
                     }
                 | tCVAR
                     {
-                        $$ = Value::UserVariable(
-                            UserVariable::Node(
-                                self.builder.cvar($<Token>1)
-                            )
+                        $$ = Value::Node(
+                            self.builder.cvar($<Token>1)
                         );
                     }
                 ;
@@ -3852,34 +3875,28 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         // FIXME: error handling here is INSANE
-                        let accessible = match $<UserVariable>1 {
-                            UserVariable::Ident(ident_t) => self.builder.accessible_ident(ident_t),
-                            UserVariable::Node(node) => self.builder.accessible_node(node),
-                        };
-
-                        $$ = Value::Node(accessible);
+                        $$ = Value::Node(
+                            self.builder.accessible($<Node>1)
+                        );
                     }
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.accessible_node($<Node>1)
+                            self.builder.accessible($<Node>1)
                         );
                     }
                 ;
 
          var_lhs: user_variable
                     {
-                        let assignable = match $<UserVariable>1 {
-                            UserVariable::Node(node) => self.builder.assignable_node(node),
-                            UserVariable::Ident(ident_t) => self.builder.assignable_ident(ident_t)
-                        };
-
-                        $$ = Value::PartialAssignment(assignable);
+                        $$ = Value::Node(
+                            self.builder.assignable($<Node>1)
+                        );
                     }
                 | keyword_variable
                     {
-                        $$ = Value::PartialAssignment(
-                            self.builder.assignable_node($<Node>1)
+                        $$ = Value::Node(
+                            self.builder.assignable($<Node>1)
                         );
                     }
                 ;
@@ -4534,17 +4551,6 @@ pub enum Value {
 
     /* For custom compstmt rule */
     MaybeNode( Option<Node> ),
-
-    /* For custom user_variable rule */
-    UserVariable( UserVariable ),
-
-    PartialAssignment( PartialAssignment ),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum UserVariable {
-    Node(Node),
-    Ident(Token)
 }
 
 impl Value {
@@ -4642,12 +4648,6 @@ impl std::fmt::Debug for Value {
             },
             Value::MaybeNode(maybe_node) => {
                 f.write_fmt(format_args!("MaybeNode({:?})", maybe_node))
-            },
-            Value::UserVariable(data) => {
-                f.write_fmt(format_args!("UserVariable({:?})", data))
-            },
-            Value::PartialAssignment(data) => {
-                f.write_fmt(format_args!("PartialAssignment({:?})", data))
             },
         }
     }

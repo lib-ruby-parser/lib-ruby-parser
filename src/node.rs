@@ -33,13 +33,13 @@ pub enum Node {
     Cvar { name: String, loc: VariableMap },
     BackRef { name: String, loc: VariableMap },
     NthRef { name: String, loc: VariableMap },
-    Lvasgn { name: String, rhs: Box<Node>, loc: VariableMap },
-    Cvasgn { name: String, rhs: Box<Node>, loc: VariableMap },
-    Ivasgn { name: String, rhs: Box<Node>, loc: VariableMap },
-    Gvasgn { name: String, rhs: Box<Node>, loc: VariableMap },
+    Lvasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
+    Cvasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
+    Ivasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
+    Gvasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
     Const { scope: Option<Box<Node>>, name: String, loc: ConstantMap },
-    Casgn { name: String, rhs: Box<Node>, loc: VariableMap },
-    IndexAsgn { receiver: Box<Node>, indexes: Vec<Node>, rhs: Box<Node>, loc: IndexMap },
+    Casgn { scope: Option<Box<Node>>, name: String, rhs: Option<Box<Node>>, loc: ConstantMap },
+    IndexAsgn { receiver: Box<Node>, indexes: Vec<Node>, rhs: Option<Box<Node>>, loc: IndexMap },
     Undef { names: Vec<Node>, loc: KeywordMap },
     Pair { key: Box<Node>, value: Box<Node>, loc: OperatorMap },
     Hash { pairs: Vec<Node>, loc: CollectionMap },
@@ -52,6 +52,9 @@ pub enum Node {
     UntilPost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
     Until { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
     RescueBody { exc_list: Vec<Node>, exc_var: Option<Box<Node>>, stmt: Box<Node>, loc: RescueBodyMap },
+    Mlhs { items: Vec<Node>, loc: CollectionMap },
+    Splat { arg: Option<Box<Node>>, loc: OperatorMap },
+    Masgn { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
 }
 
 impl Node {
@@ -106,6 +109,9 @@ impl Node {
             Self::Until { loc, .. } => &loc.expression,
             Self::UntilPost { loc, .. } => &loc.expression,
             Self::RescueBody { loc, .. } => &loc.expression,
+            Self::Mlhs { loc, .. } => &loc.expression,
+            Self::Splat { loc, .. } => &loc.expression,
+            Self::Masgn { loc, .. } => &loc.expression,
         }
     }
 }

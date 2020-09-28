@@ -3,14 +3,6 @@ use crate::source::Range;
 use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack};
 use crate::source::map::*;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum PartialAssignment {
-    Node(Node),
-    Ident(Token),
-    IndexAsgn((Node, Token, Vec<Node>, Token)), // a[b, c]
-    AttrAsgn((Node, Token, Token)), // A::B
-}
-
 pub enum LoopType {
     While,
     Until
@@ -204,12 +196,18 @@ impl Builder {
 
     // Arrays
 
-    pub fn array(&self, begin_t: Token, elements: Vec<Node>, end_t: Token) -> Node {
-        let loc = self.collection_map(&Some(begin_t.clone()), &elements, &Some(end_t.clone()));
+    pub fn array(&self, begin_t: Option<Token>, elements: Vec<Node>, end_t: Option<Token>) -> Node {
+        let loc = self.collection_map(&begin_t, &elements, &end_t);
         Node::Array { elements, loc }
     }
 
-    pub fn splat(&self) {}
+    pub fn splat(&self, star_t: Token, arg: Option<Node>) -> Node {
+        Node::Splat {
+            loc: self.unary_op_map(&star_t, &arg),
+            arg: arg.map(|node| Box::new(node))
+        }
+    }
+
     pub fn word(&self) {}
     pub fn words_compose(&self) {}
     pub fn symbols_compose(&self) {}
@@ -265,6 +263,13 @@ impl Builder {
         }
     }
 
+    pub fn lvar(&self, token: Token) -> Node {
+        Node::Lvar {
+            name: self.value(&token),
+            loc: self.variable_map(&token)
+        }
+    }
+
     pub fn ivar(&self, token: Token) -> Node {
         Node::Ivar {
             name: self.value(&token),
@@ -299,28 +304,35 @@ impl Builder {
             loc: self.variable_map(&token)
         }
     }
-    pub fn accessible_ident(&self, ident_t: Token) -> Node {
-        let name = self.value(&ident_t);
+    pub fn accessible(&self, node: Node) -> Node {
+        match node {
+            Node::Lvar { name, loc } => {
+                if self.static_env.is_declared(&name) {
+                    if let Some(current_arg) = self.current_arg_stack.top() {
+                        if current_arg == name {
+                            // diagnostic :error, :circular_argument_reference,
+                            //        { :var_name => name.to_s }, node.loc.expression
+                        }
+                    }
 
-        if self.static_env.is_declared(&name) {
-            if let Some(current_arg) = self.current_arg_stack.top() {
-                if current_arg == name {
-                    // diagnostic :error, :circular_argument_reference,
-                    //        { :var_name => name.to_s }, node.loc.expression
+                    Node::Lvar { name, loc }
+                } else {
+                    Node::Send {
+                        receiver: None,
+                        operator: name,
+                        args: vec![],
+                        loc: SendMap {
+                            expression: loc.expression.clone(),
+                            dot: None,
+                            selector: Some(loc.expression.clone()),
+                            operator: None,
+                            begin: None,
+                            end: None
+                        }
+                    }
                 }
-            }
-
-            Node::Lvar {
-                name,
-                loc: self.variable_map(&ident_t)
-            }
-        } else {
-            Node::Send {
-                receiver: None,
-                operator: name,
-                args: vec![],
-                loc: self.var_send_map(&ident_t)
-            }
+            },
+            _ => unimplemented!()
         }
     }
 
@@ -354,31 +366,38 @@ impl Builder {
     // Assignments
     //
 
-    pub fn assignable_ident(&self, ident_t: Token) -> PartialAssignment {
-        // wq/parser :ident handling
-        let var_name = self.value(&ident_t);
-        let name_loc = self.loc(&ident_t);
-
-        self.check_assignment_to_numparam(&var_name, &name_loc);
-        self.check_reserved_for_numparam(&var_name, &name_loc);
-
-        self.static_env.declare(&var_name);
-
-        PartialAssignment::Ident(ident_t)
-    }
-
-    pub fn assignable_node(&self, node: Node) -> PartialAssignment {
-        match &node {
-            Node::Cvar {..}
-            | Node::Ivar { .. }
-            | Node::Gvar { .. } => {
-                // ok
+    pub fn assignable(&self, node: Node) -> Node {
+        match node {
+            Node::Cvar { name, loc } => {
+                Node::Cvasgn { name, loc, rhs: None }
             },
-            Node::Const { loc, .. } => {
-                if !self.context.is_dynamic_const_definition_allowed() {
-                    // diagnostic :error, :dynamic_const, nil, node.loc.expression
+            Node::Ivar { name, loc } => {
+                Node::Ivasgn { name, loc, rhs: None }
+            },
+            Node::Gvar { name, loc } => {
+                Node::Gvasgn { name, loc, rhs: None }
+            },
+            Node::Const { name, scope, loc } => {
+                // if !self.context.is_dynamic_const_definition_allowed() {
+                //     diagnostic :error, :dynamic_const, nil, node.loc.expression
+                // }
+                Node::Casgn { name, scope, loc, rhs: None }
+            },
+            Node::Lvar { name, loc: VariableMap { expression, .. } } => {
+                let loc = expression.clone();
+
+                self.check_assignment_to_numparam(&name, &loc);
+                self.check_reserved_for_numparam(&name, &loc);
+
+                self.static_env.declare(&name);
+
+                Node::Lvasgn {
+                    name,
+                    loc: VariableMap { expression: loc, operator: None },
+                    rhs: None
                 }
             },
+
             Node::Nil { .. }
             | Node::Self_ { .. }
             | Node::True { .. }
@@ -387,96 +406,66 @@ impl Builder {
             | Node::__LINE__ { .. }
             | Node::__ENCODING__  { .. } => {
                 // diagnostic :error, :invalid_assignment, nil, node.loc.expression
+                node
             },
             Node::BackRef { .. }
             | Node::NthRef { .. } => {
                 // diagnostic :error, :backref_assignment, nil, node.loc.expression
+                node
             },
             _ => {
-                panic!("Unsupported assignable node {:#?}", node)
+                panic!("{:#?} can't be used in assignment", node)
             }
         }
-
-        PartialAssignment::Node(node)
     }
 
     pub fn const_op_assignable(&self) {}
 
-    pub fn assign(&self, lhs: PartialAssignment, eql_t: Token, rhs: Node) -> Node {
+    pub fn assign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
         let operator_l = Some(self.loc(&eql_t));
 
-        let lhs: Node = match lhs {
-            PartialAssignment::Ident(ident_t) => {
-                let expression_l = self.loc(&ident_t).join(&rhs.expression());
-                Node::Lvasgn {
-                    name: self.value(&ident_t),
-                    rhs: Box::new(rhs),
-                    loc: VariableMap {
-                        expression: expression_l,
-                        operator: Some(self.loc(&eql_t))
-                    }
-                }
-            },
-            PartialAssignment::Node(node) => {
-                let loc = VariableMap {
-                    expression: self.join_expr(&node, &rhs),
-                    operator: operator_l
-                };
-
-                match node {
-                    Node::Cvar { name, .. } => {
-                        Node::Cvasgn { name, rhs: Box::new(rhs), loc }
-                    },
-                    Node::Ivar { name, .. } => {
-                        Node::Ivasgn { name, rhs: Box::new(rhs), loc }
-                    },
-                    Node::Gvar { name, .. } => {
-                        Node::Gvasgn { name, rhs: Box::new(rhs), loc }
-                    },
-                    Node::Const { name, .. } => {
-                        Node::Casgn { name, rhs: Box::new(rhs), loc }
-                    },
-                    _ => panic!("impossible")
-                }
-            },
-            PartialAssignment::IndexAsgn(( receiver, lbrack_t, indexes, rbrack_t )) => {
-                let mut loc = self.index_map(&receiver, &lbrack_t, &rbrack_t, &eql_t);
-                loc.expression = loc.expression.join(&rhs.expression());
-                Node::IndexAsgn {
-                    receiver: Box::new(receiver),
-                    indexes,
-                    rhs: Box::new(rhs),
-                    loc
-                }
-            },
-            PartialAssignment::AttrAsgn(( receiver, dot_t, selector_t )) => {
-                let method_name = self.value(&selector_t) + "";
-                let mut loc = self.send_map(&Some(receiver.clone()), &dot_t, &Some(selector_t.clone()), &None, &vec![], &None);
-                loc.operator = Some(self.loc(&eql_t));
-                loc.expression = loc.expression.join(&rhs.expression());
-                if dot_t.0 == Lexer::tDOT {
-                    Node::Send {
-                        operator: method_name,
-                        receiver: Some(Box::new(receiver)),
-                        loc,
-                        args: vec![rhs]
-                    }
-                } else {
-                    Node::CSend {
-                        operator: method_name,
-                        receiver: Some(Box::new(receiver)),
-                        loc,
-                        args: vec![rhs]
-                    }
-                }
-            }
+        let var_loc = VariableMap {
+            expression: self.join_expr(&lhs, &rhs),
+            operator: operator_l
         };
-        lhs
+
+        let a = match lhs {
+            Node::Cvar { name, .. } => {
+                Node::Cvasgn { name, rhs: Some(Box::new(rhs)), loc: var_loc }
+            },
+            Node::Ivar { name, .. } => {
+                Node::Ivasgn { name, rhs: Some(Box::new(rhs)), loc: var_loc }
+            },
+            Node::Gvar { name, .. } => {
+                Node::Gvasgn { name, rhs: Some(Box::new(rhs)), loc: var_loc }
+            },
+            Node::Lvar { name, .. } => {
+                Node::Lvasgn { name, rhs: Some(Box::new(rhs)), loc: var_loc }
+            },
+
+            _ => panic!("{:#?} can't be used in assignment")
+        };
+
+        return a;
     }
 
     pub fn op_assign(&self) {}
-    pub fn multi_lhs(&self) {}
-    pub fn multi_assign(&self) {}
+
+    pub fn multi_lhs(&self, begin_t: Option<Token>, items: Vec<Node>, end_t: Option<Token>) -> Node {
+        Node::Mlhs {
+            loc: self.collection_map(&begin_t, &items, &end_t),
+            items,
+        }
+    }
+
+    pub fn multi_assign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
+        Node::Masgn {
+            loc: self.binary_op_map(&lhs, &eql_t, &rhs),
+            lhs: Box::new(lhs),
+            rhs: Box::new(rhs),
+        }
+    }
+
     pub fn rassign(&self) {}
     pub fn multi_rassign(&self) {}
 
@@ -575,9 +564,37 @@ impl Builder {
     pub fn call_lambda(&self) {}
     pub fn block(&self) {}
     pub fn block_pass(&self) {}
-    pub fn attr_asgn(&self) {}
+
+    pub fn attr_asgn(&self, receiver: Node, dot_t: Token, selector_t: Token) -> Node {
+        let method_name = self.value(&selector_t) + "";
+        let loc = self.send_map(&Some(receiver.clone()), &dot_t, &Some(selector_t.clone()), &None, &vec![], &None);
+        if dot_t.0 == Lexer::tDOT {
+            Node::Send {
+                operator: method_name,
+                receiver: Some(Box::new(receiver)),
+                loc,
+                args: vec![]
+            }
+        } else {
+            Node::CSend {
+                operator: method_name,
+                receiver: Some(Box::new(receiver)),
+                loc,
+                args: vec![]
+            }
+        }
+    }
+
     pub fn index(&self) {}
-    pub fn index_asgn(&self) {}
+    pub fn index_asgn(&self, receiver: Node, lbrack_t: Token, indexes: Vec<Node>, rbrack_t: Token) -> Node {
+        let loc = self.index_map(&receiver, &lbrack_t, &rbrack_t);
+        Node::IndexAsgn {
+            receiver: Box::new(receiver),
+            indexes,
+            rhs: None,
+            loc
+        }
+    }
 
     pub fn binary_op(&self, receiver: Node, operator_t: Token, arg: Node) -> Node {
         let source_map = self.send_binary_op_map(&receiver, &operator_t, &arg);
@@ -756,7 +773,37 @@ impl Builder {
         }
     }
 
-    pub fn begin(&self) {}
+    pub fn begin(&self, begin_t: Token, body: Option<Node>, end_t: Token) -> Node {
+        if let Some(body) = body {
+            match body {
+                // Synthesized (begin) from compstmt "a; b" or (mlhs)
+                // from multi_lhs "(a, b) = *foo".
+                Node::Mlhs { loc: CollectionMap { expression, .. }, items: statements }
+                | Node::Begin { loc: CollectionMap { begin: None, end: None, expression }, statements } => {
+                    let loc = CollectionMap {
+                        begin: Some(self.loc(&begin_t)),
+                        end: Some(self.loc(&end_t)),
+                        expression
+                    };
+                    Node::Begin { statements, loc }
+                }
+                body => {
+                    let statements = vec![body];
+                    Node::Begin {
+                        loc: self.collection_map(&Some(begin_t), &statements, &Some(end_t)),
+                        statements
+                    }
+                }
+            }
+        } else {
+            // A nil expression: `()'.
+            Node::Begin {
+                statements: vec![],
+                loc: self.collection_map(&Some(begin_t), &vec![], &Some(end_t))
+            }
+        }
+    }
+
     pub fn begin_keyword(&self, begin_t: Token, body: Option<Node>, end_t: Token) -> Node {
         match body {
             None => {
@@ -969,8 +1016,21 @@ impl Builder {
         }
     }
 
-    pub fn unary_op_map(&self) {}
+    pub fn unary_op_map(&self, op_t: &Token, arg: &Option<Node>) -> OperatorMap {
+        let expr_l: Range;
+        if let Some(arg) = arg {
+            expr_l = self.loc(op_t).join(&arg.expression())
+        } else {
+            expr_l = self.loc(op_t);
+        }
+
+        OperatorMap {
+            operator: Some(self.loc(op_t)),
+            expression: expr_l
+        }
+    }
     pub fn range_map(&self) {}
+
     pub fn arg_prefix_map(&self) {}
     pub fn kwarg_map(&self) {}
     pub fn module_definition_map(&self) {}
@@ -1047,12 +1107,12 @@ impl Builder {
 
     pub fn send_unary_op_map(&self) {}
 
-    pub fn index_map(&self, receiver_e: &Node, lbrack_t: &Token, rbrack_t: &Token, operator_t: &Token) -> IndexMap {
+    pub fn index_map(&self, receiver_e: &Node, lbrack_t: &Token, rbrack_t: &Token) -> IndexMap {
         IndexMap {
             begin: self.loc(lbrack_t),
             end: self.loc(rbrack_t),
             expression: receiver_e.expression().join(&self.loc(rbrack_t)),
-            operator: self.loc(operator_t)
+            operator: None
         }
     }
     pub fn send_index_map(&self) {}

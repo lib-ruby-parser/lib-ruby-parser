@@ -71,7 +71,7 @@ pub struct ConstantMap {
 pub struct IndexMap {
     pub begin: Range,
     pub end: Range,
-    pub operator: Range,
+    pub operator: Option<Range>,
     pub expression: Range,
 }
 
