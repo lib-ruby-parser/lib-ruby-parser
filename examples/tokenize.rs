@@ -1,7 +1,6 @@
 use std::{convert::TryInto, env};
 use std::fs;
-use ruby_parser::{Lexer, SymbolKind, Token};
-use std::convert::TryFrom;
+use ruby_parser::{Lexer, Token};
 
 fn print_usage() -> ! {
     println!("

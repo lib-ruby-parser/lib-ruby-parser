@@ -4,7 +4,7 @@ use crate::lexer::{StrTerm, StringLiteral, HeredocLiteral, str_types};
 use crate::lexer::lex_state::{lex_states, LexState};
 use lex_states::*;
 use crate::lexer::LocalsTable;
-use crate::lexer::{Context, ContextItem};
+use crate::lexer::{Context};
 use crate::parser::{Token, Loc};
 // use crate::lexer::{Token, TokenType};
 use crate::lexer::lex_char::LexChar;

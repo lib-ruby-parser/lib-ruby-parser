@@ -28,18 +28,3 @@ pub use builder::Builder;
 
 mod current_arg_stack;
 pub use current_arg_stack::CurrentArgStack;
-
-#[cfg(test)]
-mod tests {
-    fn test() -> Vec<i32> {
-        let mut v1 = vec![1, 2, 3];
-        let mut v2 = vec![4, 5, 6];
-        let v3 = [v1, v2].concat();
-        v3
-    }
-
-    #[test]
-    fn test_test() {
-        assert_eq!(test(), vec![])
-    }
-}

@@ -354,10 +354,6 @@ impl Builder {
         }
     }
 
-    pub fn accessible_node(&self, node: Node) -> Node {
-        unimplemented!()
-    }
-
     pub fn const_(&self, name_t: Token) -> Node {
         Node::Const {
             scope: None,
@@ -470,8 +466,7 @@ impl Builder {
     }
 
     pub fn op_assign(&self, mut lhs: Node, op_t: Token, rhs: Node) -> Node {
-        let mut operator = self.value(&op_t);
-        // operator.pop();
+        let operator = self.value(&op_t);
         let operator_l = self.loc(&op_t);
         let expression_l = self.join_expr(&lhs, &rhs);
 
@@ -1038,10 +1033,10 @@ impl Builder {
 
     pub fn check_duplicate_args(&self) {}
     pub fn check_duplicate_arg(&self) {}
-    pub fn check_assignment_to_numparam(&self, name: &str, loc: &Range){
+    pub fn check_assignment_to_numparam(&self, _name: &str, _loc: &Range){
     }
 
-    pub fn check_reserved_for_numparam(&self, name: &str, loc: &Range) {
+    pub fn check_reserved_for_numparam(&self, name: &str, _loc: &Range) {
         if name.len() != 2 { return }
 
         let c1 = name.chars().nth(1).unwrap();
@@ -1311,7 +1306,7 @@ impl Builder {
     pub fn ternary_map(&self) {}
     pub fn for_map(&self) {}
 
-    pub fn rescue_body_map(&self, keyword_t: &Token, exc_list: &Vec<Node>, assoc_t: &Option<Token>, exc_var: &Option<Node>, then_t: &Option<Token>, compstmt: &Node) -> RescueBodyMap {
+    pub fn rescue_body_map(&self, keyword_t: &Token, _exc_list: &Vec<Node>, assoc_t: &Option<Token>, _exc_var: &Option<Node>, then_t: &Option<Token>, compstmt: &Node) -> RescueBodyMap {
         let end_l = compstmt.expression().clone();
 
         RescueBodyMap {

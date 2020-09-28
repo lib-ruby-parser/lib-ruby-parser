@@ -1305,8 +1305,6 @@
                                 $<Token>3,
                             )
                         );
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
                     }
                 ;
 
@@ -1930,7 +1928,9 @@
                 | args tCOMMA tSTAR arg_value
                     {
                         let mut nodes = $<NodeList>1;
-                        // nodes.push( @builder.splat(val[2], val[3]) );
+                        nodes.push(
+                            self.builder.splat($<Token>3, Some($<Node>4))
+                        );
                         $$ = Value::NodeList(nodes);
                     }
                 | tSTAR arg_value
@@ -2192,7 +2192,7 @@
                         //     diagnostic :error, :class_in_def, nil, val[0]
                         // end
 
-                        let superclass = $<Superclass>3;
+                        let _superclass = $<Superclass>3;
 
                         // result = @builder.def_class(val[0], val[1],
                         //                             lt_t, superclass,
@@ -2399,7 +2399,7 @@
                   compstmt
                   if_tail
                     {
-                        let opt_else = $<OptElse>5;
+                        let _opt_else = $<OptElse>5;
                         // result = [ val[0],
                         //             @builder.condition(val[0], val[1], val[2],
                         //                                 val[3], else_t,
@@ -3388,14 +3388,14 @@ opt_block_args_tail:
             p_kw: p_kw_label p_expr
                     {
                         let p_kw_label = $<RAW>1;
-                        let p_expr = $<Node>2;
+                        let _p_expr = $<Node>2;
                         match p_kw_label {
-                            Value::PlainLabel(label_t) => {
+                            Value::PlainLabel(_label_t) => {
                                 // result = @builder.match_plain_label_pair(label_t, p_expr);
                                 // $$ = Value::Node(Node::None);
                                 panic!("dead");
                             },
-                            Value::QuotedLabel((begin_t, parts, end_t)) => {
+                            Value::QuotedLabel((_begin_t, _parts, _end_t)) => {
                                 // result = @builder.match_quoted_label_pair(begin_t, parts, end_t, p_expr);
                                 // $$ = Value::Node(Node::None);
                                 panic!("dead");
@@ -3407,12 +3407,12 @@ opt_block_args_tail:
                     {
                         let p_kw_label = $<RAW>1;
                         match p_kw_label {
-                            Value::PlainLabel(label_t) => {
+                            Value::PlainLabel(_label_t) => {
                                 // result = @builder.match_plain_label(label_t);
                                 // $$ = Value::Node(Node::None);
                                 panic!("dead");
                             },
-                            Value::QuotedLabel((begin_t, parts, end_t)) => {
+                            Value::QuotedLabel((_begin_t, _parts, _end_t)) => {
                                 // result = @builder.match_quoted_label(begin_t, parts, end_t);
                                 // $$ = Value::Node(Node::None);
                                 panic!("dead");
@@ -3551,8 +3551,6 @@ opt_block_args_tail:
                                 $<Token>3,
                             )
                         );
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
                     }
                 | tCONSTANT
                     {
@@ -3566,9 +3564,9 @@ opt_block_args_tail:
                   compstmt
                   opt_rescue
                     {
-                        let exc_var = $<ExcVar>3;
+                        let _exc_var = $<ExcVar>3;
 
-                        let exc_list = $<NodeList>2;
+                        let _exc_list = $<NodeList>2;
                         panic!("dead");
                         // let rescue_body = Node::None;
                         // let opt_rescue = $<NodeList>6;
@@ -3692,7 +3690,7 @@ opt_block_args_tail:
                     }
                 | word_list word tSPACE
                     {
-                        let mut nodes = $<NodeList>1;
+                        let nodes = $<NodeList>1;
                         // nodes.push( builder.word( $<Node>2 ) );
                         $$ = Value::NodeList(nodes);
                     }
@@ -3724,7 +3722,7 @@ opt_block_args_tail:
                     }
                 | symbol_list word tSPACE
                     {
-                        let mut nodes = $<NodeList>1;
+                        let nodes = $<NodeList>1;
                         // nodes.push(builder.word( $<Token>2 ));
                         $$ = Value::NodeList( nodes );
                     }
@@ -3752,7 +3750,7 @@ opt_block_args_tail:
                     }
                 | qword_list tSTRING_CONTENT tSPACE
                     {
-                        let mut nodes = $<NodeList>1;
+                        let nodes = $<NodeList>1;
                         // nodes.push(builder.string_internal( $<Token>2 ));
                         $$ = Value::NodeList( nodes );
                     }
@@ -3764,7 +3762,7 @@ opt_block_args_tail:
                     }
                 | qsym_list tSTRING_CONTENT tSPACE
                     {
-                        let mut nodes = $<NodeList>1;
+                        let nodes = $<NodeList>1;
                         // nodes.push(builder.symbol_internal( $<Token>2 ));
                         $$ = Value::NodeList( nodes );
                     }
