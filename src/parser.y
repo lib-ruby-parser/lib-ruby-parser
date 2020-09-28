@@ -18,7 +18,7 @@
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment};
     use crate::lexer::lex_states::*;
     use crate::lexer::{ContextItem};
-    use crate::builder::{LoopType};
+    use crate::builder::{LoopType, KeywordCmd};
 }
 
 %code {
@@ -545,9 +545,13 @@
                 | command_asgn
                 | mlhs tEQL command_call
                     {
-                        // result = @builder.multi_assign(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.multi_assign(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | lhs tEQL mrhs
                     {
@@ -2741,69 +2745,128 @@ opt_block_args_tail:
 
      method_call: fcall paren_args
                     {
-                        // lparen_t, args, rparen_t = val[1]
-                        // result = @builder.call_method(nil, nil, val[0],
-                        //             lparen_t, args, rparen_t)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let (lparen_t, args, rparen_t) = $<ParenArgs>2;
+
+                        $$ = Value::Node(
+                            self.builder.call_method(
+                                None,
+                                None,
+                                Some($<Token>1),
+                                Some(lparen_t),
+                                args,
+                                Some(rparen_t)
+                            )
+                        );
                     }
                 | primary_value call_op operation2 opt_paren_args
                     {
-                        // lparen_t, args, rparen_t = val[3]
-                        // result = @builder.call_method(val[0], val[1], val[2],
-                        //             lparen_t, args, rparen_t)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let (lparen_t, args, rparen_t) = $<OptParenArgs>4;
+
+                        $$ = Value::Node(
+                            self.builder.call_method(
+                                Some($<Node>1),
+                                Some($<Token>2),
+                                Some($<Token>3),
+                                lparen_t,
+                                args,
+                                rparen_t
+                            )
+                        );
                     }
                 | primary_value tCOLON2 operation2 paren_args
                     {
-                        // lparen_t, args, rparen_t = val[3]
-                        // result = @builder.call_method(val[0], val[1], val[2],
-                        //           lparen_t, args, rparen_t)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let (lparen_t, args, rparen_t) = $<ParenArgs>4;
+
+                        $$ = Value::Node(
+                            self.builder.call_method(
+                                Some($<Node>1),
+                                Some($<Token>2),
+                                Some($<Token>3),
+                                Some(lparen_t),
+                                args,
+                                Some(rparen_t)
+                            )
+                        );
                     }
                 | primary_value tCOLON2 operation3
                     {
-                        // result = @builder.call_method(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.call_method(
+                                Some($<Node>1),
+                                Some($<Token>2),
+                                Some($<Token>3),
+                                None,
+                                vec![],
+                                None
+                            )
+                        );
                     }
                 | primary_value call_op paren_args
                     {
-                        // lparen_t, args, rparen_t = val[2]
-                        // result = @builder.call_method(val[0], val[1], nil,
-                        //             lparen_t, args, rparen_t)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let (lparen_t, args, rparen_t) = $<ParenArgs>3;
+
+                        $$ = Value::Node(
+                            self.builder.call_method(
+                                Some($<Node>1),
+                                Some($<Token>2),
+                                None,
+                                Some(lparen_t),
+                                args,
+                                Some(rparen_t)
+                            )
+                        );
                     }
                 | primary_value tCOLON2 paren_args
                     {
-                        // lparen_t, args, rparen_t = val[2]
-                        // result = @builder.call_method(val[0], val[1], nil,
-                        //             lparen_t, args, rparen_t)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let (lparen_t, args, rparen_t) = $<ParenArgs>3;
+
+                        $$ = Value::Node(
+                            self.builder.call_method(
+                                Some($<Node>1),
+                                Some($<Token>2),
+                                None,
+                                Some(lparen_t),
+                                args,
+                                Some(rparen_t)
+                            )
+                        );
                     }
                 | kSUPER paren_args
                     {
-                        // lparen_t, args, rparen_t = val[1]
-                        // result = @builder.keyword_cmd(:super, val[0],
-                        //             lparen_t, args, rparen_t)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let (lparen_t, args, rparen_t) = $<ParenArgs>2;
+
+                        $$ = Value::Node(
+                            self.builder.keyword_cmd(
+                                KeywordCmd::Super,
+                                $<Token>1,
+                                Some(lparen_t),
+                                args,
+                                Some(rparen_t)
+                            )
+                        );
                     }
                 | kSUPER
                     {
-                        // result = @builder.keyword_cmd(:zsuper, val[0])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.keyword_cmd(
+                                KeywordCmd::Super,
+                                $<Token>1,
+                                None,
+                                vec![],
+                                None
+                            )
+                        );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
-                        // result = @builder.index(val[0], val[1], val[2], val[3])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.index(
+                                $<Node>1,
+                                $<Token>2,
+                                $<NodeList>3,
+                                $<Token>4
+                            )
+                        );
                     }
                 ;
 
@@ -4453,13 +4516,13 @@ keyword_variable: kNIL
 
         rbracket: opt_nl tRBRACK
                     {
-                        $$ = $<RAW>1;
+                        $$ = $<RAW>2;
                     }
                 ;
 
           rbrace: opt_nl tRCURLY
                     {
-                        $$ = $<RAW>1;
+                        $$ = $<RAW>2;
                     }
                 ;
 

@@ -8,6 +8,24 @@ pub enum LoopType {
     Until
 }
 
+#[derive(Debug, PartialEq)]
+pub enum KeywordCmd {
+    Break,
+    Defined,
+    Next,
+    Redo,
+    Retry,
+    Return,
+    Super,
+    Yield,
+    Zsuper,
+}
+
+enum MethodCallType {
+    Send,
+    CSend
+}
+
 #[derive(Debug, Default)]
 pub struct Builder {
     static_env: StaticEnvironment,
@@ -568,33 +586,78 @@ impl Builder {
     // Method calls
     //
 
+    fn call_type_for_dot(&self, dot_t: &Option<Token>) -> MethodCallType {
+        match dot_t {
+            Some((Lexer::tANDDOT, _, _)) => MethodCallType::CSend,
+            _ => MethodCallType::Send,
+        }
+    }
+
     pub fn forwarded_args(&self) {}
-    pub fn call_method(&self) {}
+
+    pub fn call_method(&self, receiver: Option<Node>, dot_t: Option<Token>, selector_t: Option<Token>, lparen_t: Option<Token>, args: Vec<Node>, rparen_t: Option<Token>) -> Node {
+        let loc = self.send_map(&receiver, &dot_t, &selector_t, &lparen_t, &args, &rparen_t);
+        let method_name = selector_t.map(|t| self.value(&t)).unwrap_or("call".to_owned());
+
+        match self.call_type_for_dot(&dot_t) {
+            MethodCallType::Send => {
+                Node::Send {
+                    operator: method_name,
+                    receiver: receiver.map(|node| Box::new(node)),
+                    loc,
+                    args
+                }
+            },
+
+            MethodCallType::CSend => {
+                Node::CSend {
+                    operator: method_name,
+                    receiver: receiver.map(|node| Box::new(node)),
+                    loc,
+                    args
+                }
+            }
+        }
+    }
+
     pub fn call_lambda(&self) {}
     pub fn block(&self) {}
     pub fn block_pass(&self) {}
 
     pub fn attr_asgn(&self, receiver: Node, dot_t: Token, selector_t: Token) -> Node {
         let method_name = self.value(&selector_t) + "";
-        let loc = self.send_map(&Some(receiver.clone()), &dot_t, &Some(selector_t.clone()), &None, &vec![], &None);
-        if dot_t.0 == Lexer::tDOT {
-            Node::Send {
-                operator: method_name,
-                receiver: Some(Box::new(receiver)),
-                loc,
-                args: vec![]
-            }
-        } else {
-            Node::CSend {
-                operator: method_name,
-                receiver: Some(Box::new(receiver)),
-                loc,
-                args: vec![]
+        let loc = self.send_map(&Some(receiver.clone()), &Some(dot_t.clone()), &Some(selector_t.clone()), &None, &vec![], &None);
+
+        match self.call_type_for_dot(&Some(dot_t)) {
+            MethodCallType::Send => {
+                Node::Send {
+                    operator: method_name,
+                    receiver: Some(Box::new(receiver)),
+                    loc,
+                    args: vec![]
+                }
+            },
+
+            MethodCallType::CSend => {
+                Node::CSend {
+                    operator: method_name,
+                    receiver: Some(Box::new(receiver)),
+                    loc,
+                    args: vec![]
+                }
             }
         }
     }
 
-    pub fn index(&self) {}
+    pub fn index(&self, receiver: Node, lbrack_t: Token, indexes: Vec<Node>, rbrack_t: Token) -> Node {
+        let loc = self.index_map(&receiver, &lbrack_t, &rbrack_t);
+        Node::Index {
+            receiver: Box::new(receiver),
+            indexes,
+            loc
+        }
+    }
+
     pub fn index_asgn(&self, receiver: Node, lbrack_t: Token, indexes: Vec<Node>, rbrack_t: Token) -> Node {
         let loc = self.index_map(&receiver, &lbrack_t, &rbrack_t);
         Node::IndexAsgn {
@@ -670,7 +733,47 @@ impl Builder {
 
     // Keywords
 
-    pub fn keyword_cmd(&self) {}
+    pub fn keyword_cmd(&self, type_: KeywordCmd, keyword_t: Token, lparen_t: Option<Token>, args: Vec<Node>, rparen_t: Option<Token>) -> Node {
+        if type_ == KeywordCmd::Yield && !args.is_empty() {
+            // match args.last() {
+            //     Some(Node::BlockPass { .. }) => {
+            //         diagnostic :error, :block_given_to_yield, nil, loc(keyword_t), [last_arg.loc.expression]
+            //     }
+            // }
+        }
+
+        let loc = self.keyword_map(&keyword_t, &lparen_t, &args, &rparen_t);
+
+        match type_ {
+            KeywordCmd::Break => {
+                Node::Break { args, loc }
+            },
+            KeywordCmd::Defined => {
+                Node::Defined { args, loc }
+            },
+            KeywordCmd::Next => {
+                Node::Next { args, loc }
+            },
+            KeywordCmd::Redo => {
+                Node::Redo { args, loc }
+            },
+            KeywordCmd::Retry => {
+                Node::Retry { args, loc }
+            },
+            KeywordCmd::Return => {
+                Node::Return { args, loc }
+            },
+            KeywordCmd::Super => {
+                Node::Super { args, loc }
+            },
+            KeywordCmd::Yield => {
+                Node::Yield { args, loc }
+            },
+            KeywordCmd::Zsuper => {
+                Node::Zsuper { args, loc }
+            },
+        }
+    }
 
     // BEGIN, END
 
@@ -1057,7 +1160,7 @@ impl Builder {
 
     pub fn endless_definition_map(&self) {}
 
-    pub fn send_map(&self, receiver_e: &Option<Node>, dot_t: &Token, selector_t: &Option<Token>, begin_t: &Option<Token>, args: &Vec<Node>, end_t: &Option<Token>) -> SendMap {
+    pub fn send_map(&self, receiver_e: &Option<Node>, dot_t: &Option<Token>, selector_t: &Option<Token>, begin_t: &Option<Token>, args: &Vec<Node>, end_t: &Option<Token>) -> SendMap {
         let begin_l: Option<Range>;
         let end_l: Option<Range>;
 
@@ -1073,18 +1176,20 @@ impl Builder {
             end_l = Some(self.loc(end_t));
         } else if let Some(last_arg) = args.last() {
             end_l = Some(last_arg.expression().clone());
+        } else if let Some(selector_t) = selector_t {
+            end_l = Some(self.loc(&selector_t))
         } else {
             end_l = None
         }
 
-        let expression_l = match (begin_l, end_l) {
-            (Some(begin_l), Some(end_l)) => begin_l.join(&end_l),
-            _ => panic!("unreachable")
+        let expression_l = match (&begin_l, &end_l) {
+            (Some(begin_l), Some(end_l)) => begin_l.join(end_l),
+            _ => panic!("unreachable: begin_l = {:#?}, end_l = {:#?}", begin_l, end_l)
         };
 
         SendMap {
             expression: expression_l,
-            dot: Some(self.loc(dot_t)),
+            dot: dot_t.clone().map(|t| self.loc(&t)),
             selector: selector_t.clone().map(|t| self.loc(&t)),
             operator: None,
             begin: begin_t.clone().map(|t| self.loc(&t)),

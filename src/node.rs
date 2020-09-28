@@ -39,6 +39,7 @@ pub enum Node {
     Gvasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
     Const { scope: Option<Box<Node>>, name: String, loc: ConstantMap },
     Casgn { scope: Option<Box<Node>>, name: String, rhs: Option<Box<Node>>, loc: ConstantMap },
+    Index { receiver: Box<Node>, indexes: Vec<Node>, loc: IndexMap },
     IndexAsgn { receiver: Box<Node>, indexes: Vec<Node>, rhs: Option<Box<Node>>, loc: IndexMap },
     Undef { names: Vec<Node>, loc: KeywordMap },
     Pair { key: Box<Node>, value: Box<Node>, loc: OperatorMap },
@@ -56,6 +57,15 @@ pub enum Node {
     Splat { arg: Option<Box<Node>>, loc: OperatorMap },
     Masgn { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
     Cbase { loc: Map },
+    Break { args: Vec<Node>, loc: KeywordMap },
+    Defined { args: Vec<Node>, loc: KeywordMap },
+    Next { args: Vec<Node>, loc: KeywordMap },
+    Redo { args: Vec<Node>, loc: KeywordMap },
+    Retry { args: Vec<Node>, loc: KeywordMap },
+    Return { args: Vec<Node>, loc: KeywordMap },
+    Super { args: Vec<Node>, loc: KeywordMap },
+    Yield { args: Vec<Node>, loc: KeywordMap },
+    Zsuper { args: Vec<Node>, loc: KeywordMap },
 }
 
 impl Node {
@@ -97,6 +107,7 @@ impl Node {
             Self::Gvasgn { loc, .. } => &loc.expression,
             Self::Const { loc, .. } => &loc.expression,
             Self::Casgn { loc, .. } => &loc.expression,
+            Self::Index { loc, .. } => &loc.expression,
             Self::IndexAsgn { loc, .. } => &loc.expression,
             Self::Undef { loc, .. } => &loc.expression,
             Self::Pair { loc, .. } => &loc.expression,
@@ -114,6 +125,15 @@ impl Node {
             Self::Splat { loc, .. } => &loc.expression,
             Self::Masgn { loc, .. } => &loc.expression,
             Self::Cbase { loc, .. } => &loc.expression,
+            Self::Break { loc, .. } => &loc.expression,
+            Self::Defined { loc, .. } => &loc.expression,
+            Self::Next { loc, .. } => &loc.expression,
+            Self::Redo { loc, .. } => &loc.expression,
+            Self::Retry { loc, .. } => &loc.expression,
+            Self::Return { loc, .. } => &loc.expression,
+            Self::Super { loc, .. } => &loc.expression,
+            Self::Yield { loc, .. } => &loc.expression,
+            Self::Zsuper { loc, .. } => &loc.expression,
         }
     }
 }
