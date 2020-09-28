@@ -18,7 +18,7 @@
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment};
     use crate::lexer::lex_states::*;
     use crate::lexer::{ContextItem};
-    use crate::builder::{LoopType, KeywordCmd};
+    use crate::builder::{LoopType, KeywordCmd, LogicalOp};
 }
 
 %code {
@@ -758,18 +758,24 @@
                 ;
 
      command_rhs: command_call   %prec tOP_ASGN
-                    {
-
-                    }
                 | command_call kRESCUE_MOD stmt
                     {
-                        // rescue_body = @builder.rescue_body(val[1],
-                        //                     nil, nil, nil,
-                        //                     nil, val[2])
-
-                        // result = @builder.begin_body(val[0], [ rescue_body ])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let rescue_body = self.builder.rescue_body(
+                            $<Token>2,
+                            vec![],
+                            None,
+                            None,
+                            None,
+                            $<Node>3
+                        );
+                        $$ = Value::Node(
+                            self.builder.begin_body(
+                                Some($<Node>1),
+                                vec![ rescue_body ],
+                                None,
+                                None
+                            ).unwrap()
+                        );
                     }
                 | command_asgn
                 ;
@@ -777,27 +783,47 @@
             expr: command_call
                 | expr kAND expr
                     {
-                        // result = @builder.logical_op(:and, val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.logical_op(
+                                LogicalOp::And,
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | expr kOR expr
                     {
-                        // result = @builder.logical_op(:or, val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.logical_op(
+                                LogicalOp::Or,
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | kNOT opt_nl expr
                     {
-                        // result = @builder.not_op(val[0], nil, val[2], nil)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.not_op(
+                                $<Token>1,
+                                None,
+                                Some($<Node>3),
+                                None
+                            )
+                        );
                     }
                 | tBANG command_call
                     {
-                        // result = @builder.not_op(val[0], nil, val[1], nil)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.not_op(
+                                $<Token>1,
+                                None,
+                                Some($<Node>2),
+                                None
+                            )
+                        );
                     }
                 | arg kIN
                     {

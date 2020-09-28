@@ -69,6 +69,8 @@ pub enum Node {
     AndAsgn { lhs: Box<Node>, rhs: Box<Node>, loc: OpAssignMap },
     OrAsgn { lhs: Box<Node>, rhs: Box<Node>, loc: OpAssignMap },
     OpAsgn { lhs: Box<Node>, rhs: Box<Node>, operator: String, loc: OpAssignMap },
+    And { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
+    Or { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
 }
 
 impl Node {
@@ -140,6 +142,8 @@ impl Node {
             Self::AndAsgn { loc, .. } => &loc.expression,
             Self::OrAsgn { loc, .. } => &loc.expression,
             Self::OpAsgn { loc, .. } => &loc.expression,
+            Self::And { loc, .. } => &loc.expression,
+            Self::Or { loc, .. } => &loc.expression,
         }
     }
 }

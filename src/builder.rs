@@ -26,6 +26,12 @@ enum MethodCallType {
     CSend
 }
 
+#[derive(Debug, PartialEq)]
+pub enum LogicalOp {
+    And,
+    Or
+}
+
 #[derive(Debug, Default)]
 pub struct Builder {
     static_env: StaticEnvironment,
@@ -719,7 +725,28 @@ impl Builder {
 
     pub fn match_op(&self) {}
     pub fn unary_op(&self) {}
-    pub fn not_op(&self) {}
+
+    pub fn not_op(&self, not_t: Token, begin_t: Option<Token>, receiver: Option<Node>, end_t: Option<Token>) -> Node {
+        if let Some(receiver) = receiver {
+            Node::Send {
+                loc: self.send_map(&None, &None, &Some(not_t), &begin_t, &vec![receiver.clone()], &end_t),
+                receiver: Some(Box::new(self.check_condition(receiver))),
+                operator: "!".to_owned(),
+                args: vec![],
+            }
+        } else {
+            let nil_node = Node::Begin {
+                statements: vec![],
+                loc: self.collection_map(&begin_t, &vec![], &end_t)
+            };
+            Node::Send {
+                loc: self.send_unary_op_map(&not_t, &Some(&nil_node)),
+                receiver: Some(Box::new(nil_node)),
+                operator: "!".to_owned(),
+                args: vec![]
+            }
+        }
+    }
 
     //
     // Control flow
@@ -727,7 +754,15 @@ impl Builder {
 
     // Logical operations: and, or
 
-    pub fn logical_op(&self) {}
+    pub fn logical_op(&self, type_: LogicalOp, lhs: Node, op_t: Token, rhs: Node) -> Node {
+        let loc = self.binary_op_map(&lhs, &op_t, &rhs);
+        let lhs = Box::new(lhs);
+        let rhs = Box::new(rhs);
+        match type_ {
+            LogicalOp::And => Node::And { lhs, rhs, loc },
+            LogicalOp::Or => Node::Or { lhs, rhs, loc },
+        }
+    }
 
     // Conditionals
 
@@ -1263,7 +1298,24 @@ impl Builder {
         }
     }
 
-    pub fn send_unary_op_map(&self) {}
+    pub fn send_unary_op_map(&self, selector_t: &Token, arg: &Option<&Node>) -> SendMap {
+        let expr_l: Range;
+
+        if let Some(arg) = arg {
+            expr_l = self.loc(selector_t).join(arg.expression())
+        } else {
+            expr_l = self.loc(selector_t)
+        }
+
+        SendMap {
+            expression: expr_l,
+            selector: Some(self.loc(&selector_t)),
+            dot: None,
+            begin: None,
+            operator: None,
+            end: None
+        }
+    }
 
     pub fn index_map(&self, receiver_e: &Node, lbrack_t: &Token, rbrack_t: &Token) -> IndexMap {
         IndexMap {
