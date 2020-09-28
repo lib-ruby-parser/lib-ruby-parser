@@ -668,47 +668,86 @@
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket tOP_ASGN command_rhs
                     {
-                        // result = @builder.op_assign(
-                        //             @builder.index(
-                        //                 val[0], val[1], val[2], val[3]),
-                        //             val[4], val[5])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.op_assign(
+                                self.builder.index(
+                                    $<Node>1,
+                                    $<Token>2,
+                                    $<NodeList>3,
+                                    $<Token>4
+                                ),
+                                $<Token>5,
+                                $<Node>6
+                            )
+                        );
                     }
                 | primary_value call_op tIDENTIFIER tOP_ASGN command_rhs
                     {
-                        // result = @builder.op_assign(
-                        //             @builder.call_method(
-                        //                 val[0], val[1], val[2]),
-                        //             val[3], val[4])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.op_assign(
+                                self.builder.call_method(
+                                    Some($<Node>1),
+                                    Some($<Token>2),
+                                    Some($<Token>3),
+                                    None,
+                                    vec![],
+                                    None
+                                ),
+                                $<Token>4,
+                                $<Node>5
+                            )
+                        );
                     }
                 | primary_value call_op tCONSTANT tOP_ASGN command_rhs
                     {
-                        // result = @builder.op_assign(
-                        //             @builder.call_method(
-                        //                 val[0], val[1], val[2]),
-                        //             val[3], val[4])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.op_assign(
+                                self.builder.call_method(
+                                    Some($<Node>1),
+                                    Some($<Token>2),
+                                    Some($<Token>3),
+                                    None,
+                                    vec![],
+                                    None
+                                ),
+                                $<Token>4,
+                                $<Node>5
+                            )
+                        );
                     }
                 | primary_value tCOLON2 tCONSTANT tOP_ASGN command_rhs
                     {
-                        // const  = @builder.const_op_assignable(
-                        //             @builder.const_fetch(val[0], val[1], val[2]))
-                        // result = @builder.op_assign(const, val[3], val[4])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let const_ = self.builder.const_op_assignable(
+                            self.builder.const_fetch(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Token>3
+                            )
+                        );
+                        $$ = Value::Node(
+                            self.builder.op_assign(
+                                const_,
+                                $<Token>4,
+                                $<Node>5
+                            )
+                        );
                     }
                 | primary_value tCOLON2 tIDENTIFIER tOP_ASGN command_rhs
                     {
-                        // result = @builder.op_assign(
-                        //             @builder.call_method(
-                        //                 val[0], val[1], val[2]),
-                        //             val[3], val[4])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.op_assign(
+                                self.builder.call_method(
+                                    Some($<Node>1),
+                                    Some($<Token>2),
+                                    Some($<Token>3),
+                                    None,
+                                    vec![],
+                                    None
+                                ),
+                                $<Token>4,
+                                $<Node>5
+                            )
+                        );
                     }
                 | backref tOP_ASGN command_rhs
                     {

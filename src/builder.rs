@@ -442,7 +442,14 @@ impl Builder {
         }
     }
 
-    pub fn const_op_assignable(&self) {}
+    pub fn const_op_assignable(&self, node: Node) -> Node {
+        match node {
+            Node::Const { scope, name, loc } => {
+                Node::Casgn { scope, name, loc, rhs: None }
+            },
+            _ => panic!("unsupported const_op_assignable arument: {:#?}", node)
+        }
+    }
 
     pub fn assign(&self, mut lhs: Node, eql_t: Token, rhs_value: Node) -> Node {
         let operator_l = Some(self.loc(&eql_t));
