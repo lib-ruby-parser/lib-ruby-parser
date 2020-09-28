@@ -455,8 +455,7 @@
                     }
                 | kALIAS tGVAR tNTH_REF
                     {
-                        // diagnostic :error, :nth_ref_alias, nil, val[2]
-                        panic!("dead");
+                        // FIXME: diagnostic :error, :nth_ref_alias, nil, val[2]
                     }
                 | kUNDEF undef_list
                     {
@@ -555,21 +554,41 @@
                     }
                 | lhs tEQL mrhs
                     {
-                        // result = @builder.assign(val[0], val[1],
-                        //           @builder.array(nil, val[2], nil))
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.assign(
+                                $<Node>1,
+                                $<Token>2,
+                                self.builder.array(
+                                    None,
+                                    $<NodeList>3,
+                                    None
+                                )
+                            )
+                        );
                     }
                 | mlhs tEQL mrhs_arg kRESCUE_MOD stmt
                     {
-                        // rescue_body = @builder.rescue_body(val[3],
-                        //                                     nil, nil, nil,
-                        //                                     nil, val[4])
-                        // begin_body = @builder.begin_body(val[2], [ rescue_body ])
-
-                        // result = @builder.multi_assign(val[0], val[1], begin_body)
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let rescue_body = self.builder.rescue_body(
+                            $<Token>4,
+                            vec![],
+                            None,
+                            None,
+                            None,
+                            $<Node>5
+                        );
+                        let begin_body = self.builder.begin_body(
+                            Some($<Node>3),
+                            vec![ rescue_body ],
+                            None,
+                            None
+                        ).unwrap();
+                        $$ = Value::Node(
+                            self.builder.multi_assign(
+                                $<Node>1,
+                                $<Token>2,
+                                begin_body
+                            )
+                        );
                     }
                 | mlhs tEQL mrhs_arg
                     {
@@ -587,27 +606,43 @@
 
          rassign: arg_value tASSOC lhs
                     {
-                        // result = @builder.rassign(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.rassign(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | arg_value tASSOC mlhs
                     {
-                        // result = @builder.multi_rassign(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.multi_rassign(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | rassign tASSOC lhs
                     {
-                        // result = @builder.rassign(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.rassign(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | rassign tASSOC mlhs
                     {
-                        // result = @builder.multi_rassign(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.multi_rassign(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 ;
 

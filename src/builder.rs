@@ -448,32 +448,25 @@ impl Builder {
 
     pub fn const_op_assignable(&self) {}
 
-    pub fn assign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
+    pub fn assign(&self, mut lhs: Node, eql_t: Token, rhs_value: Node) -> Node {
         let operator_l = Some(self.loc(&eql_t));
 
         let var_loc = VariableMap {
-            expression: self.join_expr(&lhs, &rhs),
+            expression: self.join_expr(&lhs, &rhs_value),
             operator: operator_l
         };
 
-        let a = match lhs {
-            Node::Cvar { name, .. } => {
-                Node::Cvasgn { name, rhs: Some(Box::new(rhs)), loc: var_loc }
+        match lhs {
+            Node::Cvasgn { ref mut loc, ref mut rhs, .. }
+            | Node::Ivasgn { ref mut loc, ref mut rhs, .. }
+            | Node::Gvasgn { ref mut loc, ref mut rhs, .. }
+            | Node::Lvasgn { ref mut loc, ref mut rhs, .. } => {
+                *loc = var_loc;
+                *rhs = Some(Box::new(rhs_value));
+                lhs
             },
-            Node::Ivar { name, .. } => {
-                Node::Ivasgn { name, rhs: Some(Box::new(rhs)), loc: var_loc }
-            },
-            Node::Gvar { name, .. } => {
-                Node::Gvasgn { name, rhs: Some(Box::new(rhs)), loc: var_loc }
-            },
-            Node::Lvar { name, .. } => {
-                Node::Lvasgn { name, rhs: Some(Box::new(rhs)), loc: var_loc }
-            },
-
-            _ => panic!("{:#?} can't be used in assignment")
-        };
-
-        return a;
+            _ => panic!("{:#?} can't be used in assignment", lhs)
+        }
     }
 
     pub fn op_assign(&self) {}
@@ -493,8 +486,13 @@ impl Builder {
         }
     }
 
-    pub fn rassign(&self) {}
-    pub fn multi_rassign(&self) {}
+    pub fn rassign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
+        self.assign(rhs, eql_t, lhs)
+    }
+
+    pub fn multi_rassign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
+        self.multi_assign(rhs, eql_t, lhs)
+    }
 
     //
     // Class and module definition
