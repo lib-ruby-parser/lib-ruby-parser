@@ -74,3 +74,11 @@ pub struct IndexMap {
     pub operator: Range,
     pub expression: Range,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RescueBodyMap {
+    pub expression: Range,
+    pub keyword: Range,
+    pub assoc: Option<Range>,
+    pub begin: Option<Range>,
+}

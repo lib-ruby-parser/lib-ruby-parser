@@ -45,6 +45,12 @@ pub enum Node {
     Array { elements: Vec<Node>, loc: CollectionMap },
     Str { value: String, loc: CollectionMap },
     Dstr { children: Vec<Node>, loc: CollectionMap },
+    If { cond: Box<Node>, if_true: Option<Box<Node>>, if_false: Option<Box<Node>>, loc: KeywordMap },
+    WhilePost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
+    While { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
+    UntilPost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
+    Until { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
+    RescueBody { exc_list: Vec<Node>, exc_var: Option<Box<Node>>, stmt: Box<Node>, loc: RescueBodyMap },
 }
 
 impl Node {
@@ -92,6 +98,12 @@ impl Node {
             Self::Array { loc, .. } => &loc.expression,
             Self::Str { loc, .. } => &loc.expression,
             Self::Dstr { loc, .. } => &loc.expression,
+            Self::If { loc, .. } => &loc.expression,
+            Self::While { loc, .. } => &loc.expression,
+            Self::WhilePost { loc, .. } => &loc.expression,
+            Self::Until { loc, .. } => &loc.expression,
+            Self::UntilPost { loc, .. } => &loc.expression,
+            Self::RescueBody { loc, .. } => &loc.expression,
         }
     }
 }

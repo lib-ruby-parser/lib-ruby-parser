@@ -18,7 +18,7 @@
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment};
     use crate::lexer::lex_states::*;
     use crate::lexer::{ContextItem};
-    use crate::builder::PartialAssignment;
+    use crate::builder::{PartialAssignment, LoopType};
 }
 
 %code {
@@ -470,39 +470,67 @@
                     }
                 | stmt kIF_MOD expr_value
                     {
-                        // result = @builder.condition_mod(val[0], nil,
-                        //                               val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.condition_mod(
+                                Some($<Node>1),
+                                None,
+                                $<Token>2,
+                                $<Node>3,
+                            )
+                        );
                     }
                 | stmt kUNLESS_MOD expr_value
                     {
-                        // result = @builder.condition_mod(nil, val[0],
-                        //                               val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.condition_mod(
+                                None,
+                                Some($<Node>1),
+                                $<Token>2,
+                                $<Node>3,
+                            )
+                        );
                     }
                 | stmt kWHILE_MOD expr_value
                     {
-                        // result = @builder.loop_mod(:while, val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.loop_mod(
+                                LoopType::While,
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3,
+                            )
+                        );
                     }
                 | stmt kUNTIL_MOD expr_value
                     {
-                        // result = @builder.loop_mod(:until, val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.loop_mod(
+                                LoopType::Until,
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3,
+                            )
+                        );
                     }
                 | stmt kRESCUE_MOD stmt
                     {
-                        // rescue_body = @builder.rescue_body(val[1],
-                        //                     nil, nil, nil,
-                        //                     nil, val[2])
+                        let rescue_body = self.builder.rescue_body(
+                            $<Token>2,
+                            vec![],
+                            None,
+                            None,
+                            None,
+                            $<Node>3
+                        );
 
-                        // result = @builder.begin_body(val[0], [ rescue_body ])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.begin_body(
+                                Some($<Node>1),
+                                vec![rescue_body],
+                                None,
+                                None,
+                            ).unwrap()
+                        );
                     }
                 | klEND tLCURLY compstmt tRCURLY
                     {

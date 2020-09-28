@@ -11,6 +11,11 @@ pub enum PartialAssignment {
     AttrAsgn((Node, Token, Token)), // A::B
 }
 
+pub enum LoopType {
+    While,
+    Until
+}
+
 #[derive(Debug, Default)]
 pub struct Builder {
     static_env: StaticEnvironment,
@@ -594,7 +599,24 @@ impl Builder {
     // Conditionals
 
     pub fn condition(&self) {}
-    pub fn condition_mod(&self) {}
+
+    pub fn condition_mod(&self, if_true: Option<Node>, if_false: Option<Node>, cond_t: Token, cond: Node) -> Node {
+        let pre = match (&if_true, &if_false) {
+            (None, None) => panic!("at least one of if_true/if_false is required"),
+            (None, Some(if_false)) => if_false.clone(),
+            (Some(if_true), None) => if_true.clone(),
+            (Some(_), Some(_)) => panic!("only one of if_true/if_false is required")
+        };
+
+        let loc = self.keyword_mod_map(&pre, &cond_t, &cond);
+        Node::If {
+            cond: Box::new(self.check_condition(cond)),
+            if_true: if_true.map(|node| Box::new(node)),
+            if_false: if_false.map(|node| Box::new(node)),
+            loc
+        }
+    }
+
     pub fn ternary(&self) {}
 
     // Case matching
@@ -605,7 +627,19 @@ impl Builder {
     // Loops
 
     pub fn loop_(&self) {}
-    pub fn loop_mod(&self) {}
+
+    pub fn loop_mod(&self, loop_type: LoopType, body: Node, keyword_t: Token, cond: Node) -> Node {
+        let loc = self.keyword_mod_map(&body, &keyword_t, &cond);
+        let cond = Box::new(self.check_condition(cond));
+
+        match (loop_type, &body) {
+            (LoopType::While, Node::KwBegin { .. }) => Node::WhilePost { cond, body: Box::new(body), loc },
+            (LoopType::While, _)                    => Node::While     { cond, body: Box::new(body), loc },
+            (LoopType::Until, Node::KwBegin { .. }) => Node::UntilPost { cond, body: Box::new(body), loc },
+            (LoopType::Until, _)                    => Node::Until     { cond, body: Box::new(body), loc },
+        }
+    }
+
     pub fn for_(&self) {}
 
     // Keywords
@@ -624,7 +658,17 @@ impl Builder {
 
     // Exception handling
 
-    pub fn rescue_body(&self) {}
+    pub fn rescue_body(&self, rescue_t: Token, exc_list: Vec<Node>, assoc_t: Option<Token>, exc_var: Option<Node>, then_t: Option<Token>, compound_stmt: Node) -> Node {
+        let loc = self.rescue_body_map(&rescue_t, &exc_list, &assoc_t, &exc_var, &then_t, &compound_stmt);
+
+        Node::RescueBody {
+            exc_list,
+            exc_var: exc_var.map(|node| Box::new(node)),
+            stmt: Box::new(compound_stmt),
+            loc
+        }
+    }
+
     pub fn begin_body(&self, compound_stmt: Option<Node>, rescue_bodies: Vec<Node>, else_: Option<(Token, Node)>, ensure: Option<(Token, Node)>) -> Option<Node> {
         let mut result: Option<Node>;
 
@@ -765,7 +809,27 @@ impl Builder {
     // Verification
     //
 
-    pub fn check_condition(&self) {}
+    pub fn check_condition(&self, cond: Node) -> Node {
+        match &cond {
+            Node::Begin { statements, loc } => {
+                if statements.len() == 1 {
+                    let stmt = statements[statements.len() - 1].clone();
+                    let stmt = self.check_condition(stmt);
+                    return Node::Begin { statements: vec![stmt], loc: loc.clone() }
+                }
+                cond
+            },
+            // FIXME:
+            // Node::And { lhs, rhs, .. }
+            // | Node::Or { lhs, rhs, .. } => {
+            // },
+            // Node::Irange { begin, end, .. }
+            // | Node::Erange { begin, end, .. } => {
+            // }
+            _ => cond
+        }
+    }
+
     pub fn check_duplicate_args(&self) {}
     pub fn check_duplicate_arg(&self) {}
     pub fn check_assignment_to_numparam(&self, name: &str, loc: &Range){
@@ -1013,11 +1077,29 @@ impl Builder {
         }
     }
 
-    pub fn keyword_mod_map(&self) {}
+    pub fn keyword_mod_map(&self, pre_e: &Node, keyword_t: &Token, post_e: &Node) -> KeywordMap {
+        KeywordMap {
+            expression: pre_e.expression().join(&post_e.expression()),
+            keyword: self.loc(keyword_t),
+            begin: None,
+            end: None
+        }
+    }
+
     pub fn condition_map(&self) {}
     pub fn ternary_map(&self) {}
     pub fn for_map(&self) {}
-    pub fn rescue_body_map(&self) {}
+
+    pub fn rescue_body_map(&self, keyword_t: &Token, exc_list: &Vec<Node>, assoc_t: &Option<Token>, exc_var: &Option<Node>, then_t: &Option<Token>, compstmt: &Node) -> RescueBodyMap {
+        let end_l = compstmt.expression().clone();
+
+        RescueBodyMap {
+            keyword: self.loc(keyword_t),
+            assoc: assoc_t.clone().map(|t| self.loc(&t)),
+            begin: then_t.clone().map(|t| self.loc(&t)),
+            expression: self.loc(keyword_t).join(&end_l)
+        }
+    }
 
     pub fn eh_keyword_map(&self, compstmt_e: &Option<Node>, keyword_t: &Option<Token>, body_es: &Vec<Node>, else_t: &Option<Token>, else_e: &Option<Node>) -> ConditionMap {
         let begin_l: Range;
