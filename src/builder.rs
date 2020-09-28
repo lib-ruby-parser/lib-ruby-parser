@@ -654,7 +654,12 @@ impl Builder {
             loc: self.keyword_map(&preexe_t, &Some(lbrace_t), &vec![], &Some(rbrace_t))
         }
     }
-    pub fn postexe(&self) {}
+    pub fn postexe(&self, postexe_t: Token, lbrace_t: Token, compstmt: Option<Node>, rbrace_t: Token) -> Node {
+        Node::Postexe {
+            body: compstmt.map(|node| Box::new(node)),
+            loc: self.keyword_map(&postexe_t, &Some(lbrace_t), &vec![], &Some(rbrace_t))
+        }
+    }
 
     // Exception handling
 

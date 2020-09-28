@@ -534,9 +534,14 @@
                     }
                 | klEND tLCURLY compstmt tRCURLY
                     {
-                        // result = @builder.postexe(val[0], val[1], val[2], val[3])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.postexe(
+                                $<Token>1,
+                                $<Token>2,
+                                $<MaybeNode>3,
+                                $<Token>4,
+                            )
+                        );
                     }
                 | command_asgn
                 | mlhs tEQL command_call
