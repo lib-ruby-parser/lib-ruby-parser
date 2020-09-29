@@ -1260,7 +1260,119 @@ impl Lexer {
     }
 
     pub fn parse_percent(&mut self, _space_seen: bool, _last_state: LexState) -> i32 { unimplemented!("parse_percent") }
-    pub fn parse_gvar(&mut self, _last_state: LexState) -> i32 { unimplemented!("parse_gvar") }
+
+    pub fn parse_gvar(&mut self, last_state: LexState) -> i32 {
+        let ptr = self.p.lex.pcur;
+        let mut c;
+
+        self.set_lex_state(EXPR_END);
+        self.p.lex.ptok = ptr - 1; // from '$'
+        self.newtok();
+        c = self.nextc();
+        match c {
+            LexChar::Some('_') => { /* $_: last read line string */
+                c = self.nextc();
+                if self.parser_is_identchar() {
+                    self.tokadd(&LexChar::Some('$'));
+                    self.tokadd(&LexChar::Some('_'));
+                } else {
+                    self.pushback(&c);
+                    c = LexChar::Some('_');
+                    self.tokadd(&LexChar::Some('$'));
+                    self.tokadd(&c);
+                    return Self::tGVAR;
+                }
+            },
+            LexChar::Some('~')          /* $~: match-data */
+            | LexChar::Some('*')        /* $*: argv */
+            | LexChar::Some('$')        /* $$: pid */
+            | LexChar::Some('?')        /* $?: last status */
+            | LexChar::Some('!')        /* $!: error string */
+            | LexChar::Some('@')        /* $@: error position */
+            | LexChar::Some('/')        /* $/: input record separator */
+            | LexChar::Some('\\')       /* $\: output record separator */
+            | LexChar::Some(';')        /* $;: field separator */
+            | LexChar::Some(',')        /* $,: output field separator */
+            | LexChar::Some('.')        /* $.: last read line number */
+            | LexChar::Some('=')        /* $=: ignorecase */
+            | LexChar::Some(':')        /* $:: load path */
+            | LexChar::Some('<')        /* $<: reading filename */
+            | LexChar::Some('>')        /* $>: default output handle */
+            | LexChar::Some('\"') => {  /* $": already loaded files */
+                self.tokadd(&LexChar::Some('$'));
+                self.tokadd(&c);
+                return Self::tGVAR;
+            },
+            LexChar::Some('-') => {
+                self.tokadd(&LexChar::Some('$'));
+                self.tokadd(&c);
+                c = self.nextc();
+                if self.parser_is_identchar() {
+                    if self.tokadd_mbchar(&c).is_err() { return Self::END_OF_INPUT }
+                } else {
+                    self.pushback(&c);
+                    self.pushback(&LexChar::Some('-'));
+                    return Self::tCHAR;
+                }
+                return Self::tGVAR;
+            },
+            LexChar::Some('&')         /* $&: last match */
+            | LexChar::Some('`')       /* $`: string before last match */
+            | LexChar::Some('\'')      /* $': string after last match */
+            | LexChar::Some('+') => {  /* $+: string matches last paren. */
+                if last_state.is_some(EXPR_FNAME) {
+                    self.tokadd(&LexChar::Some('$'));
+                    self.tokadd(&c);
+                    return Self::tGVAR
+                }
+                return Self::tBACK_REF;
+            },
+            LexChar::Some('1')
+            | LexChar::Some('2')
+            | LexChar::Some('3')
+            | LexChar::Some('4')
+            | LexChar::Some('5')
+            | LexChar::Some('6')
+            | LexChar::Some('7')
+            | LexChar::Some('8')
+            | LexChar::Some('9') => {
+                self.tokadd(&LexChar::Some('$'));
+                loop {
+                    println!("c = {:#?}", c);
+                    self.tokadd(&c);
+                    c = self.nextc();
+
+                    if c.is_eof() || !c.is_digit() {
+                        break;
+                    }
+                }
+                self.pushback(&c);
+                if last_state.is_some(EXPR_FNAME) {
+                    return Self::tGVAR
+                }
+                self.tokfix();
+                return Self::tNTH_REF;
+            }
+            _ => {
+                if !self.parser_is_identchar() {
+                    if c.is_eof() || c.is_space() {
+                        self.compile_error("`$' without identifiers is not allowed as a global variable name");
+                    } else {
+                        self.pushback(&c);
+                        self.compile_error(&format!("`${}' is not allowed as a global variable name", c.unwrap()));
+                    }
+                    return Self::tGVAR
+                }
+
+                self.tokadd(&LexChar::Some('$'));
+            }
+        }
+
+        if self.tokadd_ident(&c) { return Self::END_OF_INPUT }
+        self.set_lex_state(EXPR_END);
+        self.tokenize_ident(&last_state);
+        return Self::tGVAR;
+    }
 
     pub fn parse_atmark(&mut self, last_state: LexState) -> i32 {
         let ptr = self.p.lex.pcur;
