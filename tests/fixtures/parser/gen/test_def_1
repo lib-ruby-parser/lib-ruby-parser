@@ -1,0 +1,4 @@
+--INPUT
+def String; end
+--AST
+s(:def, "String", nil, nil)

@@ -1,0 +1,8 @@
+--INPUT
+foo::fun (1) {}
+--AST
+s(:block,
+  s(:send,
+    s(:lvar, "foo"), "fun",
+    s(:begin,
+      s(:int, "1"))), nil, nil)

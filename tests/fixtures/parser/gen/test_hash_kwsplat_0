@@ -1,0 +1,9 @@
+--INPUT
+{ foo: 2, **bar }
+--AST
+s(:hash,
+  s(:pair,
+    s(:sym, "foo"),
+    s(:int, "2")),
+  s(:kwsplat,
+    s(:lvar, "bar")))

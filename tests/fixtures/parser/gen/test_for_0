@@ -1,0 +1,8 @@
+--INPUT
+for a in foo do p a; end
+--AST
+s(:for,
+  s(:lvasgn, "a"),
+  s(:lvar, "foo"),
+  s(:send, nil, "p",
+    s(:lvar, "a")))

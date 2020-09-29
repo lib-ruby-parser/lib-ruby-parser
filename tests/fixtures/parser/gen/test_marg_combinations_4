@@ -1,0 +1,8 @@
+--INPUT
+def f ((a, *)); end
+--AST
+s(:def, "f",
+  s(:args,
+    s(:mlhs,
+      s(:arg, "a"),
+      s(:restarg))), nil)

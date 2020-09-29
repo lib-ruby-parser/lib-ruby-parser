@@ -1,0 +1,4 @@
+--INPUT
+m 1 {} # error: unexpected token tLCURLY
+--AST
+

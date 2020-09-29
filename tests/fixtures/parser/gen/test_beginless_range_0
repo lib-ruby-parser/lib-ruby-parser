@@ -1,0 +1,5 @@
+--INPUT
+..100
+--AST
+s(:irange, nil,
+  s(:int, "100"))

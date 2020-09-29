@@ -1,0 +1,5 @@
+--INPUT
+def (foo).foo; end
+--AST
+s(:defs,
+  s(:lvar, "foo"), "foo", nil, nil)

@@ -1,0 +1,13 @@
+--INPUT
+case foo; when 1, *baz; bar; when *foo; end
+--AST
+s(:case,
+  s(:lvar, "foo"),
+  s(:when,
+    s(:int, "1"),
+    s(:splat,
+      s(:lvar, "baz")),
+    s(:lvar, "bar")),
+  s(:when,
+    s(:splat,
+      s(:lvar, "foo")), nil), nil)

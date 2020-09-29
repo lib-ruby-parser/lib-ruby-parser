@@ -1,0 +1,9 @@
+--INPUT
+"#@a #@@a #$a"
+--AST
+s(:dstr,
+  s(:ivar, "@a"),
+  s(:str, " "),
+  s(:cvar, "@@a"),
+  s(:str, " "),
+  s(:gvar, "$a"))

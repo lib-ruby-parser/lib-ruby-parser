@@ -1,0 +1,5 @@
+--INPUT
+~foo
+--AST
+s(:send,
+  s(:lvar, "foo"), "~")

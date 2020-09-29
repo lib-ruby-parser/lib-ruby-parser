@@ -1,0 +1,4 @@
+--INPUT
+{ }
+--AST
+s(:hash)

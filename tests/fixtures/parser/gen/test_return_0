@@ -1,0 +1,6 @@
+--INPUT
+return(foo)
+--AST
+s(:return,
+  s(:begin,
+    s(:lvar, "foo")))

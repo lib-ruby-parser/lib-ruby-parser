@@ -1,0 +1,7 @@
+--INPUT
+((b, )) = foo
+--AST
+s(:masgn,
+  s(:mlhs,
+    s(:lvasgn, "b")),
+  s(:lvar, "foo"))

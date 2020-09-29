@@ -1,0 +1,10 @@
+--INPUT
+def obj.inc(x) = x + 1
+--AST
+s(:defs,
+  s(:send, nil, "obj"), "inc",
+  s(:args,
+    s(:arg, "x")),
+  s(:send,
+    s(:lvar, "x"), "+",
+    s(:int, "1")))

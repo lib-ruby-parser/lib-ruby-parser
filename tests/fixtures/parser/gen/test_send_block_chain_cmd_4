@@ -1,0 +1,9 @@
+--INPUT
+meth 1 do end.fun bar do end
+--AST
+s(:block,
+  s(:send,
+    s(:block,
+      s(:send, nil, "meth",
+        s(:int, "1")), nil, nil), "fun",
+    s(:lvar, "bar")), nil, nil)

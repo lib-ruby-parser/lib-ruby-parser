@@ -1,0 +1,8 @@
+--INPUT
+"foo#@a" "bar"
+--AST
+s(:dstr,
+  s(:dstr,
+    s(:str, "foo"),
+    s(:ivar, "@a")),
+  s(:str, "bar"))

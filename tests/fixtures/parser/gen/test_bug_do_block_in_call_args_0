@@ -1,0 +1,8 @@
+--INPUT
+bar def foo; self.each do end end
+--AST
+s(:send, nil, "bar",
+  s(:def, "foo", nil,
+    s(:block,
+      s(:send,
+        s(:self), "each"), nil, nil)))

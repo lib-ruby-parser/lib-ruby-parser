@@ -1,0 +1,6 @@
+--INPUT
+class << foo; _1; end
+--AST
+s(:sclass,
+  s(:lvar, "foo"),
+  s(:send, nil, "_1"))

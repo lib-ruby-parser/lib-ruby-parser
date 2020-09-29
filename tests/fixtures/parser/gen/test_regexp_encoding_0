@@ -1,0 +1,8 @@
+--INPUT
+/\xa8/n =~ ""
+--AST
+s(:match_with_lvasgn,
+  s(:regexp,
+    s(:str, "\\xa8"),
+    s(:regopt, "n")),
+  s(:str, ""))

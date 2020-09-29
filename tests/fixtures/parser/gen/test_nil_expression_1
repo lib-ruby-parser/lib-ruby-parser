@@ -1,0 +1,4 @@
+--INPUT
+begin end
+--AST
+s(:kwbegin)

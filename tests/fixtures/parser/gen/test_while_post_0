@@ -1,0 +1,7 @@
+--INPUT
+begin meth end while foo
+--AST
+s(:while_post,
+  s(:lvar, "foo"),
+  s(:kwbegin,
+    s(:send, nil, "meth")))

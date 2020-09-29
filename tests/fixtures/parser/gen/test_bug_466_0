@@ -1,0 +1,12 @@
+--INPUT
+foo "#{(1+1).to_i}" do; end
+--AST
+s(:block,
+  s(:send, nil, "foo",
+    s(:dstr,
+      s(:begin,
+        s(:send,
+          s(:begin,
+            s(:send,
+              s(:int, "1"), "+",
+              s(:int, "1"))), "to_i")))), nil, nil)

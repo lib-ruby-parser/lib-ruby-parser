@@ -1,0 +1,11 @@
+--INPUT
+a = 1; a b: 1
+--AST
+s(:begin,
+  s(:lvasgn, "a",
+    s(:int, "1")),
+  s(:send, nil, "a",
+    s(:hash,
+      s(:pair,
+        s(:sym, "b"),
+        s(:int, "1")))))

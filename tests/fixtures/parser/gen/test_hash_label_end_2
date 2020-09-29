@@ -1,0 +1,8 @@
+--INPUT
+f(a ? "a":1)
+--AST
+s(:send, nil, "f",
+  s(:if,
+    s(:send, nil, "a"),
+    s(:str, "a"),
+    s(:int, "1")))

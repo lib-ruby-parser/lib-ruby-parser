@@ -1,0 +1,4 @@
+--INPUT
+%i[]
+--AST
+s(:array)

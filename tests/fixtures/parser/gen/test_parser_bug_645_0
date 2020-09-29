@@ -1,0 +1,8 @@
+--INPUT
+-> (arg={}) {}
+--AST
+s(:block,
+  s(:lambda),
+  s(:args,
+    s(:optarg, "arg",
+      s(:hash))), nil)

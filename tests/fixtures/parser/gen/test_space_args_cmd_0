@@ -1,0 +1,7 @@
+--INPUT
+fun (f bar)
+--AST
+s(:send, nil, "fun",
+  s(:begin,
+    s(:send, nil, "f",
+      s(:lvar, "bar"))))

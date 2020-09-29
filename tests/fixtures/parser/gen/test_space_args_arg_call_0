@@ -1,0 +1,7 @@
+--INPUT
+fun (1).to_i
+--AST
+s(:send, nil, "fun",
+  s(:send,
+    s(:begin,
+      s(:int, "1")), "to_i"))

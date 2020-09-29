@@ -1,0 +1,6 @@
+--INPUT
+p <<~E
+E
+--AST
+s(:send, nil, "p",
+  s(:dstr))

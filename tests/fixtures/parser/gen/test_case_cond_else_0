@@ -1,0 +1,8 @@
+--INPUT
+case; when foo; 'foo'; else 'bar'; end
+--AST
+s(:case, nil,
+  s(:when,
+    s(:lvar, "foo"),
+    s(:str, "foo")),
+  s(:str, "bar"))

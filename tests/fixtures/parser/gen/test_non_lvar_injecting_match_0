@@ -1,0 +1,10 @@
+--INPUT
+/#{1}(?<match>bar)/ =~ 'bar'
+--AST
+s(:send,
+  s(:regexp,
+    s(:begin,
+      s(:int, "1")),
+    s(:str, "(?<match>bar)"),
+    s(:regopt, "")), "=~",
+  s(:str, "bar"))

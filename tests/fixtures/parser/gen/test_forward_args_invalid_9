@@ -1,0 +1,4 @@
+--INPUT
+def foo(...); return(...); end # error: unexpected token tRPAREN
+--AST
+

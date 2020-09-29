@@ -1,0 +1,4 @@
+--INPUT
+yield()
+--AST
+s(:yield)

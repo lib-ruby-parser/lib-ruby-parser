@@ -1,0 +1,4 @@
+--INPUT
+return
+--AST
+s(:return)

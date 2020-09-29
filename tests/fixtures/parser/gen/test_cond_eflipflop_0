@@ -1,0 +1,7 @@
+--INPUT
+if foo...bar; end
+--AST
+s(:if,
+  s(:eflipflop,
+    s(:lvar, "foo"),
+    s(:lvar, "bar")), nil, nil)

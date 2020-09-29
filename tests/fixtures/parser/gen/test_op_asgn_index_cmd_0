@@ -1,0 +1,10 @@
+--INPUT
+foo[0, 1] += m foo
+--AST
+s(:op_asgn,
+  s(:indexasgn,
+    s(:lvar, "foo"),
+    s(:int, "0"),
+    s(:int, "1")), "+",
+  s(:send, nil, "m",
+    s(:lvar, "foo")))

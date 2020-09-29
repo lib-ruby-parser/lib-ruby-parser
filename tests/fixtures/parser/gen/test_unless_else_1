@@ -1,0 +1,7 @@
+--INPUT
+unless foo; bar; else baz; end
+--AST
+s(:if,
+  s(:lvar, "foo"),
+  s(:lvar, "baz"),
+  s(:lvar, "bar"))

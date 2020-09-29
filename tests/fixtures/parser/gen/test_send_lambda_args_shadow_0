@@ -1,0 +1,9 @@
+--INPUT
+->(a; foo, bar) { }
+--AST
+s(:block,
+  s(:lambda),
+  s(:args,
+    s(:arg, "a"),
+    s(:shadowarg, "foo"),
+    s(:shadowarg, "bar")), nil)

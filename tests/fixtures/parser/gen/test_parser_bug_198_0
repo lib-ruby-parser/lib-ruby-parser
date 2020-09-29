@@ -1,0 +1,8 @@
+--INPUT
+[/()\1/, ?#]
+--AST
+s(:array,
+  s(:regexp,
+    s(:str, "()\\1"),
+    s(:regopt, "")),
+  s(:str, "#"))

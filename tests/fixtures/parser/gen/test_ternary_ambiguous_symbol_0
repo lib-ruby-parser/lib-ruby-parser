@@ -1,0 +1,11 @@
+--INPUT
+t=1;(foo)?t:T
+--AST
+s(:begin,
+  s(:lvasgn, "t",
+    s(:int, "1")),
+  s(:if,
+    s(:begin,
+      s(:lvar, "foo")),
+    s(:lvar, "t"),
+    s(:const, nil, "T")))

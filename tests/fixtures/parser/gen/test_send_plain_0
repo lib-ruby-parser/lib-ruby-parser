@@ -1,0 +1,5 @@
+--INPUT
+foo.fun
+--AST
+s(:send,
+  s(:lvar, "foo"), "fun")

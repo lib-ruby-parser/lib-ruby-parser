@@ -1,0 +1,5 @@
+--INPUT
+@var = 10
+--AST
+s(:ivasgn, "@var",
+  s(:int, "10"))

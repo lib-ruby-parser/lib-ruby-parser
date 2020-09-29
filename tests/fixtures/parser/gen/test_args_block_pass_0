@@ -1,0 +1,6 @@
+--INPUT
+fun(&bar)
+--AST
+s(:send, nil, "fun",
+  s(:block_pass,
+    s(:lvar, "bar")))

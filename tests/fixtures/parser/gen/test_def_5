@@ -1,0 +1,4 @@
+--INPUT
+def END; end
+--AST
+s(:def, "END", nil, nil)

@@ -1,0 +1,6 @@
+--INPUT
+%w{a\
+b}
+--AST
+s(:array,
+  s(:str, "a\nb"))

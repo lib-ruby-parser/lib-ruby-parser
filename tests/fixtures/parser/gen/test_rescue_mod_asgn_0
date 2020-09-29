@@ -1,0 +1,8 @@
+--INPUT
+foo = meth rescue bar
+--AST
+s(:lvasgn, "foo",
+  s(:rescue,
+    s(:send, nil, "meth"),
+    s(:resbody, nil, nil,
+      s(:lvar, "bar")), nil))

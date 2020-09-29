@@ -1,0 +1,13 @@
+--INPUT
+case foo; in Array[*, 1, *] then true; end
+--AST
+s(:case_match,
+  s(:lvar, "foo"),
+  s(:in_pattern,
+    s(:const_pattern,
+      s(:const, nil, "Array"),
+      s(:find_pattern,
+        s(:match_rest),
+        s(:int, "1"),
+        s(:match_rest))), nil,
+    s(:true)), nil)

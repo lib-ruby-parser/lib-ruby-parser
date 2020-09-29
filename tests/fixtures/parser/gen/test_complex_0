@@ -1,0 +1,4 @@
+--INPUT
+42i
+--AST
+s(:complex, "42i")

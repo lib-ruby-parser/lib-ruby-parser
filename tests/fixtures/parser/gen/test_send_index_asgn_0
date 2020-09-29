@@ -1,0 +1,8 @@
+--INPUT
+foo[1, 2] = 3
+--AST
+s(:indexasgn,
+  s(:lvar, "foo"),
+  s(:int, "1"),
+  s(:int, "2"),
+  s(:int, "3"))

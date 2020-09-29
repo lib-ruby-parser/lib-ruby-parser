@@ -1,0 +1,8 @@
+--INPUT
+lambda{|;a|a}
+--AST
+s(:block,
+  s(:send, nil, "lambda"),
+  s(:args,
+    s(:shadowarg, "a")),
+  s(:lvar, "a"))

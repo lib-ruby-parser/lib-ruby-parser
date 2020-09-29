@@ -1,0 +1,7 @@
+--INPUT
+m { |**nil| }
+--AST
+s(:block,
+  s(:send, nil, "m"),
+  s(:args,
+    s(:kwnilarg)), nil)

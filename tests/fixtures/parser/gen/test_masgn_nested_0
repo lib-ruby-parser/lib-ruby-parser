@@ -1,0 +1,10 @@
+--INPUT
+a, (b, c) = foo
+--AST
+s(:masgn,
+  s(:mlhs,
+    s(:lvasgn, "a"),
+    s(:mlhs,
+      s(:lvasgn, "b"),
+      s(:lvasgn, "c"))),
+  s(:lvar, "foo"))

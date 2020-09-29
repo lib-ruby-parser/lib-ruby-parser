@@ -1,0 +1,9 @@
+--INPUT
+foo = raise bar rescue nil
+--AST
+s(:lvasgn, "foo",
+  s(:rescue,
+    s(:send, nil, "raise",
+      s(:lvar, "bar")),
+    s(:resbody, nil, nil,
+      s(:nil)), nil))

@@ -1,0 +1,10 @@
+--INPUT
+f{ |a, o=1, &b| }
+--AST
+s(:block,
+  s(:send, nil, "f"),
+  s(:args,
+    s(:arg, "a"),
+    s(:optarg, "o",
+      s(:int, "1")),
+    s(:blockarg, "b")), nil)

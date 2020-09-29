@@ -1,0 +1,7 @@
+--INPUT
+-> do rescue; end
+--AST
+s(:block,
+  s(:lambda), nil,
+  s(:rescue, nil,
+    s(:resbody, nil, nil, nil), nil))

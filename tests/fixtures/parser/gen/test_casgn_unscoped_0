@@ -1,0 +1,5 @@
+--INPUT
+Foo = 10
+--AST
+s(:casgn, nil, "Foo",
+  s(:int, "10"))

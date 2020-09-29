@@ -1,0 +1,9 @@
+--INPUT
+case 1; in 2; 3; else; 4; end
+--AST
+s(:case_match,
+  s(:int, "1"),
+  s(:in_pattern,
+    s(:int, "2"), nil,
+    s(:int, "3")),
+  s(:int, "4"))

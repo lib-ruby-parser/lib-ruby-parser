@@ -1,0 +1,11 @@
+--INPUT
+f x: -> do meth do end end
+--AST
+s(:send, nil, "f",
+  s(:hash,
+    s(:pair,
+      s(:sym, "x"),
+      s(:block,
+        s(:lambda), nil,
+        s(:block,
+          s(:send, nil, "meth"), nil, nil)))))

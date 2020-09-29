@@ -1,0 +1,6 @@
+--INPUT
+begin foo!; bar! end
+--AST
+s(:kwbegin,
+  s(:send, nil, "foo!"),
+  s(:send, nil, "bar!"))

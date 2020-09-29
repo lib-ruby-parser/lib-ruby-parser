@@ -1,0 +1,7 @@
+--INPUT
+while not (true) do end
+--AST
+s(:while,
+  s(:send,
+    s(:begin,
+      s(:true)), "!"), nil)

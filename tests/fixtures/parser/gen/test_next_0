@@ -1,0 +1,6 @@
+--INPUT
+next(foo)
+--AST
+s(:next,
+  s(:begin,
+    s(:lvar, "foo")))

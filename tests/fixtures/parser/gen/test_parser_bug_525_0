@@ -1,0 +1,11 @@
+--INPUT
+m1 :k => m2 do; m3() do end; end
+--AST
+s(:block,
+  s(:send, nil, "m1",
+    s(:hash,
+      s(:pair,
+        s(:sym, "k"),
+        s(:send, nil, "m2")))), nil,
+  s(:block,
+    s(:send, nil, "m3"), nil, nil))

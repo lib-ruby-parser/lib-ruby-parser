@@ -1,0 +1,6 @@
+--INPUT
+foo::a = 1
+--AST
+s(:send,
+  s(:lvar, "foo"), "a=",
+  s(:int, "1"))

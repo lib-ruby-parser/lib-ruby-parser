@@ -1,0 +1,6 @@
+--INPUT
+1...2
+--AST
+s(:erange,
+  s(:int, "1"),
+  s(:int, "2"))

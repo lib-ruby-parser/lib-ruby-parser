@@ -1,0 +1,6 @@
+--INPUT
+m [] do end
+--AST
+s(:block,
+  s(:send, nil, "m",
+    s(:array)), nil, nil)

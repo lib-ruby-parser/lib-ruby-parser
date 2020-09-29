@@ -1,0 +1,5 @@
+--INPUT
+ %W[#@@1] 
+--AST
+s(:array,
+  s(:str, "\#@@1"))

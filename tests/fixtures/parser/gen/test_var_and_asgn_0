@@ -1,0 +1,6 @@
+--INPUT
+a &&= 1
+--AST
+s(:and_asgn,
+  s(:lvasgn, "a"),
+  s(:int, "1"))

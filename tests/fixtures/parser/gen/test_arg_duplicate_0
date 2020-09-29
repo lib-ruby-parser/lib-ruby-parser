@@ -1,0 +1,4 @@
+--INPUT
+def foo(aa, aa); end # error: duplicate argument name
+--AST
+

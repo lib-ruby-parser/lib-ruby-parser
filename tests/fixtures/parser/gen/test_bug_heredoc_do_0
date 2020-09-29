@@ -1,0 +1,8 @@
+--INPUT
+f <<-TABLE do
+TABLE
+end
+--AST
+s(:block,
+  s(:send, nil, "f",
+    s(:dstr)), nil, nil)

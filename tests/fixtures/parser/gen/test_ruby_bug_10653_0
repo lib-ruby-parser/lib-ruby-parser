@@ -1,0 +1,14 @@
+--INPUT
+true ? 1.tap do |n| p n end : 0
+--AST
+s(:if,
+  s(:true),
+  s(:block,
+    s(:send,
+      s(:int, "1"), "tap"),
+    s(:args,
+      s(:procarg0,
+        s(:arg, "n"))),
+    s(:send, nil, "p",
+      s(:lvar, "n"))),
+  s(:int, "0"))

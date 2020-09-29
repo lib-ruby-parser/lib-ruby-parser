@@ -1,0 +1,4 @@
+--INPUT
+false
+--AST
+s(:false)

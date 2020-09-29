@@ -1,0 +1,8 @@
+--INPUT
+case foo; in self then true; end
+--AST
+s(:case_match,
+  s(:lvar, "foo"),
+  s(:in_pattern,
+    s(:self), nil,
+    s(:true)), nil)

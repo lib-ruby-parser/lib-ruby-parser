@@ -1,0 +1,4 @@
+--INPUT
+def foo(x,y,z); bar(...); end # error: unexpected token tBDOT3
+--AST
+

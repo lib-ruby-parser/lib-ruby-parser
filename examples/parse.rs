@@ -1,4 +1,4 @@
-use ruby_parser::{Parser, Lexer};
+use ruby_parser::{Parser, Lexer, Node};
 use std::env;
 use std::fs;
 
@@ -26,5 +26,8 @@ fn main() {
     let mut parser = Parser::new(lexer);
     parser.yydebug = 1;
 
-    println!("{:#?}", parser.do_parse())
+    match parser.do_parse() {
+        Some(node) => println!("{}", node.inspect(0)),
+        None => println!("None")
+    }
 }

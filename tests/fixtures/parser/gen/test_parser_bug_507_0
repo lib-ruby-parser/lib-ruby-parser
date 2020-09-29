@@ -1,0 +1,8 @@
+--INPUT
+m = -> *args do end
+--AST
+s(:lvasgn, "m",
+  s(:block,
+    s(:lambda),
+    s(:args,
+      s(:restarg, "args")), nil))

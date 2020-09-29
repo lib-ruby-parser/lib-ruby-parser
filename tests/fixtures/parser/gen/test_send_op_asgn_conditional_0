@@ -1,0 +1,7 @@
+--INPUT
+a&.b &&= 1
+--AST
+s(:and_asgn,
+  s(:csend,
+    s(:send, nil, "a"), "b"),
+  s(:int, "1"))

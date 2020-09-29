@@ -1,0 +1,4 @@
+--INPUT
+def obj.foo = 42 # error: unexpected token tEQL
+--AST
+

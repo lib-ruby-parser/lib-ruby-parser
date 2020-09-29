@@ -1,0 +1,5 @@
+--INPUT
+begin ensure end
+--AST
+s(:kwbegin,
+  s(:ensure, nil, nil))

@@ -1,0 +1,13 @@
+--INPUT
+p <<~"E"
+    x
+  #{foo}
+E
+--AST
+s(:send, nil, "p",
+  s(:dstr,
+    s(:str, "  x\n"),
+    s(:str, ""),
+    s(:begin,
+      s(:lvar, "foo")),
+    s(:str, "\n")))

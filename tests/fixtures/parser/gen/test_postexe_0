@@ -1,0 +1,5 @@
+--INPUT
+END { 1 }
+--AST
+s(:postexe,
+  s(:int, "1"))

@@ -1,0 +1,5 @@
+--INPUT
+1 => a
+--AST
+s(:lvasgn, "a",
+  s(:int, "1"))

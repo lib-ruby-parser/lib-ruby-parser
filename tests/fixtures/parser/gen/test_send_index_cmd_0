@@ -1,0 +1,7 @@
+--INPUT
+foo[m bar]
+--AST
+s(:index,
+  s(:lvar, "foo"),
+  s(:send, nil, "m",
+    s(:lvar, "bar")))

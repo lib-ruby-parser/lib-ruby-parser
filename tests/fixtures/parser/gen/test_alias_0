@@ -1,0 +1,6 @@
+--INPUT
+alias :foo bar
+--AST
+s(:alias,
+  s(:sym, "foo"),
+  s(:sym, "bar"))

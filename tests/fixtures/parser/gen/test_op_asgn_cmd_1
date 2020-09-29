@@ -1,0 +1,8 @@
+--INPUT
+foo::a += m foo
+--AST
+s(:op_asgn,
+  s(:send,
+    s(:lvar, "foo"), "a"), "+",
+  s(:send, nil, "m",
+    s(:lvar, "foo")))

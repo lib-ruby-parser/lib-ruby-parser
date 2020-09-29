@@ -1,0 +1,5 @@
+--INPUT
+not()
+--AST
+s(:send,
+  s(:begin), "!")

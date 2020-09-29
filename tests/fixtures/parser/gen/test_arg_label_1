@@ -1,0 +1,7 @@
+--INPUT
+def foo
+ a:b end
+--AST
+s(:def, "foo", nil,
+  s(:send, nil, "a",
+    s(:sym, "b")))

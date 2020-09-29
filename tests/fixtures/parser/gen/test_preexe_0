@@ -1,0 +1,5 @@
+--INPUT
+BEGIN { 1 }
+--AST
+s(:preexe,
+  s(:int, "1"))

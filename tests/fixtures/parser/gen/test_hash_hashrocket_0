@@ -1,0 +1,7 @@
+--INPUT
+{ 1 => 2 }
+--AST
+s(:hash,
+  s(:pair,
+    s(:int, "1"),
+    s(:int, "2")))

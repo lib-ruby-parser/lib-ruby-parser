@@ -1,0 +1,7 @@
+--INPUT
+def a; @@var |= 10; end
+--AST
+s(:def, "a", nil,
+  s(:op_asgn,
+    s(:cvasgn, "@@var"), "|",
+    s(:int, "10")))

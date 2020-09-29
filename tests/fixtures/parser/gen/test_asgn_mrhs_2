@@ -1,0 +1,8 @@
+--INPUT
+foo = baz, *bar
+--AST
+s(:lvasgn, "foo",
+  s(:array,
+    s(:lvar, "baz"),
+    s(:splat,
+      s(:lvar, "bar"))))

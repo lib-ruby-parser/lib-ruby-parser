@@ -1,0 +1,11 @@
+--INPUT
+o = {
+a:
+1
+}
+--AST
+s(:lvasgn, "o",
+  s(:hash,
+    s(:pair,
+      s(:sym, "a"),
+      s(:int, "1"))))

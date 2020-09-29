@@ -1,0 +1,9 @@
+--INPUT
+foo[0, 1] &&= 2
+--AST
+s(:and_asgn,
+  s(:indexasgn,
+    s(:lvar, "foo"),
+    s(:int, "0"),
+    s(:int, "1")),
+  s(:int, "2"))

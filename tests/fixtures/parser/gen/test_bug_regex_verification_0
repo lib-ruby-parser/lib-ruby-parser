@@ -1,0 +1,6 @@
+--INPUT
+/#)/x
+--AST
+s(:regexp,
+  s(:str, "#)"),
+  s(:regopt, "x"))

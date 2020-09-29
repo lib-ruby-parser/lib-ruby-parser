@@ -1,0 +1,9 @@
+--INPUT
+p ->() do a() do end end
+--AST
+s(:send, nil, "p",
+  s(:block,
+    s(:lambda),
+    s(:args),
+    s(:block,
+      s(:send, nil, "a"), nil, nil)))

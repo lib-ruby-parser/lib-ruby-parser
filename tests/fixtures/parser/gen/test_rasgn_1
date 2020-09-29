@@ -1,0 +1,7 @@
+--INPUT
+1 + 2 => $a
+--AST
+s(:gvasgn, "$a",
+  s(:send,
+    s(:int, "1"), "+",
+    s(:int, "2")))

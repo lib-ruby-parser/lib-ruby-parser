@@ -1,0 +1,4 @@
+--INPUT
+__FILE__ = foo # error: cannot assign to a keyword
+--AST
+

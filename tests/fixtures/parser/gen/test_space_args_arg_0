@@ -1,0 +1,6 @@
+--INPUT
+fun (1)
+--AST
+s(:send, nil, "fun",
+  s(:begin,
+    s(:int, "1")))

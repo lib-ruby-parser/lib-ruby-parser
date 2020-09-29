@@ -1,0 +1,4 @@
+--INPUT
+%q(foobar)
+--AST
+s(:str, "foobar")

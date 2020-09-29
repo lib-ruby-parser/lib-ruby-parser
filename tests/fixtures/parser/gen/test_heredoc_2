@@ -1,0 +1,9 @@
+--INPUT
+<<`HERE`
+foo
+bar
+HERE
+--AST
+s(:xstr,
+  s(:str, "foo\n"),
+  s(:str, "bar\n"))

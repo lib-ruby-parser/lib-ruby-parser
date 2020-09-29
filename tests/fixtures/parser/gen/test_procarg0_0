@@ -1,0 +1,8 @@
+--INPUT
+m { |foo| } 
+--AST
+s(:block,
+  s(:send, nil, "m"),
+  s(:args,
+    s(:procarg0,
+      s(:arg, "foo"))), nil)

@@ -1,0 +1,4 @@
+--INPUT
+:@ # error: `@' is not allowed as an instance variable name
+--AST
+

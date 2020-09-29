@@ -1,0 +1,7 @@
+--INPUT
+<<-`HERE`
+#@1
+HERE
+--AST
+s(:xstr,
+  s(:str, "\#@1\n"))

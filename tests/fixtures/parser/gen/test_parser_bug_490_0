@@ -1,0 +1,8 @@
+--INPUT
+def m; class << self; class C; end; end; end
+--AST
+s(:def, "m", nil,
+  s(:sclass,
+    s(:self),
+    s(:class,
+      s(:const, nil, "C"), nil, nil)))

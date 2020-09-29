@@ -1,0 +1,6 @@
+--INPUT
+`a\
+b`
+--AST
+s(:xstr,
+  s(:str, "ab"))

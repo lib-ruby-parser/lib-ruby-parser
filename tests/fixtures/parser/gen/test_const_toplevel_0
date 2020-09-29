@@ -1,0 +1,5 @@
+--INPUT
+::Foo
+--AST
+s(:const,
+  s(:cbase), "Foo")

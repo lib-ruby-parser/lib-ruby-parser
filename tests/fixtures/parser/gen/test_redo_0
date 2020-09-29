@@ -1,0 +1,4 @@
+--INPUT
+redo
+--AST
+s(:redo)

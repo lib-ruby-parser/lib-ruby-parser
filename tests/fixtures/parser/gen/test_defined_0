@@ -1,0 +1,5 @@
+--INPUT
+defined? foo
+--AST
+s(:defined?,
+  s(:lvar, "foo"))

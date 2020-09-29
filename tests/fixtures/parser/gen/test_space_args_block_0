@@ -1,0 +1,6 @@
+--INPUT
+fun () {}
+--AST
+s(:block,
+  s(:send, nil, "fun",
+    s(:begin)), nil, nil)

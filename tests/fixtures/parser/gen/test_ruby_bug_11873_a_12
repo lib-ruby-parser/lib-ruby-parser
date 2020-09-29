@@ -1,0 +1,10 @@
+--INPUT
+a b{c d}, 1.0r do end
+--AST
+s(:block,
+  s(:send, nil, "a",
+    s(:block,
+      s(:send, nil, "b"), nil,
+      s(:send, nil, "c",
+        s(:send, nil, "d"))),
+    s(:rational, "1.0r")), nil, nil)

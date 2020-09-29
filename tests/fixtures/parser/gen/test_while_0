@@ -1,0 +1,6 @@
+--INPUT
+while foo do meth end
+--AST
+s(:while,
+  s(:lvar, "foo"),
+  s(:send, nil, "meth"))

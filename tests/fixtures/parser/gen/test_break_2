@@ -1,0 +1,5 @@
+--INPUT
+break()
+--AST
+s(:break,
+  s(:begin))

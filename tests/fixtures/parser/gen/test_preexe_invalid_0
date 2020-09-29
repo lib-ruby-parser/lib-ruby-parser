@@ -1,0 +1,4 @@
+--INPUT
+def f; BEGIN{}; end # error: BEGIN in method
+--AST
+

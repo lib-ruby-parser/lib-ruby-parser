@@ -1,0 +1,4 @@
+--INPUT
+proc {|;a| _1} # error: ordinary parameter is defined
+--AST
+

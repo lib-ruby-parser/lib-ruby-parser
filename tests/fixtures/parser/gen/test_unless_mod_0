@@ -1,0 +1,6 @@
+--INPUT
+bar unless foo
+--AST
+s(:if,
+  s(:lvar, "foo"), nil,
+  s(:lvar, "bar"))

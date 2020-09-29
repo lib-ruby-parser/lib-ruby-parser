@@ -1,0 +1,9 @@
+--INPUT
+p <<~E "  y"
+  x
+E
+--AST
+s(:send, nil, "p",
+  s(:dstr,
+    s(:str, "x\n"),
+    s(:str, "  y")))

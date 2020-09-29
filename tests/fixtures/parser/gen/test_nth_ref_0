@@ -1,0 +1,4 @@
+--INPUT
+$10
+--AST
+s(:nth_ref, 10)

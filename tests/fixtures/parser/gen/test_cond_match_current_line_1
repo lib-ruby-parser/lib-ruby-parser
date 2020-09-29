@@ -1,0 +1,8 @@
+--INPUT
+!/wat/
+--AST
+s(:send,
+  s(:match_current_line,
+    s(:regexp,
+      s(:str, "wat"),
+      s(:regopt, ""))), "!")

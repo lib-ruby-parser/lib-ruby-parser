@@ -1,0 +1,5 @@
+--INPUT
+super foo
+--AST
+s(:super,
+  s(:lvar, "foo"))

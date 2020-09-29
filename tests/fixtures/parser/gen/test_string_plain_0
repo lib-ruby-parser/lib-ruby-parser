@@ -1,0 +1,4 @@
+--INPUT
+'foobar'
+--AST
+s(:str, "foobar")

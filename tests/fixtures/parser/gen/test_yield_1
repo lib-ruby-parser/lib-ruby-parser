@@ -1,0 +1,5 @@
+--INPUT
+yield foo
+--AST
+s(:yield,
+  s(:lvar, "foo"))

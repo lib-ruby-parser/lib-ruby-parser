@@ -1,0 +1,9 @@
+--INPUT
+a b(c d), 1.0i do end
+--AST
+s(:block,
+  s(:send, nil, "a",
+    s(:send, nil, "b",
+      s(:send, nil, "c",
+        s(:send, nil, "d"))),
+    s(:complex, "1.0i")), nil, nil)

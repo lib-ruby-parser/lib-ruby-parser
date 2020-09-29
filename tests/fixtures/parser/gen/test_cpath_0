@@ -1,0 +1,6 @@
+--INPUT
+module ::Foo; end
+--AST
+s(:module,
+  s(:const,
+    s(:cbase), "Foo"), nil)

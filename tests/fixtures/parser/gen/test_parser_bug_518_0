@@ -1,0 +1,7 @@
+--INPUT
+class A < B
+end
+--AST
+s(:class,
+  s(:const, nil, "A"),
+  s(:const, nil, "B"), nil)

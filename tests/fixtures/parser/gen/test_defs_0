@@ -1,0 +1,5 @@
+--INPUT
+def self.foo; end
+--AST
+s(:defs,
+  s(:self), "foo", nil, nil)

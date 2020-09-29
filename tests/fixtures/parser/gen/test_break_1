@@ -1,0 +1,5 @@
+--INPUT
+break foo
+--AST
+s(:break,
+  s(:lvar, "foo"))

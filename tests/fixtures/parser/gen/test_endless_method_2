@@ -1,0 +1,7 @@
+--INPUT
+def obj.foo() = 42
+--AST
+s(:defs,
+  s(:send, nil, "obj"), "foo",
+  s(:args),
+  s(:int, "42"))

@@ -1,0 +1,4 @@
+--INPUT
+super()
+--AST
+s(:super)

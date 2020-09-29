@@ -1,0 +1,4 @@
+--INPUT
+?a
+--AST
+s(:str, "a")

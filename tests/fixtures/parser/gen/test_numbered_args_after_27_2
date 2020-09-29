@@ -1,0 +1,8 @@
+--INPUT
+-> { _1 + _9}
+--AST
+s(:numblock,
+  s(:lambda), 9,
+  s(:send,
+    s(:lvar, "_1"), "+",
+    s(:lvar, "_9")))

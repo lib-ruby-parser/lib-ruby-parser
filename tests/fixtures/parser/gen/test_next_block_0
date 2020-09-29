@@ -1,0 +1,7 @@
+--INPUT
+next fun foo do end
+--AST
+s(:next,
+  s(:block,
+    s(:send, nil, "fun",
+      s(:lvar, "foo")), nil, nil))

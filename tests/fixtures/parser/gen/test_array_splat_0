@@ -1,0 +1,8 @@
+--INPUT
+[1, *foo, 2]
+--AST
+s(:array,
+  s(:int, "1"),
+  s(:splat,
+    s(:lvar, "foo")),
+  s(:int, "2"))

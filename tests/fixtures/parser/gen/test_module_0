@@ -1,0 +1,5 @@
+--INPUT
+module Foo; end
+--AST
+s(:module,
+  s(:const, nil, "Foo"), nil)

@@ -1,0 +1,9 @@
+--INPUT
+def a b:
+return
+end
+--AST
+s(:def, "a",
+  s(:args,
+    s(:kwarg, "b")),
+  s(:return))

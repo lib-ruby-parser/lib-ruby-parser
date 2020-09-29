@@ -1,0 +1,10 @@
+--INPUT
+def f o=1, *r, p, &b; end
+--AST
+s(:def, "f",
+  s(:args,
+    s(:optarg, "o",
+      s(:int, "1")),
+    s(:restarg, "r"),
+    s(:arg, "p"),
+    s(:blockarg, "b")), nil)

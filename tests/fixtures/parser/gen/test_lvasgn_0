@@ -1,0 +1,7 @@
+--INPUT
+var = 10; var
+--AST
+s(:begin,
+  s(:lvasgn, "var",
+    s(:int, "10")),
+  s(:lvar, "var"))

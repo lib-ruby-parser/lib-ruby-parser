@@ -1,0 +1,9 @@
+--INPUT
+{a: if true then 42 end}
+--AST
+s(:hash,
+  s(:pair,
+    s(:sym, "a"),
+    s(:if,
+      s(:true),
+      s(:int, "42"), nil)))

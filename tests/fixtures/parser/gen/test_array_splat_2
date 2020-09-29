@@ -1,0 +1,6 @@
+--INPUT
+[*foo]
+--AST
+s(:array,
+  s(:splat,
+    s(:lvar, "foo")))

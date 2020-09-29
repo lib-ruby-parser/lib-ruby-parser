@@ -1,0 +1,4 @@
+--INPUT
+$+ |= m foo # error: cannot assign to a back-reference variable
+--AST
+

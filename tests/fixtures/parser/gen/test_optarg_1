@@ -1,0 +1,9 @@
+--INPUT
+def f(foo=1, bar=2); end
+--AST
+s(:def, "f",
+  s(:args,
+    s(:optarg, "foo",
+      s(:int, "1")),
+    s(:optarg, "bar",
+      s(:int, "2"))), nil)

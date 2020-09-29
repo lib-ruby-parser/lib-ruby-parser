@@ -1,0 +1,9 @@
+--INPUT
+meth do; foo; rescue; bar; end
+--AST
+s(:block,
+  s(:send, nil, "meth"), nil,
+  s(:rescue,
+    s(:lvar, "foo"),
+    s(:resbody, nil, nil,
+      s(:lvar, "bar")), nil))

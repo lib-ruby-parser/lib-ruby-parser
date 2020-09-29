@@ -1,0 +1,9 @@
+--INPUT
+"#{-> foo {}}"
+--AST
+s(:dstr,
+  s(:begin,
+    s(:block,
+      s(:lambda),
+      s(:args,
+        s(:arg, "foo")), nil)))

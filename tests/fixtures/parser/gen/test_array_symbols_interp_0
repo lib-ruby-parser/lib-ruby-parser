@@ -1,0 +1,8 @@
+--INPUT
+%I[foo #{bar}]
+--AST
+s(:array,
+  s(:sym, "foo"),
+  s(:dsym,
+    s(:begin,
+      s(:lvar, "bar"))))

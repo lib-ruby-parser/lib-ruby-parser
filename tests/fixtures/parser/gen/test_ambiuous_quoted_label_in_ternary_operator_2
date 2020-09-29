@@ -1,0 +1,4 @@
+--INPUT
+a ? b ~ '': nil # error: unexpected token tTILDE
+--AST
+

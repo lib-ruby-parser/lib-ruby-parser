@@ -1,0 +1,10 @@
+--INPUT
+13.divmod(5) => a,b
+--AST
+s(:masgn,
+  s(:mlhs,
+    s(:lvasgn, "a"),
+    s(:lvasgn, "b")),
+  s(:send,
+    s(:int, "13"), "divmod",
+    s(:int, "5")))

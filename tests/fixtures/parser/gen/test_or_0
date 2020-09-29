@@ -1,0 +1,6 @@
+--INPUT
+foo or bar
+--AST
+s(:or,
+  s(:lvar, "foo"),
+  s(:lvar, "bar"))

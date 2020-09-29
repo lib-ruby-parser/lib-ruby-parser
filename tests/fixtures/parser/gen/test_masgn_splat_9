@@ -1,0 +1,9 @@
+--INPUT
+*, c, d = bar
+--AST
+s(:masgn,
+  s(:mlhs,
+    s(:splat),
+    s(:lvasgn, "c"),
+    s(:lvasgn, "d")),
+  s(:lvar, "bar"))

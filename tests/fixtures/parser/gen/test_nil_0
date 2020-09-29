@@ -1,0 +1,4 @@
+--INPUT
+nil
+--AST
+s(:nil)

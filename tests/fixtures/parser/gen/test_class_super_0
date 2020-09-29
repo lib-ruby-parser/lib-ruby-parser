@@ -1,0 +1,6 @@
+--INPUT
+class Foo < Bar; end
+--AST
+s(:class,
+  s(:const, nil, "Foo"),
+  s(:const, nil, "Bar"), nil)

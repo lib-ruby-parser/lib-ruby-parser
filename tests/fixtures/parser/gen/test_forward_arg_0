@@ -1,0 +1,8 @@
+--INPUT
+def foo(...); bar(...); end
+--AST
+s(:def, "foo",
+  s(:args,
+    s(:forward_arg)),
+  s(:send, nil, "bar",
+    s(:forwarded_args)))

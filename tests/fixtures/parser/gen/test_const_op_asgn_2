@@ -1,0 +1,7 @@
+--INPUT
+B::A += 1
+--AST
+s(:op_asgn,
+  s(:casgn,
+    s(:const, nil, "B"), "A"), "+",
+  s(:int, "1"))

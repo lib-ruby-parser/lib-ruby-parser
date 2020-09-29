@@ -1,0 +1,5 @@
+--INPUT
+super do end
+--AST
+s(:block,
+  s(:zsuper), nil, nil)

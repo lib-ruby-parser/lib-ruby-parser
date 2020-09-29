@@ -1,0 +1,7 @@
+--INPUT
+def f a, &b; end
+--AST
+s(:def, "f",
+  s(:args,
+    s(:arg, "a"),
+    s(:blockarg, "b")), nil)

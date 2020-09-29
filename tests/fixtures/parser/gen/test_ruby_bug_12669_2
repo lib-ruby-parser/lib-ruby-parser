@@ -1,0 +1,8 @@
+--INPUT
+a = b += raise :x
+--AST
+s(:lvasgn, "a",
+  s(:op_asgn,
+    s(:lvasgn, "b"), "+",
+    s(:send, nil, "raise",
+      s(:sym, "x"))))

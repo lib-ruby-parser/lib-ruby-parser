@@ -1,0 +1,4 @@
+--INPUT
+nil = foo # error: cannot assign to a keyword
+--AST
+

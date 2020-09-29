@@ -1,0 +1,8 @@
+--INPUT
+"foo#{bar}baz"
+--AST
+s(:dstr,
+  s(:str, "foo"),
+  s(:begin,
+    s(:lvar, "bar")),
+  s(:str, "baz"))

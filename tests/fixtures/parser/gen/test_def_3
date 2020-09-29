@@ -1,0 +1,4 @@
+--INPUT
+def until; end
+--AST
+s(:def, "until", nil, nil)

@@ -1,0 +1,8 @@
+--INPUT
+def x; self::A ||= 1; end
+--AST
+s(:def, "x", nil,
+  s(:or_asgn,
+    s(:casgn,
+      s(:self), "A"),
+    s(:int, "1")))

@@ -1,0 +1,11 @@
+--INPUT
+foo || (a, b = bar)
+--AST
+s(:or,
+  s(:lvar, "foo"),
+  s(:begin,
+    s(:masgn,
+      s(:mlhs,
+        s(:lvasgn, "a"),
+        s(:lvasgn, "b")),
+      s(:lvar, "bar"))))

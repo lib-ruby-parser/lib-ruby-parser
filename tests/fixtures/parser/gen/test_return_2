@@ -1,0 +1,5 @@
+--INPUT
+return()
+--AST
+s(:return,
+  s(:begin))

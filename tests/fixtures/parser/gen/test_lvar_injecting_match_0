@@ -1,0 +1,10 @@
+--INPUT
+/(?<match>bar)/ =~ 'bar'; match
+--AST
+s(:begin,
+  s(:match_with_lvasgn,
+    s(:regexp,
+      s(:str, "(?<match>bar)"),
+      s(:regopt, "")),
+    s(:str, "bar")),
+  s(:lvar, "match"))

@@ -1,0 +1,9 @@
+--INPUT
+a @b do |c|;end
+--AST
+s(:block,
+  s(:send, nil, "a",
+    s(:ivar, "@b")),
+  s(:args,
+    s(:procarg0,
+      s(:arg, "c"))), nil)

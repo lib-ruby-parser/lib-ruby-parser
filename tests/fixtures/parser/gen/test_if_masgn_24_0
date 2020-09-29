@@ -1,0 +1,10 @@
+--INPUT
+if (a, b = foo); end
+--AST
+s(:if,
+  s(:begin,
+    s(:masgn,
+      s(:mlhs,
+        s(:lvasgn, "a"),
+        s(:lvasgn, "b")),
+      s(:lvar, "foo"))), nil, nil)

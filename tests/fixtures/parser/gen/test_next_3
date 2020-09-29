@@ -1,0 +1,4 @@
+--INPUT
+next
+--AST
+s(:next)

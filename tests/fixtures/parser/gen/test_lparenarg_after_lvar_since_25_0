@@ -1,0 +1,7 @@
+--INPUT
+meth (-1.3).abs
+--AST
+s(:send, nil, "meth",
+  s(:send,
+    s(:begin,
+      s(:float, "-1.3")), "abs"))

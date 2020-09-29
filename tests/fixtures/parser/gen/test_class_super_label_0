@@ -1,0 +1,7 @@
+--INPUT
+class Foo < a:b; end
+--AST
+s(:class,
+  s(:const, nil, "Foo"),
+  s(:send, nil, "a",
+    s(:sym, "b")), nil)

@@ -12,7 +12,7 @@ impl Lexer {
         let mut c: LexChar;
         let mut space = false;
 
-        println!("func = {}, pcur = {}, ptok = {}", func, self.p.lex.pcur, self.p.lex.ptok);
+        if self.debug { println!("func = {}, pcur = {}, ptok = {}", func, self.p.lex.pcur, self.p.lex.ptok); }
 
         if (func & STR_FUNC_TERM) != 0 {
             if (func & STR_FUNC_QWORDS) != 0 { self.nextc(); } /* delayed term */
@@ -265,7 +265,7 @@ impl Lexer {
         c
     }
     pub fn set_yylval_str(&mut self, value: &str) {
-        println!("set_yylval_str {}", value);
+        if self.debug { println!("set_yylval_str {}", value); }
         self.p.lval = Some(value.into());
     }
 

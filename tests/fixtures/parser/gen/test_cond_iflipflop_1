@@ -1,0 +1,8 @@
+--INPUT
+!(foo..bar)
+--AST
+s(:send,
+  s(:begin,
+    s(:iflipflop,
+      s(:lvar, "foo"),
+      s(:lvar, "bar"))), "!")

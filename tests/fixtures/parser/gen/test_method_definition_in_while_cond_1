@@ -1,0 +1,9 @@
+--INPUT
+while def self.foo; tap do end; end; break; end
+--AST
+s(:while,
+  s(:defs,
+    s(:self), "foo", nil,
+    s(:block,
+      s(:send, nil, "tap"), nil, nil)),
+  s(:break))

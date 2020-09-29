@@ -1,0 +1,6 @@
+--INPUT
+class A; _1; end
+--AST
+s(:class,
+  s(:const, nil, "A"), nil,
+  s(:send, nil, "_1"))

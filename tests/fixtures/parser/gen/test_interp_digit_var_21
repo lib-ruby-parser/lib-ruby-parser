@@ -1,0 +1,5 @@
+--INPUT
+ %I[#@@1] 
+--AST
+s(:array,
+  s(:sym, "\#@@1"))

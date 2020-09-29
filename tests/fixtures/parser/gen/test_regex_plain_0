@@ -1,0 +1,6 @@
+--INPUT
+/source/im
+--AST
+s(:regexp,
+  s(:str, "source"),
+  s(:regopt, "im"))

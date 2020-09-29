@@ -1,0 +1,4 @@
+--INPUT
+_1
+--AST
+s(:send, nil, "_1")

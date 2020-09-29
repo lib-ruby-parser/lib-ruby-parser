@@ -1,0 +1,7 @@
+--INPUT
+f{ |*s| }
+--AST
+s(:block,
+  s(:send, nil, "f"),
+  s(:args,
+    s(:restarg, "s")), nil)

@@ -1,0 +1,10 @@
+--INPUT
+m def x(); end; 1.tap do end
+--AST
+s(:begin,
+  s(:send, nil, "m",
+    s(:def, "x",
+      s(:args), nil)),
+  s(:block,
+    s(:send,
+      s(:int, "1"), "tap"), nil, nil))

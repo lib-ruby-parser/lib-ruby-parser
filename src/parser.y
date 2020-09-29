@@ -11,7 +11,7 @@
     result: Option<Node>,
     builder: Builder,
     current_arg_stack: CurrentArgStack,
-    static_env: StaticEnvironment,
+    pub static_env: StaticEnvironment,
 }
 
 %code use {
@@ -349,7 +349,7 @@
                   compstmt
                   opt_ensure
                     {
-                        println!("YYSTACK: {:#?}", yystack.value_stack);
+                        // println!("YYSTACK: {:#?}", yystack.value_stack);
 
                         let compound_stmt = $<MaybeNode>1;
                         let rescue_bodies = $<NodeList>2;
@@ -4571,13 +4571,13 @@ keyword_variable: kNIL
                     }
                 | tSTRING_BEG string_contents tLABEL_END arg_value
                     {
-                        println!("self.builder.pair_quoted({:#?} {:#?} {:#?} {:#?})", $<Token>1, $<TokenList>2, $<Token>3, $<Node>4);
+                        // println!("self.builder.pair_quoted({:#?} {:#?} {:#?} {:#?})", $<Token>1, $<TokenList>2, $<Token>3, $<Node>4);
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | tDSTAR arg_value
                     {
-                        println!("self.builder.kwsplat({:#?} {:#?})", $<RAW>1, $<RAW>2);
+                        // println!("self.builder.kwsplat({:#?} {:#?})", $<RAW>1, $<RAW>2);
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -4852,11 +4852,11 @@ impl Parser {
 
 impl Lexer {
     fn report_syntax_error(&self, ctx: &Context) {
-        eprintln!("{:#?}", ctx)
+        if self.debug { eprintln!("{:#?}", ctx) }
     }
 
     fn yyerror(&mut self, loc: &Loc, msg: &str) {
-        eprintln!("{:#?} {:#?}", loc, msg)
+        if self.debug { eprintln!("{:#?} {:#?}", loc, msg) }
     }
 }
 
@@ -4887,5 +4887,10 @@ impl Parser {
             static_env: static_env,
             yylexer: lexer,
         }
+    }
+
+    pub fn set_debug(&mut self, debug: bool) {
+        self.yydebug = if debug { 1 } else { 0 };
+        self.yylexer.debug = debug;
     }
 }

@@ -1,0 +1,4 @@
+--INPUT
+42.1r
+--AST
+s(:rational, "42.1r")

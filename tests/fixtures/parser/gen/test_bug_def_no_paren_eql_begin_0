@@ -1,0 +1,7 @@
+--INPUT
+def foo
+=begin
+=end
+end
+--AST
+s(:def, "foo", nil, nil)

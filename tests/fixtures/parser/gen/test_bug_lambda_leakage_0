@@ -1,0 +1,9 @@
+--INPUT
+->(scope) {}; scope
+--AST
+s(:begin,
+  s(:block,
+    s(:lambda),
+    s(:args,
+      s(:arg, "scope")), nil),
+  s(:send, nil, "scope"))

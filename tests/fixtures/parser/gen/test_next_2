@@ -1,0 +1,5 @@
+--INPUT
+next()
+--AST
+s(:next,
+  s(:begin))

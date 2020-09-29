@@ -1,0 +1,5 @@
+--INPUT
+-> do end
+--AST
+s(:block,
+  s(:lambda), nil, nil)

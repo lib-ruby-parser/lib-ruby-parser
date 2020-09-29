@@ -1,0 +1,10 @@
+--INPUT
+while class Foo a = tap do end; end; break; end
+--AST
+s(:while,
+  s(:class,
+    s(:const, nil, "Foo"), nil,
+    s(:lvasgn, "a",
+      s(:block,
+        s(:send, nil, "tap"), nil, nil))),
+  s(:break))

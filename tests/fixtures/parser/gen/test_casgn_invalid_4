@@ -1,0 +1,4 @@
+--INPUT
+def self.f; Foo::Bar = 1; end # error: dynamic constant assignment
+--AST
+

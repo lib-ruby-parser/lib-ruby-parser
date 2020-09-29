@@ -1,0 +1,9 @@
+--INPUT
+f{ |*r, p, &b| }
+--AST
+s(:block,
+  s(:send, nil, "f"),
+  s(:args,
+    s(:restarg, "r"),
+    s(:arg, "p"),
+    s(:blockarg, "b")), nil)

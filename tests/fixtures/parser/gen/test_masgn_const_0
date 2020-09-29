@@ -1,0 +1,9 @@
+--INPUT
+self::A, foo = foo
+--AST
+s(:masgn,
+  s(:mlhs,
+    s(:casgn,
+      s(:self), "A"),
+    s(:lvasgn, "foo")),
+  s(:lvar, "foo"))

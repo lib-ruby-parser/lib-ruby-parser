@@ -1,0 +1,6 @@
+--INPUT
+%I{a\
+b}
+--AST
+s(:array,
+  s(:sym, "a\nb"))

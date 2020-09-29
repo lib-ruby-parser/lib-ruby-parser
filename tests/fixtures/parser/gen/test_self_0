@@ -1,0 +1,4 @@
+--INPUT
+self
+--AST
+s(:self)

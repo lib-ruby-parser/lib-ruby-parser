@@ -1,0 +1,8 @@
+--INPUT
+fun(:foo => 1)
+--AST
+s(:send, nil, "fun",
+  s(:hash,
+    s(:pair,
+      s(:sym, "foo"),
+      s(:int, "1"))))

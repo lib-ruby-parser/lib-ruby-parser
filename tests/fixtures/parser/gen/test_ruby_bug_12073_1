@@ -1,0 +1,10 @@
+--INPUT
+def foo raise; raise A::B, ''; end
+--AST
+s(:def, "foo",
+  s(:args,
+    s(:arg, "raise")),
+  s(:send, nil, "raise",
+    s(:const,
+      s(:const, nil, "A"), "B"),
+    s(:str, "")))

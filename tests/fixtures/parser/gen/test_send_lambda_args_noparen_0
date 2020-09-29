@@ -1,0 +1,8 @@
+--INPUT
+-> a: 1 { }
+--AST
+s(:block,
+  s(:lambda),
+  s(:args,
+    s(:kwoptarg, "a",
+      s(:int, "1"))), nil)

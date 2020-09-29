@@ -1,0 +1,4 @@
+--INPUT
+m { || _1 }  # error: ordinary parameter is defined
+--AST
+

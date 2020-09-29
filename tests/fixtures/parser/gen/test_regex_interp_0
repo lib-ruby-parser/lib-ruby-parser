@@ -1,0 +1,9 @@
+--INPUT
+/foo#{bar}baz/
+--AST
+s(:regexp,
+  s(:str, "foo"),
+  s(:begin,
+    s(:lvar, "bar")),
+  s(:str, "baz"),
+  s(:regopt, ""))

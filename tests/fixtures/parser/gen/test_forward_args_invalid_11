@@ -1,0 +1,4 @@
+--INPUT
+def foo(...); [...]; end # error: unexpected token tRBRACK
+--AST
+

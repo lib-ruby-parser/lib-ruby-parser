@@ -1,0 +1,8 @@
+--INPUT
+begin; meth; rescue; foo; end
+--AST
+s(:kwbegin,
+  s(:rescue,
+    s(:send, nil, "meth"),
+    s(:resbody, nil, nil,
+      s(:lvar, "foo")), nil))

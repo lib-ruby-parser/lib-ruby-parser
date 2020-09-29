@@ -1,0 +1,10 @@
+--INPUT
+def self.m() = 1 rescue 2
+--AST
+s(:defs,
+  s(:self), "m",
+  s(:args),
+  s(:rescue,
+    s(:int, "1"),
+    s(:resbody, nil, nil,
+      s(:int, "2")), nil))

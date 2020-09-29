@@ -1,0 +1,5 @@
+--INPUT
+def String::foo; end
+--AST
+s(:defs,
+  s(:const, nil, "String"), "foo", nil, nil)

@@ -1,0 +1,6 @@
+--INPUT
+alias $a $+
+--AST
+s(:alias,
+  s(:gvar, "$a"),
+  s(:back_ref, "$+"))

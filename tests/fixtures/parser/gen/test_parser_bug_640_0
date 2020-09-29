@@ -1,0 +1,7 @@
+--INPUT
+<<~FOO
+  baz\
+  qux
+FOO
+--AST
+s(:str, "bazqux\n")

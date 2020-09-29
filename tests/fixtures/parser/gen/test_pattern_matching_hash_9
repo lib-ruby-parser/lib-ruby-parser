@@ -1,0 +1,13 @@
+--INPUT
+case foo; in a: 1, _a:, ** then true; end
+--AST
+s(:case_match,
+  s(:lvar, "foo"),
+  s(:in_pattern,
+    s(:hash_pattern,
+      s(:pair,
+        s(:sym, "a"),
+        s(:int, "1")),
+      s(:match_var, "_a"),
+      s(:match_rest)), nil,
+    s(:true)), nil)

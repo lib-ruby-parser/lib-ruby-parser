@@ -146,4 +146,352 @@ impl Node {
             Self::Or { loc, .. } => &loc.expression,
         }
     }
+
+    pub fn inspect(&self, indent: usize) -> String {
+        let indented = "  ".repeat(indent);
+        let mut sexp = format!("{}s(:{}", indented, self.str_type());
+
+        for child in self.inspected_children(indent) {
+            sexp.push_str(&child);
+        }
+
+        sexp.push_str(")");
+
+        sexp
+    }
+
+    fn str_type(&self) -> &'static str {
+        match self {
+            Node::Begin { .. } => "begin",
+            Node::Int { .. } => "int",
+            Node::Float { .. } => "float",
+            Node::Rational { .. } => "rational",
+            Node::Complex { .. } => "complex",
+            Node::Send { .. } => "send",
+            Node::CSend { .. } => "csend",
+            Node::Nil { .. } => "nil",
+            Node::True { .. } => "true",
+            Node::False { .. } => "false",
+            Node::Self_ { .. } => "self",
+            Node::__FILE__ { .. } => "__FILE__",
+            Node::__LINE__ { .. } => "__LINE__",
+            Node::__ENCODING__ { .. } => "__ENCODING__",
+            Node::Preexe { .. } => "preexe",
+            Node::Postexe { .. } => "postexe",
+            Node::Lvar { .. } => "lvar",
+            Node::Rescue { .. } => "rescue",
+            Node::Ensure { .. } => "ensure",
+            Node::KwBegin { .. } => "kwbegin",
+            Node::Args { .. } => "args",
+            Node::Def { .. } => "def",
+            Node::Arg { .. } => "arg",
+            Node::Sym { .. } => "sym",
+            Node::Alias { .. } => "alias",
+            Node::Ivar { .. } => "ivar",
+            Node::Gvar { .. } => "gvar",
+            Node::Cvar { .. } => "cvar",
+            Node::BackRef { .. } => "backref",
+            Node::NthRef { .. } => "nthref",
+            Node::Lvasgn { .. } => "lvasgn",
+            Node::Cvasgn { .. } => "cvasgn",
+            Node::Ivasgn { .. } => "ivasgn",
+            Node::Gvasgn { .. } => "gvasgn",
+            Node::Const { .. } => "const",
+            Node::Casgn { .. } => "casgn",
+            Node::Index { .. } => "index",
+            Node::IndexAsgn { .. } => "index_asgn",
+            Node::Undef { .. } => "undef",
+            Node::Pair { .. } => "pair",
+            Node::Hash { .. } => "hash",
+            Node::Array { .. } => "array",
+            Node::Str { .. } => "str",
+            Node::Dstr { .. } => "dstr",
+            Node::If { .. } => "if",
+            Node::WhilePost { .. } => "while_post",
+            Node::While { .. } => "while",
+            Node::UntilPost { .. } => "until_post",
+            Node::Until { .. } => "until",
+            Node::RescueBody { .. } => "resbody",
+            Node::Mlhs { .. } => "mlhs",
+            Node::Splat { .. } => "splat",
+            Node::Masgn { .. } => "masgn",
+            Node::Cbase { .. } => "cbase",
+            Node::Break { .. } => "break",
+            Node::Defined { .. } => "defined",
+            Node::Next { .. } => "next",
+            Node::Redo { .. } => "redo",
+            Node::Retry { .. } => "retry",
+            Node::Return { .. } => "return",
+            Node::Super { .. } => "super",
+            Node::Yield { .. } => "yield",
+            Node::Zsuper { .. } => "zsuper",
+            Node::AndAsgn { .. } => "and_asgn",
+            Node::OrAsgn { .. } => "or_asgn",
+            Node::OpAsgn { .. } => "op_asgn",
+            Node::And { .. } => "and",
+            Node::Or { .. } => "or",
+        }
+    }
+
+    fn inspected_children(&self, indent: usize) -> Vec<String> {
+        let mut result = InspectVec::new(indent);
+
+        match self {
+            Node::Begin { statements, .. } => {
+                result.push_nodes(statements);
+            },
+            Node::Int { value, .. }
+            | Node::Float { value, .. }
+            | Node::Rational { value, .. }
+            | Node::Complex { value, .. } => {
+                result.push_str(value);
+            }
+            Node::Send { receiver, operator, args, .. }
+            | Node::CSend { receiver, operator, args, .. } => {
+                if let Some(receiver) = receiver {
+                    result.push_node(&receiver);
+                } else {
+                    result.push_nil();
+                }
+
+                result.push_str(operator);
+                result.push_nodes(args);
+            }
+            Node::Nil { .. }
+            | Node::True { .. }
+            | Node::False { .. }
+            | Node::Self_ { .. }
+            | Node::__FILE__ { .. }
+            | Node::__LINE__ { .. }
+            | Node::__ENCODING__ { .. } => {}
+            Node::Preexe { body, .. }
+            | Node::Postexe { body, .. } => {
+                if let Some(body) = body {
+                    result.push_node(body);
+                }
+            }
+            Node::Lvar { name, .. } => {
+                result.push_str(name);
+            }
+            Node::Rescue { body, rescue_bodies, else_, .. } => {
+                if let Some(body) = body {
+                    result.push_node(body);
+                } else {
+                    result.push_nil();
+                }
+                result.push_nodes(rescue_bodies);
+                if let Some(else_) = else_ {
+                    result.push_node(else_);
+                } else {
+                    result.push_nil();
+                }
+            }
+            Node::Ensure { body, ensure, .. } => {
+                if let Some(body) = body {
+                    result.push_node(body)
+                } else {
+                    result.push_nil()
+                }
+                result.push_node(ensure)
+            }
+            Node::KwBegin { statements, .. } => {
+                result.push_nodes(statements)
+            }
+            Node::Args { args, .. } => {
+                result.push_nodes(args)
+            }
+            Node::Def { name, args, body, .. } => {
+                result.push_str(name);
+                if let Some(args) = args {
+                    result.push_node(args)
+                } else {
+                    result.push_nil()
+                }
+                if let Some(body) = body {
+                    result.push_node(body)
+                } else {
+                    result.push_nil()
+                }
+            }
+            Node::Arg { name, .. } => {
+                result.push_str(name)
+            }
+            Node::Sym { name, .. } => {
+                result.push_str(name)
+            }
+            Node::Alias { to, from, .. } => {
+                result.push_node(to);
+                result.push_node(from)
+            }
+            Node::Ivar { name, .. }
+            | Node::Gvar { name, .. }
+            | Node::Cvar { name, .. }
+            | Node::BackRef { name, .. }
+            | Node::NthRef { name, .. } => {
+                result.push_str(name)
+            }
+            Node::Lvasgn { name, rhs, .. }
+            | Node::Cvasgn { name, rhs, .. }
+            | Node::Ivasgn { name, rhs, .. }
+            | Node::Gvasgn { name, rhs, .. } => {
+                result.push_str(name);
+                if let Some(rhs) = rhs {
+                    result.push_node(rhs)
+                }
+            }
+            Node::Const { scope, name, .. } => {
+                if let Some(scope) = scope {
+                    result.push_node(scope)
+                } else {
+                    result.push_nil()
+                }
+                result.push_str(name)
+            }
+            Node::Casgn { scope, name, rhs, .. } => {
+                if let Some(scope) = scope {
+                    result.push_node(scope)
+                } else {
+                    result.push_nil()
+                }
+                result.push_str(name);
+                if let Some(rhs) = rhs {
+                    result.push_node(rhs)
+                }
+            }
+            Node::Index { receiver, indexes, .. } => {
+                result.push_node(receiver);
+                result.push_nodes(indexes);
+            }
+            Node::IndexAsgn { receiver, indexes, rhs, .. } => {
+                result.push_node(receiver);
+                result.push_nodes(indexes);
+                if let Some(rhs) = rhs {
+                    result.push_node(rhs)
+                }
+            }
+            Node::Undef { names, .. } => {
+                result.push_nodes(names)
+            }
+            Node::Pair { key, value, .. } => {
+                result.push_node(key);
+                result.push_node(value)
+            }
+            Node::Hash { pairs, .. } => {
+                result.push_nodes(pairs)
+            }
+            Node::Array { elements, .. } => {
+                result.push_nodes(elements)
+            }
+            Node::Str { value, .. } => {
+                result.push_str(value)
+            }
+            Node::Dstr { children, .. } => {
+                result.push_nodes(children)
+            }
+            Node::If { cond, if_true, if_false, .. } => {
+                result.push_node(cond);
+                if let Some(if_true) = if_true {
+                    result.push_node(if_true)
+                } else {
+                    result.push_nil()
+                }
+                if let Some(if_false) = if_false {
+                    result.push_node(if_false)
+                } else {
+                    result.push_nil()
+                }
+            }
+            Node::WhilePost { cond, body, .. }
+            | Node::While { cond, body, .. }
+            | Node::UntilPost { cond, body, .. }
+            | Node::Until { cond, body, .. } => {
+                result.push_node(cond);
+                result.push_node(body)
+            }
+            Node::RescueBody { exc_list, exc_var, stmt, .. } => {
+                if exc_list.is_empty() {
+                    result.push_nil();
+                } else {
+                    result.push_nodes(exc_list);
+                }
+                if let Some(exc_var) = exc_var {
+                    result.push_node(exc_var)
+                } else {
+                    result.push_nil()
+                }
+                result.push_node(stmt)
+            }
+            Node::Mlhs { items, .. } => {
+                result.push_nodes(items)
+            }
+            Node::Splat { arg, .. } => {
+                if let Some(arg) = arg {
+                    result.push_node(arg)
+                }
+            }
+            Node::Masgn { lhs, rhs, .. } => {
+                result.push_node(lhs);
+                result.push_node(rhs);
+            }
+            Node::Cbase { .. } => {}
+            Node::Break { args, .. }
+            | Node::Defined { args, .. }
+            | Node::Next { args, .. }
+            | Node::Redo { args, .. }
+            | Node::Retry { args, .. }
+            | Node::Return { args, .. }
+            | Node::Super { args, .. }
+            | Node::Yield { args, .. }
+            | Node::Zsuper { args, .. } => {
+                result.push_nodes(args)
+            }
+            Node::AndAsgn { lhs, rhs, .. }
+            | Node::OrAsgn { lhs, rhs, .. }
+            | Node::And { lhs, rhs, .. }
+            | Node::Or { lhs, rhs, .. } => {
+                result.push_node(lhs);
+                result.push_node(rhs);
+            }
+            Node::OpAsgn { lhs, rhs, operator, .. } => {
+                result.push_node(lhs);
+                result.push_str(operator);
+                result.push_node(rhs);
+            }
+        }
+
+        result.strings()
+    }
+}
+
+struct InspectVec {
+    indent: usize,
+    strings: Vec<String>
+}
+
+impl InspectVec {
+    pub fn new(indent: usize) -> Self {
+        Self { indent, strings: vec![] }
+    }
+
+    pub fn push_str(&mut self, string: &str) {
+        self.strings.push(format!(", {:?}", string));
+    }
+
+    pub fn push_nil(&mut self) {
+        self.strings.push(", nil".to_owned());
+    }
+
+    pub fn push_node(&mut self, node: &Node) {
+        self.strings.push(format!(",\n{}", node.inspect(self.indent + 1)))
+    }
+
+    pub fn push_nodes(&mut self, nodes: &Vec<Node>) {
+        for node in nodes {
+            self.push_node(node)
+        }
+    }
+
+    pub fn strings(self) -> Vec<String> {
+        self.strings
+    }
 }

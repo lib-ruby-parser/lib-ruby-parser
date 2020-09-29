@@ -1,0 +1,4 @@
+--INPUT
+%I"x .\xc3." # error: literal contains escape sequences incompatible with UTF-8
+--AST
+

@@ -1,0 +1,6 @@
+--INPUT
+alias $a $b
+--AST
+s(:alias,
+  s(:gvar, "$a"),
+  s(:gvar, "$b"))

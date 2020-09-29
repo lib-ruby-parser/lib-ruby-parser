@@ -1,0 +1,8 @@
+--INPUT
+a #
+#
+&.foo
+
+--AST
+s(:csend,
+  s(:send, nil, "a"), "foo")

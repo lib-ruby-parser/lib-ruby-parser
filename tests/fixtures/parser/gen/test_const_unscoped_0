@@ -1,0 +1,4 @@
+--INPUT
+Foo
+--AST
+s(:const, nil, "Foo")

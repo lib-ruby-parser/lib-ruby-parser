@@ -117,6 +117,7 @@ pub struct ParserState {
 
 #[derive(Debug, Clone, Default)]
 pub struct Lexer {
+    pub debug: bool,
     pub p: ParserState,
 }
 
@@ -152,7 +153,7 @@ impl Lexer {
         if !line.is_empty() {
             lines.push(line);
         }
-        println!("lines = {:#?}", lines);
+        if self.debug { println!("lines = {:#?}", lines); }
 
         self.p.lex.input = chars;
         self.p.lex.lines = lines;
@@ -200,7 +201,7 @@ impl Lexer {
         }
 
         let token = (token_type, token_value, Loc { begin, end });
-        println!("yylex {:?}", token);
+        if self.debug { println!("yylex {:?}", token); }
         token
     }
 
@@ -972,7 +973,7 @@ impl Lexer {
     }
 
     pub fn set_ptok(&mut self, ptok: usize) {
-        println!("set_ptok({})", ptok);
+        if self.debug { println!("set_ptok({})", ptok); }
         self.p.lex.ptok = ptok;
     }
 
@@ -1055,7 +1056,7 @@ impl Lexer {
     pub fn nextc(&mut self) -> LexChar {
         if self.p.lex.pcur == self.p.lex.pend || self.p.eofp || self.p.lex.nextline_idx.is_some() {
             let n = self.nextline();
-            println!("nextline = {:?}", n);
+            if self.debug { println!("nextline = {:?}", n); }
             if n.is_err() {
                 return LexChar::EOF;
             }
@@ -1065,7 +1066,7 @@ impl Lexer {
         if c == '\r' {
             c = self.parser_cr(c);
         }
-        println!("nextc = {:?}", c);
+        if self.debug { println!("nextc = {:?}", c); }
         return LexChar::Some(c);
     }
 
@@ -1086,7 +1087,7 @@ impl Lexer {
     }
 
     pub fn warn(&self, message: &str) {
-        println!("WARNING: {}", message)
+        if self.debug { println!("WARNING: {}", message) }
     }
 
     pub fn pushback(&mut self, c: &LexChar) {
@@ -1095,7 +1096,7 @@ impl Lexer {
         if self.p.lex.pcur > self.p.lex.pbeg && self.p.lex.input[self.p.lex.pcur] == '\n' && self.p.lex.input[self.p.lex.pcur - 1] == '\r' {
             self.p.lex.pcur -= 1;
         }
-        println!("pushback({:?}) pcur = {}", c, self.p.lex.pcur);
+        if self.debug { println!("pushback({:?}) pcur = {}", c, self.p.lex.pcur); }
     }
 
     pub fn parser_magic_comment(&self) -> bool { unimplemented!("parser_magic_comment") }
@@ -1122,7 +1123,7 @@ impl Lexer {
     }
 
     pub fn set_yylval_id(&mut self, id: &str) {
-        println!("set_yylval_id({})", id);
+        if self.debug { println!("set_yylval_id({})", id); }
         self.p.lval = Some(id.into());
     }
 
@@ -1163,7 +1164,7 @@ impl Lexer {
     }
 
     pub fn compile_error(&self, message: &str) {
-        println!("Compile error: {}", message)
+        if self.debug { println!("Compile error: {}", message) }
     }
 
     pub fn is_end(&self) -> bool {
@@ -1225,7 +1226,7 @@ impl Lexer {
     }
 
     pub fn yyerror0(&self, message: &str) {
-        println!("yyerror0: {}", message)
+        if self.debug { println!("yyerror0: {}", message) }
     }
 
     // pub fn is_space(&self, _c: &LexChar) -> bool { unimplemented!("is_space") }
@@ -1307,7 +1308,7 @@ impl Lexer {
     }
 
     pub fn set_yylval_literal(&mut self, value: &str) {
-        println!("set_yylval_literal({}) ptok = {}, pcur = {}", value, self.p.lex.ptok, self.p.lex.pcur);
+        if self.debug { println!("set_yylval_literal({}) ptok = {}, pcur = {}", value, self.p.lex.ptok, self.p.lex.pcur); }
         self.p.lval = Some(value.into());
     }
 
@@ -1326,7 +1327,7 @@ impl Lexer {
     }
 
     pub fn set_yyval_name(&mut self, name: &str) {
-        println!("set_yyval_name({})", name);
+        if self.debug { println!("set_yyval_name({})", name); }
         self.p.lval = Some(name.into());
     }
 }

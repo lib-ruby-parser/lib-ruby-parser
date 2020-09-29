@@ -1,0 +1,7 @@
+--INPUT
+fun(foo, *bar)
+--AST
+s(:send, nil, "fun",
+  s(:lvar, "foo"),
+  s(:splat,
+    s(:lvar, "bar")))

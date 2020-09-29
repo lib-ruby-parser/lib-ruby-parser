@@ -1,0 +1,6 @@
+--INPUT
+until foo do meth end
+--AST
+s(:until,
+  s(:lvar, "foo"),
+  s(:send, nil, "meth"))

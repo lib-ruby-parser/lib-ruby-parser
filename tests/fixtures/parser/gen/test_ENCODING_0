@@ -1,0 +1,4 @@
+--INPUT
+__ENCODING__
+--AST
+s(:__ENCODING__)

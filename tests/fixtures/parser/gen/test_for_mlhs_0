@@ -1,0 +1,11 @@
+--INPUT
+for a, b in foo; p a, b; end
+--AST
+s(:for,
+  s(:mlhs,
+    s(:lvasgn, "a"),
+    s(:lvasgn, "b")),
+  s(:lvar, "foo"),
+  s(:send, nil, "p",
+    s(:lvar, "a"),
+    s(:lvar, "b")))
