@@ -1,7 +1,0 @@
---INPUT
-/\//
---TOKENS
-tREGEXP_BEG "/" [0, 1]
-tSTRING_CONTENT "/" [1, 3]
-tSTRING_END "/" [3, 4]
-tREGEXP_OPT "" [4, 4]

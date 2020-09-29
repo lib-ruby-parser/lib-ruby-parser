@@ -52,6 +52,7 @@ class TestLexer
 
       if value.is_a?(String)
         value = value.dup.force_encoding('utf-8')
+        value = value.gsub("'") { "\\'" }
         if value.valid_encoding?
           value = value.inspect
         end
@@ -59,10 +60,6 @@ class TestLexer
         value = "".inspect
       else
         raise "Unknown token value type #{value.inspect}"
-      end
-
-      if [:tSTRING_BEG, :tSTRING_END].include?(name) && value == "\"'\""
-        value = "\"\\'\""
       end
 
       case name
@@ -212,6 +209,30 @@ IGNORE = [
   'test_string_double_escape_C_question',
   'test_string_double_escape_chars',
   'test_string_double_escape_c_question',
+
+  # In regexes REGEXP_END and REGOPT are merged (AST is the same)
+  'test_regexp_escape_other_meta',
+  'test_regexp_escape_chars',
+  'test_regexp_escape_hex',
+  'test_regexp_escape_C_M',
+  'test_regexp_escape_C_M_craaaazy',
+  'test_regexp_nm',
+  'test_regexp_escape_bs',
+  'test_regexp_escape_oct2',
+  'test_regexp_escape_double_backslash',
+  'test_regexp',
+  'test_regexp_escape_oct1',
+  'test_regexp_escape_backslash_slash',
+  'test_regexp_ambiguous',
+  'test_regexp_escape_c_backslash',
+  'test_bug_expr_beg_backspace_nl_0',
+  'test_regexp_escape_hex_one',
+  'test_regexp_escape_C',
+  'test_regexp_escape_M',
+  'test_regexp_escape_oct3',
+  'test_bug_expr_beg_div',
+  'test_regexp_escape_return',
+  'test_bug_expr_arg_slash_2',
 ]
 
 Minitest.after_run do

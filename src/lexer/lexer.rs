@@ -1338,7 +1338,6 @@ impl Lexer {
             | LexChar::Some('9') => {
                 self.tokadd(&LexChar::Some('$'));
                 loop {
-                    println!("c = {:#?}", c);
                     self.tokadd(&c);
                     c = self.nextc();
 

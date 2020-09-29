@@ -4,7 +4,7 @@ f \
 XXX
 
 --TOKENS
-tSTRING_BEG "<<'" [1, 8]
+tSTRING_BEG "<<\\'" [1, 8]
 tSTRING_CONTENT "f \\\n" [9, 13]
 tSTRING_END "XXX" [13, 16]
 tNL "" [8, 9]

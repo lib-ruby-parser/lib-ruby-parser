@@ -1,7 +1,0 @@
---INPUT
-/^[\xd\xa]{2}/on
---TOKENS
-tREGEXP_BEG "/" [0, 1]
-tSTRING_CONTENT "^[\\xd\\xa]{2}" [1, 13]
-tSTRING_END "/" [13, 14]
-tREGEXP_OPT "on" [14, 16]

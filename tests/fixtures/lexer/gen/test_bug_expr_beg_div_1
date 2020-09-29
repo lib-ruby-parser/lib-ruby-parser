@@ -1,9 +1,0 @@
---STATE
-expr_beg
---INPUT
-/ = /
---TOKENS
-tREGEXP_BEG "/" [0, 1]
-tSTRING_CONTENT " = " [1, 4]
-tSTRING_END "/" [4, 5]
-tREGEXP_OPT "" [5, 5]

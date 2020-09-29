@@ -1,8 +1,0 @@
---INPUT
-method /regexp/
---TOKENS
-tIDENTIFIER "method" [0, 6]
-tREGEXP_BEG "/" [7, 8]
-tSTRING_CONTENT "regexp" [8, 14]
-tSTRING_END "/" [14, 15]
-tREGEXP_OPT "" [15, 15]

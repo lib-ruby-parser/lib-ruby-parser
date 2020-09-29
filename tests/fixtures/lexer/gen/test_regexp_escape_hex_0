@@ -1,7 +1,0 @@
---INPUT
-/regex\x61xp/
---TOKENS
-tREGEXP_BEG "/" [0, 1]
-tSTRING_CONTENT "regex\\x61xp" [1, 12]
-tSTRING_END "/" [12, 13]
-tREGEXP_OPT "" [13, 13]

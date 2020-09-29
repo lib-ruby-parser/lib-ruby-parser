@@ -1,7 +1,0 @@
---INPUT
-/regexp/
---TOKENS
-tREGEXP_BEG "/" [0, 1]
-tSTRING_CONTENT "regexp" [1, 7]
-tSTRING_END "/" [7, 8]
-tREGEXP_OPT "" [8, 8]

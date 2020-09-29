@@ -3732,11 +3732,15 @@ opt_block_args_tail:
 
           regexp: tREGEXP_BEG regexp_contents tREGEXP_END
                     {
-                        // opts   = @builder.regexp_options(val[3])
-                        // result = @builder.regexp_compose(val[0], val[1], val[2], opts)
-                        // TODO: handle regexp options
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        let opts = self.builder.regexp_options($<Borrow:Token>3);
+                        $$ = Value::Node(
+                            self.builder.regexp_compose(
+                                $<Token>1,
+                                $<NodeList>2,
+                                $<Token>3,
+                                opts
+                            )
+                        );
                     }
                 ;
 

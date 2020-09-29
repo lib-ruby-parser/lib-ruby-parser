@@ -1,7 +1,0 @@
---INPUT
-/\.\$\*\+\.\?\|/
---TOKENS
-tREGEXP_BEG "/" [0, 1]
-tSTRING_CONTENT "\\.\\$\\*\\+\\.\\?\\|" [1, 15]
-tSTRING_END "/" [15, 16]
-tREGEXP_OPT "" [16, 16]

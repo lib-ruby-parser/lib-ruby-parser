@@ -92,8 +92,8 @@ impl Lexer {
     pub fn parser_string_term(&mut self, func: usize) -> i32 {
         self.p.lex.strterm = None;
         if (func & STR_FUNC_REGEXP) != 0 {
-            let regx_options = self.regx_options();
-            self.set_yylval_num(&regx_options);
+            let flags = self.regx_options();
+            self.set_yylval_num(&flags);
             self.set_lex_state(EXPR_END);
             return Self::tREGEXP_END;
         }
@@ -106,8 +106,40 @@ impl Lexer {
         return Self::tSTRING_END;
     }
 
-    pub fn set_yylval_num(&mut self, _num: &str) { unimplemented!("set_yylval_num") }
-    pub fn regx_options(&mut self) -> String { unimplemented!("regx_options") }
+    pub fn set_yylval_num(&mut self, flags: &str) {
+        if self.debug { println!("set_yylval_str {}", flags); }
+        self.p.lval = Some(flags.into());
+    }
+
+    pub fn regx_options(&mut self) -> String {
+        let mut c: LexChar;
+        let mut result = String::from("");
+
+        self.newtok();
+        loop {
+            c = self.nextc();
+            if !c.is_alpha() { break }
+
+            let ch =  c.unwrap();
+
+            match ch {
+                'o' | 'n' | 'e' | 's' | 'u' | 'i' | 'x' | 'm' => {
+                    result.push(ch);
+                },
+                _ => {
+                    self.tokadd(&c);
+                }
+            }
+        }
+
+        self.pushback(&c);
+        if self.toklen() > 0 {
+            self.tokfix();
+            self.compile_error(&format!("unknown regexp options - {}", self.tok()));
+        }
+
+        return result;
+    }
 
     pub fn parser_peek_variable_name(&mut self) -> Option<i32> {
         let mut c: LexChar;

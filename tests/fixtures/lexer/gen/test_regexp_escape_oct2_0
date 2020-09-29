@@ -1,7 +1,0 @@
---INPUT
-/regex\07xp/
---TOKENS
-tREGEXP_BEG "/" [0, 1]
-tSTRING_CONTENT "regex\\07xp" [1, 11]
-tSTRING_END "/" [11, 12]
-tREGEXP_OPT "" [12, 12]

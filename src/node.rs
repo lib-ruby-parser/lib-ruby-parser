@@ -71,6 +71,8 @@ pub enum Node {
     OpAsgn { lhs: Box<Node>, rhs: Box<Node>, operator: String, loc: OpAssignMap },
     And { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
     Or { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
+    RegOpt { options: Vec<char>, loc: Map },
+    Regexp { parts: Vec<Node>, options: Box<Node>, loc: CollectionMap },
 }
 
 impl Node {
@@ -144,6 +146,8 @@ impl Node {
             Self::OpAsgn { loc, .. } => &loc.expression,
             Self::And { loc, .. } => &loc.expression,
             Self::Or { loc, .. } => &loc.expression,
+            Self::RegOpt { loc, .. } => &loc.expression,
+            Self::Regexp { loc, .. } => &loc.expression,
         }
     }
 
@@ -230,6 +234,8 @@ impl Node {
             Node::OpAsgn { .. } => "op_asgn",
             Node::And { .. } => "and",
             Node::Or { .. } => "or",
+            Node::RegOpt { .. } => "regopt",
+            Node::Regexp { .. } => "regexp",
         }
     }
 
@@ -456,6 +462,15 @@ impl Node {
                 result.push_node(lhs);
                 result.push_str(operator);
                 result.push_node(rhs);
+            },
+            Node::RegOpt { options, .. } => {
+                for option in options {
+                    result.push_str(&format!("{}", option));
+                }
+            },
+            Node::Regexp { parts, options, .. } => {
+                result.push_nodes(parts);
+                result.push_node(options);
             }
         }
 

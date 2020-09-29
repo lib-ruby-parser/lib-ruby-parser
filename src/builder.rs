@@ -215,8 +215,24 @@ impl Builder {
 
     // Regular expressions
 
-    pub fn regexp_options(&self) {}
-    pub fn regexp_compose(&self) {}
+    pub fn regexp_options(&self, regexp_end_t: &Token) -> Node {
+        let mut options = self.value(&regexp_end_t).chars().collect::<Vec<_>>();
+        options.sort();
+        options.dedup();
+
+        Node::RegOpt {
+            options,
+            loc: self.token_map(&regexp_end_t)
+        }
+    }
+
+    pub fn regexp_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token, options: Node) -> Node {
+        Node::Regexp {
+            loc: self.regexp_map(&begin_t, &end_t, &options),
+            parts,
+            options: Box::new(options),
+        }
+    }
 
     // Arrays
 
@@ -1179,7 +1195,14 @@ impl Builder {
         self.collection_map(begin_t, parts, end_t)
     }
 
-    pub fn regexp_map(&self) {}
+    pub fn regexp_map(&self, begin_t: &Token, end_t: &Token, options: &Node) -> CollectionMap {
+        CollectionMap {
+            begin: Some(self.loc(begin_t)),
+            end: Some(self.loc(end_t)),
+            expression: self.loc(begin_t).join(options.expression())
+        }
+    }
+
     pub fn constant_map(&self, scope: &Option<&Node>, colon2_t: &Option<Token>, name_t: &Token) -> ConstantMap {
         let expr_l: Range;
         if let Some(scope) = scope {

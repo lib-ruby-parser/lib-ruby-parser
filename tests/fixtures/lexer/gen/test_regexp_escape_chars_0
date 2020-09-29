@@ -1,7 +1,0 @@
---INPUT
-/re\tge\nxp/
---TOKENS
-tREGEXP_BEG "/" [0, 1]
-tSTRING_CONTENT "re\\tge\\nxp" [1, 11]
-tSTRING_END "/" [11, 12]
-tREGEXP_OPT "" [12, 12]
