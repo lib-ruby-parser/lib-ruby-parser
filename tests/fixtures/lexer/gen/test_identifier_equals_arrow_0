@@ -1,0 +1,6 @@
+--INPUT
+:blah==>
+--TOKENS
+tSYMBEG ":" [0, 1]
+tIDENTIFIER "blah=" [1, 6]
+tASSOC "=>" [6, 8]

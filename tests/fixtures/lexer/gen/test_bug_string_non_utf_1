@@ -1,4 +1,6 @@
 --INPUT
 "café"
 --TOKENS
-tSTRING "café" [0, 7]
+tSTRING_BEG "\"" [0, 1]
+tSTRING_CONTENT "café" [1, 6]
+tSTRING_END "\"" [6, 7]

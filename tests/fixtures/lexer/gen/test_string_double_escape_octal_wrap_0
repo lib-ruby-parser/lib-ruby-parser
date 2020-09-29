@@ -1,4 +1,6 @@
 --INPUT
 "\753"
 --TOKENS
-tSTRING ë [0, 6]
+tSTRING_BEG "\"" [0, 1]
+tSTRING_CONTENT ë [1, 5]
+tSTRING_END "\"" [5, 6]

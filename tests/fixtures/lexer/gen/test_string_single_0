@@ -1,0 +1,6 @@
+--INPUT
+'string'
+--TOKENS
+tSTRING_BEG "\'" [0, 1]
+tSTRING_CONTENT "string" [1, 7]
+tSTRING_END "\'" [7, 8]

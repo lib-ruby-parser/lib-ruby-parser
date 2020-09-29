@@ -1,0 +1,6 @@
+--INPUT
+foo:bar
+--TOKENS
+tIDENTIFIER "foo" [0, 3]
+tSYMBEG ":" [3, 4]
+tIDENTIFIER "bar" [4, 7]

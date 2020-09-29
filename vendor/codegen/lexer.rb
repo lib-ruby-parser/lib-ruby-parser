@@ -85,6 +85,29 @@ class TestLexer
       end
     end
 
+    tokens = tokens.flat_map do |(name, value, range)|
+      if name == :tSYMBOL
+        [
+          [:tSYMBEG, ':'.inspect, [range[0], range[0] + 1]],
+          [:tIDENTIFIER, value, [range[0] + 1, range[1]]]
+        ]
+      elsif name == :tSTRING
+        sep = input[range[0]]
+        [
+          [:tSTRING_BEG, "\"\\#{sep}\"", [range[0], range[0] + 1]],
+          [:tSTRING_CONTENT, value, [range[0] + 1, range[1] - 1]],
+          [:tSTRING_END, "\"\\#{sep}\"", [range[1] - 1, range[1]]]
+        ]
+      # elsif name == :tLABEL
+      #   [
+      #     [:tIDENTIFIER, value, [range[0], range[1] - 1]],
+      #     [:tCOLON, "\":\"", [range[1] - 1, range[1]]]
+      #   ]
+      else
+        [[name, value, range]]
+      end
+    end
+
     TESTS[name] << { state: @lex.state, input: input, tokens: tokens, variables: variables }
   end
 
@@ -127,6 +150,7 @@ IGNORE = [
   'test_dot3_0',
   'test_dot2_0',
   'test_label__18',
+  'test_mod_not_command_start__19',
   # just a bug
   'test_float_suffix_12',
   'test_float_suffix_16',
@@ -139,55 +163,6 @@ IGNORE = [
   # => [[1, 5], :on_op, "=~", BEG]
   # parser expects 'a=' and '~'
   'test_identifier_equals_tilde_0',
-
-  # we emit string/symbols literals like MRI (STRING_BEG + STRING_CONTENT + STRING_END)
-  'test_string_single_escape_chars_0',
-  'test_bug_expr_end_colon_0',
-  'test_bug_string_utf_escape_composition_1',
-  'test_label_colon2_22_0',
-  'test_command_start_19_5',
-  'test_command_start_19_2',
-  'test_string_escape_x_single_0',
-  'test_string_double_escape_C_question_0',
-  'test_bug_string_utf_escape_composition_0',
-  'test_string_double_interp_0',
-  'test_command_start_19_3',
-  'test_command_start_19_4',
-  'test_mod_not_command_start_19_3',
-  'test_string_double_escape_chars_0',
-  'test_string_double_interp_label_0',
-  'test_string_single_0',
-  'test_transcoded_source_is_converted_back_to_original_encoding_0',
-  'test_mod_not_command_start_19_2',
-  'test_string_double_0',
-  'test_whitespace_value_1',
-  'test_whitespace_value_0',
-  'test_string_double_escape_c_question_0',
-  'test_command_start_19_1',
-  'test_command_start_19_6',
-  'test_command_start_19_8',
-  'test_identifier_equals_equals_arrow_0',
-  'test_command_start_19_9',
-  'test_command_start_19_7',
-  'test_identifier_equals3_0',
-  'test_command_start_19_0',
-  'test_string_double_escape_bs2_0',
-  'test_bug_utf32le_leak',
-  'test_symbol_0',
-  'test_whitespace_endfn_2',
-  'test_sclass_label',
-  'test_mod_not_command_start_19_0',
-  'test_label_in_params_18_0',
-  'test_mod_not_command_start_19_1',
-  'test_bug_line_begin_label_0',
-  'test_whitespace_value_2',
-  'test_string_double_no_interp_0',
-  'test_identifier_equals_arrow_0',
-  'test_whitespace_value_3',
-  'test_string_double_no_interp_1',
-  'test_command_start_19_10',
-  'test_bug_symbol_newline_0',
-  'test_bug_symbol_newline_1',
 
   # we emit 'd' in '0d10' as 'D'
   'test_numbers_3',
@@ -230,6 +205,11 @@ IGNORE = [
   'test_integer_oct_o_0',
   'test_numbers_10',
   'test_integer_oct_o_not_bad_none_0',
+  'test_string_single_escape_chars',
+  'test_string_escape_x_single',
+  'test_string_double_escape_C_question',
+  'test_string_double_escape_chars',
+  'test_string_double_escape_c_question',
 ]
 
 Minitest.after_run do

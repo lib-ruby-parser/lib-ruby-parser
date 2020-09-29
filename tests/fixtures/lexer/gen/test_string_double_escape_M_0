@@ -1,4 +1,6 @@
 --INPUT
 "\M-a"
 --TOKENS
-tSTRING á [0, 6]
+tSTRING_BEG "\"" [0, 1]
+tSTRING_CONTENT á [1, 5]
+tSTRING_END "\"" [5, 6]

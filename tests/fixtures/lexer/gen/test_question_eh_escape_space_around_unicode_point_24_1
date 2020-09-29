@@ -1,4 +1,6 @@
 --INPUT
 "\u{1 }"
 --TOKENS
-tSTRING "\u0001" [0, 8]
+tSTRING_BEG "\"" [0, 1]
+tSTRING_CONTENT "\u0001" [1, 7]
+tSTRING_END "\"" [7, 8]

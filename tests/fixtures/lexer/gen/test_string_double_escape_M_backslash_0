@@ -1,4 +1,6 @@
 --INPUT
 "\M-\\"
 --TOKENS
-tSTRING Ü [0, 7]
+tSTRING_BEG "\"" [0, 1]
+tSTRING_CONTENT Ü [1, 6]
+tSTRING_END "\"" [6, 7]

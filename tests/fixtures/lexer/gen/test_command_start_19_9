@@ -1,0 +1,7 @@
+--INPUT
+and a:b
+--TOKENS
+kAND "and" [0, 3]
+tIDENTIFIER "a" [4, 5]
+tSYMBEG ":" [5, 6]
+tIDENTIFIER "b" [6, 7]

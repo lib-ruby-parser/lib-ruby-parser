@@ -1,0 +1,10 @@
+--INPUT
+'foo':'bar'
+--TOKENS
+tSTRING_BEG "\'" [0, 1]
+tSTRING_CONTENT "foo" [1, 4]
+tSTRING_END "\'" [4, 5]
+tCOLON ":" [5, 6]
+tSTRING_BEG "\'" [6, 7]
+tSTRING_CONTENT "bar" [7, 10]
+tSTRING_END "\'" [10, 11]

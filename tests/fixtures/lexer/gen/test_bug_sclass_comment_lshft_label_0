@@ -5,6 +5,7 @@ class # foo
 kCLASS "class" [0, 5]
 tLSHFT "<<" [12, 14]
 tIDENTIFIER "a" [15, 16]
-tSYMBOL "b" [16, 18]
+tSYMBEG ":" [16, 17]
+tIDENTIFIER "b" [17, 18]
 tSEMI ";" [18, 19]
 kEND "end" [19, 22]

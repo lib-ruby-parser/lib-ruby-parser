@@ -1,6 +1,6 @@
 --INPUT
-"\u00a4"
+"# blah"
 --TOKENS
 tSTRING_BEG "\"" [0, 1]
-tSTRING_CONTENT "¤" [1, 7]
+tSTRING_CONTENT "# blah" [1, 7]
 tSTRING_END "\"" [7, 8]
