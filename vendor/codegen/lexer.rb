@@ -79,6 +79,12 @@ class TestLexer
       [name, value, range]
     end
 
+    tokens.each_cons(2) do |(t1, t2)|
+      if t1[0] == :tUNARY_NUM && %i[tFLOAT tINTEGER].include?(t2[0])
+        t1[0] = :tUMINUS_NUM
+      end
+    end
+
     TESTS[name] << { state: @lex.state, input: input, tokens: tokens, variables: variables }
   end
 
@@ -187,16 +193,6 @@ IGNORE = [
   'test_numbers_3',
   'test_numbers_5',
   'test_numbers_1',
-
-  # parser emits tUNARY_NUM instead of tUMINUS_NUM
-  'test_minus_unary_number_0',
-  'test_float_neg_0',
-  'test_float_dot_E_neg_0',
-  'test_float_dot_e_neg_0',
-  'test_float_e_neg_plus_0',
-  'test_ambiguous_uminus_0',
-  'test_float_e_neg_minus_0',
-  'test_float_e_neg_0',
 
   # parser emits :~@ as :~
   'test_parser_bug_486_0',
