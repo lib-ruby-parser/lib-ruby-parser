@@ -98,17 +98,19 @@ class TestLexer
           [:tSTRING_CONTENT, value, [range[0] + 1, range[1] - 1]],
           [:tSTRING_END, "\"\\#{sep}\"", [range[1] - 1, range[1]]]
         ]
-      # elsif name == :tLABEL
-      #   [
-      #     [:tIDENTIFIER, value, [range[0], range[1] - 1]],
-      #     [:tCOLON, "\":\"", [range[1] - 1, range[1]]]
-      #   ]
       else
         [[name, value, range]]
       end
     end
 
-    TESTS[name] << { state: @lex.state, input: input, tokens: tokens, variables: variables }
+    TESTS[name] << {
+      state: @lex.state,
+      input: input,
+      tokens: tokens,
+      variables: variables,
+      cond: @lex.cond.active?,
+      cmdarg: @lex.cmdarg.active?,
+    }
   end
 
   def refute_scanned(*); end
@@ -158,6 +160,8 @@ IGNORE = [
   'test_static_env_0',
   # just a bug (that doesn't affect anything)
   'test_rcurly_0',
+  # MRI relies on other data to emit kDO_BLOCK instead of kDO
+  'test_do_block_0',
 
   # 2.7.1 :003 > Ripper.lex('def a=~').last
   # => [[1, 5], :on_op, "=~", BEG]
@@ -175,10 +179,6 @@ IGNORE = [
 
   # seems to be a bug, parser emits || as tOROP on expr_beg, MRI emits tPIPE
   'test_or2_0',
-
-  # requires cond/cmdarg manipulation
-  'test_do_cond_0',
-  'test_do_block_0',
 
   # problematic escaping
   'test_bug_string_utf_escape_composition',
@@ -243,6 +243,20 @@ Minitest.after_run do
         fixture = [
           '--STATE',
           capture[:state],
+          *fixture
+        ]
+      end
+
+      if capture[:cmdarg]
+        fixture = [
+          '--CMDARG',
+          *fixture
+        ]
+      end
+
+      if capture[:cond]
+        fixture = [
+          '--COND',
           *fixture
         ]
       end

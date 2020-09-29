@@ -1,6 +1,0 @@
---INPUT
-"\c?"
---TOKENS
-tSTRING_BEG "\"" [0, 1]
-tSTRING_CONTENT "\u007F" [1, 4]
-tSTRING_END "\"" [4, 5]

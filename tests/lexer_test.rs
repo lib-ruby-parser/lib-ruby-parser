@@ -17,6 +17,8 @@ enum TestSection {
 
 #[derive(Debug)]
 struct TestCase {
+    cond: bool,
+    cmdarg: bool,
     vars: Vec<String>,
     state: Option<String>,
     input: String,
@@ -31,9 +33,13 @@ impl TestCase {
         let mut tokens: Vec<String> = vec![];
         let mut state: Option<String> = None;
         let mut current_section = TestSection::None;
+        let mut cond = false;
+        let mut cmdarg = false;
 
         for line in content.lines() {
             match (line, &current_section) {
+                ("--COND", _)     => cond = true,
+                ("--CMDARG", _)   => cmdarg = true,
                 ("--VARS", _)     => current_section = TestSection::Vars,
                 ("--STATE", _)    => current_section = TestSection::State,
                 ("--INPUT", _)    => current_section = TestSection::Input,
@@ -49,7 +55,7 @@ impl TestCase {
         let input = input.join("\n");
         let tokens = tokens.join("\n");
 
-        Self { vars, state, input, tokens }
+        Self { cond, cmdarg, vars, state, input, tokens }
     }
 }
 
@@ -92,6 +98,12 @@ fn test(fixture_path: &str) -> TestResult {
         }
         if let Some(state) = test_case.state {
             lexer.set_lex_state(lex_state(&state));
+        }
+        if test_case.cond {
+            lexer.cond_push(true)
+        }
+        if test_case.cmdarg {
+            lexer.cmdarg_push(true)
         }
         lexer.debug = false;
         let tokens = lexer.tokenize_until_eof();
