@@ -1259,9 +1259,60 @@ impl Lexer {
         self.p.cmdarg_stack.is_active()
     }
 
-    pub fn parse_percent(&self, _space_seen: bool, _last_state: LexState) -> i32 { unimplemented!("parse_percent") }
-    pub fn parse_gvar(&self, _last_state: LexState) -> i32 { unimplemented!("parse_gvar") }
-    pub fn parse_atmark(&self, _last_state: LexState) -> i32 { unimplemented!("parse_atmark") }
+    pub fn parse_percent(&mut self, _space_seen: bool, _last_state: LexState) -> i32 { unimplemented!("parse_percent") }
+    pub fn parse_gvar(&mut self, _last_state: LexState) -> i32 { unimplemented!("parse_gvar") }
+
+    pub fn parse_atmark(&mut self, last_state: LexState) -> i32 {
+        let ptr = self.p.lex.pcur;
+        let mut result: i32 = Self::tIVAR;
+        let mut c = self.nextc();
+
+        self.p.lex.ptok = ptr - 1; // from '@'
+        self.newtok();
+        self.tokadd(&LexChar::Some('@'));
+        if c == '@' {
+            result = Self::tCVAR;
+            self.tokadd(&LexChar::Some('@'));
+            c = self.nextc()
+        }
+        self.set_lex_state(if last_state.is_some(EXPR_FNAME) { EXPR_ENDFN } else { EXPR_END });
+        if c.is_eof() || !self.parser_is_identchar() {
+            self.pushback(&c);
+            if result == Self::tIVAR {
+                self.compile_error("`@' without identifiers is not allowed as an instance variable name");
+            } else {
+                self.compile_error("`@@' without identifiers is not allowed as a class variable name");
+            }
+            self.set_lex_state(EXPR_END);
+            return result;
+        } else if c.is_digit() {
+            self.pushback(&c);
+            if result == Self::tIVAR {
+                self.compile_error(&format!("`@{}' is not allowed as an instance variable name", c.unwrap()));
+            } else {
+                self.compile_error(&format!("`@@{}' is not allowed as a class variable name", c.unwrap()));
+            }
+            self.set_lex_state(EXPR_END);
+            return result;
+        }
+
+        if self.tokadd_ident(&c) { return Self::END_OF_INPUT }
+        self.tokenize_ident(&last_state);
+        return result;
+    }
+
+    pub fn tokadd_ident(&mut self, c: &LexChar) -> bool {
+        let mut c = c.clone();
+        loop {
+            if self.tokadd_mbchar(&c).is_err() { return true }
+            c = self.nextc();
+
+            if !self.parser_is_identchar() { break; }
+        };
+
+        self.pushback(&c);
+        return false;
+    }
 
     pub fn is_whole_match(&self, eos: &str, indent: usize) -> bool {
         let mut ptr = self.p.lex.pbeg;

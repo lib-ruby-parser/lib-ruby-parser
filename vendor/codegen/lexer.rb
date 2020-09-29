@@ -153,6 +153,8 @@ IGNORE = [
   'test_dot2_0',
   'test_label__18',
   'test_mod_not_command_start__19',
+  'test_question_eh_escape_M_escape_C__18',
+  'test_question_eh_escape_M_escape_C__19',
   # just a bug
   'test_float_suffix_12',
   'test_float_suffix_16',

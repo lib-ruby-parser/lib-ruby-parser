@@ -1,4 +1,0 @@
---INPUT
-?\M-\C-a
---TOKENS
-tINTEGER "?\\M-\\C-a" [0, 8]
