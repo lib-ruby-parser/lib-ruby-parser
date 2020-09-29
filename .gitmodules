@@ -1,6 +1,3 @@
 [submodule "vendor/parser"]
 	path = vendor/parser
 	url = git@github.com:whitequark/parser.git
-[submodule "vendor/ast"]
-	path = vendor/ast
-	url = git@github.com:whitequark/ast.git
