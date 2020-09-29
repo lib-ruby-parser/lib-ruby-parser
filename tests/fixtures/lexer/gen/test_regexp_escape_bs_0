@@ -1,0 +1,7 @@
+--INPUT
+/regex\\regex/
+--TOKENS
+tREGEXP_BEG "/" [0, 1]
+tSTRING_CONTENT "regex\\\\regex" [1, 13]
+tSTRING_END "/" [13, 14]
+tREGEXP_OPT "" [14, 14]

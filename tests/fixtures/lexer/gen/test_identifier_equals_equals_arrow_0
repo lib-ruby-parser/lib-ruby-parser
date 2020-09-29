@@ -1,0 +1,6 @@
+--INPUT
+:a==>b
+--TOKENS
+tSYMBOL "a=" [0, 3]
+tASSOC "=>" [3, 5]
+tIDENTIFIER "b" [5, 6]

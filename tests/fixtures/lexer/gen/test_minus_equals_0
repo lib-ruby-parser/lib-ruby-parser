@@ -1,0 +1,6 @@
+--STATE
+expr_end
+--INPUT
+-=
+--TOKENS
+tOP_ASGN "-" [0, 2]

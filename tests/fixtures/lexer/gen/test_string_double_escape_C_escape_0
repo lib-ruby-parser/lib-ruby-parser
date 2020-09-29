@@ -1,0 +1,4 @@
+--INPUT
+"\c\M-a"
+--TOKENS
+tSTRING Å [0, 8]

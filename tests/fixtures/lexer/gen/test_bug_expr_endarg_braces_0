@@ -1,0 +1,7 @@
+--INPUT
+let [] {
+--TOKENS
+tIDENTIFIER "let" [0, 3]
+tLBRACK "[" [4, 5]
+tRBRACK "]" [5, 6]
+tLBRACE_ARG "{" [7, 8]

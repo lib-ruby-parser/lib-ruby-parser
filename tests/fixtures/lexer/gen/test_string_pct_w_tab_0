@@ -1,0 +1,9 @@
+--INPUT
+%w[abc	def]
+--TOKENS
+tQWORDS_BEG "%w[" [0, 3]
+tSTRING_CONTENT "abc" [3, 6]
+tSPACE "" [6, 7]
+tSTRING_CONTENT "def" [7, 10]
+tSPACE "" [10, 10]
+tSTRING_END "]" [10, 11]

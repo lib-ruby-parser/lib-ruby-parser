@@ -1,0 +1,4 @@
+--INPUT
+42r
+--TOKENS
+tRATIONAL "42r" [0, 3]

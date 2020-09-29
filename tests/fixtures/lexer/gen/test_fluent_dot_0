@@ -1,0 +1,7 @@
+--INPUT
+x
+.y
+--TOKENS
+tIDENTIFIER "x" [0, 1]
+tDOT "." [2, 3]
+tIDENTIFIER "y" [3, 4]

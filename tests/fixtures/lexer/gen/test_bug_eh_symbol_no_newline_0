@@ -1,0 +1,7 @@
+--INPUT
+?"
+foo
+--TOKENS
+tINTEGER "?\"" [0, 2]
+tNL "" [2, 3]
+tIDENTIFIER "foo" [3, 6]

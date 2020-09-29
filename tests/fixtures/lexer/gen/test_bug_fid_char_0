@@ -1,0 +1,5 @@
+--INPUT
+eof??a
+--TOKENS
+tFID "eof?" [0, 4]
+tCHARACTER "a" [4, 6]

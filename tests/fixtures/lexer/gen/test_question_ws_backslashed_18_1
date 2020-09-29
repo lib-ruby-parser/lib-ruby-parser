@@ -1,0 +1,6 @@
+--STATE
+expr_beg
+--INPUT
+?\n
+--TOKENS
+tINTEGER "?\\n" [0, 3]

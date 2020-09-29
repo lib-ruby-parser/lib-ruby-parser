@@ -1,0 +1,4 @@
+--INPUT
+"\u{ 1 2}"
+--TOKENS
+tSTRING "\u0001\u0002" [0, 10]

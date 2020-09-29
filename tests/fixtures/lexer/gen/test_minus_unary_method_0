@@ -1,0 +1,6 @@
+--STATE
+expr_fname
+--INPUT
+-@
+--TOKENS
+tUMINUS "-@" [0, 2]

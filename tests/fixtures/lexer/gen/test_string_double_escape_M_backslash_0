@@ -1,0 +1,4 @@
+--INPUT
+"\M-\\"
+--TOKENS
+tSTRING Ü [0, 7]

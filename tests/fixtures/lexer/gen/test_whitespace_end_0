@@ -1,0 +1,7 @@
+--STATE
+expr_end
+--INPUT
++ 1
+--TOKENS
+tPLUS "+" [0, 1]
+tINTEGER "1" [2, 3]

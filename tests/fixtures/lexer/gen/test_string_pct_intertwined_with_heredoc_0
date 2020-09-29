@@ -1,0 +1,14 @@
+--INPUT
+<<-foo + %\a
+bar
+foo
+b\
+--TOKENS
+tSTRING_BEG "<<\"" [0, 6]
+tSTRING_CONTENT "bar\n" [13, 17]
+tSTRING_END "foo" [17, 20]
+tPLUS "+" [7, 8]
+tSTRING_BEG "%\\" [9, 11]
+tSTRING_CONTENT "a\n" [11, 13]
+tSTRING_CONTENT "b" [21, 22]
+tSTRING_END "\\" [22, 23]

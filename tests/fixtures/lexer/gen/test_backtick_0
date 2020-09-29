@@ -1,0 +1,6 @@
+--INPUT
+`ls`
+--TOKENS
+tXSTRING_BEG "`" [0, 1]
+tSTRING_CONTENT "ls" [1, 3]
+tSTRING_END "`" [3, 4]

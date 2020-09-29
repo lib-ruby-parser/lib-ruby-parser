@@ -34,8 +34,6 @@ require 'bundler/setup'
 require 'helper'
 require 'parse_helper'
 
-puts ARGV.inspect
-
 TESTS = Hash.new { |hash, test_name| hash[test_name] = [] }
 
 class Rewriter < Parser::AST::Processor
@@ -113,7 +111,7 @@ module ParseHelperPatch
         end
       end
 
-      TESTS[name] << { input: code, output: parsed_ast.inspect }
+      TESTS[name] << { input: code, ast: parsed_ast.inspect }
     end
   end
 
@@ -144,28 +142,30 @@ end
 
 ParseHelper.prepend(ParseHelperPatch)
 
-class Minitest::Test
-  IGNORE = [
-    'test___ENCODING___legacy_',
-  ]
+IGNORE = [
+  'test___ENCODING___legacy_',
+]
 
-  def after_teardown
-    TESTS.each do |test_name, cases|
-      next if IGNORE.include?(test_name)
+Minitest.after_run do
+  TESTS.each do |test_name, cases|
+    next if IGNORE.include?(test_name)
 
-      cases.each_with_index do |capture, idx|
-        full_test_name = "#{test_name}_#{idx}".gsub(/_{2,}/, '_')
-        # puts "Creating input/output files for #{full_test_name}"
+    cases.each_with_index do |capture, idx|
+      full_test_name = "#{test_name}_#{idx}".gsub(/_{2,}/, '_')
+      puts "Creating input/output files for #{full_test_name}"
 
-        input_filepath = File.join(TARGET_DIR, full_test_name)
+      input_filepath = File.join(TARGET_DIR, full_test_name)
 
-        File.write(input_filepath, <<-TEXT)
---INPUT
-#{capture[:input]}
---AST
-#{capture[:output]}
-TEXT
-      end
+      fixture = [
+        '--INPUT',
+        capture[:input],
+        '--AST',
+        capture[:ast]
+      ]
+
+      fixture << ''
+
+      File.write(input_filepath, fixture.join("\n"))
     end
   end
 end

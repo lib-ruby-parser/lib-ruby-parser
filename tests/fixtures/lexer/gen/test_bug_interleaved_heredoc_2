@@ -1,0 +1,16 @@
+--STATE
+expr_beg
+--INPUT
+<<w; "#{
+foo
+w
+}"
+--TOKENS
+tSTRING_BEG "<<\"" [0, 3]
+tSTRING_CONTENT "foo\n" [9, 13]
+tSTRING_END "w" [13, 14]
+tSEMI ";" [3, 4]
+tSTRING_BEG "\"" [5, 6]
+tSTRING_DBEG "\#{" [6, 8]
+tRCURLY "}" [15, 16]
+tSTRING_END "\"" [16, 17]

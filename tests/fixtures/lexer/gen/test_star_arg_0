@@ -1,0 +1,7 @@
+--STATE
+expr_arg
+--INPUT
+ *a
+--TOKENS
+tSTAR "*" [1, 2]
+tIDENTIFIER "a" [2, 3]

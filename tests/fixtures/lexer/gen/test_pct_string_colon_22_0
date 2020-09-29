@@ -1,0 +1,8 @@
+--INPUT
+{%'a':
+--TOKENS
+tLBRACE "{" [0, 1]
+tSTRING_BEG "%'" [1, 3]
+tSTRING_CONTENT "a" [3, 4]
+tSTRING_END "'" [4, 5]
+tCOLON ":" [5, 6]

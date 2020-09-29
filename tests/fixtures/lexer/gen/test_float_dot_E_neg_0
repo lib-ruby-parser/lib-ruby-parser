@@ -1,0 +1,5 @@
+--INPUT
+-1.0e10
+--TOKENS
+tUNARY_NUM "-" [0, 1]
+tFLOAT "1.0e10" [1, 7]

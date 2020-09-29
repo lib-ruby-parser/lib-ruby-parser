@@ -1,0 +1,6 @@
+--STATE
+expr_fname
+--INPUT
++@
+--TOKENS
+tUPLUS "+@" [0, 2]

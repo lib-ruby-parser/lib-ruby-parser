@@ -1,0 +1,4 @@
+--INPUT
+"\M-b\C-\M-@\C-\M-Y"
+--TOKENS
+tSTRING "’" [0, 20]

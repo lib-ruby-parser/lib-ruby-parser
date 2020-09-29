@@ -1,0 +1,9 @@
+--STATE
+expr_endfn
+--INPUT
+#foo
+foo: 
+--TOKENS
+tNL "" [4, 5]
+tIDENTIFIER "foo" [5, 8]
+tCOLON ":" [8, 9]

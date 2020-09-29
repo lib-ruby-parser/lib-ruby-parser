@@ -1,287 +1,170 @@
-$: << File.expand_path('./parser/test', __dir__)
-$: << File.expand_path('./ast/lib', __dir__)
+PARSER_DIR = File.expand_path('../parser', __dir__)
+TARGET_RUBY_VERSION = "3.0"
+TARGET_DIR = File.expand_path('../../tests/fixtures/lexer/gen', __dir__)
 
-$LOADED_FEATURES << 'simplecov.rb' << 'parser/lexer.rb' << 'minitest/autorun'
-module Parser
-  class Lexer
-    attr_accessor :comments, :diagnostics, :source_buffer, :state, :static_env
-    def initialize(*); end
-    def reset(*); end
-    def advance; end
-    def cond; end
-  end
+require 'fileutils'
+FileUtils.rm_rf(TARGET_DIR)
+FileUtils.mkdir_p(TARGET_DIR)
+
+puts "Importing test cases from #{PARSER_DIR}"
+
+$LOAD_PATH << File.join(PARSER_DIR, 'lib')
+$LOAD_PATH << File.join(PARSER_DIR, 'test')
+
+ENV['BUNDLE_GEMFILE'] = File.join(PARSER_DIR, 'Gemfile')
+require 'bundler/setup'
+require 'helper'
+require 'parse_helper'
+
+TESTS = Hash.new { |hash, test_name| hash[test_name] = [] }
+
+class Blackhole
+  def method_missing(*); self; end
 end
 
-module Minitest
-  def self.after_run(*); end
-  class Test
+class Parser::Lexer
+  def comments
+    Blackhole.new
   end
 end
 
 require 'test_lexer'
-require 'ostruct'
-
-class DummyLex
-  def method_missing(*); self; end
-  def state=(state); $current_rust_test.lex_state = state.to_s.upcase; end
-end
 
 class TestLexer
-  def initialize(*)
-    @lex = DummyLex.new
-  end
+  i_suck_and_my_tests_are_order_dependent!
 
-  def setup_lexer(*); end
-
-  def assert_scanned(input, *tokens)
-    $current_rust_test.input = input
-
-    tokens = tokens
-      .each_slice(3)
-      .to_a
-      .map { |(name, value, range)|
-        t = Token.new
-        t.source = input
-        t.range = range
-        t.value = value
-        t.name = name
-        t
-      }
-
-    tokens = Tokens.new(tokens)
-
-    $current_rust_test.tokens = tokens
-    $rust_tests << $current_rust_test
-    $current_rust_test = RustTest.new
-  end
-
-  def assert_escape(*); end
-  def assert_raises(*); end
-  def refute_escape(*); end
-
-  # these guys are too complex
-  def assert_lex_fname(*); end
-  def assert_equal(*); end
-  def test_comment(*); end
-  def test_comment_begin(*); end
-  def test_comment_begin_space(*); end
-  def test_comment_end_space_and_text(*); end
-  def test_comment_eos(*); end
-  def test_bug_hidden_eof_case_5(*); end
-
-  # these guys are wrong in 3.0 moe
-  def test_bug_ragel_stack; end
-  def test_string_pct_W_interp; end
-  def test_string_double_interp_label; end
-  def test_or2; end
-  def test_label_in_params__18; end
-  def test_numbers; end
-  def test_integer_oct_O_not_bad_none; end
-  def test_bug_expr_endarg_braces; end
-  def test_label__18; end
-  def test_string_pct_w_backslash_interp_nl; end
-  def test_heredoc_empty; end
-  def test_ternary; end
-  def test_bug_eh_symbol_no_newline; end
-  def test_string_double_interp; end
-  def test_dot2; end
-  def test_bug_interleaved_heredoc; end
-  def test_heredoc_double_interp; end
-  def test_bug_interp_expr_value; end
-  def test_integer_oct_o_not_bad_none; end
-  def test_dot3; end
-
-  # these tests expect us to parse number,
-  # but we return string representation
-  def test_integer_oct_O; end
-  def test_integer_oct_o; end
-
-  # these require some manual work in the test
-  def test_do_block; end
-  def test_do_cond; end
-end
-
-class String
-  def rustify
-    self
-      .gsub("\\\#", "#")
-      .gsub("\\a", "\\x07")
-      .gsub("\\b", "\\x08")
-      .gsub("\\e", "\\x1b")
-      .gsub("\\f", "\\x0c")
-      .gsub("\\v", "\\x0b")
-      .gsub(/\\u[0-9a-fA-F]{4}/) { |match| "\\u{" + match[-4..-1] + "}"  }
-  end
-end
-
-class Token < Struct.new(:name, :value, :range, :source)
   UNPARSABLE_TOKENS = %i[tRATIONAL tFLOAT tCOMPLEX tIMAGINARY]
 
-  def name=(name)
-    case name
-    when :tINTEGER
-      if (raw_value = source[range[0]...range[1]]) && raw_value.start_with?('0')
-        self.value = raw_value
-      else
-        self.value = @raw_value.to_s
-      end
-    when *UNPARSABLE_TOKENS
-      self.value = source[range[0]...range[1]]
-    end
-    super("#{name.inspect}, ")
-  end
-
-  def value=(value)
-    @raw_value = value
-    if value.is_a?(Numeric)
-      value = value.to_s
+  def assert_scanned(input, *tokens)
+    variables = []
+    static_env = @lex.static_env
+    if static_env
+      variables = static_env.instance_variable_get(:@variables).to_a
     end
 
-    if value.is_a?(String)
-      value = value.dup.force_encoding('utf-8')
-      if value.valid_encoding?
-        value = value.inspect.rustify
-      end
-      super("#{value}, ")
-    elsif value.nil?
-      super("\"\", ")
-    else
-      raise "Unknown token value type #{value.inspect}"
-    end
-  end
-
-  def valid?
-    if value.is_a?(String)
-      value.valid_encoding?
-    else
-      true
-    end
-  end
-end
-
-class Tokens
-  def initialize(list)
-    @list = list
-  end
-
-  def to_s
-    max_name_length  = @list.map(&:name).map(&:length).max
-    max_value_length = @list.map(&:value).map(&:length).max
-
-    @list.map do |t|
-      name  = t.name.to_s.ljust(max_name_length, ' ')
-      value = t.value.ljust(max_value_length, ' ')
-      "#{name}#{value}#{t.range.inspect}"
-    end.join(",\n                    ")
-  end
-
-  def valid?
-    @list.all?(&:valid?)
-  end
-end
-
-class RustTest < Struct.new(:lex_state, :input, :tokens, :mid)
-  IGNORED_MIDS = [
-    # That's the difference between MRI lexer and parser gem
-    # when "||" is used without arguments.
-    'test_or2_after_27_case_0',
-
-    # parser bugs:
-    # '+1.0' is a snigle literal, not a unary plus and a number
-    'test_ambiguous_uplus_case_0',
-    'test_float_dot_e_pos_case_0',
-    'test_float_dot_e_upper_pos_case_0',
-    'test_float_e_pos_case_0',
-    'test_float_e_pos_minus_case_0',
-    'test_float_e_pos_plus_case_0',
-    'test_float_pos_case_0',
-    'test_minus_unary_whitespace_number_case_0',
-    'test_plus_unary_number_case_0',
-    'test_plus_unary_whitespace_number_case_0',
-    'test_whitespace_end_case_2',
-    # these are recordings for olrder rubies
-    'test_float_suffix_case_0',
-    'test_float_suffix_case_3',
-    'test_float_suffix_case_6',
-    'test_int_suffix_case_0',
-    'test_int_suffix_case_2',
-    'test_int_suffix_case_4',
-    # just a bug
-    'test_float_suffix_case_12',
-    'test_float_suffix_case_16',
-    # requires static env manipulation
-    'test_static_env_case_0',
-    # just a bug (that doesn't affect anything)
-    'test_rcurly_case_0',
-
-    # 2.7.1 :003 > Ripper.lex('def a=~').last
-    # => [[1, 5], :on_op, "=~", BEG]
-    # parser expects 'a=' and '~'
-    'test_identifier_equals_tilde_case_0',
-  ]
-
-  def mid=(mid)
-    super(mid.gsub("__", "_").gsub("__", "_"))
-  end
-
-  def input=(input)
     input = input.dup.force_encoding('utf-8')
-    if input.valid_encoding?
-      input = input.inspect.rustify
+
+    tokens = tokens.each_slice(3).map do |(name, value, range)|
+      raw_value = value
+      if value.is_a?(Numeric)
+        value = value.to_s
+      end
+
+      if value.is_a?(String)
+        value = value.dup.force_encoding('utf-8')
+        if value.valid_encoding?
+          value = value.inspect
+        end
+      elsif value.nil?
+        value = "".inspect
+      else
+        raise "Unknown token value type #{value.inspect}"
+      end
+
+      case name
+      when :tINTEGER
+        if (raw_value = input[range[0]...range[1]]) && raw_value.start_with?('0')
+          value = raw_value.inspect
+        else
+          value = raw_value.to_s.inspect
+        end
+      when *UNPARSABLE_TOKENS
+        value = input[range[0]...range[1]].inspect
+      end
+
+      [name, value, range]
     end
-    super(input)
+
+    TESTS[name] << { state: @lex.state, input: input, tokens: tokens, variables: variables }
   end
 
-  def lex_state=(lex_state)
-    if lex_state
-      super(lex_state.to_s.upcase)
-    end
-  end
-
-  def valid?
-    input.valid_encoding? && tokens.valid? && lex_state != 'LINE_BEGIN' && !IGNORED_MIDS.include?(mid)
-  end
-
-  def to_s
-    return "// skipping #{mid}" unless valid?
-
-    [
-      "#[test]",
-      "fn #{mid}() {",
-      "    let mut lexer = setup_lexer!();",
-     ("    set_lex_state!(lexer, #{lex_state});" if lex_state),
-      "    assert_scanned!(&mut lexer,",
-      "                    #{input},",
-      "                    #{tokens.to_s});",
-      "}"
-  ].compact.join("\n")
-  end
-end
-$current_rust_test = RustTest.new
-
-ruby_test = TestLexer.new
-methods = ruby_test.methods.grep(/\Atest_/).sort
-# methods = [:test_colon2]
-$recorded_rust_tests = []
-
-methods.each do |mid|
-  $rust_tests = []
-
-  ruby_test.send(mid)
-
-  rust_mid = mid.to_s.gsub(/[A-Z]+/) { |match| match.downcase + "_upper" }
-
-  $rust_tests.each_with_index do |rust_test, idx|
-    rust_test.mid = "#{rust_mid}_case_#{idx}"
-    $recorded_rust_tests << rust_test
-  end
+  def refute_scanned(*); end
+  def assert_equal(*); end
+  def assert_nil(*); end
+  def assert_raises(*); Blackhole.new; end
+  def test_eof; end
 end
 
-File.write(
-  File.expand_path('../tests/lexer/lexer_test.rs', __dir__),
-<<-RUST
-// THIS FILE IS AUTO-GENERATED BY vendor/codegen.rb
+IGNORE = [
+  # Legacy test
+  'test___ENCODING___legacy_',
 
-#{$recorded_rust_tests.map(&:to_s).join("\n\n")}
-RUST
-)
+  # That's the difference between MRI lexer and parser gem
+  # when "||" is used without arguments.
+  'test_or2_after_27_0',
+
+  # parser bugs:
+  # '+1.0' is a single literal, not a unary plus and a number
+  'test_ambiguous_uplus_0',
+  'test_float_dot_e_pos_0',
+  'test_float_dot_e_upper_pos_0',
+  'test_float_e_pos_0',
+  'test_float_e_pos_minus_0',
+  'test_float_e_pos_plus_0',
+  'test_float_pos_0',
+  'test_minus_unary_whitespace_number_0',
+  'test_plus_unary_number_0',
+  'test_plus_unary_whitespace_number_0',
+  'test_whitespace_end_2',
+  # these are recordings for olrder rubies
+  'test_float_suffix_0',
+  'test_float_suffix_3',
+  'test_float_suffix_6',
+  'test_int_suffix_0',
+  'test_int_suffix_2',
+  'test_int_suffix_4',
+  # just a bug
+  'test_float_suffix_12',
+  'test_float_suffix_16',
+  # requires static env manipulation
+  'test_static_env_0',
+  # just a bug (that doesn't affect anything)
+  'test_rcurly_0',
+
+  # 2.7.1 :003 > Ripper.lex('def a=~').last
+  # => [[1, 5], :on_op, "=~", BEG]
+  # parser expects 'a=' and '~'
+  'test_identifier_equals_tilde_0',
+]
+
+Minitest.after_run do
+  TESTS.each do |test_name, cases|
+    next if IGNORE.include?(test_name)
+
+    cases.each_with_index do |capture, idx|
+      full_test_name = "#{test_name}_#{idx}".gsub(/_{2,}/, '_')
+      next if IGNORE.include?(full_test_name)
+
+      puts "Creating input/output files for #{full_test_name}"
+
+      input_filepath = File.join(TARGET_DIR, full_test_name)
+
+      fixture = [
+        '--INPUT',
+        capture[:input],
+        '--TOKENS',
+        capture[:tokens].map { |(name, value, range)| "#{name} #{value} #{range}" }
+      ]
+
+      if (variables = capture[:variables]).any?
+        fixture = [
+          '--VARS',
+          variables.join(' '),
+          *fixture
+        ]
+      end
+
+      if capture[:state] != :line_begin
+        fixture = [
+          '--STATE',
+          capture[:state],
+          *fixture
+        ]
+      end
+
+      fixture << ''
+
+      File.write(input_filepath, fixture.join("\n"))
+    end
+  end
+end

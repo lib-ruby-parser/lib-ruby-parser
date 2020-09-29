@@ -1,0 +1,6 @@
+--INPUT
+a >= 2
+--TOKENS
+tIDENTIFIER "a" [0, 1]
+tGEQ ">=" [2, 4]
+tINTEGER "2" [5, 6]

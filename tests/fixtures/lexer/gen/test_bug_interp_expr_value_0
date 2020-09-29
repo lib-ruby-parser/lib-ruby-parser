@@ -1,0 +1,9 @@
+--INPUT
+"#{f:a}"
+--TOKENS
+tSTRING_BEG "\"" [0, 1]
+tSTRING_DBEG "\#{" [1, 3]
+tIDENTIFIER "f" [3, 4]
+tSYMBOL "a" [4, 6]
+tRCURLY "}" [6, 7]
+tSTRING_END "\"" [7, 8]

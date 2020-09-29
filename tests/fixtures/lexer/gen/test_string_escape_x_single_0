@@ -1,0 +1,4 @@
+--INPUT
+"\x0"
+--TOKENS
+tSTRING "\u0000" [0, 5]

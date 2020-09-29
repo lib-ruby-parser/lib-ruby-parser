@@ -1,0 +1,8 @@
+--STATE
+expr_arg
+--INPUT
+#foo
++
+--TOKENS
+tNL "" [4, 5]
+tUPLUS "+" [5, 6]

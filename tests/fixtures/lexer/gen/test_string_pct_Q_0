@@ -1,0 +1,6 @@
+--INPUT
+%Q[s1 s2]
+--TOKENS
+tSTRING_BEG "%Q[" [0, 3]
+tSTRING_CONTENT "s1 s2" [3, 8]
+tSTRING_END "]" [8, 9]

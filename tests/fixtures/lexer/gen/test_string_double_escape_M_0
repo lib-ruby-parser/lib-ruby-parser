@@ -1,0 +1,4 @@
+--INPUT
+"\M-a"
+--TOKENS
+tSTRING á [0, 6]

@@ -1,0 +1,4 @@
+--INPUT
+?*
+--TOKENS
+tINTEGER "?*" [0, 2]

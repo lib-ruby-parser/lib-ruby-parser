@@ -1,0 +1,16 @@
+--INPUT
+"blah #x a #@a b #$b c #{3} # "
+--TOKENS
+tSTRING_BEG "\"" [0, 1]
+tSTRING_CONTENT "blah #x a " [1, 11]
+tSTRING_DVAR "" [11, 12]
+tIVAR "@a" [12, 14]
+tSTRING_CONTENT " b " [14, 17]
+tSTRING_DVAR "" [17, 18]
+tGVAR "$b" [18, 20]
+tSTRING_CONTENT " c " [20, 23]
+tSTRING_DBEG "\#{" [23, 25]
+tINTEGER "3" [25, 26]
+tRCURLY "}" [26, 27]
+tSTRING_CONTENT " # " [27, 30]
+tSTRING_END "\"" [30, 31]

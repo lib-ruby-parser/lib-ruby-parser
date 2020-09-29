@@ -1,0 +1,5 @@
+--INPUT
+a *= 
+--TOKENS
+tIDENTIFIER "a" [0, 1]
+tOP_ASGN "*" [2, 4]

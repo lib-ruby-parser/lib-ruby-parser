@@ -1,0 +1,6 @@
+--STATE
+expr_fname
+--INPUT
+~@
+--TOKENS
+tTILDE "~@" [0, 2]

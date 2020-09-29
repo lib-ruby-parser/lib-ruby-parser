@@ -1,0 +1,9 @@
+--STATE
+expr_arg
+--INPUT
+ /1/
+--TOKENS
+tREGEXP_BEG "/" [1, 2]
+tSTRING_CONTENT "1" [2, 3]
+tSTRING_END "/" [3, 4]
+tREGEXP_OPT "" [4, 4]

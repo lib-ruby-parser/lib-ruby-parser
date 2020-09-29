@@ -1,0 +1,6 @@
+--INPUT
+{a:b
+--TOKENS
+tLBRACE "{" [0, 1]
+tIDENTIFIER "a" [1, 2]
+tSYMBOL "b" [2, 4]

@@ -1,0 +1,8 @@
+--INPUT
+foo.x= 1
+--TOKENS
+tIDENTIFIER "foo" [0, 3]
+tDOT "." [3, 4]
+tIDENTIFIER "x" [4, 5]
+tEQL "=" [5, 6]
+tINTEGER "1" [7, 8]

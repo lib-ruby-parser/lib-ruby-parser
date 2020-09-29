@@ -1,0 +1,6 @@
+--INPUT
+:foo
+
+--TOKENS
+tSYMBOL "foo" [0, 4]
+tNL "" [4, 5]

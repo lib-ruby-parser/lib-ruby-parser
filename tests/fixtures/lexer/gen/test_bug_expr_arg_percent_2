@@ -1,0 +1,8 @@
+--STATE
+expr_arg
+--INPUT
+ %[1]
+--TOKENS
+tSTRING_BEG "%[" [1, 3]
+tSTRING_CONTENT "1" [3, 4]
+tSTRING_END "]" [4, 5]

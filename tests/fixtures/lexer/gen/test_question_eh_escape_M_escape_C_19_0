@@ -1,0 +1,4 @@
+--INPUT
+?\M-\C-a
+--TOKENS
+tCHARACTER Å [0, 8]

@@ -1,0 +1,4 @@
+--INPUT
+"\ca"
+--TOKENS
+tSTRING "\u0001" [0, 5]

@@ -1,0 +1,4 @@
+--INPUT
+$-x
+--TOKENS
+tGVAR "$-x" [0, 3]

@@ -1,0 +1,4 @@
+--INPUT
+"\u00a4"
+--TOKENS
+tSTRING "¤" [0, 8]

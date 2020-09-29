@@ -1,0 +1,4 @@
+--INPUT
+^
+--TOKENS
+tCARET "^" [0, 1]

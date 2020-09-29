@@ -1,0 +1,7 @@
+--INPUT
+/regex\cxxx/
+--TOKENS
+tREGEXP_BEG "/" [0, 1]
+tSTRING_CONTENT "regex\\cxxx" [1, 11]
+tSTRING_END "/" [11, 12]
+tREGEXP_OPT "" [12, 12]

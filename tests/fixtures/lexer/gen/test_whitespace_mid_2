@@ -1,0 +1,8 @@
+--STATE
+expr_mid
+--INPUT
+
++
+--TOKENS
+tNL "" [0, 1]
+tUPLUS "+" [1, 2]

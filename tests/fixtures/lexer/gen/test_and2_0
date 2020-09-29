@@ -1,0 +1,6 @@
+--STATE
+expr_end
+--INPUT
+&&
+--TOKENS
+tANDOP "&&" [0, 2]

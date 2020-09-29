@@ -1,0 +1,6 @@
+--INPUT
+if a:b
+--TOKENS
+kIF "if" [0, 2]
+tIDENTIFIER "a" [3, 4]
+tSYMBOL "b" [4, 6]

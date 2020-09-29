@@ -1,0 +1,4 @@
+--INPUT
+?*
+--TOKENS
+tCHARACTER "*" [0, 2]

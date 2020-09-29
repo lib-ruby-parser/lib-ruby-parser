@@ -1,0 +1,5 @@
+--INPUT
+1.1end
+--TOKENS
+tFLOAT "1.1" [0, 3]
+kEND "end" [3, 6]

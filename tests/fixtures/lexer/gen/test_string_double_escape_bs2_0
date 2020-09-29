@@ -1,0 +1,4 @@
+--INPUT
+"a\\a"
+--TOKENS
+tSTRING "a\\a" [0, 6]

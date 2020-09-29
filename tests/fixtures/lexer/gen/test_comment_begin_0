@@ -1,0 +1,8 @@
+--INPUT
+=begin
+blah
+blah
+=end
+42
+--TOKENS
+tINTEGER "42" [22, 24]

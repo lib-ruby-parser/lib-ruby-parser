@@ -1,0 +1,6 @@
+--INPUT
+123if cond
+--TOKENS
+tINTEGER "123" [0, 3]
+kIF_MOD "if" [3, 5]
+tIDENTIFIER "cond" [6, 10]

@@ -1,0 +1,4 @@
+--INPUT
+|=
+--TOKENS
+tOP_ASGN "|" [0, 2]

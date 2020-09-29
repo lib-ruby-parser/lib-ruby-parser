@@ -1,0 +1,9 @@
+--INPUT
+%w[s\ 1 s\ 2]
+--TOKENS
+tQWORDS_BEG "%w[" [0, 3]
+tSTRING_CONTENT "s 1" [3, 7]
+tSPACE "" [7, 8]
+tSTRING_CONTENT "s 2" [8, 12]
+tSPACE "" [12, 12]
+tSTRING_END "]" [12, 13]

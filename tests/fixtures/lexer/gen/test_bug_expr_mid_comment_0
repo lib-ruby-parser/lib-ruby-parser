@@ -1,0 +1,7 @@
+--INPUT
+rescue #bar
+print
+--TOKENS
+kRESCUE "rescue" [0, 6]
+tNL "" [11, 12]
+tIDENTIFIER "print" [12, 17]

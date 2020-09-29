@@ -1,0 +1,8 @@
+--STATE
+expr_end
+--INPUT
+while a:b
+--TOKENS
+kWHILE_MOD "while" [0, 5]
+tLABEL "a" [6, 8]
+tIDENTIFIER "b" [8, 9]

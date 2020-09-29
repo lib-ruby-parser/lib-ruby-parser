@@ -1,0 +1,6 @@
+--STATE
+expr_beg
+--INPUT
+?\r
+--TOKENS
+tINTEGER "?\\r" [0, 3]

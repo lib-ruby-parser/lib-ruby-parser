@@ -1,0 +1,10 @@
+--STATE
+expr_fname
+--INPUT
+%s(a)
+--TOKENS
+tPERCENT "%" [0, 1]
+tIDENTIFIER "s" [1, 2]
+tLPAREN2 "(" [2, 3]
+tIDENTIFIER "a" [3, 4]
+tRPAREN ")" [4, 5]

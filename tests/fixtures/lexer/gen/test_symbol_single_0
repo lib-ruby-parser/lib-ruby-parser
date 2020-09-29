@@ -1,0 +1,6 @@
+--INPUT
+:'symbol'
+--TOKENS
+tSYMBEG ":'" [0, 2]
+tSTRING_CONTENT "symbol" [2, 8]
+tSTRING_END "'" [8, 9]

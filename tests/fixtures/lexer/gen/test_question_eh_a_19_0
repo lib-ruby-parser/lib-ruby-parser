@@ -1,0 +1,4 @@
+--INPUT
+?a
+--TOKENS
+tCHARACTER "a" [0, 2]

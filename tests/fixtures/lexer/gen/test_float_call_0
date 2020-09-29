@@ -1,0 +1,6 @@
+--INPUT
+1.0.to_s
+--TOKENS
+tFLOAT "1.0" [0, 3]
+tDOT "." [3, 4]
+tIDENTIFIER "to_s" [4, 8]

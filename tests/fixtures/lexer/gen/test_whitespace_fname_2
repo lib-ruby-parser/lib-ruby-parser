@@ -1,0 +1,7 @@
+--STATE
+expr_fname
+--INPUT
+
+class
+--TOKENS
+kCLASS "class" [1, 6]

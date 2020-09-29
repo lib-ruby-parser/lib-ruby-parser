@@ -1,0 +1,6 @@
+--INPUT
+elsif a:b
+--TOKENS
+kELSIF "elsif" [0, 5]
+tIDENTIFIER "a" [6, 7]
+tSYMBOL "b" [7, 9]

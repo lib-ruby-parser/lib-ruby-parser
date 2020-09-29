@@ -1,0 +1,6 @@
+--STATE
+expr_beg
+--INPUT
+?\f
+--TOKENS
+tCHARACTER "\f" [0, 3]

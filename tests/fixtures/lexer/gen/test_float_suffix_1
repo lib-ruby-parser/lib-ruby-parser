@@ -1,0 +1,5 @@
+--INPUT
+42.1if
+--TOKENS
+tFLOAT "42.1" [0, 4]
+kIF_MOD "if" [4, 6]

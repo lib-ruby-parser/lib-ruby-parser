@@ -1,0 +1,4 @@
+--INPUT
+"\あ"
+--TOKENS
+tSTRING "あ" [0, 4]

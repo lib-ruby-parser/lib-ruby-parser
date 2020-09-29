@@ -1,0 +1,4 @@
+--INPUT
+?\u{123}
+--TOKENS
+tCHARACTER "ģ" [0, 8]

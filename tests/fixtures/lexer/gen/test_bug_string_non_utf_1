@@ -1,0 +1,4 @@
+--INPUT
+"café"
+--TOKENS
+tSTRING "café" [0, 7]

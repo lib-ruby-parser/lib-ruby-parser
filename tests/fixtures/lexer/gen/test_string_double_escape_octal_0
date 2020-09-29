@@ -1,0 +1,4 @@
+--INPUT
+"n = \101\102\103"
+--TOKENS
+tSTRING "n = ABC" [0, 18]

@@ -1,7 +1,7 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(runner)]
 
-use ruby_parser::{Node, Parser, Lexer};
+use ruby_parser::{Parser, Lexer};
 use std::panic;
 use std::fs;
 use std::process::exit;

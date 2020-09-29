@@ -1,0 +1,5 @@
+--INPUT
+rescue=>
+--TOKENS
+kRESCUE "rescue" [0, 6]
+tASSOC "=>" [6, 8]

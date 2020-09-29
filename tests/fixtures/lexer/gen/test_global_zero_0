@@ -1,0 +1,4 @@
+--INPUT
+$0
+--TOKENS
+tGVAR "$0" [0, 2]

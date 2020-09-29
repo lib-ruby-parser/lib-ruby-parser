@@ -1,0 +1,4 @@
+--INPUT
+1.0
+--TOKENS
+tFLOAT "1.0" [0, 3]

@@ -1,0 +1,9 @@
+--INPUT
+<<E
+foo
+EO
+--TOKENS
+tSTRING_BEG "<<\"" [0, 3]
+tSTRING_CONTENT "foo\n" [4, 8]
+tSTRING_END "E" [8, 11]
+tNL "" [3, 4]

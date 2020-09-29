@@ -1,0 +1,8 @@
+--INPUT
+'blah\
+blah'
+--TOKENS
+tSTRING_BEG "'" [0, 1]
+tSTRING_CONTENT "blah\\\n" [1, 7]
+tSTRING_CONTENT "blah" [7, 11]
+tSTRING_END "'" [11, 12]

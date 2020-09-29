@@ -1,0 +1,10 @@
+--STATE
+expr_arg
+--INPUT
+<<EOS
+EOS
+--TOKENS
+tLSHFT "<<" [0, 2]
+tCONSTANT "EOS" [2, 5]
+tNL "" [5, 6]
+tCONSTANT "EOS" [6, 9]

@@ -1,0 +1,5 @@
+--INPUT
+def < 
+--TOKENS
+kDEF "def" [0, 3]
+tLT "<" [4, 5]

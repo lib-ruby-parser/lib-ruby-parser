@@ -1,0 +1,12 @@
+--INPUT
+<<EOL % [
+foo
+EOL
+]
+--TOKENS
+tSTRING_BEG "<<\"" [0, 5]
+tSTRING_CONTENT "foo\n" [10, 14]
+tSTRING_END "EOL" [14, 17]
+tPERCENT "%" [6, 7]
+tLBRACK "[" [8, 9]
+tRBRACK "]" [18, 19]

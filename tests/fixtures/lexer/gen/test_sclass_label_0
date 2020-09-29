@@ -1,0 +1,7 @@
+--INPUT
+class << a:b
+--TOKENS
+kCLASS "class" [0, 5]
+tLSHFT "<<" [6, 8]
+tIDENTIFIER "a" [9, 10]
+tSYMBOL "b" [10, 12]

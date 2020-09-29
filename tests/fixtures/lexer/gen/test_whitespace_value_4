@@ -1,0 +1,8 @@
+--STATE
+expr_value
+--INPUT
+#foo
+a:b
+--TOKENS
+tIDENTIFIER "a" [5, 6]
+tSYMBOL "b" [6, 8]

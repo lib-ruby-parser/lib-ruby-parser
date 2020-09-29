@@ -1,0 +1,4 @@
+--INPUT
+"\C-\\"
+--TOKENS
+tSTRING "\u001C" [0, 7]

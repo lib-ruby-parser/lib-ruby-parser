@@ -1,0 +1,8 @@
+--STATE
+expr_endarg
+--INPUT
+#foo
+{
+--TOKENS
+tNL "" [4, 5]
+tLBRACE "{" [5, 6]

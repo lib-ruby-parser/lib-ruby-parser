@@ -1,0 +1,4 @@
+--INPUT
+42ri
+--TOKENS
+tIMAGINARY "42ri" [0, 4]

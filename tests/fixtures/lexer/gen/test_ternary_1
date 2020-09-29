@@ -1,0 +1,7 @@
+--INPUT
+a ?b : c
+--TOKENS
+tIDENTIFIER "a" [0, 1]
+tINTEGER "?b" [2, 4]
+tCOLON ":" [5, 6]
+tIDENTIFIER "c" [7, 8]
