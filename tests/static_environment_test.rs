@@ -2,7 +2,7 @@ use ruby_parser::StaticEnvironment;
 
 #[test]
 fn test_declare() {
-    let mut env = StaticEnvironment::new();
+    let env = StaticEnvironment::new();
     assert!(!env.is_declared("foo"));
 
     env.declare("foo");
@@ -11,7 +11,7 @@ fn test_declare() {
 
 #[test]
 fn test_extend_static() {
-    let mut env = StaticEnvironment::new();
+    let env = StaticEnvironment::new();
 
     env.declare("foo");
     env.extend_static();
@@ -23,7 +23,7 @@ fn test_extend_static() {
 
 #[test]
 fn test_extend_dynamic() {
-    let mut env = StaticEnvironment::new();
+    let env = StaticEnvironment::new();
 
     env.declare("foo");
     env.extend_dynamic();
@@ -35,7 +35,7 @@ fn test_extend_dynamic() {
 
 #[test]
 fn test_unextend() {
-    let mut env = StaticEnvironment::new();
+    let env = StaticEnvironment::new();
 
     env.declare("foo");
     env.extend_dynamic();

@@ -1,4 +1,4 @@
-use ruby_parser::{Parser, Lexer, Node};
+use ruby_parser::{Parser, Lexer};
 use std::env;
 use std::fs;
 
