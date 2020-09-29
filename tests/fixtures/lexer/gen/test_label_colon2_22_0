@@ -1,6 +1,0 @@
---INPUT
-{'a'::
---TOKENS
-tLBRACE "{" [0, 1]
-tSTRING "a" [1, 4]
-tCOLON2 "::" [4, 6]

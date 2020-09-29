@@ -1,4 +1,0 @@
---INPUT
-"\xE2\x80\x99"
---TOKENS
-tSTRING "’" [0, 14]

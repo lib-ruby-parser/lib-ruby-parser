@@ -1,7 +1,0 @@
---INPUT
-foo(a:b
---TOKENS
-tIDENTIFIER "foo" [0, 3]
-tLPAREN2 "(" [3, 4]
-tIDENTIFIER "a" [4, 5]
-tSYMBOL "b" [5, 7]

@@ -1,4 +1,0 @@
---INPUT
-"n = \x61\x62\x63"
---TOKENS
-tSTRING "n = abc" [0, 18]

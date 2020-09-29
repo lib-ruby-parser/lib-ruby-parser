@@ -1,6 +1,0 @@
---INPUT
-and a:b
---TOKENS
-kAND "and" [0, 3]
-tIDENTIFIER "a" [4, 5]
-tSYMBOL "b" [5, 7]

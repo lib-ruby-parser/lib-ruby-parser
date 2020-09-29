@@ -1,5 +1,0 @@
---INPUT
--1e-10
---TOKENS
-tUNARY_NUM "-" [0, 1]
-tFLOAT "1e-10" [1, 6]

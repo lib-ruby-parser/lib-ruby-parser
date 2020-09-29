@@ -1,8 +1,0 @@
---STATE
-expr_end
---INPUT
-if a:b
---TOKENS
-kIF_MOD "if" [0, 2]
-tLABEL "a" [3, 5]
-tIDENTIFIER "b" [5, 6]

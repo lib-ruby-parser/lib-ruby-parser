@@ -3,5 +3,5 @@
 --TOKENS
 tREGEXP_BEG "%r'" [0, 3]
 tSTRING_CONTENT "'" [3, 5]
-tSTRING_END "'" [5, 6]
+tSTRING_END "\'" [5, 6]
 tREGEXP_OPT "" [6, 6]

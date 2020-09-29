@@ -1,4 +1,0 @@
---INPUT
-"s\tri\ng"
---TOKENS
-tSTRING "s\tri\ng" [0, 10]

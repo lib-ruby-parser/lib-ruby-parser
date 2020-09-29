@@ -1,4 +1,0 @@
---INPUT
-"blah # blah"
---TOKENS
-tSTRING "blah # blah" [0, 13]

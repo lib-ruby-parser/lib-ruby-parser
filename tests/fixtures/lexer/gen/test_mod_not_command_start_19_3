@@ -1,8 +1,0 @@
---STATE
-expr_end
---INPUT
-until a:b
---TOKENS
-kUNTIL_MOD "until" [0, 5]
-tLABEL "a" [6, 8]
-tIDENTIFIER "b" [8, 9]

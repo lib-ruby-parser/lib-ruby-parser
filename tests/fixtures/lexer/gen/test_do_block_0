@@ -1,8 +1,0 @@
---STATE
-expr_endarg
---INPUT
-do 42 end
---TOKENS
-kDO_BLOCK "do" [0, 2]
-tINTEGER "42" [3, 5]
-kEND "end" [6, 9]

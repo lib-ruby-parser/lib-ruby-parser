@@ -1,6 +1,0 @@
---INPUT
-:a===b
---TOKENS
-tSYMBOL "a" [0, 2]
-tEQQ "===" [2, 5]
-tIDENTIFIER "b" [5, 6]

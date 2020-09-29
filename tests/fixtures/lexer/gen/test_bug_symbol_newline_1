@@ -1,6 +1,0 @@
---INPUT
-:foo=
-
---TOKENS
-tSYMBOL "foo=" [0, 5]
-tNL "" [5, 6]

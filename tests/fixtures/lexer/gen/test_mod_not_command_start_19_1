@@ -1,8 +1,0 @@
---STATE
-expr_end
---INPUT
-unless a:b
---TOKENS
-kUNLESS_MOD "unless" [0, 6]
-tLABEL "a" [7, 9]
-tIDENTIFIER "b" [9, 10]

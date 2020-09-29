@@ -1,5 +1,0 @@
---INPUT
-+1.0E10
---TOKENS
-tUNARY_NUM "+" [0, 1]
-tFLOAT "1.0E10" [1, 7]

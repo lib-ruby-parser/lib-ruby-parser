@@ -1,6 +1,0 @@
---INPUT
-"a" + "b"
---TOKENS
-tSTRING "a" [0, 3]
-tPLUS "+" [4, 5]
-tSTRING "b" [6, 9]

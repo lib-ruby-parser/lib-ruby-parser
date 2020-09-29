@@ -1,4 +1,0 @@
---INPUT
-"\c?"
---TOKENS
-tSTRING "\u007F" [0, 5]

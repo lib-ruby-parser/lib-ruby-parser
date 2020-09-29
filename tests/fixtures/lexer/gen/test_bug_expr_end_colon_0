@@ -1,6 +1,0 @@
---INPUT
-'foo':'bar'
---TOKENS
-tSTRING "foo" [0, 5]
-tCOLON ":" [5, 6]
-tSTRING "bar" [6, 11]

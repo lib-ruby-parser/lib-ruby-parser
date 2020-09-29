@@ -1,4 +1,0 @@
---INPUT
-"a\a\a"
---TOKENS
-tSTRING "a\a\a" [0, 7]

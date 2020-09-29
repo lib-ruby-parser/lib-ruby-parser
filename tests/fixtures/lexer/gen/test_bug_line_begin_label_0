@@ -1,5 +1,0 @@
---INPUT
-foo:bar
---TOKENS
-tIDENTIFIER "foo" [0, 3]
-tSYMBOL "bar" [3, 7]
