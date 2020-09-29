@@ -186,14 +186,14 @@ impl Lexer {
             self.p.lex.input[begin..end].iter().collect()
         );
 
-        match self.p.lex.strterm {
-            Some(StrTerm::Heredoc(_)) => {
-                // RUBY_SET_YYLLOC_FROM_STRTERM_HEREDOC
-            },
-            _ => {
-                // RUBY_SET_YYLLOC
-            }
-        };
+        // match self.p.lex.strterm {
+        //     Some(StrTerm::Heredoc(_)) => {
+        //         // RUBY_SET_YYLLOC_FROM_STRTERM_HEREDOC
+        //     },
+        //     _ => {
+        //         // RUBY_SET_YYLLOC
+        //     }
+        // };
 
         if token_type == Self::tNL {
             token_value = "".to_owned();
@@ -213,15 +213,16 @@ impl Lexer {
         let mut last_state: LexState;
         let token_seen = self.p.token_seen;
 
-        if let Some(strterm) = self.p.lex.strterm.clone() {
+        let strterm = self.p.lex.strterm.clone();
+        if let Some(strterm) = strterm {
             match strterm {
-                StrTerm::Heredoc(mut heredoc) => {
-                    return self.here_document(&mut heredoc)
+                StrTerm::HeredocLiteral(heredoc) => {
+                    return self.here_document(heredoc);
                 },
 
-                StrTerm::Literal(mut string) => {
+                StrTerm::StringLiteral(string) => {
                     self.token_flush();
-                    return self.parse_string(&mut string)
+                    return self.parse_string(string);
                 }
             }
         }
@@ -989,7 +990,7 @@ impl Lexer {
         self.p.lex.state.is_all(states)
     }
 
-    pub fn here_document(&self, _heredoc: &HeredocLiteral) -> i32 { unimplemented!("here_document") }
+    pub fn here_document(&self, _heredoc: HeredocLiteral) -> i32 { unimplemented!("here_document") }
 
     pub fn token_flush(&mut self) {
         self.set_ptok(self.p.lex.pcur);
@@ -1183,7 +1184,7 @@ impl Lexer {
     }
 
     pub fn new_strterm(&self, func: usize, term: char, paren: Option<char>) -> Option<StrTerm> {
-        Some(StrTerm::Literal(StringLiteral { nest: 0, func, paren, term }))
+        Some(StrTerm::new_literal(StringLiteral::new(0, func, paren, term)))
     }
 
     pub fn parse_qmark(&self, _space_seen: bool) -> i32 { unimplemented!("parse_qmark") }
@@ -1259,7 +1260,114 @@ impl Lexer {
         self.p.cmdarg_stack.is_active()
     }
 
-    pub fn parse_percent(&mut self, _space_seen: bool, _last_state: LexState) -> i32 { unimplemented!("parse_percent") }
+    pub fn percent_unknown(&mut self, term: &LexChar) -> i32 {
+        self.pushback(&term);
+        let len = self.parser_precise_mbclen(self.p.lex.pcur);
+        if let Some(len) = len {
+            self.p.lex.pcur += len;
+            self.yyerror0("unknown type of %string");
+        }
+        return Self::END_OF_INPUT
+    }
+
+    pub fn percent_quatation(&mut self, c: &LexChar, ptok: usize) -> i32 {
+        let mut c = c.clone();
+        let mut term: LexChar;
+        let mut paren: Option<char>;
+
+        if c.is_eof() || !c.is_alnum() {
+            term = c.clone();
+            if !c.is_ascii() {
+                return self.percent_unknown(&term)
+            }
+            c = LexChar::Some('Q');
+        } else {
+            term = self.nextc();
+            if term.is_alnum() {
+                return self.percent_unknown(&term);
+            }
+        }
+
+        if term.is_eof() {
+            self.compile_error("unterminated quoted string meets end of file");
+            return Self::END_OF_INPUT;
+        }
+
+        paren = term.to_option();
+        if term == '(' { term = LexChar::Some(')') }
+        else if term == '[' { term = LexChar::Some(']') }
+        else if term == '{' { term = LexChar::Some('}') }
+        else if term == '<' { term = LexChar::Some('>') }
+        else { paren = None }
+
+        self.p.lex.ptok = ptok - 1;
+        match c {
+            LexChar::Some('Q') => {
+                self.p.lex.strterm = self.new_strterm(str_types::str_dquote, term.unwrap(), paren);
+                return Self::tSTRING_BEG;
+            },
+            LexChar::Some('q') => {
+                self.p.lex.strterm = self.new_strterm(str_types::str_squote, term.unwrap(), paren);
+                return Self::tSTRING_BEG;
+            },
+            LexChar::Some('W') => {
+                self.p.lex.strterm = self.new_strterm(str_types::str_dword, term.unwrap(), paren);
+                return Self::tWORDS_BEG;
+            },
+            LexChar::Some('w') => {
+                self.p.lex.strterm = self.new_strterm(str_types::str_sword, term.unwrap(), paren);
+                return Self::tQWORDS_BEG;
+            },
+            LexChar::Some('I') => {
+                self.p.lex.strterm = self.new_strterm(str_types::str_dword, term.unwrap(), paren);
+                return Self::tSYMBOLS_BEG;
+            },
+            LexChar::Some('i') => {
+                self.p.lex.strterm = self.new_strterm(str_types::str_sword, term.unwrap(), paren);
+                return Self::tQSYMBOLS_BEG;
+            },
+            LexChar::Some('x') => {
+                self.p.lex.strterm = self.new_strterm(str_types::str_xquote, term.unwrap(), paren);
+                return Self::tXSTRING_BEG;
+            },
+            LexChar::Some('r') => {
+                self.p.lex.strterm = self.new_strterm(str_types::str_regexp, term.unwrap(), paren);
+                return Self::tREGEXP_BEG;
+            },
+            LexChar::Some('s') => {
+                self.p.lex.strterm = self.new_strterm(str_types::str_ssym, term.unwrap(), paren);
+                self.set_lex_state(EXPR_FNAME|EXPR_FITEM);
+                return Self::tSYMBEG;
+            },
+            _ => {
+                self.yyerror0("unknown type of %string");
+                return Self::END_OF_INPUT;
+            }
+        }
+    }
+
+    pub fn parse_percent(&mut self, space_seen: bool, last_state: LexState) -> i32 {
+        let c: LexChar;
+        let ptok = self.p.lex.pcur;
+
+        if self.is_beg() {
+            c = self.nextc();
+            return self.percent_quatation(&c, ptok);
+        }
+
+        c = self.nextc();
+        if c == '=' {
+            self.set_yylval_id("%");
+            self.set_lex_state(EXPR_BEG);
+            return Self::tOP_ASGN;
+        }
+        if self.is_spacearg(&c, space_seen) || (self.is_lex_state_some(EXPR_FITEM) && c == 's') {
+            return self.percent_quatation(&c, ptok);
+        }
+        self.set_lex_state(if self.is_after_operator() { EXPR_ARG } else { EXPR_BEG });
+        self.pushback(&c);
+        return self.warn_balanced(Self::tPERCENT, "%%", "string literal", &c, space_seen, &last_state);
+    }
 
     pub fn parse_gvar(&mut self, last_state: LexState) -> i32 {
         let ptr = self.p.lex.pcur;
@@ -1482,6 +1590,11 @@ impl Lexer {
                 Ok(())
             }
         }
+    }
+
+    pub fn parser_precise_mbclen(&mut self, _ptr: usize) -> Option<usize> {
+        // FIXME: mbc = multibyte char, so we need to do some byte work once we take Vec<u8> instead of String
+        Some(1)
     }
 
     pub fn is_label_suffix(&mut self, n: usize) -> bool {

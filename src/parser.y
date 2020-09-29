@@ -1821,13 +1821,19 @@
                 | args trailer
                 | args tCOMMA assocs trailer
                     {
-                        // result = val[0] << @builder.associate(nil, val[2], nil)
-                        $$ = Value::NodeList( vec![] );
+                        let mut nodes = $<NodeList>1;
+                        nodes.push(
+                            self.builder.associate(None, $<NodeList>3, None)
+                        );
+                        $$ = Value::NodeList( nodes );
                     }
                 | assocs trailer
                     {
-                        // result = [ @builder.associate(nil, val[0], nil) ]
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::NodeList(
+                            vec![
+                                self.builder.associate(None, $<NodeList>1, None)
+                            ]
+                        );
                     }
                 ;
 
@@ -2082,9 +2088,9 @@
                     {
                         $$ = Value::Node(
                             self.builder.associate(
-                                $<Token>1,
+                                Some($<Token>1),
                                 $<NodeList>2,
-                                $<Token>3
+                                Some($<Token>3)
                             )
                         );
                     }
@@ -3746,9 +3752,13 @@ opt_block_args_tail:
 
            words: tWORDS_BEG tSPACE word_list tSTRING_END
                     {
-                        // result = @builder.words_compose(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.words_compose(
+                                $<Token>1,
+                                $<NodeList>3,
+                                $<Token>4
+                            )
+                        );
                     }
                 ;
 
@@ -3759,8 +3769,10 @@ opt_block_args_tail:
                     }
                 | word_list word tSPACE
                     {
-                        let nodes = $<NodeList>1;
-                        // nodes.push( builder.word( $<Node>2 ) );
+                        let mut nodes = $<NodeList>1;
+                        nodes.push(
+                            self.builder.word( $<NodeList>2 )
+                        );
                         $$ = Value::NodeList(nodes);
                     }
                 ;
@@ -3779,9 +3791,13 @@ opt_block_args_tail:
 
          symbols: tSYMBOLS_BEG tSPACE symbol_list tSTRING_END
                     {
-                        // result = @builder.symbols_compose(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.symbols_compose(
+                                $<Token>1,
+                                $<NodeList>3,
+                                $<Token>4
+                            )
+                        );
                     }
                 ;
 
@@ -3791,25 +3807,35 @@ opt_block_args_tail:
                     }
                 | symbol_list word tSPACE
                     {
-                        let nodes = $<NodeList>1;
-                        // nodes.push(builder.word( $<Token>2 ));
+                        let mut nodes = $<NodeList>1;
+                        nodes.push(
+                            self.builder.word( $<NodeList>2 )
+                        );
                         $$ = Value::NodeList( nodes );
                     }
                 ;
 
           qwords: tQWORDS_BEG tSPACE qword_list tSTRING_END
                     {
-                        // result = @builder.words_compose(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.words_compose(
+                                $<Token>1,
+                                $<NodeList>3,
+                                $<Token>4
+                            )
+                        );
                     }
                 ;
 
         qsymbols: tQSYMBOLS_BEG tSPACE qsym_list tSTRING_END
                     {
-                        // result = @builder.symbols_compose(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.symbols_compose(
+                                $<Token>1,
+                                $<NodeList>3,
+                                $<Token>4
+                            )
+                        );
                     }
                 ;
 
@@ -3819,8 +3845,10 @@ opt_block_args_tail:
                     }
                 | qword_list tSTRING_CONTENT tSPACE
                     {
-                        let nodes = $<NodeList>1;
-                        // nodes.push(builder.string_internal( $<Token>2 ));
+                        let mut nodes = $<NodeList>1;
+                        nodes.push(
+                            self.builder.string_internal( $<Token>2 )
+                        );
                         $$ = Value::NodeList( nodes );
                     }
                 ;
@@ -3831,8 +3859,10 @@ opt_block_args_tail:
                     }
                 | qsym_list tSTRING_CONTENT tSPACE
                     {
-                        let nodes = $<NodeList>1;
-                        // nodes.push(builder.symbol_internal( $<Token>2 ));
+                        let mut nodes = $<NodeList>1;
+                        nodes.push(
+                            self.builder.symbol_internal( $<Token>2 )
+                        );
                         $$ = Value::NodeList( nodes );
                     }
                 ;

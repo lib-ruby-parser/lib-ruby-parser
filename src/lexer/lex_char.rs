@@ -58,6 +58,10 @@ impl LexChar {
     pub fn is_global_name_punct(&self) -> bool {
         if let LexChar::Some(c) = self { Self::PUNCT.contains(c) } else { false }
     }
+
+    pub fn to_option(&self) -> Option<char> {
+        if let LexChar::Some(c) = self { Some(c.clone()) } else { None }
+    }
 }
 
 impl PartialEq<char> for LexChar {

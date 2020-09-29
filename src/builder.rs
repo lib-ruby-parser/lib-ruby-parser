@@ -248,9 +248,52 @@ impl Builder {
         }
     }
 
-    pub fn word(&self) {}
-    pub fn words_compose(&self) {}
-    pub fn symbols_compose(&self) {}
+    pub fn word(&self, parts: Vec<Node>) -> Node {
+        if parts.len() == 1 {
+            let part = &parts[0];
+            match part {
+                Node::Str { .. } | Node::Dstr { .. } => {
+                    // collapse_string_parts? == true
+                    return part.clone()
+                }
+                _ => {}
+            }
+        }
+
+        Node::Dstr {
+            loc: self.collection_map(&None, &parts, &None),
+            children: parts,
+        }
+    }
+
+    pub fn words_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
+        Node::Array {
+            loc: self.collection_map(&Some(begin_t), &parts, &Some(end_t)),
+            elements: parts
+        }
+    }
+
+    pub fn symbols_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
+        let parts = parts.into_iter().map(|part| {
+            match part {
+                Node::Str { value, loc } => {
+                    Node::Sym {
+                        name: value,
+                        loc: loc
+                    }
+                },
+                Node::Dstr { children, loc } => {
+                    Node::Dsym { children, loc }
+                },
+                _ => part
+            }
+        }).collect::<Vec<_>>();
+
+        Node::Array {
+            loc: self.collection_map(&Some(begin_t), &parts, &Some(end_t)),
+            elements: parts
+        }
+    }
 
     // Hashes
 
@@ -280,8 +323,8 @@ impl Builder {
     pub fn pair_quoted(&self) {}
     pub fn kwsplat(&self) {}
 
-    pub fn associate(&self, begin_t: Token, pairs: Vec<Node>, end_t: Token) -> Node {
-        let loc = self.collection_map(&Some(begin_t.clone()), &pairs, &Some(end_t.clone()));
+    pub fn associate(&self, begin_t: Option<Token>, pairs: Vec<Node>, end_t: Option<Token>) -> Node {
+        let loc = self.collection_map(&begin_t, &pairs, &end_t);
         Node::Hash {
             pairs,
             loc

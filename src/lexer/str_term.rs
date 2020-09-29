@@ -1,3 +1,6 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 pub mod str_types {
     pub const STR_FUNC_ESCAPE: usize = 0x01;
     pub const STR_FUNC_EXPAND: usize = 0x02;
@@ -21,7 +24,7 @@ pub mod str_types {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct StringLiteral { // struct rb_strterm_literal_struct
+struct InnerStringLiteral { // struct rb_strterm_literal_struct
     pub nest: usize,
     pub func: usize,
     pub paren: Option<char>,
@@ -29,7 +32,28 @@ pub struct StringLiteral { // struct rb_strterm_literal_struct
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct HeredocLiteral {
+pub struct StringLiteral {
+    inner: Rc<RefCell<InnerStringLiteral>>
+}
+
+impl StringLiteral {
+    pub fn new(nest: usize, func: usize, paren: Option<char>, term: char) -> Self {
+        Self { inner: Rc::new(RefCell::new(InnerStringLiteral { nest, func, paren, term })) }
+    }
+
+    pub fn nest(&self) -> usize { self.inner.borrow().nest }
+    pub fn func(&self) -> usize { self.inner.borrow().func }
+    pub fn paren(&self) -> Option<char> { self.inner.borrow().paren }
+    pub fn term(&self) -> char { self.inner.borrow().term }
+
+    pub fn set_nest(&self, nest: usize) { self.inner.borrow_mut().nest = nest; }
+    pub fn set_func(&self, func: usize) { self.inner.borrow_mut().func = func; }
+    pub fn set_paren(&self, paren: Option<char>) { self.inner.borrow_mut().paren = paren; }
+    pub fn set_term(&self, term: char) { self.inner.borrow_mut().term = term; }
+}
+
+#[derive(Debug, Clone, Default)]
+struct InnerHeredocLiteral {
     lastline: String,   /* the string of line that contains `<<"END"` */
     offset: usize,      /* the column of END in `<<"END"` */
     sourceline: usize,  /* lineno of the line that contains `<<"END"` */
@@ -39,8 +63,56 @@ pub struct HeredocLiteral {
     func: usize,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct HeredocLiteral {
+    inner: Rc<RefCell<InnerHeredocLiteral>>
+}
+
+impl HeredocLiteral {
+    pub fn new(lastline: String, offset: usize, sourceline: usize, length: usize, quote: usize, func: usize) -> Self {
+        Self {
+            inner: Rc::new(
+                RefCell::new(
+                    InnerHeredocLiteral {
+                        lastline,
+                        offset,
+                        sourceline,
+                        length,
+                        quote,
+                        func
+                    }
+                )
+            )
+        }
+    }
+
+    pub fn lastline(&self) -> String { self.inner.borrow().lastline.clone() }
+    pub fn offset(&self) -> usize { self.inner.borrow().offset }
+    pub fn sourceline(&self) -> usize { self.inner.borrow().sourceline }
+    pub fn length(&self) -> usize { self.inner.borrow().length }
+    pub fn quote(&self) -> usize { self.inner.borrow().quote }
+    pub fn func(&self) -> usize { self.inner.borrow().func }
+
+    pub fn set_lastline(&self, lastline: String) { self.inner.borrow_mut().lastline = lastline; }
+    pub fn set_offset(&self, offset: usize) { self.inner.borrow_mut().offset = offset; }
+    pub fn set_sourceline(&self, sourceline: usize) { self.inner.borrow_mut().sourceline = sourceline; }
+    pub fn set_length(&self, length: usize) { self.inner.borrow_mut().length = length; }
+    pub fn set_quote(&self, quote: usize) { self.inner.borrow_mut().quote = quote; }
+    pub fn set_func(&self, func: usize) { self.inner.borrow_mut().func = func; }
+}
+
 #[derive(Debug, Clone)]
 pub enum StrTerm { // struct rb_strterm_struct
-    Literal(StringLiteral),
-    Heredoc(HeredocLiteral)
+    StringLiteral(StringLiteral),
+    HeredocLiteral(HeredocLiteral)
+}
+
+impl StrTerm {
+    pub fn new_literal(literal: StringLiteral) -> Self {
+        Self::StringLiteral(literal)
+    }
+
+    pub fn new_heredoc(heredoc: HeredocLiteral) -> Self {
+        Self::HeredocLiteral(heredoc)
+    }
 }

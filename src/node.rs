@@ -47,6 +47,7 @@ pub enum Node {
     Array { elements: Vec<Node>, loc: CollectionMap },
     Str { value: String, loc: CollectionMap },
     Dstr { children: Vec<Node>, loc: CollectionMap },
+    Dsym { children: Vec<Node>, loc: CollectionMap },
     If { cond: Box<Node>, if_true: Option<Box<Node>>, if_false: Option<Box<Node>>, loc: KeywordMap },
     WhilePost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
     While { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
@@ -122,6 +123,7 @@ impl Node {
             Self::Array { loc, .. } => &loc.expression,
             Self::Str { loc, .. } => &loc.expression,
             Self::Dstr { loc, .. } => &loc.expression,
+            Self::Dsym { loc, .. } => &loc.expression,
             Self::If { loc, .. } => &loc.expression,
             Self::While { loc, .. } => &loc.expression,
             Self::WhilePost { loc, .. } => &loc.expression,
@@ -210,6 +212,7 @@ impl Node {
             Node::Array { .. } => "array",
             Node::Str { .. } => "str",
             Node::Dstr { .. } => "dstr",
+            Node::Dsym { .. } => "dsym",
             Node::If { .. } => "if",
             Node::WhilePost { .. } => "while_post",
             Node::While { .. } => "while",
@@ -391,7 +394,8 @@ impl Node {
             Node::Str { value, .. } => {
                 result.push_str(value)
             }
-            Node::Dstr { children, .. } => {
+            Node::Dstr { children, .. }
+            | Node::Dsym { children, .. } => {
                 result.push_nodes(children)
             }
             Node::If { cond, if_true, if_false, .. } => {

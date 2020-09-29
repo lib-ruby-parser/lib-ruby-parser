@@ -5,10 +5,10 @@ use crate::lexer::lex_states::*;
 use crate::lexer::str_types::*;
 
 impl Lexer {
-    pub fn parse_string(&mut self, quote: &mut StringLiteral) -> i32 {
-        let func = quote.func;
-        let term = quote.term;
-        let paren = quote.paren;
+    pub fn parse_string(&mut self, quote: StringLiteral) -> i32 {
+        let func = quote.func();
+        let term = quote.term();
+        let paren = quote.paren();
         let mut c: LexChar;
         let mut space = false;
 
@@ -34,20 +34,20 @@ impl Lexer {
             space = true;
         }
         if (func & STR_FUNC_LIST) != 0 {
-            quote.func &= !STR_FUNC_LIST;
+            quote.set_func(quote.func() & !STR_FUNC_LIST);
             space = true;
         }
-        if c == term && quote.nest == 0 {
+        if c == term && quote.nest() == 0 {
             if (func & STR_FUNC_QWORDS) != 0 {
-                quote.func &= STR_FUNC_TERM;
+                quote.set_func(quote.func() | STR_FUNC_TERM);
                 self.pushback(&c); /* dispatch the term at tSTRING_END */
-                return Self::tSP;
+                return Self::tSPACE;
             }
             return self.parser_string_term(func);
         }
         if space {
             self.pushback(&c);
-            return Self::tSP;
+            return Self::tSPACE;
         }
         self.newtok();
         if ((func & STR_FUNC_EXPAND) != 0) && c == '#' {
@@ -59,7 +59,7 @@ impl Lexer {
         }
         self.pushback(&c);
 
-        if self.tokadd_string(func, term, paren, &mut quote.nest).is_eof() {
+        if self.tokadd_string(func, term, paren, &quote).is_eof() {
             if self.p.eofp {
                 self.literal_flush(self.p.lex.pcur);
                 if (func & STR_FUNC_QWORDS) != 0 {
@@ -73,7 +73,7 @@ impl Lexer {
                 } else {
                     self.yyerror0("unterminated string meets end of file");
                 }
-                quote.func |= STR_FUNC_TERM;
+                quote.set_func(quote.func() | STR_FUNC_TERM);
             }
         }
 
@@ -81,11 +81,6 @@ impl Lexer {
         self.set_yylval_str(&self.tok());
         self.flush_string_content();
 
-        // if let Some(lval) = &self.p.lval {
-        //     if lval != "a string" {
-        //         panic!("dead");
-        //     }
-        // }
         Self::tSTRING_CONTENT
     }
 
@@ -182,7 +177,7 @@ impl Lexer {
         None
     }
 
-    pub fn tokadd_string(&mut self, func: usize, term: char, paren: Option<char>, nest: &mut usize) -> LexChar {
+    pub fn tokadd_string(&mut self, func: usize, term: char, paren: Option<char>, literal: &StringLiteral) -> LexChar {
         let mut c;
         let _erred = false;
 
@@ -194,16 +189,14 @@ impl Lexer {
                 self.parser_update_heredoc_indent(&c);
             }
 
-            if let Some(paren) = paren {
-                if c == paren {
-                    *nest += 1;
-                }
+            if c == paren {
+                literal.set_nest(literal.nest() + 1);
             } else if c == term {
-                if *nest == 0 {
+                if literal.nest() == 0 {
                     self.pushback(&c);
                     break;
                 }
-                *nest -= 1;
+                literal.set_nest(literal.nest() - 1);
             } else if ((func & STR_FUNC_EXPAND) != 0) && c == '#' && self.p.lex.pcur < self.p.lex.pend {
                 let c2 = self.char_at(self.p.lex.pcur);
                 if c2 == '$' || c2 == '@' || c2 == '{' {
