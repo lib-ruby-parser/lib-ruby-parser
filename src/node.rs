@@ -53,7 +53,7 @@ pub enum Node {
     While { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
     UntilPost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
     Until { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
-    RescueBody { exc_list: Vec<Node>, exc_var: Option<Box<Node>>, stmt: Box<Node>, loc: RescueBodyMap },
+    RescueBody { exc_list: Option<Box<Node>>, exc_var: Option<Box<Node>>, stmt: Option<Box<Node>>, loc: RescueBodyMap },
     Mlhs { items: Vec<Node>, loc: CollectionMap },
     Splat { arg: Option<Box<Node>>, loc: OperatorMap },
     Masgn { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
@@ -419,17 +419,21 @@ impl Node {
                 result.push_node(body)
             }
             Node::RescueBody { exc_list, exc_var, stmt, .. } => {
-                if exc_list.is_empty() {
-                    result.push_nil();
+                if let Some(exc_list) = exc_list {
+                    result.push_node(exc_list);
                 } else {
-                    result.push_nodes(exc_list);
+                    result.push_nil();
                 }
                 if let Some(exc_var) = exc_var {
                     result.push_node(exc_var)
                 } else {
                     result.push_nil()
                 }
-                result.push_node(stmt)
+                if let Some(stmt) = stmt {
+                    result.push_node(stmt)
+                } else {
+                    result.push_nil()
+                }
             }
             Node::Mlhs { items, .. } => {
                 result.push_nodes(items)

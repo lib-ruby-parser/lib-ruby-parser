@@ -33,6 +33,12 @@ pub enum LogicalOp {
     Or
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum PKwLabel {
+    PlainLabel(Token),
+    QuotedLabel(( Token, Vec<Node>, Token ))
+}
+
 #[derive(Debug, Default)]
 pub struct Builder {
     static_env: StaticEnvironment,
@@ -176,7 +182,7 @@ impl Builder {
         }
     }
 
-    pub fn character(&self) {}
+    pub fn character(&self, char_t: Token) -> Node { unimplemented!("character") }
 
     pub fn __file__(&self, file_t: Token) -> Node {
         Node::__FILE__ {
@@ -204,15 +210,15 @@ impl Builder {
         }
     }
 
-    pub fn symbol_compose(&self) {}
+    pub fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node { unimplemented!("symbol_compose") }
 
     // Executable strings
 
-    pub fn xstring_compose(&self) {}
+    pub fn xstring_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node { unimplemented!("xstring_compose") }
 
     // Indented (interpolated, noninterpolated, executable) strings
 
-    pub fn dedent_string(&self) {}
+    pub fn dedent_string(&self, node: Node, dedent_level: i32) -> Node { unimplemented!("dedent_string") }
 
     // Regular expressions
 
@@ -321,8 +327,8 @@ impl Builder {
         }
     }
 
-    pub fn pair_quoted(&self) {}
-    pub fn kwsplat(&self) {}
+    pub fn pair_quoted(&self, begin_t: Token, parts: Vec<Node>, end_t: Token, value: Node) -> Node { unimplemented!("pair_quoted") }
+    pub fn kwsplat(&self, dstar_t: Token, arg: Node) -> Node { unimplemented!("kwsplat") }
 
     pub fn associate(&self, begin_t: Option<Token>, pairs: Vec<Node>, end_t: Option<Token>) -> Node {
         let loc = self.collection_map(&begin_t, &pairs, &end_t);
@@ -687,8 +693,8 @@ impl Builder {
     }
 
     pub fn numargs(&self) {}
-    pub fn forward_only_args(&self) {}
-    pub fn forward_arg(&self) {}
+    pub fn forward_only_args(&self, begin_t: Token, dots_t: Token, end_t: Token) -> Node { unimplemented!("forward_only_args") }
+    pub fn forward_arg(&self, dots_t: Token) -> Node { unimplemented!("forward_arg") }
 
     pub fn arg(&self, name_t: Token) -> Node {
         self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
@@ -748,7 +754,7 @@ impl Builder {
         }
     }
 
-    pub fn call_lambda(&self) {}
+    pub fn call_lambda(&self, _lambda_t: Token) -> Node { unimplemented!("call_lambda") }
     pub fn block(&self, _method_call: Node, _begin_t: Token, _args: Option<Node>, _body: Option<Node>, _end_t: Token) -> Node {
         unimplemented!("block")
     }
@@ -880,7 +886,7 @@ impl Builder {
 
     // Case matching
 
-    pub fn when(&self) {}
+    pub fn when(&self, when_t: Token, patterns: Vec<Node>, then_t: Token, body: Option<Node>) -> Node { unimplemented!("when") }
 
     pub fn case(&self, _case_t: Token, _expr: Option<Node>, _when_bodies: Vec<Node>, _else_t: Option<Token>, _else_body: Option<Node>, _end_t: Token) -> Node {
         unimplemented!("case")
@@ -969,13 +975,13 @@ impl Builder {
 
     // Exception handling
 
-    pub fn rescue_body(&self, rescue_t: Token, exc_list: Vec<Node>, assoc_t: Option<Token>, exc_var: Option<Node>, then_t: Option<Token>, compound_stmt: Node) -> Node {
+    pub fn rescue_body(&self, rescue_t: Token, exc_list: Option<Node>, assoc_t: Option<Token>, exc_var: Option<Node>, then_t: Option<Token>, compound_stmt: Option<Node>) -> Node {
         let loc = self.rescue_body_map(&rescue_t, &exc_list, &assoc_t, &exc_var, &then_t, &compound_stmt);
 
         Node::RescueBody {
-            exc_list,
+            exc_list: exc_list.map(|node| Box::new(node)),
             exc_var: exc_var.map(|node| Box::new(node)),
-            stmt: Box::new(compound_stmt),
+            stmt: compound_stmt.map(|node| Box::new(node)),
             loc
         }
     }
@@ -1148,8 +1154,8 @@ impl Builder {
     pub fn match_alt(&self, left: Node, pipe_t: Token, right: Node) -> Node { unimplemented!("match_alt") }
     pub fn match_as(&self, value: Node, assoc_t: Token, as_: Node) -> Node { unimplemented!("match_as") }
     pub fn match_nil_pattern(&self, dstar_t: Token, nil_t: Token) -> Node { unimplemented!("match_nil_pattern") }
-    pub fn match_pair(&self) -> Node { unimplemented!("match_pair") }
-    pub fn match_label(&self) -> Node { unimplemented!("match_label") }
+    pub fn match_pair(&self, p_kw_label: PKwLabel, value: Node) -> Node { unimplemented!("match_pair") }
+    pub fn match_label(&self, p_kw_label: PKwLabel) -> Node { unimplemented!("match_label") }
 
     //
     // Verification
@@ -1475,8 +1481,14 @@ impl Builder {
     pub fn ternary_map(&self) {}
     pub fn for_map(&self) {}
 
-    pub fn rescue_body_map(&self, keyword_t: &Token, _exc_list: &Vec<Node>, assoc_t: &Option<Token>, _exc_var: &Option<Node>, then_t: &Option<Token>, compstmt: &Node) -> RescueBodyMap {
-        let end_l = compstmt.expression().clone();
+    pub fn rescue_body_map(&self, keyword_t: &Token, exc_list: &Option<Node>, assoc_t: &Option<Token>, exc_var: &Option<Node>, then_t: &Option<Token>, compstmt: &Option<Node>) -> RescueBodyMap {
+        let end_l = match (compstmt, then_t, exc_var, exc_list) {
+            (Some(compstmt), _, _, _) => compstmt.expression().clone(),
+            (None, Some(then_t), _, _) => self.loc(then_t),
+            (None, None, Some(exc_var), _) => exc_var.expression().clone(),
+            (None, None, None, Some(exc_list)) => exc_list.expression().clone(),
+            (None, None, None, None) => self.loc(&keyword_t)
+        };
 
         RescueBodyMap {
             keyword: self.loc(keyword_t),
