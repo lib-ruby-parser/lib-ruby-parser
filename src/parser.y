@@ -456,7 +456,7 @@
                     }
                 | kALIAS tGVAR tNTH_REF
                     {
-                        // FIXME: diagnostic :error, :nth_ref_alias, nil, val[2]
+                        // FIXME: diagnostic :error, :nth_ref_alias, None, val[2]
                     }
                 | kUNDEF undef_list
                     {
@@ -1268,7 +1268,7 @@
                 | primary_value call_op tIDENTIFIER
                     {
                         // if (val[1][0] == :anddot)
-                        //     diagnostic :error, :csend_in_lhs_of_masgn, nil, val[1]
+                        //     diagnostic :error, :csend_in_lhs_of_masgn, None, val[1]
                         // end
 
                         $$ = Value::Node(
@@ -1292,7 +1292,7 @@
                 | primary_value call_op tCONSTANT
                     {
                         // if (val[1][0] == :anddot)
-                        //     diagnostic :error, :csend_in_lhs_of_masgn, nil, val[1]
+                        //     diagnostic :error, :csend_in_lhs_of_masgn, None, val[1]
                         // end
 
                         $$ = Value::Node(
@@ -1424,7 +1424,7 @@
 
            cname: tIDENTIFIER
                     {
-                        // diagnostic :error, :module_name_const, nil, val[0]
+                        // diagnostic :error, :module_name_const, None, val[0]
                         $$ = $<RAW>1;
                     }
                 | tCONSTANT
@@ -1927,7 +1927,7 @@
                         let (def_t, name_t) = $<DefnHead>1;
 
                         // if name_t[0].end_with?('=')
-                        //     diagnostic :error, :endless_setter, nil, name_t
+                        //     diagnostic :error, :endless_setter, None, name_t
                         // end
 
                         $$ = Value::Node(
@@ -2053,15 +2053,23 @@
 
         rel_expr: arg relop arg   %prec tGT
                     {
-                        // result = self.builder.binary_op(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.binary_op(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 | rel_expr relop arg   %prec tGT
                     {
-                        // result = self.builder.binary_op(val[0], val[1], val[2])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        $$ = Value::Node(
+                            self.builder.binary_op(
+                                $<Node>1,
+                                $<Token>2,
+                                $<Node>3
+                            )
+                        );
                     }
                 ;
 
@@ -2094,13 +2102,21 @@
          arg_rhs: arg   %prec tOP_ASGN
                 | arg kRESCUE_MOD arg
                     {
-                        // rescue_body = self.builder.rescue_body(val[1],
-                        //                     nil, nil, nil,
-                        //                     nil, val[2])
+                        let rescue_body = self.builder.rescue_body(
+                            $<Token>2,
+                            vec![],
+                            None,
+                            None,
+                            None,
+                            $<Node>3
+                        );
 
-                        // result = self.builder.begin_body(val[0], [ rescue_body ])
-                        // $$ = Value::Node(Node::None);
-                        panic!("dead");
+                        self.builder.begin_body(
+                            Some($<Node>1),
+                            vec![ rescue_body ],
+                            None,
+                            None
+                        );
                     }
                 ;
 
@@ -2114,8 +2130,11 @@
                         //     diagnostic :error, :unexpected_token, { :token => 'tBDOT3' } , val[3]
                         // end
 
-                        // result = [val[0], [*val[1], self.builder.forwarded_args(val[3])], val[4]]
-                        $$ = Value::ParenArgs(( $<Token>1, vec![], $<Token>5 ));
+                        let args = [
+                            $<NodeList>2,
+                            vec![ self.builder.forwarded_args($<Token>4) ]
+                        ].concat();
+                        $$ = Value::ParenArgs(( $<Token>1, args, $<Token>5 ));
                     }
                 | tLPAREN2 args_forward rparen
                     {
@@ -2123,8 +2142,7 @@
                         //     diagnostic :error, :unexpected_token, { :token => 'tBDOT3' } , val[1]
                         // end
 
-                        // result = [val[0], [self.builder.forwarded_args(val[1])], val[2]]
-                        $$ = Value::ParenArgs(( $<Token>1, vec![], $<Token>3 ));
+                        $$ = Value::ParenArgs(( $<Token>1, vec![ self.builder.forwarded_args($<Token>2) ], $<Token>3 ));
                     }
                 ;
 
@@ -2147,13 +2165,17 @@
                 | args tCOMMA
                 | args tCOMMA assocs tCOMMA
                     {
-                        // result = val[0] << self.builder.associate(nil, val[2], nil)
-                        $$ = Value::NodeList( vec![] );
+                        let mut nodes = $<NodeList>1;
+                        nodes.push( self.builder.associate(None, $<NodeList>3, None) );
+                        $$ = Value::NodeList( nodes );
                     }
                 | assocs tCOMMA
                     {
-                        // result = [ self.builder.associate(nil, val[0], nil) ]
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::NodeList(
+                            vec![
+                                self.builder.associate(None, $<NodeList>1, None)
+                            ]
+                        );
                     }
                 ;
 
@@ -2168,16 +2190,20 @@
                     }
                 | assocs opt_block_arg
                     {
-                        // result = [ self.builder.associate(nil, val[0], nil) ]
-                        // result.concat(val[1])
-                        $$ = Value::NodeList( vec![] );
+                        let nodes = [
+                            vec![ self.builder.associate(None, $<NodeList>1, None) ],
+                            $<NodeList>2
+                        ].concat();
+                        $$ = Value::NodeList( nodes );
                     }
                 | args tCOMMA assocs opt_block_arg
                     {
-                        // assocs = self.builder.associate(nil, val[2], nil)
-                        // result = val[0] << assocs
-                        // result.concat(val[3])
-                        $$ = Value::NodeList( vec![] );
+                        let nodes = [
+                            $<NodeList>1,
+                            vec![ self.builder.associate(None, $<NodeList>3, None) ],
+                            $<NodeList>4
+                        ].concat();
+                        $$ = Value::NodeList( nodes );
                     }
                 | block_arg
                     {
@@ -2277,7 +2303,7 @@
                 | backref
                 | tFID
                     {
-                        // result = self.builder.call_method(nil, nil, val[0])
+                        // result = self.builder.call_method(None, None, val[0])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -2387,13 +2413,13 @@
                     }
                 | kNOT tLPAREN2 rparen
                     {
-                        // result = self.builder.not_op(val[0], val[1], nil, val[2])
+                        // result = self.builder.not_op(val[0], val[1], None, val[2])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | fcall brace_block
                     {
-                        // method_call = self.builder.call_method(nil, nil, val[0])
+                        // method_call = self.builder.call_method(None, None, val[0])
 
                         // begin_t, args, body, end_t = val[1]
                         // result      = self.builder.block(method_call,
@@ -2477,7 +2503,7 @@
                     {
                         // *when_bodies, (else_t, else_body) = *val[2]
 
-                        // result = self.builder.case(val[0], nil,
+                        // result = self.builder.case(val[0], None,
                         //                         when_bodies, else_t, else_body,
                         //                         val[3])
                         // $$ = Value::Node(Node::None);
@@ -2514,7 +2540,7 @@
                   k_end
                     {
                         // unless @context.class_definition_allowed?
-                        //     diagnostic :error, :class_in_def, nil, val[0]
+                        //     diagnostic :error, :class_in_def, None, val[0]
                         // end
 
                         let _superclass = $<Superclass>3;
@@ -2561,7 +2587,7 @@
                   k_end
                     {
                         // unless @context.module_definition_allowed?
-                        //     diagnostic :error, :module_in_def, nil, val[0]
+                        //     diagnostic :error, :module_in_def, None, val[0]
                         // end
 
                         // result = self.builder.def_module(val[0], val[1],
@@ -2698,7 +2724,7 @@
         k_return: kRETURN
                     {
                         // if @context.in_class?
-                        //     diagnostic :error, :invalid_return, nil, val[0]
+                        //     diagnostic :error, :invalid_return, None, val[0]
                         // end
                         $$ = $<RAW>1;
                     }
@@ -2728,7 +2754,7 @@
                         // result = [ val[0],
                         //             self.builder.condition(val[0], val[1], val[2],
                         //                                 val[3], else_t,
-                        //                                 else_,  nil),
+                        //                                 else_,  None),
                         //         ]
                         // $$ = Value::IfTail( Some(( $<Token>1, Node::None )) );
                         panic!("dead");
@@ -2928,7 +2954,7 @@ opt_block_args_tail:
 
  opt_block_param: none
                     {
-                        // result = self.builder.args(nil, [], nil)
+                        // result = self.builder.args(None, [], None)
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -2942,7 +2968,7 @@ opt_block_args_tail:
  block_param_def: tPIPE opt_bv_decl tPIPE
                     {
                         // @max_numparam_stack.has_ordinary_params!
-                        // @current_arg_stack.set(nil)
+                        // @current_arg_stack.set(None)
                         // result = self.builder.args(val[0], val[1], val[2])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -2950,7 +2976,7 @@ opt_block_args_tail:
                 | tPIPE block_param opt_bv_decl tPIPE
                     {
                         // @max_numparam_stack.has_ordinary_params!
-                        // @current_arg_stack.set(nil)
+                        // @current_arg_stack.set(None)
                         // result = self.builder.args(val[0], val[1].concat(val[2]), val[3])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -3035,7 +3061,7 @@ opt_block_args_tail:
                         // if val[0].any?
                         //     @max_numparam_stack.has_ordinary_params!
                         // end
-                        // result = self.builder.args(nil, val[0], nil)
+                        // result = self.builder.args(None, val[0], None)
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -3106,7 +3132,7 @@ opt_block_args_tail:
                 | block_call call_op2 operation2 command_args do_block
                     {
                         // method_call = self.builder.call_method(val[0], val[1], val[2],
-                        //                 nil, val[3], nil)
+                        //                 None, val[3], None)
 
                         // begin_t, args, body, end_t = val[4]
                         // result      = self.builder.block(method_call,
@@ -3406,31 +3432,31 @@ opt_block_args_tail:
                         // like 1, 2,
                         // must be emitted as `array_pattern_with_tail`
                         // item = self.builder.match_with_trailing_comma(val[0], val[1])
-                        // result = self.builder.array_pattern(nil, [ item ], nil)
+                        // result = self.builder.array_pattern(None, [ item ], None)
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | p_expr tCOMMA p_args
                     {
-                        // result = self.builder.array_pattern(nil, [val[0]].concat(val[2]), nil)
+                        // result = self.builder.array_pattern(None, [val[0]].concat(val[2]), None)
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | p_find
                     {
-                        // result = self.builder.find_pattern(nil, val[0], nil)
+                        // result = self.builder.find_pattern(None, val[0], None)
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | p_args_tail
                     {
-                        // result = self.builder.array_pattern(nil, val[0], nil)
+                        // result = self.builder.array_pattern(None, val[0], None)
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | p_kwargs
                     {
-                        // result = self.builder.hash_pattern(nil, val[0], nil)
+                        // result = self.builder.hash_pattern(None, val[0], None)
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -3475,7 +3501,7 @@ opt_block_args_tail:
                 | p_const p_lparen p_args rparen
                     {
                         // @pattern_hash_keys.pop
-                        // pattern = self.builder.array_pattern(nil, val[2], nil)
+                        // pattern = self.builder.array_pattern(None, val[2], None)
                         // result = self.builder.const_pattern(val[0], val[1], pattern, val[3])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -3483,7 +3509,7 @@ opt_block_args_tail:
                 | p_const p_lparen p_find rparen
                     {
                         // @pattern_hash_keys.pop
-                        // pattern = self.builder.find_pattern(nil, val[2], nil)
+                        // pattern = self.builder.find_pattern(None, val[2], None)
                         // result = self.builder.const_pattern(val[0], val[1], pattern, val[3])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -3491,14 +3517,14 @@ opt_block_args_tail:
                 | p_const p_lparen p_kwargs rparen
                     {
                         // @pattern_hash_keys.pop
-                        // pattern = self.builder.hash_pattern(nil, val[2], nil)
+                        // pattern = self.builder.hash_pattern(None, val[2], None)
                         // result = self.builder.const_pattern(val[0], val[1], pattern, val[3])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | p_const tLPAREN2 rparen
                     {
-                        // pattern = self.builder.array_pattern(val[1], nil, val[2])
+                        // pattern = self.builder.array_pattern(val[1], None, val[2])
                         // result = self.builder.const_pattern(val[0], val[1], pattern, val[2])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -3506,7 +3532,7 @@ opt_block_args_tail:
                 | p_const p_lbracket p_args rbracket
                     {
                         // @pattern_hash_keys.pop
-                        // pattern = self.builder.array_pattern(nil, val[2], nil)
+                        // pattern = self.builder.array_pattern(None, val[2], None)
                         // result = self.builder.const_pattern(val[0], val[1], pattern, val[3])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -3514,7 +3540,7 @@ opt_block_args_tail:
                 | p_const p_lbracket p_find rbracket
                     {
                         // @pattern_hash_keys.pop
-                        // pattern = self.builder.find_pattern(nil, val[2], nil)
+                        // pattern = self.builder.find_pattern(None, val[2], None)
                         // result = self.builder.const_pattern(val[0], val[1], pattern, val[3])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -3522,14 +3548,14 @@ opt_block_args_tail:
                 | p_const p_lbracket p_kwargs rbracket
                     {
                         // @pattern_hash_keys.pop
-                        // pattern = self.builder.hash_pattern(nil, val[2], nil)
+                        // pattern = self.builder.hash_pattern(None, val[2], None)
                         // result = self.builder.const_pattern(val[0], val[1], pattern, val[3])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | p_const tLBRACK2 rbracket
                     {
-                        // pattern = self.builder.array_pattern(val[1], nil, val[2])
+                        // pattern = self.builder.array_pattern(val[1], None, val[2])
                         // result = self.builder.const_pattern(val[0], val[1], pattern, val[2])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
@@ -3764,7 +3790,7 @@ opt_block_args_tail:
                     }
                 | kwrest_mark
                     {
-                        // result = [ self.builder.match_rest(val[0], nil) ]
+                        // result = [ self.builder.match_rest(val[0], None) ]
                         $$ = Value::NodeList( vec![] );
                     }
                 ;
@@ -3795,13 +3821,13 @@ opt_block_args_tail:
                     }
                 | p_primitive tDOT2
                     {
-                        // result = self.builder.range_inclusive(val[0], val[1], nil)
+                        // result = self.builder.range_inclusive(val[0], val[1], None)
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | p_primitive tDOT3
                     {
-                        // result = self.builder.range_exclusive(val[0], val[1], nil)
+                        // result = self.builder.range_exclusive(val[0], val[1], None)
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -3810,13 +3836,13 @@ opt_block_args_tail:
                 | p_const
                 | tBDOT2 p_primitive
                     {
-                        // result = self.builder.range_inclusive(nil, val[0], val[1])
+                        // result = self.builder.range_inclusive(None, val[0], val[1])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | tBDOT3 p_primitive
                     {
-                        // result = self.builder.range_exclusive(nil, val[0], val[1])
+                        // result = self.builder.range_exclusive(None, val[0], val[1])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
@@ -4565,22 +4591,22 @@ keyword_variable: kNIL
 
        f_bad_arg: tCONSTANT
                     {
-                        // diagnostic :error, :argument_const, nil, val[0]
+                        // diagnostic :error, :argument_const, None, val[0]
                         $$ = $<RAW>1;
                     }
                 | tIVAR
                     {
-                        // diagnostic :error, :argument_const, nil, val[0]
+                        // diagnostic :error, :argument_const, None, val[0]
                         $$ = $<RAW>1;
                     }
                 | tGVAR
                     {
-                        // diagnostic :error, :argument_const, nil, val[0]
+                        // diagnostic :error, :argument_const, None, val[0]
                         $$ = $<RAW>1;
                     }
                 | tCVAR
                     {
-                        // diagnostic :error, :argument_const, nil, val[0]
+                        // diagnostic :error, :argument_const, None, val[0]
                         $$ = $<RAW>1;
                     }
                 ;
@@ -4649,14 +4675,14 @@ keyword_variable: kNIL
 
             f_kw: f_label arg_value
                     {
-                        // @current_arg_stack.set(nil)
+                        // @current_arg_stack.set(None)
                         // result = self.builder.kwoptarg(val[0], val[1])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");
                     }
                 | f_label
                     {
-                        // @current_arg_stack.set(nil)
+                        // @current_arg_stack.set(None)
                         // result = self.builder.kwarg(val[0])
                         // $$ = Value::Node(Node::None);
                         panic!("dead");

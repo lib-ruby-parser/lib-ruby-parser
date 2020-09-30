@@ -712,7 +712,9 @@ impl Builder {
         }
     }
 
-    pub fn forwarded_args(&self) {}
+    pub fn forwarded_args(&self, _dots_t: Token) -> Node {
+        unimplemented!("forwarded_args")
+    }
 
     pub fn call_method(&self, receiver: Option<Node>, dot_t: Option<Token>, selector_t: Option<Token>, lparen_t: Option<Token>, args: Vec<Node>, rparen_t: Option<Token>) -> Node {
         let loc = self.send_map(&receiver, &dot_t, &selector_t, &lparen_t, &args, &rparen_t);
