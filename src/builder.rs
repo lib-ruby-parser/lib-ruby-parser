@@ -698,15 +698,15 @@ impl Builder {
         }
     }
 
-    pub fn optarg(&self) {}
-    pub fn restarg(&self) {}
-    pub fn kwarg(&self) {}
-    pub fn kwoptarg(&self) {}
-    pub fn kwrestarg(&self) {}
-    pub fn kwnilarg(&self) {}
-    pub fn shadowarg(&self) {}
-    pub fn blockarg(&self) {}
-    pub fn procarg0(&self) {}
+    pub fn optarg(&self, _name_t: Token, _eql_t: Token, _value: Node) -> Node { unimplemented!("optarg") }
+    pub fn restarg(&self, _start_t: Token, _name_t: Option<Token>) -> Node { unimplemented!("restarg") }
+    pub fn kwarg(&self, _name_t: Token) -> Node { unimplemented!("kwarg") }
+    pub fn kwoptarg(&self, _name_t: Token, _value: Node) -> Node { unimplemented!("kwoptarg") }
+    pub fn kwrestarg(&self, _dstar_t: Token, _name_t: Option<Token>) -> Node { unimplemented!("kwrestarg") }
+    pub fn kwnilarg(&self, _dstar_t: Token, _nil_t: Token) -> Node { unimplemented!("kwnilarg") }
+    pub fn shadowarg(&self, _name_t: Token) -> Node { unimplemented!("shadowarg") }
+    pub fn blockarg(&self, _amper_t: Token, _name_t: Token) -> Node { unimplemented!("blockarg") }
+    pub fn procarg0(&self, _arg: Node) -> Node { unimplemented!("Node") }
 
     //
     // Method calls
@@ -749,7 +749,7 @@ impl Builder {
     }
 
     pub fn call_lambda(&self) {}
-    pub fn block(&self, _method_call: Node, _begin_t: Token, _args: Node, _body: Node, _end_t: Token) -> Node {
+    pub fn block(&self, _method_call: Node, _begin_t: Token, _args: Option<Node>, _body: Option<Node>, _end_t: Token) -> Node {
         unimplemented!("block")
     }
     pub fn block_pass(&self, _amper_t: Token, _arg: Node) -> Node {
@@ -853,7 +853,7 @@ impl Builder {
 
     // Conditionals
 
-    pub fn condition(&self, _cond_t: Token, _cond: Node, _then_t: Token, _if_true: Option<Node>, _else_t: Option<Token>, _else_: Option<Node>, _end_t: Token) -> Node {
+    pub fn condition(&self, _cond_t: Token, _cond: Node, _then_t: Token, _if_true: Option<Node>, _else_t: Option<Token>, _else_: Option<Node>, _end_t: Option<Token>) -> Node {
         unimplemented!("condition");
     }
 
@@ -1130,24 +1130,26 @@ impl Builder {
     }
 
     pub fn in_match(&self, _lhs: Node, _in_t: Token, _rhs: Node) -> Node { unimplemented!("in_match") }
-    pub fn in_pattern(&self) {}
-    pub fn if_guard(&self) {}
-    pub fn unless_guard(&self) {}
-    pub fn match_var(&self) {}
-    pub fn match_hash_var(&self) {}
-    pub fn match_hash_var_from_str(&self) {}
-    pub fn match_rest(&self) {}
-    pub fn hash_pattern(&self) {}
-    pub fn array_pattern(&self) {}
-    pub fn find_pattern(&self) {}
-    pub fn match_with_trailing_comma(&self) {}
-    pub fn const_pattern(&self) {}
-    pub fn pin(&self) {}
-    pub fn match_alt(&self) {}
-    pub fn match_as(&self) {}
-    pub fn match_nil_pattern(&self) {}
-    pub fn match_pair(&self) {}
-    pub fn match_label(&self) {}
+    pub fn in_pattern(&self, in_t: Token, pattern: Node, guard: Option<Node>, then_t: Token, body: Option<Node>) -> Node { unimplemented!("in_pattern") }
+
+    pub fn if_guard(&self, if_t: Token, if_body: Node) -> Node { unimplemented!("if_guard") }
+    pub fn unless_guard(&self, unless_t: Token, unless_body: Node) -> Node { unimplemented!("unless_guard") }
+
+    pub fn match_var(&self, name_t: Token) -> Node { unimplemented!("match_var") }
+    pub fn match_hash_var(&self, name_t: Token) -> Node { unimplemented!("match_hash_var") }
+    pub fn match_hash_var_from_str(&self, begin_t: Token, strings: Vec<Node>, end_t: Token) -> Node { unimplemented!("match_hash_var_from_str") }
+    pub fn match_rest(&self, star_t: Token, _name_t: Option<Token>) -> Node { unimplemented!("match_rest") }
+    pub fn hash_pattern(&self, lbrace_t: Option<Token>, kwargs: Vec<Node>, rbrace_t: Option<Token>) -> Node { unimplemented!("hash_pattern") }
+    pub fn array_pattern(&self, lbrack_t: Option<Token>, elements: Vec<Node>, rbrack_t: Option<Token>) -> Node { unimplemented!("array_pattern") }
+    pub fn find_pattern(&self, lbrack_t: Option<Token>, elements: Vec<Node>, rbrack_t: Option<Token>) -> Node { unimplemented!("find_pattern") }
+    pub fn match_with_trailing_comma(&self, match_: Node, comma_t: Token) -> Node { unimplemented!("match_with_trailing_comma") }
+    pub fn const_pattern(&self, const_: Node, ldelim_t: Token, pattern: Node, rdelim_t: Token) -> Node { unimplemented!("const_pattern") }
+    pub fn pin(&self, pin_t: Token, var: Node) -> Node { unimplemented!("pin") }
+    pub fn match_alt(&self, left: Node, pipe_t: Token, right: Node) -> Node { unimplemented!("match_alt") }
+    pub fn match_as(&self, value: Node, assoc_t: Token, as_: Node) -> Node { unimplemented!("match_as") }
+    pub fn match_nil_pattern(&self, dstar_t: Token, nil_t: Token) -> Node { unimplemented!("match_nil_pattern") }
+    pub fn match_pair(&self) -> Node { unimplemented!("match_pair") }
+    pub fn match_label(&self) -> Node { unimplemented!("match_label") }
 
     //
     // Verification
