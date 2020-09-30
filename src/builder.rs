@@ -333,8 +333,12 @@ impl Builder {
 
     // Ranges
 
-    pub fn range_inclusive(&self) {}
-    pub fn range_exclusive(&self) {}
+    pub fn range_inclusive(&self, lhs: Option<Node>, dot2_t: Token, rhs: Option<Node>) -> Node {
+        unimplemented!("range_inclusive")
+    }
+    pub fn range_exclusive(&self, lhs: Option<Node>, dot3_t: Token, rhs: Option<Node>) -> Node {
+        unimplemented!("range_exclusive")
+    }
 
     //
     // Access
@@ -567,7 +571,7 @@ impl Builder {
             Node::BackRef { .. }
             | Node::NthRef { .. } => {
                 // diagnostic :error, :backref_assignment, nil, lhs.loc.expression
-                panic!("backref assignment")
+                return rhs;
             }
             _ => panic!("unsupported op_assign lhs {:#?}", lhs)
         };
@@ -629,9 +633,15 @@ impl Builder {
         }
     }
 
-    pub fn def_endless_method(&self) {}
-    pub fn def_singleton(&self) {}
-    pub fn def_endless_singleton(&self) {}
+    pub fn def_endless_method(&self, _def_t: Token, _name_t: Token, _args: Option<Node>, _assignment_t: Token, _body: Option<Node>) -> Node {
+        unimplemented!("def_endless_method")
+    }
+    pub fn def_singleton(&self, _def_t: Token, _definee: Node, _dot_t: Token, _name_t: Token, _args: Option<Node>, _body: Option<Node>, _end_t: Token) -> Node {
+        unimplemented!("def_singleton")
+    }
+    pub fn def_endless_singleton(&self, _def_t: Token, _definee: Node, _dot_t: Token, _name_t: Token, _args: Option<Node>, _assignment_t: Token, _body: Option<Node>) -> Node {
+        panic!("def_endless_singleton")
+    }
 
     pub fn undef_method(&self, undef_t: Token, names: Vec<Node>) -> Node {
         let loc = self.keyword_map(&undef_t, &None, &names, &None);
@@ -730,7 +740,9 @@ impl Builder {
     }
 
     pub fn call_lambda(&self) {}
-    pub fn block(&self) {}
+    pub fn block(&self, method_call: Node, begin_t: Token, args: Node, body: Node, end_t: Token) -> Node {
+        unimplemented!("block")
+    }
     pub fn block_pass(&self) {}
 
     pub fn attr_asgn(&self, receiver: Node, dot_t: Token, selector_t: Token) -> Node {
@@ -782,8 +794,13 @@ impl Builder {
         Node::Send { receiver: Some(Box::new(receiver)), operator: self.value(&operator_t), args: vec![arg], loc: source_map }
     }
 
-    pub fn match_op(&self) {}
-    pub fn unary_op(&self) {}
+    pub fn match_op(&self, receiver: Node, match_t: Token, arg: Node) -> Node {
+        unimplemented!("match_op")
+    }
+
+    pub fn unary_op(&self, op_t: Token, receiver: Node) -> Node {
+        unimplemented!("unary_op")
+    }
 
     pub fn not_op(&self, not_t: Token, begin_t: Option<Token>, receiver: Option<Node>, end_t: Option<Token>) -> Node {
         if let Some(receiver) = receiver {
@@ -844,7 +861,9 @@ impl Builder {
         }
     }
 
-    pub fn ternary(&self) {}
+    pub fn ternary(&self, cond: Node, question_t: Token, if_true: Node, colon_t: Token, if_false: Node) -> Node {
+        unimplemented!("ternary")
+    }
 
     // Case matching
 
@@ -1087,7 +1106,7 @@ impl Builder {
     //
 
     pub fn case_match(&self) {}
-    pub fn in_match(&self) {}
+    pub fn in_match(&self, lhs: Node, in_t: Token, rhs: Node) -> Node { unimplemented!("in_match") }
     pub fn in_pattern(&self) {}
     pub fn if_guard(&self) {}
     pub fn unless_guard(&self) {}
