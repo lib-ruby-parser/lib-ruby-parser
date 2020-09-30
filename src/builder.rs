@@ -1,6 +1,6 @@
 use std::{convert::TryInto};
 use crate::source::Range;
-use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack};
+use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack, Loc};
 use crate::source::map::*;
 
 #[derive(Debug, PartialEq)]
@@ -131,7 +131,7 @@ impl Builder {
                 loc.operator = Some(operator_l);
                 numeric
             },
-            _ => panic!("unreachable")
+            _ => unreachable!()
         }
     }
 
@@ -168,7 +168,7 @@ impl Builder {
                                     loc: self.string_map(&begin_t, &parts, &end_t)
                                 }
                             },
-                            _ => panic!("unreachable")
+                            _ => unreachable!()
                         }
                     }
                 },
@@ -182,7 +182,12 @@ impl Builder {
         }
     }
 
-    pub fn character(&self, char_t: Token) -> Node { unimplemented!("character") }
+    pub fn character(&self, char_t: Token) -> Node {
+        Node::Str {
+            loc: self.prefix_string_map(&char_t),
+            value: self.value(&char_t)
+        }
+    }
 
     pub fn __file__(&self, file_t: Token) -> Node {
         Node::__FILE__ {
@@ -210,15 +215,43 @@ impl Builder {
         }
     }
 
-    pub fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node { unimplemented!("symbol_compose") }
+    pub fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
+        if parts.len() == 1 {
+            let part = &parts[0];
+            let value = match part {
+                // collapse_string_parts? == true
+                Node::Str { value, .. } => {
+                    value.clone()
+                }
+                _ => unreachable!()
+            };
+            return Node::Sym {
+                loc: self.collection_map(&Some(begin_t), &vec![], &Some(end_t)),
+                name: value,
+            }
+        }
+
+        Node::Dsym {
+            loc: self.collection_map(&Some(begin_t), &parts, &Some(end_t)),
+            children: parts
+        }
+    }
 
     // Executable strings
 
-    pub fn xstring_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node { unimplemented!("xstring_compose") }
+    pub fn xstring_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
+        Node::Xstr {
+            loc: self.string_map(&Some(begin_t), &parts, &Some(end_t)),
+            children: parts
+        }
+    }
 
     // Indented (interpolated, noninterpolated, executable) strings
 
-    pub fn dedent_string(&self, node: Node, dedent_level: i32) -> Node { unimplemented!("dedent_string") }
+    pub fn dedent_string(&self, node: Node, _dedent_level: i32) -> Node {
+        // FIXME
+        node
+    }
 
     // Regular expressions
 
@@ -250,7 +283,7 @@ impl Builder {
 
     pub fn splat(&self, star_t: Token, arg: Option<Node>) -> Node {
         Node::Splat {
-            loc: self.unary_op_map(&star_t, &arg),
+            loc: self.unary_op_map(&star_t, &arg.as_ref()),
             arg: arg.map(|node| Box::new(node))
         }
     }
@@ -327,8 +360,24 @@ impl Builder {
         }
     }
 
-    pub fn pair_quoted(&self, begin_t: Token, parts: Vec<Node>, end_t: Token, value: Node) -> Node { unimplemented!("pair_quoted") }
-    pub fn kwsplat(&self, dstar_t: Token, arg: Node) -> Node { unimplemented!("kwsplat") }
+    pub fn pair_quoted(&self, begin_t: Token, parts: Vec<Node>, end_t: Token, value: Node) -> Node {
+        let (end_t, pair_map) = self.pair_quoted_map(&begin_t, &end_t, &value);
+
+        let key = self.symbol_compose(begin_t, parts, end_t);
+
+        Node::Pair {
+            key: Box::new(key),
+            value: Box::new(value),
+            loc: pair_map
+        }
+    }
+
+    pub fn kwsplat(&self, dstar_t: Token, arg: Node) -> Node {
+        Node::Kwsplat {
+            loc: self.unary_op_map(&dstar_t, &Some(&arg)),
+            value: Box::new(arg)
+        }
+    }
 
     pub fn associate(&self, begin_t: Option<Token>, pairs: Vec<Node>, end_t: Option<Token>) -> Node {
         let loc = self.collection_map(&begin_t, &pairs, &end_t);
@@ -340,11 +389,20 @@ impl Builder {
 
     // Ranges
 
-    pub fn range_inclusive(&self, _lhs: Option<Node>, _dot2_t: Token, _rhs: Option<Node>) -> Node {
-        unimplemented!("range_inclusive")
+    pub fn range_inclusive(&self, lhs: Option<Node>, dot2_t: Token, rhs: Option<Node>) -> Node {
+        Node::Irange {
+            loc: self.range_map(&lhs, &dot2_t, &rhs),
+            left: lhs.map(|node| Box::new(node)),
+            right: rhs.map(|node| Box::new(node))
+        }
     }
-    pub fn range_exclusive(&self, _lhs: Option<Node>, _dot3_t: Token, _rhs: Option<Node>) -> Node {
-        unimplemented!("range_exclusive")
+
+    pub fn range_exclusive(&self, lhs: Option<Node>, dot3_t: Token, rhs: Option<Node>) -> Node {
+        Node::Erange {
+            loc: self.range_map(&lhs, &dot3_t, &rhs),
+            left: lhs.map(|node| Box::new(node)),
+            right: rhs.map(|node| Box::new(node))
+        }
     }
 
     //
@@ -620,14 +678,29 @@ impl Builder {
     // Class and module definition
     //
 
-    pub fn def_class(&self, _class_t: Token, _name: Node, _lt_t: Option<Token>, _superclass: Option<Node>, _body: Option<Node>, _end_t: Token) -> Node {
-        unimplemented!("def_class")
+    pub fn def_class(&self, class_t: Token, name: Node, lt_t: Option<Token>, superclass: Option<Node>, body: Option<Node>, end_t: Token) -> Node {
+        Node::Class {
+            loc: self.module_definition_map(&class_t, &Some(&name), &lt_t, &end_t),
+            name: Box::new(name),
+            superclass: superclass.map(|node| Box::new(node)),
+            body: body.map(|node| Box::new(node))
+        }
     }
-    pub fn def_sclass(&self, _class_t: Token, _lshft_t: Token, _expr: Node, _body: Option<Node>, _end_t: Token) -> Node {
-        unimplemented!("def_sclass")
+
+    pub fn def_sclass(&self, class_t: Token, lshift_t: Token, expr: Node, body: Option<Node>, end_t: Token) -> Node {
+        Node::Sclass {
+            loc: self.module_definition_map(&class_t, &None, &Some(lshift_t), &end_t),
+            expr: Box::new(expr),
+            body: body.map(|node| Box::new(node))
+        }
     }
-    pub fn def_module(&self, _module_t: Token, _name: Node, _body: Option<Node>, _end_t: Token) -> Node {
-        unimplemented!("def_module")
+
+    pub fn def_module(&self, module_t: Token, name: Node, body: Option<Node>, end_t: Token) -> Node {
+        Node::Module {
+            loc: self.module_definition_map(&module_t, &Some(&name), &None, &end_t),
+            name: Box::new(name),
+            body: body.map(|node| Box::new(node))
+        }
     }
 
     //
@@ -637,23 +710,49 @@ impl Builder {
     pub fn def_method(&self, def_t: Token, name_t: Token, args: Option<Node>, body: Option<Node>, end_t: Token) -> Node {
         self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
 
-        let loc = self.definition_map(&def_t, &None, &name_t, &end_t);
         Node::Def {
+            loc: self.definition_map(&def_t, &None, &name_t, &end_t),
             name: self.value(&name_t),
             args: args.map(|node| Box::new(node)),
             body: body.map(|node| Box::new(node)),
-            loc
         }
     }
 
-    pub fn def_endless_method(&self, _def_t: Token, _name_t: Token, _args: Option<Node>, _assignment_t: Token, _body: Option<Node>) -> Node {
-        unimplemented!("def_endless_method")
+    pub fn def_endless_method(&self, def_t: Token, name_t: Token, args: Option<Node>, assignment_t: Token, body: Option<Node>) -> Node {
+        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+
+        Node::Def {
+            loc: self.endless_definition_map(&def_t, &None, &name_t, &assignment_t, &body.as_ref()),
+            name: self.value(&name_t),
+            args: args.map(|node| Box::new(node)),
+            body: body.map(|node| Box::new(node)),
+        }
     }
-    pub fn def_singleton(&self, _def_t: Token, _definee: Node, _dot_t: Token, _name_t: Token, _args: Option<Node>, _body: Option<Node>, _end_t: Token) -> Node {
-        unimplemented!("def_singleton")
+
+    pub fn def_singleton(&self, def_t: Token, definee: Node, dot_t: Token, name_t: Token, args: Option<Node>, body: Option<Node>, end_t: Token) -> Node {
+        self.validate_definee(&definee);
+        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+
+        Node::Defs {
+            loc: self.definition_map(&def_t, &Some(dot_t), &name_t, &end_t),
+            definee: Box::new(definee),
+            name: self.value(&name_t),
+            args: args.map(|node| Box::new(node)),
+            body: body.map(|node| Box::new(node)),
+        }
     }
-    pub fn def_endless_singleton(&self, _def_t: Token, _definee: Node, _dot_t: Token, _name_t: Token, _args: Option<Node>, _assignment_t: Token, _body: Option<Node>) -> Node {
-        panic!("def_endless_singleton")
+
+    pub fn def_endless_singleton(&self, def_t: Token, definee: Node, dot_t: Token, name_t: Token, args: Option<Node>, assignment_t: Token, body: Option<Node>) -> Node {
+        self.validate_definee(&definee);
+        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+
+        Node::Defs {
+            loc: self.endless_definition_map(&def_t, &Some(dot_t), &name_t, &assignment_t, &body.as_ref()),
+            definee: Box::new(definee),
+            name: self.value(&name_t),
+            args: args.map(|node| Box::new(node)),
+            body: body.map(|node| Box::new(node)),
+        }
     }
 
     pub fn undef_method(&self, undef_t: Token, names: Vec<Node>) -> Node {
@@ -693,8 +792,20 @@ impl Builder {
     }
 
     pub fn numargs(&self) {}
-    pub fn forward_only_args(&self, begin_t: Token, dots_t: Token, end_t: Token) -> Node { unimplemented!("forward_only_args") }
-    pub fn forward_arg(&self, dots_t: Token) -> Node { unimplemented!("forward_arg") }
+
+    pub fn forward_only_args(&self, begin_t: Token, dots_t: Token, end_t: Token) -> Node {
+        let args = vec![ self.forward_arg(dots_t) ];
+        Node::Args {
+            loc: self.collection_map(&Some(begin_t), &args, &Some(end_t)),
+            args,
+        }
+    }
+
+    pub fn forward_arg(&self, dots_t: Token) -> Node {
+        Node::ForwardArg {
+            loc: self.token_map(&dots_t)
+        }
+    }
 
     pub fn arg(&self, name_t: Token) -> Node {
         self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
@@ -704,15 +815,93 @@ impl Builder {
         }
     }
 
-    pub fn optarg(&self, _name_t: Token, _eql_t: Token, _value: Node) -> Node { unimplemented!("optarg") }
-    pub fn restarg(&self, _start_t: Token, _name_t: Option<Token>) -> Node { unimplemented!("restarg") }
-    pub fn kwarg(&self, _name_t: Token) -> Node { unimplemented!("kwarg") }
-    pub fn kwoptarg(&self, _name_t: Token, _value: Node) -> Node { unimplemented!("kwoptarg") }
-    pub fn kwrestarg(&self, _dstar_t: Token, _name_t: Option<Token>) -> Node { unimplemented!("kwrestarg") }
-    pub fn kwnilarg(&self, _dstar_t: Token, _nil_t: Token) -> Node { unimplemented!("kwnilarg") }
-    pub fn shadowarg(&self, _name_t: Token) -> Node { unimplemented!("shadowarg") }
-    pub fn blockarg(&self, _amper_t: Token, _name_t: Token) -> Node { unimplemented!("blockarg") }
-    pub fn procarg0(&self, _arg: Node) -> Node { unimplemented!("Node") }
+    pub fn optarg(&self, name_t: Token, eql_t: Token, value: Node) -> Node {
+        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        Node::Optarg {
+            loc: VariableMap {
+                operator: Some(self.loc(&eql_t)),
+                expression: self.loc(&name_t).join(&value.expression())
+            },
+            name: self.value(&name_t),
+            value: Box::new(value),
+        }
+    }
+
+    pub fn restarg(&self, star_t: Token, name_t: Option<Token>) -> Node {
+        let loc = self.arg_prefix_map(&star_t, &name_t);
+        let name = match name_t {
+            Some(name_t) => {
+                self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+                Some(self.value(&name_t))
+            },
+            _ => None
+        };
+        Node::Restarg { loc, name }
+    }
+
+    pub fn kwarg(&self, name_t: Token) -> Node {
+        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        Node::Kwarg {
+            loc: self.kwarg_map(&name_t, &None),
+            name: self.value(&name_t)
+        }
+    }
+
+    pub fn kwoptarg(&self, name_t: Token, value: Node) -> Node {
+        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+
+        Node::Kwoptarg {
+            loc: self.kwarg_map(&name_t, &Some(&value)),
+            name: self.value(&name_t),
+            value: Box::new(value)
+        }
+    }
+
+    pub fn kwrestarg(&self, dstar_t: Token, name_t: Option<Token>) -> Node {
+        let loc = self.arg_prefix_map(&dstar_t, &name_t);
+        let name = match name_t {
+            Some(name_t) => {
+                self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+                Some(self.value(&name_t))
+            },
+            _ => {
+                None
+            }
+        };
+
+        Node::Kwrestarg { name, loc }
+    }
+
+    pub fn kwnilarg(&self, dstar_t: Token, nil_t: Token) -> Node {
+        Node::Kwnilarg { loc: self.arg_prefix_map(&dstar_t, &Some(nil_t)) }
+    }
+
+    pub fn shadowarg(&self, name_t: Token) -> Node {
+        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        Node::Shadowarg {
+            loc: self.variable_map(&name_t),
+            name: self.value(&name_t)
+        }
+    }
+
+    pub fn blockarg(&self, amper_t: Token, name_t: Token) -> Node {
+        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        Node::Blockarg {
+            name: self.value(&name_t),
+            loc: self.arg_prefix_map(&amper_t, &Some(name_t)),
+        }
+    }
+
+    pub fn procarg0(&self, arg: Node) -> Node {
+        Node::Procarg0 {
+            loc: CollectionMap {
+                begin: None,
+                end: None,
+                expression: arg.expression().clone()
+            },
+            arg: Box::new(arg)
+        }
+    }
 
     //
     // Method calls
@@ -1216,7 +1405,16 @@ impl Builder {
     }
 
     pub fn delimited_string_map(&self) {}
-    pub fn prefix_string_map(&self) {}
+
+    pub fn prefix_string_map(&self, symbol: &Token) -> CollectionMap {
+        let str_range = self.loc(symbol);
+        let begin_l = str_range.with(str_range.begin_pos, str_range.begin_pos + 1);
+        CollectionMap {
+            begin: Some(begin_l),
+            end: None,
+            expression: str_range
+        }
+    }
 
     pub fn unquoted_map(&self, token: &Token) -> CollectionMap {
         CollectionMap {
@@ -1244,7 +1442,22 @@ impl Builder {
         )
     }
 
-    pub fn pair_quoted_map(&self) {}
+    pub fn pair_quoted_map(&self, begin_t: &Token, end_t: &Token, value: &Node) -> ( Token, OperatorMap ) {
+        let end_l = self.loc(end_t);
+
+        let quote_loc = Loc { begin: end_l.end_pos - 2, end: end_l.end_pos - 1 };
+
+        let colon_l = end_l.with(end_l.end_pos - 1, end_l.end_pos);
+
+        (
+            ( end_t.0, self.value(end_t), quote_loc ),
+            OperatorMap {
+                operator: Some(colon_l),
+                expression: self.loc(begin_t).join(&value.expression())
+            }
+        )
+    }
+
     pub fn expr_map(&self) {}
 
     pub fn collection_map(&self, begin_t: &Option<Token>, parts: &Vec<Node>, end_t: &Option<Token>) -> CollectionMap {
@@ -1323,7 +1536,7 @@ impl Builder {
         }
     }
 
-    pub fn unary_op_map(&self, op_t: &Token, arg: &Option<Node>) -> OperatorMap {
+    pub fn unary_op_map(&self, op_t: &Token, arg: &Option<&Node>) -> OperatorMap {
         let expr_l: Range;
         if let Some(arg) = arg {
             expr_l = self.loc(op_t).join(&arg.expression())
@@ -1336,24 +1549,93 @@ impl Builder {
             expression: expr_l
         }
     }
-    pub fn range_map(&self) {}
 
-    pub fn arg_prefix_map(&self) {}
-    pub fn kwarg_map(&self) {}
-    pub fn module_definition_map(&self) {}
+    pub fn range_map(&self, start: &Option<Node>, op_t: &Token, end: &Option<Node>) -> OperatorMap {
+        let expr_l = match (start, end) {
+            (Some(start), Some(end)) => self.join_expr(&start, &end),
+            (Some(start), None) => start.expression().join(&self.loc(op_t)),
+            (None, Some(end)) => self.loc(op_t).join(&end.expression()),
+            (None, None) => unreachable!("at least one of start/end is required")
+        };
+
+        OperatorMap {
+            operator: Some(self.loc(op_t)),
+            expression: expr_l
+        }
+    }
+
+    pub fn arg_prefix_map(&self, op_t: &Token, name_t: &Option<Token>) -> VariableMap {
+        let op_l = self.loc(op_t);
+        let expr_l = if let Some(name_t) = name_t {
+            op_l.join(&self.loc(&name_t))
+        } else {
+            op_l.clone()
+        };
+
+        VariableMap {
+            operator: Some(op_l),
+            expression: expr_l
+        }
+    }
+
+    pub fn kwarg_map(&self, name_t: &Token, value: &Option<&Node>) -> VariableMap {
+        let label_range = self.loc(name_t);
+        let name_range = label_range.adjust(0, -1);
+
+        let name_l = self.loc(name_t);
+        let expr_l = if let Some(value) = value {
+            name_l.join(&value.expression())
+        } else {
+            name_l
+        };
+
+        VariableMap {
+            operator: Some(name_range),
+            expression: expr_l
+        }
+    }
+
+    pub fn module_definition_map(&self, keyword_t: &Token, name: &Option<&Node>, operator_t: &Option<Token>, end_t: &Token) -> DefinitionMap {
+        let name_l = if let Some(name) = name { Some(name.expression().clone()) } else { None };
+
+        let keyword_l = self.loc(keyword_t);
+        let end_l = self.loc(end_t);
+        let operator_l = if let Some(operator_t) = operator_t { Some(self.loc(operator_t)) } else { None };
+
+        DefinitionMap {
+            expression: keyword_l.join(&end_l),
+            keyword: keyword_l,
+            operator: operator_l,
+            name: name_l,
+            end: end_l,
+        }
+    }
 
     pub fn definition_map(&self, keyword_t: &Token, operator_t: &Option<Token>, name_t: &Token, end_t: &Token) -> MethodDefinitionMap {
+        let keyword_l = self.loc(keyword_t);
         MethodDefinitionMap {
-            keyword: self.loc(keyword_t),
+            expression: keyword_l.join(&self.loc(end_t)),
+            keyword: keyword_l,
             operator: operator_t.clone().map(|op| self.loc(&op)),
             name: self.loc(name_t),
             end: Some(self.loc(end_t)),
             assignment: None,
-            expression: self.loc(keyword_t).join(&self.loc(end_t))
         }
     }
 
-    pub fn endless_definition_map(&self) {}
+    pub fn endless_definition_map(&self, keyword_t: &Token, operator_t: &Option<Token>, name_t: &Token, assignment_t: &Token, body: &Option<&Node>) -> MethodDefinitionMap {
+        let body_l = body.map(|node| node.expression()).unwrap_or_else(|| unreachable!("endless method always has body") );
+        let keyword_l = self.loc(keyword_t);
+
+        MethodDefinitionMap {
+            expression: keyword_l.join(&body_l),
+            keyword: keyword_l,
+            operator: operator_t.clone().map(|tok| self.loc(&tok)),
+            name: self.loc(&name_t),
+            end: None,
+            assignment: Some(self.loc(&assignment_t)),
+        }
+    }
 
     pub fn send_map(&self, receiver_e: &Option<Node>, dot_t: &Option<Token>, selector_t: &Option<Token>, begin_t: &Option<Token>, args: &Vec<Node>, end_t: &Option<Token>) -> SendMap {
         let begin_l: Option<Range>;
@@ -1379,7 +1661,7 @@ impl Builder {
 
         let expression_l = match (&begin_l, &end_l) {
             (Some(begin_l), Some(end_l)) => begin_l.join(end_l),
-            _ => panic!("unreachable: begin_l = {:#?}, end_l = {:#?}", begin_l, end_l)
+            _ => unreachable!("begin_l = {:#?}, end_l = {:#?}", begin_l, end_l)
         };
 
         SendMap {
@@ -1557,6 +1839,6 @@ impl Builder {
     }
 
     pub fn diagnostic(&self) {}
-    pub fn validate_definee(&self) {}
+    pub fn validate_definee(&self, _definee: &Node) {}
 
 }

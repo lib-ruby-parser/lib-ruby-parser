@@ -88,3 +88,12 @@ pub struct OpAssignMap {
     pub expression: Range,
     pub operator: Range,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DefinitionMap {
+    pub expression: Range,
+    pub keyword: Range,
+    pub operator: Option<Range>,
+    pub name: Option<Range>,
+    pub end: Range,
+}

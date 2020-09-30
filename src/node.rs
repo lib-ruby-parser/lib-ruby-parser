@@ -25,6 +25,7 @@ pub enum Node {
     KwBegin { statements: Vec<Node>, loc: CollectionMap },
     Args { args: Vec<Node>, loc: CollectionMap },
     Def { name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
+    Defs { definee: Box<Node>, name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
     Arg { name: String, loc: VariableMap },
     Sym { name: String, loc: CollectionMap },
     Alias { to: Box<Node>, from: Box<Node>, loc: KeywordMap },
@@ -47,6 +48,7 @@ pub enum Node {
     Array { elements: Vec<Node>, loc: CollectionMap },
     Str { value: String, loc: CollectionMap },
     Dstr { children: Vec<Node>, loc: CollectionMap },
+    Xstr { children: Vec<Node>, loc: CollectionMap },
     Dsym { children: Vec<Node>, loc: CollectionMap },
     If { cond: Box<Node>, if_true: Option<Box<Node>>, if_false: Option<Box<Node>>, loc: KeywordMap },
     WhilePost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
@@ -74,6 +76,23 @@ pub enum Node {
     Or { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
     RegOpt { options: Vec<char>, loc: Map },
     Regexp { parts: Vec<Node>, options: Box<Node>, loc: CollectionMap },
+    Kwsplat { value: Box<Node>, loc: OperatorMap },
+    Irange { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap  },
+    Erange { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap  },
+    Class { name: Box<Node>, superclass: Option<Box<Node>>, body: Option<Box<Node>>, loc: DefinitionMap },
+    Sclass { expr: Box<Node>, body: Option<Box<Node>>, loc: DefinitionMap },
+    Module { name: Box<Node>, body: Option<Box<Node>>, loc: DefinitionMap },
+    ForwardArg { loc: Map },
+    Optarg { name: String, value: Box<Node>, loc: VariableMap },
+    Restarg { name: Option<String>, loc: VariableMap },
+    Kwarg { name: String, loc: VariableMap  },
+    Kwoptarg { name: String, value: Box<Node>, loc: VariableMap  },
+    Kwrestarg { name: Option<String>, loc: VariableMap },
+    Kwnilarg { loc: VariableMap },
+    Shadowarg { name: String, loc: VariableMap },
+    Blockarg { name: String, loc: VariableMap },
+    Procarg0 { arg: Box<Node>, loc: CollectionMap },
+    ForwardedArgs { loc: Map },
 }
 
 impl Node {
@@ -101,6 +120,7 @@ impl Node {
             Self::KwBegin { loc, .. } => &loc.expression,
             Self::Args { loc, .. } => &loc.expression,
             Self::Def { loc, .. } => &loc.expression,
+            Self::Defs { loc, .. } => &loc.expression,
             Self::Arg { loc, .. } => &loc.expression,
             Self::Sym { loc, .. } => &loc.expression,
             Self::Alias { loc, .. } => &loc.expression,
@@ -123,6 +143,7 @@ impl Node {
             Self::Array { loc, .. } => &loc.expression,
             Self::Str { loc, .. } => &loc.expression,
             Self::Dstr { loc, .. } => &loc.expression,
+            Self::Xstr { loc, .. } => &loc.expression,
             Self::Dsym { loc, .. } => &loc.expression,
             Self::If { loc, .. } => &loc.expression,
             Self::While { loc, .. } => &loc.expression,
@@ -150,6 +171,23 @@ impl Node {
             Self::Or { loc, .. } => &loc.expression,
             Self::RegOpt { loc, .. } => &loc.expression,
             Self::Regexp { loc, .. } => &loc.expression,
+            Self::Kwsplat { loc, .. } => &loc.expression,
+            Self::Irange { loc, .. } => &loc.expression,
+            Self::Erange { loc, .. } => &loc.expression,
+            Self::Class { loc, .. } => &loc.expression,
+            Self::Module { loc, .. } => &loc.expression,
+            Self::Sclass { loc, .. } => &loc.expression,
+            Self::ForwardArg { loc, .. } => &loc.expression,
+            Self::Optarg { loc, .. } => &loc.expression,
+            Self::Restarg { loc, .. } => &loc.expression,
+            Self::Kwarg { loc, .. } => &loc.expression,
+            Self::Kwoptarg { loc, .. } => &loc.expression,
+            Self::Kwrestarg { loc, .. } => &loc.expression,
+            Self::Kwnilarg { loc, .. } => &loc.expression,
+            Self::Shadowarg { loc, .. } => &loc.expression,
+            Self::Blockarg { loc, .. } => &loc.expression,
+            Self::Procarg0 { loc, .. } => &loc.expression,
+            Self::ForwardedArgs { loc } => &loc.expression,
         }
     }
 
@@ -190,6 +228,7 @@ impl Node {
             Node::KwBegin { .. } => "kwbegin",
             Node::Args { .. } => "args",
             Node::Def { .. } => "def",
+            Node::Defs { .. } => "defs",
             Node::Arg { .. } => "arg",
             Node::Sym { .. } => "sym",
             Node::Alias { .. } => "alias",
@@ -212,6 +251,7 @@ impl Node {
             Node::Array { .. } => "array",
             Node::Str { .. } => "str",
             Node::Dstr { .. } => "dstr",
+            Node::Xstr { .. } => "dstr",
             Node::Dsym { .. } => "dsym",
             Node::If { .. } => "if",
             Node::WhilePost { .. } => "while_post",
@@ -239,6 +279,23 @@ impl Node {
             Node::Or { .. } => "or",
             Node::RegOpt { .. } => "regopt",
             Node::Regexp { .. } => "regexp",
+            Node::Kwsplat { .. } => "kwsplat",
+            Node::Irange { .. } => "irange",
+            Node::Erange { .. } => "Erange",
+            Node::Class { .. } => "class",
+            Node::Sclass { .. } => "sclass",
+            Node::Module { .. } => "sclass",
+            Node::ForwardArg { .. } => "forward_arg",
+            Node::Optarg { .. } => "optarg",
+            Node::Restarg { .. } => "restarg",
+            Node::Kwarg { .. } => "kwarg",
+            Node::Kwoptarg { .. } => "kwoptarg",
+            Node::Kwrestarg { .. } => "kwrestarg",
+            Node::Kwnilarg { .. } => "kwnilarg",
+            Node::Shadowarg { .. } => "shadowarg",
+            Node::Blockarg { .. } => "blockarg",
+            Node::Procarg0 { .. } => "procarg0",
+            Node::ForwardedArgs { .. } => "forwarded_args",
         }
     }
 
@@ -310,6 +367,20 @@ impl Node {
                 result.push_nodes(args)
             }
             Node::Def { name, args, body, .. } => {
+                result.push_str(name);
+                if let Some(args) = args {
+                    result.push_node(args)
+                } else {
+                    result.push_nil()
+                }
+                if let Some(body) = body {
+                    result.push_node(body)
+                } else {
+                    result.push_nil()
+                }
+            }
+            Node::Defs { definee, name, args, body, .. } => {
+                result.push_node(definee);
                 result.push_str(name);
                 if let Some(args) = args {
                     result.push_node(args)
@@ -395,7 +466,8 @@ impl Node {
                 result.push_str(value)
             }
             Node::Dstr { children, .. }
-            | Node::Dsym { children, .. } => {
+            | Node::Dsym { children, .. }
+            | Node::Xstr { children, .. } => {
                 result.push_nodes(children)
             }
             Node::If { cond, if_true, if_false, .. } => {
@@ -479,7 +551,83 @@ impl Node {
             Node::Regexp { parts, options, .. } => {
                 result.push_nodes(parts);
                 result.push_node(options);
+            },
+            Node::Kwsplat { value, .. } => {
+                result.push_node(value);
+            },
+            Node::Irange { left, right, .. }
+            | Node::Erange { left, right, .. } => {
+                if let Some(left) = left {
+                    result.push_node(left);
+                } else {
+                    result.push_nil()
+                }
+                if let Some(right) = right {
+                    result.push_node(right);
+                } else {
+                    result.push_nil()
+                }
+            },
+            Node::Class { name, superclass, body, .. } => {
+                result.push_node(name);
+                if let Some(superclass) = superclass {
+                    result.push_node(superclass);
+                }
+                if let Some(body) = body {
+                    result.push_node(body);
+                }
+            },
+            Node::Sclass { expr, body, .. } => {
+                result.push_node(expr);
+                if let Some(body) = body {
+                    result.push_node(body);
+                } else {
+                    result.push_nil();
+                }
+            },
+            Node::Module { name, body, .. } => {
+                result.push_node(name);
+                if let Some(body) = body {
+                    result.push_node(body);
+                } else {
+                    result.push_nil();
+                }
+            },
+            Node::ForwardArg { .. } => {},
+            Node::Optarg { name, value, .. } => {
+                result.push_str(name);
+                result.push_node(value);
             }
+            Node::Restarg { name, .. } => {
+                if let Some(name) = name {
+                    result.push_str(name);
+                }
+            }
+            Node::Kwarg { name, .. } => {
+                result.push_str(name);
+
+            }
+            Node::Kwoptarg { name, value, .. } => {
+                result.push_str(name);
+                result.push_node(value);
+            }
+            Node::Kwrestarg { name, .. } => {
+                if let Some(name) = name {
+                    result.push_str(name);
+                }
+            }
+            Node::Kwnilarg { .. } => {}
+            Node::Shadowarg { name, .. } => {
+                result.push_str(name);
+            }
+            Node::Blockarg { name, .. } => {
+                result.push_str(name);
+
+            }
+            Node::Procarg0 { arg, .. } => {
+                result.push_node(arg);
+            }
+            Node::ForwardedArgs { .. } => {}
         }
 
         result.strings()
