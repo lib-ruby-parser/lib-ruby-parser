@@ -3,6 +3,7 @@ use crate::source::Range;
 use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack};
 use crate::source::map::*;
 
+#[derive(Debug, PartialEq)]
 pub enum LoopType {
     While,
     Until
@@ -333,10 +334,10 @@ impl Builder {
 
     // Ranges
 
-    pub fn range_inclusive(&self, lhs: Option<Node>, dot2_t: Token, rhs: Option<Node>) -> Node {
+    pub fn range_inclusive(&self, _lhs: Option<Node>, _dot2_t: Token, _rhs: Option<Node>) -> Node {
         unimplemented!("range_inclusive")
     }
-    pub fn range_exclusive(&self, lhs: Option<Node>, dot3_t: Token, rhs: Option<Node>) -> Node {
+    pub fn range_exclusive(&self, _lhs: Option<Node>, _dot3_t: Token, _rhs: Option<Node>) -> Node {
         unimplemented!("range_exclusive")
     }
 
@@ -613,9 +614,15 @@ impl Builder {
     // Class and module definition
     //
 
-    pub fn def_class(&self) {}
-    pub fn def_sclass(&self) {}
-    pub fn def_module(&self) {}
+    pub fn def_class(&self, _class_t: Token, _name: Node, _lt_t: Option<Token>, _superclass: Option<Node>, _body: Option<Node>, _end_t: Token) -> Node {
+        unimplemented!("def_class")
+    }
+    pub fn def_sclass(&self, _class_t: Token, _lshft_t: Token, _expr: Node, _body: Option<Node>, _end_t: Token) -> Node {
+        unimplemented!("def_sclass")
+    }
+    pub fn def_module(&self, _module_t: Token, _name: Node, _body: Option<Node>, _end_t: Token) -> Node {
+        unimplemented!("def_module")
+    }
 
     //
     // Method (un)definition
@@ -742,10 +749,12 @@ impl Builder {
     }
 
     pub fn call_lambda(&self) {}
-    pub fn block(&self, method_call: Node, begin_t: Token, args: Node, body: Node, end_t: Token) -> Node {
+    pub fn block(&self, _method_call: Node, _begin_t: Token, _args: Node, _body: Node, _end_t: Token) -> Node {
         unimplemented!("block")
     }
-    pub fn block_pass(&self) {}
+    pub fn block_pass(&self, _amper_t: Token, _arg: Node) -> Node {
+        unimplemented!("block_pass")
+    }
 
     pub fn attr_asgn(&self, receiver: Node, dot_t: Token, selector_t: Token) -> Node {
         let method_name = self.value(&selector_t) + "";
@@ -796,11 +805,11 @@ impl Builder {
         Node::Send { receiver: Some(Box::new(receiver)), operator: self.value(&operator_t), args: vec![arg], loc: source_map }
     }
 
-    pub fn match_op(&self, receiver: Node, match_t: Token, arg: Node) -> Node {
+    pub fn match_op(&self, _receiver: Node, _match_t: Token, _arg: Node) -> Node {
         unimplemented!("match_op")
     }
 
-    pub fn unary_op(&self, op_t: Token, receiver: Node) -> Node {
+    pub fn unary_op(&self, _op_t: Token, _receiver: Node) -> Node {
         unimplemented!("unary_op")
     }
 
@@ -844,7 +853,9 @@ impl Builder {
 
     // Conditionals
 
-    pub fn condition(&self) {}
+    pub fn condition(&self, _cond_t: Token, _cond: Node, _then_t: Token, _if_true: Option<Node>, _else_t: Option<Token>, _else_: Option<Node>, _end_t: Token) -> Node {
+        unimplemented!("condition");
+    }
 
     pub fn condition_mod(&self, if_true: Option<Node>, if_false: Option<Node>, cond_t: Token, cond: Node) -> Node {
         let pre = match (&if_true, &if_false) {
@@ -863,18 +874,23 @@ impl Builder {
         }
     }
 
-    pub fn ternary(&self, cond: Node, question_t: Token, if_true: Node, colon_t: Token, if_false: Node) -> Node {
+    pub fn ternary(&self, _cond: Node, _question_t: Token, _if_true: Node, _colon_t: Token, _if_false: Node) -> Node {
         unimplemented!("ternary")
     }
 
     // Case matching
 
     pub fn when(&self) {}
-    pub fn case(&self) {}
+
+    pub fn case(&self, _case_t: Token, _expr: Option<Node>, _when_bodies: Vec<Node>, _else_t: Option<Token>, _else_body: Option<Node>, _end_t: Token) -> Node {
+        unimplemented!("case")
+    }
 
     // Loops
 
-    pub fn loop_(&self) {}
+    pub fn loop_(&self, _loop_type: LoopType, _keyword_t: Token, _cond: Node, _do_t: Token, _body: Option<Node>, _end_t: Token) -> Node {
+        unimplemented!("loop_");
+    }
 
     pub fn loop_mod(&self, loop_type: LoopType, body: Node, keyword_t: Token, cond: Node) -> Node {
         let loc = self.keyword_mod_map(&body, &keyword_t, &cond);
@@ -888,7 +904,9 @@ impl Builder {
         }
     }
 
-    pub fn for_(&self) {}
+    pub fn for_(&self, _for_t: Token, _iterator: Node, _in_t: Token, _iteratee: Node, _do_t: Token, _body: Option<Node>, _end_t: Token) -> Node {
+        unimplemented!("for_")
+    }
 
     // Keywords
 
@@ -1107,8 +1125,11 @@ impl Builder {
     // Pattern matching
     //
 
-    pub fn case_match(&self) {}
-    pub fn in_match(&self, lhs: Node, in_t: Token, rhs: Node) -> Node { unimplemented!("in_match") }
+    pub fn case_match(&self, _case_t: Token, _expr: Node, _in_bodies: Vec<Node>, _else_t: Option<Token>, _else_body: Option<Node>, _end_t: Token) -> Node {
+        unimplemented!("case_match")
+    }
+
+    pub fn in_match(&self, _lhs: Node, _in_t: Token, _rhs: Node) -> Node { unimplemented!("in_match") }
     pub fn in_pattern(&self) {}
     pub fn if_guard(&self) {}
     pub fn unless_guard(&self) {}
