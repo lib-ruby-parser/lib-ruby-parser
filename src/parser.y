@@ -2111,11 +2111,13 @@
                             Some($<Node>3)
                         );
 
-                        self.builder.begin_body(
-                            Some($<Node>1),
-                            vec![ rescue_body ],
-                            None,
-                            None
+                        $$ = Value::Node(
+                            self.builder.begin_body(
+                                Some($<Node>1),
+                                vec![ rescue_body ],
+                                None,
+                                None
+                            ).unwrap()
                         );
                     }
                 ;

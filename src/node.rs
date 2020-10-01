@@ -253,7 +253,7 @@ impl Node {
             Node::Ivar { .. } => "ivar",
             Node::Gvar { .. } => "gvar",
             Node::Cvar { .. } => "cvar",
-            Node::BackRef { .. } => "backref",
+            Node::BackRef { .. } => "back_ref",
             Node::NthRef { .. } => "nthref",
             Node::Lvasgn { .. } => "lvasgn",
             Node::Cvasgn { .. } => "cvasgn",
@@ -262,7 +262,7 @@ impl Node {
             Node::Const { .. } => "const",
             Node::Casgn { .. } => "casgn",
             Node::Index { .. } => "index",
-            Node::IndexAsgn { .. } => "index_asgn",
+            Node::IndexAsgn { .. } => "indexasgn",
             Node::Undef { .. } => "undef",
             Node::Pair { .. } => "pair",
             Node::Hash { .. } => "hash",
@@ -284,7 +284,7 @@ impl Node {
             Node::Masgn { .. } => "masgn",
             Node::Cbase { .. } => "cbase",
             Node::Break { .. } => "break",
-            Node::Defined { .. } => "defined",
+            Node::Defined { .. } => "defined?",
             Node::Next { .. } => "next",
             Node::Redo { .. } => "redo",
             Node::Retry { .. } => "retry",
@@ -301,10 +301,10 @@ impl Node {
             Node::Regexp { .. } => "regexp",
             Node::Kwsplat { .. } => "kwsplat",
             Node::Irange { .. } => "irange",
-            Node::Erange { .. } => "Erange",
+            Node::Erange { .. } => "erange",
             Node::Class { .. } => "class",
             Node::Sclass { .. } => "sclass",
-            Node::Module { .. } => "sclass",
+            Node::Module { .. } => "module",
             Node::ForwardArg { .. } => "forward_arg",
             Node::Optarg { .. } => "optarg",
             Node::Restarg { .. } => "restarg",
@@ -609,6 +609,8 @@ impl Node {
                 result.push_node(name);
                 if let Some(superclass) = superclass {
                     result.push_node(superclass);
+                } else {
+                    result.push_nil()
                 }
                 if let Some(body) = body {
                     result.push_node(body);

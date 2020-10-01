@@ -583,23 +583,43 @@ impl Builder {
         }
     }
 
-    pub fn assign(&self, mut lhs: Node, eql_t: Token, rhs_value: Node) -> Node {
+    pub fn assign(&self, mut lhs: Node, eql_t: Token, new_rhs: Node) -> Node {
         let operator_l = Some(loc(&eql_t));
-
-        let var_loc = VariableMap {
-            expression: join_exprs(&lhs, &rhs_value),
-            operator: operator_l
-        };
+        let expr_l = join_exprs(&lhs, &new_rhs);
 
         match lhs {
             Node::Cvasgn { ref mut loc, ref mut rhs, .. }
             | Node::Ivasgn { ref mut loc, ref mut rhs, .. }
             | Node::Gvasgn { ref mut loc, ref mut rhs, .. }
             | Node::Lvasgn { ref mut loc, ref mut rhs, .. } => {
-                *loc = var_loc;
-                *rhs = Some(Box::new(rhs_value));
+                loc.expression = expr_l;
+                loc.operator = operator_l;
+                *rhs = Some(Box::new(new_rhs));
                 lhs
             },
+            Node::Casgn { ref mut loc, ref mut rhs, .. } => {
+                loc.expression = expr_l;
+                loc.operator = operator_l;
+                *rhs = Some(Box::new(new_rhs));
+                lhs
+            },
+            Node::IndexAsgn { ref mut loc, ref mut rhs, .. } => {
+                loc.expression = expr_l;
+                loc.operator = operator_l;
+                *rhs = Some(Box::new(new_rhs));
+                lhs
+            }
+            Node::Send { ref mut args, ref mut loc, .. }
+            | Node::CSend { ref mut args, ref mut loc, .. } => {
+                loc.expression = expr_l;
+                loc.operator = operator_l;
+                if args.is_empty() {
+                    *args = vec![new_rhs];
+                } else {
+                    unreachable!("can't assign to method call with args")
+                }
+                lhs
+            }
             _ => panic!("{:#?} can't be used in assignment", lhs)
         }
     }
@@ -1035,7 +1055,7 @@ impl Builder {
     }
 
     pub fn attr_asgn(&self, receiver: Node, dot_t: Token, selector_t: Token) -> Node {
-        let method_name = value(&selector_t) + "";
+        let method_name = value(&selector_t) + "=";
         let loc = send_map(&Some(&receiver), &Some(&dot_t), &Some(&selector_t), &None, &vec![], &None);
 
         match self.call_type_for_dot(&Some(dot_t)) {
@@ -1423,8 +1443,15 @@ impl Builder {
             match body {
                 // Synthesized (begin) from compstmt "a; b" or (mlhs)
                 // from multi_lhs "(a, b) = *foo".
-                Node::Mlhs { loc: CollectionMap { expression, .. }, items: statements }
-                | Node::Begin { loc: CollectionMap { begin: None, end: None, expression }, statements } => {
+                Node::Mlhs { loc: CollectionMap { expression, .. }, items } => {
+                    let loc = CollectionMap {
+                        begin: Some(loc(&begin_t)),
+                        end: Some(loc(&end_t)),
+                        expression
+                    };
+                    Node::Mlhs { items, loc }
+                }
+                Node::Begin { loc: CollectionMap { begin: None, end: None, expression }, statements } => {
                     let loc = CollectionMap {
                         begin: Some(loc(&begin_t)),
                         end: Some(loc(&end_t)),

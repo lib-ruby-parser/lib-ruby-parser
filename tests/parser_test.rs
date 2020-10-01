@@ -62,7 +62,7 @@ fn test(fixture_path: &str) -> TestResult {
         if ast == test_case.ast {
             Ok(())
         } else {
-            Err(format!("actual:\n{:?}\nexpected:\n{:?}\n", ast, test_case.ast))
+            Err(format!("actual:\n{}\nexpected:\n{}\n", ast, test_case.ast))
         }
     });
 
