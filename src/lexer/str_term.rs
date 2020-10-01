@@ -54,7 +54,7 @@ impl StringLiteral {
 
 #[derive(Debug, Clone, Default)]
 struct InnerHeredocLiteral {
-    lastline: Vec<u8>,   /* the string of line that contains `<<"END"` */
+    lastline: usize,   /* the string of line that contains `<<"END"` */
     offset: usize,      /* the column of END in `<<"END"` */
     sourceline: usize,  /* lineno of the line that contains `<<"END"` */
     length: usize,      /* the length of END in `<<"END"` */
@@ -69,7 +69,7 @@ pub struct HeredocLiteral {
 }
 
 impl HeredocLiteral {
-    pub fn new(lastline: Vec<u8>, offset: usize, sourceline: usize, length: usize, quote: usize, func: usize) -> Self {
+    pub fn new(lastline: usize, offset: usize, sourceline: usize, length: usize, quote: usize, func: usize) -> Self {
         Self {
             inner: Rc::new(
                 RefCell::new(
@@ -86,14 +86,14 @@ impl HeredocLiteral {
         }
     }
 
-    pub fn lastline(&self) -> Vec<u8> { self.inner.borrow().lastline.clone() }
+    pub fn lastline(&self) -> usize { self.inner.borrow().lastline.clone() }
     pub fn offset(&self) -> usize { self.inner.borrow().offset }
     pub fn sourceline(&self) -> usize { self.inner.borrow().sourceline }
     pub fn length(&self) -> usize { self.inner.borrow().length }
     pub fn quote(&self) -> usize { self.inner.borrow().quote }
     pub fn func(&self) -> usize { self.inner.borrow().func }
 
-    pub fn set_lastline(&self, lastline: Vec<u8>) { self.inner.borrow_mut().lastline = lastline; }
+    pub fn set_lastline(&self, lastline: usize) { self.inner.borrow_mut().lastline = lastline; }
     pub fn set_offset(&self, offset: usize) { self.inner.borrow_mut().offset = offset; }
     pub fn set_sourceline(&self, sourceline: usize) { self.inner.borrow_mut().sourceline = sourceline; }
     pub fn set_length(&self, length: usize) { self.inner.borrow_mut().length = length; }

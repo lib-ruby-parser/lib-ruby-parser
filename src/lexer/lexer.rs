@@ -12,9 +12,9 @@ use crate::StaticEnvironment;
 use crate::lexer::StackState;
 
 #[derive(Debug, Clone, Default)]
-struct SourceLine {
-    start: usize,
-    end: usize,
+pub struct SourceLine {
+    pub start: usize,
+    pub end: usize,
 }
 
 impl SourceLine {
@@ -23,7 +23,7 @@ impl SourceLine {
         source[self.start..self.end].to_owned()
     }
 
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.end - self.start
     }
 
@@ -35,13 +35,13 @@ impl SourceLine {
 #[derive(Debug, Clone, Default)]
 pub struct LexerState {
     pub strterm: Option<StrTerm>,
-    input: Vec<u8>,
-    lines: Vec<SourceLine>,
+    pub input: Vec<u8>,
+    pub lines: Vec<SourceLine>,
     prevline_idx: Option<usize>,
-    lastline_idx: Option<usize>,
+    pub lastline_idx: Option<usize>,
     lastline_start: usize,
-    nextline_idx: Option<usize>,
-    pbeg: usize,
+    pub nextline_idx: Option<usize>,
+    pub pbeg: usize,
     pub pcur: usize,
     pub pend: usize,
     pub ptok: usize,
@@ -60,15 +60,15 @@ pub struct ParserState {
     tokidx: usize,
     toksize: usize,
     tokline: usize,
-    heredoc_end: usize,
+    pub heredoc_end: usize,
     pub heredoc_indent: i32,
-    heredoc_line_indent: usize,
+    pub heredoc_line_indent: i32,
     tokenbuf: Vec<u8>,
     lvtbl: LocalsTable,
     pvtbl: std::collections::HashMap<Vec<u8>, Vec<u8>>,
     pktbl: std::collections::HashMap<Vec<u8>, Vec<u8>>,
     line_count: usize,
-    ruby_sourceline: usize,	/* current line no. */
+    pub ruby_sourceline: usize,	/* current line no. */
     ruby_sourcefile: Vec<u8>, /* current source file */
     ruby_sourcefile_string: Vec<u8>,
     // enc: Encoding,
@@ -454,7 +454,11 @@ impl Lexer {
                         !self.is_lex_state_some(EXPR_DOT|EXPR_CLASS) &&
                         !self.is_end() &&
                         (!self.is_arg() || self.is_lex_state_some(EXPR_LABELED) || space_seen) {
-                            return self.heredoc_identifier();
+                            if let Some(token) = self.heredoc_identifier() {
+                                return token
+                            } else {
+                                return Self::END_OF_INPUT
+                            }
                     }
                     if self.is_after_operator() {
                         self.set_lex_state(EXPR_ARG);
@@ -988,8 +992,6 @@ impl Lexer {
         self.p.lex.state.is_all(states)
     }
 
-    pub fn here_document(&self, _heredoc: HeredocLiteral) -> i32 { unimplemented!("here_document") }
-
     pub fn token_flush(&mut self) {
         self.set_ptok(self.p.lex.pcur);
     }
@@ -1173,8 +1175,6 @@ impl Lexer {
     pub fn is_arg(&self) -> bool {
         self.is_lex_state_some(EXPR_ARG_ANY)
     }
-
-    pub fn heredoc_identifier(&self) -> i32 { unimplemented!("heredoc_identifier") }
 
     pub fn is_label_possible(&self, cmd_state: bool) -> bool {
         (self.is_lex_state_some(EXPR_LABEL|EXPR_ENDFN) && !cmd_state) ||

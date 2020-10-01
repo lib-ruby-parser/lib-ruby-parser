@@ -1,5 +1,5 @@
 use crate::Lexer;
-use crate::lexer::{StringLiteral};
+use crate::lexer::{StrTerm, HeredocLiteral, StringLiteral};
 use crate::lexer::lex_char::LexChar;
 use crate::lexer::lex_states::*;
 use crate::lexer::str_types::*;
@@ -59,7 +59,11 @@ impl Lexer {
         }
         self.pushback(&c);
 
-        if self.tokadd_string(func, term, paren, &quote).is_eof() {
+        let mut nest = quote.nest();
+        let added = self.tokadd_string(func, term, paren, &mut nest);
+        quote.set_nest(nest);
+
+        if added.is_some() {
             if self.p.eofp {
                 self.literal_flush(self.p.lex.pcur);
                 if (func & STR_FUNC_QWORDS) != 0 {
@@ -177,7 +181,7 @@ impl Lexer {
         None
     }
 
-    pub fn tokadd_string(&mut self, func: usize, term: u8, paren: Option<u8>, literal: &StringLiteral) -> LexChar {
+    pub fn tokadd_string(&mut self, func: usize, term: u8, paren: Option<u8>, nest: &mut usize) -> Option<u8> {
         let mut c;
         let _erred = false;
 
@@ -190,13 +194,15 @@ impl Lexer {
             }
 
             if c == paren {
-                literal.set_nest(literal.nest() + 1);
+                *nest += 1;
+                // literal.set_nest(literal.nest() + 1);
             } else if c == term {
-                if literal.nest() == 0 {
+                if *nest == 0 {
                     self.pushback(&c);
                     break;
                 }
-                literal.set_nest(literal.nest() - 1);
+                // literal.set_nest(literal.nest() - 1);
+                *nest -= 1;
             } else if ((func & STR_FUNC_EXPAND) != 0) && c == b'#' && self.p.lex.pcur < self.p.lex.pend {
                 let c2 = self.char_at(self.p.lex.pcur);
                 if c2 == b'$' || c2 == b'@' || c2 == b'{' {
@@ -215,7 +221,7 @@ impl Lexer {
                             }
                             if c == term {
                                 c = LexChar::Some(b'\\');
-                                return c;
+                                return c.to_option();
                             }
                         }
                         self.tokadd(&LexChar::Some(b'\\'));
@@ -237,7 +243,7 @@ impl Lexer {
                     },
 
                     LexChar::EOF => {
-                        return LexChar::EOF;
+                        return None;
                     },
 
                     LexChar::Some(_) => {
@@ -255,7 +261,7 @@ impl Lexer {
                                 self.pushback(&c);
                                 c = self.tokadd_escape();
                                 if c.is_eof() {
-                                    return c;
+                                    return None;
                                 }
                                 // TODO: compare encodings
                                 continue;
@@ -287,7 +293,7 @@ impl Lexer {
             self.tokadd(&c);
         }
 
-        c
+        c.to_option()
     }
     pub fn set_yylval_str(&mut self, value: Vec<u8>) {
         if self.debug { println!("set_yylval_str {:#?}", value); }
@@ -298,7 +304,7 @@ impl Lexer {
         // noop
     }
 
-    pub fn parser_update_heredoc_indent(&mut self, _c: &LexChar) {
+    pub fn parser_update_heredoc_indent(&mut self, _c: &LexChar) -> bool {
         unimplemented!("parser_update_heredoc_indent")
     }
 
@@ -320,6 +326,262 @@ impl Lexer {
 
     pub fn parser_is_ascii(&self) -> bool {
         self.char_at(self.p.lex.pcur - 1).is_ascii()
+    }
+
+    pub fn heredoc_identifier(&mut self) -> Option<i32> {
+        /*
+        * term_len is length of `<<"END"` except `END`,
+        * in this case term_len is 4 (<, <, " and ").
+        */
+        let mut len;
+        let mut offset = self.p.lex.pcur - self.p.lex.pbeg;
+        let mut c = self.nextc();
+        let term;
+        let mut func = 0;
+        let mut quote = 0;
+        let mut token = Self::tSTRING_BEG;
+        let mut indent = 0;
+
+        if c == b'-' {
+            c = self.nextc();
+            func = STR_FUNC_INDENT;
+            offset += 1;
+        } else if c == b'~' {
+            c = self.nextc();
+            func = STR_FUNC_INDENT;
+            offset += 1;
+            indent = std::i32::MAX;
+        }
+
+        if c == b'\'' || c == b'"' || c == b'`' {
+            if c == b'\'' { func |= str_squote }
+            if c == b'"'  { func |= str_dquote }
+            if c == b'`'  { func |= str_xquote; token = Self::tXSTRING_BEG }
+
+            quote += 1;
+            offset += 1;
+            term = c;
+            len = 0;
+
+            loop {
+                c = self.nextc();
+                if c != term { break }
+
+                if c.is_eof() || c == b'\r' || c == b'\n' {
+                    self.yyerror0("unterminated here document identifier");
+                    return None;
+                }
+            }
+        } else {
+            if !self.parser_is_identchar() {
+                self.pushback(&c);
+                if (func & STR_FUNC_INDENT) != 0 {
+                    self.pushback(&LexChar::Some(if indent > 0 { b'~' } else { b'-' }));
+                }
+                return Some(Self::END_OF_INPUT);
+            }
+            func |= str_dquote;
+            loop {
+                if let Some(n) = self.parser_precise_mbclen(self.p.lex.pcur - 1) {
+                    self.p.lex.pcur += n - 1;
+                } else {
+                    return Some(Self::END_OF_INPUT)
+                }
+                c = self.nextc();
+                if c.is_eof() || !self.parser_is_identchar() { break }
+            }
+            self.pushback(&c);
+        }
+
+        len = self.p.lex.pcur - (self.p.lex.pbeg + offset) - quote;
+        self.lex_goto_eol();
+
+        self.p.lex.strterm = Some(
+            StrTerm::new_heredoc(
+                HeredocLiteral::new(
+                    self.p.lex.lastline_idx.unwrap(),
+                    offset,
+                    self.p.ruby_sourceline,
+                    len,
+                    quote,
+                    func
+                )
+            )
+        );
+
+        self.token_flush();
+        self.p.heredoc_indent = indent;
+        self.p.heredoc_line_indent = 0;
+        return Some(token);
+    }
+
+    pub fn here_document(&mut self, here: HeredocLiteral) -> i32 {
+        let mut c;
+        let func;
+        let indent;
+        let eos;
+        let mut ptr;
+        let mut ptr_end;
+        let len;
+        let mut str_: Vec<u8>;
+        // let enc = self.p.enc;
+        // let base_enc = 0;
+        let bol;
+
+        eos = here.lastline() + here.offset();
+        len = here.length();
+        func = here.func();
+        indent = here.func() & STR_FUNC_INDENT;
+
+        c = self.nextc();
+        if c.is_eof() {
+            return self.here_document_error(&here, eos, len);
+        }
+        bol = self.was_bol();
+        if !bol {
+            /* not beginning of line, cannot be the terminator */
+        } else if self.p.heredoc_line_indent == -1 {
+            /* `heredoc_line_indent == -1` means
+            * - "after an interpolation in the same line", or
+            * - "in a continuing line"
+            */
+            self.p.heredoc_line_indent = 0;
+        } else if self.is_whole_match(&self.p.lex.input[eos..eos+len].to_vec(), indent) {
+            return self.here_document_restore(&here);
+        }
+
+        if (func & STR_FUNC_EXPAND) == 0 {
+            loop {
+                ptr = self.p.lex.lastline_idx.unwrap();
+                ptr_end = self.p.lex.pend;
+                if ptr_end > ptr {
+                    match self.p.lex.input[ptr_end - 1] {
+                        b'\n' => {
+                            ptr_end -= 1;
+                            if ptr_end == ptr || self.p.lex.input[ptr_end - 1] != b'\r' {
+                                ptr_end += 1;
+                            } else {
+                                ptr_end -= 1;
+                            }
+                        },
+                        b'\r' => {
+                            ptr_end -= 1;
+                        },
+                        _ => {}
+                    }
+                }
+
+                if self.p.heredoc_indent > 0 {
+                    let mut i = 0;
+                    while (ptr + i < ptr_end) && self.parser_update_heredoc_indent(&self.char_at(ptr + i)) {
+                        i += 1;
+                    }
+                    self.p.heredoc_line_indent = 0;
+                }
+
+                str_ = self.p.lex.input[ptr..ptr_end].to_vec();
+                if ptr_end < self.p.lex.pend { str_.push(b'\n') }
+                self.lex_goto_eol();
+                if self.p.heredoc_indent > 0 {
+                    return self.heredoc_flush_str(str_);
+                }
+                if self.nextc().is_eof() {
+                    str_.clear();
+                    return self.here_document_error(&here, eos, len);
+                }
+
+                if self.is_whole_match(&self.p.lex.input[eos..eos+len].to_vec(), indent) {
+                    break;
+                }
+            }
+        } else {
+            self.newtok();
+            if c == b'#' {
+                let t = self.parser_peek_variable_name();
+                if self.p.heredoc_line_indent != -1 {
+                    if self.p.heredoc_indent > self.p.heredoc_line_indent {
+                        self.p.heredoc_indent = self.p.heredoc_line_indent;
+                    }
+                    self.p.heredoc_line_indent = -1;
+                }
+                if let Some(t) = t { return t }
+                self.tokadd(&LexChar::Some(b'#'));
+                c = self.nextc();
+            }
+            loop {
+                self.pushback(&c);
+                // enc = self.p.enc;
+                if self.tokadd_string(func, b'\n', None, &mut 0).is_none() {
+                    if self.p.eofp { return self.here_document_error(&here, eos, len) }
+                    return self.here_document_restore(&here);
+                }
+                if c != b'\n' {
+                    if c == b'\\' { self.p.heredoc_line_indent = -1 }
+                    return self.heredoc_flush();
+                }
+                let cc = self.nextc();
+                self.tokadd(&cc);
+                if self.p.heredoc_indent > 0 {
+                    self.lex_goto_eol();
+                    return self.heredoc_flush();
+                }
+                c = self.nextc();
+                if c.is_eof() { return self.here_document_error(&here, eos, len) }
+
+                if self.is_whole_match(&self.p.lex.input[eos..eos+len].to_vec(), indent) {
+                    break;
+                }
+            }
+            str_ = self.tok();
+        }
+
+        self.heredoc_restore(&here);
+        self.token_flush();
+        self.p.lex.strterm = self.new_strterm(func | STR_FUNC_TERM, 0, Some(0));
+        self.set_yylval_str(str_);
+        return Self::tSTRING_CONTENT;
+    }
+
+    pub fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32 {
+        self.heredoc_restore(&here);
+        self.compile_error(&format!("can't find string \"{:#?}\" anywhere before EOF", self.p.lex.input[eos..eos+len].to_vec()));
+        self.token_flush();
+        self.p.lex.strterm = None;
+        self.set_lex_state(EXPR_END);
+        return Self::tSTRING_END;
+    }
+
+    pub fn here_document_restore(&mut self, here: &HeredocLiteral) -> i32 {
+        self.heredoc_restore(&here);
+        self.token_flush();
+        self.p.lex.strterm = None;
+        self.set_lex_state(EXPR_END);
+        return Self::tSTRING_END;
+    }
+
+    pub fn heredoc_flush_str(&mut self, str_: Vec<u8>) -> i32 {
+        self.set_yylval_str(str_);
+        self.flush_string_content();
+        return Self::tSTRING_CONTENT;
+    }
+
+    pub fn heredoc_flush(&mut self) -> i32 {
+        let str_ = self.tok();
+        return self.heredoc_flush_str(str_)
+    }
+
+    pub fn heredoc_restore(&mut self, here: &HeredocLiteral) {
+        self.p.lex.strterm = None;
+        let line = here.lastline();
+        self.p.lex.lastline_idx = Some(line);
+        self.p.lex.pbeg = self.p.lex.lines[line].start;
+        self.p.lex.pend = self.p.lex.pbeg + self.p.lex.lines[line].len();
+        self.p.lex.pcur = self.p.lex.pbeg + here.offset() + here.length() + here.quote();
+        self.p.lex.ptok = self.p.lex.pbeg + here.offset() - here.quote();
+        self.p.heredoc_end = self.p.ruby_sourceline;
+        self.p.ruby_sourceline = here.sourceline();
+        if self.p.eofp { self.p.lex.nextline_idx = None }
+        self.p.eofp = false;
     }
 
 }
