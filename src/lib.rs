@@ -25,6 +25,7 @@ pub mod node;
 pub use node::Node;
 mod builder;
 pub use builder::Builder;
+pub mod map_builder;
 
 mod current_arg_stack;
 pub use current_arg_stack::CurrentArgStack;

@@ -97,3 +97,19 @@ pub struct DefinitionMap {
     pub name: Option<Range>,
     pub end: Range,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TernaryMap {
+    pub expression: Range,
+    pub question: Range,
+    pub colon: Range,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ForMap {
+    pub expression: Range,
+    pub keyword: Range,
+    pub in_: Range,
+    pub begin: Range,
+    pub end: Range,
+}

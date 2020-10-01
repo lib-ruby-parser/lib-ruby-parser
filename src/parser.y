@@ -1831,7 +1831,7 @@
                 | arg tMATCH arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)
+                            self.builder.match_op($<Node>1, $<Token>2, $<Node>3)
                         );
                     }
                 | arg tNMATCH arg

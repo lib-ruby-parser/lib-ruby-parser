@@ -50,7 +50,9 @@ pub enum Node {
     Dstr { children: Vec<Node>, loc: CollectionMap },
     Xstr { children: Vec<Node>, loc: CollectionMap },
     Dsym { children: Vec<Node>, loc: CollectionMap },
-    If { cond: Box<Node>, if_true: Option<Box<Node>>, if_false: Option<Box<Node>>, loc: KeywordMap },
+    IfMod { cond: Box<Node>, if_true: Option<Box<Node>>, if_false: Option<Box<Node>>, loc: KeywordMap },
+    IfTernary { cond: Box<Node>, if_true: Box<Node>, if_false: Box<Node>, loc: TernaryMap },
+    If { cond: Box<Node>, if_true: Option<Box<Node>>, if_false: Option<Box<Node>>, loc: ConditionMap },
     WhilePost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
     While { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
     UntilPost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
@@ -93,6 +95,13 @@ pub enum Node {
     Blockarg { name: String, loc: VariableMap },
     Procarg0 { arg: Box<Node>, loc: CollectionMap },
     ForwardedArgs { loc: Map },
+    Block { call: Box<Node>, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: CollectionMap },
+    Lambda { loc: Map },
+    BlockPass { arg: Box<Node>, loc: OperatorMap },
+    MatchWithLvasgn { receiver: Box<Node>, arg: Box<Node>, loc: SendMap },
+    For { iterator: Box<Node>, iteratee: Box<Node>, body: Option<Box<Node>>, loc: ForMap },
+    When { patterns: Vec<Node>, body: Option<Box<Node>>, loc: KeywordMap },
+    Case { expr: Option<Box<Node>>, when_bodies: Vec<Node>, else_body: Option<Box<Node>>, loc: ConditionMap },
 }
 
 impl Node {
@@ -145,6 +154,8 @@ impl Node {
             Self::Dstr { loc, .. } => &loc.expression,
             Self::Xstr { loc, .. } => &loc.expression,
             Self::Dsym { loc, .. } => &loc.expression,
+            Self::IfMod { loc, .. } => &loc.expression,
+            Self::IfTernary { loc, .. } => &loc.expression,
             Self::If { loc, .. } => &loc.expression,
             Self::While { loc, .. } => &loc.expression,
             Self::WhilePost { loc, .. } => &loc.expression,
@@ -188,6 +199,13 @@ impl Node {
             Self::Blockarg { loc, .. } => &loc.expression,
             Self::Procarg0 { loc, .. } => &loc.expression,
             Self::ForwardedArgs { loc } => &loc.expression,
+            Self::Block { loc, .. } => &loc.expression,
+            Self::Lambda { loc, .. } => &loc.expression,
+            Self::BlockPass { loc, .. } => &loc.expression,
+            Self::MatchWithLvasgn { loc, .. } => &loc.expression,
+            Self::For { loc, .. } => &loc.expression,
+            Self::When { loc, .. } => &loc.expression,
+            Self::Case { loc, .. } => &loc.expression,
         }
     }
 
@@ -253,7 +271,9 @@ impl Node {
             Node::Dstr { .. } => "dstr",
             Node::Xstr { .. } => "dstr",
             Node::Dsym { .. } => "dsym",
-            Node::If { .. } => "if",
+            Node::IfMod { .. }
+            | Node::IfTernary { .. }
+            | Node::If { .. } => "if",
             Node::WhilePost { .. } => "while_post",
             Node::While { .. } => "while",
             Node::UntilPost { .. } => "until_post",
@@ -296,6 +316,13 @@ impl Node {
             Node::Blockarg { .. } => "blockarg",
             Node::Procarg0 { .. } => "procarg0",
             Node::ForwardedArgs { .. } => "forwarded_args",
+            Node::Block { .. } => "block",
+            Node::Lambda { .. } => "lambda",
+            Node::BlockPass { .. } => "block_pass",
+            Node::MatchWithLvasgn { .. } => "match_with_lvasgn",
+            Node::For { .. } => "for",
+            Node::When { .. } => "when",
+            Node::Case { .. } => "case",
         }
     }
 
@@ -470,7 +497,8 @@ impl Node {
             | Node::Xstr { children, .. } => {
                 result.push_nodes(children)
             }
-            Node::If { cond, if_true, if_false, .. } => {
+            Node::If { cond, if_true, if_false, .. }
+            | Node::IfMod { cond, if_true, if_false, .. } => {
                 result.push_node(cond);
                 if let Some(if_true) = if_true {
                     result.push_node(if_true)
@@ -482,6 +510,11 @@ impl Node {
                 } else {
                     result.push_nil()
                 }
+            }
+            Node::IfTernary { cond, if_true, if_false, .. } => {
+                result.push_node(cond);
+                result.push_node(if_true);
+                result.push_node(if_false);
             }
             Node::WhilePost { cond, body, .. }
             | Node::While { cond, body, .. }
@@ -628,6 +661,57 @@ impl Node {
                 result.push_node(arg);
             }
             Node::ForwardedArgs { .. } => {}
+            Node::Block { call, args, body, .. } => {
+                result.push_node(call);
+                if let Some(args) = args {
+                    result.push_node(args)
+                } else {
+                    result.push_nil()
+                }
+                if let Some(body) = body {
+                    result.push_node(body)
+                } else {
+                    result.push_nil()
+                }
+            }
+            Node::Lambda { .. } => {}
+            Node::BlockPass { arg, .. } => {
+                result.push_node(arg)
+            }
+            Node::MatchWithLvasgn { receiver, arg, .. } => {
+                result.push_node(receiver);
+                result.push_node(arg);
+            }
+            Node::For { iterator, iteratee, body, .. } => {
+                result.push_node(iterator);
+                result.push_node(iteratee);
+                if let Some(body) = body {
+                    result.push_node(body)
+                } else {
+                    result.push_nil()
+                }
+            }
+            Node::When { patterns, body, .. } => {
+                result.push_nodes(patterns);
+                if let Some(body) = body {
+                    result.push_node(body)
+                } else {
+                    result.push_nil()
+                }
+            }
+            Node::Case { expr, when_bodies, else_body, .. } => {
+                if let Some(expr) = expr {
+                    result.push_node(expr)
+                } else {
+                    result.push_nil()
+                }
+                result.push_nodes(when_bodies);
+                if let Some(else_body) = else_body {
+                    result.push_node(else_body);
+                } else {
+                    result.push_nil()
+                }
+            }
         }
 
         result.strings()

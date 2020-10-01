@@ -1,7 +1,8 @@
-use std::{convert::TryInto};
+use onig::{Regex, RegexOptions};
 use crate::source::Range;
-use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack, Loc};
+use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack};
 use crate::source::map::*;
+use crate::map_builder::*;
 
 #[derive(Debug, PartialEq)]
 pub enum LoopType {
@@ -59,19 +60,19 @@ impl Builder {
 
     pub fn nil(&self, nil_t: Token) -> Node {
         Node::Nil {
-            loc: self.token_map(&nil_t)
+            loc: token_map(&nil_t)
         }
     }
 
     pub fn true_(&self, true_t: Token) -> Node {
         Node::True {
-            loc: self.token_map(&true_t)
+            loc: token_map(&true_t)
         }
     }
 
     pub fn false_(&self, false_t: Token) -> Node {
         Node::False {
-            loc: self.token_map(&false_t)
+            loc: token_map(&false_t)
         }
     }
 
@@ -79,9 +80,9 @@ impl Builder {
 
     pub fn integer(&self, integer_t: Token) -> Node {
         Node::Int {
-            value: self.value(&integer_t),
+            value: value(&integer_t),
             loc: OperatorMap {
-                expression: self.loc(&integer_t),
+                expression: loc(&integer_t),
                 operator: None,
             }
         }
@@ -89,9 +90,9 @@ impl Builder {
 
     pub fn float(&self, float_t: Token) -> Node {
         Node::Float {
-            value: self.value(&float_t),
+            value: value(&float_t),
             loc: OperatorMap {
-                expression: self.loc(&float_t),
+                expression: loc(&float_t),
                 operator: None,
             }
         }
@@ -99,9 +100,9 @@ impl Builder {
 
     pub fn rational(&self, rational_t: Token) -> Node {
         Node::Rational {
-            value: self.value(&rational_t),
+            value: value(&rational_t),
             loc: OperatorMap {
-                expression: self.loc(&rational_t),
+                expression: loc(&rational_t),
                 operator: None,
             }
         }
@@ -109,17 +110,17 @@ impl Builder {
 
     pub fn complex(&self, complex: Token) -> Node {
         Node::Complex {
-            value: self.value(&complex),
+            value: value(&complex),
             loc: OperatorMap {
-                expression: self.loc(&complex),
+                expression: loc(&complex),
                 operator: None,
             }
         }
     }
 
     pub fn unary_num(&self, unary_t: Token, mut numeric: Node) -> Node {
-        let sign = self.value(&unary_t);
-        let operator_l = self.loc(&unary_t);
+        let sign = value(&unary_t);
+        let operator_l = loc(&unary_t);
 
         match &mut numeric {
             Node::Int { value, loc }
@@ -137,7 +138,7 @@ impl Builder {
 
     pub fn __line__(&self, line_t: Token) -> Node {
         Node::__LINE__ {
-            loc: self.token_map(&line_t)
+            loc: token_map(&line_t)
         }
     }
 
@@ -147,8 +148,8 @@ impl Builder {
 
     pub fn string_internal(&self, string_t: Token) -> Node {
         Node::Str {
-            value: self.value(&string_t),
-            loc: self.unquoted_map(&string_t)
+            value: value(&string_t),
+            loc: unquoted_map(&string_t)
         }
     }
 
@@ -165,7 +166,7 @@ impl Builder {
                             Node::Str { value, .. } => {
                                 return Node::Str {
                                     value: value.clone(),
-                                    loc: self.string_map(&begin_t, &parts, &end_t)
+                                    loc: string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref())
                                 }
                             },
                             _ => unreachable!()
@@ -177,21 +178,21 @@ impl Builder {
         }
 
         Node::Dstr {
-            loc: self.string_map(&begin_t, &parts, &end_t),
+            loc: string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref()),
             children: parts,
         }
     }
 
     pub fn character(&self, char_t: Token) -> Node {
         Node::Str {
-            loc: self.prefix_string_map(&char_t),
-            value: self.value(&char_t)
+            loc: prefix_string_map(&char_t),
+            value: value(&char_t)
         }
     }
 
     pub fn __file__(&self, file_t: Token) -> Node {
         Node::__FILE__ {
-            loc: self.token_map(&file_t)
+            loc: token_map(&file_t)
         }
     }
 
@@ -199,10 +200,10 @@ impl Builder {
 
     pub fn symbol(&self, start_t: Token, value_t: Token) -> Node {
         Node::Sym {
-            name: self.value(&value_t),
+            name: value(&value_t),
             loc: CollectionMap {
-                expression: self.loc(&start_t).join(&self.loc(&value_t)),
-                begin: Some(self.loc(&start_t)),
+                expression: loc(&start_t).join(&loc(&value_t)),
+                begin: Some(loc(&start_t)),
                 end: None
             }
         }
@@ -210,8 +211,8 @@ impl Builder {
 
     pub fn symbol_internal(&self, symbol_t: Token) -> Node {
         Node::Sym {
-            name: self.value(&symbol_t),
-            loc: self.unquoted_map(&symbol_t)
+            name: value(&symbol_t),
+            loc: unquoted_map(&symbol_t)
         }
     }
 
@@ -226,13 +227,13 @@ impl Builder {
                 _ => unreachable!()
             };
             return Node::Sym {
-                loc: self.collection_map(&Some(begin_t), &vec![], &Some(end_t)),
+                loc: collection_map(&Some(&begin_t), &vec![], &Some(&end_t)),
                 name: value,
             }
         }
 
         Node::Dsym {
-            loc: self.collection_map(&Some(begin_t), &parts, &Some(end_t)),
+            loc: collection_map(&Some(&begin_t), &parts.iter().collect(), &Some(&end_t)),
             children: parts
         }
     }
@@ -241,7 +242,7 @@ impl Builder {
 
     pub fn xstring_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
         Node::Xstr {
-            loc: self.string_map(&Some(begin_t), &parts, &Some(end_t)),
+            loc: string_map(&Some(&begin_t), &parts.iter().collect(), &Some(&end_t)),
             children: parts
         }
     }
@@ -256,19 +257,19 @@ impl Builder {
     // Regular expressions
 
     pub fn regexp_options(&self, regexp_end_t: &Token) -> Node {
-        let mut options = self.value(&regexp_end_t).chars().collect::<Vec<_>>();
+        let mut options = value(&regexp_end_t).chars().collect::<Vec<_>>();
         options.sort();
         options.dedup();
 
         Node::RegOpt {
             options,
-            loc: self.token_map(&regexp_end_t)
+            loc: token_map(&regexp_end_t)
         }
     }
 
     pub fn regexp_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token, options: Node) -> Node {
         Node::Regexp {
-            loc: self.regexp_map(&begin_t, &end_t, &options),
+            loc: regexp_map(&begin_t, &end_t, &options),
             parts,
             options: Box::new(options),
         }
@@ -277,13 +278,13 @@ impl Builder {
     // Arrays
 
     pub fn array(&self, begin_t: Option<Token>, elements: Vec<Node>, end_t: Option<Token>) -> Node {
-        let loc = self.collection_map(&begin_t, &elements, &end_t);
+        let loc = collection_map(&begin_t.as_ref(), &elements.iter().collect(), &end_t.as_ref());
         Node::Array { elements, loc }
     }
 
     pub fn splat(&self, star_t: Token, arg: Option<Node>) -> Node {
         Node::Splat {
-            loc: self.unary_op_map(&star_t, &arg.as_ref()),
+            loc: unary_op_map(&star_t, &arg.as_ref()),
             arg: arg.map(|node| Box::new(node))
         }
     }
@@ -301,14 +302,14 @@ impl Builder {
         }
 
         Node::Dstr {
-            loc: self.collection_map(&None, &parts, &None),
+            loc: collection_map(&None, &parts.iter().collect(), &None),
             children: parts,
         }
     }
 
     pub fn words_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
         Node::Array {
-            loc: self.collection_map(&Some(begin_t), &parts, &Some(end_t)),
+            loc: collection_map(&Some(&begin_t), &parts.iter().collect(), &Some(&end_t)),
             elements: parts
         }
     }
@@ -330,7 +331,7 @@ impl Builder {
         }).collect::<Vec<_>>();
 
         Node::Array {
-            loc: self.collection_map(&Some(begin_t), &parts, &Some(end_t)),
+            loc: collection_map(&Some(&begin_t), &parts.iter().collect(), &Some(&end_t)),
             elements: parts
         }
     }
@@ -338,7 +339,7 @@ impl Builder {
     // Hashes
 
     pub fn pair(&self, key: Node, assoc_t: Token, value: Node) -> Node {
-        let loc = self.binary_op_map(&key, &assoc_t, &value);
+        let loc = binary_op_map(&key, &assoc_t, &value);
         Node::Pair {
             key: Box::new(key),
             value: Box::new(value),
@@ -347,21 +348,21 @@ impl Builder {
     }
     pub fn pair_list_18(&self) {}
 
-    pub fn pair_keyword(&self, key_t: Token, value: Node) -> Node {
-        let (key_map, pair_map) = self.pair_keyword_map(&key_t, &value);
+    pub fn pair_keyword(&self, key_t: Token, value_node: Node) -> Node {
+        let (key_map, pair_map) = pair_keyword_map(&key_t, &value_node);
         let key = Node::Sym {
-            name: self.value(&key_t),
+            name: value(&key_t),
             loc: key_map
         };
         Node::Pair {
             key: Box::new(key),
-            value: Box::new(value),
+            value: Box::new(value_node),
             loc: pair_map
         }
     }
 
     pub fn pair_quoted(&self, begin_t: Token, parts: Vec<Node>, end_t: Token, value: Node) -> Node {
-        let (end_t, pair_map) = self.pair_quoted_map(&begin_t, &end_t, &value);
+        let (end_t, pair_map) = pair_quoted_map(&begin_t, &end_t, &value);
 
         let key = self.symbol_compose(begin_t, parts, end_t);
 
@@ -374,13 +375,13 @@ impl Builder {
 
     pub fn kwsplat(&self, dstar_t: Token, arg: Node) -> Node {
         Node::Kwsplat {
-            loc: self.unary_op_map(&dstar_t, &Some(&arg)),
+            loc: unary_op_map(&dstar_t, &Some(&arg)),
             value: Box::new(arg)
         }
     }
 
     pub fn associate(&self, begin_t: Option<Token>, pairs: Vec<Node>, end_t: Option<Token>) -> Node {
-        let loc = self.collection_map(&begin_t, &pairs, &end_t);
+        let loc = collection_map(&begin_t.as_ref(), &pairs.iter().collect(), &end_t.as_ref());
         Node::Hash {
             pairs,
             loc
@@ -391,7 +392,7 @@ impl Builder {
 
     pub fn range_inclusive(&self, lhs: Option<Node>, dot2_t: Token, rhs: Option<Node>) -> Node {
         Node::Irange {
-            loc: self.range_map(&lhs, &dot2_t, &rhs),
+            loc: range_map(&lhs.as_ref(), &dot2_t, &rhs.as_ref()),
             left: lhs.map(|node| Box::new(node)),
             right: rhs.map(|node| Box::new(node))
         }
@@ -399,7 +400,7 @@ impl Builder {
 
     pub fn range_exclusive(&self, lhs: Option<Node>, dot3_t: Token, rhs: Option<Node>) -> Node {
         Node::Erange {
-            loc: self.range_map(&lhs, &dot3_t, &rhs),
+            loc: range_map(&lhs.as_ref(), &dot3_t, &rhs.as_ref()),
             left: lhs.map(|node| Box::new(node)),
             right: rhs.map(|node| Box::new(node))
         }
@@ -411,49 +412,49 @@ impl Builder {
 
     pub fn self_(&self, token: Token) -> Node {
         Node::Self_ {
-            loc: self.token_map(&token)
+            loc: token_map(&token)
         }
     }
 
     pub fn lvar(&self, token: Token) -> Node {
         Node::Lvar {
-            name: self.value(&token),
-            loc: self.variable_map(&token)
+            name: value(&token),
+            loc: variable_map(&token)
         }
     }
 
     pub fn ivar(&self, token: Token) -> Node {
         Node::Ivar {
-            name: self.value(&token),
-            loc: self.variable_map(&token)
+            name: value(&token),
+            loc: variable_map(&token)
         }
     }
 
     pub fn gvar(&self, token: Token) -> Node {
         Node::Gvar {
-            name: self.value(&token),
-            loc: self.variable_map(&token)
+            name: value(&token),
+            loc: variable_map(&token)
         }
     }
 
     pub fn cvar(&self, token: Token) -> Node {
         Node::Cvar {
-            name: self.value(&token),
-            loc: self.variable_map(&token)
+            name: value(&token),
+            loc: variable_map(&token)
         }
     }
 
     pub fn back_ref(&self, token: Token) -> Node {
         Node::BackRef {
-            name: self.value(&token),
-            loc: self.variable_map(&token)
+            name: value(&token),
+            loc: variable_map(&token)
         }
     }
 
     pub fn nth_ref(&self, token: Token) -> Node {
         Node::NthRef {
-            name: self.value(&token),
-            loc: self.variable_map(&token)
+            name: value(&token),
+            loc: variable_map(&token)
         }
     }
     pub fn accessible(&self, node: Node) -> Node {
@@ -491,31 +492,31 @@ impl Builder {
     pub fn const_(&self, name_t: Token) -> Node {
         Node::Const {
             scope: None,
-            name: self.value(&name_t),
-            loc: self.constant_map(&None, &None, &name_t)
+            name: value(&name_t),
+            loc: constant_map(&None, &None, &name_t)
         }
     }
 
     pub fn const_global(&self, t_colon3: Token, name_t: Token) -> Node {
-        let cbase = Node::Cbase { loc: self.token_map(&t_colon3) };
+        let cbase = Node::Cbase { loc: token_map(&t_colon3) };
         Node::Const {
-            loc: self.constant_map(&Some(&cbase), &Some(t_colon3), &name_t),
+            loc: constant_map(&Some(&cbase), &Some(&t_colon3), &name_t),
             scope: Some(Box::new(cbase)),
-            name: self.value(&name_t)
+            name: value(&name_t)
         }
     }
 
     pub fn const_fetch(&self, scope: Node, t_colon2: Token, name_t: Token) -> Node {
         Node::Const {
-            loc: self.constant_map(&Some(&scope), &Some(t_colon2), &name_t),
+            loc: constant_map(&Some(&scope), &Some(&t_colon2), &name_t),
             scope: Some(Box::new(scope)),
-            name: self.value(&name_t)
+            name: value(&name_t)
         }
     }
 
     pub fn __encoding__(&self, _encoding_t: Token) -> Node {
         Node::__ENCODING__ {
-            loc: self.token_map(&_encoding_t)
+            loc: token_map(&_encoding_t)
         }
     }
 
@@ -535,7 +536,7 @@ impl Builder {
                 Node::Gvasgn { name, loc, rhs: None }
             },
             Node::Const { name, scope, loc } => {
-                // if !self.context.is_dynamic_const_definition_allowed() {
+                // if !context.is_dynamic_const_definition_allowed() {
                 //     diagnostic :error, :dynamic_const, nil, node.loc.expression
                 // }
                 Node::Casgn { name, scope, loc, rhs: None }
@@ -586,10 +587,10 @@ impl Builder {
     }
 
     pub fn assign(&self, mut lhs: Node, eql_t: Token, rhs_value: Node) -> Node {
-        let operator_l = Some(self.loc(&eql_t));
+        let operator_l = Some(loc(&eql_t));
 
         let var_loc = VariableMap {
-            expression: self.join_expr(&lhs, &rhs_value),
+            expression: join_exprs(&lhs, &rhs_value),
             operator: operator_l
         };
 
@@ -607,9 +608,9 @@ impl Builder {
     }
 
     pub fn op_assign(&self, mut lhs: Node, op_t: Token, rhs: Node) -> Node {
-        let operator = self.value(&op_t);
-        let operator_l = self.loc(&op_t);
-        let expression_l = self.join_expr(&lhs, &rhs);
+        let operator = value(&op_t);
+        let operator_l = loc(&op_t);
+        let expression_l = join_exprs(&lhs, &rhs);
 
         let loc = match lhs {
             Node::Gvasgn { .. }
@@ -653,14 +654,14 @@ impl Builder {
 
     pub fn multi_lhs(&self, begin_t: Option<Token>, items: Vec<Node>, end_t: Option<Token>) -> Node {
         Node::Mlhs {
-            loc: self.collection_map(&begin_t, &items, &end_t),
+            loc: collection_map(&begin_t.as_ref(), &items.iter().collect(), &end_t.as_ref()),
             items,
         }
     }
 
     pub fn multi_assign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
         Node::Masgn {
-            loc: self.binary_op_map(&lhs, &eql_t, &rhs),
+            loc: binary_op_map(&lhs, &eql_t, &rhs),
             lhs: Box::new(lhs),
             rhs: Box::new(rhs),
         }
@@ -680,7 +681,7 @@ impl Builder {
 
     pub fn def_class(&self, class_t: Token, name: Node, lt_t: Option<Token>, superclass: Option<Node>, body: Option<Node>, end_t: Token) -> Node {
         Node::Class {
-            loc: self.module_definition_map(&class_t, &Some(&name), &lt_t, &end_t),
+            loc: module_definition_map(&class_t, &Some(&name), &lt_t.as_ref(), &end_t),
             name: Box::new(name),
             superclass: superclass.map(|node| Box::new(node)),
             body: body.map(|node| Box::new(node))
@@ -689,7 +690,7 @@ impl Builder {
 
     pub fn def_sclass(&self, class_t: Token, lshift_t: Token, expr: Node, body: Option<Node>, end_t: Token) -> Node {
         Node::Sclass {
-            loc: self.module_definition_map(&class_t, &None, &Some(lshift_t), &end_t),
+            loc: module_definition_map(&class_t, &None, &Some(&lshift_t), &end_t),
             expr: Box::new(expr),
             body: body.map(|node| Box::new(node))
         }
@@ -697,7 +698,7 @@ impl Builder {
 
     pub fn def_module(&self, module_t: Token, name: Node, body: Option<Node>, end_t: Token) -> Node {
         Node::Module {
-            loc: self.module_definition_map(&module_t, &Some(&name), &None, &end_t),
+            loc: module_definition_map(&module_t, &Some(&name), &None, &end_t),
             name: Box::new(name),
             body: body.map(|node| Box::new(node))
         }
@@ -708,22 +709,22 @@ impl Builder {
     //
 
     pub fn def_method(&self, def_t: Token, name_t: Token, args: Option<Node>, body: Option<Node>, end_t: Token) -> Node {
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
 
         Node::Def {
-            loc: self.definition_map(&def_t, &None, &name_t, &end_t),
-            name: self.value(&name_t),
+            loc: definition_map(&def_t, &None, &name_t, &end_t),
+            name: value(&name_t),
             args: args.map(|node| Box::new(node)),
             body: body.map(|node| Box::new(node)),
         }
     }
 
     pub fn def_endless_method(&self, def_t: Token, name_t: Token, args: Option<Node>, assignment_t: Token, body: Option<Node>) -> Node {
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
 
         Node::Def {
-            loc: self.endless_definition_map(&def_t, &None, &name_t, &assignment_t, &body.as_ref()),
-            name: self.value(&name_t),
+            loc: endless_definition_map(&def_t, &None, &name_t, &assignment_t, &body.as_ref()),
+            name: value(&name_t),
             args: args.map(|node| Box::new(node)),
             body: body.map(|node| Box::new(node)),
         }
@@ -731,12 +732,12 @@ impl Builder {
 
     pub fn def_singleton(&self, def_t: Token, definee: Node, dot_t: Token, name_t: Token, args: Option<Node>, body: Option<Node>, end_t: Token) -> Node {
         self.validate_definee(&definee);
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
 
         Node::Defs {
-            loc: self.definition_map(&def_t, &Some(dot_t), &name_t, &end_t),
+            loc: definition_map(&def_t, &Some(&dot_t), &name_t, &end_t),
             definee: Box::new(definee),
-            name: self.value(&name_t),
+            name: value(&name_t),
             args: args.map(|node| Box::new(node)),
             body: body.map(|node| Box::new(node)),
         }
@@ -744,19 +745,19 @@ impl Builder {
 
     pub fn def_endless_singleton(&self, def_t: Token, definee: Node, dot_t: Token, name_t: Token, args: Option<Node>, assignment_t: Token, body: Option<Node>) -> Node {
         self.validate_definee(&definee);
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
 
         Node::Defs {
-            loc: self.endless_definition_map(&def_t, &Some(dot_t), &name_t, &assignment_t, &body.as_ref()),
+            loc: endless_definition_map(&def_t, &Some(&dot_t), &name_t, &assignment_t, &body.as_ref()),
             definee: Box::new(definee),
-            name: self.value(&name_t),
+            name: value(&name_t),
             args: args.map(|node| Box::new(node)),
             body: body.map(|node| Box::new(node)),
         }
     }
 
     pub fn undef_method(&self, undef_t: Token, names: Vec<Node>) -> Node {
-        let loc = self.keyword_map(&undef_t, &None, &names, &None);
+        let loc = keyword_map(&undef_t, &None, &names.iter().collect(), &None);
         Node::Undef {
             names,
             loc
@@ -764,7 +765,7 @@ impl Builder {
     }
 
     pub fn alias(&self, alias_t: Token, to: Node, from: Node) -> Node {
-        let loc = self.keyword_map(&alias_t, &None, &vec![from.clone(), to.clone()], &None);
+        let loc = keyword_map(&alias_t, &None, &vec![&from, &to], &None);
         Node::Alias {
             to: Box::new(to),
             from: Box::new(from),
@@ -780,7 +781,7 @@ impl Builder {
         match (&begin_t, args.len(), &end_t) {
             (None, 0, None) => None,
             _ => {
-                let loc = self.collection_map(&begin_t, &args, &end_t);
+                let loc = collection_map(&begin_t.as_ref(), &args.iter().collect(), &end_t.as_ref());
                 Some(
                     Node::Args {
                         args,
@@ -796,99 +797,99 @@ impl Builder {
     pub fn forward_only_args(&self, begin_t: Token, dots_t: Token, end_t: Token) -> Node {
         let args = vec![ self.forward_arg(dots_t) ];
         Node::Args {
-            loc: self.collection_map(&Some(begin_t), &args, &Some(end_t)),
+            loc: collection_map(&Some(&begin_t), &args.iter().collect(), &Some(&end_t)),
             args,
         }
     }
 
     pub fn forward_arg(&self, dots_t: Token) -> Node {
         Node::ForwardArg {
-            loc: self.token_map(&dots_t)
+            loc: token_map(&dots_t)
         }
     }
 
     pub fn arg(&self, name_t: Token) -> Node {
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
         Node::Arg {
-            name: self.value(&name_t),
-            loc: self.variable_map(&name_t)
+            name: value(&name_t),
+            loc: variable_map(&name_t)
         }
     }
 
-    pub fn optarg(&self, name_t: Token, eql_t: Token, value: Node) -> Node {
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+    pub fn optarg(&self, name_t: Token, eql_t: Token, value_node: Node) -> Node {
+        self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
         Node::Optarg {
             loc: VariableMap {
-                operator: Some(self.loc(&eql_t)),
-                expression: self.loc(&name_t).join(&value.expression())
+                operator: Some(loc(&eql_t)),
+                expression: loc(&name_t).join(&value_node.expression())
             },
-            name: self.value(&name_t),
-            value: Box::new(value),
+            name: value(&name_t),
+            value: Box::new(value_node),
         }
     }
 
     pub fn restarg(&self, star_t: Token, name_t: Option<Token>) -> Node {
-        let loc = self.arg_prefix_map(&star_t, &name_t);
+        let map = arg_prefix_map(&star_t, &name_t.as_ref());
         let name = match name_t {
             Some(name_t) => {
-                self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
-                Some(self.value(&name_t))
+                self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
+                Some(value(&name_t))
             },
             _ => None
         };
-        Node::Restarg { loc, name }
+        Node::Restarg { loc: map, name }
     }
 
     pub fn kwarg(&self, name_t: Token) -> Node {
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
         Node::Kwarg {
-            loc: self.kwarg_map(&name_t, &None),
-            name: self.value(&name_t)
+            loc: kwarg_map(&name_t, &None),
+            name: value(&name_t)
         }
     }
 
-    pub fn kwoptarg(&self, name_t: Token, value: Node) -> Node {
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+    pub fn kwoptarg(&self, name_t: Token, value_node: Node) -> Node {
+        self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
 
         Node::Kwoptarg {
-            loc: self.kwarg_map(&name_t, &Some(&value)),
-            name: self.value(&name_t),
-            value: Box::new(value)
+            loc: kwarg_map(&name_t, &Some(&value_node)),
+            name: value(&name_t),
+            value: Box::new(value_node)
         }
     }
 
     pub fn kwrestarg(&self, dstar_t: Token, name_t: Option<Token>) -> Node {
-        let loc = self.arg_prefix_map(&dstar_t, &name_t);
+        let map = arg_prefix_map(&dstar_t, &name_t.as_ref());
         let name = match name_t {
             Some(name_t) => {
-                self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
-                Some(self.value(&name_t))
+                self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
+                Some(value(&name_t))
             },
             _ => {
                 None
             }
         };
 
-        Node::Kwrestarg { name, loc }
+        Node::Kwrestarg { name, loc: map }
     }
 
     pub fn kwnilarg(&self, dstar_t: Token, nil_t: Token) -> Node {
-        Node::Kwnilarg { loc: self.arg_prefix_map(&dstar_t, &Some(nil_t)) }
+        Node::Kwnilarg { loc: arg_prefix_map(&dstar_t, &Some(&nil_t)) }
     }
 
     pub fn shadowarg(&self, name_t: Token) -> Node {
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
         Node::Shadowarg {
-            loc: self.variable_map(&name_t),
-            name: self.value(&name_t)
+            loc: variable_map(&name_t),
+            name: value(&name_t)
         }
     }
 
     pub fn blockarg(&self, amper_t: Token, name_t: Token) -> Node {
-        self.check_reserved_for_numparam(&self.value(&name_t), &self.loc(&name_t));
+        self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
         Node::Blockarg {
-            name: self.value(&name_t),
-            loc: self.arg_prefix_map(&amper_t, &Some(name_t)),
+            name: value(&name_t),
+            loc: arg_prefix_map(&amper_t, &Some(&name_t)),
         }
     }
 
@@ -914,13 +915,20 @@ impl Builder {
         }
     }
 
-    pub fn forwarded_args(&self, _dots_t: Token) -> Node {
-        unimplemented!("forwarded_args")
+    pub fn forwarded_args(&self, dots_t: Token) -> Node {
+        Node::ForwardedArgs { loc: token_map(&dots_t) }
     }
 
     pub fn call_method(&self, receiver: Option<Node>, dot_t: Option<Token>, selector_t: Option<Token>, lparen_t: Option<Token>, args: Vec<Node>, rparen_t: Option<Token>) -> Node {
-        let loc = self.send_map(&receiver, &dot_t, &selector_t, &lparen_t, &args, &rparen_t);
-        let method_name = selector_t.map(|t| self.value(&t)).unwrap_or("call".to_owned());
+        let loc = send_map(
+            &receiver.as_ref(),
+            &dot_t.as_ref(),
+            &selector_t.as_ref(),
+            &lparen_t.as_ref(),
+            &args.iter().collect(),
+            &rparen_t.as_ref()
+        );
+        let method_name = selector_t.map(|t| value(&t)).unwrap_or("call".to_owned());
 
         match self.call_type_for_dot(&dot_t) {
             MethodCallType::Send => {
@@ -943,17 +951,95 @@ impl Builder {
         }
     }
 
-    pub fn call_lambda(&self, _lambda_t: Token) -> Node { unimplemented!("call_lambda") }
-    pub fn block(&self, _method_call: Node, _begin_t: Token, _args: Option<Node>, _body: Option<Node>, _end_t: Token) -> Node {
-        unimplemented!("block")
+    pub fn call_lambda(&self, lambda_t: Token) -> Node {
+        Node::Lambda { loc: expr_map(&loc(&lambda_t)) }
     }
-    pub fn block_pass(&self, _amper_t: Token, _arg: Node) -> Node {
-        unimplemented!("block_pass")
+
+    pub fn block(&self, method_call: Node, begin_t: Token, args: Option<Node>, body: Option<Node>, end_t: Token) -> Node {
+        let block_args = args.map(|node| Box::new(node));
+        let block_body = body.map(|node| Box::new(node));
+
+        match &method_call {
+            Node::Yield { .. } => {
+                // diagnostic :error, :block_given_to_yield, nil, method_call.loc.keyword, [loc(begin_t)]
+            },
+            Node::Send { args, .. }
+            | Node::CSend { args, .. } => {
+                match args.last() {
+                    Some(Node::Blockarg { loc: VariableMap { expression: _, .. }, .. })
+                    | Some(Node::ForwardedArgs { loc: Map { expression: _ }, .. }) => {
+                        // diagnostic :error, :block_and_blockarg, nil, expression, [loc(begin_t)]
+                    },
+                    _ => {}
+                }
+            },
+            _ => {}
+        }
+
+        let rewrite_args_and_loc = |args: &Vec<Node>, loc: &KeywordMap, block_args: Option<Box<Node>>, block_body: Option<Box<Node>>| {
+            // Code like "return foo 1 do end" is reduced in a weird sequence.
+            // Here, method_call is actually (return).
+            let actual_send = args[0].clone();
+
+            let block = Node::Block {
+                loc: block_map(&actual_send.expression(), &begin_t, &end_t),
+                call: Box::new(actual_send),
+                args: block_args,
+                body: block_body,
+            };
+
+            let loc = KeywordMap {
+                keyword: loc.keyword.clone(),
+                begin: loc.begin.clone(),
+                end: loc.end.clone(),
+                expression: loc.expression.join(&block.expression())
+            };
+            let args = vec![block];
+
+            (args, loc)
+        };
+
+        match &method_call {
+            Node::Send { .. }
+            | Node::CSend { .. }
+            | Node::Index { .. }
+            | Node::Super { .. }
+            | Node::Zsuper { .. }
+            // | Node::Lambda { .. }
+            => {
+                let loc = block_map(&method_call.expression(), &begin_t, &end_t);
+                return Node::Block {
+                    call: Box::new(method_call),
+                    args: block_args,
+                    body: block_body,
+                    loc
+                }
+            },
+            Node::Return { args, loc } => {
+                let (args, loc) = rewrite_args_and_loc(args, loc, block_args, block_body);
+                Node::Return { args, loc }
+            },
+            Node::Next { args, loc } => {
+                let (args, loc) = rewrite_args_and_loc(args, loc, block_args, block_body);
+                Node::Next { args, loc }
+            },
+            Node::Break { args, loc } => {
+                let (args, loc) = rewrite_args_and_loc(args, loc, block_args, block_body);
+                Node::Break { args, loc }
+            },
+            _ => unreachable!()
+        }
+    }
+    pub fn block_pass(&self, amper_t: Token, arg: Node) -> Node {
+        Node::BlockPass {
+            loc: unary_op_map(&amper_t, &Some(&arg)),
+            arg: Box::new(arg)
+        }
     }
 
     pub fn attr_asgn(&self, receiver: Node, dot_t: Token, selector_t: Token) -> Node {
-        let method_name = self.value(&selector_t) + "";
-        let loc = self.send_map(&Some(receiver.clone()), &Some(dot_t.clone()), &Some(selector_t.clone()), &None, &vec![], &None);
+        let method_name = value(&selector_t) + "";
+        let loc = send_map(&Some(&receiver), &Some(&dot_t), &Some(&selector_t), &None, &vec![], &None);
 
         match self.call_type_for_dot(&Some(dot_t)) {
             MethodCallType::Send => {
@@ -977,7 +1063,7 @@ impl Builder {
     }
 
     pub fn index(&self, receiver: Node, lbrack_t: Token, indexes: Vec<Node>, rbrack_t: Token) -> Node {
-        let loc = self.index_map(&receiver, &lbrack_t, &rbrack_t);
+        let loc = index_map(&receiver, &lbrack_t, &rbrack_t);
         Node::Index {
             receiver: Box::new(receiver),
             indexes,
@@ -986,7 +1072,7 @@ impl Builder {
     }
 
     pub fn index_asgn(&self, receiver: Node, lbrack_t: Token, indexes: Vec<Node>, rbrack_t: Token) -> Node {
-        let loc = self.index_map(&receiver, &lbrack_t, &rbrack_t);
+        let loc = index_map(&receiver, &lbrack_t, &rbrack_t);
         Node::IndexAsgn {
             receiver: Box::new(receiver),
             indexes,
@@ -996,22 +1082,53 @@ impl Builder {
     }
 
     pub fn binary_op(&self, receiver: Node, operator_t: Token, arg: Node) -> Node {
-        let source_map = self.send_binary_op_map(&receiver, &operator_t, &arg);
-        Node::Send { receiver: Some(Box::new(receiver)), operator: self.value(&operator_t), args: vec![arg], loc: source_map }
+        let source_map = send_binary_op_map(&receiver, &operator_t, &arg);
+        Node::Send { receiver: Some(Box::new(receiver)), operator: value(&operator_t), args: vec![arg], loc: source_map }
     }
 
-    pub fn match_op(&self, _receiver: Node, _match_t: Token, _arg: Node) -> Node {
-        unimplemented!("match_op")
+    pub fn match_op(&self, receiver: Node, match_t: Token, arg: Node) -> Node {
+        let source_map = send_binary_op_map(&receiver, &match_t, &arg);
+        let captures = self.static_regexp_captures(&receiver);
+        if captures.is_empty() {
+            Node::Send {
+                receiver: Some(Box::new(receiver)),
+                operator: String::from("=~"),
+                args: vec![arg],
+                loc: source_map
+            }
+        } else {
+            for capture in captures {
+                self.static_env.declare(&capture);
+            }
+
+            Node::MatchWithLvasgn {
+                receiver: Box::new(receiver),
+                arg: Box::new(arg),
+                loc: source_map
+            }
+        }
     }
 
-    pub fn unary_op(&self, _op_t: Token, _receiver: Node) -> Node {
-        unimplemented!("unary_op")
+    pub fn unary_op(&self, op_t: Token, receiver: Node) -> Node {
+        let loc = send_unary_op_map(&op_t, &Some(&receiver));
+        let op = value(&op_t);
+        let method = if op == "+" || op == "-" {
+            op + "@"
+        } else {
+            op
+        };
+        Node::Send {
+            receiver: Some(Box::new(receiver)),
+            operator: method,
+            args: vec![],
+            loc
+        }
     }
 
     pub fn not_op(&self, not_t: Token, begin_t: Option<Token>, receiver: Option<Node>, end_t: Option<Token>) -> Node {
         if let Some(receiver) = receiver {
             Node::Send {
-                loc: self.send_map(&None, &None, &Some(not_t), &begin_t, &vec![receiver.clone()], &end_t),
+                loc: send_map(&None, &None, &Some(&not_t), &begin_t.as_ref(), &vec![&receiver], &end_t.as_ref()),
                 receiver: Some(Box::new(self.check_condition(receiver))),
                 operator: "!".to_owned(),
                 args: vec![],
@@ -1019,10 +1136,10 @@ impl Builder {
         } else {
             let nil_node = Node::Begin {
                 statements: vec![],
-                loc: self.collection_map(&begin_t, &vec![], &end_t)
+                loc: collection_map(&begin_t.as_ref(), &vec![], &end_t.as_ref())
             };
             Node::Send {
-                loc: self.send_unary_op_map(&not_t, &Some(&nil_node)),
+                loc: send_unary_op_map(&not_t, &Some(&nil_node)),
                 receiver: Some(Box::new(nil_node)),
                 operator: "!".to_owned(),
                 args: vec![]
@@ -1037,7 +1154,7 @@ impl Builder {
     // Logical operations: and, or
 
     pub fn logical_op(&self, type_: LogicalOp, lhs: Node, op_t: Token, rhs: Node) -> Node {
-        let loc = self.binary_op_map(&lhs, &op_t, &rhs);
+        let loc = binary_op_map(&lhs, &op_t, &rhs);
         let lhs = Box::new(lhs);
         let rhs = Box::new(rhs);
         match type_ {
@@ -1048,8 +1165,13 @@ impl Builder {
 
     // Conditionals
 
-    pub fn condition(&self, _cond_t: Token, _cond: Node, _then_t: Token, _if_true: Option<Node>, _else_t: Option<Token>, _else_: Option<Node>, _end_t: Option<Token>) -> Node {
-        unimplemented!("condition");
+    pub fn condition(&self, cond_t: Token, cond: Node, then_t: Token, if_true: Option<Node>, else_t: Option<Token>, if_false: Option<Node>, end_t: Option<Token>) -> Node {
+        Node::If {
+            loc: condition_map(&cond_t, &Some(&cond), &Some(&then_t), &if_true.as_ref(), &else_t.as_ref(), &if_false.as_ref(), &end_t.as_ref()),
+            cond: Box::new(self.check_condition(cond)),
+            if_true: if_true.map(|node| Box::new(node)),
+            if_false: if_false.map(|node| Box::new(node)),
+        }
     }
 
     pub fn condition_mod(&self, if_true: Option<Node>, if_false: Option<Node>, cond_t: Token, cond: Node) -> Node {
@@ -1060,8 +1182,8 @@ impl Builder {
             (Some(_), Some(_)) => panic!("only one of if_true/if_false is required")
         };
 
-        let loc = self.keyword_mod_map(&pre, &cond_t, &cond);
-        Node::If {
+        let loc = keyword_mod_map(&pre, &cond_t, &cond);
+        Node::IfMod {
             cond: Box::new(self.check_condition(cond)),
             if_true: if_true.map(|node| Box::new(node)),
             if_false: if_false.map(|node| Box::new(node)),
@@ -1069,16 +1191,48 @@ impl Builder {
         }
     }
 
-    pub fn ternary(&self, _cond: Node, _question_t: Token, _if_true: Node, _colon_t: Token, _if_false: Node) -> Node {
-        unimplemented!("ternary")
+    pub fn ternary(&self, cond: Node, question_t: Token, if_true: Node, colon_t: Token, if_false: Node) -> Node {
+        Node::IfTernary {
+            loc: ternary_map(&cond, &question_t, &if_true, &colon_t, &if_false),
+            cond: Box::new(cond),
+            if_true: Box::new(if_true),
+            if_false: Box::new(if_false)
+        }
     }
 
     // Case matching
 
-    pub fn when(&self, when_t: Token, patterns: Vec<Node>, then_t: Token, body: Option<Node>) -> Node { unimplemented!("when") }
+    pub fn when(&self, when_t: Token, patterns: Vec<Node>, then_t: Token, body: Option<Node>) -> Node {
+        let loc = if let Some(body) = &body {
+            let args = [ patterns.iter().collect(), vec![body] ].concat();
+            keyword_map(&when_t, &Some(&then_t), &args, &None)
+        } else {
+            keyword_map(&when_t, &Some(&then_t), &patterns.iter().collect(), &None)
+        };
 
-    pub fn case(&self, _case_t: Token, _expr: Option<Node>, _when_bodies: Vec<Node>, _else_t: Option<Token>, _else_body: Option<Node>, _end_t: Token) -> Node {
-        unimplemented!("case")
+        Node::When {
+            patterns,
+            body: body.map(|node| Box::new(node)),
+            loc
+        }
+    }
+
+    pub fn case(&self, case_t: Token, expr: Option<Node>, when_bodies: Vec<Node>, else_t: Option<Token>, else_body: Option<Node>, end_t: Token) -> Node {
+        let loc = condition_map(
+            &case_t,
+            &expr.as_ref(),
+            &None,
+            &None,
+            &else_t.as_ref(),
+            &else_body.as_ref(),
+            &Some(&end_t)
+        );
+        Node::Case {
+            loc,
+            expr: expr.map(Box::new),
+            when_bodies,
+            else_body: else_body.map(Box::new)
+        }
     }
 
     // Loops
@@ -1088,7 +1242,7 @@ impl Builder {
     }
 
     pub fn loop_mod(&self, loop_type: LoopType, body: Node, keyword_t: Token, cond: Node) -> Node {
-        let loc = self.keyword_mod_map(&body, &keyword_t, &cond);
+        let loc = keyword_mod_map(&body, &keyword_t, &cond);
         let cond = Box::new(self.check_condition(cond));
 
         match (loop_type, &body) {
@@ -1099,8 +1253,13 @@ impl Builder {
         }
     }
 
-    pub fn for_(&self, _for_t: Token, _iterator: Node, _in_t: Token, _iteratee: Node, _do_t: Token, _body: Option<Node>, _end_t: Token) -> Node {
-        unimplemented!("for_")
+    pub fn for_(&self, for_t: Token, iterator: Node, in_t: Token, iteratee: Node, do_t: Token, body: Option<Node>, end_t: Token) -> Node {
+        Node::For {
+            loc: for_map(&for_t, &in_t, &do_t, &end_t),
+            iterator: Box::new(iterator),
+            iteratee: Box::new(iteratee),
+            body: body.map(|node| Box::new(node))
+        }
     }
 
     // Keywords
@@ -1114,7 +1273,7 @@ impl Builder {
             // }
         }
 
-        let loc = self.keyword_map(&keyword_t, &lparen_t, &args, &rparen_t);
+        let loc = keyword_map(&keyword_t, &lparen_t.as_ref(), &args.iter().collect(), &rparen_t.as_ref());
 
         match type_ {
             KeywordCmd::Break => {
@@ -1152,20 +1311,20 @@ impl Builder {
     pub fn preexe(&self, preexe_t: Token, lbrace_t: Token, compstmt: Option<Node>, rbrace_t: Token) -> Node {
         Node::Preexe {
             body: compstmt.map(|node| Box::new(node)),
-            loc: self.keyword_map(&preexe_t, &Some(lbrace_t), &vec![], &Some(rbrace_t))
+            loc: keyword_map(&preexe_t, &Some(&lbrace_t), &vec![], &Some(&rbrace_t))
         }
     }
     pub fn postexe(&self, postexe_t: Token, lbrace_t: Token, compstmt: Option<Node>, rbrace_t: Token) -> Node {
         Node::Postexe {
             body: compstmt.map(|node| Box::new(node)),
-            loc: self.keyword_map(&postexe_t, &Some(lbrace_t), &vec![], &Some(rbrace_t))
+            loc: keyword_map(&postexe_t, &Some(&lbrace_t), &vec![], &Some(&rbrace_t))
         }
     }
 
     // Exception handling
 
     pub fn rescue_body(&self, rescue_t: Token, exc_list: Option<Node>, assoc_t: Option<Token>, exc_var: Option<Node>, then_t: Option<Token>, compound_stmt: Option<Node>) -> Node {
-        let loc = self.rescue_body_map(&rescue_t, &exc_list, &assoc_t, &exc_var, &then_t, &compound_stmt);
+        let loc = rescue_body_map(&rescue_t, &exc_list.as_ref(), &assoc_t.as_ref(), &exc_var.as_ref(), &then_t.as_ref(), &compound_stmt.as_ref());
 
         Node::RescueBody {
             exc_list: exc_list.map(|node| Box::new(node)),
@@ -1180,7 +1339,13 @@ impl Builder {
 
         if !rescue_bodies.is_empty() {
             if let Some((else_t, else_)) = else_ {
-                let loc = self.eh_keyword_map(&compound_stmt, &None, &rescue_bodies, &Some(else_t.clone()), &Some(else_.clone()));
+                let loc = eh_keyword_map(
+                    &compound_stmt.as_ref(),
+                    &None,
+                    &rescue_bodies.iter().collect(),
+                    &Some(&else_t),
+                    &Some(&else_)
+                );
                 result = Some(
                         Node::Rescue {
                         body: compound_stmt.map(|node| Box::new(node)),
@@ -1190,7 +1355,7 @@ impl Builder {
                     }
                 )
             } else {
-                let loc = self.eh_keyword_map(&compound_stmt, &None, &rescue_bodies, &None, &None);
+                let loc = eh_keyword_map(&compound_stmt.as_ref(), &None, &rescue_bodies.iter().collect(), &None, &None);
                 result = Some(
                         Node::Rescue {
                         body: compound_stmt.map(|node| Box::new(node)),
@@ -1208,16 +1373,15 @@ impl Builder {
                 Some(compound_stmt) => statements.push(compound_stmt),
                 _ => {}
             }
-            let else_ = vec![else_];
-            let loc = self.collection_map(&Some(else_t), &else_, &None);
+            let loc = collection_map(&Some(&else_t), &vec![&else_], &None);
             statements.push(
                 Node::Begin {
-                    statements: else_,
+                    statements: vec![else_],
                     loc
                 }
             );
 
-            let loc = self.collection_map(&None, &statements, &None);
+            let loc = collection_map(&None, &statements.iter().collect(), &None);
             result = Some(
                 Node::Begin {
                     statements,
@@ -1229,7 +1393,7 @@ impl Builder {
         }
 
         if let Some((ensure_t, ensure)) = ensure {
-            let loc = self.eh_keyword_map(&result, &Some(ensure_t.clone()), &vec![ensure.clone()], &None, &None);
+            let loc = eh_keyword_map(&result.as_ref(), &Some(&ensure_t), &vec![&ensure], &None, &None);
             result = Some(
                     Node::Ensure {
                     body: result.map(|node| Box::new(node)),
@@ -1252,7 +1416,7 @@ impl Builder {
         } else if statements.len() == 1 {
             statements.pop()
         } else {
-            let source_map = self.collection_map(&None, &statements, &None);
+            let source_map = collection_map(&None, &statements.iter().collect(), &None);
             Some(Node::Begin { statements, loc: source_map })
         }
     }
@@ -1265,8 +1429,8 @@ impl Builder {
                 Node::Mlhs { loc: CollectionMap { expression, .. }, items: statements }
                 | Node::Begin { loc: CollectionMap { begin: None, end: None, expression }, statements } => {
                     let loc = CollectionMap {
-                        begin: Some(self.loc(&begin_t)),
-                        end: Some(self.loc(&end_t)),
+                        begin: Some(loc(&begin_t)),
+                        end: Some(loc(&end_t)),
                         expression
                     };
                     Node::Begin { statements, loc }
@@ -1274,7 +1438,7 @@ impl Builder {
                 body => {
                     let statements = vec![body];
                     Node::Begin {
-                        loc: self.collection_map(&Some(begin_t), &statements, &Some(end_t)),
+                        loc: collection_map(&Some(&begin_t), &statements.iter().collect(), &Some(&end_t)),
                         statements
                     }
                 }
@@ -1283,7 +1447,7 @@ impl Builder {
             // A nil expression: `()'.
             Node::Begin {
                 statements: vec![],
-                loc: self.collection_map(&Some(begin_t), &vec![], &Some(end_t))
+                loc: collection_map(&Some(&begin_t), &vec![], &Some(&end_t))
             }
         }
     }
@@ -1294,12 +1458,12 @@ impl Builder {
                 // A nil expression: `begin end'.
                 Node::KwBegin  {
                     statements: vec![],
-                    loc: self.collection_map(&Some(begin_t), &vec![], &Some(end_t))
+                    loc: collection_map(&Some(&begin_t), &vec![], &Some(&end_t))
                 }
             },
             Some(Node::Begin { statements, loc: CollectionMap { begin: None, end: None, .. }, .. }) => {
                 // Synthesized (begin) from compstmt "a; b".
-                let loc = self.collection_map(&Some(begin_t), &statements, &Some(end_t));
+                let loc = collection_map(&Some(&begin_t), &statements.iter().collect(), &Some(&end_t));
                 Node::KwBegin {
                     statements,
                     loc
@@ -1307,7 +1471,7 @@ impl Builder {
             },
             Some(node) => {
                 let statements = vec![node];
-                let loc = self.collection_map(&Some(begin_t), &statements, &Some(end_t));
+                let loc = collection_map(&Some(&begin_t), &statements.iter().collect(), &Some(&end_t));
                 Node::KwBegin {
                     statements,
                     loc
@@ -1325,26 +1489,26 @@ impl Builder {
     }
 
     pub fn in_match(&self, _lhs: Node, _in_t: Token, _rhs: Node) -> Node { unimplemented!("in_match") }
-    pub fn in_pattern(&self, in_t: Token, pattern: Node, guard: Option<Node>, then_t: Token, body: Option<Node>) -> Node { unimplemented!("in_pattern") }
+    pub fn in_pattern(&self, _in_t: Token, _pattern: Node, _guard: Option<Node>, _then_t: Token, _body: Option<Node>) -> Node { unimplemented!("in_pattern") }
 
-    pub fn if_guard(&self, if_t: Token, if_body: Node) -> Node { unimplemented!("if_guard") }
-    pub fn unless_guard(&self, unless_t: Token, unless_body: Node) -> Node { unimplemented!("unless_guard") }
+    pub fn if_guard(&self, _if_t: Token, _if_body: Node) -> Node { unimplemented!("if_guard") }
+    pub fn unless_guard(&self, _unless_t: Token, _unless_body: Node) -> Node { unimplemented!("unless_guard") }
 
-    pub fn match_var(&self, name_t: Token) -> Node { unimplemented!("match_var") }
-    pub fn match_hash_var(&self, name_t: Token) -> Node { unimplemented!("match_hash_var") }
-    pub fn match_hash_var_from_str(&self, begin_t: Token, strings: Vec<Node>, end_t: Token) -> Node { unimplemented!("match_hash_var_from_str") }
-    pub fn match_rest(&self, star_t: Token, _name_t: Option<Token>) -> Node { unimplemented!("match_rest") }
-    pub fn hash_pattern(&self, lbrace_t: Option<Token>, kwargs: Vec<Node>, rbrace_t: Option<Token>) -> Node { unimplemented!("hash_pattern") }
-    pub fn array_pattern(&self, lbrack_t: Option<Token>, elements: Vec<Node>, rbrack_t: Option<Token>) -> Node { unimplemented!("array_pattern") }
-    pub fn find_pattern(&self, lbrack_t: Option<Token>, elements: Vec<Node>, rbrack_t: Option<Token>) -> Node { unimplemented!("find_pattern") }
-    pub fn match_with_trailing_comma(&self, match_: Node, comma_t: Token) -> Node { unimplemented!("match_with_trailing_comma") }
-    pub fn const_pattern(&self, const_: Node, ldelim_t: Token, pattern: Node, rdelim_t: Token) -> Node { unimplemented!("const_pattern") }
-    pub fn pin(&self, pin_t: Token, var: Node) -> Node { unimplemented!("pin") }
-    pub fn match_alt(&self, left: Node, pipe_t: Token, right: Node) -> Node { unimplemented!("match_alt") }
-    pub fn match_as(&self, value: Node, assoc_t: Token, as_: Node) -> Node { unimplemented!("match_as") }
-    pub fn match_nil_pattern(&self, dstar_t: Token, nil_t: Token) -> Node { unimplemented!("match_nil_pattern") }
-    pub fn match_pair(&self, p_kw_label: PKwLabel, value: Node) -> Node { unimplemented!("match_pair") }
-    pub fn match_label(&self, p_kw_label: PKwLabel) -> Node { unimplemented!("match_label") }
+    pub fn match_var(&self, _name_t: Token) -> Node { unimplemented!("match_var") }
+    pub fn match_hash_var(&self, _name_t: Token) -> Node { unimplemented!("match_hash_var") }
+    pub fn match_hash_var_from_str(&self, _begin_t: Token, _strings: Vec<Node>, _end_t: Token) -> Node { unimplemented!("match_hash_var_from_str") }
+    pub fn match_rest(&self, _star_t: Token, __name_t: Option<Token>) -> Node { unimplemented!("match_rest") }
+    pub fn hash_pattern(&self, _lbrace_t: Option<Token>, _kwargs: Vec<Node>, _rbrace_t: Option<Token>) -> Node { unimplemented!("hash_pattern") }
+    pub fn array_pattern(&self, _lbrack_t: Option<Token>, _elements: Vec<Node>, _rbrack_t: Option<Token>) -> Node { unimplemented!("array_pattern") }
+    pub fn find_pattern(&self, _lbrack_t: Option<Token>, _elements: Vec<Node>, _rbrack_t: Option<Token>) -> Node { unimplemented!("find_pattern") }
+    pub fn match_with_trailing_comma(&self, _match_: Node, _comma_t: Token) -> Node { unimplemented!("match_with_trailing_comma") }
+    pub fn const_pattern(&self, _const_: Node, _ldelim_t: Token, _pattern: Node, _rdelim_t: Token) -> Node { unimplemented!("const_pattern") }
+    pub fn pin(&self, _pin_t: Token, _var: Node) -> Node { unimplemented!("pin") }
+    pub fn match_alt(&self, _left: Node, _pipe_t: Token, _right: Node) -> Node { unimplemented!("match_alt") }
+    pub fn match_as(&self, _value: Node, _assoc_t: Token, _as_: Node) -> Node { unimplemented!("match_as") }
+    pub fn match_nil_pattern(&self, _dstar_t: Token, _nil_t: Token) -> Node { unimplemented!("match_nil_pattern") }
+    pub fn match_pair(&self, _p_kw_label: PKwLabel, _value: Node) -> Node { unimplemented!("match_pair") }
+    pub fn match_label(&self, _p_kw_label: PKwLabel) -> Node { unimplemented!("match_label") }
 
     //
     // Verification
@@ -1393,450 +1557,75 @@ impl Builder {
     pub fn check_duplicate_pattern_key(&self) {}
 
     //
-    // Source maps
-    //
-
-    pub fn join_expr(&self, left_expr: &Node, right_expr: &Node) -> Range {
-        left_expr.expression().join(right_expr.expression())
-    }
-
-    pub fn token_map(&self, token: &Token) -> Map {
-        Map { expression: self.loc(&token) }
-    }
-
-    pub fn delimited_string_map(&self) {}
-
-    pub fn prefix_string_map(&self, symbol: &Token) -> CollectionMap {
-        let str_range = self.loc(symbol);
-        let begin_l = str_range.with(str_range.begin_pos, str_range.begin_pos + 1);
-        CollectionMap {
-            begin: Some(begin_l),
-            end: None,
-            expression: str_range
-        }
-    }
-
-    pub fn unquoted_map(&self, token: &Token) -> CollectionMap {
-        CollectionMap {
-            begin: None,
-            end: None,
-            expression: self.loc(&token)
-        }
-    }
-
-    pub fn pair_keyword_map(&self, key_t: &Token, value: &Node) -> (CollectionMap, OperatorMap) {
-        let key_range = self.loc(&key_t);
-        let key_l = key_range.adjust(0, -1);
-        let colon_l = key_range.adjust((key_range.end_pos - 1).try_into().unwrap(), 0);
-
-        (
-            CollectionMap {
-                begin: None,
-                end: None,
-                expression: key_l
-            },
-            OperatorMap {
-                operator: Some(colon_l),
-                expression: key_range.join(&value.expression())
-            }
-        )
-    }
-
-    pub fn pair_quoted_map(&self, begin_t: &Token, end_t: &Token, value: &Node) -> ( Token, OperatorMap ) {
-        let end_l = self.loc(end_t);
-
-        let quote_loc = Loc { begin: end_l.end_pos - 2, end: end_l.end_pos - 1 };
-
-        let colon_l = end_l.with(end_l.end_pos - 1, end_l.end_pos);
-
-        (
-            ( end_t.0, self.value(end_t), quote_loc ),
-            OperatorMap {
-                operator: Some(colon_l),
-                expression: self.loc(begin_t).join(&value.expression())
-            }
-        )
-    }
-
-    pub fn expr_map(&self) {}
-
-    pub fn collection_map(&self, begin_t: &Option<Token>, parts: &Vec<Node>, end_t: &Option<Token>) -> CollectionMap {
-        let expr_l: Range;
-
-        let begin_l = if let Some(begin_t) = begin_t { Some(self.loc(&begin_t)) } else { None };
-        let end_l = if let Some(end_t) = end_t { Some(self.loc(&end_t)) } else { None };
-
-        match (begin_l.clone(), end_l.clone(), !parts.is_empty()) {
-            (Some(begin_l), Some(end_l), _) => {
-                expr_l = begin_l.join(&end_l);
-            },
-            (_, _, true) => {
-                expr_l = self.join_expr(parts.first().unwrap(), parts.last().unwrap());
-            },
-            (Some(begin_l), _, false) => {
-                expr_l = begin_l.clone();
-            },
-            (_, Some(end_l), false) => {
-                expr_l = end_l.clone();
-            },
-            (None, None, false) => {
-                panic!("empty collection without begin_t/end_t, can't build source map");
-            }
-        }
-
-        CollectionMap {
-            begin: begin_l,
-            end: end_l,
-            expression: expr_l
-        }
-    }
-
-    pub fn string_map(&self, begin_t: &Option<Token>, parts: &Vec<Node>, end_t: &Option<Token>) -> CollectionMap {
-        if let Some(begin_t) = begin_t {
-            if self.value(&begin_t).starts_with("<<") {
-                unimplemented!("heredoc map")
-            }
-        }
-
-        self.collection_map(begin_t, parts, end_t)
-    }
-
-    pub fn regexp_map(&self, begin_t: &Token, end_t: &Token, options: &Node) -> CollectionMap {
-        CollectionMap {
-            begin: Some(self.loc(begin_t)),
-            end: Some(self.loc(end_t)),
-            expression: self.loc(begin_t).join(options.expression())
-        }
-    }
-
-    pub fn constant_map(&self, scope: &Option<&Node>, colon2_t: &Option<Token>, name_t: &Token) -> ConstantMap {
-        let expr_l: Range;
-        if let Some(scope) = scope {
-            expr_l = scope.expression().join(&self.loc(name_t));
-        } else {
-            expr_l = self.loc(name_t);
-        }
-
-        ConstantMap {
-            double_colon: colon2_t.clone().map(|t| self.loc(&t)),
-            name: self.loc(&name_t),
-            operator: None,
-            expression: expr_l,
-        }
-    }
-
-    pub fn variable_map(&self, name_t: &Token) -> VariableMap {
-        VariableMap { expression: self.loc(name_t), operator: None }
-    }
-
-    pub fn binary_op_map(&self, left_e: &Node, op_t: &Token, right_e: &Node) -> OperatorMap {
-        OperatorMap {
-            operator: Some(self.loc(op_t)),
-            expression: self.join_expr(&left_e, &right_e)
-        }
-    }
-
-    pub fn unary_op_map(&self, op_t: &Token, arg: &Option<&Node>) -> OperatorMap {
-        let expr_l: Range;
-        if let Some(arg) = arg {
-            expr_l = self.loc(op_t).join(&arg.expression())
-        } else {
-            expr_l = self.loc(op_t);
-        }
-
-        OperatorMap {
-            operator: Some(self.loc(op_t)),
-            expression: expr_l
-        }
-    }
-
-    pub fn range_map(&self, start: &Option<Node>, op_t: &Token, end: &Option<Node>) -> OperatorMap {
-        let expr_l = match (start, end) {
-            (Some(start), Some(end)) => self.join_expr(&start, &end),
-            (Some(start), None) => start.expression().join(&self.loc(op_t)),
-            (None, Some(end)) => self.loc(op_t).join(&end.expression()),
-            (None, None) => unreachable!("at least one of start/end is required")
-        };
-
-        OperatorMap {
-            operator: Some(self.loc(op_t)),
-            expression: expr_l
-        }
-    }
-
-    pub fn arg_prefix_map(&self, op_t: &Token, name_t: &Option<Token>) -> VariableMap {
-        let op_l = self.loc(op_t);
-        let expr_l = if let Some(name_t) = name_t {
-            op_l.join(&self.loc(&name_t))
-        } else {
-            op_l.clone()
-        };
-
-        VariableMap {
-            operator: Some(op_l),
-            expression: expr_l
-        }
-    }
-
-    pub fn kwarg_map(&self, name_t: &Token, value: &Option<&Node>) -> VariableMap {
-        let label_range = self.loc(name_t);
-        let name_range = label_range.adjust(0, -1);
-
-        let name_l = self.loc(name_t);
-        let expr_l = if let Some(value) = value {
-            name_l.join(&value.expression())
-        } else {
-            name_l
-        };
-
-        VariableMap {
-            operator: Some(name_range),
-            expression: expr_l
-        }
-    }
-
-    pub fn module_definition_map(&self, keyword_t: &Token, name: &Option<&Node>, operator_t: &Option<Token>, end_t: &Token) -> DefinitionMap {
-        let name_l = if let Some(name) = name { Some(name.expression().clone()) } else { None };
-
-        let keyword_l = self.loc(keyword_t);
-        let end_l = self.loc(end_t);
-        let operator_l = if let Some(operator_t) = operator_t { Some(self.loc(operator_t)) } else { None };
-
-        DefinitionMap {
-            expression: keyword_l.join(&end_l),
-            keyword: keyword_l,
-            operator: operator_l,
-            name: name_l,
-            end: end_l,
-        }
-    }
-
-    pub fn definition_map(&self, keyword_t: &Token, operator_t: &Option<Token>, name_t: &Token, end_t: &Token) -> MethodDefinitionMap {
-        let keyword_l = self.loc(keyword_t);
-        MethodDefinitionMap {
-            expression: keyword_l.join(&self.loc(end_t)),
-            keyword: keyword_l,
-            operator: operator_t.clone().map(|op| self.loc(&op)),
-            name: self.loc(name_t),
-            end: Some(self.loc(end_t)),
-            assignment: None,
-        }
-    }
-
-    pub fn endless_definition_map(&self, keyword_t: &Token, operator_t: &Option<Token>, name_t: &Token, assignment_t: &Token, body: &Option<&Node>) -> MethodDefinitionMap {
-        let body_l = body.map(|node| node.expression()).unwrap_or_else(|| unreachable!("endless method always has body") );
-        let keyword_l = self.loc(keyword_t);
-
-        MethodDefinitionMap {
-            expression: keyword_l.join(&body_l),
-            keyword: keyword_l,
-            operator: operator_t.clone().map(|tok| self.loc(&tok)),
-            name: self.loc(&name_t),
-            end: None,
-            assignment: Some(self.loc(&assignment_t)),
-        }
-    }
-
-    pub fn send_map(&self, receiver_e: &Option<Node>, dot_t: &Option<Token>, selector_t: &Option<Token>, begin_t: &Option<Token>, args: &Vec<Node>, end_t: &Option<Token>) -> SendMap {
-        let begin_l: Option<Range>;
-        let end_l: Option<Range>;
-
-        if let Some(receiver_e) = receiver_e {
-            begin_l = Some(receiver_e.expression().clone())
-        } else if let Some(selector_t) = selector_t {
-            begin_l = Some(self.loc(selector_t))
-        } else {
-            begin_l = None
-        }
-
-        if let Some(end_t) = end_t {
-            end_l = Some(self.loc(end_t));
-        } else if let Some(last_arg) = args.last() {
-            end_l = Some(last_arg.expression().clone());
-        } else if let Some(selector_t) = selector_t {
-            end_l = Some(self.loc(&selector_t))
-        } else {
-            end_l = None
-        }
-
-        let expression_l = match (&begin_l, &end_l) {
-            (Some(begin_l), Some(end_l)) => begin_l.join(end_l),
-            _ => unreachable!("begin_l = {:#?}, end_l = {:#?}", begin_l, end_l)
-        };
-
-        SendMap {
-            expression: expression_l,
-            dot: dot_t.clone().map(|t| self.loc(&t)),
-            selector: selector_t.clone().map(|t| self.loc(&t)),
-            operator: None,
-            begin: begin_t.clone().map(|t| self.loc(&t)),
-            end: end_t.clone().map(|t| self.loc(&t)),
-        }
-    }
-
-    pub fn var_send_map(&self, variable_t: &Token) -> SendMap {
-        SendMap {
-            expression: self.loc(&variable_t),
-            dot: None,
-            selector: Some(self.loc(&variable_t)),
-            operator: None,
-            begin: None,
-            end: None
-        }
-    }
-
-    pub fn send_binary_op_map(&self, lhs_e: &Node, selector_t: &Token, rhs_e: &Node) -> SendMap {
-        SendMap {
-            expression: self.join_expr(&lhs_e, &rhs_e),
-            dot: None,
-            selector: Some(self.loc(&selector_t)),
-            begin: None,
-            end: None,
-            operator: None
-        }
-    }
-
-    pub fn send_unary_op_map(&self, selector_t: &Token, arg: &Option<&Node>) -> SendMap {
-        let expr_l: Range;
-
-        if let Some(arg) = arg {
-            expr_l = self.loc(selector_t).join(arg.expression())
-        } else {
-            expr_l = self.loc(selector_t)
-        }
-
-        SendMap {
-            expression: expr_l,
-            selector: Some(self.loc(&selector_t)),
-            dot: None,
-            begin: None,
-            operator: None,
-            end: None
-        }
-    }
-
-    pub fn index_map(&self, receiver_e: &Node, lbrack_t: &Token, rbrack_t: &Token) -> IndexMap {
-        IndexMap {
-            begin: self.loc(lbrack_t),
-            end: self.loc(rbrack_t),
-            expression: receiver_e.expression().join(&self.loc(rbrack_t)),
-            operator: None
-        }
-    }
-    pub fn send_index_map(&self) {}
-
-    pub fn block_map(&self) {}
-
-    pub fn keyword_map(&self, keyword_t: &Token, begin_t: &Option<Token>, args: &Vec<Node>, end_t: &Option<Token>) -> KeywordMap {
-        let expr_end_l: Range;
-        let begin_l = if let Some(begin_t) = begin_t { Some(self.loc(&begin_t)) } else { None };
-        let end_l = if let Some(end_t) = end_t { Some(self.loc(&end_t)) } else { None };
-
-        if let Some(end_l) = &end_l {
-            expr_end_l = end_l.clone();
-        } else if let Some(last_arg) = args.iter().rev().nth(0) {
-            expr_end_l = last_arg.expression().clone();
-        } else if let Some(second_last_arg) = args.iter().rev().nth(1) {
-            expr_end_l = second_last_arg.expression().clone();
-        } else {
-            expr_end_l = self.loc(&keyword_t);
-        }
-
-        KeywordMap {
-            expression: self.loc(&keyword_t).join(&expr_end_l),
-            keyword: self.loc(&keyword_t),
-            begin: begin_l,
-            end: end_l
-        }
-    }
-
-    pub fn keyword_mod_map(&self, pre_e: &Node, keyword_t: &Token, post_e: &Node) -> KeywordMap {
-        KeywordMap {
-            expression: pre_e.expression().join(&post_e.expression()),
-            keyword: self.loc(keyword_t),
-            begin: None,
-            end: None
-        }
-    }
-
-    pub fn condition_map(&self) {}
-    pub fn ternary_map(&self) {}
-    pub fn for_map(&self) {}
-
-    pub fn rescue_body_map(&self, keyword_t: &Token, exc_list: &Option<Node>, assoc_t: &Option<Token>, exc_var: &Option<Node>, then_t: &Option<Token>, compstmt: &Option<Node>) -> RescueBodyMap {
-        let end_l = match (compstmt, then_t, exc_var, exc_list) {
-            (Some(compstmt), _, _, _) => compstmt.expression().clone(),
-            (None, Some(then_t), _, _) => self.loc(then_t),
-            (None, None, Some(exc_var), _) => exc_var.expression().clone(),
-            (None, None, None, Some(exc_list)) => exc_list.expression().clone(),
-            (None, None, None, None) => self.loc(&keyword_t)
-        };
-
-        RescueBodyMap {
-            keyword: self.loc(keyword_t),
-            assoc: assoc_t.clone().map(|t| self.loc(&t)),
-            begin: then_t.clone().map(|t| self.loc(&t)),
-            expression: self.loc(keyword_t).join(&end_l)
-        }
-    }
-
-    pub fn eh_keyword_map(&self, compstmt_e: &Option<Node>, keyword_t: &Option<Token>, body_es: &Vec<Node>, else_t: &Option<Token>, else_e: &Option<Node>) -> ConditionMap {
-        let begin_l: Range;
-        let end_l: Range;
-
-        if let Some(compstmt_e) = &compstmt_e {
-            begin_l = compstmt_e.expression().clone();
-        } else if let Some(keyword_t) = &keyword_t {
-            begin_l = self.loc(&keyword_t);
-        } else {
-            begin_l = body_es.first().unwrap().expression().clone();
-        }
-
-        if let Some(else_t) = &else_t {
-            if let Some(else_e) = &else_e {
-                end_l = else_e.expression().clone();
-            } else {
-                end_l = self.loc(&else_t);
-            }
-        } else if let Some(last_body_es) = body_es.last() {
-            end_l = last_body_es.expression().clone();
-        } else if let Some(keyword_t) = &keyword_t {
-            end_l = self.loc(&keyword_t);
-        } else {
-            panic!("bug");
-        }
-
-        ConditionMap {
-            expression: begin_l.join(&end_l),
-            keyword: keyword_t.clone().map(|t| self.loc(&t)),
-            begin: None,
-            else_: else_t.clone().map(|t| self.loc(&t)),
-            end: None
-        }
-    }
-
-    pub fn guard_map(&self) {}
-
-    //
     // Helpers
     //
 
-    pub fn static_string(&self) {}
-    pub fn static_regexp(&self) {}
-    pub fn static_regexp_node(&self) {}
+    pub fn static_string(&self, nodes: &Vec<Node>) -> Option<String> {
+        let mut result = String::from("");
+
+        for node in nodes {
+            match node {
+                Node::Str { value, .. } => result.push_str(value),
+                Node::Begin { statements, .. } => {
+                    if let Some(s) = self.static_string(statements) {
+                        result.push_str(&s)
+                    } else {
+                        return None
+                    }
+                },
+                _ => return None
+            }
+        }
+
+        Some(result)
+    }
+
+    pub fn static_regexp(&self, parts: &Vec<Node>, options: &Vec<char>) -> Option<Regex> {
+        if let Some(source) = self.static_string(&parts) {
+            let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
+            reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
+            if options.contains(&'x') {
+                reg_options |= RegexOptions::REGEX_OPTION_EXTEND;
+            }
+            let regex = Regex::with_options(&source, reg_options, onig::Syntax::default());
+
+            match regex {
+                Ok(regex) => return Some(regex),
+                Err(err) => println!("Failed to process static regex source, got error {:?}", err)
+            }
+        }
+
+        None
+    }
+
+    pub fn static_regexp_captures(&self, node: &Node) -> Vec<String> {
+        match node {
+            Node::Regexp { parts, options, .. } => {
+                match &**options {
+                    Node::RegOpt { options, .. } => {
+                        if let Some(regex) = self.static_regexp(parts, options) {
+                            let mut result: Vec<String> = vec![];
+
+                            regex.foreach_name(|name, _| {
+                                result.push(name.to_owned());
+                                true
+                            });
+
+                            return result;
+                        }
+                    },
+                    _ => {}
+                }
+            },
+            _ => {}
+        }
+
+        vec![]
+    }
+
     pub fn collapse_string_parts(&self) {}
 
-    pub fn value(&self, token: &Token) -> String {
-        let (_, token_value, _) = token;
-        token_value.clone()
-    }
-
     pub fn string_value(&self) {}
-
-    pub fn loc(&self, token: &Token) -> Range {
-        let (_, _, loc) = token;
-        Range::new(loc.begin, loc.end)
-    }
 
     pub fn diagnostic(&self) {}
     pub fn validate_definee(&self, _definee: &Node) {}
