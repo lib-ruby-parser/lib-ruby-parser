@@ -9,19 +9,19 @@ impl Lexer {
         !self.p.eofp && self.is_identchar(self.p.lex.pcur - 1, self.p.lex.pend)
     }
 
-    pub fn tokenize_ident(&mut self, _last_state: &LexState) -> String {
+    pub fn tokenize_ident(&mut self, _last_state: &LexState) -> Vec<u8> {
         let ident = self.tok();
-        self.set_yyval_name(&ident);
+        self.set_yyval_name(ident.clone());
         ident
     }
 
     // This method is called is_local_id in MRI, not sure why
-    pub fn is_var_name(&self, ident: &str) -> bool {
+    pub fn is_var_name(&self, ident: &Vec<u8>) -> bool {
         // FIXME: unclear what it can be
         // MRI has some weird logic of comparing given ID with tLAST_OP_ID
         // and then checking & ID_SCOPE_MASK
-        if let Some(first_char) = ident.chars().next() {
-            return !first_char.is_uppercase()
+        if let Some(first_char) = ident.first() {
+            return !first_char.is_ascii_uppercase()
         }
         false
     }
@@ -30,7 +30,7 @@ impl Lexer {
         let mut c = c.clone();
         let mut result: i32;
         let last_state: LexState = self.p.lex.state.clone();
-        let ident: String;
+        let ident: Vec<u8>;
 
         loop {
             if !c.is_ascii() { /* mb = ENC_CODERANGE_UNKNOWN */ }
@@ -40,11 +40,11 @@ impl Lexer {
             if !self.parser_is_identchar() { break }
         }
 
-        if (c == '!' || c == '?') && !self.peek('=') {
+        if (c == b'!' || c == b'?') && !self.peek(b'=') {
             result = Self::tFID;
             self.tokadd(&c);
-        } else if c == '=' && self.is_lex_state_some(EXPR_FNAME) &&
-                (!self.peek('~') && !self.peek('>') && (!self.peek('=') || (self.peek_n('>', 1)))) {
+        } else if c == b'=' && self.is_lex_state_some(EXPR_FNAME) &&
+                (!self.peek(b'~') && !self.peek(b'>') && (!self.peek(b'=') || (self.peek_n(b'>', 1)))) {
             result = Self::tIDENTIFIER;
             self.tokadd(&c)
         } else {
@@ -57,7 +57,7 @@ impl Lexer {
             if self.is_label_suffix(0) {
                 self.set_lex_state(EXPR_ARG|EXPR_LABELED);
                 self.nextc();
-                self.set_yyval_name(&self.tok());
+                self.set_yyval_name(self.tok());
                 return Self::tLABEL;
             }
         }
@@ -66,7 +66,7 @@ impl Lexer {
                 let state: LexState = self.p.lex.state.clone();
                 if state.is_some(EXPR_FNAME) {
                     self.set_lex_state(EXPR_ENDFN);
-                    self.set_yyval_name(&self.tok());
+                    self.set_yyval_name(self.tok());
                     return kw.id.clone();
                 }
                 self.set_lex_state(kw.state);

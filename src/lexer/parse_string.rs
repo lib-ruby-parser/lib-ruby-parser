@@ -50,11 +50,11 @@ impl Lexer {
             return Self::tSPACE;
         }
         self.newtok();
-        if ((func & STR_FUNC_EXPAND) != 0) && c == '#' {
+        if ((func & STR_FUNC_EXPAND) != 0) && c == b'#' {
             if let Some(t) = self.parser_peek_variable_name() {
                 return t;
             }
-            self.tokadd(&LexChar::Some('#'));
+            self.tokadd(&LexChar::Some(b'#'));
             c = self.nextc();
         }
         self.pushback(&c);
@@ -78,7 +78,7 @@ impl Lexer {
         }
 
         self.tokfix();
-        self.set_yylval_str(&self.tok());
+        self.set_yylval_str(self.tok());
         self.flush_string_content();
 
         Self::tSTRING_CONTENT
@@ -88,7 +88,7 @@ impl Lexer {
         self.p.lex.strterm = None;
         if (func & STR_FUNC_REGEXP) != 0 {
             let flags = self.regx_options();
-            self.set_yylval_num(&flags);
+            self.set_yylval_num(flags);
             self.set_lex_state(EXPR_END);
             return Self::tREGEXP_END;
         }
@@ -101,14 +101,14 @@ impl Lexer {
         return Self::tSTRING_END;
     }
 
-    pub fn set_yylval_num(&mut self, flags: &str) {
-        if self.debug { println!("set_yylval_str {}", flags); }
-        self.p.lval = Some(flags.into());
+    pub fn set_yylval_num(&mut self, flags: Vec<u8>) {
+        if self.debug { println!("set_yylval_str {:#?}", flags); }
+        self.p.lval = Some(flags);
     }
 
-    pub fn regx_options(&mut self) -> String {
+    pub fn regx_options(&mut self) -> Vec<u8> {
         let mut c: LexChar;
-        let mut result = String::from("");
+        let mut result = vec![];
 
         self.newtok();
         loop {
@@ -118,7 +118,7 @@ impl Lexer {
             let ch =  c.unwrap();
 
             match ch {
-                'o' | 'n' | 'e' | 's' | 'u' | 'i' | 'x' | 'm' => {
+                b'o' | b'n' | b'e' | b's' | b'u' | b'i' | b'x' | b'm' => {
                     result.push(ch);
                 },
                 _ => {
@@ -130,7 +130,7 @@ impl Lexer {
         self.pushback(&c);
         if self.toklen() > 0 {
             self.tokfix();
-            self.compile_error(&format!("unknown regexp options - {}", self.tok()));
+            self.compile_error(&format!("unknown regexp options - {:#?}", self.tok()));
         }
 
         return result;
@@ -145,9 +145,9 @@ impl Lexer {
         ptr += 1;
 
         match c {
-            LexChar::Some('$') => {
+            LexChar::Some(b'$') => {
                 c = self.char_at(ptr);
-                if c == '-' {
+                if c == b'-' {
                     ptr += 1;
                     if ptr >= self.p.lex.pend { return None }
                     // c = self.char_at(ptr);
@@ -156,16 +156,16 @@ impl Lexer {
                 }
             },
 
-            LexChar::Some('@') => {
+            LexChar::Some(b'@') => {
                 c = self.char_at(ptr);
-                if c == '@' {
+                if c == b'@' {
                     ptr += 1;
                     if ptr >= self.p.lex.pend { return None }
                     // c = self.char_at(ptr);
                 }
             },
 
-            LexChar::Some('{') => {
+            LexChar::Some(b'{') => {
                 self.p.lex.pcur = ptr;
                 self.p.command_start = true;
                 return Some(Self::tSTRING_DBEG)
@@ -177,7 +177,7 @@ impl Lexer {
         None
     }
 
-    pub fn tokadd_string(&mut self, func: usize, term: char, paren: Option<char>, literal: &StringLiteral) -> LexChar {
+    pub fn tokadd_string(&mut self, func: usize, term: u8, paren: Option<u8>, literal: &StringLiteral) -> LexChar {
         let mut c;
         let _erred = false;
 
@@ -197,39 +197,39 @@ impl Lexer {
                     break;
                 }
                 literal.set_nest(literal.nest() - 1);
-            } else if ((func & STR_FUNC_EXPAND) != 0) && c == '#' && self.p.lex.pcur < self.p.lex.pend {
+            } else if ((func & STR_FUNC_EXPAND) != 0) && c == b'#' && self.p.lex.pcur < self.p.lex.pend {
                 let c2 = self.char_at(self.p.lex.pcur);
-                if c2 == '$' || c2 == '@' || c2 == '{' {
+                if c2 == b'$' || c2 == b'@' || c2 == b'{' {
                     self.pushback(&c);
                     break;
                 }
-            } else if c == '\\' {
+            } else if c == b'\\' {
                 self.literal_flush(self.p.lex.pcur - 1);
                 c = self.nextc();
                 match c {
-                    LexChar::Some('\n') => {
+                    LexChar::Some(b'\n') => {
                         if (func & STR_FUNC_QWORDS) != 0 { break }
                         if (func & STR_FUNC_EXPAND) != 0 {
                             if (func & STR_FUNC_INDENT) == 0 || self.p.heredoc_indent < 0 {
                                 continue;
                             }
                             if c == term {
-                                c = LexChar::Some('\\');
+                                c = LexChar::Some(b'\\');
                                 return c;
                             }
                         }
-                        self.tokadd(&LexChar::Some('\\'));
+                        self.tokadd(&LexChar::Some(b'\\'));
                         break;
                     },
 
-                    LexChar::Some('\\') => {
+                    LexChar::Some(b'\\') => {
                         if (func & STR_FUNC_ESCAPE) != 0 { self.tokadd(&c) }
                         break;
                     },
 
-                    LexChar::Some('u') => {
+                    LexChar::Some(b'u') => {
                         if (func & STR_FUNC_EXPAND) == 0 {
-                            self.tokadd(&LexChar::Some('\\'));
+                            self.tokadd(&LexChar::Some(b'\\'));
                             break;
                         }
                         self.tokadd_utf8(term, func & STR_FUNC_SYMBOL, func & STR_FUNC_REGEXP);
@@ -243,7 +243,7 @@ impl Lexer {
                     LexChar::Some(_) => {
                         if !c.is_ascii() {
                             if (func & STR_FUNC_EXPAND) == 0 {
-                                self.tokadd(&LexChar::Some('\\'));
+                                self.tokadd(&LexChar::Some(b'\\'));
                                 // goto non_ascii (inlined)
                                 unimplemented!("non_ascii1");
                             }
@@ -261,12 +261,12 @@ impl Lexer {
                                 continue;
                             } else if (func & STR_FUNC_EXPAND) != 0 {
                                 self.pushback(&c);
-                                if (func & STR_FUNC_ESCAPE) != 0 { self.tokadd(&LexChar::Some('\\')) }
+                                if (func & STR_FUNC_ESCAPE) != 0 { self.tokadd(&LexChar::Some(b'\\')) }
                                 c = self.read_escape(0);
                             } else if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
                                 // ignore backslashed spaces in %w
                             } else if c != term && c != paren {
-                                self.tokadd(&LexChar::Some('\\'));
+                                self.tokadd(&LexChar::Some(b'\\'));
                                 self.pushback(&c);
                                 continue;
                             }
@@ -289,9 +289,9 @@ impl Lexer {
 
         c
     }
-    pub fn set_yylval_str(&mut self, value: &str) {
-        if self.debug { println!("set_yylval_str {}", value); }
-        self.p.lval = Some(value.into());
+    pub fn set_yylval_str(&mut self, value: Vec<u8>) {
+        if self.debug { println!("set_yylval_str {:#?}", value); }
+        self.p.lval = Some(value);
     }
 
     pub fn flush_string_content(&mut self) {
@@ -302,7 +302,7 @@ impl Lexer {
         unimplemented!("parser_update_heredoc_indent")
     }
 
-    pub fn tokadd_utf8(&mut self, _c: char, _func1: usize, _func2: usize) {
+    pub fn tokadd_utf8(&mut self, _c: u8, _func1: usize, _func2: usize) {
         unimplemented!("tokadd_utf8")
     }
 

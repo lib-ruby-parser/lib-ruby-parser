@@ -92,9 +92,9 @@ fn lex_state(state: &str) -> usize {
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = TestCase::new(fixture_path);
-        let mut lexer = Lexer::new(&test_case.input);
+        let mut lexer = Lexer::new(&test_case.input.as_bytes().to_vec());
         for var in test_case.vars {
-            lexer.p.static_env.declare(&var);
+            lexer.p.static_env.declare(&var.as_bytes().to_vec());
         }
         if let Some(state) = test_case.state {
             lexer.set_lex_state(lex_state(&state));
@@ -108,7 +108,7 @@ fn test(fixture_path: &str) -> TestResult {
         lexer.debug = false;
         let tokens = lexer.tokenize_until_eof();
         let tokens = tokens.iter().map(|token|
-            format!("{} {:?} [{}, {}]", token_name(&token), token.1, token.2.begin, token.2.end)
+            format!("{} {:?} [{}, {}]", token_name(&token), String::from_utf8_lossy(&token.1).into_owned(), token.2.begin, token.2.end)
         ).collect::<Vec<_>>().join("\n");
 
         if tokens == test_case.tokens {

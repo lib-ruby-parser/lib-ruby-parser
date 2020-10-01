@@ -10,7 +10,7 @@ pub fn loc(token: &Token) -> Range {
 
 pub fn value(token: &Token) -> String {
     let (_, token_value, _) = token;
-    token_value.clone()
+    String::from_utf8(token_value.to_owned()).unwrap()
 }
 
 pub fn join_exprs(left_expr: &Node, right_expr: &Node) -> Range {
@@ -66,8 +66,10 @@ pub fn pair_quoted_map(begin_t: &Token, end_t: &Token, node: &Node) -> ( Token, 
 
     let colon_l = end_l.with(end_l.end_pos - 1, end_l.end_pos);
 
+    let end_t: Token = (end_t.0, end_t.1.clone(), quote_loc);
+
     (
-        ( end_t.0, value(end_t), quote_loc ),
+        end_t,
         OperatorMap {
             operator: Some(colon_l),
             expression: loc(begin_t).join(&node.expression())

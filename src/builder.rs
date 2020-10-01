@@ -147,10 +147,9 @@ impl Builder {
     pub fn string(&self) {}
 
     pub fn string_internal(&self, string_t: Token) -> Node {
-        Node::Str {
-            value: value(&string_t),
-            loc: unquoted_map(&string_t)
-        }
+        let loc = unquoted_map(&string_t);
+        let (_, bytes, _) = string_t;
+        Node::Str { value: bytes, loc }
     }
 
     pub fn string_compose(&self, begin_t: Option<Token>, parts: Vec<Node>, end_t: Option<Token>) -> Node {
@@ -184,10 +183,9 @@ impl Builder {
     }
 
     pub fn character(&self, char_t: Token) -> Node {
-        Node::Str {
-            loc: prefix_string_map(&char_t),
-            value: value(&char_t)
-        }
+        let loc = prefix_string_map(&char_t);
+        let (_, bytes, _) = char_t;
+        Node::Str { value: bytes, loc }
     }
 
     pub fn __file__(&self, file_t: Token) -> Node {
@@ -199,21 +197,19 @@ impl Builder {
     // Symbols
 
     pub fn symbol(&self, start_t: Token, value_t: Token) -> Node {
-        Node::Sym {
-            name: value(&value_t),
-            loc: CollectionMap {
-                expression: loc(&start_t).join(&loc(&value_t)),
-                begin: Some(loc(&start_t)),
-                end: None
-            }
-        }
+        let loc = CollectionMap {
+            expression: loc(&start_t).join(&loc(&value_t)),
+            begin: Some(loc(&start_t)),
+            end: None
+        };
+        let (_, bytes, _) = value_t;
+        Node::Sym { name: bytes, loc }
     }
 
     pub fn symbol_internal(&self, symbol_t: Token) -> Node {
-        Node::Sym {
-            name: value(&symbol_t),
-            loc: unquoted_map(&symbol_t)
-        }
+        let loc = unquoted_map(&symbol_t);
+        let (_, bytes, _) = symbol_t;
+        Node::Sym { name: bytes, loc }
     }
 
     pub fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
@@ -350,8 +346,9 @@ impl Builder {
 
     pub fn pair_keyword(&self, key_t: Token, value_node: Node) -> Node {
         let (key_map, pair_map) = pair_keyword_map(&key_t, &value_node);
+        let (_, bytes, _) = key_t;
         let key = Node::Sym {
-            name: value(&key_t),
+            name: bytes,
             loc: key_map
         };
         Node::Pair {
@@ -460,7 +457,7 @@ impl Builder {
     pub fn accessible(&self, node: Node) -> Node {
         match node {
             Node::Lvar { name, loc } => {
-                if self.static_env.is_declared(&name) {
+                if self.static_env.is_declared(&name.as_bytes().to_vec()) {
                     if let Some(current_arg) = self.current_arg_stack.top() {
                         if current_arg == name {
                             // diagnostic :error, :circular_argument_reference,
@@ -547,7 +544,7 @@ impl Builder {
                 self.check_assignment_to_numparam(&name, &loc);
                 self.check_reserved_for_numparam(&name, &loc);
 
-                self.static_env.declare(&name);
+                self.static_env.declare(&name.as_bytes().to_vec());
 
                 Node::Lvasgn {
                     name,
@@ -1098,7 +1095,7 @@ impl Builder {
             }
         } else {
             for capture in captures {
-                self.static_env.declare(&capture);
+                self.static_env.declare(&capture.as_bytes().to_vec());
             }
 
             Node::MatchWithLvasgn {
@@ -1565,7 +1562,10 @@ impl Builder {
 
         for node in nodes {
             match node {
-                Node::Str { value, .. } => result.push_str(value),
+                Node::Str { value, .. } => {
+                    let value = String::from_utf8_lossy(&value).into_owned();
+                    result.push_str(&value)
+                },
                 Node::Begin { statements, .. } => {
                     if let Some(s) = self.static_string(statements) {
                         result.push_str(&s)

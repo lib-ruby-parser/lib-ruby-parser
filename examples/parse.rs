@@ -17,8 +17,8 @@ fn main() {
 
     let source =
         match args[..] {
-            ["-e", code] => code.to_owned(),
-            [filepath] => fs::read_to_string(filepath).expect("Failed to read file"),
+            ["-e", code] => code.to_owned().into_bytes(),
+            [filepath] => fs::read(filepath).expect("Failed to read file"),
             _ => print_usage()
         };
 

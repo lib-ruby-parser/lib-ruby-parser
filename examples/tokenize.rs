@@ -20,7 +20,7 @@ fn token_name(token: &Token) -> String {
 
 fn token_value(token: &Token) -> String {
     let (_, value, _) = token;
-    value.clone()
+    String::from_utf8_lossy(value).into_owned()
 }
 
 fn rpad1<T: Sized + std::fmt::Display>(value: &T, total_width: usize) -> String {
@@ -37,8 +37,8 @@ fn main() {
 
     let source =
         match args[..] {
-            ["-e", code] => code.to_owned(),
-            [filepath] => fs::read_to_string(filepath).expect("Failed to read file"),
+            ["-e", code] => code.to_owned().into_bytes(),
+            [filepath] => fs::read(filepath).expect("Failed to read file"),
             _ => print_usage()
         };
 

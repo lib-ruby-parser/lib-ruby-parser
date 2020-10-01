@@ -27,7 +27,7 @@ pub enum Node {
     Def { name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
     Defs { definee: Box<Node>, name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
     Arg { name: String, loc: VariableMap },
-    Sym { name: String, loc: CollectionMap },
+    Sym { name: Vec<u8>, loc: CollectionMap },
     Alias { to: Box<Node>, from: Box<Node>, loc: KeywordMap },
     Ivar { name: String, loc: VariableMap },
     Gvar { name: String, loc: VariableMap },
@@ -46,7 +46,7 @@ pub enum Node {
     Pair { key: Box<Node>, value: Box<Node>, loc: OperatorMap },
     Hash { pairs: Vec<Node>, loc: CollectionMap },
     Array { elements: Vec<Node>, loc: CollectionMap },
-    Str { value: String, loc: CollectionMap },
+    Str { value: Vec<u8>, loc: CollectionMap },
     Dstr { children: Vec<Node>, loc: CollectionMap },
     Xstr { children: Vec<Node>, loc: CollectionMap },
     Dsym { children: Vec<Node>, loc: CollectionMap },
@@ -423,9 +423,6 @@ impl Node {
             Node::Arg { name, .. } => {
                 result.push_str(name)
             }
-            Node::Sym { name, .. } => {
-                result.push_str(name)
-            }
             Node::Alias { to, from, .. } => {
                 result.push_node(to);
                 result.push_node(from)
@@ -489,8 +486,15 @@ impl Node {
             Node::Array { elements, .. } => {
                 result.push_nodes(elements)
             }
-            Node::Str { value, .. } => {
-                result.push_str(value)
+            Node::Str { value, .. }
+            | Node::Sym { name: value, .. } => {
+                match String::from_utf8(value.to_owned()) {
+                    Ok(string) => result.push_str(&string),
+                    Err(_) => {
+                        let string = String::from_utf8_lossy(&value).into_owned();
+                        result.push_str(&string)
+                    }
+                }
             }
             Node::Dstr { children, .. }
             | Node::Dsym { children, .. }
