@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use crate::lexer::{StrTerm, StringLiteral, HeredocLiteral, str_types};
+use crate::lexer::{StrTerm, StringLiteral, str_types};
 use crate::lexer::lex_state::{lex_states, LexState};
 use lex_states::*;
 use crate::lexer::LocalsTable;

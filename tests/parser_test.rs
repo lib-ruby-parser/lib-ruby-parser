@@ -57,7 +57,7 @@ fn test(fixture_path: &str) -> TestResult {
         parser.static_env.declare(&b"bar".to_vec());
         parser.static_env.declare(&b"baz".to_vec());
         parser.set_debug(false);
-        let ast = parser.do_parse().unwrap().inspect(0);
+        let ast = parser.do_parse().map(|node| node.inspect(0)).unwrap_or("None".to_owned());
 
         if ast == test_case.ast {
             Ok(())

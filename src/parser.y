@@ -354,7 +354,7 @@
                     {
                         let compound_stmt = $<MaybeNode>1;
                         let rescue_bodies = $<NodeList>2;
-                        let else_ = Some(( $<Token>3, $<Node>5 ));
+                        let else_ = Some(( $<Token>3, $<MaybeNode>5 ));
                         let ensure = $<OptEnsure>6;
 
                         $$ = Value::MaybeNode(
@@ -417,10 +417,10 @@
                 | klBEGIN
                     {
                         self.yyerror(&@1, "BEGIN is permitted only at toplevel");
+                        return Self::YYERROR;
                     }
                   begin_block
                     {
-                        $$ = $<RAW>3;
                     }
                 ;
 
@@ -2364,7 +2364,7 @@
                         $$ = Value::Node(
                             self.builder.begin(
                                 $<Token>1,
-                                Some($<Node>2),
+                                $<MaybeNode>2,
                                 $<Token>3
                             )
                         );
@@ -2461,7 +2461,7 @@
                                 $<Token>1,
                                 Some($<Token>3),
                                 vec![ $<Node>4 ],
-                                Some($<Token>4)
+                                Some($<Token>5)
                             )
                         );
                     }
@@ -2551,7 +2551,7 @@
                   opt_else
                   k_end
                     {
-                        let (else_t, else_) = match $<IfTail>5 {
+                        let (else_t, else_) = match $<OptElse>5 {
                             Some((else_t, else_)) => (Some(else_t), else_),
                             None => (None, None)
                         };
@@ -4361,7 +4361,7 @@ opt_block_args_tail:
       opt_ensure: k_ensure compstmt
                     {
                         let token = $<Token>1;
-                        let node = $<Node>2;
+                        let node = $<MaybeNode>2;
                         $$ = Value::OptEnsure( Some((token, node)) );
                     }
                 | none
@@ -4927,7 +4927,7 @@ keyword_variable: kNIL
                     }
                 | f_arg tCOMMA f_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4, $<NodeList>7, $<NodeList>8 ].concat();
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>7, $<NodeList>8 ].concat();
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_optarg opt_args_tail
@@ -4957,12 +4957,12 @@ keyword_variable: kNIL
                     }
                 | f_optarg tCOMMA f_rest_arg opt_args_tail
                     {
-                        let nodes = [ $<NodeList>1, $<NodeList>2, $<NodeList>3 ].concat();
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
                         $$ = Value::NodeList(nodes);
                     }
                 | f_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let nodes = [ $<NodeList>1, $<NodeList>2, $<NodeList>3, $<NodeList>4 ].concat();
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
                         $$ = Value::NodeList(nodes);
                     }
                 | f_optarg opt_args_tail
@@ -4972,7 +4972,7 @@ keyword_variable: kNIL
                     }
                 | f_optarg tCOMMA f_arg opt_args_tail
                     {
-                        let nodes = [ $<NodeList>1, $<NodeList>2, $<NodeList>3 ].concat();
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
                         $$ = Value::NodeList(nodes);
                     }
                 | f_rest_arg opt_args_tail
@@ -4982,7 +4982,7 @@ keyword_variable: kNIL
                     }
                 | f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let nodes = [ $<NodeList>1, $<NodeList>2, $<NodeList>3 ].concat();
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
                         $$ = Value::NodeList(nodes);
                     }
                 | args_tail
@@ -5160,7 +5160,7 @@ keyword_variable: kNIL
                         self.static_env.declare(&ident_t.1);
                         $$ = Value::NodeList(
                             vec![
-                                self.builder.kwrestarg($<Token>1, Some($<Token>2))
+                                self.builder.kwrestarg($<Token>1, Some(ident_t))
                             ]
                         );
                     }
@@ -5230,12 +5230,12 @@ keyword_variable: kNIL
 
       f_rest_arg: restarg_mark tIDENTIFIER
                     {
-                        let ident_t = $<Token>1;
+                        let ident_t = $<Token>2;
                         self.static_env.declare(&ident_t.1);
 
                         $$ = Value::NodeList(
                             vec![
-                                self.builder.restarg($<Token>1, Some($<Token>2))
+                                self.builder.restarg($<Token>1, Some(ident_t))
                             ]
                         );
                     }
@@ -5276,7 +5276,7 @@ keyword_variable: kNIL
        singleton: var_ref
                 | tLPAREN2 expr rparen
                     {
-                        $$ = $<RAW>1;
+                        $$ = $2;
                     }
                 ;
 
@@ -5434,7 +5434,7 @@ pub enum Value {
     Superclass(Option<(Token, Node)>),
 
     /* For custom opt_ensure rule */
-    OptEnsure(Option<(Token, Node)>),
+    OptEnsure(Option<(Token, Option<Node>)>),
 
     /* For custom opt_else rule */
     OptElse(Option<(Token, Option<Node>)>),

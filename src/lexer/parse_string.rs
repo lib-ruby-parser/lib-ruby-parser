@@ -333,7 +333,7 @@ impl Lexer {
         * term_len is length of `<<"END"` except `END`,
         * in this case term_len is 4 (<, <, " and ").
         */
-        let mut len;
+        let len;
         let mut offset = self.p.lex.pcur - self.p.lex.pbeg;
         let mut c = self.nextc();
         let term;
@@ -361,7 +361,6 @@ impl Lexer {
             quote += 1;
             offset += 1;
             term = c;
-            len = 0;
 
             loop {
                 c = self.nextc();

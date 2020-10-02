@@ -21,7 +21,7 @@ pub enum Node {
     Postexe { body: Option<Box<Node>>, loc: KeywordMap },
     Lvar { name: String, loc: VariableMap },
     Rescue { body: Option<Box<Node>>, rescue_bodies: Vec<Node>, else_: Option<Box<Node>>, loc: ConditionMap },
-    Ensure { body: Option<Box<Node>>, ensure: Box<Node>, loc: ConditionMap },
+    Ensure { body: Option<Box<Node>>, ensure: Option<Box<Node>>, loc: ConditionMap },
     KwBegin { statements: Vec<Node>, loc: CollectionMap },
     Args { args: Vec<Node>, loc: CollectionMap },
     Def { name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
@@ -385,7 +385,11 @@ impl Node {
                 } else {
                     result.push_nil()
                 }
-                result.push_node(ensure)
+                if let Some(ensure) = ensure {
+                    result.push_node(ensure)
+                } else {
+                    result.push_nil()
+                }
             }
             Node::KwBegin { statements, .. } => {
                 result.push_nodes(statements)

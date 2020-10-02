@@ -1351,7 +1351,7 @@ impl Builder {
         }
     }
 
-    pub fn begin_body(&self, compound_stmt: Option<Node>, rescue_bodies: Vec<Node>, else_: Option<(Token, Node)>, ensure: Option<(Token, Node)>) -> Option<Node> {
+    pub fn begin_body(&self, compound_stmt: Option<Node>, rescue_bodies: Vec<Node>, else_: Option<(Token, Option<Node>)>, ensure: Option<(Token, Option<Node>)>) -> Option<Node> {
         let mut result: Option<Node>;
 
         if !rescue_bodies.is_empty() {
@@ -1361,13 +1361,13 @@ impl Builder {
                     &None,
                     &rescue_bodies.iter().collect(),
                     &Some(&else_t),
-                    &Some(&else_)
+                    &else_.as_ref()
                 );
                 result = Some(
                         Node::Rescue {
                         body: compound_stmt.map(|node| Box::new(node)),
                         rescue_bodies,
-                        else_: Some(Box::new(else_)),
+                        else_: else_.map(Box::new),
                         loc
                     }
                 )
@@ -1390,10 +1390,11 @@ impl Builder {
                 Some(compound_stmt) => statements.push(compound_stmt),
                 _ => {}
             }
-            let loc = collection_map(&Some(&else_t), &vec![&else_], &None);
+            let parts = if let Some(else_) = else_ { vec![else_] } else { vec![] };
+            let loc = collection_map(&Some(&else_t), &parts.iter().collect(), &None);
             statements.push(
                 Node::Begin {
-                    statements: vec![else_],
+                    statements: parts,
                     loc
                 }
             );
@@ -1410,11 +1411,13 @@ impl Builder {
         }
 
         if let Some((ensure_t, ensure)) = ensure {
-            let loc = eh_keyword_map(&result.as_ref(), &Some(&ensure_t), &vec![&ensure], &None, &None);
+            let body_es = if let Some(ensure) = &ensure { vec![ensure] } else { vec![] };
+            let loc = eh_keyword_map(&result.as_ref(), &Some(&ensure_t), &body_es, &None, &None);
+
             result = Some(
-                    Node::Ensure {
+                Node::Ensure {
                     body: result.map(|node| Box::new(node)),
-                    ensure: Box::new(ensure),
+                    ensure: ensure.map(Box::new),
                     loc
                 }
             )
@@ -1567,8 +1570,8 @@ impl Builder {
     pub fn check_reserved_for_numparam(&self, name: &str, _loc: &Range) {
         if name.len() != 2 { return }
 
-        let c1 = name.chars().nth(1).unwrap();
-        let c2 = name.chars().nth(2).unwrap();
+        let c1 = name.chars().nth(0).unwrap();
+        let c2 = name.chars().nth(1).unwrap();
 
         if c1 == '0' && (c2 >= '1' && c2 <= '9') {
             // diagnostic :error, "reserved_for_numparam"
