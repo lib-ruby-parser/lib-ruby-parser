@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 
 use crate::lexer::{StrTerm, StringLiteral, str_types};
 use crate::lexer::lex_state::{lex_states, LexState};
@@ -67,7 +67,7 @@ pub struct ParserState {
     lvtbl: LocalsTable,
     pvtbl: std::collections::HashMap<Vec<u8>, Vec<u8>>,
     pktbl: std::collections::HashMap<Vec<u8>, Vec<u8>>,
-    line_count: usize,
+    pub line_count: usize,
     pub ruby_sourceline: usize,        /* current line no. */
     ruby_sourcefile: Vec<u8>, /* current source file */
     ruby_sourcefile_string: Vec<u8>,
@@ -93,7 +93,7 @@ pub struct ParserState {
     pub eofp: bool,
     ruby__end__seen: bool,
     debug: usize,
-    has_shebang: bool,
+    pub has_shebang: bool,
     token_seen: bool,
     token_info_enabled: bool,
 
@@ -199,8 +199,21 @@ impl Lexer {
         }
 
         let token = (token_type, token_value, Loc { begin, end });
-        if self.debug { println!("yylex {:?}", token); }
+        if self.debug { println!("yylex ({:?}, {:?}, {:?})", Self::token_name(&token), String::from_utf8_lossy(&token.1).into_owned(), token.2); }
         token
+    }
+
+    pub fn token_name(token: &Token) -> String {
+        let (id, _, _) = token;
+        let first_token: usize = Self::YYerror.try_into().unwrap();
+        let id_usize: usize = (*id).try_into().unwrap(); // minus first token ID
+        if id_usize > first_token + 1 {
+            Self::TOKEN_NAMES[id_usize - first_token + 1].to_owned()
+        } else if *id == Self::END_OF_INPUT {
+            "EOF".to_owned()
+        } else {
+            panic!("token_name fails, {:?} (first token = {})", token, first_token)
+        }
     }
 
     pub fn parser_yylex(&mut self) -> i32 {
@@ -262,18 +275,17 @@ impl Lexer {
                     continue 'retrying;
                 },
 
-                LexChar::Some(b'#') => { // it's a comment
-                    self.p.token_seen = token_seen;
-                    // no magic_comment in shebang line
-                    if !self.parser_magic_comment() {
-                        if self.comment_at_top() {
-                            self.set_file_encoding()
+                LexChar::Some(b'#') | LexChar::Some(b'\n') => {
+                    if c == b'#' { // it's a comment
+                        self.p.token_seen = token_seen;
+                        // no magic_comment in shebang line
+                        if !self.parser_magic_comment(self.p.lex.pcur, self.p.lex.pend - self.p.lex.pcur) {
+                            if self.comment_at_top() {
+                                self.set_file_encoding(self.p.lex.pcur, self.p.lex.pend)
+                            }
                         }
+                        self.lex_goto_eol();
                     }
-                    self.lex_goto_eol();
-                },
-
-                LexChar::Some(b'\n') => {
                     self.p.token_seen = token_seen;
                     let cc = self.is_lex_state_some( EXPR_BEG|EXPR_CLASS|EXPR_FNAME|EXPR_DOT) && !self.is_lex_state_some(EXPR_LABELED);
                     if cc || self.is_lex_state_all(EXPR_ARG|EXPR_LABELED) {
@@ -314,7 +326,7 @@ impl Lexer {
                                     self.p.lex.lastline_idx = self.p.lex.prevline_idx.clone();
                                 }
 
-                                self.p.lex.pbeg = self.p.lex.lastline_start;
+                                self.p.lex.pbeg = self.p.lex.lines[self.p.lex.lastline_idx.unwrap()].start;
                                 self.p.lex.pend = self.p.lex.pbeg + self.p.lex.lines[self.p.lex.lastline_idx.unwrap()].len();
                                 self.p.lex.pcur = self.p.lex.pend;
                                 self.pushback(&LexChar::Some(1 as u8));
@@ -331,7 +343,7 @@ impl Lexer {
                                     self.p.lex.lastline_idx = self.p.lex.prevline_idx.clone();
                                 }
 
-                                self.p.lex.pbeg = self.p.lex.lastline_start;
+                                self.p.lex.pbeg = self.p.lex.lines[self.p.lex.lastline_idx.unwrap()].start;
                                 self.p.lex.pend = self.p.lex.pbeg + self.p.lex.lines[self.p.lex.lastline_idx.unwrap()].len();
                                 self.p.lex.pcur = self.p.lex.pend;
                                 self.pushback(&LexChar::Some(1 as u8));
@@ -1067,7 +1079,7 @@ impl Lexer {
         if c == b'\r' {
             c = self.parser_cr(c);
         }
-        if self.debug { println!("nextc = {:?}", c); }
+        if self.debug { println!("nextc = {:?}", c as char); }
         return LexChar::Some(c);
     }
 
@@ -1099,10 +1111,6 @@ impl Lexer {
         }
         if self.debug { println!("pushback({:?}) pcur = {}", c, self.p.lex.pcur); }
     }
-
-    pub fn parser_magic_comment(&self) -> bool { unimplemented!("parser_magic_comment") }
-    pub fn comment_at_top(&self) -> bool { unimplemented!("comment_at_top") }
-    pub fn set_file_encoding(&self) { unimplemented!("set_file_encoding") }
 
     pub fn lex_goto_eol(&mut self) {
         self.p.lex.pcur = self.p.lex.pend;
@@ -1661,7 +1669,7 @@ impl Lexer {
     }
 
     pub fn set_yylval_literal(&mut self, value: Vec<u8>) {
-        if self.debug { println!("set_yylval_literal({:#?}) ptok = {}, pcur = {}", value, self.p.lex.ptok, self.p.lex.pcur); }
+        if self.debug { println!("set_yylval_literal({:#?}) ptok = {}, pcur = {}", String::from_utf8_lossy(&value), self.p.lex.ptok, self.p.lex.pcur); }
         self.p.lval = Some(value);
     }
 
@@ -1685,7 +1693,7 @@ impl Lexer {
     }
 
     pub fn set_yyval_name(&mut self, name: Vec<u8>) {
-        if self.debug { println!("set_yyval_name({:#?})", name); }
+        if self.debug { println!("set_yyval_name({:#?})", String::from_utf8_lossy(&name)); }
         self.p.lval = Some(name);
     }
 }

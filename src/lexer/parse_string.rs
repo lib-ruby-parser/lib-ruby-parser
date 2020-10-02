@@ -106,7 +106,7 @@ impl Lexer {
     }
 
     pub fn set_yylval_num(&mut self, flags: Vec<u8>) {
-        if self.debug { println!("set_yylval_str {:#?}", flags); }
+        if self.debug { println!("set_yylval_num {:#?}", String::from_utf8_lossy(&flags)); }
         self.p.lval = Some(flags);
     }
 
@@ -296,7 +296,7 @@ impl Lexer {
         c.to_option()
     }
     pub fn set_yylval_str(&mut self, value: Vec<u8>) {
-        if self.debug { println!("set_yylval_str {:#?}", value); }
+        if self.debug { println!("set_yylval_str {:#?}", String::from_utf8_lossy(&value)); }
         self.p.lval = Some(value);
     }
 
@@ -427,7 +427,7 @@ impl Lexer {
         // let base_enc = 0;
         let bol;
 
-        eos = here.lastline() + here.offset();
+        eos = self.p.lex.lines[here.lastline()].start + here.offset();
         len = here.length();
         func = here.func();
         indent = here.func() & STR_FUNC_INDENT;
@@ -451,7 +451,7 @@ impl Lexer {
 
         if (func & STR_FUNC_EXPAND) == 0 {
             loop {
-                ptr = self.p.lex.lastline_idx.unwrap();
+                ptr = self.p.lex.lines[self.p.lex.lastline_idx.unwrap()].start;
                 ptr_end = self.p.lex.pend;
                 if ptr_end > ptr {
                     match self.p.lex.input[ptr_end - 1] {
@@ -525,6 +525,7 @@ impl Lexer {
                     return self.heredoc_flush();
                 }
                 c = self.nextc();
+                println!("eos = {}, len = {}", eos, len);
                 if c.is_eof() { return self.here_document_error(&here, eos, len) }
 
                 if self.is_whole_match(&self.p.lex.input[eos..eos+len].to_vec(), indent) {
@@ -543,7 +544,7 @@ impl Lexer {
 
     pub fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32 {
         self.heredoc_restore(&here);
-        self.compile_error(&format!("can't find string \"{:#?}\" anywhere before EOF", self.p.lex.input[eos..eos+len].to_vec()));
+        self.compile_error(&format!("can't find string \"{:#?}\" anywhere before EOF", String::from_utf8_lossy(&self.p.lex.input[eos..eos+len])));
         self.token_flush();
         self.p.lex.strterm = None;
         self.set_lex_state(EXPR_END);

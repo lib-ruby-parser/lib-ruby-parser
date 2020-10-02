@@ -475,7 +475,7 @@ pub fn eh_keyword_map(compstmt_e: &Option<&Node>, keyword_t: &Option<&Token>, bo
     } else if let Some(keyword_t) = keyword_t {
         end_l = loc(keyword_t);
     } else {
-        panic!("bug");
+        unreachable!("One of body_es/keyword_t must be given");
     }
 
     ConditionMap {

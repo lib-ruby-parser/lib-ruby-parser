@@ -566,7 +566,7 @@ impl Builder {
                 node
             },
             _ => {
-                panic!("{:#?} can't be used in assignment", node)
+                panic!("{:?} can't be used in assignment", node)
             }
         }
     }
@@ -617,7 +617,7 @@ impl Builder {
                 }
                 lhs
             }
-            _ => panic!("{:#?} can't be used in assignment", lhs)
+            _ => panic!("{:?} can't be used in assignment", lhs)
         }
     }
 

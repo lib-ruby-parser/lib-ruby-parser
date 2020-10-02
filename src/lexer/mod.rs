@@ -27,6 +27,7 @@ mod parse_string;
 mod reserved_words;
 pub use reserved_words::{ReservedWord, reserved_word};
 mod locals;
+mod parse_magic_comment;
 
 mod stack_state;
 pub use stack_state::StackState;
