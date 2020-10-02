@@ -29,6 +29,7 @@ pub struct SendMap {
 #[derive(Debug, Clone, PartialEq)]
 pub struct VariableMap {
     pub expression: Range,
+    pub name: Option<Range>,
     pub operator: Option<Range>,
 }
 

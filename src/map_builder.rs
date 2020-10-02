@@ -147,7 +147,8 @@ pub fn constant_map(scope: &Option<&Node>, colon2_t: &Option<&Token>, name_t: &T
 }
 
 pub fn variable_map(name_t: &Token) -> VariableMap {
-    VariableMap { expression: loc(name_t), operator: None }
+    let name_l = loc(&name_t);
+    VariableMap { expression: name_l.clone(), name: Some(name_l), operator: None }
 }
 
 pub fn binary_op_map(left_e: &Node, op_t: &Token, right_e: &Node) -> OperatorMap {
@@ -190,11 +191,12 @@ pub fn arg_prefix_map(op_t: &Token, name_t: &Option<&Token>) -> VariableMap {
     let expr_l = if let Some(name_t) = name_t {
         op_l.join(&loc(&name_t))
     } else {
-        op_l.clone()
+        op_l
     };
 
     VariableMap {
-        operator: Some(op_l),
+        name: name_t.map(loc),
+        operator: None,
         expression: expr_l
     }
 }
@@ -211,7 +213,8 @@ pub fn kwarg_map(name_t: &Token, value: &Option<&Node>) -> VariableMap {
     };
 
     VariableMap {
-        operator: Some(name_range),
+        name: Some(name_range),
+        operator: None,
         expression: expr_l
     }
 }
@@ -484,4 +487,14 @@ pub fn eh_keyword_map(compstmt_e: &Option<&Node>, keyword_t: &Option<&Token>, bo
     }
 }
 
-pub fn guard_map() {}
+pub fn guard_map(keyword_t: &Token, guard_body: &Node) -> KeywordMap {
+    let keyword_l = loc(&keyword_t);
+    let guard_body_l = guard_body.expression().clone();
+
+    KeywordMap {
+        expression: keyword_l.join(&guard_body_l),
+        keyword: keyword_l,
+        begin: None,
+        end: None,
+    }
+}

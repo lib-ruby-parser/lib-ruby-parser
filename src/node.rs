@@ -27,7 +27,7 @@ pub enum Node {
     Def { name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
     Defs { definee: Box<Node>, name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
     Arg { name: String, loc: VariableMap },
-    Sym { name: Vec<u8>, loc: CollectionMap },
+    Sym { name: String, loc: CollectionMap },
     Alias { to: Box<Node>, from: Box<Node>, loc: KeywordMap },
     Ivar { name: String, loc: VariableMap },
     Gvar { name: String, loc: VariableMap },
@@ -54,9 +54,9 @@ pub enum Node {
     IfTernary { cond: Box<Node>, if_true: Box<Node>, if_false: Box<Node>, loc: TernaryMap },
     If { cond: Box<Node>, if_true: Option<Box<Node>>, if_false: Option<Box<Node>>, loc: ConditionMap },
     WhilePost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
-    While { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
+    While { cond: Box<Node>, body: Option<Box<Node>>, loc: KeywordMap },
     UntilPost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
-    Until { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
+    Until { cond: Box<Node>, body: Option<Box<Node>>, loc: KeywordMap },
     RescueBody { exc_list: Option<Box<Node>>, exc_var: Option<Box<Node>>, stmt: Option<Box<Node>>, loc: RescueBodyMap },
     Mlhs { items: Vec<Node>, loc: CollectionMap },
     Splat { arg: Option<Box<Node>>, loc: OperatorMap },
@@ -102,6 +102,24 @@ pub enum Node {
     For { iterator: Box<Node>, iteratee: Box<Node>, body: Option<Box<Node>>, loc: ForMap },
     When { patterns: Vec<Node>, body: Option<Box<Node>>, loc: KeywordMap },
     Case { expr: Option<Box<Node>>, when_bodies: Vec<Node>, else_body: Option<Box<Node>>, loc: ConditionMap },
+    MatchVar { name: String, loc: VariableMap },
+    EmptyElse { loc: Map },
+    CaseMatch { expr: Box<Node>, in_bodies: Vec<Node>, else_body: Option<Box<Node>>, loc: ConditionMap },
+    InMatch { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
+    InPattern { pattern: Box<Node>, guard: Option<Box<Node>>, body: Option<Box<Node>>, loc: KeywordMap },
+    IfGuard { body: Box<Node>, loc: KeywordMap },
+    UnlessGuard { body: Box<Node>, loc: KeywordMap },
+    MatchRest { name: Option<Box<Node>>, loc: OperatorMap },
+    HashPattern { args: Vec<Node>, loc: CollectionMap },
+    ArrayPattern { elements: Vec<Node>, loc: CollectionMap },
+    MatchWithTrailingComma { match_: Box<Node>, loc: Map },
+    ArrayPatternWithTail { elements: Vec<Node>, loc: CollectionMap },
+    FindPattern { elements: Vec<Node>, loc: CollectionMap },
+    ConstPattern { const_: Box<Node>, pattern: Box<Node>, loc: CollectionMap },
+    Pin { var: Box<Node>, loc: SendMap },
+    MatchAlt { left: Box<Node>, right: Box<Node>, loc: OperatorMap },
+    MatchAs { value: Box<Node>, as_: Box<Node>, loc: OperatorMap },
+    MatchNilPattern { loc: VariableMap },
 }
 
 impl Node {
@@ -206,6 +224,24 @@ impl Node {
             Self::For { loc, .. } => &loc.expression,
             Self::When { loc, .. } => &loc.expression,
             Self::Case { loc, .. } => &loc.expression,
+            Self::MatchVar { loc, .. } => &loc.expression,
+            Self::EmptyElse { loc, .. } => &loc.expression,
+            Self::CaseMatch { loc, .. } => &loc.expression,
+            Self::InMatch { loc, .. } => &loc.expression,
+            Self::InPattern { loc, .. } => &loc.expression,
+            Self::IfGuard { loc, .. } => &loc.expression,
+            Self::UnlessGuard { loc, .. } => &loc.expression,
+            Self::MatchRest { loc, .. } => &loc.expression,
+            Self::HashPattern { loc, .. } => &loc.expression,
+            Self::ArrayPattern { loc, .. } => &loc.expression,
+            Self::MatchWithTrailingComma { loc, .. } => &loc.expression,
+            Self::ArrayPatternWithTail { loc, .. } => &loc.expression,
+            Self::FindPattern { loc, .. } => &loc.expression,
+            Self::ConstPattern { loc, .. } => &loc.expression,
+            Self::Pin { loc, .. } => &loc.expression,
+            Self::MatchAlt { loc, .. } => &loc.expression,
+            Self::MatchAs { loc, .. } => &loc.expression,
+            Self::MatchNilPattern { loc, .. } => &loc.expression,
         }
     }
 
@@ -323,6 +359,24 @@ impl Node {
             Node::For { .. } => "for",
             Node::When { .. } => "when",
             Node::Case { .. } => "case",
+            Node::MatchVar { .. } => "match_var",
+            Node::EmptyElse { .. } => "empty_else",
+            Node::CaseMatch { .. } => "case_match",
+            Node::InMatch { .. } => "in_match",
+            Node::InPattern { .. } => "in_pattern",
+            Node::IfGuard { .. } => "if_guard",
+            Node::UnlessGuard { .. } => "unless_guard",
+            Node::MatchRest { .. } => "match_rest",
+            Node::HashPattern { .. } => "hash_pattern",
+            Node::ArrayPattern { .. } => "array_pattern",
+            Node::MatchWithTrailingComma { .. } => "match_with_trailing_comma",
+            Node::ArrayPatternWithTail { .. } => "array_pattern_with_tail",
+            Node::FindPattern { .. } => "find_pattern",
+            Node::ConstPattern { .. } => "const_pattern",
+            Node::Pin { .. } => "pin",
+            Node::MatchAlt { .. } => "match_alt",
+            Node::MatchAs { .. } => "match_as",
+            Node::MatchNilPattern { .. } => "match_nil_pattern",
         }
     }
 
@@ -490,8 +544,7 @@ impl Node {
             Node::Array { elements, .. } => {
                 result.push_nodes(elements)
             }
-            Node::Str { value, .. }
-            | Node::Sym { name: value, .. } => {
+            Node::Str { value, .. } => {
                 match String::from_utf8(value.to_owned()) {
                     Ok(string) => result.push_str(&string),
                     Err(_) => {
@@ -499,6 +552,9 @@ impl Node {
                         result.push_str(&string)
                     }
                 }
+            }
+            Node::Sym { name, .. } => {
+                result.push_str(name)
             }
             Node::Dstr { children, .. }
             | Node::Dsym { children, .. }
@@ -525,11 +581,18 @@ impl Node {
                 result.push_node(if_false);
             }
             Node::WhilePost { cond, body, .. }
-            | Node::While { cond, body, .. }
-            | Node::UntilPost { cond, body, .. }
-            | Node::Until { cond, body, .. } => {
+            | Node::UntilPost { cond, body, .. } => {
                 result.push_node(cond);
                 result.push_node(body)
+            }
+            Node::While { cond, body, .. }
+            | Node::Until { cond, body, .. } => {
+                result.push_node(cond);
+                if let Some(body) = body {
+                    result.push_node(body)
+                } else {
+                    result.push_nil()
+                }
             }
             Node::RescueBody { exc_list, exc_var, stmt, .. } => {
                 if let Some(exc_list) = exc_list {
@@ -722,6 +785,69 @@ impl Node {
                     result.push_nil()
                 }
             }
+            Node::MatchVar { name, .. } => {
+                result.push_str(name);
+            }
+            Node::EmptyElse { .. } => {}
+            Node::CaseMatch { expr, in_bodies, else_body, .. } => {
+                result.push_node(expr);
+                result.push_nodes(in_bodies);
+                if let Some(else_body) = else_body {
+                    result.push_node(else_body);
+                }
+            }
+            Node::InMatch { lhs, rhs, .. } => {
+                result.push_node(lhs);
+                result.push_node(rhs);
+            }
+            Node::InPattern { pattern, guard, body, .. } => {
+                result.push_node(pattern);
+                if let Some(guard) = guard {
+                    result.push_node(guard);
+                } else {
+                    result.push_nil()
+                }
+                if let Some(body) = body {
+                    result.push_node(body);
+                } else {
+                    result.push_nil()
+                }
+            }
+            Node::IfGuard { body, .. }
+            | Node::UnlessGuard { body, .. } => {
+                result.push_node(body)
+            }
+            Node::MatchRest { name, .. } => {
+                if let Some(name) = name {
+                    result.push_node(name)
+                }
+            }
+            Node::HashPattern { args: elements, .. }
+            | Node::ArrayPattern { elements, .. }
+            | Node::ArrayPatternWithTail { elements, .. }
+            | Node::FindPattern { elements, .. } => {
+                result.push_nodes(elements)
+            }
+            Node::MatchWithTrailingComma { match_, .. } => {
+                result.push_node(match_)
+            }
+            Node::ConstPattern { const_, pattern, .. } => {
+                result.push_node(const_);
+                result.push_node(pattern)
+
+            }
+            Node::Pin { var, .. } => {
+                result.push_node(var)
+            }
+            Node::MatchAlt { left, right, ..} => {
+                result.push_node(left);
+                result.push_node(right)
+            }
+            Node::MatchAs { value, as_, .. } => {
+                result.push_node(value);
+                result.push_node(as_)
+            }
+            Node::MatchNilPattern { .. } => {}
         }
 
         result.strings()

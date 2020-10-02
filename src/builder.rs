@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use onig::{Regex, RegexOptions};
 use crate::source::Range;
 use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack};
@@ -202,14 +204,12 @@ impl Builder {
             begin: Some(loc(&start_t)),
             end: None
         };
-        let (_, bytes, _) = value_t;
-        Node::Sym { name: bytes, loc }
+        Node::Sym { name: value(&value_t), loc }
     }
 
     pub fn symbol_internal(&self, symbol_t: Token) -> Node {
         let loc = unquoted_map(&symbol_t);
-        let (_, bytes, _) = symbol_t;
-        Node::Sym { name: bytes, loc }
+        Node::Sym { name: value(&symbol_t), loc }
     }
 
     pub fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
@@ -224,7 +224,7 @@ impl Builder {
             };
             return Node::Sym {
                 loc: collection_map(&Some(&begin_t), &vec![], &Some(&end_t)),
-                name: value,
+                name: String::from_utf8(value).unwrap_or_else(|_| panic!("non-utf8 symbol")),
             }
         }
 
@@ -315,7 +315,7 @@ impl Builder {
             match part {
                 Node::Str { value, loc } => {
                     Node::Sym {
-                        name: value,
+                        name: String::from_utf8(value).unwrap_or_else(|_| panic!("non-utf8 symbol")),
                         loc: loc
                     }
                 },
@@ -346,9 +346,8 @@ impl Builder {
 
     pub fn pair_keyword(&self, key_t: Token, value_node: Node) -> Node {
         let (key_map, pair_map) = pair_keyword_map(&key_t, &value_node);
-        let (_, bytes, _) = key_t;
         let key = Node::Sym {
-            name: bytes,
+            name: value(&key_t),
             loc: key_map
         };
         Node::Pair {
@@ -538,9 +537,7 @@ impl Builder {
                 // }
                 Node::Casgn { name, scope, loc, rhs: None }
             },
-            Node::Lvar { name, loc: VariableMap { expression, .. } } => {
-                let loc = expression.clone();
-
+            Node::Lvar { name, loc: VariableMap { expression: loc, name: name_l, .. } } => {
                 self.check_assignment_to_numparam(&name, &loc);
                 self.check_reserved_for_numparam(&name, &loc);
 
@@ -548,7 +545,7 @@ impl Builder {
 
                 Node::Lvasgn {
                     name,
-                    loc: VariableMap { expression: loc, operator: None },
+                    loc: VariableMap { expression: loc, name: name_l, operator: None },
                     rhs: None
                 }
             },
@@ -838,6 +835,7 @@ impl Builder {
         Node::Optarg {
             loc: VariableMap {
                 operator: Some(loc(&eql_t)),
+                name: Some(loc(&name_t)),
                 expression: loc(&name_t).join(&value_node.expression())
             },
             name: value(&name_t),
@@ -1254,8 +1252,15 @@ impl Builder {
 
     // Loops
 
-    pub fn loop_(&self, _loop_type: LoopType, _keyword_t: Token, _cond: Node, _do_t: Token, _body: Option<Node>, _end_t: Token) -> Node {
-        unimplemented!("loop_");
+    pub fn loop_(&self, loop_type: LoopType, keyword_t: Token, cond: Node, do_t: Token, body: Option<Node>, end_t: Token) -> Node {
+        let loc = keyword_map(&keyword_t, &Some(&do_t), &vec![], &Some(&end_t));
+        let cond = Box::new(self.check_condition(cond));
+        let body = body.map(Box::new);
+
+        match loop_type {
+            LoopType::While => Node::While { cond, body, loc },
+            LoopType::Until => Node::Until { cond, body, loc }
+        }
     }
 
     pub fn loop_mod(&self, loop_type: LoopType, body: Node, keyword_t: Token, cond: Node) -> Node {
@@ -1264,9 +1269,9 @@ impl Builder {
 
         match (loop_type, &body) {
             (LoopType::While, Node::KwBegin { .. }) => Node::WhilePost { cond, body: Box::new(body), loc },
-            (LoopType::While, _)                    => Node::While     { cond, body: Box::new(body), loc },
+            (LoopType::While, _)                    => Node::While     { cond, body: Some(Box::new(body)), loc },
             (LoopType::Until, Node::KwBegin { .. }) => Node::UntilPost { cond, body: Box::new(body), loc },
-            (LoopType::Until, _)                    => Node::Until     { cond, body: Box::new(body), loc },
+            (LoopType::Until, _)                    => Node::Until     { cond, body: Some(Box::new(body)), loc },
         }
     }
 
@@ -1511,31 +1516,265 @@ impl Builder {
     // Pattern matching
     //
 
-    pub fn case_match(&self, _case_t: Token, _expr: Node, _in_bodies: Vec<Node>, _else_t: Option<Token>, _else_body: Option<Node>, _end_t: Token) -> Node {
-        unimplemented!("case_match")
+    pub fn case_match(&self, case_t: Token, expr: Node, in_bodies: Vec<Node>, else_t: Option<Token>, else_body: Option<Node>, end_t: Token) -> Node {
+        let else_body = match (&else_t, &else_body) {
+            (Some(else_t), None) => {
+                Some( Node::EmptyElse { loc: token_map(else_t) } )
+            }
+            _ => else_body,
+        };
+
+        Node::CaseMatch {
+            loc: condition_map(&case_t, &Some(&expr), &None, &None, &else_t.as_ref(), &else_body.as_ref(), &Some(&end_t)),
+            expr: Box::new(expr),
+            in_bodies,
+            else_body: else_body.map(Box::new)
+        }
     }
 
-    pub fn in_match(&self, _lhs: Node, _in_t: Token, _rhs: Node) -> Node { unimplemented!("in_match") }
-    pub fn in_pattern(&self, _in_t: Token, _pattern: Node, _guard: Option<Node>, _then_t: Token, _body: Option<Node>) -> Node { unimplemented!("in_pattern") }
+    pub fn in_match(&self, lhs: Node, in_t: Token, rhs: Node) -> Node {
+        Node::InMatch {
+            loc: binary_op_map(&lhs, &in_t, &rhs),
+            lhs: Box::new(lhs),
+            rhs: Box::new(rhs),
+        }
+    }
 
-    pub fn if_guard(&self, _if_t: Token, _if_body: Node) -> Node { unimplemented!("if_guard") }
-    pub fn unless_guard(&self, _unless_t: Token, _unless_body: Node) -> Node { unimplemented!("unless_guard") }
+    pub fn in_pattern(&self, in_t: Token, pattern: Node, guard: Option<Node>, then_t: Token, body: Option<Node>) -> Node {
+        let mut children = vec![&pattern];
+        if let Some(guard) = &guard { children.push(&guard) }
+        if let Some(body) = &body { children.push(&body) }
 
-    pub fn match_var(&self, _name_t: Token) -> Node { unimplemented!("match_var") }
-    pub fn match_hash_var(&self, _name_t: Token) -> Node { unimplemented!("match_hash_var") }
-    pub fn match_hash_var_from_str(&self, _begin_t: Token, _strings: Vec<Node>, _end_t: Token) -> Node { unimplemented!("match_hash_var_from_str") }
-    pub fn match_rest(&self, _star_t: Token, __name_t: Option<Token>) -> Node { unimplemented!("match_rest") }
-    pub fn hash_pattern(&self, _lbrace_t: Option<Token>, _kwargs: Vec<Node>, _rbrace_t: Option<Token>) -> Node { unimplemented!("hash_pattern") }
-    pub fn array_pattern(&self, _lbrack_t: Option<Token>, _elements: Vec<Node>, _rbrack_t: Option<Token>) -> Node { unimplemented!("array_pattern") }
-    pub fn find_pattern(&self, _lbrack_t: Option<Token>, _elements: Vec<Node>, _rbrack_t: Option<Token>) -> Node { unimplemented!("find_pattern") }
-    pub fn match_with_trailing_comma(&self, _match_: Node, _comma_t: Token) -> Node { unimplemented!("match_with_trailing_comma") }
-    pub fn const_pattern(&self, _const_: Node, _ldelim_t: Token, _pattern: Node, _rdelim_t: Token) -> Node { unimplemented!("const_pattern") }
-    pub fn pin(&self, _pin_t: Token, _var: Node) -> Node { unimplemented!("pin") }
-    pub fn match_alt(&self, _left: Node, _pipe_t: Token, _right: Node) -> Node { unimplemented!("match_alt") }
-    pub fn match_as(&self, _value: Node, _assoc_t: Token, _as_: Node) -> Node { unimplemented!("match_as") }
-    pub fn match_nil_pattern(&self, _dstar_t: Token, _nil_t: Token) -> Node { unimplemented!("match_nil_pattern") }
-    pub fn match_pair(&self, _p_kw_label: PKwLabel, _value: Node) -> Node { unimplemented!("match_pair") }
-    pub fn match_label(&self, _p_kw_label: PKwLabel) -> Node { unimplemented!("match_label") }
+        Node::InPattern {
+            loc: keyword_map(&in_t, &Some(&then_t), &children, &None),
+            pattern: Box::new(pattern),
+            guard: guard.map(Box::new),
+            body: body.map(Box::new)
+        }
+    }
+
+    pub fn if_guard(&self, if_t: Token, if_body: Node) -> Node {
+        Node::IfGuard {
+            loc: guard_map(&if_t, &if_body),
+            body: Box::new(if_body)
+        }
+    }
+    pub fn unless_guard(&self, unless_t: Token, unless_body: Node) -> Node {
+        Node::UnlessGuard {
+            loc: guard_map(&unless_t, &unless_body),
+            body: Box::new(unless_body)
+        }
+    }
+
+    pub fn match_var(&self, name_t: Token) -> Node {
+        let name = value(&name_t);
+        let name_l = loc(&name_t);
+
+        self.check_lvar_name(&name, &name_l);
+        self.check_duplicate_pattern_variable(&name, &name_l);
+        self.static_env.declare(&name.as_bytes().to_vec());
+
+        Node::MatchVar {
+            name,
+            loc: variable_map(&name_t)
+        }
+    }
+
+    pub fn match_hash_var(&self, name_t: Token) -> Node {
+        let name = value(&name_t);
+
+        let expr_l = loc(&name_t);
+        let name_l = expr_l.adjust(0, -1);
+
+        self.check_lvar_name(&name, &name_l);
+        self.check_duplicate_pattern_variable(&name, &name_l);
+        self.static_env.declare(&name.as_bytes().to_vec());
+
+        Node::MatchVar {
+            name,
+            loc: VariableMap { name: Some(name_l), operator: None, expression: expr_l }
+        }
+    }
+    pub fn match_hash_var_from_str(&self, begin_t: Token, mut strings: Vec<Node>, end_t: Token) -> Node {
+        if strings.len() != 1 {
+            // diagnostic :error, :pm_interp_in_var_name, nil, loc(begin_t).join(loc(end_t))
+        }
+
+        match strings.remove(1) {
+            Node::Str { value, loc: CollectionMap { begin, end, expression } } => {
+                let name = match String::from_utf8(value) {
+                    Ok(name) => name,
+                    Err(_) => panic!("utf8 conversion error")
+                };
+                let mut name_l = expression.clone();
+
+                self.check_lvar_name(&name, &name_l);
+                self.check_duplicate_pattern_variable(&name, &name_l);
+
+                self.static_env.declare(&name.as_bytes().to_vec());
+
+                match &begin {
+                    Some(begin_l) => {
+                        let begin_pos_d: i32 = begin_l.size().try_into().unwrap();
+                        name_l = name_l.adjust(begin_pos_d, 0)
+                    },
+                    _ => {}
+                }
+
+                match &end {
+                    Some(end_l) => {
+                        let end_pos_d: i32 = end_l.size().try_into().unwrap();
+                        name_l = name_l.adjust(0, -end_pos_d)
+                    },
+                    _ => {}
+                }
+
+                let expr_l = loc(&begin_t).join(&expression).join(&loc(&end_t));
+                Node::MatchVar {
+                    name,
+                    loc: VariableMap {
+                        name: Some(name_l),
+                        operator: None,
+                        expression: expr_l
+                    }
+                }
+
+            },
+            Node::Begin { statements, .. } => {
+                self.match_hash_var_from_str(begin_t, statements, end_t)
+            },
+            _ => {
+                // diagnostic :error, :pm_interp_in_var_name, nil, loc(begin_t).join(loc(end_t))
+                panic!("missing diagnostic")
+            }
+        }
+    }
+
+    pub fn match_rest(&self, star_t: Token, name_t: Option<Token>) -> Node {
+        let name = name_t.map(|t| self.match_var(t));
+        Node::MatchRest {
+            loc: unary_op_map(&star_t, &name.as_ref()),
+            name: name.map(Box::new)
+        }
+    }
+
+    pub fn hash_pattern(&self, lbrace_t: Option<Token>, kwargs: Vec<Node>, rbrace_t: Option<Token>) -> Node {
+        self.check_duplicate_args(&kwargs);
+        Node::HashPattern {
+            loc: collection_map(&lbrace_t.as_ref(), &kwargs.iter().collect(), &rbrace_t.as_ref()),
+            args: kwargs,
+        }
+    }
+
+    pub fn array_pattern(&self, lbrack_t: Option<Token>, elements: Vec<Node>, rbrack_t: Option<Token>) -> Node {
+        let loc = collection_map(&lbrack_t.as_ref(), &elements.iter().collect(), &rbrack_t.as_ref());
+
+        if elements.is_empty() {
+            return Node::ArrayPattern { elements: vec![], loc }
+        }
+
+        let mut trailing_comma = false;
+        let nodes_elements = elements.into_iter().map(|element| {
+            match element {
+                Node::MatchWithTrailingComma { match_, .. } => {
+                    trailing_comma = true;
+                    *match_
+                }
+                e => e
+            }
+        }).collect::<Vec<_>>();
+
+        if trailing_comma {
+            Node::ArrayPatternWithTail { elements: nodes_elements, loc }
+        } else {
+            Node::ArrayPattern { elements: nodes_elements, loc }
+        }
+    }
+
+    pub fn find_pattern(&self, lbrack_t: Option<Token>, elements: Vec<Node>, rbrack_t: Option<Token>) -> Node {
+        Node::FindPattern {
+            loc: collection_map(&lbrack_t.as_ref(), &elements.iter().collect(), &rbrack_t.as_ref()),
+            elements
+        }
+    }
+
+    pub fn match_with_trailing_comma(&self, match_: Node, comma_t: Token) -> Node {
+        Node::MatchWithTrailingComma {
+            loc: expr_map(&match_.expression().join(&loc(&comma_t))),
+            match_: Box::new(match_)
+        }
+    }
+
+    pub fn const_pattern(&self, const_: Node, ldelim_t: Token, pattern: Node, rdelim_t: Token) -> Node {
+        Node::ConstPattern {
+            loc: CollectionMap {
+                begin: Some(loc(&ldelim_t)),
+                end: Some(loc(&rdelim_t)),
+                expression: const_.expression().join(&loc(&rdelim_t))
+            },
+            const_: Box::new(const_),
+            pattern: Box::new(pattern)
+        }
+    }
+
+    pub fn pin(&self, pin_t: Token, var: Node) -> Node {
+        Node::Pin {
+            loc: send_unary_op_map(&pin_t, &Some(&var)),
+            var: Box::new(var)
+        }
+    }
+
+    pub fn match_alt(&self, left: Node, pipe_t: Token, right: Node) -> Node {
+        let loc = binary_op_map(&left, &pipe_t, &right);
+        Node::MatchAlt {
+            left: Box::new(left),
+            right: Box::new(right),
+            loc
+        }
+    }
+
+    pub fn match_as(&self, value: Node, assoc_t: Token, as_: Node) -> Node {
+        let loc = binary_op_map(&value, &assoc_t, &as_);
+        Node::MatchAs {
+            value: Box::new(value),
+            as_: Box::new(as_),
+            loc
+        }
+    }
+
+    pub fn match_nil_pattern(&self, dstar_t: Token, nil_t: Token) -> Node {
+        Node::MatchNilPattern {
+            loc: arg_prefix_map(&dstar_t, &Some(&nil_t))
+        }
+    }
+
+    pub fn match_pair(&self, p_kw_label: PKwLabel, value_node: Node) -> Node {
+        match p_kw_label {
+            PKwLabel::PlainLabel(label_t) => {
+                self.check_duplicate_pattern_key(&value(&label_t), &loc(&label_t));
+                self.pair_keyword(label_t, value_node)
+            }
+            PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
+                let label_loc = loc(&begin_t).join(&loc(&end_t));
+
+                match self.static_string(&parts) {
+                    Some(var_name) => self.check_duplicate_pattern_key(&var_name, &label_loc),
+                    _ => {} /* diagnostic :error, :pm_interp_in_var_name, nil, label_loc */
+                }
+
+                self.pair_quoted(begin_t, parts, end_t, value_node)
+            }
+        }
+    }
+
+    pub fn match_label(&self, p_kw_label: PKwLabel) -> Node {
+        match p_kw_label {
+            PKwLabel::PlainLabel(label_t) => self.match_hash_var(label_t),
+            PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
+                self.match_hash_var_from_str(begin_t, parts, end_t)
+            }
+        }
+    }
 
     //
     // Verification
@@ -1562,7 +1801,7 @@ impl Builder {
         }
     }
 
-    pub fn check_duplicate_args(&self) {}
+    pub fn check_duplicate_args(&self, _args: &Vec<Node>) {}
     pub fn check_duplicate_arg(&self) {}
     pub fn check_assignment_to_numparam(&self, _name: &str, _loc: &Range){
     }
@@ -1578,10 +1817,10 @@ impl Builder {
         }
     }
 
-    pub fn arg_name_collides(&self) {}
-    pub fn check_lvar_name(&self) {}
-    pub fn check_duplicate_pattern_variable(&self) {}
-    pub fn check_duplicate_pattern_key(&self) {}
+    pub fn arg_name_collides(&self, _this_name: &str, _that_name: &str) -> bool { false }
+    pub fn check_lvar_name(&self, _name: &str, _loc: &Range) {}
+    pub fn check_duplicate_pattern_variable(&self, _name: &str, _loc: &Range) {}
+    pub fn check_duplicate_pattern_key(&self, _name: &str, _loc: &Range) {}
 
     //
     // Helpers
