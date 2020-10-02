@@ -1917,8 +1917,8 @@
                                 $<Node>1,
                                 $<Token>2,
                                 $<Node>3,
-                                $<Token>4,
-                                $<Node>5
+                                $<Token>5,
+                                $<Node>6
                             )
                         );
                     }

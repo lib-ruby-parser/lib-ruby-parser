@@ -68,7 +68,7 @@ pub struct ParserState {
     pvtbl: std::collections::HashMap<Vec<u8>, Vec<u8>>,
     pktbl: std::collections::HashMap<Vec<u8>, Vec<u8>>,
     line_count: usize,
-    pub ruby_sourceline: usize,	/* current line no. */
+    pub ruby_sourceline: usize,        /* current line no. */
     ruby_sourcefile: Vec<u8>, /* current source file */
     ruby_sourcefile_string: Vec<u8>,
     // enc: Encoding,
@@ -544,7 +544,7 @@ impl Lexer {
                 },
 
                 LexChar::Some(b'?') => {
-                    return self.parse_qmark(space_seen);
+                    return self.parse_qmark(space_seen).unwrap_or(-1);
                 },
 
                 LexChar::Some(b'&') => {
@@ -1185,7 +1185,94 @@ impl Lexer {
         Some(StrTerm::new_literal(StringLiteral::new(0, func, paren, term)))
     }
 
-    pub fn parse_qmark(&self, _space_seen: bool) -> i32 { unimplemented!("parse_qmark") }
+    pub fn escaped_control_code(&self, c: &LexChar) -> Option<u8> {
+        if *c == b' ' { return Some(b's') }
+        if *c == b'\n' { return Some(b'n') }
+        if *c == b'\t' { return Some(b't') }
+        if *c == 0x0b { return Some(b'v') }
+        if *c == b'\r' { return Some(b'r') }
+        if *c == 0x0c { return Some(b'f') }
+        None
+    }
+
+    pub fn parse_qmark_ternary(&mut self, c: &LexChar) -> Result<i32, ()> {
+        unimplemented!()
+    }
+
+    pub fn warn_space_char(&mut self, c: u8, s: &str) {
+        unimplemented!()
+    }
+
+    pub fn parse_qmark(&mut self, space_seen: bool) -> Result<i32, ()> {
+        // let enc;
+        let mut c;
+        let lit;
+
+        if self.is_end() {
+            self.set_lex_state(EXPR_VALUE);
+            return Ok(Self::tEH);
+        }
+        c = self.nextc();
+        if c.is_eof() {
+            self.compile_error("incomplete character syntax");
+            return Ok(Self::END_OF_INPUT);
+        }
+        if c.is_space() {
+            if !self.is_arg() {
+                if let Some(c2) = self.escaped_control_code(&c) {
+                    self.warn_space_char(c2, "?");
+                }
+            }
+            return self.parse_qmark_ternary(&c);
+        }
+        self.newtok();
+        // enc = self.p.enc;
+
+        if !self.parser_is_ascii() {
+            if self.tokadd_mbchar(&c).is_err() { return Ok(Self::END_OF_INPUT) }
+        } else if (c.is_alnum() || c == b'_') && self.p.lex.pcur < self.p.lex.pend && self.is_identchar(self.p.lex.pcur, self.p.lex.pend) {
+            if space_seen {
+                let start = self.p.lex.pcur - 1;
+                let mut ptr = start;
+                loop {
+                    if let Some(n) = self.parser_precise_mbclen(ptr) {
+                        ptr += n;
+                    } else {
+                        return Err(())
+                    }
+
+                    if !( ptr < self.p.lex.pend && self.is_identchar(ptr, self.p.lex.pend) ) {
+                        break
+                    }
+                }
+                // rb_warn2("`?' just followed by `%.*s' is interpreted as" \
+                //  " a conditional operator, put a space after `?'",
+                //  WARN_I((int)(ptr - start)), WARN_S_L(start, (ptr - start)));
+            }
+            return self.parse_qmark_ternary(&c);
+        } else if c == b'\\' {
+            if self.peek(b'u') {
+                self.nextc();
+                // enc = utf8
+                panic!("\\u handling");
+                // self.tokadd_utf8(c, func1, func2)
+            } else if !self.is_lex_eol() && !self.char_at(self.p.lex.pcur).is_ascii() {
+                c = self.char_at(self.p.lex.pcur);
+                self.nextc();
+                if self.tokadd_mbchar(&c).is_err() { return Ok(Self::END_OF_INPUT) }
+            } else {
+                c = self.read_escape(0);
+                self.tokadd(&c);
+            }
+        } else {
+            self.tokadd(&c);
+        }
+        self.tokfix();
+        lit = self.tok();
+        self.set_yylval_str(lit);
+        self.set_lex_state(EXPR_END);
+        return Ok(Self::tCHAR);
+    }
 
     pub fn arg_ambiguous(&self, c: u8) -> bool {
         self.warn(&format!("ambiguous first argument; put parentheses or a space even after `{}' operator", c));
@@ -1227,8 +1314,6 @@ impl Lexer {
     pub fn yyerror0(&self, message: &str) {
         if self.debug { println!("yyerror0: {}", message) }
     }
-
-    // pub fn is_space(&self, _c: &LexChar) -> bool { unimplemented!("is_space") }
 
     pub fn is_lambda_beginning(&self) -> bool {
         self.p.lex.lpar_beg == self.p.lex.paren_nest
