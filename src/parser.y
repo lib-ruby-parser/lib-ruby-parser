@@ -457,6 +457,7 @@
                 | kALIAS tGVAR tNTH_REF
                     {
                         // FIXME: diagnostic :error, :nth_ref_alias, None, val[2]
+                        return Self::YYERROR;
                     }
                 | kUNDEF undef_list
                     {
@@ -2654,7 +2655,7 @@
                   p_case_body
                   k_end
                     {
-                        let (in_bodies, else_) = $<CaseBody>4;
+                        let (in_bodies, else_) = $<PCaseBody>4;
                         let (else_t, else_body) = match else_ {
                             Some((else_t, else_body)) => (Some(else_t), else_body),
                             None => (None, None)
@@ -3731,7 +3732,7 @@ opt_block_args_tail:
                     }
                 | p_expr tCOMMA p_args
                     {
-                        let items = [ $<NodeList>1, $<NodeList>3 ].concat();
+                        let items = [ vec![$<Node>1], $<NodeList>3 ].concat();
                         $$ = Value::Node(
                             self.builder.array_pattern(None, items, None)
                         );
