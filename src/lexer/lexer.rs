@@ -1204,11 +1204,13 @@ impl Lexer {
     }
 
     pub fn parse_qmark_ternary(&mut self, c: &LexChar) -> Result<i32, ()> {
-        unimplemented!()
+        self.pushback(c);
+        self.set_lex_state(EXPR_VALUE);
+        Ok(Self::tEH)
     }
 
     pub fn warn_space_char(&mut self, c: u8, s: &str) {
-        unimplemented!()
+        unimplemented!("warn_space_char")
     }
 
     pub fn parse_qmark(&mut self, space_seen: bool) -> Result<i32, ()> {
@@ -1634,6 +1636,8 @@ impl Lexer {
                 ptr += 1;
             }
         }
+
+        if self.p.lex.pend < ptr + len { return false }
 
         if let Ok(n) = isize::try_from(self.p.lex.pend - (ptr + len)) {
             if n < 0 { return false }

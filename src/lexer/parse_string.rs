@@ -5,6 +5,8 @@ use crate::lexer::lex_states::*;
 use crate::lexer::str_types::*;
 
 impl Lexer {
+    pub const TAB_WIDTH: i32 = 8;
+
     pub fn parse_string(&mut self, quote: StringLiteral) -> i32 {
         let func = quote.func();
         let term = quote.term();
@@ -304,8 +306,25 @@ impl Lexer {
         // noop
     }
 
-    pub fn parser_update_heredoc_indent(&mut self, _c: &LexChar) -> bool {
-        unimplemented!("parser_update_heredoc_indent")
+    pub fn parser_update_heredoc_indent(&mut self, c: &LexChar) -> bool {
+        if self.p.heredoc_line_indent == -1 {
+            if *c == b'\n' { self.p.heredoc_line_indent = 0 }
+        } else {
+            if *c == b' ' {
+                self.p.heredoc_line_indent += 1;
+                return true;
+            } else if *c == b'\t' {
+                let w = (self.p.heredoc_line_indent / Self::TAB_WIDTH) + 1;
+                self.p.heredoc_line_indent = w * Self::TAB_WIDTH;
+                return true;
+            } else if *c != b'\n' {
+                if self.p.heredoc_indent > self.p.heredoc_line_indent {
+                    self.p.heredoc_indent = self.p.heredoc_line_indent
+                }
+                self.p.heredoc_line_indent = -1;
+            }
+        }
+        true
     }
 
     pub fn tokadd_utf8(&mut self, _c: u8, _func1: usize, _func2: usize) {
@@ -364,7 +383,7 @@ impl Lexer {
 
             loop {
                 c = self.nextc();
-                if c != term { break }
+                if c == term { break }
 
                 if c.is_eof() || c == b'\r' || c == b'\n' {
                     self.yyerror0("unterminated here document identifier");

@@ -576,7 +576,7 @@ impl Builder {
             Node::Const { scope, name, loc } => {
                 Node::Casgn { scope, name, loc, rhs: None }
             },
-            _ => panic!("unsupported const_op_assignable arument: {:#?}", node)
+            _ => panic!("unsupported const_op_assignable arument: {:?}", node)
         }
     }
 
@@ -653,7 +653,7 @@ impl Builder {
                 // diagnostic :error, :backref_assignment, nil, lhs.loc.expression
                 return rhs;
             }
-            _ => panic!("unsupported op_assign lhs {:#?}", lhs)
+            _ => panic!("unsupported op_assign lhs {:?}", lhs)
         };
 
         let lhs = Box::new(lhs);
