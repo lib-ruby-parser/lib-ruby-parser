@@ -6,4 +6,4 @@ s(:regexp,
   s(:begin,
     s(:lvar, "bar")),
   s(:str, "baz"),
-  s(:regopt, ""))
+  s(:regopt))

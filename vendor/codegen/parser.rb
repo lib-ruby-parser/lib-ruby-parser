@@ -47,11 +47,6 @@ class Rewriter < Parser::AST::Processor
   alias on_rational replace_to_original_source
   alias on_complex replace_to_original_source
 
-  # we emit flags as a string s(:regopt, "mix")
-  def on_regopt(node)
-    node.updated(nil, [node.children.join])
-  end
-
   # we don't emit implicit empty s(:args)
   def on_def(node)
     node = super
@@ -179,10 +174,10 @@ class Parser::AST::Node
     sexp = "#{indented}s(:#{@type}"
 
     children.each do |child|
+      child = child.to_s if child.is_a?(Symbol)
+
       if child.is_a?(Parser::AST::Node)
         sexp += ",\n#{child.inspect(indent + 1)}"
-      elsif child.is_a?(Symbol)
-        sexp += ", #{child.to_s.inspect}"
       else
         sexp += ", #{child.inspect}"
       end

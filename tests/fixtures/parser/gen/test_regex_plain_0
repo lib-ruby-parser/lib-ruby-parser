@@ -3,4 +3,4 @@
 --AST
 s(:regexp,
   s(:str, "source"),
-  s(:regopt, "im"))
+  s(:regopt, "i", "m"))

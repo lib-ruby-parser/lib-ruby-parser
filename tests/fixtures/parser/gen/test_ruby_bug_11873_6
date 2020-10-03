@@ -9,4 +9,4 @@ s(:block,
         s(:send, nil, "d"))),
     s(:regexp,
       s(:str, "x"),
-      s(:regopt, ""))), nil, nil)
+      s(:regopt))), nil, nil)

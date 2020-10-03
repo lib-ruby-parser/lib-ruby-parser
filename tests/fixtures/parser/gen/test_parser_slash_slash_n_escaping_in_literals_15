@@ -4,4 +4,4 @@ b}
 --AST
 s(:regexp,
   s(:str, "ab"),
-  s(:regopt, ""))
+  s(:regopt))

@@ -6,5 +6,5 @@ s(:send,
     s(:begin,
       s(:int, "1")),
     s(:str, "(?<match>bar)"),
-    s(:regopt, "")), "=~",
+    s(:regopt)), "=~",
   s(:str, "bar"))

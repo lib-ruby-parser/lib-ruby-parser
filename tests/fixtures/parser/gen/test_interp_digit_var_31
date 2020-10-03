@@ -3,4 +3,4 @@
 --AST
 s(:regexp,
   s(:str, "\#@@1"),
-  s(:regopt, ""))
+  s(:regopt))
