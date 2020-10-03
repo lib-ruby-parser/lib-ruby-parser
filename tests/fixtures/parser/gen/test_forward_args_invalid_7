@@ -1,4 +1,0 @@
---INPUT
-->(...) {} # error: unexpected token tDOT3
---AST
-

@@ -1,4 +1,0 @@
---INPUT
--> { rescue; } # error: unexpected token kRESCUE
---AST
-

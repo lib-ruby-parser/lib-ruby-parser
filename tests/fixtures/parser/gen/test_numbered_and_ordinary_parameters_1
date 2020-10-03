@@ -1,4 +1,0 @@
---INPUT
-m { |a| _1 }  # error: ordinary parameter is defined
---AST
-

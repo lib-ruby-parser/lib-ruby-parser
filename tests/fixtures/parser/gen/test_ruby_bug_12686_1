@@ -1,4 +1,0 @@
---INPUT
-f(g rescue nil) # error: unexpected token kRESCUE_MOD
---AST
-

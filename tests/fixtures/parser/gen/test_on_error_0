@@ -1,4 +1,0 @@
---INPUT
-def foo(bar baz); end # error: unexpected token tIDENTIFIER
---AST
-

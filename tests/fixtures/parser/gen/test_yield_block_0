@@ -1,4 +1,0 @@
---INPUT
-yield foo do end # error: block given to yield
---AST
-

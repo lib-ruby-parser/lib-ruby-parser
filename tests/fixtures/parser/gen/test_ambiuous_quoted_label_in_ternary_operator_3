@@ -1,4 +1,0 @@
---INPUT
-a ? b ! '': nil # error: unexpected token tBANG
---AST
-

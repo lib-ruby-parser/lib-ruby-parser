@@ -1,4 +1,0 @@
---INPUT
-def foo(...) defined?(...); end # error: unexpected token tRPAREN
---AST
-

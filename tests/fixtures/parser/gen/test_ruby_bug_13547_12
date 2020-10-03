@@ -1,6 +1,0 @@
---INPUT
-meth[] {}
---AST
-s(:block,
-  s(:index,
-    s(:send, nil, "meth")), nil, nil)

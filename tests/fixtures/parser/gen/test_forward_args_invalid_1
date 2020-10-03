@@ -1,4 +1,0 @@
---INPUT
-foo do |...| end # error: unexpected token tBDOT3
---AST
-

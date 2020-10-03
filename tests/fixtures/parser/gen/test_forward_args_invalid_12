@@ -1,4 +1,0 @@
---INPUT
-def foo(...) bar[...]; end # error: unexpected token tRBRACK
---AST
-

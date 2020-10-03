@@ -1,4 +1,0 @@
---INPUT
-foo { |...| } # error: unexpected token tBDOT3
---AST
-

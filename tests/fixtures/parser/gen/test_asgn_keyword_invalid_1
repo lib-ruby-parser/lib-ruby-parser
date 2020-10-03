@@ -1,4 +1,0 @@
---INPUT
-self = foo # error: cannot assign to a keyword
---AST
-

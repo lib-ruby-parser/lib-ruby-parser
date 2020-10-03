@@ -1,4 +1,0 @@
---INPUT
-->(x=_1) {} # error: ordinary parameter is defined
---AST
-

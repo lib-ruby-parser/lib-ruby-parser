@@ -1,4 +1,0 @@
---INPUT
-def m(foo: foo) end # error: circular argument reference foo
---AST
-

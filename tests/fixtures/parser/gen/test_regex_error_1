@@ -1,4 +1,0 @@
---INPUT
-/#{""}?/ # error: target of repeat operator is not specified: /?/
---AST
-

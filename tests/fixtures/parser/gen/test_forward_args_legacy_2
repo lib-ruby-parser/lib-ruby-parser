@@ -1,5 +1,0 @@
---INPUT
-def foo(...); end
---AST
-s(:def, "foo",
-  s(:forward_args), nil)
