@@ -5,7 +5,7 @@ pub struct ReservedWord {
     pub name: Vec<u8>,
     pub id: i32,
     pub modifier_id: i32,
-    pub state: usize
+    pub state: i32
 }
 
 lazy_static! {

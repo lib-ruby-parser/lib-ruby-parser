@@ -7,7 +7,6 @@ pub enum ContextItem {
     Defs,
     Block,
     Lambda,
-    Defined,
 }
 
 #[derive(Debug, Clone, Default)]

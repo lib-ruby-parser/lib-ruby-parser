@@ -46,9 +46,9 @@ pub struct LexerState {
     pub pend: usize,
     pub ptok: usize,
     pub state: LexState,
-    paren_nest: i32,
+    pub paren_nest: i32,
     pub lpar_beg: i32,
-    brace_nest: i32,
+    pub brace_nest: i32,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -618,6 +618,7 @@ impl Lexer {
                         return Self::tOP_ASGN;
                     }
                     self.set_lex_state(if self.is_after_operator() { EXPR_ARG } else { EXPR_BEG|EXPR_LABEL });
+                    self.pushback(&c);
                     return Self::tPIPE;
                 },
 
@@ -992,15 +993,15 @@ impl Lexer {
         self.p.lex.ptok = ptok;
     }
 
-    pub fn set_lex_state(&mut self, states: usize) {
+    pub fn set_lex_state(&mut self, states: i32) {
         self.p.lex.state.set(states)
     }
 
-    pub fn is_lex_state_some(&self, states: usize) -> bool {
+    pub fn is_lex_state_some(&self, states: i32) -> bool {
         self.p.lex.state.is_some(states)
     }
 
-    pub fn is_lex_state_all(&self, states: usize) -> bool {
+    pub fn is_lex_state_all(&self, states: i32) -> bool {
         self.p.lex.state.is_all(states)
     }
 

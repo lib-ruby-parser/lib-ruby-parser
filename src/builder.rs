@@ -2,7 +2,7 @@ use std::convert::TryInto;
 
 use onig::{Regex, RegexOptions};
 use crate::source::Range;
-use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack};
+use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack, MaxNumparamStack};
 use crate::source::map::*;
 use crate::map_builder::*;
 
@@ -46,12 +46,13 @@ pub enum PKwLabel {
 pub struct Builder {
     static_env: StaticEnvironment,
     context: Context,
-    current_arg_stack: CurrentArgStack
+    current_arg_stack: CurrentArgStack,
+    max_numparam_stack: MaxNumparamStack,
 }
 
 impl Builder {
-    pub fn new(static_env: StaticEnvironment, context: Context, current_arg_stack: CurrentArgStack) -> Self {
-        Self { static_env, context, current_arg_stack }
+    pub fn new(static_env: StaticEnvironment, context: Context, current_arg_stack: CurrentArgStack, max_numparam_stack: MaxNumparamStack) -> Self {
+        Self { static_env, context, current_arg_stack, max_numparam_stack }
     }
 
     //

@@ -29,3 +29,9 @@ pub mod map_builder;
 
 mod current_arg_stack;
 pub use current_arg_stack::CurrentArgStack;
+
+mod max_numparam_stack;
+pub use max_numparam_stack::MaxNumparamStack;
+
+mod variables_stack;
+pub use variables_stack::VariablesStack;

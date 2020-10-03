@@ -12,13 +12,20 @@
     builder: Builder,
     current_arg_stack: CurrentArgStack,
     pub static_env: StaticEnvironment,
+    context: LexContext,
+    last_token: Token,
+    max_numparam_stack: MaxNumparamStack,
+    pattern_variables: VariablesStack,
+    pattern_hash_keys: VariablesStack,
 }
 
 %code use {
-    use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment};
+    use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
     use crate::lexer::lex_states::*;
-    use crate::lexer::{ContextItem};
+    use crate::lexer::{Context as LexContext, ContextItem};
     use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel};
+    use crate::lexer::{StrTerm};
+    use crate::map_builder::value;
 }
 
 %code {
@@ -163,7 +170,7 @@
 %type <token>   cname fname op f_norm_arg f_bad_arg
 %type <token>   f_label f_arg_asgn call_op call_op2 reswords relop dot_or_colon
 %type <token>   p_rest p_kw_label
-%type <token>   args_forward excessed_comma def_name
+%type <token>   args_forward excessed_comma def_name k_if k_elsif
 %type <token>   rbrace rparen rbracket p_lparen p_lbracket k_return then term fcall
 
 %type <token_list> terms
@@ -288,6 +295,7 @@
 %%
 
          program:   {
+                        self.yylexer.set_lex_state(EXPR_BEG);
                     }
                   top_compstmt
                     {
@@ -298,6 +306,7 @@
 
     top_compstmt: top_stmts opt_terms
                     {
+                        // TODO: run void_stmts
                         $$ = Value::MaybeNode(
                             self.builder.compstmt($<NodeList>1)
                         );
@@ -387,6 +396,7 @@
 
         compstmt: stmts opt_terms
                     {
+                        // TODO: run void_stmts
                         $$ = Value::MaybeNode(
                             self.builder.compstmt($<NodeList>1)
                         );
@@ -426,7 +436,7 @@
 
             stmt: kALIAS fitem
                     {
-                        self.yylexer.set_lex_state(EXPR_FNAME);
+                        self.yylexer.set_lex_state(EXPR_FNAME|EXPR_FITEM);
                     }
                   fitem
                     {
@@ -456,7 +466,7 @@
                     }
                 | kALIAS tGVAR tNTH_REF
                     {
-                        // FIXME: diagnostic :error, :nth_ref_alias, None, val[2]
+                        self.yyerror(&@3, "can't make alias for the number variables");
                         return Self::YYERROR;
                     }
                 | kUNDEF undef_list
@@ -534,6 +544,10 @@
                     }
                 | klEND tLCURLY compstmt tRCURLY
                     {
+                        if self.context.is_in(ContextItem::Def) {
+                            self.warn(&@1, "END in method; use at_exit")
+                        }
+
                         $$ = Value::Node(
                             self.builder.postexe(
                                 $<Token>1,
@@ -753,13 +767,8 @@
                     }
                 | backref tOP_ASGN command_rhs
                     {
-                        $$ = Value::Node(
-                            self.builder.op_assign(
-                                $<Node>1,
-                                $<Token>2,
-                                $<Node>3
-                            )
-                        );
+                        // TODO: backref_error
+                        $$ = Value::Node( Node::empty_begin(&@$) );
                     }
                 ;
 
@@ -833,15 +842,16 @@
                     }
                 | arg kIN
                     {
-                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.set_lex_state(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.p.command_start = true;
-                        // self.pattern_variables.push();
+                        self.pattern_variables.push();
 
                         $<Bool>$ = Value::Bool(self.yylexer.p.in_kwarg);
                         self.yylexer.p.in_kwarg = true;
                     }
                   p_expr
                     {
+                        self.pattern_variables.pop();
                         self.yylexer.p.in_kwarg = $<Bool>3;
 
                         $$ = Value::Node(
@@ -862,13 +872,13 @@
                         self.yylexer.cond_push(false);
                         self.current_arg_stack.push(None);
 
-                        $$ = $<RAW>1;
+                        $$ = $1;
                     }
                 ;
 
        defn_head: k_def def_name
                     {
-                        self.yylexer.p.context.push(ContextItem::Def);
+                        self.context.push(ContextItem::Def);
 
                         $$ = Value::DefnHead(( $<Token>1, $<Token>2 ));
                     }
@@ -880,7 +890,8 @@
                     }
                   def_name
                     {
-                        self.yylexer.p.context.push(ContextItem::Defs);
+                        self.yylexer.set_lex_state(EXPR_ENDFN|EXPR_LABEL);
+                        self.context.push(ContextItem::Defs);
 
                         $$ = Value::DefsHead(( $<Token>1, $<Node>2, $<Token>3, $<Token>5 ));
                     }
@@ -911,11 +922,11 @@
 
  cmd_brace_block: tLBRACE_ARG
                     {
-                        self.yylexer.p.context.push(ContextItem::Block);
+                        self.context.push(ContextItem::Block);
                     }
                   brace_body tRCURLY
                     {
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         let (args, body) = $<BraceBody>3;
                         $$ = Value::CmdBraceBlock(( $<Token>1, args, body, $<Token>4 ));
                     }
@@ -1268,14 +1279,16 @@
                     }
                 | primary_value call_op tIDENTIFIER
                     {
-                        // if (val[1][0] == :anddot)
-                        //     diagnostic :error, :csend_in_lhs_of_masgn, None, val[1]
-                        // end
+                        let op_t = $<Token>2;
+                        if op_t.0 == Lexer::tANDDOT {
+                            self.yyerror(&@2, "&. inside multiple assignment destination");
+                            return Self::YYERROR;
+                        }
 
                         $$ = Value::Node(
                             self.builder.attr_asgn(
                                 $<Node>1,
-                                $<Token>2,
+                                op_t,
                                 $<Token>3
                             )
                         );
@@ -1292,14 +1305,16 @@
                     }
                 | primary_value call_op tCONSTANT
                     {
-                        // if (val[1][0] == :anddot)
-                        //     diagnostic :error, :csend_in_lhs_of_masgn, None, val[1]
-                        // end
+                        let op_t = $<Token>2;
+                        if op_t.0 == Lexer::tANDDOT {
+                            self.yyerror(&@2, "&. inside multiple assignment destination");
+                            return Self::YYERROR;
+                        }
 
                         $$ = Value::Node(
                             self.builder.attr_asgn(
                                 $<Node>1,
-                                $<Token>2,
+                                op_t,
                                 $<Token>3
                             )
                         );
@@ -1425,8 +1440,8 @@
 
            cname: tIDENTIFIER
                     {
-                        // diagnostic :error, :module_name_const, None, val[0]
-                        $$ = $<RAW>1;
+                        self.yyerror(&@1, "class/module name must be CONSTANT");
+                        $$ = $1;
                     }
                 | tCONSTANT
                 ;
@@ -1479,7 +1494,11 @@
                     {
                         $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
-                | undef_list tCOMMA { self.yylexer.set_lex_state(EXPR_FNAME); } fitem
+                | undef_list tCOMMA
+                    {
+                        self.yylexer.set_lex_state(EXPR_FNAME|EXPR_FITEM);
+                    }
+                  fitem
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>4 );
@@ -1927,9 +1946,9 @@
                     {
                         let (def_t, name_t) = $<DefnHead>1;
 
-                        // if name_t[0].end_with?('=')
-                        //     diagnostic :error, :endless_setter, None, name_t
-                        // end
+                        if name_t.1.last() == Some(&b'=') {
+                            self.yyerror(&@1, "setter method cannot be defined in an endless method definition");
+                        }
 
                         $$ = Value::Node(
                             self.builder.def_endless_method(
@@ -1944,7 +1963,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         self.static_env.unextend();
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         self.current_arg_stack.pop();
                     }
                 | defn_head f_paren_args tEQL arg kRESCUE_MOD arg
@@ -1980,7 +1999,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         self.static_env.unextend();
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         self.current_arg_stack.pop();
                     }
                 | defs_head f_paren_args tEQL arg
@@ -2002,7 +2021,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         self.static_env.unextend();
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         self.current_arg_stack.pop();
                     }
                 | defs_head f_paren_args tEQL arg kRESCUE_MOD arg
@@ -2040,7 +2059,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         self.static_env.unextend();
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         self.current_arg_stack.pop();
                     }
                 | primary
@@ -2064,6 +2083,7 @@
                     }
                 | rel_expr relop arg   %prec tGT
                     {
+                        self.warn(&@2, &format!("comparison after comparison"));
                         $$ = Value::Node(
                             self.builder.binary_op(
                                 $<Node>1,
@@ -2129,9 +2149,10 @@
                     }
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
-                        // unless self.static_env.declared_forward_args?
-                        //     diagnostic :error, :unexpected_token, { :token => 'tBDOT3' } , val[3]
-                        // end
+                        if !self.static_env.is_forward_args_declared() {
+                            self.yyerror(&@4, "unexpected ...");
+                            return Self::YYERROR;
+                        }
 
                         let args = [
                             $<NodeList>2,
@@ -2141,9 +2162,10 @@
                     }
                 | tLPAREN2 args_forward rparen
                     {
-                        // unless self.static_env.declared_forward_args?
-                        //     diagnostic :error, :unexpected_token, { :token => 'tBDOT3' } , val[1]
-                        // end
+                        if !self.static_env.is_forward_args_declared() {
+                            self.yyerror(&@2, "unexpected ...");
+                            return Self::YYERROR;
+                        }
 
                         $$ = Value::ParenArgs(( $<Token>1, vec![ self.builder.forwarded_args($<Token>2) ], $<Token>3 ));
                     }
@@ -2215,12 +2237,33 @@
                 ;
 
     command_args:   {
-                        // TODO: crazy cmdarg manipulation
+                        let lookahead =
+                            match self.last_token.0 {
+                                Lexer::tLPAREN2
+                                | Lexer::tLPAREN
+                                | Lexer:: tLPAREN_ARG
+                                | Lexer::tLBRACK2
+                                | Lexer::tLBRACK => true,
+                                _ => false
+                            };
+
+                        if lookahead { self.yylexer.cmdarg_pop() }
+                        self.yylexer.cmdarg_push(true);
+                        if lookahead { self.yylexer.cmdarg_push(false) }
                     }
                   call_args
                     {
-                        // TODO: crazy cmdarg manipulation
-                        $$ = $<RAW>2;
+                        let lookahead =
+                            match self.last_token.0 {
+                                Lexer::tLBRACE_ARG => true,
+                                _ => false
+                            };
+
+                        if lookahead { self.yylexer.cmdarg_pop() }
+                        self.yylexer.cmdarg_pop();
+                        if lookahead { self.yylexer.cmdarg_push(false) }
+
+                        $$ = $2;
                     }
                 ;
 
@@ -2694,14 +2737,15 @@
                         self.static_env.extend_static();
                         self.yylexer.cmdarg_push(false);
                         self.yylexer.cond_push(false);
-                        self.yylexer.p.context.push(ContextItem::Class);
+                        self.context.push(ContextItem::Class);
                     }
                   bodystmt
                   k_end
                     {
-                        // unless @context.class_definition_allowed?
-                        //     diagnostic :error, :class_in_def, None, val[0]
-                        // end
+                        if !self.context.is_class_definition_allowed() {
+                            self.yyerror(&@1, "class definition in method body");
+                            return Self::YYERROR;
+                        }
 
                         let (lt_t, superclass) = match $<Superclass>3 {
                             Some((lt_t, superclass)) => (Some(lt_t), Some(superclass)),
@@ -2722,14 +2766,14 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         self.static_env.unextend();
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                     }
                 | k_class tLSHFT expr
                     {
                         self.static_env.extend_static();
                         self.yylexer.cmdarg_push(false);
                         self.yylexer.cond_push(false);
-                        self.yylexer.p.context.push(ContextItem::Sclass);
+                        self.context.push(ContextItem::Sclass);
                     }
                   term
                   bodystmt
@@ -2748,20 +2792,21 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         self.static_env.unextend();
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                     }
                 | k_module cpath
                     {
                         self.static_env.extend_static();
                         self.yylexer.cmdarg_push(false);
-                        self.yylexer.p.context.push(ContextItem::Module);
+                        self.context.push(ContextItem::Module);
                     }
                   bodystmt
                   k_end
                     {
-                        // unless @context.module_definition_allowed?
-                        //     diagnostic :error, :module_in_def, None, val[0]
-                        // end
+                        if !self.context.is_module_definition_allowed() {
+                            self.yyerror(&@1, "module definition in method body");
+                            return Self::YYERROR;
+                        }
 
                         $$ = Value::Node(
                             self.builder.def_module(
@@ -2774,7 +2819,7 @@
 
                         self.yylexer.cmdarg_pop();
                         self.static_env.unextend();
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                     }
                 | defn_head
                   f_arglist
@@ -2796,7 +2841,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         self.static_env.unextend();
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         self.current_arg_stack.pop();
                     }
                 | defs_head
@@ -2821,7 +2866,7 @@
                         self.yylexer.cmdarg_pop();
                         self.yylexer.cond_pop();
                         self.static_env.unextend();
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         self.current_arg_stack.pop();
                     }
                 | kBREAK
@@ -2881,6 +2926,10 @@
                 ;
 
             k_if: kIF
+                    {
+                        // TODO: check for WARN_EOL("if")
+                        $$ = $1;
+                    }
                 ;
 
         k_unless: kUNLESS
@@ -2926,6 +2975,10 @@
                 ;
 
          k_elsif: kELSIF
+                    {
+                        // TODO: check for WARN_EOL("elsif")
+                        $$ = $1;
+                    }
                 ;
 
            k_end: kEND
@@ -2933,10 +2986,11 @@
 
         k_return: kRETURN
                     {
-                        // if @context.in_class?
-                        //     diagnostic :error, :invalid_return, None, val[0]
-                        // end
-                        $$ = $<RAW>1;
+                        if self.context.is_in(ContextItem::Class) {
+                            self.yyerror(&@1, "Invalid return in class/module body");
+                            return Self::YYERROR;
+                        }
+                        $$ = $1;
                     }
                 ;
 
@@ -2944,7 +2998,7 @@
                 | kTHEN
                 | term kTHEN
                     {
-                        $$ = $<RAW>2;
+                        $$ = $2;
                     }
                 ;
 
@@ -3194,15 +3248,16 @@ opt_block_args_tail:
                     }
                 | block_param_def
                     {
-                        self.yylexer.set_lex_state(EXPR_VALUE);
-                        $$ = $<RAW>1;
+                        self.yylexer.p.command_start = true;
+                        $$ = $1;
                     }
                 ;
 
  block_param_def: tPIPE opt_bv_decl tPIPE
                     {
-                        // @max_numparam_stack.has_ordinary_params!
+                        self.max_numparam_stack.has_ordinary_params();
                         self.current_arg_stack.set(None);
+
                         $$ = Value::MaybeNode(
                             self.builder.args(
                                 Some($<Token>1),
@@ -3213,7 +3268,7 @@ opt_block_args_tail:
                     }
                 | tPIPE block_param opt_bv_decl tPIPE
                     {
-                        // @max_numparam_stack.has_ordinary_params!
+                        self.max_numparam_stack.has_ordinary_params();
                         self.current_arg_stack.set(None);
 
                         $$ = Value::MaybeNode(
@@ -3266,22 +3321,26 @@ opt_block_args_tail:
           lambda: tLAMBDA
                     {
                         self.static_env.extend_dynamic();
-                        // @max_numparam_stack.push
-                        self.yylexer.p.context.push(ContextItem::Lambda);
+                        self.max_numparam_stack.push();
+                        self.context.push(ContextItem::Lambda);
+                        $<Num>$ = Value::Num(self.yylexer.p.lex.lpar_beg);
+                        self.yylexer.p.lex.lpar_beg = self.yylexer.p.lex.paren_nest;
                     }
                   f_larglist
                     {
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         self.yylexer.cmdarg_push(false);
                     }
                   lambda_body
                     {
+                        self.yylexer.p.lex.lpar_beg = $<Num>2;
+
                         let lambda_call = self.builder.call_lambda($<Token>1);
                         // args = @max_numparam_stack.has_numparams? ? self.builder.numargs(@max_numparam_stack.top) : val[2]
                         let args = $<MaybeNode>3;
                         let (begin_t, body, end_t) = $<LambdaBody>5;
 
-                        // @max_numparam_stack.pop
+                        self.max_numparam_stack.pop();
                         self.static_env.unextend();
                         self.yylexer.cmdarg_pop();
 
@@ -3299,7 +3358,7 @@ opt_block_args_tail:
 
       f_larglist: tLPAREN2 f_args opt_bv_decl tRPAREN
                     {
-                        // @max_numparam_stack.has_ordinary_params!
+                        self.max_numparam_stack.has_ordinary_params();
                         $$ = Value::MaybeNode(
                             self.builder.args(
                                 Some($<Token>1),
@@ -3310,43 +3369,44 @@ opt_block_args_tail:
                     }
                 | f_args
                     {
-                        // if val[0].any?
-                        //     @max_numparam_stack.has_ordinary_params!
-                        // end
+                        let args = $<NodeList>1;
+                        if !args.is_empty() {
+                            self.max_numparam_stack.has_ordinary_params();
+                        }
                         $$ = Value::MaybeNode(
-                            self.builder.args(None, $<NodeList>1, None)
+                            self.builder.args(None, args, None)
                         );
                     }
                 ;
 
      lambda_body: tLAMBEG
                     {
-                        self.yylexer.p.context.push(ContextItem::Lambda);
+                        self.context.push(ContextItem::Lambda);
                     }
                   compstmt tRCURLY
                     {
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         $$ = Value::LambdaBody(( $<Token>1, $<MaybeNode>3, $<Token>4 ));
                     }
                 | kDO_LAMBDA
                     {
-                        self.yylexer.p.context.push(ContextItem::Lambda);
+                        self.context.push(ContextItem::Lambda);
                     }
                   bodystmt k_end
                     {
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         $$ = Value::LambdaBody(( $<Token>1, $<MaybeNode>3, $<Token>4 ));
                     }
                 ;
 
         do_block: k_do_block
                     {
-                        self.yylexer.p.context.push(ContextItem::Block);
+                        self.context.push(ContextItem::Block);
                     }
                   do_body k_end
                     {
                         let (args, body) = $<DoBody>3;
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
                         $$ = Value::DoBlock(( $<Token>1, args, body, $<Token>4 ));
                     }
                 ;
@@ -3554,23 +3614,23 @@ opt_block_args_tail:
 
      brace_block: tLCURLY
                     {
-                        self.yylexer.p.context.push(ContextItem::Block);
+                        self.context.push(ContextItem::Block);
                     }
                   brace_body tRCURLY
                     {
                         let (args, body) = $<BraceBody>3;
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
 
                         $$ = Value::BraceBlock(( $<Token>1, args, body, $<Token>4 ));
                     }
                 | k_do
                     {
-                        self.yylexer.p.context.push(ContextItem::Block);
+                        self.context.push(ContextItem::Block);
                     }
                   do_body k_end
                     {
                         let (args, body) = $<DoBody>3;
-                        self.yylexer.p.context.pop();
+                        self.context.pop();
 
                         $$ = Value::BraceBlock(( $<Token>1, args, body, $<Token>4 ));
                     }
@@ -3578,13 +3638,13 @@ opt_block_args_tail:
 
       brace_body:   {
                         self.static_env.extend_dynamic();
-                        // @max_numparam_stack.push
+                        self.max_numparam_stack.push();
                     }
                   opt_block_param compstmt
                     {
                         // args = @max_numparam_stack.has_numparams? ? self.builder.numargs(@max_numparam_stack.top) : val[1]
 
-                        // @max_numparam_stack.pop
+                        self.max_numparam_stack.pop();
                         self.static_env.unextend();
 
                         $$ = Value::BraceBody(( $<MaybeNode>2, $<MaybeNode>3 ));
@@ -3593,14 +3653,14 @@ opt_block_args_tail:
 
          do_body:   {
                         self.static_env.extend_dynamic();
-                        // @max_numparam_stack.push
+                        self.max_numparam_stack.push();
                         self.yylexer.cmdarg_push(false);
                     }
                   opt_block_param bodystmt
                     {
                         // args = @max_numparam_stack.has_numparams? ? self.builder.numargs(@max_numparam_stack.top) : val[2]
 
-                        // @max_numparam_stack.pop
+                        self.max_numparam_stack.pop();
                         self.static_env.unextend();
                         self.yylexer.cmdarg_pop();
 
@@ -3658,13 +3718,13 @@ opt_block_args_tail:
 
      p_case_body: kIN
                     {
-                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.set_lex_state(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.p.command_start = false;
-                        // @pattern_variables.push
-                        // @pattern_hash_keys.push
+                        self.pattern_variables.push();
+                        self.pattern_hash_keys.push();
 
                         $<Bool>$ = Value::Bool(self.yylexer.p.in_kwarg);
-                        self.yylexer.p.in_kwarg = true
+                        self.yylexer.p.in_kwarg = true;
                     }
                   p_top_expr then
                     {
@@ -3788,22 +3848,22 @@ opt_block_args_tail:
 
         p_lparen: tLPAREN2
                     {
-                        $$ = $<RAW>1;
-                        // @pattern_hash_keys.push
+                        $$ = $1;
+                        self.pattern_hash_keys.push();
                     }
                 ;
 
       p_lbracket: tLBRACK2
                     {
-                        $$ = $<RAW>1;
-                        // @pattern_hash_keys.push
+                        $$ = $1;
+                        self.pattern_hash_keys.push();
                     }
                 ;
 
     p_expr_basic: p_value
                 | p_const p_lparen p_args rparen
                     {
-                        // @pattern_hash_keys.pop
+                        self.pattern_hash_keys.pop();
                         let pattern = self.builder.array_pattern(None, $<NodeList>3, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
@@ -3816,7 +3876,7 @@ opt_block_args_tail:
                     }
                 | p_const p_lparen p_find rparen
                     {
-                        // @pattern_hash_keys.pop
+                        self.pattern_hash_keys.pop();
                         let pattern = self.builder.find_pattern(None, $<NodeList>3, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
@@ -3829,7 +3889,7 @@ opt_block_args_tail:
                     }
                 | p_const p_lparen p_kwargs rparen
                     {
-                        // @pattern_hash_keys.pop
+                        self.pattern_hash_keys.pop();
                         let pattern = self.builder.hash_pattern(None, $<NodeList>3, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
@@ -3856,7 +3916,7 @@ opt_block_args_tail:
                     }
                 | p_const p_lbracket p_args rbracket
                     {
-                        // @pattern_hash_keys.pop
+                        self.pattern_hash_keys.pop();
                         let pattern = self.builder.array_pattern(None, $<NodeList>3, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
@@ -3869,7 +3929,7 @@ opt_block_args_tail:
                     }
                 | p_const p_lbracket p_find rbracket
                     {
-                        // @pattern_hash_keys.pop
+                        self.pattern_hash_keys.pop();
                         let pattern = self.builder.find_pattern(None, $<NodeList>3, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
@@ -3882,7 +3942,7 @@ opt_block_args_tail:
                     }
                 | p_const p_lbracket p_kwargs rbracket
                     {
-                        // @pattern_hash_keys.pop
+                        self.pattern_hash_keys.pop();
                         let pattern = self.builder.hash_pattern(None, $<NodeList>3, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
@@ -3939,13 +3999,13 @@ opt_block_args_tail:
                     }
                 | tLBRACE
                     {
-                        // @pattern_hash_keys.push
+                        self.pattern_hash_keys.push();
                         $<Bool>$ = Value::Bool(self.yylexer.p.in_kwarg);
                         self.yylexer.p.in_kwarg = false;
                     }
                   p_kwargs rbrace
                     {
-                        // @pattern_hash_keys.pop
+                        self.pattern_hash_keys.pop();
                         self.yylexer.p.in_kwarg = $<Bool>2;
                         $$ = Value::Node(
                             self.builder.hash_pattern(
@@ -3967,11 +4027,11 @@ opt_block_args_tail:
                     }
                 | tLPAREN
                     {
-                        // @pattern_hash_keys.push
+                        self.pattern_hash_keys.push();
                     }
                   p_expr rparen
                     {
-                        // @pattern_hash_keys.pop
+                        self.pattern_hash_keys.pop();
                         $$ = Value::Node(
                             self.builder.begin(
                                 $<Token>1,
@@ -4268,12 +4328,11 @@ opt_block_args_tail:
                     {
                         let ident_t = $<Token>2;
 
-                        // name = val[1][0]
-                        // unless static_env.declared?(name)
-                        //     diagnostic :error, :undefined_lvar, { :name => name }, val[1]
-                        // end
+                        if !self.static_env.is_declared(&ident_t.1) {
+                            self.yyerror(&@2, &format!("{}: no such local variable", String::from_utf8_lossy(&ident_t.1)));
+                        }
 
-                        let lvar = self.builder.accessible(self.builder.lvar(ident_t.clone()));
+                        let lvar = self.builder.accessible(self.builder.lvar(ident_t));
                         $$ = Value::Node(
                             self.builder.pin($<Token>1, lvar)
                         );
@@ -4598,23 +4657,53 @@ xstring_contents: /* none */
                     }
                 | tSTRING_DVAR
                     {
-                        // TODO: push terminal
+                        let mut strterm: Option<StrTerm> = None;
+                        std::mem::swap(&mut strterm, &mut self.yylexer.p.lex.strterm);
+                        $<StrTerm>$ = Value::StrTerm(strterm);
+                        self.yylexer.set_lex_state(EXPR_BEG);
                     }
                   string_dvar
                     {
-                        $$ = $<RAW>3;
+                        self.yylexer.p.lex.strterm = $<StrTerm>2;
+                        $$ = $3;
                     }
                 | tSTRING_DBEG
                     {
-                        // TODO: push terminal
+                        self.yylexer.cmdarg_push(false);
+                        self.yylexer.cond_push(false);
+                    }
+                    {
+                        let mut strterm: Option<StrTerm> = None;
+                        std::mem::swap(&mut strterm, &mut self.yylexer.p.lex.strterm);
+                        $<StrTerm>$ = Value::StrTerm(strterm);
+                    }
+                    {
+                        $<Num>$ = Value::Num( self.yylexer.p.lex.state.get() );
+                        self.yylexer.set_lex_state(EXPR_BEG);
+                    }
+                    {
+                        $<Num>$ = Value::Num( self.yylexer.p.lex.brace_nest );
+                        self.yylexer.p.lex.brace_nest = 0;
+                    }
+                    {
+                        $<Num>$ = Value::Num( self.yylexer.p.heredoc_indent );
+                        self.yylexer.p.heredoc_indent = 0;
                     }
                   compstmt tSTRING_DEND
                     {
+                        self.yylexer.cond_pop();
+                        self.yylexer.cmdarg_pop();
+                        self.yylexer.p.lex.strterm = $<StrTerm>3;
+                        self.yylexer.set_lex_state($<Num>4);
+                        self.yylexer.p.lex.brace_nest = $<Num>5;
+                        self.yylexer.p.heredoc_indent = $<Num>6;
+                        self.yylexer.p.heredoc_line_indent = -1;
+
                         $$ = Value::Node(
                             self.builder.begin(
                                 $<Token>1,
-                                $<MaybeNode>3,
-                                $<Token>4
+                                $<MaybeNode>7,
+                                $<Token>8
                             )
                         );
                     }
@@ -4678,28 +4767,24 @@ xstring_contents: /* none */
 
   simple_numeric: tINTEGER
                     {
-                        self.yylexer.set_lex_state(EXPR_END);
                         $$ = Value::Node(
                             self.builder.integer($<Token>1)
                         );
                     }
                 | tFLOAT
                     {
-                        self.yylexer.set_lex_state(EXPR_END);
                         $$ = Value::Node(
                             self.builder.float($<Token>1)
                         );
                     }
                 | tRATIONAL
                     {
-                        self.yylexer.set_lex_state(EXPR_END);
                         $$ = Value::Node(
                             self.builder.rational($<Token>1)
                         );
                     }
                 | tIMAGINARY
                     {
-                        self.yylexer.set_lex_state(EXPR_END);
                         $$ = Value::Node(
                             self.builder.complex($<Token>1)
                         );
@@ -4827,7 +4912,8 @@ keyword_variable: kNIL
 
       superclass: tLT
                     {
-                        self.yylexer.set_lex_state(EXPR_VALUE);
+                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.p.command_start = true;
                     }
                   expr_value term
                     {
@@ -4847,7 +4933,8 @@ keyword_variable: kNIL
                             self.builder.args(Some($<Token>1), $<NodeList>2, Some($<Token>3))
                         );
 
-                        self.yylexer.set_lex_state(EXPR_VALUE);
+                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.p.command_start = true;
                     }
                 | tLPAREN2 f_arg tCOMMA args_forward rparen
                     {
@@ -4862,7 +4949,10 @@ keyword_variable: kNIL
                                 Some($<Token>5)
                             )
                         );
+
                         self.static_env.declare_forward_args();
+                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.p.command_start = true;
                     }
                 | tLPAREN2 args_forward rparen
                     {
@@ -4871,8 +4961,10 @@ keyword_variable: kNIL
                                 self.builder.forward_only_args($<Token>1, $<Token>2, $<Token>3)
                             )
                         );
+
                         self.static_env.declare_forward_args();
-                        self.yylexer.set_lex_state(EXPR_VALUE);
+                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.p.command_start = true;
                     }
                 ;
 
@@ -4880,6 +4972,7 @@ keyword_variable: kNIL
                 |    {
                         $<Bool>$ = Value::Bool(self.yylexer.p.in_kwarg);
                         self.yylexer.p.in_kwarg = true;
+                        self.yylexer.set_lex_state(self.yylexer.p.lex.state.get()|EXPR_LABEL);
                     }
                   f_args term
                     {
@@ -4887,6 +4980,8 @@ keyword_variable: kNIL
                         $$ = Value::MaybeNode(
                             self.builder.args(None, $<NodeList>2, None)
                         );
+                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.p.command_start = true;
                     }
                 ;
 
@@ -5002,22 +5097,22 @@ keyword_variable: kNIL
 
        f_bad_arg: tCONSTANT
                     {
-                        // diagnostic :error, :argument_const, None, val[0]
+                        self.yyerror(&@1, "formal argument cannot be a constant");
                         $$ = $<RAW>1;
                     }
                 | tIVAR
                     {
-                        // diagnostic :error, :argument_const, None, val[0]
+                        self.yyerror(&@1, "formal argument cannot be an instance variable");
                         $$ = $<RAW>1;
                     }
                 | tGVAR
                     {
-                        // diagnostic :error, :argument_const, None, val[0]
+                        self.yyerror(&@1, "formal argument cannot be a global variable");
                         $$ = $<RAW>1;
                     }
                 | tCVAR
                     {
-                        // diagnostic :error, :argument_const, None, val[0]
+                        self.yyerror(&@1, "formal argument cannot be a class variable");
                         $$ = $<RAW>1;
                     }
                 ;
@@ -5027,21 +5122,23 @@ keyword_variable: kNIL
                     {
                         let ident_t = $<Borrow:Token>1;
                         self.static_env.declare(&ident_t.1);
-                        // @max_numparam_stack.has_ordinary_params!
+                        self.max_numparam_stack.has_ordinary_params();
                         $$ = $<RAW>1;
                     }
                 ;
 
       f_arg_asgn: f_norm_arg
                     {
-                        // @current_arg_stack.set(val[0][0])
-                        $$ = $<RAW>1;
+                        let arg_t = $<Token>1;
+                        let arg_name = value(&arg_t);
+                        self.current_arg_stack.set(Some(arg_name));
+                        $$ = Value::Token(arg_t);
                     }
                 ;
 
       f_arg_item: f_arg_asgn
                     {
-                        // @current_arg_stack.set(0)
+                        self.current_arg_stack.set(None);
                         $$ = Value::Node(
                             self.builder.arg($<Token>1)
                         );
@@ -5073,16 +5170,19 @@ keyword_variable: kNIL
 
          f_label: tLABEL
                     {
-                        let ident_t = $<Borrow:Token>1;
-                        // check_kwarg_name(val[0])
+                        let ident_t = $<Token>1;
+                        if let Err(e) = self.check_kwarg_name(&ident_t) {
+                            self.yyerror(&@1, &e);
+                        }
 
                         self.static_env.declare(&ident_t.1);
 
-                        // @max_numparam_stack.has_ordinary_params!
+                        self.max_numparam_stack.has_ordinary_params();
 
-                        // @current_arg_stack.set(val[0][0])
+                        let ident = value(&ident_t);
+                        self.current_arg_stack.set(Some(ident));
 
-                        $$ = $<RAW>1;
+                        $$ = Value::Token(ident_t);
                     }
                 ;
 
@@ -5177,7 +5277,7 @@ keyword_variable: kNIL
 
            f_opt: f_arg_asgn tEQL arg_value
                     {
-                        // @current_arg_stack.set(0)
+                        self.current_arg_stack.set(None);
                         $$ = Value::Node(
                             self.builder.optarg(
                                 $<Token>1,
@@ -5190,7 +5290,7 @@ keyword_variable: kNIL
 
      f_block_opt: f_arg_asgn tEQL primary_value
                     {
-                        // @current_arg_stack.set(0)
+                        self.current_arg_stack.set(None);
                         $$ = Value::Node(
                             self.builder.optarg(
                                 $<Token>1,
@@ -5275,9 +5375,9 @@ keyword_variable: kNIL
                 ;
 
        singleton: var_ref
-                | tLPAREN2 expr rparen
+                | tLPAREN2 { self.yylexer.set_lex_state(EXPR_BEG); } expr rparen
                     {
-                        $$ = $2;
+                        $$ = $3;
                     }
                 ;
 
@@ -5421,7 +5521,7 @@ keyword_variable: kNIL
 
 use crate::Node;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub enum Value {
     Stolen,
     None,
@@ -5430,6 +5530,8 @@ pub enum Value {
     Node(Node),
     NodeList(Vec<Node>),
     Bool(bool),
+    StrTerm(Option<StrTerm>),
+    Num(i32),
 
     /* For custom superclass rule */
     Superclass(Option<(Token, Node)>),
@@ -5534,6 +5636,12 @@ impl std::fmt::Debug for Value {
             Value::Bool(value) => {
                 f.write_fmt(format_args!("Bool({:?})", value))
             },
+            Value::StrTerm(value) => {
+                f.write_fmt(format_args!("StrTerm({:?})", value))
+            },
+            Value::Num(value) => {
+                f.write_fmt(format_args!("Num({:?})", value))
+            },
             Value::Superclass(data) => {
                 f.write_fmt(format_args!("Superclass({:?})", data))
             },
@@ -5619,11 +5727,11 @@ impl Parser {
 
 impl Lexer {
     fn report_syntax_error(&self, ctx: &Context) {
-        if self.debug { eprintln!("{:#?}", ctx) }
+        if self.debug { eprintln!("syntax error: {:?}", ctx) }
     }
 
     fn yyerror(&mut self, loc: &Loc, msg: &str) {
-        if self.debug { eprintln!("{:#?} {:#?}", loc, msg) }
+        if self.debug { eprintln!("yyerror: {:?} {:?}", loc, msg) }
     }
 }
 
@@ -5642,6 +5750,9 @@ impl Parser {
         let static_env = lexer.p.static_env.clone();
         let context = lexer.p.context.clone();
         let current_arg_stack = CurrentArgStack::new();
+        let max_numparam_stack = MaxNumparamStack::new();
+        let pattern_variables = VariablesStack::new();
+        let pattern_hash_keys = VariablesStack::new();
 
         Self {
             yy_error_verbose: true,
@@ -5649,15 +5760,45 @@ impl Parser {
             yydebug: 0,
             yyerrstatus_: 0,
             result: None,
-            builder: Builder::new(static_env.clone(), context.clone(), current_arg_stack.clone()),
-            current_arg_stack: current_arg_stack,
-            static_env: static_env,
+            builder: Builder::new(
+                static_env.clone(),
+                context.clone(),
+                current_arg_stack.clone(),
+                max_numparam_stack.clone()
+            ),
+            context,
+            current_arg_stack,
+            max_numparam_stack,
+            pattern_variables,
+            pattern_hash_keys,
+            static_env,
             yylexer: lexer,
+            last_token: (0, vec![], Loc { begin: 0, end: 0 }),
         }
     }
 
     pub fn set_debug(&mut self, debug: bool) {
         self.yydebug = if debug { 1 } else { 0 };
         self.yylexer.debug = debug;
+    }
+
+    pub fn warn(&self, loc: &Loc, message: &str) {
+        eprintln!("warn: {:?} {:?}", loc, message)
+    }
+
+    fn next_token(&mut self) -> Token {
+        let token = self.yylexer.yylex();
+        self.last_token = token.clone();
+        token
+    }
+
+    fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), String> {
+        let name = String::from_utf8_lossy(&ident_t.1);
+        let first_char = name.chars().nth(0).unwrap();
+        if first_char.is_lowercase() {
+            Ok(())
+        } else {
+            Err("formal argument cannot be a constant".to_owned())
+        }
     }
 }

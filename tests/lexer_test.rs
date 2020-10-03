@@ -73,7 +73,7 @@ fn token_name(token: &Token) -> String {
     Lexer::TOKEN_NAMES[id_usize - first_token + 1].to_owned()
 }
 
-fn lex_state(state: &str) -> usize {
+fn lex_state(state: &str) -> i32 {
     match state {
         "expr_arg" => EXPR_ARG,
         "expr_beg" => EXPR_BEG,

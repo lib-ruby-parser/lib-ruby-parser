@@ -1,5 +1,6 @@
 use crate::source::Range;
 use crate::source::map::*;
+use crate::Loc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {
@@ -794,6 +795,8 @@ impl Node {
                 result.push_nodes(in_bodies);
                 if let Some(else_body) = else_body {
                     result.push_node(else_body);
+                } else {
+                    result.push_nil()
                 }
             }
             Node::InMatch { lhs, rhs, .. } => {
@@ -851,6 +854,17 @@ impl Node {
         }
 
         result.strings()
+    }
+
+    pub fn empty_begin(loc: &Loc) -> Self {
+        Node::Begin {
+            statements: vec![],
+            loc: CollectionMap {
+                begin: None,
+                end: None,
+                expression: Range::new(loc.begin, loc.end)
+            }
+        }
     }
 }
 

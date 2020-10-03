@@ -1,6 +1,6 @@
 #[derive(Clone)]
 pub struct LexState {
-    value: usize
+    value: i32
 }
 
 impl LexState {
@@ -8,20 +8,24 @@ impl LexState {
         Self { value: lex_states::EXPR_BEG }
     }
 
-    pub fn is(&self, value: usize) -> bool {
+    pub fn is(&self, value: i32) -> bool {
         self.value == value
     }
 
-    pub fn is_some(&self, states: usize) -> bool {
+    pub fn is_some(&self, states: i32) -> bool {
         (self.value & states) != 0
     }
 
-    pub fn is_all(&self, states: usize) -> bool {
+    pub fn is_all(&self, states: i32) -> bool {
         (self.value & states) == states
     }
 
-    pub fn set(&mut self, value: usize) {
+    pub fn set(&mut self, value: i32) {
         self.value = value
+    }
+
+    pub fn get(&self) -> i32 {
+        self.value
     }
 }
 
@@ -32,24 +36,24 @@ impl Default for LexState {
 }
 
 pub mod lex_states {
-    pub const EXPR_BEG: usize = 1 << 0;
-    pub const EXPR_END: usize = 1 << 1;
-    pub const EXPR_ENDARG: usize = 1 << 2;
-    pub const EXPR_ENDFN: usize = 1 << 3;
-    pub const EXPR_ARG: usize = 1 << 4;
-    pub const EXPR_CMDARG: usize = 1 << 5;
-    pub const EXPR_MID: usize = 1 << 6;
-    pub const EXPR_FNAME: usize = 1 << 7;
-    pub const EXPR_DOT: usize = 1 << 8;
-    pub const EXPR_CLASS: usize = 1 << 9;
-    pub const EXPR_LABEL: usize = 1 << 10;
-    pub const EXPR_LABELED: usize = 1 << 11;
-    pub const EXPR_FITEM: usize = 1 << 12;
-    pub const EXPR_VALUE: usize = EXPR_BEG;
-    pub const EXPR_BEG_ANY: usize = EXPR_BEG | EXPR_MID | EXPR_CLASS;
-    pub const EXPR_ARG_ANY: usize = EXPR_ARG | EXPR_CMDARG;
-    pub const EXPR_END_ANY: usize = EXPR_END | EXPR_ENDARG | EXPR_ENDFN;
-    pub const EXPR_NONE: usize = 0;
+    pub const EXPR_BEG: i32 = 1 << 0;
+    pub const EXPR_END: i32 = 1 << 1;
+    pub const EXPR_ENDARG: i32 = 1 << 2;
+    pub const EXPR_ENDFN: i32 = 1 << 3;
+    pub const EXPR_ARG: i32 = 1 << 4;
+    pub const EXPR_CMDARG: i32 = 1 << 5;
+    pub const EXPR_MID: i32 = 1 << 6;
+    pub const EXPR_FNAME: i32 = 1 << 7;
+    pub const EXPR_DOT: i32 = 1 << 8;
+    pub const EXPR_CLASS: i32 = 1 << 9;
+    pub const EXPR_LABEL: i32 = 1 << 10;
+    pub const EXPR_LABELED: i32 = 1 << 11;
+    pub const EXPR_FITEM: i32 = 1 << 12;
+    pub const EXPR_VALUE: i32 = EXPR_BEG;
+    pub const EXPR_BEG_ANY: i32 = EXPR_BEG | EXPR_MID | EXPR_CLASS;
+    pub const EXPR_ARG_ANY: i32 = EXPR_ARG | EXPR_CMDARG;
+    pub const EXPR_END_ANY: i32 = EXPR_END | EXPR_ENDARG | EXPR_ENDFN;
+    pub const EXPR_NONE: i32 = 0;
 }
 
 impl std::fmt::Debug for LexState {
