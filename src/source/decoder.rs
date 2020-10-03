@@ -1,5 +1,4 @@
 use regex::Regex;
-use encoding::Encoding;
 use std::fmt;
 use std::error::Error;
 
@@ -92,7 +91,7 @@ fn decode(input: &Vec<u8>, enc: &str) -> Result<String, InputError> {
     }
 }
 
-pub fn decode_input(input: &Vec<u8>, mut enc: Option<String>) -> Result<(String, String), InputError> {
+pub fn decode_input(input: &Vec<u8>, enc: Option<String>) -> Result<(String, String), InputError> {
     match enc {
         Some(enc) => return Ok(( decode(input, &enc)?, enc )),
         _ => {}

@@ -121,7 +121,6 @@ impl Lexer {
         }
 
         while len > 0 {
-            let mut mc_idx = 0;
             let n;
 
             loop {
@@ -225,7 +224,7 @@ impl Lexer {
             for known in MAGIC_COMMENTS.iter() {
                 if &&name == known {
                     // TODO: emit magic comment
-                    println!("magic comment {:#?}", name);
+                    println!("magic comment {:#?} {:#?}", name, self.buffer.substr_at(vbeg, vend).unwrap());
                 }
             }
         };

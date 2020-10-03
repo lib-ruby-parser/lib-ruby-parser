@@ -22,7 +22,7 @@ fn main() {
             _ => print_usage()
         };
 
-        let mut lexer = Lexer::new(&source, None).unwrap();
+    let lexer = Lexer::new(&source, None).unwrap();
     let mut parser = Parser::new(lexer);
     parser.set_debug(true);
 

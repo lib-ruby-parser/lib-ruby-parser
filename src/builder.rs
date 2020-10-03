@@ -1816,7 +1816,7 @@ impl Builder {
                     loc
                 }
             },
-            Node::Irange { left, right, loc } => {
+            Node::Erange { left, right, loc } => {
                 Node::EFlipFlop {
                     left: left.map(|node| Box::new(self.check_condition(*node))),
                     right: right.map(|node| Box::new(self.check_condition(*node))),
