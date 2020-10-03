@@ -1789,14 +1789,39 @@ impl Builder {
     //
 
     pub fn check_condition(&self, cond: Node) -> Node {
-        match &cond {
-            Node::Begin { statements, loc } => {
-                if statements.len() == 1 {
-                    let stmt = statements[statements.len() - 1].clone();
-                    let stmt = self.check_condition(stmt);
-                    return Node::Begin { statements: vec![stmt], loc: loc.clone() }
+        match cond {
+            Node::Begin { statements, loc } if statements.len() == 1 => {
+                let stmt = statements[statements.len() - 1].clone();
+                let stmt = self.check_condition(stmt);
+                Node::Begin { statements: vec![stmt], loc: loc.clone() }
+            },
+            Node::And { lhs, rhs, loc } => {
+                Node::And {
+                    lhs: Box::new(self.check_condition(*lhs)),
+                    rhs: Box::new(self.check_condition(*rhs)),
+                    loc
                 }
-                cond
+            },
+            Node::Or { lhs, rhs, loc } => {
+                Node::Or {
+                    lhs: Box::new(self.check_condition(*lhs)),
+                    rhs: Box::new(self.check_condition(*rhs)),
+                    loc
+                }
+            },
+            Node::Irange { left, right, loc } => {
+                Node::IFlipFlop {
+                    left: left.map(|node| Box::new(self.check_condition(*node))),
+                    right: right.map(|node| Box::new(self.check_condition(*node))),
+                    loc
+                }
+            },
+            Node::Irange { left, right, loc } => {
+                Node::EFlipFlop {
+                    left: left.map(|node| Box::new(self.check_condition(*node))),
+                    right: right.map(|node| Box::new(self.check_condition(*node))),
+                    loc
+                }
             },
             // FIXME:
             // Node::And { lhs, rhs, .. }

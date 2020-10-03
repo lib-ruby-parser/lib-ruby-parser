@@ -150,6 +150,8 @@ pub enum Node {
     MatchAlt { left: Box<Node>, right: Box<Node>, loc: OperatorMap },
     MatchAs { value: Box<Node>, as_: Box<Node>, loc: OperatorMap },
     MatchNilPattern { loc: VariableMap },
+    IFlipFlop { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap },
+    EFlipFlop { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap },
 }
 
 impl Node {
@@ -272,6 +274,8 @@ impl Node {
             Self::MatchAlt { loc, .. } => &loc.expression,
             Self::MatchAs { loc, .. } => &loc.expression,
             Self::MatchNilPattern { loc, .. } => &loc.expression,
+            Self::IFlipFlop { loc, .. } => &loc.expression,
+            Self::EFlipFlop { loc, .. } => &loc.expression,
         }
     }
 
@@ -407,6 +411,8 @@ impl Node {
             Node::MatchAlt { .. } => "match_alt",
             Node::MatchAs { .. } => "match_as",
             Node::MatchNilPattern { .. } => "match_nil_pattern",
+            Node::IFlipFlop { .. } => "iflipflop",
+            Node::EFlipFlop { .. } => "eflipflip",
         }
     }
 
@@ -690,7 +696,9 @@ impl Node {
                 result.push_node(value);
             },
             Node::Irange { left, right, .. }
-            | Node::Erange { left, right, .. } => {
+            | Node::Erange { left, right, .. }
+            | Node::IFlipFlop { left, right, .. }
+            | Node::EFlipFlop { left, right, .. }  => {
                 if let Some(left) = left {
                     result.push_node(left);
                 } else {
