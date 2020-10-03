@@ -2,9 +2,9 @@ use crate::Buffer;
 
 #[derive(Clone)]
 pub struct FileLoc {
-    filename: String,
-    line: usize,
-    col: usize
+    pub filename: String,
+    pub line: usize,
+    pub col: usize
 }
 
 impl std::fmt::Debug for FileLoc {

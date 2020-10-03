@@ -1,4 +1,6 @@
 use std::convert::TryInto;
+use crate::Buffer;
+use crate::source::FileLoc;
 
 #[derive(Clone, PartialEq)]
 pub struct Range {
@@ -82,6 +84,13 @@ impl Range {
 
     pub fn cmp(&self, _other: &Self) -> i8 {
         unimplemented!()
+    }
+
+    pub fn to_locs(&self, buffer: &Buffer) -> Option<(FileLoc, FileLoc)> {
+        let begin_loc = FileLoc::from_pos(self.begin_pos, &buffer)?;
+        let end_loc   = FileLoc::from_pos(self.end_pos, &buffer)?;
+
+        Some((begin_loc, end_loc))
     }
 }
 

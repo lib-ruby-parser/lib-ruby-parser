@@ -340,10 +340,10 @@ impl Buffer {
 
     pub fn line_col_for_pos(&self, mut pos: usize) -> Option<(usize, usize)> {
         for (lineno, line) in self.lines.iter().enumerate() {
-            if pos < line.len() {
+            if pos > line.len() {
                 pos -= line.len()
             } else {
-                return Some(( lineno, pos ))
+                return Some(( lineno + 1, pos ))
             }
         }
 
