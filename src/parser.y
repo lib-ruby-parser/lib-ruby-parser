@@ -843,16 +843,16 @@
                 | arg kIN
                     {
                         self.yylexer.set_lex_state(EXPR_BEG|EXPR_LABEL);
-                        self.yylexer.p.command_start = true;
+                        self.yylexer.command_start = true;
                         self.pattern_variables.push();
 
-                        $<Bool>$ = Value::Bool(self.yylexer.p.in_kwarg);
-                        self.yylexer.p.in_kwarg = true;
+                        $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
+                        self.yylexer.in_kwarg = true;
                     }
                   p_expr
                     {
                         self.pattern_variables.pop();
-                        self.yylexer.p.in_kwarg = $<Bool>3;
+                        self.yylexer.in_kwarg = $<Bool>3;
 
                         $$ = Value::Node(
                             self.builder.in_match(
@@ -3248,7 +3248,7 @@ opt_block_args_tail:
                     }
                 | block_param_def
                     {
-                        self.yylexer.p.command_start = true;
+                        self.yylexer.command_start = true;
                         $$ = $1;
                     }
                 ;
@@ -3323,8 +3323,8 @@ opt_block_args_tail:
                         self.static_env.extend_dynamic();
                         self.max_numparam_stack.push();
                         self.context.push(ContextItem::Lambda);
-                        $<Num>$ = Value::Num(self.yylexer.p.lex.lpar_beg);
-                        self.yylexer.p.lex.lpar_beg = self.yylexer.p.lex.paren_nest;
+                        $<Num>$ = Value::Num(self.yylexer.lpar_beg);
+                        self.yylexer.lpar_beg = self.yylexer.paren_nest;
                     }
                   f_larglist
                     {
@@ -3333,7 +3333,7 @@ opt_block_args_tail:
                     }
                   lambda_body
                     {
-                        self.yylexer.p.lex.lpar_beg = $<Num>2;
+                        self.yylexer.lpar_beg = $<Num>2;
 
                         let lambda_call = self.builder.call_lambda($<Token>1);
                         // args = @max_numparam_stack.has_numparams? ? self.builder.numargs(@max_numparam_stack.top) : val[2]
@@ -3719,16 +3719,16 @@ opt_block_args_tail:
      p_case_body: kIN
                     {
                         self.yylexer.set_lex_state(EXPR_BEG|EXPR_LABEL);
-                        self.yylexer.p.command_start = false;
+                        self.yylexer.command_start = false;
                         self.pattern_variables.push();
                         self.pattern_hash_keys.push();
 
-                        $<Bool>$ = Value::Bool(self.yylexer.p.in_kwarg);
-                        self.yylexer.p.in_kwarg = true;
+                        $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
+                        self.yylexer.in_kwarg = true;
                     }
                   p_top_expr then
                     {
-                        self.yylexer.p.in_kwarg = $<Bool>2;
+                        self.yylexer.in_kwarg = $<Bool>2;
                     }
                   compstmt
                   p_cases
@@ -4000,13 +4000,13 @@ opt_block_args_tail:
                 | tLBRACE
                     {
                         self.pattern_hash_keys.push();
-                        $<Bool>$ = Value::Bool(self.yylexer.p.in_kwarg);
-                        self.yylexer.p.in_kwarg = false;
+                        $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
+                        self.yylexer.in_kwarg = false;
                     }
                   p_kwargs rbrace
                     {
                         self.pattern_hash_keys.pop();
-                        self.yylexer.p.in_kwarg = $<Bool>2;
+                        self.yylexer.in_kwarg = $<Bool>2;
                         $$ = Value::Node(
                             self.builder.hash_pattern(
                                 Some($<Token>1),
@@ -4470,7 +4470,7 @@ opt_block_args_tail:
                     {
                         let string = self.builder.string_compose(Some($<Token>1), $<NodeList>2, Some($<Token>3));
                         $$ = Value::Node(
-                            self.builder.dedent_string(string, self.yylexer.p.heredoc_indent)
+                            self.builder.dedent_string(string, self.yylexer.buffer.heredoc_indent)
                         );
                     }
                 ;
@@ -4479,7 +4479,7 @@ opt_block_args_tail:
                     {
                         let string = self.builder.xstring_compose($<Token>1, $<NodeList>2, $<Token>3);
                         $$ = Value::Node(
-                            self.builder.dedent_string(string, self.yylexer.p.heredoc_indent)
+                            self.builder.dedent_string(string, self.yylexer.buffer.heredoc_indent)
                         );
                     }
                 ;
@@ -4658,13 +4658,13 @@ xstring_contents: /* none */
                 | tSTRING_DVAR
                     {
                         let mut strterm: Option<StrTerm> = None;
-                        std::mem::swap(&mut strterm, &mut self.yylexer.p.lex.strterm);
+                        std::mem::swap(&mut strterm, &mut self.yylexer.strterm);
                         $<StrTerm>$ = Value::StrTerm(strterm);
                         self.yylexer.set_lex_state(EXPR_BEG);
                     }
                   string_dvar
                     {
-                        self.yylexer.p.lex.strterm = $<StrTerm>2;
+                        self.yylexer.strterm = $<StrTerm>2;
                         $$ = $3;
                     }
                 | tSTRING_DBEG
@@ -4674,30 +4674,30 @@ xstring_contents: /* none */
                     }
                     {
                         let mut strterm: Option<StrTerm> = None;
-                        std::mem::swap(&mut strterm, &mut self.yylexer.p.lex.strterm);
+                        std::mem::swap(&mut strterm, &mut self.yylexer.strterm);
                         $<StrTerm>$ = Value::StrTerm(strterm);
                     }
                     {
-                        $<Num>$ = Value::Num( self.yylexer.p.lex.state.get() );
+                        $<Num>$ = Value::Num( self.yylexer.state.get() );
                         self.yylexer.set_lex_state(EXPR_BEG);
                     }
                     {
-                        $<Num>$ = Value::Num( self.yylexer.p.lex.brace_nest );
-                        self.yylexer.p.lex.brace_nest = 0;
+                        $<Num>$ = Value::Num( self.yylexer.brace_nest );
+                        self.yylexer.brace_nest = 0;
                     }
                     {
-                        $<Num>$ = Value::Num( self.yylexer.p.heredoc_indent );
-                        self.yylexer.p.heredoc_indent = 0;
+                        $<Num>$ = Value::Num( self.yylexer.buffer.heredoc_indent );
+                        self.yylexer.buffer.heredoc_indent = 0;
                     }
                   compstmt tSTRING_DEND
                     {
                         self.yylexer.cond_pop();
                         self.yylexer.cmdarg_pop();
-                        self.yylexer.p.lex.strterm = $<StrTerm>3;
+                        self.yylexer.strterm = $<StrTerm>3;
                         self.yylexer.set_lex_state($<Num>4);
-                        self.yylexer.p.lex.brace_nest = $<Num>5;
-                        self.yylexer.p.heredoc_indent = $<Num>6;
-                        self.yylexer.p.heredoc_line_indent = -1;
+                        self.yylexer.brace_nest = $<Num>5;
+                        self.yylexer.buffer.heredoc_indent = $<Num>6;
+                        self.yylexer.buffer.heredoc_line_indent = -1;
 
                         $$ = Value::Node(
                             self.builder.begin(
@@ -4913,7 +4913,7 @@ keyword_variable: kNIL
       superclass: tLT
                     {
                         self.yylexer.set_lex_state(EXPR_BEG);
-                        self.yylexer.p.command_start = true;
+                        self.yylexer.command_start = true;
                     }
                   expr_value term
                     {
@@ -4934,7 +4934,7 @@ keyword_variable: kNIL
                         );
 
                         self.yylexer.set_lex_state(EXPR_BEG);
-                        self.yylexer.p.command_start = true;
+                        self.yylexer.command_start = true;
                     }
                 | tLPAREN2 f_arg tCOMMA args_forward rparen
                     {
@@ -4952,7 +4952,7 @@ keyword_variable: kNIL
 
                         self.static_env.declare_forward_args();
                         self.yylexer.set_lex_state(EXPR_BEG);
-                        self.yylexer.p.command_start = true;
+                        self.yylexer.command_start = true;
                     }
                 | tLPAREN2 args_forward rparen
                     {
@@ -4964,24 +4964,24 @@ keyword_variable: kNIL
 
                         self.static_env.declare_forward_args();
                         self.yylexer.set_lex_state(EXPR_BEG);
-                        self.yylexer.p.command_start = true;
+                        self.yylexer.command_start = true;
                     }
                 ;
 
        f_arglist: f_paren_args
                 |    {
-                        $<Bool>$ = Value::Bool(self.yylexer.p.in_kwarg);
-                        self.yylexer.p.in_kwarg = true;
-                        self.yylexer.set_lex_state(self.yylexer.p.lex.state.get()|EXPR_LABEL);
+                        $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
+                        self.yylexer.in_kwarg = true;
+                        self.yylexer.set_lex_state(self.yylexer.state.get()|EXPR_LABEL);
                     }
                   f_args term
                     {
-                        self.yylexer.p.in_kwarg = $<Bool>1;
+                        self.yylexer.in_kwarg = $<Bool>1;
                         $$ = Value::MaybeNode(
                             self.builder.args(None, $<NodeList>2, None)
                         );
                         self.yylexer.set_lex_state(EXPR_BEG);
-                        self.yylexer.p.command_start = true;
+                        self.yylexer.command_start = true;
                     }
                 ;
 
@@ -5747,8 +5747,8 @@ impl Lexer {
 
 impl Parser {
     pub fn new(lexer: Lexer) -> Self {
-        let static_env = lexer.p.static_env.clone();
-        let context = lexer.p.context.clone();
+        let static_env = lexer.static_env.clone();
+        let context = lexer.context.clone();
         let current_arg_stack = CurrentArgStack::new();
         let max_numparam_stack = MaxNumparamStack::new();
         let pattern_variables = VariablesStack::new();
@@ -5779,7 +5779,7 @@ impl Parser {
 
     pub fn set_debug(&mut self, debug: bool) {
         self.yydebug = if debug { 1 } else { 0 };
-        self.yylexer.debug = debug;
+        self.yylexer.set_debug(debug);
     }
 
     pub fn warn(&self, loc: &Loc, message: &str) {

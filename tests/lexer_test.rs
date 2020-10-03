@@ -94,7 +94,7 @@ fn test(fixture_path: &str) -> TestResult {
         let test_case = TestCase::new(fixture_path);
         let mut lexer = Lexer::new(&test_case.input.as_bytes().to_vec());
         for var in test_case.vars {
-            lexer.p.static_env.declare(&var.as_bytes().to_vec());
+            lexer.static_env.declare(&var.as_bytes().to_vec());
         }
         if let Some(state) = test_case.state {
             lexer.set_lex_state(lex_state(&state));

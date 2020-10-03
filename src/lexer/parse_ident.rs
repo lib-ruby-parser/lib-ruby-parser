@@ -6,7 +6,7 @@ use crate::lexer::reserved_word;
 
 impl Lexer {
     pub fn parser_is_identchar(&self) -> bool {
-        !self.p.eofp && self.is_identchar(self.p.lex.pcur - 1, self.p.lex.pend)
+        !self.buffer.eofp && self.is_identchar(self.buffer.pcur - 1, self.buffer.pend)
     }
 
     pub fn tokenize_ident(&mut self, _last_state: &LexState) -> Vec<u8> {
@@ -29,7 +29,7 @@ impl Lexer {
     pub fn parse_ident(&mut self, c: &LexChar, cmd_state: bool) -> i32 {
         let mut c = c.clone();
         let mut result: i32;
-        let last_state: LexState = self.p.lex.state.clone();
+        let last_state: LexState = self.state.clone();
         let ident: Vec<u8>;
 
         loop {
@@ -40,16 +40,16 @@ impl Lexer {
             if !self.parser_is_identchar() { break }
         }
 
-        if (c == b'!' || c == b'?') && !self.peek(b'=') {
+        if (c == b'!' || c == b'?') && !self.buffer.peek(b'=') {
             result = Self::tFID;
             self.tokadd(&c);
         } else if c == b'=' && self.is_lex_state_some(EXPR_FNAME) &&
-                (!self.peek(b'~') && !self.peek(b'>') && (!self.peek(b'=') || (self.peek_n(b'>', 1)))) {
+                (!self.buffer.peek(b'~') && !self.buffer.peek(b'>') && (!self.buffer.peek(b'=') || (self.buffer.peek_n(b'>', 1)))) {
             result = Self::tIDENTIFIER;
             self.tokadd(&c)
         } else {
             result = Self::tCONSTANT; /* assume provisionally */
-            self.pushback(&c)
+            self.buffer.pushback(&c)
         }
         self.tokfix();
 
@@ -63,7 +63,7 @@ impl Lexer {
         }
         if /* mb == ENC_CODERANGE_7BIT && */ !self.is_lex_state_some(EXPR_DOT) {
             if let Some(kw) = reserved_word(&self.tok()) {
-                let state: LexState = self.p.lex.state.clone();
+                let state: LexState = self.state.clone();
                 if state.is_some(EXPR_FNAME) {
                     self.set_lex_state(EXPR_ENDFN);
                     self.set_yyval_name(self.tok());
@@ -71,11 +71,11 @@ impl Lexer {
                 }
                 self.set_lex_state(kw.state);
                 if self.is_lex_state_some(EXPR_BEG) {
-                    self.p.command_start = true
+                    self.command_start = true
                 }
                 if kw.id == Self::kDO {
                     if self.is_lambda_beginning() {
-                        self.p.lex.lpar_beg = -1; /* make lambda_beginning_p() == FALSE in the body of "-> do ... end" */
+                        self.lpar_beg = -1; /* make lambda_beginning_p() == FALSE in the body of "-> do ... end" */
                         return Self::kDO_LAMBDA
                     }
                     if self.is_cond_active() { return Self::kDO_COND }
@@ -101,7 +101,7 @@ impl Lexer {
             } else {
                 self.set_lex_state(EXPR_ARG);
             }
-        } else if self.p.lex.state.is(EXPR_FNAME) {
+        } else if self.state.is(EXPR_FNAME) {
             self.set_lex_state(EXPR_ENDFN)
         } else {
             self.set_lex_state(EXPR_END)

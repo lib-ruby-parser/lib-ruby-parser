@@ -43,7 +43,7 @@ impl Lexer {
                         if c.is_eof() { break }
                     }
                 }
-                self.pushback(&c);
+                self.buffer.pushback(&c);
                 self.tokfix();
                 if self.toklen() == start {
                     return self.no_digits();
@@ -71,7 +71,7 @@ impl Lexer {
                         if c.is_eof() { break }
                     }
                 }
-                self.pushback(&c);
+                self.buffer.pushback(&c);
                 self.tokfix();
                 if self.toklen() == start {
                     return self.no_digits();
@@ -99,7 +99,7 @@ impl Lexer {
                         if c.is_eof() { break }
                     }
                 }
-                self.pushback(&c);
+                self.buffer.pushback(&c);
                 self.tokfix();
                 if self.toklen() == start {
                     return self.no_digits();
@@ -133,7 +133,7 @@ impl Lexer {
             } else if c == b'.' || c == b'e' || c == b'E' {
                 self.tokadd(&LexChar::Some(b'0'));
             } else {
-                self.pushback(&c);
+                self.buffer.pushback(&c);
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
                 return self.set_integer_literal("0".to_owned().into_bytes(), suffix);
             }
@@ -162,7 +162,7 @@ impl Lexer {
                     } else {
                         let c0 = self.nextc();
                         if c.is_eof() || !c0.is_digit() {
-                            self.pushback(&c0);
+                            self.buffer.pushback(&c0);
                             return self.decode_num(c, nondigit, is_float, seen_e, seen_point);
                         }
                         c = c0;
@@ -177,7 +177,7 @@ impl Lexer {
                 LexChar::Some(b'e') |
                 LexChar::Some(b'E') => {
                     if let Some(nondigit_value) = &nondigit {
-                        self.pushback(&c);
+                        self.buffer.pushback(&c);
                         c = nondigit_value.clone();
                         return self.decode_num(c, nondigit, is_float, seen_e, seen_point);
                     }
@@ -187,7 +187,7 @@ impl Lexer {
                     nondigit = Some(c.clone());
                     c = self.nextc();
                     if c != b'-' && c != b'+' && !c.is_digit() {
-                        self.pushback(&c);
+                        self.buffer.pushback(&c);
                         nondigit = None;
                         return self.decode_num(c, nondigit, is_float, seen_e, seen_point);
                     }
@@ -227,14 +227,14 @@ impl Lexer {
         }
 
         if self.toklen() > start {
-            self.pushback(&c);
+            self.buffer.pushback(&c);
             self.tokfix();
             if nondigit.is_some() { return Some(self.trailing_uc(&nondigit)) }
             let suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
             return Some(self.set_integer_literal([ "0".to_owned().into_bytes(), self.tok() ].concat(), suffix));
         }
         if nondigit.is_some() {
-            self.pushback(&c);
+            self.buffer.pushback(&c);
             return Some(self.trailing_uc(&nondigit));
         }
 
@@ -247,13 +247,13 @@ impl Lexer {
     }
 
     fn trailing_uc(&mut self, _nondigit: &Option<LexChar>) -> i32 {
-        self.literal_flush(self.p.lex.pcur - 1);
+        self.literal_flush(self.buffer.pcur - 1);
         // FIXME: compile_error(p, "trailing `%c' in number", nondigit);
         Self::END_OF_INPUT // (format!("trailing `{}' in number", nondigit.clone().unwrap().unwrap()))
     }
 
     fn decode_num(&mut self, c: LexChar, nondigit: Option<LexChar>, is_float: bool, seen_e: bool, seen_point: Option<usize>) -> i32 {
-        self.pushback(&c);
+        self.buffer.pushback(&c);
         if nondigit.is_some() {
             self.trailing_uc(&nondigit);
         }
@@ -299,7 +299,7 @@ impl Lexer {
 
     pub fn no_digits(&mut self) -> i32 {
         self.yyerror0("numeric literal without digits");
-        if self.peek(b'_') { self.nextc(); }
+        if self.buffer.peek(b'_') { self.nextc(); }
         self.set_integer_literal(vec![b'0'], 0)
     }
 
@@ -307,7 +307,7 @@ impl Lexer {
         let mut c: LexChar;
         let mut mask = mask;
         let mut result: i8 = 0;
-        let lastp = self.p.lex.pcur;
+        let lastp = self.buffer.pcur;
 
         loop {
             c = self.nextc();
@@ -326,11 +326,11 @@ impl Lexer {
                 continue;
             }
             if !c.is_ascii() || c.is_alpha() || c == b'_' {
-                self.p.lex.pcur = lastp;
-                // self.literal_flush(self.p.lex.pcur);
+                self.buffer.pcur = lastp;
+                // self.literal_flush(self.buffer.pcur);
                 return 0;
             }
-            self.pushback(&c);
+            self.buffer.pushback(&c);
             break;
         }
 

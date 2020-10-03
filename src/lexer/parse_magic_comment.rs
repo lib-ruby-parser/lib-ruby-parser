@@ -14,9 +14,9 @@ const MAGIC_COMMENTS: [MagicComment; 4] = [
 
 impl Lexer {
     pub fn comment_at_top(&self) -> bool {
-        let mut ptr = self.p.lex.pbeg;
-        let ptr_end = self.p.lex.pcur - 1;
-        if self.p.line_count != (if self.p.has_shebang { 2 } else { 1 }) { return false }
+        let mut ptr = self.buffer.pbeg;
+        let ptr_end = self.buffer.pcur - 1;
+        if self.buffer.line_count != (if self.has_shebang { 2 } else { 1 }) { return false }
         while ptr < ptr_end {
             if !self.char_at(ptr).is_space() { return false }
             ptr += 1;
@@ -50,7 +50,7 @@ impl Lexer {
                     }
                 }
             }
-            if self.p.lex.input[str_-6..str_] == b"coding"[..] {
+            if self.buffer.input[str_-6..str_] == b"coding"[..] {
                 break;
             }
         }
@@ -72,7 +72,7 @@ impl Lexer {
             str_ += 1;
         }
 
-        let enc_name = self.p.lex.input[beg..str_].to_vec();
+        let enc_name = self.buffer.input[beg..str_].to_vec();
         println!("enc = {}", String::from_utf8(enc_name).unwrap());
 
     }
@@ -224,7 +224,7 @@ impl Lexer {
             }
 
             n = end - beg;
-            name = self.p.lex.input[beg..beg+n].to_vec();
+            name = self.buffer.input[beg..beg+n].to_vec();
             for c in name.iter_mut() {
                 if *c == b'-' { *c = b'_' }
             }

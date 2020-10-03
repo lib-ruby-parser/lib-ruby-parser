@@ -1,7 +1,10 @@
-pub mod buffer;
-pub mod comment;
-pub mod range;
+mod comment;
+mod range;
 pub mod map;
+mod file_loc;
+mod buffer;
 
-pub use buffer::{Buffer, BufferError};
 pub use range::Range;
+pub use file_loc::FileLoc;
+
+pub use buffer::{Buffer, BufferEncoding};

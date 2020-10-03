@@ -43,7 +43,7 @@ fn main() {
         };
 
     let mut lexer = Lexer::new(&source);
-    lexer.debug = true;
+    lexer.set_debug(true);
     let tokens = lexer.tokenize_until_eof();
 
     let tok_name_length  = tokens.iter().map(|tok| format!("{:?}", token_name(tok)).len()).max().unwrap_or(0) + 2;
