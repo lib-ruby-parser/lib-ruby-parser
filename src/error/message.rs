@@ -1,4 +1,5 @@
-pub enum Message {
+#[derive(Debug, Clone)]
+pub enum ErrorMessage {
     UnicodePointTooLarge {},
     InvalidEscape {},
     IncompleteEscape {},
@@ -61,19 +62,9 @@ pub enum Message {
     DuplicatePatternKey { name: String },
     EndlessSetter {},
     UselessElse {},
-    InvalidEncoding {},
-    InvalidAction { action: String },
-    Clobbered { action: String },
-    DifferentReplacements { replacement: String, other_replacement: String},
-    SwallowedInsertions {},
-    SwallowedInsertionsConflict {},
-    CrossingDeletions {},
-    CrossingDeletionsConflict {},
-    CrossingInsertions {},
-    CrossingInsertionsConflict {},
 }
 
-impl Message {
+impl ErrorMessage {
     pub fn render(&self) -> String {
         match self {
             Self::UnicodePointTooLarge {} => format!("invalid Unicode codepoint (too large)"),
@@ -138,16 +129,6 @@ impl Message {
             Self::DuplicatePatternKey { name } => format!("duplicate hash pattern key {name}", name = name),
             Self::EndlessSetter {} => format!("setter method cannot be defined in an endless method definition"),
             Self::UselessElse {} => format!("else without rescue is useless"),
-            Self::InvalidEncoding {} => format!("literal contains escape sequences incompatible with UTF-8"),
-            Self::InvalidAction { action } => format!("cannot {action}", action = action),
-            Self::Clobbered { action } => format!("clobbered by: {action}", action = action),
-            Self::DifferentReplacements { replacement, other_replacement} => format!("different replacements: {replacement} vs {other_replacement}", replacement = replacement, other_replacement = other_replacement),
-            Self::SwallowedInsertions {} => format!("this replacement:"),
-            Self::SwallowedInsertionsConflict {} => format!("swallows some inner rewriting actions:"),
-            Self::CrossingDeletions {} => format!("the deletion of:"),
-            Self::CrossingDeletionsConflict {} => format!("is crossing:"),
-            Self::CrossingInsertions {} => format!("the rewriting action on:"),
-            Self::CrossingInsertionsConflict {} => format!("is crossing that on:"),
         }
     }
 }

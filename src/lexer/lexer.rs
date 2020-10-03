@@ -1210,7 +1210,7 @@ impl Lexer {
         Ok(Self::tEH)
     }
 
-    pub fn warn_space_char(&mut self, c: u8, s: &str) {
+    pub fn warn_space_char(&mut self, _c: u8, _s: &str) {
         unimplemented!("warn_space_char")
     }
 

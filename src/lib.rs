@@ -12,9 +12,6 @@ pub use lexer::{Lexer, Context};
 
 pub mod meta;
 
-mod messages;
-pub use messages::Message;
-
 mod static_environment;
 pub use static_environment::StaticEnvironment;
 
@@ -35,3 +32,6 @@ pub use max_numparam_stack::MaxNumparamStack;
 
 mod variables_stack;
 pub use variables_stack::VariablesStack;
+
+mod error;
+pub use error::{ParseError, ErrorLevel, ErrorMessage};

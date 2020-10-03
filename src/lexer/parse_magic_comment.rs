@@ -1,5 +1,4 @@
 use crate::Lexer;
-use crate::lexer::lex_states::*;
 use crate::lexer::lex_char::LexChar;
 
 struct MagicComment {
@@ -27,7 +26,7 @@ impl Lexer {
 
     pub fn set_file_encoding(&mut self, mut str_: usize, send: usize) {
         let mut sep = false;
-        let mut beg = str_;
+        let beg;
 
         loop {
             if send - str_ <= 6 { return }
@@ -108,7 +107,6 @@ impl Lexer {
     pub fn parser_magic_comment(&self, mut str_: usize, mut len: usize) -> bool {
         let mut indicator = false;
         let mut name;
-        let mut val = 0;
         let mut beg;
         let mut end;
         let mut vbeg;
@@ -128,7 +126,7 @@ impl Lexer {
 
         while len > 0 {
             let mut mc_idx = 0;
-            let mut n = 0;
+            let n;
 
             loop {
                 let c = self.char_at(str_);
@@ -233,7 +231,6 @@ impl Lexer {
             loop {
                 let mc = MAGIC_COMMENTS[mc_idx].name;
                 if n < mc.len() && mc.as_bytes()[0..n] == name[0..n] {
-                    n = vend - vbeg;
                     match mc {
                         "coding" | "encoding" => {
 
@@ -242,6 +239,7 @@ impl Lexer {
                         "warn_indent" => {}
                         _ => {}
                     }
+                    println!("magic comment loc: {}..{}", vbeg, vend);
                     break
                 }
 
