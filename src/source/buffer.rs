@@ -1,60 +1,6 @@
 use std::convert::{TryFrom};
 use crate::lexer::LexChar;
-
-#[derive(Debug, Clone)]
-#[allow(dead_code, non_camel_case_types)]
-pub enum BufferEncoding {
-    ASCII,
-    BIG5_2003,
-    ERROR,
-    EUC_JP,
-    GB18030,
-    GBK,
-    HZ,
-    IBM866,
-    ISO_2022_JP,
-    ISO_8859_1,
-    ISO_8859_2,
-    ISO_8859_3,
-    ISO_8859_4,
-    ISO_8859_5,
-    ISO_8859_6,
-    ISO_8859_7,
-    ISO_8859_8,
-    ISO_8859_10,
-    ISO_8859_13,
-    ISO_8859_14,
-    ISO_8859_15,
-    ISO_8859_16,
-    KOI8_R,
-    KOI8_U,
-    MAC_CYRILLIC,
-    MAC_ROMAN,
-    UTF_8,
-    UTF_16BE,
-    UTF_16LE,
-    WINDOWS_874,
-    WINDOWS_949,
-    WINDOWS_1250,
-    WINDOWS_1251,
-    WINDOWS_1252,
-    WINDOWS_1253,
-    WINDOWS_1254,
-    WINDOWS_1255,
-    WINDOWS_1256,
-    WINDOWS_1257,
-    WINDOWS_1258,
-    WINDOWS_31J,
-
-    Unknown,
-}
-
-impl Default for BufferEncoding {
-    fn default() -> Self {
-        Self::Unknown
-    }
-}
-
+use crate::source::{decode_input, InputError};
 
 #[derive(Debug, Clone, Default)]
 pub struct SourceLine {
@@ -63,7 +9,7 @@ pub struct SourceLine {
 }
 
 impl SourceLine {
-    pub fn source(&self, source: &Vec<u8>) -> Vec<u8> {
+    pub fn source(&self, source: &Vec<char>) -> Vec<char> {
         source[self.start..self.end].to_owned()
     }
 
@@ -79,8 +25,7 @@ impl SourceLine {
 #[derive(Debug, Clone, Default)]
 pub struct Buffer {
     pub name: String,
-    pub encoding: BufferEncoding,
-    pub input: Vec<u8>,
+    pub input: Vec<char>,
 
     pub lines: Vec<SourceLine>,
     pub line_count: usize,
@@ -104,33 +49,38 @@ pub struct Buffer {
     pub tokline: usize,
 
     pub ruby_sourceline: usize,        /* current line no. */
-    pub ruby_sourcefile: Vec<u8>,      /* current source file */
-    pub ruby_sourcefile_string: Vec<u8>,
+    pub ruby_sourcefile: Vec<char>,      /* current source file */
+    pub ruby_sourcefile_string: Vec<char>,
 
     pub debug: bool,
 }
 
 impl Buffer {
-    const CTRL_Z_CHAR: u8 = 0x1a;
-    const CTRL_D_CHAR: u8 = 0x04;
+    const CTRL_Z_CHAR: char = 0x1a as char;
+    const CTRL_D_CHAR: char = 0x04 as char;
 
-    pub fn new(name: &str, bytes: Vec<u8>, encoding: BufferEncoding) -> Self {
+    pub fn new(name: &str, bytes: Vec<u8>, known_encoding: Option<String>) -> Result<Self, InputError> {
+        let (input, _) = decode_input(&bytes, known_encoding)?;
+        let input = input.chars().collect::<Vec<_>>();
+
         let mut line = SourceLine { start: 0, end: 0 };
         let mut lines: Vec<SourceLine> = vec![];
 
-        for (idx, c) in bytes.iter().enumerate() {
+        for (idx, c) in input.iter().enumerate() {
             line.end = idx + 1;
-            if *c == b'\n' {
+            if *c == '\n' {
                 lines.push(line);
                 line = SourceLine { start: idx + 1, end: 0 }
             }
         };
-        line.end = bytes.len();
+        line.end = input.len();
         if !line.is_empty() {
             lines.push(line);
         }
 
-        Self { name: name.to_owned(), input: bytes, lines, encoding, ..Self::default() }
+        Ok(
+            Self { name: name.to_owned(), input, lines, ..Self::default() }
+        )
     }
 
     pub fn nextc(&mut self) -> LexChar {
@@ -141,9 +91,9 @@ impl Buffer {
                 return LexChar::EOF;
             }
         }
-        let mut c: u8 = self.input[self.pcur];
+        let mut c = self.input[self.pcur];
         self.pcur += 1;
-        if c == b'\r' {
+        if c == '\r' {
             c = self.parser_cr(c);
         }
         if self.debug { println!("nextc = {:?}", c as char); }
@@ -162,10 +112,10 @@ impl Buffer {
         self.pcur + n >= self.pend
     }
 
-    pub fn peek(&self, c: u8) -> bool {
+    pub fn peek(&self, c: char) -> bool {
         self.peek_n(c, 0)
     }
-    pub fn peek_n(&self, c: u8, n: usize) -> bool {
+    pub fn peek_n(&self, c: char, n: usize) -> bool {
         !self.is_eol_n(n) && c == self.input[self.pcur + n]
     }
 
@@ -178,7 +128,7 @@ impl Buffer {
                 return Err(());
             }
 
-            if self.pend > self.pbeg && self.input[self.pend - 1] != b'\n' {
+            if self.pend > self.pbeg && self.input[self.pend - 1] != '\n' {
                 self.eofp = true;
                 self.goto_eol();
                 return Err(());
@@ -234,7 +184,7 @@ impl Buffer {
         self.ptok = ptok;
     }
 
-    pub fn parser_cr(&mut self, _c: u8) -> u8 {
+    pub fn parser_cr(&mut self, _c: char) -> char {
         unimplemented!("parser_cr")
     }
 
@@ -247,9 +197,9 @@ impl Buffer {
         }
     }
 
-    pub fn substr_at(&self, start: usize, end: usize) -> Option<Vec<u8>> {
+    pub fn substr_at(&self, start: usize, end: usize) -> Option<String> {
         if start < end && end < self.input.len() {
-            Some(self.input[start..end].to_owned())
+            Some(self.input[start..end].iter().collect())
         } else {
             None
         }
@@ -258,7 +208,7 @@ impl Buffer {
     pub fn pushback(&mut self, c: &LexChar) {
         if c.is_eof() { return };
         self.pcur -= 1;
-        if self.pcur > self.pbeg && self.input[self.pcur] == b'\n' && self.input[self.pcur - 1] == b'\r' {
+        if self.pcur > self.pbeg && self.input[self.pcur] == '\n' && self.input[self.pcur - 1] == '\r' {
             self.pcur -= 1;
         }
         if self.debug { println!("pushback({:?}) pcur = {}", c, self.pcur); }
@@ -268,14 +218,14 @@ impl Buffer {
         self.pcur == self.pbeg + 1
     }
 
-    pub fn is_word_match(&self, word: &Vec<u8>) -> bool {
+    pub fn is_word_match(&self, word: &str) -> bool {
         let len = word.len();
 
-        if self.substr_at(self.pcur, self.pcur + len).as_ref() != Some(word) { return false }
+        if self.substr_at(self.pcur, self.pcur + len) != Some(word.to_owned()) { return false }
         if self.pcur + len == self.pend { return true }
         let c = self.char_at(self.pcur + len);
         if c.is_space() { return true }
-        if c == b'\0' || c == Self::CTRL_Z_CHAR || c == Self::CTRL_D_CHAR {
+        if c == '\0' || c == Self::CTRL_Z_CHAR || c == Self::CTRL_D_CHAR {
             return true;
         }
         false
@@ -287,7 +237,7 @@ impl Buffer {
             let c = self.input.get(ptr);
             ptr += 1;
             if let Some(c) = c {
-                let eol = *c == b'\n' || *c == b'#';
+                let eol = *c == '\n' || *c == '#';
                 if eol || !c.is_ascii_whitespace() {
                     return eol
                 }
@@ -296,7 +246,7 @@ impl Buffer {
         true
     }
 
-    pub fn is_whole_match(&self, eos: &Vec<u8>, indent: usize) -> bool {
+    pub fn is_whole_match(&self, eos: &str, indent: usize) -> bool {
         let mut ptr = self.pbeg;
         let len = eos.len();
 
@@ -314,13 +264,13 @@ impl Buffer {
             let last_char = self.input.get(ptr + len);
             let char_after_last_char = self.input.get(ptr + len + 1);
 
-            if n > 0 && last_char != Some(&b'\n') {
-                if last_char != Some(&b'\r') { return false }
-                if n <= 1 || char_after_last_char != Some(&b'\n') { return false }
+            if n > 0 && last_char != Some(&'\n') {
+                if last_char != Some(&'\r') { return false }
+                if n <= 1 || char_after_last_char != Some(&'\n') { return false }
             }
 
-            let next_len_chars: Vec<u8> = self.input[ptr..ptr+len].to_owned();
-            return *eos == next_len_chars
+            let next_len_chars = self.substr_at(ptr, ptr+len);
+            return Some(eos.to_owned()) == next_len_chars
         } else {
             return false
         }
@@ -334,7 +284,7 @@ impl Buffer {
         self.pbeg = self.lines[self.lastline].start;
         self.pend = self.pbeg + self.lines[self.lastline].len();
         self.pcur = self.pend;
-        self.pushback(&LexChar::Some(1 as u8));
+        self.pushback(&LexChar::Some(1 as char));
         self.set_ptok(self.pcur);
     }
 

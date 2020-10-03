@@ -5,6 +5,8 @@ use crate::source::Range;
 use crate::{Lexer, Node, Token, StaticEnvironment, Context, CurrentArgStack, MaxNumparamStack};
 use crate::source::map::*;
 use crate::map_builder::*;
+use crate::parser::TokenValue;
+use crate::node::StringValue;
 
 #[derive(Debug, PartialEq)]
 pub enum LoopType {
@@ -36,7 +38,7 @@ pub enum LogicalOp {
     Or
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum PKwLabel {
     PlainLabel(Token),
     QuotedLabel(( Token, Vec<Node>, Token ))
@@ -151,8 +153,12 @@ impl Builder {
 
     pub fn string_internal(&self, string_t: Token) -> Node {
         let loc = unquoted_map(&string_t);
-        let (_, bytes, _) = string_t;
-        Node::Str { value: bytes, loc }
+        let (_, value, _) = string_t;
+        let value = match value {
+            TokenValue::String(s) => StringValue::String(s),
+            TokenValue::InvalidString(bytes) => StringValue::Bytes(bytes)
+        };
+        Node::Str { value, loc }
     }
 
     pub fn string_compose(&self, begin_t: Option<Token>, parts: Vec<Node>, end_t: Option<Token>) -> Node {
@@ -187,8 +193,12 @@ impl Builder {
 
     pub fn character(&self, char_t: Token) -> Node {
         let loc = prefix_string_map(&char_t);
-        let (_, bytes, _) = char_t;
-        Node::Str { value: bytes, loc }
+        let (_, value, _) = char_t;
+        let value = match value {
+            TokenValue::String(s) => StringValue::String(s),
+            TokenValue::InvalidString(bytes) => StringValue::Bytes(bytes)
+        };
+        Node::Str { value, loc }
     }
 
     pub fn __file__(&self, file_t: Token) -> Node {
@@ -225,7 +235,7 @@ impl Builder {
             };
             return Node::Sym {
                 loc: collection_map(&Some(&begin_t), &vec![], &Some(&end_t)),
-                name: String::from_utf8(value).unwrap_or_else(|_| panic!("non-utf8 symbol")),
+                name: value.to_string_lossy(),
             }
         }
 
@@ -316,7 +326,7 @@ impl Builder {
             match part {
                 Node::Str { value, loc } => {
                     Node::Sym {
-                        name: String::from_utf8(value).unwrap_or_else(|_| panic!("non-utf8 symbol")),
+                        name: value.to_string_lossy(),
                         loc: loc
                     }
                 },
@@ -457,7 +467,7 @@ impl Builder {
     pub fn accessible(&self, node: Node) -> Node {
         match node {
             Node::Lvar { name, loc } => {
-                if self.static_env.is_declared(&name.as_bytes().to_vec()) {
+                if self.static_env.is_declared(&name) {
                     if let Some(current_arg) = self.current_arg_stack.top() {
                         if current_arg == name {
                             // diagnostic :error, :circular_argument_reference,
@@ -542,7 +552,7 @@ impl Builder {
                 self.check_assignment_to_numparam(&name, &loc);
                 self.check_reserved_for_numparam(&name, &loc);
 
-                self.static_env.declare(&name.as_bytes().to_vec());
+                self.static_env.declare(&name);
 
                 Node::Lvasgn {
                     name,
@@ -1114,7 +1124,7 @@ impl Builder {
             }
         } else {
             for capture in captures {
-                self.static_env.declare(&capture.as_bytes().to_vec());
+                self.static_env.declare(&capture);
             }
 
             Node::MatchWithLvasgn {
@@ -1573,7 +1583,7 @@ impl Builder {
 
         self.check_lvar_name(&name, &name_l);
         self.check_duplicate_pattern_variable(&name, &name_l);
-        self.static_env.declare(&name.as_bytes().to_vec());
+        self.static_env.declare(&name);
 
         Node::MatchVar {
             name,
@@ -1589,7 +1599,7 @@ impl Builder {
 
         self.check_lvar_name(&name, &name_l);
         self.check_duplicate_pattern_variable(&name, &name_l);
-        self.static_env.declare(&name.as_bytes().to_vec());
+        self.static_env.declare(&name);
 
         Node::MatchVar {
             name,
@@ -1603,16 +1613,13 @@ impl Builder {
 
         match strings.remove(1) {
             Node::Str { value, loc: CollectionMap { begin, end, expression } } => {
-                let name = match String::from_utf8(value) {
-                    Ok(name) => name,
-                    Err(_) => panic!("utf8 conversion error")
-                };
+                let name = value.to_string_lossy();
                 let mut name_l = expression.clone();
 
                 self.check_lvar_name(&name, &name_l);
                 self.check_duplicate_pattern_variable(&name, &name_l);
 
-                self.static_env.declare(&name.as_bytes().to_vec());
+                self.static_env.declare(&name);
 
                 match &begin {
                     Some(begin_l) => {
@@ -1833,7 +1840,7 @@ impl Builder {
         for node in nodes {
             match node {
                 Node::Str { value, .. } => {
-                    let value = String::from_utf8_lossy(&value).into_owned();
+                    let value = value.to_string_lossy();
                     result.push_str(&value)
                 },
                 Node::Begin { statements, .. } => {

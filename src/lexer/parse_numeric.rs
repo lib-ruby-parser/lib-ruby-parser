@@ -7,7 +7,7 @@ impl Lexer {
     const NUM_SUFFIX_I: i8 = 1 << 1;
     const NUM_SUFFIX_ALL: i8 = 3;
 
-    pub fn parse_numeric(&mut self, prefix: u8) -> i32 {
+    pub fn parse_numeric(&mut self, prefix: char) -> i32 {
         let mut c = LexChar::Some(prefix);
 
         let mut is_float: bool = false;
@@ -18,19 +18,19 @@ impl Lexer {
 
         self.set_lex_state(EXPR_END);
         self.newtok();
-        if c == b'-' || c == b'+' {
+        if c == '-' || c == '+' {
             self.tokadd(&c);
             c = self.nextc();
         }
-        if c == b'0' {
+        if c == '0' {
             let start = self.toklen();
             c = self.nextc();
-            if c == b'x' || c == b'X' {
+            if c == 'x' || c == 'X' {
                 // hexadecimal
                 c = self.nextc();
                 if !c.is_eof() && c.is_hexdigit() {
                     loop {
-                        if c == b'_' {
+                        if c == '_' {
                             if nondigit.is_some() { break }
                             nondigit = Some(c.clone());
                             continue;
@@ -51,19 +51,19 @@ impl Lexer {
                     return self.trailing_uc(&nondigit);
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                return self.set_integer_literal([ "0x".to_owned().into_bytes(), self.tok() ].concat(), suffix);
+                return self.set_integer_literal(format!("0x{}", self.tok()), suffix);
             }
-            if c == b'b' || c == b'B' {
+            if c == 'b' || c == 'B' {
                 // binary
                 c = self.nextc();
-                if c == b'0' || c == b'1' {
+                if c == '0' || c == '1' {
                     loop {
-                        if c == b'_' {
+                        if c == '_' {
                             if nondigit.is_some() { break }
                             nondigit = Some(c.clone());
                             continue;
                         }
-                        if c != b'0' && c != b'1' { break }
+                        if c != '0' && c != '1' { break }
                         nondigit = None;
                         self.tokadd(&c);
 
@@ -79,14 +79,14 @@ impl Lexer {
                     return self.trailing_uc(&nondigit);
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                return self.set_integer_literal([ "0b".to_owned().into_bytes(), self.tok() ].concat(), suffix);
+                return self.set_integer_literal(format!("0b{}", self.tok()), suffix);
             }
-            if c == b'd' || c == b'D' {
+            if c == 'd' || c == 'D' {
                 // decimal
                 c = self.nextc();
                 if !c.is_eof() && c.is_digit() {
                     loop {
-                        if c == b'_' {
+                        if c == '_' {
                             if nondigit.is_some() { break }
                             nondigit = Some(c.clone());
                             continue;
@@ -107,55 +107,55 @@ impl Lexer {
                     return self.trailing_uc(&nondigit);
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                return self.set_integer_literal([ "0d".to_owned().into_bytes(), self.tok() ].concat(), suffix);
+                return self.set_integer_literal(format!("0d{}", self.tok()), suffix);
             }
-            if c == b'_' {
+            if c == '_' {
                 // 0_0
                 if let Some(result) = self.parse_octal(&mut c, &mut nondigit, start) {
                     return result;
                 }
             }
-            if c == b'o' || c == b'O' {
+            if c == 'o' || c == 'O' {
                 // prefixed octal
                 c = self.nextc();
-                if c.is_eof() || c == b'_' || !c.is_digit() {
+                if c.is_eof() || c == '_' || !c.is_digit() {
                     return self.no_digits();
                 }
             }
-            if c >= b'0' && c <= b'7' {
+            if c >= '0' && c <= '7' {
                 // octal
                 if let Some(result) = self.parse_octal(&mut c, &mut nondigit, start) {
                     return result;
                 }
             }
-            if c > b'7' && c <= b'9' {
+            if c > '7' && c <= '9' {
                 self.invalid_octal();
-            } else if c == b'.' || c == b'e' || c == b'E' {
-                self.tokadd(&LexChar::Some(b'0'));
+            } else if c == '.' || c == 'e' || c == 'E' {
+                self.tokadd(&LexChar::Some('0'));
             } else {
                 self.buffer.pushback(&c);
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                return self.set_integer_literal("0".to_owned().into_bytes(), suffix);
+                return self.set_integer_literal("0".to_owned(), suffix);
             }
         }
 
         loop {
             match c {
-                LexChar::Some(b'0') |
-                LexChar::Some(b'1') |
-                LexChar::Some(b'2') |
-                LexChar::Some(b'3') |
-                LexChar::Some(b'4') |
-                LexChar::Some(b'5') |
-                LexChar::Some(b'6') |
-                LexChar::Some(b'7') |
-                LexChar::Some(b'8') |
-                LexChar::Some(b'9') => {
+                LexChar::Some('0') |
+                LexChar::Some('1') |
+                LexChar::Some('2') |
+                LexChar::Some('3') |
+                LexChar::Some('4') |
+                LexChar::Some('5') |
+                LexChar::Some('6') |
+                LexChar::Some('7') |
+                LexChar::Some('8') |
+                LexChar::Some('9') => {
                     nondigit = None;
                     self.tokadd(&c);
                 },
 
-                LexChar::Some(b'.') => {
+                LexChar::Some('.') => {
                     if nondigit.is_some() { return self.trailing_uc(&nondigit) }
                     if seen_point.is_some() || seen_e {
                         return self.decode_num(c, nondigit, is_float, seen_e, seen_point);
@@ -168,14 +168,14 @@ impl Lexer {
                         c = c0;
                     }
                     seen_point = Some(self.toklen());
-                    self.tokadd(&LexChar::Some(b'.'));
+                    self.tokadd(&LexChar::Some('.'));
                     self.tokadd(&c);
                     is_float = true;
                     nondigit = None;
                 },
 
-                LexChar::Some(b'e') |
-                LexChar::Some(b'E') => {
+                LexChar::Some('e') |
+                LexChar::Some('E') => {
                     if let Some(nondigit_value) = &nondigit {
                         self.buffer.pushback(&c);
                         c = nondigit_value.clone();
@@ -186,7 +186,7 @@ impl Lexer {
                     }
                     nondigit = Some(c.clone());
                     c = self.nextc();
-                    if c != b'-' && c != b'+' && !c.is_digit() {
+                    if c != '-' && c != '+' && !c.is_digit() {
                         self.buffer.pushback(&c);
                         nondigit = None;
                         return self.decode_num(c, nondigit, is_float, seen_e, seen_point);
@@ -195,10 +195,10 @@ impl Lexer {
                     seen_e = true;
                     is_float = true;
                     self.tokadd(&c);
-                    nondigit = if c == b'-' || c == b'+' { Some(c) } else { None };
+                    nondigit = if c == '-' || c == '+' { Some(c) } else { None };
                 },
 
-                LexChar::Some(b'_') => {
+                LexChar::Some('_') => {
                     if nondigit.is_some() { return self.decode_num(c, nondigit, is_float, seen_e, seen_point); }
                     nondigit = Some(c);
                 },
@@ -212,13 +212,13 @@ impl Lexer {
 
     pub fn parse_octal(&mut self, c: &mut LexChar, nondigit: &mut Option<LexChar>, start: usize) -> Option<i32> {
         loop {
-            if *c == b'_' {
+            if *c == '_' {
                 if nondigit.is_some() { break }
                 *nondigit = Some(c.clone());
                 continue;
             }
-            if *c < b'0' || *c > b'9' { break }
-            if *c > b'7' { self.invalid_octal(); return None }
+            if *c < '0' || *c > '9' { break }
+            if *c > '7' { self.invalid_octal(); return None }
             *nondigit = None;
             self.tokadd(&c);
 
@@ -231,7 +231,7 @@ impl Lexer {
             self.tokfix();
             if nondigit.is_some() { return Some(self.trailing_uc(&nondigit)) }
             let suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-            return Some(self.set_integer_literal([ "0".to_owned().into_bytes(), self.tok() ].concat(), suffix));
+            return Some(self.set_integer_literal(format!("0{}", self.tok()), suffix));
         }
         if nondigit.is_some() {
             self.buffer.pushback(&c);
@@ -264,11 +264,11 @@ impl Lexer {
         self.tokfix();
         if is_float {
             let mut token_type: i32 = Self::tFLOAT;
-            let v: Vec<u8>;
+            let v: String;
 
             let suffix = self.number_literal_suffix(if seen_e { Self::NUM_SUFFIX_I } else { Self::NUM_SUFFIX_ALL });
             if (suffix & Self::NUM_SUFFIX_R) != 0 {
-                let value = [ self.tok(), vec![b'r'] ].concat();
+                let value = format!("{}r", self.tok());
                 token_type = Self::tRATIONAL;
                 v = self.parse_rational(value, self.toklen(), seen_point);
             } else {
@@ -281,15 +281,15 @@ impl Lexer {
         return self.set_integer_literal(self.tok(), suffix);
     }
 
-    fn parse_rational(&mut self, tok: Vec<u8>, _len: usize, _seen_point: Option<usize>) -> Vec<u8> {
+    fn parse_rational(&mut self, tok: String, _len: usize, _seen_point: Option<usize>) -> String {
         tok
     }
 
-    fn set_number_literal(&mut self, value: Vec<u8>, token_type: i32, suffix: i8) -> i32 {
+    fn set_number_literal(&mut self, value: String, token_type: i32, suffix: i8) -> i32 {
         let mut token_type = token_type;
         let mut value = value.to_owned();
         if suffix & Self::NUM_SUFFIX_I != 0 {
-            value = [ value, vec![b'i'] ].concat();
+            value = format!("{}i", value);
             token_type = Self::tIMAGINARY;
         }
         self.set_yylval_literal(value);
@@ -299,8 +299,8 @@ impl Lexer {
 
     pub fn no_digits(&mut self) -> i32 {
         self.yyerror0("numeric literal without digits");
-        if self.buffer.peek(b'_') { self.nextc(); }
-        self.set_integer_literal(vec![b'0'], 0)
+        if self.buffer.peek('_') { self.nextc(); }
+        self.set_integer_literal("0".to_owned(), 0)
     }
 
     pub fn number_literal_suffix(&mut self, mask: i8) -> i8 {
@@ -313,19 +313,19 @@ impl Lexer {
             c = self.nextc();
             if c.is_eof() { break }
 
-            if (mask & Self::NUM_SUFFIX_I != 0) && c == b'i' {
+            if (mask & Self::NUM_SUFFIX_I != 0) && c == 'i' {
                 result |= mask & Self::NUM_SUFFIX_I;
                 mask &= !Self::NUM_SUFFIX_I;
                 // r after i, rational of complex is disallowed
                 mask &= !Self::NUM_SUFFIX_R;
                 continue;
             }
-            if (mask & Self::NUM_SUFFIX_R != 0) && c == b'r' {
+            if (mask & Self::NUM_SUFFIX_R != 0) && c == 'r' {
                 result |= mask & Self::NUM_SUFFIX_R;
                 mask &= !Self::NUM_SUFFIX_R;
                 continue;
             }
-            if !c.is_ascii() || c.is_alpha() || c == b'_' {
+            if !c.is_ascii() || c.is_alpha() || c == '_' {
                 self.buffer.pcur = lastp;
                 // self.literal_flush(self.buffer.pcur);
                 return 0;
@@ -337,11 +337,11 @@ impl Lexer {
         result
     }
 
-    pub fn set_integer_literal(&mut self, value: Vec<u8>, suffix: i8) -> i32 {
+    pub fn set_integer_literal(&mut self, value: String, suffix: i8) -> i32 {
         let mut token_type: i32 = Self::tINTEGER;
         let mut value = value.to_owned();
         if suffix & Self::NUM_SUFFIX_R != 0 {
-            value = [ vec![b'r'], value ].concat();
+            value = format!("r{}", value);
             token_type = Self::tRATIONAL;
         }
         self.set_number_literal(value, token_type, suffix)

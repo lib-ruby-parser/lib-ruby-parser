@@ -2,11 +2,11 @@ use std::collections::HashSet;
 
 #[derive(Debug, Clone, Default)]
 struct InnerStaticEnvironment {
-    variables: HashSet<Vec<u8>>,
-    stack: Vec<HashSet<Vec<u8>>>,
+    variables: HashSet<String>,
+    stack: Vec<HashSet<String>>,
 }
 
-const FORWARD_ARGS: &'static [u8; 12] = b"FORWARD_ARGS";
+const FORWARD_ARGS: &'static str = "FORWARD_ARGS";
 
 impl InnerStaticEnvironment {
     pub fn new() -> Self {
@@ -19,7 +19,7 @@ impl InnerStaticEnvironment {
     }
 
     pub fn extend_static(&mut self) {
-        let mut variables: HashSet<Vec<u8>> = HashSet::new();
+        let mut variables: HashSet<String> = HashSet::new();
         std::mem::swap(&mut variables, &mut self.variables);
         self.stack.push(variables);
     }
@@ -32,20 +32,20 @@ impl InnerStaticEnvironment {
         self.variables = self.stack.pop().unwrap();
     }
 
-    pub fn declare(&mut self, name: &Vec<u8>) {
+    pub fn declare(&mut self, name: &str) {
         self.variables.insert(name.to_owned());
     }
 
-    pub fn is_declared(&self, name: &Vec<u8>) -> bool {
+    pub fn is_declared(&self, name: &str) -> bool {
         self.variables.get(name).is_some()
     }
 
     pub fn declare_forward_args(&mut self) {
-        self.declare(&FORWARD_ARGS.to_vec());
+        self.declare(FORWARD_ARGS);
     }
 
     pub fn is_forward_args_declared(&self) -> bool {
-        self.is_declared(&FORWARD_ARGS.to_vec())
+        self.is_declared(FORWARD_ARGS)
     }
 }
 
@@ -63,8 +63,8 @@ impl StaticEnvironment {
     pub fn extend_static(&self) { self.inner.borrow_mut().extend_static() }
     pub fn extend_dynamic(&self) { self.inner.borrow_mut().extend_dynamic() }
     pub fn unextend(&self) { self.inner.borrow_mut().unextend() }
-    pub fn declare(&self, name: &Vec<u8>) { self.inner.borrow_mut().declare(name) }
-    pub fn is_declared(&self, name: &Vec<u8>) -> bool { self.inner.borrow().is_declared(name) }
+    pub fn declare(&self, name: &str) { self.inner.borrow_mut().declare(name) }
+    pub fn is_declared(&self, name: &str) -> bool { self.inner.borrow().is_declared(name) }
     pub fn declare_forward_args(&self) { self.inner.borrow_mut().declare_forward_args() }
     pub fn is_forward_args_declared(&self) -> bool { self.inner.borrow().is_forward_args_declared() }
 }

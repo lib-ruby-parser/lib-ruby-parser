@@ -20,7 +20,7 @@ fn token_name(token: &Token) -> String {
 
 fn token_value(token: &Token) -> String {
     let (_, value, _) = token;
-    String::from_utf8_lossy(value).into_owned()
+    value.to_string_lossy()
 }
 
 fn rpad1<T: Sized + std::fmt::Display>(value: &T, total_width: usize) -> String {
@@ -42,7 +42,7 @@ fn main() {
             _ => print_usage()
         };
 
-    let mut lexer = Lexer::new(&source);
+    let mut lexer = Lexer::new(&source, None).unwrap();
     lexer.set_debug(true);
     let tokens = lexer.tokenize_until_eof();
 

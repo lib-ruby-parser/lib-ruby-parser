@@ -10,7 +10,7 @@ pub fn loc(token: &Token) -> Range {
 
 pub fn value(token: &Token) -> String {
     let (_, token_value, _) = token;
-    String::from_utf8(token_value.to_owned()).unwrap()
+    token_value.to_string_lossy()
 }
 
 pub fn join_exprs(left_expr: &Node, right_expr: &Node) -> Range {

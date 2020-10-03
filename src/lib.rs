@@ -6,7 +6,7 @@ extern crate regex;
 extern crate lazy_static;
 
 pub mod source;
-pub use source::{Buffer, BufferEncoding};
+pub use source::{Buffer};
 
 pub mod lexer;
 pub use lexer::{Lexer, Context};

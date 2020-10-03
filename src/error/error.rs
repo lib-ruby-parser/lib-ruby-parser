@@ -23,7 +23,7 @@ impl ParseError {
         debug_assert!(start_loc.line == end_loc.line, "multi-line error");
         println!("{:#?} - {:#?}", start_loc, end_loc);
         let line_no = start_loc.line;
-        let line = String::from_utf8_lossy(&buffer.lines[line_no - 1].source(&buffer.input)).into_owned();
+        let line = buffer.lines[line_no - 1].source(&buffer.input).iter().collect::<String>();
 
         Some(
             format!("{:#?}: {:#?}: {}\n{}:{}: {}\n{}:{}: {}",

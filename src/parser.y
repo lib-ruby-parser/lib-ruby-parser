@@ -1946,7 +1946,8 @@
                     {
                         let (def_t, name_t) = $<DefnHead>1;
 
-                        if name_t.1.last() == Some(&b'=') {
+                        let name = value(&name_t);
+                        if name.ends_with('=') {
                             self.yyerror(&@1, "setter method cannot be defined in an endless method definition");
                         }
 
@@ -3179,7 +3180,7 @@ opt_block_args_tail:
                     }
                 | f_arg tCOMMA f_block_optarg tCOMMA f_arg opt_block_args_tail
                     {
-                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4, $<NodeList>5 ].concat();
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_rest_arg opt_block_args_tail
@@ -3209,7 +3210,7 @@ opt_block_args_tail:
                     }
                 | f_block_optarg tCOMMA f_rest_arg opt_block_args_tail
                     {
-                        let nodes = [ $<NodeList>1, $<NodeList>2, $<NodeList>3 ].concat();
+                        let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
                         $$ = Value::NodeList(nodes);
                     }
                 | f_block_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
@@ -3307,7 +3308,7 @@ opt_block_args_tail:
             bvar: tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
-                        self.static_env.declare(&ident_t.1);
+                        self.static_env.declare(&value(&ident_t));
                         $$ = Value::Node(
                             self.builder.shadowarg(ident_t)
                         );
@@ -3472,7 +3473,7 @@ opt_block_args_tail:
                             None
                         );
 
-                        let (begin_t, args, body, end_t) = $<BraceBlock>5;
+                        let (begin_t, args, body, end_t) = $<DoBlock>5;
                         $$ = Value::Node(
                             self.builder.block(
                                 method_call,
@@ -4327,9 +4328,10 @@ opt_block_args_tail:
        p_var_ref: tCARET tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
+                        let name = value(&ident_t);
 
-                        if !self.static_env.is_declared(&ident_t.1) {
-                            self.yyerror(&@2, &format!("{}: no such local variable", String::from_utf8_lossy(&ident_t.1)));
+                        if !self.static_env.is_declared(&name) {
+                            self.yyerror(&@2, &format!("{}: no such local variable", name));
                         }
 
                         let lvar = self.builder.accessible(self.builder.lvar(ident_t));
@@ -5120,10 +5122,11 @@ keyword_variable: kNIL
       f_norm_arg: f_bad_arg
                 | tIDENTIFIER
                     {
-                        let ident_t = $<Borrow:Token>1;
-                        self.static_env.declare(&ident_t.1);
+                        let ident_t = $<Token>1;
+                        let name = value(&ident_t);
+                        self.static_env.declare(&name);
                         self.max_numparam_stack.has_ordinary_params();
-                        $$ = $<RAW>1;
+                        $$ = Value::Token(ident_t);
                     }
                 ;
 
@@ -5175,11 +5178,11 @@ keyword_variable: kNIL
                             self.yyerror(&@1, &e);
                         }
 
-                        self.static_env.declare(&ident_t.1);
+                        let ident = value(&ident_t);
+                        self.static_env.declare(&ident);
 
                         self.max_numparam_stack.has_ordinary_params();
 
-                        let ident = value(&ident_t);
                         self.current_arg_stack.set(Some(ident));
 
                         $$ = Value::Token(ident_t);
@@ -5258,7 +5261,7 @@ keyword_variable: kNIL
         f_kwrest: kwrest_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(&ident_t.1);
+                        self.static_env.declare(&value(&ident_t));
                         $$ = Value::NodeList(
                             vec![
                                 self.builder.kwrestarg($<Token>1, Some(ident_t))
@@ -5332,7 +5335,7 @@ keyword_variable: kNIL
       f_rest_arg: restarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(&ident_t.1);
+                        self.static_env.declare(&value(&ident_t));
 
                         $$ = Value::NodeList(
                             vec![
@@ -5357,7 +5360,7 @@ keyword_variable: kNIL
      f_block_arg: blkarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(&ident_t.1);
+                        self.static_env.declare(&value(&ident_t));
                         $$ = Value::Node(
                             self.builder.blockarg($<Token>1, ident_t)
                         );
@@ -5773,7 +5776,7 @@ impl Parser {
             pattern_hash_keys,
             static_env,
             yylexer: lexer,
-            last_token: (0, vec![], Loc { begin: 0, end: 0 }),
+            last_token: (0, TokenValue::String("".to_owned()), Loc { begin: 0, end: 0 }),
         }
     }
 
@@ -5793,7 +5796,7 @@ impl Parser {
     }
 
     fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), String> {
-        let name = String::from_utf8_lossy(&ident_t.1);
+        let name = value(ident_t);
         let first_char = name.chars().nth(0).unwrap();
         if first_char.is_lowercase() {
             Ok(())

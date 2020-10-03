@@ -1,20 +1,20 @@
 #[derive(Debug, Clone)]
 pub enum LexChar {
-    Some(u8),
+    Some(char),
     EOF
 }
 
-const SPACE: u8 = ' ' as u8;
-const TAB: u8 = '\t' as u8;
-const VTAB: u8 = '\x0b' as u8;
-const PUNCT: [u8; 21] = ['!' as u8, '"' as u8, '$' as u8, '&' as u8, '\'' as u8, '*' as u8, '+' as u8, ',' as u8, '.' as u8, '/' as u8, '0' as u8, ':' as u8, ';' as u8, '<' as u8, '=' as u8, '>' as u8, '?' as u8, '@' as u8, '\\' as u8, '`' as u8, '~' as u8];
+const SPACE: char = ' ';
+const TAB: char = '\t';
+const VTAB: char = '\x0b';
+const PUNCT: [char; 21] = ['!', '"', '$', '&', '\'', '*', '+', ',', '.', '/', '0', ':', ';', '<', '=', '>', '?', '@', '\\', '`', '~'];
 
 impl LexChar {
     pub fn is_eof(&self) -> bool {
         self == &LexChar::EOF
     }
 
-    pub fn unwrap(&self) -> u8 {
+    pub fn unwrap(&self) -> char {
         match self {
             LexChar::Some(c) => *c,
             _ => panic!("LexChar is empty, can't unwrap()")
@@ -61,13 +61,13 @@ impl LexChar {
         if let LexChar::Some(c) = self { PUNCT.contains(c) } else { false }
     }
 
-    pub fn to_option(&self) -> Option<u8> {
-        if let LexChar::Some(c) = self { Some(c.clone()) } else { None }
+    pub fn to_option(&self) -> Option<char> {
+        if let LexChar::Some(c) = self { Some(*c) } else { None }
     }
 }
 
-impl PartialEq<u8> for LexChar {
-    fn eq(&self, other: &u8) -> bool {
+impl PartialEq<char> for LexChar {
+    fn eq(&self, other: &char) -> bool {
         match self {
             LexChar::Some(charcode) => charcode == other,
             LexChar::EOF => false
@@ -75,8 +75,8 @@ impl PartialEq<u8> for LexChar {
     }
 }
 
-impl PartialEq<Option<u8>> for LexChar {
-    fn eq(&self, other: &Option<u8>) -> bool {
+impl PartialEq<Option<char>> for LexChar {
+    fn eq(&self, other: &Option<char>) -> bool {
         match other {
             Some(c) => self == c,
             _ => false
@@ -84,7 +84,7 @@ impl PartialEq<Option<u8>> for LexChar {
     }
 }
 
-impl PartialEq<LexChar> for u8 {
+impl PartialEq<LexChar> for char {
     fn eq(&self, other: &LexChar) -> bool {
         match other {
             LexChar::Some(charcode) => charcode == self,
@@ -103,8 +103,8 @@ impl PartialEq for LexChar {
     }
 }
 
-impl PartialOrd<u8> for LexChar {
-    fn partial_cmp(&self, other: &u8) -> Option<std::cmp::Ordering> {
+impl PartialOrd<char> for LexChar {
+    fn partial_cmp(&self, other: &char) -> Option<std::cmp::Ordering> {
         match self {
             LexChar::Some(charcode) => Some(charcode.cmp(other)),
             LexChar::EOF => Some(std::cmp::Ordering::Less)

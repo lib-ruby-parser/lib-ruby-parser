@@ -52,10 +52,10 @@ enum TestResult {
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = TestCase::new(fixture_path);
-        let mut parser = Parser::new(Lexer::new(&test_case.input.as_bytes().to_vec()));
-        parser.static_env.declare(&b"foo".to_vec());
-        parser.static_env.declare(&b"bar".to_vec());
-        parser.static_env.declare(&b"baz".to_vec());
+        let mut parser = Parser::new(Lexer::new(&test_case.input.as_bytes().to_vec(), None).unwrap());
+        parser.static_env.declare("foo");
+        parser.static_env.declare("bar");
+        parser.static_env.declare("baz");
         parser.set_debug(false);
         let ast = parser.do_parse().map(|node| node.inspect(0)).unwrap_or("None".to_owned());
 

@@ -9,18 +9,18 @@ impl Lexer {
         !self.buffer.eofp && self.is_identchar(self.buffer.pcur - 1, self.buffer.pend)
     }
 
-    pub fn tokenize_ident(&mut self, _last_state: &LexState) -> Vec<u8> {
+    pub fn tokenize_ident(&mut self, _last_state: &LexState) -> String {
         let ident = self.tok();
         self.set_yyval_name(ident.clone());
         ident
     }
 
     // This method is called is_local_id in MRI, not sure why
-    pub fn is_var_name(&self, ident: &Vec<u8>) -> bool {
+    pub fn is_var_name(&self, ident: &str) -> bool {
         // FIXME: unclear what it can be
         // MRI has some weird logic of comparing given ID with tLAST_OP_ID
         // and then checking & ID_SCOPE_MASK
-        if let Some(first_char) = ident.first() {
+        if let Some(first_char) = ident.chars().nth(0) {
             return !first_char.is_ascii_uppercase()
         }
         false
@@ -30,7 +30,7 @@ impl Lexer {
         let mut c = c.clone();
         let mut result: i32;
         let last_state: LexState = self.state.clone();
-        let ident: Vec<u8>;
+        let ident: String;
 
         loop {
             if !c.is_ascii() { /* mb = ENC_CODERANGE_UNKNOWN */ }
@@ -40,11 +40,11 @@ impl Lexer {
             if !self.parser_is_identchar() { break }
         }
 
-        if (c == b'!' || c == b'?') && !self.buffer.peek(b'=') {
+        if (c == '!' || c == '?') && !self.buffer.peek('=') {
             result = Self::tFID;
             self.tokadd(&c);
-        } else if c == b'=' && self.is_lex_state_some(EXPR_FNAME) &&
-                (!self.buffer.peek(b'~') && !self.buffer.peek(b'>') && (!self.buffer.peek(b'=') || (self.buffer.peek_n(b'>', 1)))) {
+        } else if c == '=' && self.is_lex_state_some(EXPR_FNAME) &&
+                (!self.buffer.peek('~') && !self.buffer.peek('>') && (!self.buffer.peek('=') || (self.buffer.peek_n('>', 1)))) {
             result = Self::tIDENTIFIER;
             self.tokadd(&c)
         } else {

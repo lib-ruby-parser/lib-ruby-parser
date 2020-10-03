@@ -1,4 +1,4 @@
-use ruby_parser::{ErrorLevel, ErrorMessage, ParseError, Buffer, BufferEncoding, source::Range};
+use ruby_parser::{ErrorLevel, ErrorMessage, ParseError, Buffer, source::Range};
 
 #[test]
 fn it_renders() {
@@ -6,8 +6,8 @@ fn it_renders() {
     let buffer = Buffer::new(
         "(test_render)",
         source.as_bytes().to_vec(),
-        BufferEncoding::Unknown
-    );
+        None
+    ).unwrap();
 
     let error = ParseError::new(
         ErrorLevel::Warning,

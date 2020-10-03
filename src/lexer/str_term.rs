@@ -27,8 +27,8 @@ pub mod str_types {
 struct InnerStringLiteral { // struct rb_strterm_literal_struct
     pub nest: usize,
     pub func: usize,
-    pub paren: Option<u8>,
-    pub term: u8,
+    pub paren: Option<char>,
+    pub term: char,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -37,19 +37,19 @@ pub struct StringLiteral {
 }
 
 impl StringLiteral {
-    pub fn new(nest: usize, func: usize, paren: Option<u8>, term: u8) -> Self {
+    pub fn new(nest: usize, func: usize, paren: Option<char>, term: char) -> Self {
         Self { inner: Rc::new(RefCell::new(InnerStringLiteral { nest, func, paren, term })) }
     }
 
     pub fn nest(&self) -> usize { self.inner.borrow().nest }
     pub fn func(&self) -> usize { self.inner.borrow().func }
-    pub fn paren(&self) -> Option<u8> { self.inner.borrow().paren }
-    pub fn term(&self) -> u8 { self.inner.borrow().term }
+    pub fn paren(&self) -> Option<char> { self.inner.borrow().paren }
+    pub fn term(&self) -> char { self.inner.borrow().term }
 
     pub fn set_nest(&self, nest: usize) { self.inner.borrow_mut().nest = nest; }
     pub fn set_func(&self, func: usize) { self.inner.borrow_mut().func = func; }
-    pub fn set_paren(&self, paren: Option<u8>) { self.inner.borrow_mut().paren = paren; }
-    pub fn set_term(&self, term: u8) { self.inner.borrow_mut().term = term; }
+    pub fn set_paren(&self, paren: Option<char>) { self.inner.borrow_mut().paren = paren; }
+    pub fn set_term(&self, term: char) { self.inner.borrow_mut().term = term; }
 }
 
 #[derive(Debug, Clone, Default)]

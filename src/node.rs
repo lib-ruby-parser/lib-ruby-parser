@@ -3,6 +3,35 @@ use crate::source::map::*;
 use crate::Loc;
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum StringValue {
+    String(String),
+    Bytes(Vec<u8>)
+}
+
+impl StringValue {
+    pub fn to_string_lossy(&self) -> String {
+        match &self {
+            StringValue::String(s) => s.clone(),
+            StringValue::Bytes(bytes) => {
+                String::from_utf8_lossy(&bytes).into_owned()
+            }
+        }
+    }
+
+    pub fn to_string(&self) -> Option<String> {
+        match &self {
+            StringValue::String(s) => Some(s.clone()),
+            StringValue::Bytes(bytes) => {
+                match String::from_utf8(bytes.clone()) {
+                    Ok(s) => Some(s),
+                    Err(_) => None
+                }
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Node {
     Begin { statements: Vec<Node>, loc: CollectionMap },
     Int { value: String, loc: OperatorMap },
@@ -47,7 +76,7 @@ pub enum Node {
     Pair { key: Box<Node>, value: Box<Node>, loc: OperatorMap },
     Hash { pairs: Vec<Node>, loc: CollectionMap },
     Array { elements: Vec<Node>, loc: CollectionMap },
-    Str { value: Vec<u8>, loc: CollectionMap },
+    Str { value: StringValue, loc: CollectionMap },
     Dstr { children: Vec<Node>, loc: CollectionMap },
     Xstr { children: Vec<Node>, loc: CollectionMap },
     Dsym { children: Vec<Node>, loc: CollectionMap },
@@ -546,11 +575,11 @@ impl Node {
                 result.push_nodes(elements)
             }
             Node::Str { value, .. } => {
-                match String::from_utf8(value.to_owned()) {
-                    Ok(string) => result.push_str(&string),
-                    Err(_) => {
-                        let string = String::from_utf8_lossy(&value).into_owned();
-                        result.push_str(&string)
+                match value {
+                    StringValue::String(s) => result.push_str(s),
+                    StringValue::Bytes(bytes) => {
+                        let s = String::from_utf8_lossy(&bytes).into_owned();
+                        result.push_str(&s);
                     }
                 }
             }

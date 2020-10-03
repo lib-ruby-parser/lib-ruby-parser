@@ -1,15 +1,11 @@
 use crate::Lexer;
 use crate::lexer::lex_char::LexChar;
 
-struct MagicComment {
-    pub name: &'static str
-}
-
-const MAGIC_COMMENTS: [MagicComment; 4] = [
-    MagicComment { name: "coding" },
-    MagicComment { name: "encoding" },
-    MagicComment { name: "frozen_string_literal" },
-    MagicComment { name: "warn_indent" },
+const MAGIC_COMMENTS: [&'static str; 4] = [
+    "coding",
+    "encoding",
+    "frozen_string_literal",
+    "warn_indent",
 ];
 
 impl Lexer {
@@ -31,13 +27,13 @@ impl Lexer {
         loop {
             if send - str_ <= 6 { return }
             match self.char_at(str_ + 6) {
-                LexChar::Some(b'C') | LexChar::Some(b'c') => { str_ += 6; continue; },
-                LexChar::Some(b'O') | LexChar::Some(b'o') => { str_ += 5; continue; },
-                LexChar::Some(b'D') | LexChar::Some(b'd') => { str_ += 4; continue; },
-                LexChar::Some(b'I') | LexChar::Some(b'i') => { str_ += 3; continue; },
-                LexChar::Some(b'N') | LexChar::Some(b'n') => { str_ += 2; continue; },
-                LexChar::Some(b'G') | LexChar::Some(b'g') => { str_ += 1; continue; },
-                LexChar::Some(b'=') | LexChar::Some(b':') => {
+                LexChar::Some('C') | LexChar::Some('c') => { str_ += 6; continue; },
+                LexChar::Some('O') | LexChar::Some('o') => { str_ += 5; continue; },
+                LexChar::Some('D') | LexChar::Some('d') => { str_ += 4; continue; },
+                LexChar::Some('I') | LexChar::Some('i') => { str_ += 3; continue; },
+                LexChar::Some('N') | LexChar::Some('n') => { str_ += 2; continue; },
+                LexChar::Some('G') | LexChar::Some('g') => { str_ += 1; continue; },
+                LexChar::Some('=') | LexChar::Some(':') => {
                     sep = true;
                     str_ += 6;
                 },
@@ -50,7 +46,7 @@ impl Lexer {
                     }
                 }
             }
-            if self.buffer.input[str_-6..str_] == b"coding"[..] {
+            if self.buffer.substr_at(str_-6, str_) == Some("coding".to_owned()) {
                 break;
             }
         }
@@ -62,18 +58,18 @@ impl Lexer {
             }
             if sep { break }
             let c = self.char_at(str_);
-            if c != b'=' && c != b':' { return }
+            if c != '=' && c != ':' { return }
             sep = true;
             str_ += 1;
         }
         beg = str_;
 
-        while self.char_at(str_) == b'-' || self.char_at(str_) == b'_' || self.char_at(str_).is_alnum() && str_ + 1 < send {
+        while self.char_at(str_) == '-' || self.char_at(str_) == '_' || self.char_at(str_).is_alnum() && str_ + 1 < send {
             str_ += 1;
         }
 
-        let enc_name = self.buffer.input[beg..str_].to_vec();
-        println!("enc = {}", String::from_utf8(enc_name).unwrap());
+        let enc_name = self.buffer.substr_at(beg, str_).unwrap();
+        println!("enc = {:#?}", enc_name);
 
     }
 
@@ -82,17 +78,17 @@ impl Lexer {
 
         while i < len {
             match self.char_at(str_ + i) {
-                LexChar::Some(b'-') => {
-                    if self.char_at(str_ + i - 1) == b'*' && self.char_at(str_ + i - 2) == b'-' {
+                LexChar::Some('-') => {
+                    if self.char_at(str_ + i - 1) == '*' && self.char_at(str_ + i - 2) == '-' {
                         return str_ + i + 1;
                     }
                     i += 2
                 },
-                LexChar::Some(b'*') => {
+                LexChar::Some('*') => {
                     if i + 1 >= len { return 0 }
-                    if self.char_at(str_ + i + 1) != b'-' {
+                    if self.char_at(str_ + i + 1) != '-' {
                         i += 4;
-                    } else if self.char_at(str_ + i - 1) != b'-' {
+                    } else if self.char_at(str_ + i - 1) != '-' {
                         i += 2;
                     } else {
                         return str_ + i + 2;
@@ -132,7 +128,7 @@ impl Lexer {
                 let c = self.char_at(str_);
                 if !( len > 0 && !c.is_eof() ) { break }
 
-                if c == b'\'' || c == b'"' || c == b':' || c == b';' {
+                if c == '\'' || c == '"' || c == ':' || c == ';' {
                     // noop
                 } else {
                     if !c.is_space() { break }
@@ -148,7 +144,7 @@ impl Lexer {
                 if !( len > 0 ) { break }
 
                 let c = self.char_at(str_);
-                if c == b'\'' || c == b'"' || c == b':' || c == b';' {
+                if c == '\'' || c == '"' || c == ':' || c == ';' {
                     // noop
                 } else {
                     if c.is_space() { break }
@@ -170,7 +166,7 @@ impl Lexer {
             }
 
             if len == 0 { break }
-            if self.char_at(str_) != b':' {
+            if self.char_at(str_) != ':' {
                 if !indicator { return false }
                 continue;
             }
@@ -182,16 +178,16 @@ impl Lexer {
                 if !( len > 0 && self.char_at(str_).is_space() ) { break }
             }
             if len == 0 { break }
-            if self.char_at(str_) == b'"' {
+            if self.char_at(str_) == '"' {
                 str_ += 1;
                 vbeg = str_;
 
                 loop {
                     let c = self.char_at(str_);
                     len -= 1;
-                    if !( len > 0 && c != b'"' ) { break }
+                    if !( len > 0 && c != '"' ) { break }
 
-                    if c == b'\\' {
+                    if c == '\\' {
                         len -= 1;
                         str_ += 1;
                     }
@@ -208,7 +204,7 @@ impl Lexer {
                 vbeg = str_;
                 loop {
                     let c = self.char_at(str_);
-                    if !( len > 0 && c != b'"' && c != b';' && !c.is_space() ) { break }
+                    if !( len > 0 && c != '"' && c != ';' && !c.is_space() ) { break }
 
                     // empty for loop body
 
@@ -217,37 +213,21 @@ impl Lexer {
                 vend = str_;
             }
             if indicator {
-                while len > 0 && (self.char_at(str_) == b';' || self.char_at(str_).is_space()) { len -= 1; str_ += 1; }
+                while len > 0 && (self.char_at(str_) == ';' || self.char_at(str_).is_space()) { len -= 1; str_ += 1; }
             } else {
                 while len > 0 && self.char_at(str_).is_space() { len -= 1; str_ += 1; }
                 if len != 0 { return false }
             }
 
             n = end - beg;
-            name = self.buffer.input[beg..beg+n].to_vec();
-            for c in name.iter_mut() {
-                if *c == b'-' { *c = b'_' }
-            }
-            loop {
-                let mc = MAGIC_COMMENTS[mc_idx].name;
-                if n < mc.len() && mc.as_bytes()[0..n] == name[0..n] {
-                    match mc {
-                        "coding" | "encoding" => {
-
-                        },
-                        "frozen_string_literal" => {}
-                        "warn_indent" => {}
-                        _ => {}
-                    }
-                    println!("magic comment loc: {}..{}", vbeg, vend);
-                    break
+            name = self.buffer.substr_at(beg, beg + n).unwrap();
+            name = name.replace("-", "_");
+            for known in MAGIC_COMMENTS.iter() {
+                if &&name == known {
+                    // TODO: emit magic comment
+                    println!("magic comment {:#?}", name);
                 }
-
-                mc_idx += 1;
-                if !( mc_idx < MAGIC_COMMENTS.len() ) { break }
             }
-
-            println!("magic comment {:#?}", String::from_utf8(name.clone()).unwrap());
         };
 
         false
