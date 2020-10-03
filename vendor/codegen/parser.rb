@@ -179,7 +179,7 @@ class Parser::AST::Node
       if child.is_a?(Parser::AST::Node)
         sexp += ",\n#{child.inspect(indent + 1)}"
       else
-        sexp += ", #{child.inspect}"
+        sexp += ", #{child.inspect.gsub("\\#") { "#" }}"
       end
     end
 

@@ -4,4 +4,4 @@
 HERE
 --AST
 s(:xstr,
-  s(:str, "\#@1\n"))
+  s(:str, "#@1\n"))
