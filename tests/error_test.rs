@@ -1,4 +1,4 @@
-use ruby_parser::{ErrorLevel, ErrorMessage, ParseError, Buffer, source::Range};
+use ruby_parser::{ErrorLevel, ErrorMessage, ParseError, source::buffer::*, source::Range};
 
 #[test]
 fn it_renders() {

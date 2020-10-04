@@ -6,10 +6,9 @@ extern crate regex;
 extern crate lazy_static;
 
 pub mod source;
-pub use source::{Buffer};
 
 pub mod lexer;
-pub use lexer::{Lexer, Context};
+pub use lexer::Lexer;
 
 pub mod meta;
 
@@ -36,3 +35,22 @@ pub use variables_stack::VariablesStack;
 
 mod error;
 pub use error::{ParseError, ErrorLevel, ErrorMessage};
+
+pub mod lex_char;
+
+mod lex_state;
+pub use lex_state::{LexState, lex_states};
+
+mod token_buf;
+pub use token_buf::TokenBuf;
+
+mod reserved_words;
+pub use reserved_words::reserved_word;
+
+mod stack_state;
+pub use stack_state::StackState;
+
+pub mod str_term;
+
+mod context;
+pub use context::Context;

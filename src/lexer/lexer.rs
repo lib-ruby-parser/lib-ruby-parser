@@ -1,18 +1,17 @@
 use std::convert::{TryInto};
 
-use crate::{Buffer};
+use crate::source::buffer::*;
 use crate::source::InputError;
-use crate::lexer::{StrTerm, StringLiteral, str_types};
-use crate::lexer::lex_state::{lex_states, LexState};
-use lex_states::*;
-use crate::lexer::LocalsTable;
-use crate::lexer::{Context};
+use crate::str_term::{StrTerm, StringLiteral, str_types};
+use crate::{LexState, lex_states::*};
+use crate::Context;
 use crate::parser::{Token, Loc};
-// use crate::lexer::{Token, TokenType};
-use crate::lexer::lex_char::LexChar;
+use crate::lex_char::*;
 use crate::StaticEnvironment;
-use crate::lexer::StackState;
+use crate::StackState;
 use crate::parser::TokenValue;
+use crate::TokenBuf;
+use crate::lexer::*;
 
 #[derive(Debug, Clone, Default)]
 pub struct Lexer {
@@ -28,10 +27,7 @@ pub struct Lexer {
     cond_stack: StackState,
     cmdarg_stack: StackState,
 
-    tokenbuf: String,
-    lvtbl: LocalsTable,
-    pvtbl: std::collections::HashMap<String, String>,
-    pktbl: std::collections::HashMap<String, String>,
+    pub tokenbuf: TokenBuf,
 
     // enc: Encoding,
     // token_info: TokenInfo,
@@ -52,7 +48,6 @@ pub struct Lexer {
     pub in_kwarg: bool,
 
     pub command_start: bool,
-    ruby__end__seen: bool,
     pub has_shebang: bool,
     token_seen: bool,
     token_info_enabled: bool,
@@ -67,13 +62,13 @@ pub struct Lexer {
     pub static_env: StaticEnvironment,
 }
 
-const NULL_CHAR  : char = 0x00 as char;
-const CTRL_D_CHAR: char = 0x04 as char;
-const CTRL_Z_CHAR: char = 0x1a as char;
-const LF_CHAR    : char = 0x0c as char;
-const VTAB_CHAR  : char = 0x0b as char;
-
 impl Lexer {
+    pub const NULL_CHAR  : char = 0x00 as char;
+    pub const CTRL_D_CHAR: char = 0x04 as char;
+    pub const CTRL_Z_CHAR: char = 0x1a as char;
+    pub const LF_CHAR    : char = 0x0c as char;
+    pub const VTAB_CHAR  : char = 0x0b as char;
+
     pub fn new(bytes: &Vec<u8>, known_encoding: Option<String>) -> Result<Self, InputError> {
         Ok(
             Self {
@@ -194,29 +189,29 @@ impl Lexer {
                 return Self::END_OF_INPUT
             }
 
-            match c {
-                LexChar::EOF |
-                LexChar::Some(NULL_CHAR) |
-                LexChar::Some(CTRL_D_CHAR) |
-                LexChar::Some(CTRL_Z_CHAR) => { return Self::END_OF_INPUT },
+            match c.to_option() {
+                None |
+                Some(Self::NULL_CHAR) |
+                Some(Self::CTRL_D_CHAR) |
+                Some(Self::CTRL_Z_CHAR) => { return Self::END_OF_INPUT },
 
                 // whitespaces
-                LexChar::Some('\r') => {
+                Some('\r') => {
                     if !self.buffer.cr_seen {
                         self.buffer.cr_seen = true;
                         self.warn("encountered \\r in middle of line, treated as a mere space");
                     }
                 },
 
-                LexChar::Some(' ') |
-                LexChar::Some('\t') |
-                LexChar::Some(LF_CHAR) |
-                LexChar::Some(VTAB_CHAR) => {
+                Some(' ') |
+                Some('\t') |
+                Some(Self::LF_CHAR) |
+                Some(Self::VTAB_CHAR) => {
                     space_seen = true;
                     continue 'retrying;
                 },
 
-                LexChar::Some('#') | LexChar::Some('\n') => {
+                Some('#') | Some('\n') => {
                     if c == '#' { // it's a comment
                         self.token_seen = token_seen;
                         // no magic_comment in shebang line
@@ -241,19 +236,19 @@ impl Lexer {
                     loop {
                         c = self.nextc();
 
-                        match c {
-                            LexChar::Some(' ') |
-                            LexChar::Some('\t') |
-                            LexChar::Some(LF_CHAR) |
-                            LexChar::Some('\r') |
-                            LexChar::Some(VTAB_CHAR) => {
+                        match c.to_option() {
+                            Some(' ') |
+                            Some('\t') |
+                            Some(Self::LF_CHAR) |
+                            Some('\r') |
+                            Some(Self::VTAB_CHAR) => {
                                 space_seen = true;
                             },
-                            LexChar::Some('#') => {
+                            Some('#') => {
                                 self.buffer.pushback(&c);
                                 continue 'retrying;
                             },
-                            LexChar::Some('&') | LexChar::Some('.') => {
+                            Some('&') | Some('.') => {
                                 if self.buffer.peek('.') == (c == '&') {
                                     self.buffer.pushback(&c);
                                     continue 'retrying;
@@ -261,7 +256,7 @@ impl Lexer {
                                 self.buffer.ruby_sourceline -= 1;
                                 self.buffer.nextline = self.buffer.lastline;
                             },
-                            LexChar::EOF => {
+                            None => {
                                 // EOF no decrement
                                 self.buffer.eof_no_decrement();
                                 self.command_start = true;
@@ -280,7 +275,7 @@ impl Lexer {
                     }
                 },
 
-                LexChar::Some('*') => {
+                Some('*') => {
                     let result: i32;
 
                     c = self.nextc();
@@ -322,7 +317,7 @@ impl Lexer {
                     return result;
                 },
 
-                LexChar::Some('!') => {
+                Some('!') => {
                     c = self.nextc();
                     if self.is_after_operator() {
                         self.set_lex_state(EXPR_ARG);
@@ -342,7 +337,7 @@ impl Lexer {
                     return Self::tBANG;
                 },
 
-                LexChar::Some('=') => {
+                Some('=') => {
                     if self.buffer.was_bol() {
                         // skip embedded rd document
                         if self.buffer.is_word_match("begin") {
@@ -383,7 +378,7 @@ impl Lexer {
                     return Self::tEQL;
                 },
 
-                LexChar::Some('<') => {
+                Some('<') => {
                     c = self.nextc();
                     if c == '<' &&
                         !self.is_lex_state_some(EXPR_DOT|EXPR_CLASS) &&
@@ -425,7 +420,7 @@ impl Lexer {
                     return Self::tLT
                 },
 
-                LexChar::Some('>') => {
+                Some('>') => {
                     self.set_lex_state(if self.is_after_operator() { EXPR_ARG } else { EXPR_BEG });
 
                     c = self.nextc();
@@ -447,14 +442,14 @@ impl Lexer {
                     return Self::tGT;
                 },
 
-                LexChar::Some('"') => {
+                Some('"') => {
                     label = if self.is_label_possible(cmd_state) { str_types::str_label } else { 0 };
                     self.strterm = self.new_strterm(str_types::str_dquote | label, '"', None);
                     self.buffer.set_ptok(self.buffer.pcur - 1);
                     return Self::tSTRING_BEG;
                 },
 
-                LexChar::Some('`') => {
+                Some('`') => {
                     if self.is_lex_state_some(EXPR_FNAME) {
                         self.set_lex_state(EXPR_ENDFN);
                         return Self::tBACK_REF2;
@@ -471,18 +466,18 @@ impl Lexer {
                     return Self::tXSTRING_BEG;
                 },
 
-                LexChar::Some('\'') => {
+                Some('\'') => {
                     label = if self.is_label_possible(cmd_state) { str_types::str_label } else { 0 };
                     self.strterm = self.new_strterm(str_types::str_squote | label, '\'', None);
                     self.buffer.set_ptok(self.buffer.pcur - 1);
                     return Self::tSTRING_BEG;
                 },
 
-                LexChar::Some('?') => {
+                Some('?') => {
                     return self.parse_qmark(space_seen).unwrap_or(-1);
                 },
 
-                LexChar::Some('&') => {
+                Some('&') => {
                     let result: i32;
 
                     c = self.nextc();
@@ -518,7 +513,7 @@ impl Lexer {
                     return result;
                 },
 
-                LexChar::Some('|') => {
+                Some('|') => {
                     c = self.nextc();
                     if c == '|' {
                         self.set_lex_state(EXPR_BEG);
@@ -530,7 +525,7 @@ impl Lexer {
                         }
                         self.buffer.pushback(&c);
                         if last_state.is_some(EXPR_BEG) {
-                            self.buffer.pushback(&LexChar::Some('|'));
+                            self.buffer.pushback(&Some('|'));
                             return Self::tPIPE;
                         }
                         return Self::tOROP;
@@ -545,7 +540,7 @@ impl Lexer {
                     return Self::tPIPE;
                 },
 
-                LexChar::Some('+') => {
+                Some('+') => {
                     c = self.nextc();
                     if self.is_after_operator() {
                         self.set_lex_state(EXPR_ARG);
@@ -573,7 +568,7 @@ impl Lexer {
                     return self.warn_balanced(Self::tPLUS, "+", "unary operator", &c, space_seen, &last_state);
                 },
 
-                LexChar::Some('-') => {
+                Some('-') => {
                     c = self.nextc();
                     if self.is_after_operator() {
                         self.set_lex_state(EXPR_ARG);
@@ -605,7 +600,7 @@ impl Lexer {
                     return self.warn_balanced(Self::tMINUS, "-", "unary operator", &c, space_seen, &last_state);
                 },
 
-                LexChar::Some('.') => {
+                Some('.') => {
                     let is_beg = self.is_beg();
                     self.set_lex_state(EXPR_BEG);
                     c = self.nextc();
@@ -628,7 +623,7 @@ impl Lexer {
                     if !c.is_eof() && c.is_digit() {
                         let prev =
                             if self.buffer.pcur - 1 > self.buffer.pbeg {
-                                LexChar::Some(self.buffer.input[self.buffer.pcur - 2])
+                                self.buffer.char_at(self.buffer.pcur - 2)
                             } else {
                                 LexChar::EOF
                             };
@@ -647,20 +642,20 @@ impl Lexer {
                     return Self::tDOT;
                 },
 
-                LexChar::Some('0') |
-                LexChar::Some('1') |
-                LexChar::Some('2') |
-                LexChar::Some('3') |
-                LexChar::Some('4') |
-                LexChar::Some('5') |
-                LexChar::Some('6') |
-                LexChar::Some('7') |
-                LexChar::Some('8') |
-                LexChar::Some('9')  => {
+                Some('0') |
+                Some('1') |
+                Some('2') |
+                Some('3') |
+                Some('4') |
+                Some('5') |
+                Some('6') |
+                Some('7') |
+                Some('8') |
+                Some('9')  => {
                     return self.parse_numeric(c.unwrap().clone());
                 },
 
-                LexChar::Some(')') => {
+                Some(')') => {
                     self.cond_pop();
                     self.cmdarg_pop();
                     self.set_lex_state(EXPR_ENDFN);
@@ -669,7 +664,7 @@ impl Lexer {
                     return Self::tRPAREN;
                 },
 
-                LexChar::Some(']') => {
+                Some(']') => {
                     self.cond_pop();
                     self.cmdarg_pop();
                     self.set_lex_state(EXPR_END);
@@ -678,7 +673,7 @@ impl Lexer {
                     return Self::tRBRACK;
                 },
 
-                LexChar::Some('}') => {
+                Some('}') => {
                     // tSTRING_DEND does COND_POP and CMDARG_POP in the yacc's rule (lalrpop here)
                     if self.brace_nest == 0 {
                         self.brace_nest -= 1;
@@ -693,7 +688,7 @@ impl Lexer {
                     return Self::tRCURLY;
                 },
 
-                LexChar::Some(':') => {
+                Some(':') => {
                     c = self.nextc();
                     if c == ':' {
                         if self.is_beg() || self.is_lex_state_some(EXPR_CLASS) || self.is_spacearg(&LexChar::EOF, space_seen) {
@@ -704,22 +699,22 @@ impl Lexer {
                         self.set_lex_state(EXPR_DOT);
                         return Self::tCOLON2;
                     }
-                    if self.is_end() || c.is_space() || c == LexChar::Some('#') {
+                    if self.is_end() || c.is_space() || c == Some('#') {
                         self.buffer.pushback(&c);
                         let result = self.warn_balanced(Self::tCOLON, ":", "symbol literal", &c, space_seen, &last_state);
                         self.set_lex_state(EXPR_BEG);
                         return result;
                     }
-                    match c {
-                        LexChar::Some('\'') => self.strterm = self.new_strterm(str_types::str_ssym, c.unwrap(), None),
-                        LexChar::Some('"')  => self.strterm = self.new_strterm(str_types::str_dsym, c.unwrap(), None),
+                    match c.to_option() {
+                        Some('\'') => self.strterm = self.new_strterm(str_types::str_ssym, c.unwrap(), None),
+                        Some('"')  => self.strterm = self.new_strterm(str_types::str_dsym, c.unwrap(), None),
                         _ => self.buffer.pushback(&c)
                     }
                     self.set_lex_state(EXPR_FNAME);
                     return Self::tSYMBEG;
                 },
 
-                LexChar::Some('/') => {
+                Some('/') => {
                     if self.is_beg() {
                         self.strterm = self.new_strterm(str_types::str_regexp, '/', None);
                         return Self::tREGEXP_BEG;
@@ -740,7 +735,7 @@ impl Lexer {
                     return self.warn_balanced(Self::tDIVIDE, "/", "regexp literal", &c, space_seen, &last_state);
                 },
 
-                LexChar::Some('^') => {
+                Some('^') => {
                     c = self.nextc();
                     if c == '=' {
                         self.set_yylval_id("^");
@@ -752,18 +747,18 @@ impl Lexer {
                     return Self::tCARET;
                 }
 
-                LexChar::Some(';') => {
+                Some(';') => {
                     self.set_lex_state(EXPR_BEG);
                     self.command_start = true;
                     return Self::tSEMI;
                 },
 
-                LexChar::Some(',') => {
+                Some(',') => {
                     self.set_lex_state(EXPR_BEG|EXPR_LABEL);
                     return Self::tCOMMA;
                 },
 
-                LexChar::Some('~') => {
+                Some('~') => {
                     if self.is_after_operator() {
                         c = self.nextc();
                         if c != '@' {
@@ -777,7 +772,7 @@ impl Lexer {
                     return Self::tTILDE;
                 },
 
-                LexChar::Some('(') => {
+                Some('(') => {
                     let mut result: i32 = Self::tLPAREN2;
 
                     if self.is_beg() {
@@ -798,7 +793,7 @@ impl Lexer {
                     return result;
                 },
 
-                LexChar::Some('[') => {
+                Some('[') => {
                     let mut result: i32 = Self::tLBRACK2;
 
                     self.paren_nest += 1;
@@ -827,7 +822,7 @@ impl Lexer {
                     return result;
                 },
 
-                LexChar::Some('{') => {
+                Some('{') => {
                     self.brace_nest += 1;
 
                     let result: i32;
@@ -857,7 +852,7 @@ impl Lexer {
                     return result;
                 },
 
-                LexChar::Some('\\') => {
+                Some('\\') => {
                     c = self.nextc();
                     if c == '\n' {
                         space_seen = true;
@@ -873,21 +868,20 @@ impl Lexer {
                     panic!("unclear what to return for \\ (2)");
                 },
 
-                LexChar::Some('%') => {
+                Some('%') => {
                     return self.parse_percent(space_seen, last_state);
                 },
 
-                LexChar::Some('$') => {
+                Some('$') => {
                     return self.parse_gvar(last_state);
                 },
 
-                LexChar::Some('@') => {
+                Some('@') => {
                     return self.parse_atmark(last_state);
                 },
 
-                LexChar::Some('_') => {
+                Some('_') => {
                     if self.buffer.was_bol() && self.buffer.is_whole_match("__END__", 0) {
-                        self.ruby__end__seen = true;
                         self.buffer.eofp = true;
                         return Self::END_OF_INPUT;
                     }
@@ -1050,8 +1044,8 @@ impl Lexer {
                 self.nextc();
                 if self.tokadd_mbchar(&c).is_err() { return Ok(Self::END_OF_INPUT) }
             } else {
-                c = self.read_escape(0);
-                self.tokadd(&c);
+                let byte = self.read_escape(0);
+                self.tokadd(&byte);
             }
         } else {
             self.tokadd(&c);
@@ -1068,21 +1062,28 @@ impl Lexer {
         true
     }
 
-    pub fn tokadd(&mut self, c: &LexChar) {
-        let c = c.unwrap();
-        self.tokenbuf.push(c);
-    }
+    // pub fn tokadd(&mut self, c: &LexChar) {
+    //     let c = c.unwrap();
+    //     self.tokenbuf.push(c);
+    // }
+
+    // pub fn tokadd_byte(&mut self, byte: u8) {
+    //     unimplemented!()
+    // }
 
     pub fn toklen(&self) -> usize {
-        self.tokenbuf.len()
+        match &self.tokenbuf {
+            TokenBuf::String(s) => s.len(),
+            TokenBuf::Bytes(_) => unreachable!("toklen is supposed to be used with String")
+        }
      }
 
     pub fn tokfix(&self) {
         // nop
     }
 
-    pub fn tok(&self) -> String {
-        self.tokenbuf.to_owned()
+    pub fn tok(&self) -> TokenBuf {
+        self.tokenbuf.clone()
     }
 
     pub fn yyerror0(&self, message: &str) {
@@ -1118,7 +1119,7 @@ impl Lexer {
     }
 
     pub fn percent_unknown(&mut self, term: &LexChar) -> i32 {
-        self.buffer.pushback(&term);
+        self.buffer.pushback(term);
         let len = self.parser_precise_mbclen(self.buffer.pcur);
         if let Some(len) = len {
             self.buffer.pcur += len;
@@ -1137,7 +1138,7 @@ impl Lexer {
             if !c.is_ascii() {
                 return self.percent_unknown(&term)
             }
-            c = LexChar::Some('Q');
+            c = LexChar::new('Q');
         } else {
             term = self.nextc();
             if term.is_alnum() {
@@ -1151,47 +1152,47 @@ impl Lexer {
         }
 
         paren = term.to_option();
-        if term == '(' { term = LexChar::Some(')') }
-        else if term == '[' { term = LexChar::Some(']') }
-        else if term == '{' { term = LexChar::Some('}') }
-        else if term == '<' { term = LexChar::Some('>') }
+        if term == '(' { term = LexChar::new(')') }
+        else if term == '[' { term = LexChar::new(']') }
+        else if term == '{' { term = LexChar::new('}') }
+        else if term == '<' { term = LexChar::new('>') }
         else { paren = None }
 
         self.buffer.ptok = ptok - 1;
-        match c {
-            LexChar::Some('Q') => {
+        match c.to_option() {
+            Some('Q') => {
                 self.strterm = self.new_strterm(str_types::str_dquote, term.unwrap(), paren);
                 return Self::tSTRING_BEG;
             },
-            LexChar::Some('q') => {
+            Some('q') => {
                 self.strterm = self.new_strterm(str_types::str_squote, term.unwrap(), paren);
                 return Self::tSTRING_BEG;
             },
-            LexChar::Some('W') => {
+            Some('W') => {
                 self.strterm = self.new_strterm(str_types::str_dword, term.unwrap(), paren);
                 return Self::tWORDS_BEG;
             },
-            LexChar::Some('w') => {
+            Some('w') => {
                 self.strterm = self.new_strterm(str_types::str_sword, term.unwrap(), paren);
                 return Self::tQWORDS_BEG;
             },
-            LexChar::Some('I') => {
+            Some('I') => {
                 self.strterm = self.new_strterm(str_types::str_dword, term.unwrap(), paren);
                 return Self::tSYMBOLS_BEG;
             },
-            LexChar::Some('i') => {
+            Some('i') => {
                 self.strterm = self.new_strterm(str_types::str_sword, term.unwrap(), paren);
                 return Self::tQSYMBOLS_BEG;
             },
-            LexChar::Some('x') => {
+            Some('x') => {
                 self.strterm = self.new_strterm(str_types::str_xquote, term.unwrap(), paren);
                 return Self::tXSTRING_BEG;
             },
-            LexChar::Some('r') => {
+            Some('r') => {
                 self.strterm = self.new_strterm(str_types::str_regexp, term.unwrap(), paren);
                 return Self::tREGEXP_BEG;
             },
-            LexChar::Some('s') => {
+            Some('s') => {
                 self.strterm = self.new_strterm(str_types::str_ssym, term.unwrap(), paren);
                 self.set_lex_state(EXPR_FNAME|EXPR_FITEM);
                 return Self::tSYMBEG;
@@ -1234,74 +1235,74 @@ impl Lexer {
         self.buffer.ptok = ptr - 1; // from '$'
         self.newtok();
         c = self.nextc();
-        match c {
-            LexChar::Some('_') => { /* $_: last read line string */
+        match c.to_option() {
+            Some('_') => { /* $_: last read line string */
                 c = self.nextc();
                 if self.parser_is_identchar() {
-                    self.tokadd(&LexChar::Some('$'));
-                    self.tokadd(&LexChar::Some('_'));
+                    self.tokadd('$');
+                    self.tokadd('_');
                 } else {
                     self.buffer.pushback(&c);
-                    c = LexChar::Some('_');
-                    self.tokadd(&LexChar::Some('$'));
+                    c = LexChar::new('_');
+                    self.tokadd('$');
                     self.tokadd(&c);
                     return Self::tGVAR;
                 }
             },
-            LexChar::Some('~')          /* $~: match-data */
-            | LexChar::Some('*')        /* $*: argv */
-            | LexChar::Some('$')        /* $$: pid */
-            | LexChar::Some('?')        /* $?: last status */
-            | LexChar::Some('!')        /* $!: error string */
-            | LexChar::Some('@')        /* $@: error position */
-            | LexChar::Some('/')        /* $/: input record separator */
-            | LexChar::Some('\\')       /* $\: output record separator */
-            | LexChar::Some(';')        /* $;: field separator */
-            | LexChar::Some(',')        /* $,: output field separator */
-            | LexChar::Some('.')        /* $.: last read line number */
-            | LexChar::Some('=')        /* $=: ignorecase */
-            | LexChar::Some(':')        /* $:: load path */
-            | LexChar::Some('<')        /* $<: reading filename */
-            | LexChar::Some('>')        /* $>: default output handle */
-            | LexChar::Some('\"') => {  /* $": already loaded files */
-                self.tokadd(&LexChar::Some('$'));
+            Some('~')          /* $~: match-data */
+            | Some('*')        /* $*: argv */
+            | Some('$')        /* $$: pid */
+            | Some('?')        /* $?: last status */
+            | Some('!')        /* $!: error string */
+            | Some('@')        /* $@: error position */
+            | Some('/')        /* $/: input record separator */
+            | Some('\\')       /* $\: output record separator */
+            | Some(';')        /* $;: field separator */
+            | Some(',')        /* $,: output field separator */
+            | Some('.')        /* $.: last read line number */
+            | Some('=')        /* $=: ignorecase */
+            | Some(':')        /* $:: load path */
+            | Some('<')        /* $<: reading filename */
+            | Some('>')        /* $>: default output handle */
+            | Some('\"') => {  /* $": already loaded files */
+                self.tokadd('$');
                 self.tokadd(&c);
                 return Self::tGVAR;
             },
-            LexChar::Some('-') => {
-                self.tokadd(&LexChar::Some('$'));
+            Some('-') => {
+                self.tokadd('$');
                 self.tokadd(&c);
                 c = self.nextc();
                 if self.parser_is_identchar() {
                     if self.tokadd_mbchar(&c).is_err() { return Self::END_OF_INPUT }
                 } else {
                     self.buffer.pushback(&c);
-                    self.buffer.pushback(&LexChar::Some('-'));
+                    self.buffer.pushback(&'-');
                     return Self::tCHAR;
                 }
                 return Self::tGVAR;
             },
-            LexChar::Some('&')         /* $&: last match */
-            | LexChar::Some('`')       /* $`: string before last match */
-            | LexChar::Some('\'')      /* $': string after last match */
-            | LexChar::Some('+') => {  /* $+: string matches last paren. */
+            Some('&')         /* $&: last match */
+            | Some('`')       /* $`: string before last match */
+            | Some('\'')      /* $': string after last match */
+            | Some('+') => {  /* $+: string matches last paren. */
                 if last_state.is_some(EXPR_FNAME) {
-                    self.tokadd(&LexChar::Some('$'));
+                    self.tokadd('$');
                     self.tokadd(&c);
                     return Self::tGVAR
                 }
                 return Self::tBACK_REF;
             },
-            LexChar::Some('1')
-            | LexChar::Some('2')
-            | LexChar::Some('3')
-            | LexChar::Some('4')
-            | LexChar::Some('5')
-            | LexChar::Some('6')
-            | LexChar::Some('7')
-            | LexChar::Some('8')
-            | LexChar::Some('9') => {
-                self.tokadd(&LexChar::Some('$'));
+            Some('1')
+            | Some('2')
+            | Some('3')
+            | Some('4')
+            | Some('5')
+            | Some('6')
+            | Some('7')
+            | Some('8')
+            | Some('9') => {
+                self.tokadd('$');
                 loop {
                     self.tokadd(&c);
                     c = self.nextc();
@@ -1328,7 +1329,7 @@ impl Lexer {
                     return Self::tGVAR
                 }
 
-                self.tokadd(&LexChar::Some('$'));
+                self.tokadd('$');
             }
         }
 
@@ -1345,10 +1346,10 @@ impl Lexer {
 
         self.buffer.ptok = ptr - 1; // from '@'
         self.newtok();
-        self.tokadd(&LexChar::Some('@'));
+        self.tokadd('@');
         if c == '@' {
             result = Self::tCVAR;
-            self.tokadd(&LexChar::Some('@'));
+            self.tokadd('@');
             c = self.nextc()
         }
         self.set_lex_state(if last_state.is_some(EXPR_FNAME) { EXPR_ENDFN } else { EXPR_END });
@@ -1393,7 +1394,7 @@ impl Lexer {
     pub fn newtok(&mut self) {
         self.buffer.tokidx = 0;
         self.buffer.tokline = self.buffer.ruby_sourceline;
-        self.tokenbuf = "".into();
+        self.tokenbuf = TokenBuf::default();
     }
 
     pub fn is_identchar(&self, begin: usize, _end: usize) -> bool {
@@ -1406,16 +1407,16 @@ impl Lexer {
         self.buffer.set_ptok(ptok);
     }
 
-    pub fn set_yylval_literal(&mut self, value: String) {
+    pub fn set_yylval_literal(&mut self, value: TokenBuf) {
         if self.debug { println!("set_yylval_literal({:#?}) ptok = {}, pcur = {}", value, self.buffer.ptok, self.buffer.pcur); }
-        self.lval = Some(TokenValue::String(value));
+        self.lval = Some(value.to_token_value());
     }
 
     pub fn tokadd_mbchar(&mut self, c: &LexChar) -> Result<(), ()> {
         match c {
             LexChar::EOF => Err(()),
             _ => {
-                self.tokadd(&c);
+                self.tokadd(c);
                 Ok(())
             }
         }
@@ -1430,8 +1431,12 @@ impl Lexer {
         self.buffer.peek_n(':', n) && !self.buffer.peek_n(':', n+1)
     }
 
-    pub fn set_yyval_name(&mut self, name: String) {
+    pub fn set_yyval_name(&mut self, name: TokenBuf) {
         if self.debug { println!("set_yyval_name({:#?})", name); }
-        self.lval = Some(TokenValue::String(name));
+        self.lval = Some(name.to_token_value());
+    }
+
+    pub fn is_lvar_defined(&self, name: &str) -> bool {
+        self.static_env.is_declared(name)
     }
 }

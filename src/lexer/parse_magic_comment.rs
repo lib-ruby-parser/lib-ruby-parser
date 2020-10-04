@@ -1,5 +1,4 @@
 use crate::Lexer;
-use crate::lexer::lex_char::LexChar;
 
 const MAGIC_COMMENTS: [&'static str; 4] = [
     "coding",
@@ -26,14 +25,14 @@ impl Lexer {
 
         loop {
             if send - str_ <= 6 { return }
-            match self.char_at(str_ + 6) {
-                LexChar::Some('C') | LexChar::Some('c') => { str_ += 6; continue; },
-                LexChar::Some('O') | LexChar::Some('o') => { str_ += 5; continue; },
-                LexChar::Some('D') | LexChar::Some('d') => { str_ += 4; continue; },
-                LexChar::Some('I') | LexChar::Some('i') => { str_ += 3; continue; },
-                LexChar::Some('N') | LexChar::Some('n') => { str_ += 2; continue; },
-                LexChar::Some('G') | LexChar::Some('g') => { str_ += 1; continue; },
-                LexChar::Some('=') | LexChar::Some(':') => {
+            match self.char_at(str_ + 6).to_option() {
+                Some('C') | Some('c') => { str_ += 6; continue; },
+                Some('O') | Some('o') => { str_ += 5; continue; },
+                Some('D') | Some('d') => { str_ += 4; continue; },
+                Some('I') | Some('i') => { str_ += 3; continue; },
+                Some('N') | Some('n') => { str_ += 2; continue; },
+                Some('G') | Some('g') => { str_ += 1; continue; },
+                Some('=') | Some(':') => {
                     sep = true;
                     str_ += 6;
                 },
@@ -77,14 +76,14 @@ impl Lexer {
         let mut i = 2;
 
         while i < len {
-            match self.char_at(str_ + i) {
-                LexChar::Some('-') => {
+            match self.char_at(str_ + i).to_option() {
+                Some('-') => {
                     if self.char_at(str_ + i - 1) == '*' && self.char_at(str_ + i - 2) == '-' {
                         return str_ + i + 1;
                     }
                     i += 2
                 },
-                LexChar::Some('*') => {
+                Some('*') => {
                     if i + 1 >= len { return 0 }
                     if self.char_at(str_ + i + 1) != '-' {
                         i += 4;

@@ -1,4 +1,4 @@
-use crate::Buffer;
+use crate::source::buffer::*;
 
 #[derive(Clone)]
 pub struct FileLoc {

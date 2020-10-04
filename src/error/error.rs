@@ -1,6 +1,6 @@
 use crate::{ErrorLevel, ErrorMessage};
 use crate::source::Range;
-use crate::Buffer;
+use crate::source::buffer::*;
 
 #[derive(Debug, Clone)]
 pub struct ParseError {

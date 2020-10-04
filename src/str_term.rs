@@ -12,14 +12,23 @@ pub mod str_types {
     pub const STR_FUNC_LIST  : usize = 0x4000;
     pub const STR_FUNC_TERM  : usize = 0x8000;
 
+    #[allow(non_upper_case_globals)]
     pub const str_label : usize = STR_FUNC_LABEL;
+    #[allow(non_upper_case_globals)]
     pub const str_squote: usize = 0;
+    #[allow(non_upper_case_globals)]
     pub const str_dquote: usize = STR_FUNC_EXPAND;
+    #[allow(non_upper_case_globals)]
     pub const str_xquote: usize = STR_FUNC_EXPAND;
+    #[allow(non_upper_case_globals)]
     pub const str_regexp: usize = STR_FUNC_REGEXP|STR_FUNC_ESCAPE|STR_FUNC_EXPAND;
+    #[allow(non_upper_case_globals)]
     pub const str_sword : usize = STR_FUNC_QWORDS|STR_FUNC_LIST;
+    #[allow(non_upper_case_globals)]
     pub const str_dword : usize = STR_FUNC_QWORDS|STR_FUNC_EXPAND|STR_FUNC_LIST;
+    #[allow(non_upper_case_globals)]
     pub const str_ssym  : usize = STR_FUNC_SYMBOL;
+    #[allow(non_upper_case_globals)]
     pub const str_dsym  : usize = STR_FUNC_SYMBOL|STR_FUNC_EXPAND;
 }
 

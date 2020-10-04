@@ -1,5 +1,5 @@
 use std::convert::TryInto;
-use crate::Buffer;
+use crate::source::buffer::*;
 use crate::source::FileLoc;
 
 #[derive(Clone, PartialEq)]

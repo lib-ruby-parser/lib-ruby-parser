@@ -1,5 +1,6 @@
-use crate::lexer::lex_states::*;
+use crate::lex_states::*;
 use crate::Lexer;
+use crate::TokenBuf;
 
 pub struct ReservedWord {
     pub name: &'static str,
@@ -260,7 +261,12 @@ lazy_static! {
     ];
 }
 
-pub fn reserved_word(tok: &str) -> Option<&'static ReservedWord> {
+pub fn reserved_word(tok: &TokenBuf) -> Option<&'static ReservedWord> {
+    let tok = match tok {
+        TokenBuf::String(s) => s,
+        TokenBuf::Bytes(_) => return None
+    };
+
     for res in RESERVED_WORDS.iter() {
         if res.name == tok {
             return Some(res)

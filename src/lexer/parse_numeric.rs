@@ -1,6 +1,9 @@
 use crate::Lexer;
-use crate::lexer::lex_states::*;
-use crate::lexer::lex_char::LexChar;
+use crate::source::buffer::*;
+use crate::TokenBuf;
+use crate::lexer::TokAdd;
+use crate::lex_states::*;
+use crate::lex_char::*;
 
 impl Lexer {
     const NUM_SUFFIX_R: i8 = 1 << 0;
@@ -8,7 +11,7 @@ impl Lexer {
     const NUM_SUFFIX_ALL: i8 = 3;
 
     pub fn parse_numeric(&mut self, prefix: char) -> i32 {
-        let mut c = LexChar::Some(prefix);
+        let mut c = LexChar::new(prefix);
 
         let mut is_float: bool = false;
         let mut seen_point: Option<usize> = None;
@@ -51,7 +54,9 @@ impl Lexer {
                     return self.trailing_uc(&nondigit);
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                return self.set_integer_literal(format!("0x{}", self.tok()), suffix);
+                let mut tok = self.tok();
+                tok.prepend("0x");
+                return self.set_integer_literal(tok, suffix);
             }
             if c == 'b' || c == 'B' {
                 // binary
@@ -79,7 +84,9 @@ impl Lexer {
                     return self.trailing_uc(&nondigit);
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                return self.set_integer_literal(format!("0b{}", self.tok()), suffix);
+                let mut tok = self.tok();
+                tok.prepend("0b");
+                return self.set_integer_literal(tok, suffix);
             }
             if c == 'd' || c == 'D' {
                 // decimal
@@ -107,7 +114,9 @@ impl Lexer {
                     return self.trailing_uc(&nondigit);
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                return self.set_integer_literal(format!("0d{}", self.tok()), suffix);
+                let mut tok = self.tok();
+                tok.prepend("0d");
+                return self.set_integer_literal(tok, suffix);
             }
             if c == '_' {
                 // 0_0
@@ -131,31 +140,31 @@ impl Lexer {
             if c > '7' && c <= '9' {
                 self.invalid_octal();
             } else if c == '.' || c == 'e' || c == 'E' {
-                self.tokadd(&LexChar::Some('0'));
+                self.tokadd('0');
             } else {
                 self.buffer.pushback(&c);
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                return self.set_integer_literal("0".to_owned(), suffix);
+                return self.set_integer_literal(TokenBuf::String("0".to_owned()), suffix);
             }
         }
 
         loop {
-            match c {
-                LexChar::Some('0') |
-                LexChar::Some('1') |
-                LexChar::Some('2') |
-                LexChar::Some('3') |
-                LexChar::Some('4') |
-                LexChar::Some('5') |
-                LexChar::Some('6') |
-                LexChar::Some('7') |
-                LexChar::Some('8') |
-                LexChar::Some('9') => {
+            match c.to_option() {
+                Some('0') |
+                Some('1') |
+                Some('2') |
+                Some('3') |
+                Some('4') |
+                Some('5') |
+                Some('6') |
+                Some('7') |
+                Some('8') |
+                Some('9') => {
                     nondigit = None;
                     self.tokadd(&c);
                 },
 
-                LexChar::Some('.') => {
+                Some('.') => {
                     if nondigit.is_some() { return self.trailing_uc(&nondigit) }
                     if seen_point.is_some() || seen_e {
                         return self.decode_num(c, nondigit, is_float, seen_e, seen_point);
@@ -168,14 +177,14 @@ impl Lexer {
                         c = c0;
                     }
                     seen_point = Some(self.toklen());
-                    self.tokadd(&LexChar::Some('.'));
+                    self.tokadd('.');
                     self.tokadd(&c);
                     is_float = true;
                     nondigit = None;
                 },
 
-                LexChar::Some('e') |
-                LexChar::Some('E') => {
+                Some('e') |
+                Some('E') => {
                     if let Some(nondigit_value) = &nondigit {
                         self.buffer.pushback(&c);
                         c = nondigit_value.clone();
@@ -198,7 +207,7 @@ impl Lexer {
                     nondigit = if c == '-' || c == '+' { Some(c) } else { None };
                 },
 
-                LexChar::Some('_') => {
+                Some('_') => {
                     if nondigit.is_some() { return self.decode_num(c, nondigit, is_float, seen_e, seen_point); }
                     nondigit = Some(c);
                 },
@@ -220,21 +229,23 @@ impl Lexer {
             if *c < '0' || *c > '9' { break }
             if *c > '7' { self.invalid_octal(); return None }
             *nondigit = None;
-            self.tokadd(&c);
+            self.tokadd(&*c);
 
             *c = self.nextc();
             if c.is_eof() { break }
         }
 
         if self.toklen() > start {
-            self.buffer.pushback(&c);
+            self.buffer.pushback(c);
             self.tokfix();
             if nondigit.is_some() { return Some(self.trailing_uc(&nondigit)) }
             let suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-            return Some(self.set_integer_literal(format!("0{}", self.tok()), suffix));
+            let mut tok = self.tok();
+            tok.prepend("0");
+            return Some(self.set_integer_literal(tok, suffix));
         }
         if nondigit.is_some() {
-            self.buffer.pushback(&c);
+            self.buffer.pushback(c);
             return Some(self.trailing_uc(&nondigit));
         }
 
@@ -264,11 +275,12 @@ impl Lexer {
         self.tokfix();
         if is_float {
             let mut token_type: i32 = Self::tFLOAT;
-            let v: String;
+            let v;
 
             let suffix = self.number_literal_suffix(if seen_e { Self::NUM_SUFFIX_I } else { Self::NUM_SUFFIX_ALL });
             if (suffix & Self::NUM_SUFFIX_R) != 0 {
-                let value = format!("{}r", self.tok());
+                let mut value = self.tok();
+                value.push('r');
                 token_type = Self::tRATIONAL;
                 v = self.parse_rational(value, self.toklen(), seen_point);
             } else {
@@ -281,15 +293,14 @@ impl Lexer {
         return self.set_integer_literal(self.tok(), suffix);
     }
 
-    fn parse_rational(&mut self, tok: String, _len: usize, _seen_point: Option<usize>) -> String {
+    fn parse_rational(&mut self, tok: TokenBuf, _len: usize, _seen_point: Option<usize>) -> TokenBuf {
         tok
     }
 
-    fn set_number_literal(&mut self, value: String, token_type: i32, suffix: i8) -> i32 {
+    fn set_number_literal(&mut self, mut value: TokenBuf, token_type: i32, suffix: i8) -> i32 {
         let mut token_type = token_type;
-        let mut value = value.to_owned();
         if suffix & Self::NUM_SUFFIX_I != 0 {
-            value = format!("{}i", value);
+            value.push('i');
             token_type = Self::tIMAGINARY;
         }
         self.set_yylval_literal(value);
@@ -300,7 +311,7 @@ impl Lexer {
     pub fn no_digits(&mut self) -> i32 {
         self.yyerror0("numeric literal without digits");
         if self.buffer.peek('_') { self.nextc(); }
-        self.set_integer_literal("0".to_owned(), 0)
+        self.set_integer_literal(TokenBuf::String("0".to_owned()), 0)
     }
 
     pub fn number_literal_suffix(&mut self, mask: i8) -> i8 {
@@ -337,11 +348,10 @@ impl Lexer {
         result
     }
 
-    pub fn set_integer_literal(&mut self, value: String, suffix: i8) -> i32 {
-        let mut token_type: i32 = Self::tINTEGER;
-        let mut value = value.to_owned();
+    pub fn set_integer_literal(&mut self, mut value: TokenBuf, suffix: i8) -> i32 {
+        let mut token_type = Self::tINTEGER;
         if suffix & Self::NUM_SUFFIX_R != 0 {
-            value = format!("r{}", value);
+            value.push('r');
             token_type = Self::tRATIONAL;
         }
         self.set_number_literal(value, token_type, suffix)

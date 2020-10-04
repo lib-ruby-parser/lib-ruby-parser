@@ -5,7 +5,7 @@ use ruby_parser::{Lexer, Token};
 use std::{convert::TryInto, panic};
 use std::fs;
 use std::process::exit;
-use ruby_parser::lexer::lex_states::*;
+use ruby_parser::lex_states::*;
 
 enum TestSection {
     None,

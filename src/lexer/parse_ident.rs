@@ -1,8 +1,9 @@
-use crate::Lexer;
-use crate::lexer::{LexState};
-use crate::lexer::lex_char::LexChar;
-use crate::lexer::lex_states::*;
-use crate::lexer::reserved_word;
+use crate::lexer::*;
+use crate::source::buffer::*;
+use crate::TokenBuf;
+use crate::{LexState, lex_states::*};
+use crate::lex_char::*;
+use crate::reserved_word;
 
 impl Lexer {
     pub fn parser_is_identchar(&self) -> bool {
@@ -12,7 +13,10 @@ impl Lexer {
     pub fn tokenize_ident(&mut self, _last_state: &LexState) -> String {
         let ident = self.tok();
         self.set_yyval_name(ident.clone());
-        ident
+        match ident {
+            TokenBuf::String(s) => s,
+            TokenBuf::Bytes(_) => unreachable!("locals can't have non-utf chars")
+        }
     }
 
     // This method is called is_local_id in MRI, not sure why

@@ -1,26 +1,7 @@
 use std::convert::{TryFrom};
-use crate::lexer::LexChar;
+use crate::lex_char::*;
 use crate::source::{decode_input, InputError};
-
-#[derive(Debug, Clone, Default)]
-pub struct SourceLine {
-    pub start: usize,
-    pub end: usize,
-}
-
-impl SourceLine {
-    pub fn source(&self, source: &Vec<char>) -> Vec<char> {
-        source[self.start..self.end].to_owned()
-    }
-
-    pub fn len(&self) -> usize {
-        self.end - self.start
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.start == self.end
-    }
-}
+use crate::source::SourceLine;
 
 #[derive(Debug, Clone, Default)]
 pub struct Buffer {
@@ -97,7 +78,7 @@ impl Buffer {
             c = self.parser_cr(c);
         }
         if self.debug { println!("nextc = {:?}", c as char); }
-        return LexChar::Some(c);
+        return LexChar::new(c);
     }
 
     pub fn goto_eol(&mut self) {
@@ -191,7 +172,7 @@ impl Buffer {
 
     pub fn char_at(&self, idx: usize) -> LexChar {
         if let Some(c) = self.input.get(idx) {
-            LexChar::Some(c.clone())
+            LexChar::new(*c)
         } else {
             LexChar::EOF
         }
@@ -203,15 +184,6 @@ impl Buffer {
         } else {
             None
         }
-    }
-
-    pub fn pushback(&mut self, c: &LexChar) {
-        if c.is_eof() { return };
-        self.pcur -= 1;
-        if self.pcur > self.pbeg && self.input[self.pcur] == '\n' && self.input[self.pcur - 1] == '\r' {
-            self.pcur -= 1;
-        }
-        if self.debug { println!("pushback({:?}) pcur = {}", c, self.pcur); }
     }
 
     pub fn was_bol(&self) -> bool {
@@ -284,7 +256,7 @@ impl Buffer {
         self.pbeg = self.lines[self.lastline].start;
         self.pend = self.pbeg + self.lines[self.lastline].len();
         self.pcur = self.pend;
-        self.pushback(&LexChar::Some(1 as char));
+        self.pushback(&LexChar::new(1));
         self.set_ptok(self.pcur);
     }
 
@@ -298,5 +270,33 @@ impl Buffer {
         }
 
         None
+    }
+}
+
+
+pub trait Pushback<T> {
+    fn pushback(&mut self, c: &T);
+}
+
+impl Pushback<Option<char>> for Buffer {
+    fn pushback(&mut self, c: &Option<char>) {
+        if c.is_none() { return };
+        self.pcur -= 1;
+        if self.pcur > self.pbeg && self.input[self.pcur] == '\n' && self.input[self.pcur - 1] == '\r' {
+            self.pcur -= 1;
+        }
+        if self.debug { println!("pushback({:?}) pcur = {}", c, self.pcur); }
+    }
+}
+
+impl Pushback<LexChar> for Buffer {
+    fn pushback(&mut self, c: &LexChar) {
+        self.pushback(&c.to_option())
+    }
+}
+
+impl Pushback<char> for Buffer {
+    fn pushback(&mut self, c: &char) {
+        self.pushback(&Some(*c))
     }
 }

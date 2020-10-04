@@ -12,7 +12,7 @@
     builder: Builder,
     current_arg_stack: CurrentArgStack,
     pub static_env: StaticEnvironment,
-    context: LexContext,
+    context: ParserContext,
     last_token: Token,
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
@@ -21,10 +21,10 @@
 
 %code use {
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
-    use crate::lexer::lex_states::*;
-    use crate::lexer::{Context as LexContext, ContextItem};
+    use crate::lex_states::*;
+    use crate::Context as ParserContext;
     use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel};
-    use crate::lexer::{StrTerm};
+    use crate::str_term::StrTerm;
     use crate::map_builder::value;
 }
 
@@ -544,7 +544,7 @@
                     }
                 | klEND tLCURLY compstmt tRCURLY
                     {
-                        if self.context.is_in(ContextItem::Def) {
+                        if self.context.is_in_def() {
                             self.warn(&@1, "END in method; use at_exit")
                         }
 
@@ -878,7 +878,7 @@
 
        defn_head: k_def def_name
                     {
-                        self.context.push(ContextItem::Def);
+                        self.context.push_def();
 
                         $$ = Value::DefnHead(( $<Token>1, $<Token>2 ));
                     }
@@ -891,7 +891,7 @@
                   def_name
                     {
                         self.yylexer.set_lex_state(EXPR_ENDFN|EXPR_LABEL);
-                        self.context.push(ContextItem::Defs);
+                        self.context.push_defs();
 
                         $$ = Value::DefsHead(( $<Token>1, $<Node>2, $<Token>3, $<Token>5 ));
                     }
@@ -922,7 +922,7 @@
 
  cmd_brace_block: tLBRACE_ARG
                     {
-                        self.context.push(ContextItem::Block);
+                        self.context.push_block();
                     }
                   brace_body tRCURLY
                     {
@@ -2738,7 +2738,7 @@
                         self.static_env.extend_static();
                         self.yylexer.cmdarg_push(false);
                         self.yylexer.cond_push(false);
-                        self.context.push(ContextItem::Class);
+                        self.context.push_class();
                     }
                   bodystmt
                   k_end
@@ -2774,7 +2774,7 @@
                         self.static_env.extend_static();
                         self.yylexer.cmdarg_push(false);
                         self.yylexer.cond_push(false);
-                        self.context.push(ContextItem::Sclass);
+                        self.context.push_sclass();
                     }
                   term
                   bodystmt
@@ -2799,7 +2799,7 @@
                     {
                         self.static_env.extend_static();
                         self.yylexer.cmdarg_push(false);
-                        self.context.push(ContextItem::Module);
+                        self.context.push_module();
                     }
                   bodystmt
                   k_end
@@ -2987,7 +2987,7 @@
 
         k_return: kRETURN
                     {
-                        if self.context.is_in(ContextItem::Class) {
+                        if self.context.is_in_class() {
                             self.yyerror(&@1, "Invalid return in class/module body");
                             return Self::YYERROR;
                         }
@@ -3323,7 +3323,7 @@ opt_block_args_tail:
                     {
                         self.static_env.extend_dynamic();
                         self.max_numparam_stack.push();
-                        self.context.push(ContextItem::Lambda);
+                        self.context.push_lambda();
                         $<Num>$ = Value::Num(self.yylexer.lpar_beg);
                         self.yylexer.lpar_beg = self.yylexer.paren_nest;
                     }
@@ -3382,7 +3382,7 @@ opt_block_args_tail:
 
      lambda_body: tLAMBEG
                     {
-                        self.context.push(ContextItem::Lambda);
+                        self.context.push_lambda();
                     }
                   compstmt tRCURLY
                     {
@@ -3391,7 +3391,7 @@ opt_block_args_tail:
                     }
                 | kDO_LAMBDA
                     {
-                        self.context.push(ContextItem::Lambda);
+                        self.context.push_lambda();
                     }
                   bodystmt k_end
                     {
@@ -3402,7 +3402,7 @@ opt_block_args_tail:
 
         do_block: k_do_block
                     {
-                        self.context.push(ContextItem::Block);
+                        self.context.push_block();
                     }
                   do_body k_end
                     {
@@ -3615,7 +3615,7 @@ opt_block_args_tail:
 
      brace_block: tLCURLY
                     {
-                        self.context.push(ContextItem::Block);
+                        self.context.push_block();
                     }
                   brace_body tRCURLY
                     {
@@ -3626,7 +3626,7 @@ opt_block_args_tail:
                     }
                 | k_do
                     {
-                        self.context.push(ContextItem::Block);
+                        self.context.push_block();
                     }
                   do_body k_end
                     {
