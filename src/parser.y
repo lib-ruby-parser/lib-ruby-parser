@@ -17,6 +17,7 @@
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
+    tokens: Vec<Token>,
 }
 
 %code use {
@@ -5721,23 +5722,6 @@ impl std::fmt::Debug for Value {
     }
 }
 
-impl Parser {
-  pub fn do_parse(mut self) -> Option<Node> {
-      self.parse();
-      self.result
-  }
-}
-
-impl Lexer {
-    fn report_syntax_error(&self, ctx: &Context) {
-        if self.debug { eprintln!("syntax error: {:?}", ctx) }
-    }
-
-    fn yyerror(&mut self, loc: &Loc, msg: &str) {
-        if self.debug { eprintln!("yyerror: {:?} {:?}", loc, msg) }
-    }
-}
-
 #[allow(non_upper_case_globals)]
 impl Lexer {
     // Dummy tokens to satisfy tests for now
@@ -5746,6 +5730,14 @@ impl Lexer {
     pub const tUNARY_NUM: i32 = 1_002;
     pub const tREGEXP_OPT: i32 = 1_003;
     pub const tCHARACTER: i32 = 1_004;
+
+    fn report_syntax_error(&self, ctx: &Context) {
+        if self.debug { eprintln!("syntax error: {:?}", ctx) }
+    }
+
+    fn yyerror(&mut self, loc: &Loc, msg: &str) {
+        if self.debug { eprintln!("yyerror: {:?} {:?}", loc, msg) }
+    }
 }
 
 impl Parser {
@@ -5777,7 +5769,20 @@ impl Parser {
             static_env,
             yylexer: lexer,
             last_token: (0, TokenValue::String("".to_owned()), Loc { begin: 0, end: 0 }),
+            tokens: vec![],
         }
+    }
+
+    pub fn do_parse(&mut self) -> Option<Node> {
+        self.parse();
+        std::mem::replace(&mut self.result, None)
+    }
+
+    pub fn lex(&mut self) -> Option<Vec<Token>> {
+        self.do_parse()?;
+        Some(
+            std::mem::replace(&mut self.tokens, vec![])
+        )
     }
 
     pub fn set_debug(&mut self, debug: bool) {
@@ -5792,6 +5797,7 @@ impl Parser {
     fn next_token(&mut self) -> Token {
         let token = self.yylexer.yylex();
         self.last_token = token.clone();
+        self.tokens.push(token.clone());
         token
     }
 

@@ -60,7 +60,10 @@ fn recognize_encoding(source: &Vec<u8>) -> Result<String, InputError> {
 
     let encoding_line = String::from(String::from_utf8_lossy(encoding_line));
 
-    let captures = ENCODING_RE.captures(&encoding_line).unwrap();
+    let captures = match ENCODING_RE.captures(&encoding_line) {
+        Some(captures) => captures,
+        None => return Err(InputError::UnableToRecognizeEncoding)
+    };
 
     let enc = captures.name("a")
         .or(captures.name("b"))

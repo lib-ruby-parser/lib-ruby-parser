@@ -10,7 +10,7 @@ pub struct Buffer {
 
     pub lines: Vec<SourceLine>,
     pub line_count: usize,
-    pub prevline: usize, // index
+    pub prevline: Option<usize>, // index
     pub lastline: usize, // index
     pub nextline: usize, // index
     pub pbeg: usize,
@@ -139,7 +139,7 @@ impl Buffer {
         self.pcur = line.start;
         self.pend = line.end;
         self.token_flush();
-        self.prevline = self.lastline;
+        self.prevline = Some(self.lastline);
         self.lastline = v;
 
 
@@ -249,10 +249,11 @@ impl Buffer {
     }
 
     pub fn eof_no_decrement(&mut self) {
-        if self.prevline != 0 && !self.eofp {
-            self.lastline = self.prevline;
+        if let Some(prevline) = self.prevline {
+            if !self.eofp {
+                self.lastline = prevline;
+            }
         }
-
         self.pbeg = self.lines[self.lastline].start;
         self.pend = self.pbeg + self.lines[self.lastline].len();
         self.pcur = self.pend;
@@ -262,7 +263,7 @@ impl Buffer {
 
     pub fn line_col_for_pos(&self, mut pos: usize) -> Option<(usize, usize)> {
         for (lineno, line) in self.lines.iter().enumerate() {
-            if pos > line.len() {
+            if pos >= line.len() {
                 pos -= line.len()
             } else {
                 return Some(( lineno + 1, pos ))

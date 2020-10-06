@@ -1,4 +1,4 @@
-use std::{convert::TryInto, env};
+use std::env;
 use std::fs;
 use ruby_parser::{Lexer, Token};
 
@@ -12,10 +12,7 @@ USAGE:
 }
 
 fn token_name(token: &Token) -> String {
-    let (id, _, _) = token;
-    let first_token: usize = Lexer::YYerror.try_into().unwrap();
-    let id_usize: usize = (*id).try_into().unwrap(); // minus first token ID
-    Lexer::TOKEN_NAMES[id_usize - first_token + 1].to_owned()
+    Lexer::token_name(token)
 }
 
 fn token_value(token: &Token) -> String {

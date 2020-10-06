@@ -126,7 +126,7 @@ impl Lexer {
         // };
 
         if token_type == Self::tNL {
-            token_value = TokenValue::String("".to_owned());
+            token_value = TokenValue::String("\n".to_owned());
             end = begin + 1;
         }
 
