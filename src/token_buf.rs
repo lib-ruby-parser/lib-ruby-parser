@@ -34,13 +34,13 @@ impl TokenBuf {
         }
     }
 
-    pub fn prepend(&mut self, s: &str) {
+    pub fn prepend(&mut self, part: &str) {
         match self {
-            TokenBuf::String(s2) => {
-                *s2 = format!("{}{}", s, s2);
+            TokenBuf::String(s) => {
+                *s = format!("{}{}", part, s);
             }
             TokenBuf::Bytes(bytes) => {
-                let mut tmp = s.as_bytes().to_vec();
+                let mut tmp = part.as_bytes().to_vec();
                 tmp.extend(bytes.iter());
                 *bytes = tmp;
             }

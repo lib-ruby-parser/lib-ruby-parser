@@ -114,3 +114,10 @@ pub struct ForMap {
     pub begin: Range,
     pub end: Range,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct HeredocMap {
+    pub heredoc_body: Range,
+    pub heredoc_end: Range,
+    pub expression: Range,
+}

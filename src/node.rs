@@ -78,7 +78,9 @@ pub enum Node {
     Array { elements: Vec<Node>, loc: CollectionMap },
     Str { value: StringValue, loc: CollectionMap },
     Dstr { children: Vec<Node>, loc: CollectionMap },
+    Heredoc { children: Vec<Node>, loc: HeredocMap },
     Xstr { children: Vec<Node>, loc: CollectionMap },
+    XHeredoc { children: Vec<Node>, loc: HeredocMap },
     Dsym { children: Vec<Node>, loc: CollectionMap },
     IfMod { cond: Box<Node>, if_true: Option<Box<Node>>, if_false: Option<Box<Node>>, loc: KeywordMap },
     IfTernary { cond: Box<Node>, if_true: Box<Node>, if_false: Box<Node>, loc: TernaryMap },
@@ -203,7 +205,9 @@ impl Node {
             Self::Array { loc, .. } => &loc.expression,
             Self::Str { loc, .. } => &loc.expression,
             Self::Dstr { loc, .. } => &loc.expression,
+            Self::Heredoc { loc, .. } => &loc.expression,
             Self::Xstr { loc, .. } => &loc.expression,
+            Self::XHeredoc { loc, .. } => &loc.expression,
             Self::Dsym { loc, .. } => &loc.expression,
             Self::IfMod { loc, .. } => &loc.expression,
             Self::IfTernary { loc, .. } => &loc.expression,
@@ -341,7 +345,9 @@ impl Node {
             Node::Array { .. } => "array",
             Node::Str { .. } => "str",
             Node::Dstr { .. } => "dstr",
+            Node::Heredoc { .. } => "dstr",
             Node::Xstr { .. } => "xstr",
+            Node::XHeredoc { .. } => "xstr",
             Node::Dsym { .. } => "dsym",
             Node::IfMod { .. }
             | Node::IfTernary { .. }
@@ -597,7 +603,9 @@ impl Node {
             }
             Node::Dstr { children, .. }
             | Node::Dsym { children, .. }
-            | Node::Xstr { children, .. } => {
+            | Node::Xstr { children, .. }
+            | Node::Heredoc { children, .. }
+            | Node::XHeredoc { children, .. } => {
                 result.push_nodes(children)
             }
             Node::If { cond, if_true, if_false, .. }
@@ -722,6 +730,8 @@ impl Node {
                 }
                 if let Some(body) = body {
                     result.push_node(body);
+                } else {
+                    result.push_nil()
                 }
             },
             Node::Sclass { expr, body, .. } => {

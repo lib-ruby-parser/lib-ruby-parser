@@ -112,14 +112,33 @@ pub fn collection_map(begin_t: &Option<&Token>, parts: &Vec<&Node>, end_t: &Opti
     }
 }
 
-pub fn string_map(begin_t: &Option<&Token>, parts: &Vec<&Node>, end_t: &Option<&Token>) -> CollectionMap {
+pub enum StringMap {
+    CollectionMap(CollectionMap),
+    HeredocMap(HeredocMap)
+}
+
+pub fn string_map(begin_t: &Option<&Token>, parts: &Vec<&Node>, end_t: &Option<&Token>) -> StringMap {
     if let Some(begin_t) = begin_t {
         if value(&begin_t).starts_with("<<") {
-            unimplemented!("heredoc map")
+            let end_t = end_t.unwrap_or_else(|| panic!("heredoc must have end_t"));
+            let expr_l = match (parts.first(), parts.last()) {
+                (Some(first), Some(last)) => {
+                    join_exprs(*first, *last)
+                },
+                _ => loc(end_t)
+            };
+
+            return StringMap::HeredocMap(
+                HeredocMap {
+                    expression: expr_l,
+                    heredoc_body: loc(*begin_t),
+                    heredoc_end: loc(end_t)
+                }
+            )
         }
     }
 
-    collection_map(begin_t, parts, end_t)
+    StringMap::CollectionMap(collection_map(begin_t, parts, end_t))
 }
 
 pub fn regexp_map(begin_t: &Token, end_t: &Token, options: &Node) -> CollectionMap {

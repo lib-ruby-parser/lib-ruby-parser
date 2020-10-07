@@ -155,6 +155,17 @@ impl Builder {
 
     // Strings
 
+    pub fn str_node(&self, begin_t: Option<Token>, value: StringValue, parts: Vec<Node>, end_t: Option<Token>) -> Node {
+        match string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref()) {
+            StringMap::CollectionMap(loc) => {
+                Node::Str { value, loc }
+            }
+            StringMap::HeredocMap(loc) => {
+                Node::Heredoc { children: parts, loc }
+            }
+        }
+    }
+
     pub fn string(&self) {}
 
     pub fn string_internal(&self, string_t: Token) -> Node {
@@ -170,10 +181,7 @@ impl Builder {
     pub fn string_compose(&self, begin_t: Option<Token>, parts: Vec<Node>, end_t: Option<Token>) -> Node {
         match &parts[..] {
             [] => {
-                return Node::Str {
-                    loc: string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref()),
-                    value: StringValue::String("".to_owned()),
-                }
+                return self.str_node(begin_t, StringValue::String("".to_owned()), parts, end_t)
             },
             [part] => {
                 match part {
@@ -184,10 +192,7 @@ impl Builder {
                         } else {
                             match part {
                                 Node::Str { value, .. } => {
-                                    return Node::Str {
-                                        value: value.clone(),
-                                        loc: string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref())
-                                    }
+                                    return self.str_node(begin_t, value.clone(), parts, end_t)
                                 },
                                 _ => unreachable!()
                             }
@@ -199,9 +204,13 @@ impl Builder {
             _ => {}
         };
 
-        Node::Dstr {
-            loc: string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref()),
-            children: parts,
+        match string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref()) {
+            StringMap::CollectionMap(loc) => {
+                Node::Dstr { loc, children: parts, }
+            }
+            StringMap::HeredocMap(loc) => {
+                Node::Heredoc { loc, children: parts }
+            }
         }
     }
 
@@ -262,9 +271,13 @@ impl Builder {
     // Executable strings
 
     pub fn xstring_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
-        Node::Xstr {
-            loc: string_map(&Some(&begin_t), &parts.iter().collect(), &Some(&end_t)),
-            children: parts
+        match string_map(&Some(&begin_t), &parts.iter().collect(), &Some(&end_t)) {
+            StringMap::CollectionMap(loc) => {
+                Node::Xstr { loc, children: parts, }
+            }
+            StringMap::HeredocMap(loc) => {
+                Node::XHeredoc { loc, children: parts }
+            }
         }
     }
 

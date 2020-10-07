@@ -38,6 +38,8 @@ struct InnerStringLiteral { // struct rb_strterm_literal_struct
     pub func: usize,
     pub paren: Option<char>,
     pub term: char,
+    pub heredoc_end: Option<usize>,
+    pub heredoc_len: Option<usize>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -46,8 +48,8 @@ pub struct StringLiteral {
 }
 
 impl StringLiteral {
-    pub fn new(nest: usize, func: usize, paren: Option<char>, term: char) -> Self {
-        Self { inner: Rc::new(RefCell::new(InnerStringLiteral { nest, func, paren, term })) }
+    pub fn new(nest: usize, func: usize, paren: Option<char>, term: char, heredoc_end: Option<usize>, heredoc_len: Option<usize>) -> Self {
+        Self { inner: Rc::new(RefCell::new(InnerStringLiteral { nest, func, paren, term, heredoc_end, heredoc_len })) }
     }
 
     pub fn nest(&self) -> usize { self.inner.borrow().nest }
@@ -59,6 +61,9 @@ impl StringLiteral {
     pub fn set_func(&self, func: usize) { self.inner.borrow_mut().func = func; }
     pub fn set_paren(&self, paren: Option<char>) { self.inner.borrow_mut().paren = paren; }
     pub fn set_term(&self, term: char) { self.inner.borrow_mut().term = term; }
+
+    pub fn heredoc_end(&self) -> Option<usize> { self.inner.borrow().heredoc_end.clone() }
+    pub fn heredoc_len(&self) -> Option<usize> { self.inner.borrow().heredoc_len.clone() }
 }
 
 #[derive(Debug, Clone, Default)]

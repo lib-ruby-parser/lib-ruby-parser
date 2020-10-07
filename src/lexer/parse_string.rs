@@ -29,6 +29,13 @@ impl Lexer {
             if (func & STR_FUNC_REGEXP) != 0 {
                 return Self::tREGEXP_END
             } else {
+                match (quote.heredoc_len(), quote.heredoc_end()) {
+                    (Some(len), Some(end)) => {
+                        self.lval_start = Some(end);
+                        self.lval_end = Some(end + len)
+                    },
+                    _ => {}
+                }
                 return Self::tSTRING_END;
             }
         }
@@ -776,7 +783,14 @@ impl Lexer {
         }
 
         len = self.buffer.pcur - (self.buffer.pbeg + offset) - quote;
+
+        let id = self.buffer.substr_at(self.buffer.ptok, self.buffer.pcur).unwrap();
+        self.set_yylval_str(TokenBuf::String(id));
+        self.lval_start = Some(self.buffer.ptok);
+        self.lval_end = Some(self.buffer.pcur);
+
         self.buffer.goto_eol();
+
 
         self.strterm = Some(
             StrTerm::new_heredoc(
@@ -798,6 +812,8 @@ impl Lexer {
     }
 
     pub fn here_document(&mut self, here: HeredocLiteral) -> i32 {
+        self.lval_start = Some(self.buffer.pcur);
+
         let mut c;
         let func;
         let indent;
@@ -809,6 +825,7 @@ impl Lexer {
         // let enc = self.p.enc;
         // let base_enc = 0;
         let bol;
+        let mut heredoc_end = None;
 
         eos = self.buffer.lines[here.lastline()].start + here.offset();
         len = here.length();
@@ -894,10 +911,15 @@ impl Lexer {
             loop {
                 self.buffer.pushback(&c);
                 // enc = self.p.enc;
-                if self.tokadd_string(func, '\n', None, &mut 0).is_none() {
-                    if self.buffer.eofp { return self.here_document_error(&here, eos, len) }
-                    return self.here_document_restore(&here);
+                match self.tokadd_string(func, '\n', None, &mut 0) {
+                    Some(cc) => c = cc,
+                    None => {
+                        if self.buffer.eofp { return self.here_document_error(&here, eos, len) }
+                        return self.here_document_restore(&here);
+                    }
                 }
+                self.lval_end = Some(self.buffer.pcur + 1);
+                heredoc_end = Some(self.buffer.pcur + 1);
                 if c != '\n' {
                     if c == '\\' { self.buffer.heredoc_line_indent = -1 }
                     return self.heredoc_flush();
@@ -920,7 +942,8 @@ impl Lexer {
 
         self.heredoc_restore(&here);
         self.token_flush();
-        self.strterm = self.new_strterm(func | STR_FUNC_TERM, 0 as char, Some(0 as char));
+        let heredoc_len = Some(here.length());
+        self.strterm = self.new_strterm(func | STR_FUNC_TERM, 0 as char, Some(0 as char), heredoc_end, heredoc_len);
         self.set_yylval_str(str_);
         return Self::tSTRING_CONTENT;
     }
