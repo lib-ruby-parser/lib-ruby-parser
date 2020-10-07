@@ -180,7 +180,7 @@ impl Buffer {
     }
 
     pub fn substr_at(&self, start: usize, end: usize) -> Option<String> {
-        if start < end && end < self.input.len() {
+        if start <= end && end <= self.input.len() {
             Some(self.input[start..end].iter().collect())
         } else {
             None

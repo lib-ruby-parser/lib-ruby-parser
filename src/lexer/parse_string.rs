@@ -349,8 +349,29 @@ impl Lexer {
         result
     }
 
+    pub fn scan_oct(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
+        let mut s = start;
+        let mut result: usize = 0;
+
+        for _ in 0..len {
+            match self.buffer.char_at(s).to_option() {
+                Some(c) if (c > '0' && c <= '7') => {
+                    result <<= 3;
+                    result |= ((c as u8) - ('0' as u8)) as usize;
+                },
+                _ => break
+            }
+            s += 1;
+        }
+
+        *numlen = s - start;
+        result
+    }
+
     pub fn tokcopy(&mut self, n: usize) {
-        let substr = self.buffer.substr_at(self.buffer.pcur - n, n).unwrap();
+        let substr = self.buffer.substr_at(self.buffer.pcur - n, self.buffer.pcur).unwrap_or_else(||
+            panic!("no substr {}..{}", self.buffer.pcur - n, self.buffer.pcur)
+        );
         self.tokenbuf.append(&substr);
     }
     pub fn tokaddmbc(&mut self, _codepoint: usize) { unimplemented!("tokaddmbc") }
@@ -564,10 +585,6 @@ impl Lexer {
         unimplemented!("read_escape_eof")
     }
 
-    pub fn scan_oct(&mut self, _a: usize, _b: usize, _c: &mut usize) -> LexChar {
-        unimplemented!("scan_oct")
-    }
-
     pub fn tok_hex(&mut self, numlen: &mut usize) -> LexChar {
         let c;
 
@@ -609,7 +626,7 @@ impl Lexer {
                 self.buffer.pushback(&c);
                 let c = self.scan_oct(self.buffer.pcur, 3, &mut numlen);
                 self.buffer.pcur += numlen;
-                return c
+                return LexChar::new(c as u8)
             },
 
             Some('x') => {
@@ -788,7 +805,7 @@ impl Lexer {
         let mut ptr;
         let mut ptr_end;
         let len;
-        let mut str_: TokenBuf;
+        let mut str_ = TokenBuf::String("".to_owned());
         // let enc = self.p.enc;
         // let base_enc = 0;
         let bol;
@@ -825,8 +842,6 @@ impl Lexer {
                             ptr_end -= 1;
                             if ptr_end == ptr || self.buffer.input[ptr_end - 1] != '\r' {
                                 ptr_end += 1;
-                            } else {
-                                ptr_end -= 1;
                             }
                         },
                         '\r' => {
@@ -844,7 +859,10 @@ impl Lexer {
                     self.buffer.heredoc_line_indent = 0;
                 }
 
-                str_ = TokenBuf::String(self.buffer.substr_at(ptr, ptr_end).unwrap());
+                match self.buffer.substr_at(ptr, ptr_end) {
+                    Some(s) => str_.append(&s),
+                    _ => { panic!("no substr {}..{} (len = {})", ptr, ptr_end, self.buffer.input.len()) }
+                };
                 if ptr_end < self.buffer.pend { str_.push('\n') }
                 self.buffer.goto_eol();
                 if self.buffer.heredoc_indent > 0 {
