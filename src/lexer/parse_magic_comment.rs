@@ -69,7 +69,6 @@ impl Lexer {
 
         let enc_name = self.buffer.substr_at(beg, str_).unwrap();
         println!("enc = {:#?}", enc_name);
-
     }
 
     pub fn magic_comment_marker(&self, str_: usize, len: usize) -> usize {

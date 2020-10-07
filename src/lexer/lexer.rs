@@ -1088,6 +1088,7 @@ impl Lexer {
 
     pub fn yyerror0(&self, message: &str) {
         if self.debug { println!("yyerror0: {}", message) }
+        panic!("{}", message)
     }
 
     pub fn is_lambda_beginning(&self) -> bool {

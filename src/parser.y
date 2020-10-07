@@ -5737,6 +5737,7 @@ impl Lexer {
 
     fn yyerror(&mut self, loc: &Loc, msg: &str) {
         if self.debug { eprintln!("yyerror: {:?} {:?}", loc, msg) }
+        panic!("{:?} {}", loc, msg)
     }
 }
 

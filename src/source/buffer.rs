@@ -7,6 +7,7 @@ use crate::source::SourceLine;
 pub struct Buffer {
     pub name: String,
     pub input: Vec<char>,
+    pub encoding: String,
 
     pub lines: Vec<SourceLine>,
     pub line_count: usize,
@@ -41,7 +42,7 @@ impl Buffer {
     const CTRL_D_CHAR: char = 0x04 as char;
 
     pub fn new(name: &str, bytes: Vec<u8>, known_encoding: Option<String>) -> Result<Self, InputError> {
-        let (input, _) = decode_input(&bytes, known_encoding)?;
+        let (input, encoding) = decode_input(&bytes, known_encoding)?;
         let input = input.chars().collect::<Vec<_>>();
 
         let mut line = SourceLine { start: 0, end: 0 };
@@ -60,7 +61,7 @@ impl Buffer {
         }
 
         Ok(
-            Self { name: name.to_owned(), input, lines, ..Self::default() }
+            Self { name: name.to_owned(), encoding, input, lines, ..Self::default() }
         )
     }
 

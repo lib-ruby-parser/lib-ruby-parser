@@ -27,6 +27,13 @@ impl TokenBuf {
         }
     }
 
+    pub fn append(&mut self, part: &str) {
+        match self {
+            TokenBuf::String(s) => s.push_str(part),
+            TokenBuf::Bytes(bytes) => bytes.append(&mut part.to_string().into_bytes())
+        }
+    }
+
     pub fn prepend(&mut self, s: &str) {
         match self {
             TokenBuf::String(s2) => {

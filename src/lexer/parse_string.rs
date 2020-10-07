@@ -241,7 +241,7 @@ impl Lexer {
                             self.tokadd('\\');
                             break;
                         }
-                        self.tokadd_utf8(term, func & STR_FUNC_SYMBOL, func & STR_FUNC_REGEXP);
+                        self.tokadd_utf8(Some(term), func & STR_FUNC_SYMBOL, func & STR_FUNC_REGEXP);
                         continue;
                     },
                     None => {
@@ -261,8 +261,7 @@ impl Lexer {
                                 continue;
                             }
                             self.buffer.pushback(&c);
-                            c = self.tokadd_escape();
-                            if c.is_eof() {
+                            if self.tokadd_escape().is_err() {
                                 return None;
                             }
                             // TODO: compare encodings
@@ -271,7 +270,6 @@ impl Lexer {
                             self.buffer.pushback(&c);
                             if (func & STR_FUNC_ESCAPE) != 0 { self.tokadd('\\') }
                             c = self.read_escape(0);
-                            self.tokadd(&c);
                         } else if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
                             // ignore backslashed spaces in %w
                         } else if c != term && c != paren {
@@ -323,16 +321,241 @@ impl Lexer {
         true
     }
 
-    pub fn tokadd_utf8(&mut self, _c: char, _func1: usize, _func2: usize) {
-        unimplemented!("tokadd_utf8")
+    pub fn tokadd_utf8_unterminated(&mut self) {
+        unimplemented!("tokadd_utf8_unterminated")
+    }
+
+    pub fn scan_hex(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
+        let mut s = start;
+        let mut result = 0;
+
+        for _ in 0..len {
+            match self.buffer.char_at(s).to_option() {
+                None => break,
+                Some(c) => {
+                    match usize::from_str_radix(&c.to_string(), 16) {
+                        Ok(hex) => {
+                            result <<= 4;
+                            result |= hex;
+                        },
+                        Err(_) => break
+                    }
+                }
+            }
+            s += 1;
+        }
+
+        *numlen = s - start;
+        result
+    }
+
+    pub fn tokcopy(&mut self, n: usize) {
+        let substr = self.buffer.substr_at(self.buffer.pcur - n, n).unwrap();
+        self.tokenbuf.append(&substr);
+    }
+    pub fn tokaddmbc(&mut self, _codepoint: usize) { unimplemented!("tokaddmbc") }
+
+    pub fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool {
+        let mut numlen = 0;
+        let codepoint = self.scan_hex(self.buffer.pcur, if wide { self.buffer.pend - self.buffer.pcur } else { 4 }, &mut numlen);
+        self.literal_flush(self.buffer.pcur);
+        self.buffer.pcur += numlen;
+        if if wide { numlen == 0 || numlen > 6 } else { numlen < 4 } {
+            self.yyerror0("invalid Unicode escape");
+            return wide && numlen > 0;
+        }
+        if codepoint > 0x10ffff {
+            self.yyerror0("invalid Unicode codepoint (too large)");
+            return wide;
+        }
+        if (codepoint & 0xfffff800) == 0xd800 {
+            self.yyerror0("invalid Unicode codepoint");
+            return wide;
+        }
+        if regexp_literal != 0 {
+            self.tokcopy(numlen);
+        } else if codepoint >= 0x80 {
+            if self.buffer.encoding != "utf-8" {
+                panic!("UTF-8 mixed within source");
+            }
+            self.tokaddmbc(codepoint);
+        } else {
+            self.tokadd(codepoint as u8)
+        }
+
+        true
+    }
+
+    pub fn tokadd_utf8(&mut self, term: Option<char>, _symbol_literal: usize, regexp_literal: usize) {
+        let open_brace = '{';
+        let close_brace = '}';
+        let mut got_multiple_codepoints = false;
+
+        if regexp_literal != 0 { self.tokadd('\\'); self.tokadd('u') }
+
+        if self.buffer.peek(open_brace) {
+            let mut second: Option<usize> = None;
+            let mut c;
+            let mut last = self.nextc();
+            if self.buffer.pcur >= self.buffer.pend { return self.tokadd_utf8_unterminated() }
+            loop {
+                c = self.buffer.char_at(self.buffer.pcur);
+                if !c.is_space() { break }
+                self.buffer.pcur += 1;
+                if !( self.buffer.pcur < self.buffer.pend ) { break }
+            }
+            while c != close_brace {
+                if c == term { return self.tokadd_utf8_unterminated() }
+                if got_multiple_codepoints {
+                    second = Some(self.buffer.pcur);
+                }
+                if regexp_literal != 0 { self.tokadd(&last) }
+                if !self.tokadd_codepoint(regexp_literal, true) {
+                    break;
+                }
+                loop {
+                    c = self.char_at(self.buffer.pcur);
+                    if !c.is_space() { break }
+                    self.buffer.pcur += 1;
+                    if self.buffer.pcur >= self.buffer.pend { return self.tokadd_utf8_unterminated() }
+                    last = c;
+                }
+                if term.is_none() && second.is_some() {
+                    got_multiple_codepoints = true;
+                }
+            }
+
+            if c != close_brace {
+                return self.tokadd_utf8_unterminated();
+            }
+            if let Some(second) = second {
+                if !got_multiple_codepoints {
+                    let pcur = self.buffer.pcur;
+                    self.buffer.pcur = second;
+                    self.token_flush();
+                    self.buffer.pcur = pcur;
+                    self.yyerror0("Multiple codepoints at single character literal");
+                    self.token_flush();
+                }
+            }
+
+            if regexp_literal != 0 { self.tokadd(close_brace) }
+            self.nextc();
+        } else {
+            if !self.tokadd_codepoint(regexp_literal, false) {
+                self.token_flush();
+            }
+        }
     }
 
     pub fn is_simple_re_match(&mut self, _c: &LexChar) -> bool {
         unimplemented!("is_simple_re_match")
     }
 
-    pub fn tokadd_escape(&mut self) -> LexChar {
-        unimplemented!("tokadd_escape")
+    pub fn tokadd_escape_eof(&mut self) -> Result<(), ()> {
+        unimplemented!("tokadd_escape_eof")
+    }
+
+    pub fn tokadd_escape(&mut self) -> Result<(), ()> {
+        let mut c;
+        let mut flags = 0;
+        let mut numlen = 0;
+
+        loop {
+            c = self.nextc();
+            match c.to_option() {
+                Some('\n') => return Ok(()),
+
+                Some('0')
+                | Some('1')
+                | Some('2')
+                | Some('3')
+                | Some('4')
+                | Some('5')
+                | Some('6')
+                | Some('7') => {
+                    self.buffer.pcur -= 1;
+                    self.scan_oct(self.buffer.pcur, 3, &mut numlen);
+                    self.buffer.pcur += numlen;
+                    self.tokcopy(numlen + 1);
+                    return Ok(());
+                },
+
+                Some('x') => {
+                    self.tok_hex(&mut numlen);
+                    if numlen == 0 { return Err(()) }
+                    self.tokcopy(numlen + 2);
+                    return Ok(())
+                },
+
+                Some('M') =>  {
+                    if (flags & ESCAPE_META) != 0 { return self.tokadd_escape_eof() }
+                    c = self.nextc();
+                    if c != '-' {
+                        self.buffer.pushback(&c);
+                        return self.tokadd_escape_eof()
+                    }
+                    self.tokcopy(3);
+                    flags |= ESCAPE_META;
+
+                    // goto escaped
+                    c = self.nextc();
+                    if c == '\\' {
+                        continue;
+                    } else if c.is_eof() {
+                        return self.tokadd_escape_eof()
+                    }
+                    self.tokadd(&c);
+                    return Ok(())
+                }
+
+                Some('C') => {
+                    if (flags & ESCAPE_CONTROL) != 0 { return self.tokadd_escape_eof() }
+                    c = self.nextc();
+                    if c != '-' {
+                        self.buffer.pushback(&c);
+                        return self.tokadd_escape_eof()
+                    }
+                    self.tokcopy(3);
+
+                    // goto escaped
+                    c = self.nextc();
+                    if c == '\\' {
+                        continue;
+                    } else if c.is_eof() {
+                        return self.tokadd_escape_eof()
+                    }
+                    self.tokadd(&c);
+                    return Ok(())
+                },
+
+                Some('c') => {
+                    if (flags & ESCAPE_CONTROL) != 0 { return self.tokadd_escape_eof() }
+                    self.tokcopy(2);
+                    flags |= ESCAPE_CONTROL;
+
+                    // escaped:
+                    c = self.nextc();
+                    if c == '\\' {
+                        continue;
+                    } else if c.is_eof() {
+                        return self.tokadd_escape_eof()
+                    }
+                    self.tokadd(&c);
+                    return Ok(())
+                },
+
+                // eof:
+                None => {
+                    return self.tokadd_escape_eof()
+                },
+
+                Some(other) => {
+                    self.tokadd('\\');
+                    self.tokadd(other);
+                }
+            }
+        }
     }
 
     pub fn read_escape_eof(&mut self) -> LexChar {
@@ -345,9 +568,17 @@ impl Lexer {
         unimplemented!("scan_oct")
     }
 
-    pub fn tok_hex(&mut self, _numlen: &mut usize) -> LexChar {
+    pub fn tok_hex(&mut self, numlen: &mut usize) -> LexChar {
+        let c;
 
-        unimplemented!("tok_hex")
+        c = self.scan_hex(self.buffer.pcur, 2, numlen);
+        if *numlen == 0 {
+            self.yyerror0("invalid hex escape");
+            self.token_flush();
+            return LexChar::new(0)
+        }
+        self.buffer.pcur += *numlen;
+        LexChar::new(c as u8)
     }
 
     pub fn read_escape(&mut self, flags: usize) -> LexChar {
@@ -660,7 +891,6 @@ impl Lexer {
                     return self.heredoc_flush();
                 }
                 c = self.nextc();
-                println!("eos = {}, len = {}", eos, len);
                 if c.is_eof() { return self.here_document_error(&here, eos, len) }
 
                 if self.buffer.is_whole_match(&self.buffer.substr_at(eos, eos+len).unwrap(), indent) {

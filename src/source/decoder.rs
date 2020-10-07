@@ -81,7 +81,6 @@ fn find_encoding(enc: &str) -> Result<encoding::EncodingRef, InputError> {
         "UTF-8" => Ok(encoding::all::UTF_8),
         "KOI8-R" => Ok(encoding::all::KOI8_R),
         _ => {
-            println!("Unsupported encoding {}", enc);
             Err(InputError::UnsupportdEncoding(enc.to_owned()))
         }
     }

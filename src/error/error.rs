@@ -21,7 +21,6 @@ impl ParseError {
     pub fn render(&self, buffer: &Buffer) -> Option<String> {
         let (start_loc, end_loc) = self.range.to_locs(&buffer)?;
         debug_assert!(start_loc.line == end_loc.line, "multi-line error");
-        println!("{:#?} - {:#?}", start_loc, end_loc);
         let line_no = start_loc.line;
         let line = buffer.lines[line_no - 1].source(&buffer.input).iter().collect::<String>();
 
