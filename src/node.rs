@@ -440,12 +440,7 @@ impl Node {
             }
             Node::Send { receiver, operator, args, .. }
             | Node::CSend { receiver, operator, args, .. } => {
-                if let Some(receiver) = receiver {
-                    result.push_node(&receiver);
-                } else {
-                    result.push_nil();
-                }
-
+                result.push_maybe_node_or_nil(receiver);
                 result.push_str(operator);
                 result.push_nodes(args);
             }
@@ -458,37 +453,19 @@ impl Node {
             | Node::__ENCODING__ { .. } => {}
             Node::Preexe { body, .. }
             | Node::Postexe { body, .. } => {
-                if let Some(body) = body {
-                    result.push_node(body);
-                }
+                result.push_maybe_node(body);
             }
             Node::Lvar { name, .. } => {
                 result.push_str(name);
             }
             Node::Rescue { body, rescue_bodies, else_, .. } => {
-                if let Some(body) = body {
-                    result.push_node(body);
-                } else {
-                    result.push_nil();
-                }
+                result.push_maybe_node_or_nil(body);
                 result.push_nodes(rescue_bodies);
-                if let Some(else_) = else_ {
-                    result.push_node(else_);
-                } else {
-                    result.push_nil();
-                }
+                result.push_maybe_node_or_nil(else_);
             }
             Node::Ensure { body, ensure, .. } => {
-                if let Some(body) = body {
-                    result.push_node(body)
-                } else {
-                    result.push_nil()
-                }
-                if let Some(ensure) = ensure {
-                    result.push_node(ensure)
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(body);
+                result.push_maybe_node_or_nil(ensure);
             }
             Node::KwBegin { statements, .. } => {
                 result.push_nodes(statements)
@@ -498,30 +475,14 @@ impl Node {
             }
             Node::Def { name, args, body, .. } => {
                 result.push_str(name);
-                if let Some(args) = args {
-                    result.push_node(args)
-                } else {
-                    result.push_nil()
-                }
-                if let Some(body) = body {
-                    result.push_node(body)
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(args);
+                result.push_maybe_node_or_nil(body);
             }
             Node::Defs { definee, name, args, body, .. } => {
                 result.push_node(definee);
                 result.push_str(name);
-                if let Some(args) = args {
-                    result.push_node(args)
-                } else {
-                    result.push_nil()
-                }
-                if let Some(body) = body {
-                    result.push_node(body)
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(args);
+                result.push_maybe_node_or_nil(body);
             }
             Node::Arg { name, .. } => {
                 result.push_str(name)
@@ -572,9 +533,7 @@ impl Node {
             Node::IndexAsgn { receiver, indexes, rhs, .. } => {
                 result.push_node(receiver);
                 result.push_nodes(indexes);
-                if let Some(rhs) = rhs {
-                    result.push_node(rhs)
-                }
+                result.push_maybe_node(rhs);
             }
             Node::Undef { names, .. } => {
                 result.push_nodes(names)
@@ -611,16 +570,8 @@ impl Node {
             Node::If { cond, if_true, if_false, .. }
             | Node::IfMod { cond, if_true, if_false, .. } => {
                 result.push_node(cond);
-                if let Some(if_true) = if_true {
-                    result.push_node(if_true)
-                } else {
-                    result.push_nil()
-                }
-                if let Some(if_false) = if_false {
-                    result.push_node(if_false)
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(if_true);
+                result.push_maybe_node_or_nil(if_false);
             }
             Node::IfTernary { cond, if_true, if_false, .. } => {
                 result.push_node(cond);
@@ -635,28 +586,12 @@ impl Node {
             Node::While { cond, body, .. }
             | Node::Until { cond, body, .. } => {
                 result.push_node(cond);
-                if let Some(body) = body {
-                    result.push_node(body)
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(body);
             }
             Node::RescueBody { exc_list, exc_var, stmt, .. } => {
-                if let Some(exc_list) = exc_list {
-                    result.push_node(exc_list);
-                } else {
-                    result.push_nil();
-                }
-                if let Some(exc_var) = exc_var {
-                    result.push_node(exc_var)
-                } else {
-                    result.push_nil()
-                }
-                if let Some(stmt) = stmt {
-                    result.push_node(stmt)
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(exc_list);
+                result.push_maybe_node_or_nil(exc_var);
+                result.push_maybe_node_or_nil(stmt);
             }
             Node::Mlhs { items, .. } => {
                 result.push_nodes(items)
@@ -710,45 +645,21 @@ impl Node {
             | Node::Erange { left, right, .. }
             | Node::IFlipFlop { left, right, .. }
             | Node::EFlipFlop { left, right, .. }  => {
-                if let Some(left) = left {
-                    result.push_node(left);
-                } else {
-                    result.push_nil()
-                }
-                if let Some(right) = right {
-                    result.push_node(right);
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(left);
+                result.push_maybe_node_or_nil(right);
             },
             Node::Class { name, superclass, body, .. } => {
                 result.push_node(name);
-                if let Some(superclass) = superclass {
-                    result.push_node(superclass);
-                } else {
-                    result.push_nil()
-                }
-                if let Some(body) = body {
-                    result.push_node(body);
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(superclass);
+                result.push_maybe_node_or_nil(body);
             },
             Node::Sclass { expr, body, .. } => {
                 result.push_node(expr);
-                if let Some(body) = body {
-                    result.push_node(body);
-                } else {
-                    result.push_nil();
-                }
+                result.push_maybe_node_or_nil(body);
             },
             Node::Module { name, body, .. } => {
                 result.push_node(name);
-                if let Some(body) = body {
-                    result.push_node(body);
-                } else {
-                    result.push_nil();
-                }
+                result.push_maybe_node_or_nil(body);
             },
             Node::ForwardArg { .. } => {},
             Node::Optarg { name, value, .. } => {
@@ -787,16 +698,8 @@ impl Node {
             Node::ForwardedArgs { .. } => {}
             Node::Block { call, args, body, .. } => {
                 result.push_node(call);
-                if let Some(args) = args {
-                    result.push_node(args)
-                } else {
-                    result.push_nil()
-                }
-                if let Some(body) = body {
-                    result.push_node(body)
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(args);
+                result.push_maybe_node_or_nil(body);
             }
             Node::Lambda { .. } => {}
             Node::BlockPass { arg, .. } => {
@@ -809,32 +712,16 @@ impl Node {
             Node::For { iterator, iteratee, body, .. } => {
                 result.push_node(iterator);
                 result.push_node(iteratee);
-                if let Some(body) = body {
-                    result.push_node(body)
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(body);
             }
             Node::When { patterns, body, .. } => {
                 result.push_nodes(patterns);
-                if let Some(body) = body {
-                    result.push_node(body)
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(body);
             }
             Node::Case { expr, when_bodies, else_body, .. } => {
-                if let Some(expr) = expr {
-                    result.push_node(expr)
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(expr);
                 result.push_nodes(when_bodies);
-                if let Some(else_body) = else_body {
-                    result.push_node(else_body);
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(else_body);
             }
             Node::MatchVar { name, .. } => {
                 result.push_str(name);
@@ -843,11 +730,7 @@ impl Node {
             Node::CaseMatch { expr, in_bodies, else_body, .. } => {
                 result.push_node(expr);
                 result.push_nodes(in_bodies);
-                if let Some(else_body) = else_body {
-                    result.push_node(else_body);
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(else_body);
             }
             Node::InMatch { lhs, rhs, .. } => {
                 result.push_node(lhs);
@@ -855,25 +738,15 @@ impl Node {
             }
             Node::InPattern { pattern, guard, body, .. } => {
                 result.push_node(pattern);
-                if let Some(guard) = guard {
-                    result.push_node(guard);
-                } else {
-                    result.push_nil()
-                }
-                if let Some(body) = body {
-                    result.push_node(body);
-                } else {
-                    result.push_nil()
-                }
+                result.push_maybe_node_or_nil(guard);
+                result.push_maybe_node_or_nil(body);
             }
             Node::IfGuard { body, .. }
             | Node::UnlessGuard { body, .. } => {
                 result.push_node(body)
             }
             Node::MatchRest { name, .. } => {
-                if let Some(name) = name {
-                    result.push_node(name)
-                }
+                result.push_maybe_node(name);
             }
             Node::HashPattern { args: elements, .. }
             | Node::ArrayPattern { elements, .. }
@@ -947,6 +820,20 @@ impl InspectVec {
 
     pub fn push_node(&mut self, node: &Node) {
         self.strings.push(format!(",\n{}", node.inspect(self.indent + 1)))
+    }
+
+    pub fn push_maybe_node(&mut self, node: &Option<Box<Node>>) {
+        if let Some(node) = node {
+            self.push_node(node)
+        }
+    }
+
+    pub fn push_maybe_node_or_nil(&mut self, node: &Option<Box<Node>>) {
+        if let Some(node) = node {
+            self.push_node(node)
+        } else {
+            self.push_nil()
+        }
     }
 
     pub fn push_nodes(&mut self, nodes: &Vec<Node>) {
