@@ -24,7 +24,7 @@ fn main() {
 
     let lexer = Lexer::new(&source, None).unwrap();
     let mut parser = Parser::new(lexer);
-    parser.set_debug(true);
+    parser.set_debug(false);
 
     match parser.do_parse() {
         Some(node) => println!("{}", node.inspect(0)),

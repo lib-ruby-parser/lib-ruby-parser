@@ -4,5 +4,5 @@ expr_arg
 
 +
 --TOKENS
-tNL "" [0, 1]
+tNL "\n" [0, 1]
 tUPLUS "+" [1, 2]

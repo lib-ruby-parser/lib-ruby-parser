@@ -116,6 +116,8 @@ ops = {
     '**=' => :tOP_ASGN,
 }
 
+strs = []
+
 $stderr.puts ARGV.first
 Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, _)|
     tok_name =
@@ -126,6 +128,21 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, _)|
         else
             mapping.fetch(tok_name) { raise 'unsupported ' + tok_name.to_s + ' ' + tok_value }
         end
+
+    case tok_name
+    when :tSTRING_BEG, :tREGEXP_BEG
+        strs.push(tok_value)
+    when :tSTRING_END, :tREGEXP_END
+        strs.pop
+    when :tSTRING_CONTENT
+        case strs.last
+        when "'" # no escaping
+        when "\"", "/"
+            tok_value = ("\"" + tok_value + "\"").undump
+        else
+            raise "unknown str type #{strs.last.inspect}"
+        end
+    end
 
     puts tok_name.to_s + ' ' + tok_value.bytes.inspect + ' ' + start.join(':')
 end

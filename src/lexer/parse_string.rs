@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::lexer::*;
 use crate::source::buffer::*;
 use crate::TokenBuf;
@@ -19,8 +21,9 @@ impl Lexer {
         let paren = quote.paren();
         let mut c: LexChar;
         let mut space = false;
+        self.lval_start = Some(self.buffer.pcur);
 
-        if self.debug { println!("func = {}, pcur = {}, ptok = {}", func, self.buffer.pcur, self.buffer.ptok); }
+        if self.debug { println!("func = {}, pcur = {}, ptok = {}, term = {}", func, self.buffer.pcur, self.buffer.ptok, quote.term()); }
 
         if (func & STR_FUNC_TERM) != 0 {
             if (func & STR_FUNC_QWORDS) != 0 { self.nextc(); } /* delayed term */
@@ -263,7 +266,7 @@ impl Lexer {
                             }
                         }
                         if (func & STR_FUNC_REGEXP) != 0 {
-                            if c == term && !self.is_simple_re_match(&c) {
+                            if c == term && !self.simple_re_meta(&c) {
                                 self.tokadd(&c);
                                 continue;
                             }
@@ -381,7 +384,10 @@ impl Lexer {
         );
         self.tokenbuf.append(&substr);
     }
-    pub fn tokaddmbc(&mut self, _codepoint: usize) { unimplemented!("tokaddmbc") }
+
+    pub fn tokaddmbc(&mut self, codepoint: usize) {
+        self.tokadd(std::char::from_u32(codepoint.try_into().unwrap()).unwrap())
+    }
 
     pub fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool {
         let mut numlen = 0;
@@ -476,12 +482,27 @@ impl Lexer {
         }
     }
 
-    pub fn is_simple_re_match(&mut self, _c: &LexChar) -> bool {
-        unimplemented!("is_simple_re_match")
+    pub fn simple_re_meta(&mut self, c: &LexChar) -> bool {
+        match c.to_option() {
+            Some('$')
+            | Some('*')
+            | Some('+')
+            | Some('.')
+            | Some('?')
+            | Some('^')
+            | Some('|')
+            | Some(')')
+            | Some(']')
+            | Some('}')
+            | Some('>') => true,
+            _ => false
+        }
     }
 
     pub fn tokadd_escape_eof(&mut self) -> Result<(), ()> {
-        unimplemented!("tokadd_escape_eof")
+        self.yyerror0("Invalid escape character syntax");
+        self.token_flush();
+        Err(())
     }
 
     pub fn tokadd_escape(&mut self) -> Result<(), ()> {
@@ -581,6 +602,7 @@ impl Lexer {
                 Some(other) => {
                     self.tokadd('\\');
                     self.tokadd(other);
+                    return Ok(())
                 }
             }
         }

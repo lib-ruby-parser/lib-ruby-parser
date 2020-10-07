@@ -4,5 +4,5 @@ expr_arg
  #
 foo
 --TOKENS
-tNL "" [2, 3]
+tNL "\n" [2, 3]
 tIDENTIFIER "foo" [3, 6]

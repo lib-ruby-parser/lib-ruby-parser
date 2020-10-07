@@ -4,5 +4,5 @@ expr_mid
 #foo
 +
 --TOKENS
-tNL "" [4, 5]
+tNL "\n" [4, 5]
 tUPLUS "+" [5, 6]

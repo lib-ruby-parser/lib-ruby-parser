@@ -76,9 +76,9 @@ impl Buffer {
         let mut c = self.input[self.pcur];
         self.pcur += 1;
         if c == '\r' {
-            c = self.parser_cr(c);
+            c = self.parser_cr(&mut c);
         }
-        if self.debug { println!("nextc = {:?}", c as char); }
+        if self.debug { println!("nextc = {:?}", c); }
         return LexChar::new(c);
     }
 
@@ -166,8 +166,12 @@ impl Buffer {
         self.ptok = ptok;
     }
 
-    pub fn parser_cr(&mut self, _c: char) -> char {
-        unimplemented!("parser_cr")
+    pub fn parser_cr(&mut self, c: &mut char) -> char {
+        if self.peek('\n') {
+            self.pcur += 1;
+            *c = '\n';
+        }
+        *c
     }
 
 

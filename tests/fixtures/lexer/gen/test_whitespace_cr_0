@@ -6,4 +6,4 @@ EO
 tSTRING_BEG "<<\"" [0, 3]
 tSTRING_CONTENT "foo\n" [4, 8]
 tSTRING_END "E" [8, 11]
-tNL "" [3, 4]
+tNL "\n" [3, 4]

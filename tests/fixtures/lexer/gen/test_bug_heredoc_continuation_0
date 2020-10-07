@@ -7,5 +7,5 @@ end
 --TOKENS
 tSTRING_BEG "<<\"" [1, 6]
 tSTRING_END "EOS" [7, 10]
-tNL "" [6, 7]
+tNL "\n" [6, 7]
 kEND "end" [11, 14]

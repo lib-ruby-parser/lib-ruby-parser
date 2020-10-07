@@ -4,5 +4,5 @@ expr_endarg
 #foo
 {
 --TOKENS
-tNL "" [4, 5]
+tNL "\n" [4, 5]
 tLBRACE "{" [5, 6]

@@ -986,8 +986,8 @@ impl Lexer {
         Ok(Self::tEH)
     }
 
-    pub fn warn_space_char(&mut self, _c: char, _s: &str) {
-        unimplemented!("warn_space_char")
+    pub fn warn_space_char(&mut self, c: char, prefix: &str) {
+        self.warn(&format!("invalid character syntax; use \"{}\"\\{}", prefix, c))
     }
 
     pub fn parse_qmark(&mut self, space_seen: bool) -> Result<i32, ()> {
@@ -1040,9 +1040,7 @@ impl Lexer {
         } else if c == '\\' {
             if self.buffer.peek('u') {
                 self.nextc();
-                // enc = utf8
-                panic!("\\u handling");
-                // self.tokadd_utf8(c, func1, func2)
+                self.tokadd_utf8(None, 0, 0);
             } else if !self.buffer.is_eol() && !self.char_at(self.buffer.pcur).is_ascii() {
                 c = self.char_at(self.buffer.pcur);
                 self.nextc();

@@ -95,6 +95,8 @@ class TestLexer
           [:tSTRING_CONTENT, value, [range[0] + 1, range[1] - 1]],
           [:tSTRING_END, "\"\\#{sep}\"", [range[1] - 1, range[1]]]
         ]
+      elsif name == :tNL
+        [[:tNL, "\n".inspect, range]]
       else
         [[name, value, range]]
       end
@@ -152,6 +154,7 @@ IGNORE = [
   'test_mod_not_command_start__19',
   'test_question_eh_escape_M_escape_C__18',
   'test_question_eh_escape_M_escape_C__19',
+  'test_question_eh_a__18',
   # just a bug
   'test_float_suffix_12',
   'test_float_suffix_16',
@@ -188,6 +191,16 @@ IGNORE = [
   'test_string_double_escape_octal',
   'test_bug_hidden_eof',
   'test_string_double_escape_bs1',
+  'test_string_double_escape_M_escape',
+  'test_string_double_escape_M_backslash',
+  'test_heredoc_with_identifier_ending_newline__24',
+  'test_bug_string_non_utf',
+  'test_string_double_escape_M',
+  'test_string_double_escape_octal_wrap',
+  'test_string_double_escape_C_escape',
+  'test_string_double_escape_c_escape',
+  'test_question_eh_escape_space_around_unicode_point_24_0',
+
 
   # we exclude some chars from number's source (like _ from ints)
   # FIXME: these should be fixed.
@@ -233,6 +246,13 @@ IGNORE = [
   'test_bug_expr_beg_div',
   'test_regexp_escape_return',
   'test_bug_expr_arg_slash_2',
+  'test_regexp_escape_backslash_terminator_meta3',
+  'test_question_eh_escape_space_around_unicode_point_24_1',
+
+  # interpolation involves parser
+  'test_bug_ragel_stack_0',
+  'test_heredoc_none_0',
+  'test_bug_heredoc_lshft_0',
 ]
 
 Minitest.after_run do

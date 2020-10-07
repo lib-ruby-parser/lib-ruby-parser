@@ -4,5 +4,5 @@
 2
 --TOKENS
 tINTEGER "1" [0, 1]
-tNL "" [7, 8]
+tNL "\n" [7, 8]
 tINTEGER "2" [14, 15]

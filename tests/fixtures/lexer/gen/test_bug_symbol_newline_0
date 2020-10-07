@@ -4,4 +4,4 @@
 --TOKENS
 tSYMBEG ":" [0, 1]
 tIDENTIFIER "foo" [1, 4]
-tNL "" [4, 5]
+tNL "\n" [4, 5]

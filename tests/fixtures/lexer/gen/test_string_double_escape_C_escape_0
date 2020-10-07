@@ -1,6 +1,0 @@
---INPUT
-"\c\M-a"
---TOKENS
-tSTRING_BEG "\"" [0, 1]
-tSTRING_CONTENT Å [1, 7]
-tSTRING_END "\"" [7, 8]
