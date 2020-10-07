@@ -23,8 +23,8 @@
 %code use {
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
     use crate::lex_states::*;
-    use crate::Context as ParserContext;
-    use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel};
+    use crate::{Context as ParserContext, ContextItem};
+    use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel, ArgsType};
     use crate::str_term::StrTerm;
     use crate::map_builder::value;
 }
@@ -3257,7 +3257,7 @@ opt_block_args_tail:
 
  block_param_def: tPIPE opt_bv_decl tPIPE
                     {
-                        self.max_numparam_stack.has_ordinary_params();
+                        self.max_numparam_stack.set_has_ordinary_params();
                         self.current_arg_stack.set(None);
 
                         $$ = Value::MaybeNode(
@@ -3270,7 +3270,7 @@ opt_block_args_tail:
                     }
                 | tPIPE block_param opt_bv_decl tPIPE
                     {
-                        self.max_numparam_stack.has_ordinary_params();
+                        self.max_numparam_stack.set_has_ordinary_params();
                         self.current_arg_stack.set(None);
 
                         $$ = Value::MaybeNode(
@@ -3338,8 +3338,11 @@ opt_block_args_tail:
                         self.yylexer.lpar_beg = $<Num>2;
 
                         let lambda_call = self.builder.call_lambda($<Token>1);
-                        // args = @max_numparam_stack.has_numparams? ? self.builder.numargs(@max_numparam_stack.top) : val[2]
-                        let args = $<MaybeNode>3;
+                        let args = if self.max_numparam_stack.has_numparams() {
+                            ArgsType::Numargs(self.max_numparam_stack.top() as u8)
+                        } else {
+                            ArgsType::Args($<MaybeNode>3)
+                        };
                         let (begin_t, body, end_t) = $<LambdaBody>5;
 
                         self.max_numparam_stack.pop();
@@ -3360,7 +3363,7 @@ opt_block_args_tail:
 
       f_larglist: tLPAREN2 f_args opt_bv_decl tRPAREN
                     {
-                        self.max_numparam_stack.has_ordinary_params();
+                        self.max_numparam_stack.set_has_ordinary_params();
                         $$ = Value::MaybeNode(
                             self.builder.args(
                                 Some($<Token>1),
@@ -3373,7 +3376,7 @@ opt_block_args_tail:
                     {
                         let args = $<NodeList>1;
                         if !args.is_empty() {
-                            self.max_numparam_stack.has_ordinary_params();
+                            self.max_numparam_stack.set_has_ordinary_params();
                         }
                         $$ = Value::MaybeNode(
                             self.builder.args(None, args, None)
@@ -3644,12 +3647,16 @@ opt_block_args_tail:
                     }
                   opt_block_param compstmt
                     {
-                        // args = @max_numparam_stack.has_numparams? ? self.builder.numargs(@max_numparam_stack.top) : val[1]
+                        let args = if self.max_numparam_stack.has_numparams() {
+                            ArgsType::Numargs(self.max_numparam_stack.top() as u8)
+                        } else {
+                            ArgsType::Args($<MaybeNode>2)
+                        };
 
                         self.max_numparam_stack.pop();
                         self.static_env.unextend();
 
-                        $$ = Value::BraceBody(( $<MaybeNode>2, $<MaybeNode>3 ));
+                        $$ = Value::BraceBody(( args, $<MaybeNode>3 ));
                     }
                 ;
 
@@ -3660,13 +3667,17 @@ opt_block_args_tail:
                     }
                   opt_block_param bodystmt
                     {
-                        // args = @max_numparam_stack.has_numparams? ? self.builder.numargs(@max_numparam_stack.top) : val[2]
+                        let args = if self.max_numparam_stack.has_numparams() {
+                            ArgsType::Numargs(self.max_numparam_stack.top() as u8)
+                        } else {
+                            ArgsType::Args($<MaybeNode>2)
+                        };
 
                         self.max_numparam_stack.pop();
                         self.static_env.unextend();
                         self.yylexer.cmdarg_pop();
 
-                        $$ = Value::DoBody(( $<MaybeNode>2, $<MaybeNode>3 ));
+                        $$ = Value::DoBody(( args, $<MaybeNode>3 ));
                     }
                 ;
 
@@ -4636,7 +4647,9 @@ xstring_contents: /* none */
                     }
                 | xstring_contents string_content
                     {
-                        $$ = Value::NodeList( vec![] );
+                        let mut nodes = $<NodeList>1;
+                        nodes.push($<Node>2);
+                        $$ = Value::NodeList(nodes);
                     }
                 ;
 
@@ -4872,9 +4885,55 @@ keyword_variable: kNIL
 
          var_ref: user_variable
                     {
-                        // FIXME: error handling here is INSANE
+                        let node =  cast_to_variant!(Node, yystack, yystack.owned_value_at(0));
+                        match &node {
+                            Node::Lvar { name, loc } => {
+                                match name.chars().collect::<Vec<_>>()[..] {
+                                    ['_', n] if n >= '1' && n <= '9' => {
+                                        if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
+                                            /* definitely an implicit param */
+                                            let location = loc.expression.clone();
+
+                                            if self.max_numparam_stack.has_ordinary_params() {
+                                                // diagnostic :error, :ordinary_param_defined, nil, [nil, location]
+                                            }
+
+                                            let mut raw_context = self.context.inner_clone();
+                                            let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
+
+                                            /* ignore current block scope */
+                                            raw_context.pop();
+                                            raw_max_numparam_stack.pop();
+
+                                            for outer_scope in raw_context.iter().rev() {
+                                                if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda {
+                                                    let outer_scope_has_numparams = raw_max_numparam_stack.pop().unwrap() > 0;
+
+                                                    if outer_scope_has_numparams {
+                                                        // diagnostic :error, :numparam_used_in_outer_scope, nil, [nil, location]
+                                                    } else {
+                                                        /* for now it's ok, but an outer scope can also be a block
+                                                           with numparams, so we need to continue */
+                                                    }
+                                                } else {
+                                                    /* found an outer scope that can't have numparams
+                                                       like def/class/etc */
+                                                    break;
+                                                }
+                                            }
+
+                                            self.static_env.declare(name);
+                                            self.max_numparam_stack.register(n.to_digit(10).unwrap() as i32)
+                                        }
+                                    },
+                                    _ => {}
+                                }
+                            },
+                            _ => {},
+                        }
+
                         $$ = Value::Node(
-                            self.builder.accessible($<Node>1)
+                            self.builder.accessible(node)
                         );
                     }
                 | keyword_variable
@@ -5126,7 +5185,7 @@ keyword_variable: kNIL
                         let ident_t = $<Token>1;
                         let name = value(&ident_t);
                         self.static_env.declare(&name);
-                        self.max_numparam_stack.has_ordinary_params();
+                        self.max_numparam_stack.set_has_ordinary_params();
                         $$ = Value::Token(ident_t);
                     }
                 ;
@@ -5182,7 +5241,7 @@ keyword_variable: kNIL
                         let ident = value(&ident_t);
                         self.static_env.declare(&ident);
 
-                        self.max_numparam_stack.has_ordinary_params();
+                        self.max_numparam_stack.set_has_ordinary_params();
 
                         self.current_arg_stack.set(Some(ident));
 
@@ -5559,10 +5618,10 @@ pub enum Value {
     PKwLabel( PKwLabel ),
 
     /* For custom brace_body rule */
-    BraceBody(( Option<Node>, Option<Node> )),
+    BraceBody(( ArgsType, Option<Node> )),
 
     /* For custom cmd_brace_block rule */
-    CmdBraceBlock(( Token, Option<Node>, Option<Node>, Token )),
+    CmdBraceBlock(( Token, ArgsType, Option<Node>, Token )),
 
     /* For custom paren_args rule  */
     ParenArgs(( Token, Vec<Node>, Token )),
@@ -5574,10 +5633,10 @@ pub enum Value {
     LambdaBody(( Token, Option<Node>, Token )),
 
     /* For custom do_block rule  */
-    DoBlock(( Token, Option<Node>, Option<Node>, Token )),
+    DoBlock(( Token, ArgsType, Option<Node>, Token )),
 
     /* For custom brace_block rule  */
-    BraceBlock(( Token, Option<Node>, Option<Node>, Token )),
+    BraceBlock(( Token, ArgsType, Option<Node>, Token )),
 
     /* For custom defs_head rule */
     DefsHead(( Token, Node, Token, Token )),
@@ -5604,7 +5663,7 @@ pub enum Value {
     MaybeNode( Option<Node> ),
 
     /* For custom do_body rule */
-    DoBody(( Option<Node>, Option<Node> )),
+    DoBody(( ArgsType, Option<Node> )),
 
     /* For custom p_top_expr rule */
     PTopExpr(( Node, Option<Node> )),

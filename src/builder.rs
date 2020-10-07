@@ -44,6 +44,12 @@ pub enum PKwLabel {
     QuotedLabel(( Token, Vec<Node>, Token ))
 }
 
+#[derive(Debug, Clone)]
+pub enum ArgsType {
+    Args(Option<Node>),
+    Numargs(u8)
+}
+
 #[derive(Debug, Default)]
 pub struct Builder {
     static_env: StaticEnvironment,
@@ -162,28 +168,36 @@ impl Builder {
     }
 
     pub fn string_compose(&self, begin_t: Option<Token>, parts: Vec<Node>, end_t: Option<Token>) -> Node {
-        if parts.len() == 1 {
-            let part = &parts[0];
-            match part {
-                Node::Str { .. } | Node::Dstr { .. } => {
-                    // collapse_string_parts? == true
-                    if begin_t.is_none() && end_t.is_none() {
-                        return part.clone();
-                    } else {
-                        match part {
-                            Node::Str { value, .. } => {
-                                return Node::Str {
-                                    value: value.clone(),
-                                    loc: string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref())
-                                }
-                            },
-                            _ => unreachable!()
+        match &parts[..] {
+            [] => {
+                return Node::Str {
+                    loc: string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref()),
+                    value: StringValue::String("".to_owned()),
+                }
+            },
+            [part] => {
+                match part {
+                    Node::Str { .. } | Node::Dstr { .. } => {
+                        // collapse_string_parts? == true
+                        if begin_t.is_none() && end_t.is_none() {
+                            return part.clone();
+                        } else {
+                            match part {
+                                Node::Str { value, .. } => {
+                                    return Node::Str {
+                                        value: value.clone(),
+                                        loc: string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref())
+                                    }
+                                },
+                                _ => unreachable!()
+                            }
                         }
-                    }
-                },
-                _ => {}
-            }
-        }
+                    },
+                    _ => {}
+                }
+            },
+            _ => {}
+        };
 
         Node::Dstr {
             loc: string_map(&begin_t.as_ref(), &parts.iter().collect(), &end_t.as_ref()),
@@ -817,8 +831,6 @@ impl Builder {
         }
     }
 
-    pub fn numargs(&self) {}
-
     pub fn forward_only_args(&self, begin_t: Token, dots_t: Token, end_t: Token) -> Node {
         let args = vec![ self.forward_arg(dots_t) ];
         Node::Args {
@@ -981,8 +993,9 @@ impl Builder {
         Node::Lambda { loc: expr_map(&loc(&lambda_t)) }
     }
 
-    pub fn block(&self, method_call: Node, begin_t: Token, args: Option<Node>, body: Option<Node>, end_t: Token) -> Node {
-        let block_args = args.map(|node| Box::new(node));
+    pub fn block(&self, method_call: Node, begin_t: Token, block_args: ArgsType, body: Option<Node>, end_t: Token) -> Node {
+
+        // let block_args = args.map(|node| Box::new(node));
         let block_body = body.map(|node| Box::new(node));
 
         match &method_call {
@@ -1002,16 +1015,28 @@ impl Builder {
             _ => {}
         }
 
-        let rewrite_args_and_loc = |args: &Vec<Node>, loc: &KeywordMap, block_args: Option<Box<Node>>, block_body: Option<Box<Node>>| {
+        let rewrite_args_and_loc = |method_args: &Vec<Node>, loc: &KeywordMap, block_args: ArgsType, block_body: Option<Box<Node>>| {
             // Code like "return foo 1 do end" is reduced in a weird sequence.
             // Here, method_call is actually (return).
-            let actual_send = args[0].clone();
+            let actual_send = method_args[0].clone();
 
-            let block = Node::Block {
-                loc: block_map(&actual_send.expression(), &begin_t, &end_t),
-                call: Box::new(actual_send),
-                args: block_args,
-                body: block_body,
+            let block = match block_args {
+                ArgsType::Args(args) => {
+                    Node::Block {
+                        loc: block_map(&actual_send.expression(), &begin_t, &end_t),
+                        call: Box::new(actual_send),
+                        args: args.map(Box::new),
+                        body: block_body,
+                    }
+                }
+                ArgsType::Numargs(numargs) => {
+                    Node::Numblock {
+                        loc: block_map(&actual_send.expression(), &begin_t, &end_t),
+                        call: Box::new(actual_send),
+                        numargs,
+                        body: block_body.unwrap(),
+                    }
+                }
             };
 
             let loc = KeywordMap {
@@ -1034,11 +1059,23 @@ impl Builder {
             | Node::Lambda { .. }
             => {
                 let loc = block_map(&method_call.expression(), &begin_t, &end_t);
-                return Node::Block {
-                    call: Box::new(method_call),
-                    args: block_args,
-                    body: block_body,
-                    loc
+                match block_args {
+                    ArgsType::Args(args) => {
+                        Node::Block {
+                            call: Box::new(method_call),
+                            args: args.map(Box::new),
+                            body: block_body,
+                            loc
+                        }
+                    }
+                    ArgsType::Numargs(numargs) => {
+                        Node::Numblock {
+                            numargs,
+                            call: Box::new(method_call),
+                            body: block_body.unwrap(),
+                            loc
+                        }
+                    }
                 }
             },
             Node::Return { args, loc } => {
@@ -1824,13 +1861,6 @@ impl Builder {
                     loc
                 }
             },
-            // FIXME:
-            // Node::And { lhs, rhs, .. }
-            // | Node::Or { lhs, rhs, .. } => {
-            // },
-            // Node::Irange { begin, end, .. }
-            // | Node::Erange { begin, end, .. } => {
-            // }
             _ => cond
         }
     }

@@ -152,6 +152,7 @@ pub enum Node {
     MatchNilPattern { loc: VariableMap },
     IFlipFlop { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap },
     EFlipFlop { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap },
+    Numblock { numargs: u8, call: Box<Node>, body: Box<Node>, loc: CollectionMap }
 }
 
 impl Node {
@@ -276,6 +277,7 @@ impl Node {
             Self::MatchNilPattern { loc, .. } => &loc.expression,
             Self::IFlipFlop { loc, .. } => &loc.expression,
             Self::EFlipFlop { loc, .. } => &loc.expression,
+            Self::Numblock { loc, .. } => &loc.expression,
         }
     }
 
@@ -339,7 +341,7 @@ impl Node {
             Node::Array { .. } => "array",
             Node::Str { .. } => "str",
             Node::Dstr { .. } => "dstr",
-            Node::Xstr { .. } => "dstr",
+            Node::Xstr { .. } => "xstr",
             Node::Dsym { .. } => "dsym",
             Node::IfMod { .. }
             | Node::IfTernary { .. }
@@ -413,6 +415,7 @@ impl Node {
             Node::MatchNilPattern { .. } => "match_nil_pattern",
             Node::IFlipFlop { .. } => "iflipflop",
             Node::EFlipFlop { .. } => "eflipflip",
+            Node::Numblock { .. } => "numblock",
         }
     }
 
@@ -888,6 +891,11 @@ impl Node {
                 result.push_node(as_)
             }
             Node::MatchNilPattern { .. } => {}
+            Node::Numblock { call, numargs, body, .. } => {
+                result.push_node(call);
+                result.push_u8(*numargs);
+                result.push_node(body);
+            }
         }
 
         result.strings()
@@ -921,6 +929,10 @@ impl InspectVec {
 
     pub fn push_nil(&mut self) {
         self.strings.push(", nil".to_owned());
+    }
+
+    pub fn push_u8(&mut self, n: u8) {
+        self.strings.push(format!(", {}", n))
     }
 
     pub fn push_node(&mut self, node: &Node) {

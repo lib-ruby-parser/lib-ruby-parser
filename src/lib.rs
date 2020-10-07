@@ -53,4 +53,4 @@ pub use stack_state::StackState;
 pub mod str_term;
 
 mod context;
-pub use context::Context;
+pub use context::{Context, ContextItem};

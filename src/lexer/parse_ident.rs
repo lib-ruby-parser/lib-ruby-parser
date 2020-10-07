@@ -61,7 +61,6 @@ impl Lexer {
             if self.is_label_suffix(0) {
                 self.set_lex_state(EXPR_ARG|EXPR_LABELED);
                 self.nextc();
-                self.tokadd(':');
                 self.set_yyval_name(self.tok());
                 return Self::tLABEL;
             }

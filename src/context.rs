@@ -10,8 +10,8 @@ pub enum ContextItem {
 }
 
 #[derive(Debug, Clone, Default)]
-struct InnerContext {
-    stack: Vec<ContextItem>
+pub struct InnerContext {
+    pub stack: Vec<ContextItem>
 }
 
 impl InnerContext {
@@ -73,6 +73,10 @@ impl InnerContext {
     pub fn is_in_dynamic_block(&self) -> bool {
         self.is_in(ContextItem::Block) || self.is_in(ContextItem::Lambda)
     }
+
+    pub fn inner_clone(&self) -> Vec<ContextItem> {
+        self.stack.clone()
+    }
 }
 
 use std::rc::Rc;
@@ -132,5 +136,9 @@ impl Context {
 
     pub fn is_in_dynamic_block(&self) -> bool {
         self.inner.borrow().is_in_dynamic_block()
+    }
+
+    pub fn inner_clone(&self) -> Vec<ContextItem> {
+        self.inner.borrow().inner_clone()
     }
 }

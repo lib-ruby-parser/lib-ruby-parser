@@ -16,6 +16,10 @@ impl InnerMaxNumparamStack {
         self.top() < 0
     }
 
+    pub fn has_numparams(&self) -> bool {
+        self.top() > 0
+    }
+
     pub fn register(&mut self, numparam: i32) {
         self.set( std::cmp::max(self.top(), numparam ) )
     }
@@ -36,6 +40,10 @@ impl InnerMaxNumparamStack {
         self.stack.pop();
         self.stack.push(value)
     }
+
+    pub fn inner_clone(&self) -> Vec<i32> {
+        self.stack.clone()
+    }
 }
 
 use std::rc::Rc;
@@ -51,10 +59,12 @@ impl MaxNumparamStack {
         Self { inner: Rc::new(RefCell::new(InnerMaxNumparamStack::new())) }
     }
 
-    pub fn set_has_ordinary_params(&mut self) { self.inner.borrow_mut().set_has_ordinary_params() }
+    pub fn set_has_ordinary_params(&self) { self.inner.borrow_mut().set_has_ordinary_params() }
     pub fn has_ordinary_params(&self) -> bool { self.inner.borrow().has_ordinary_params() }
-    pub fn register(&mut self, numparam: i32) { self.inner.borrow_mut().register(numparam) }
+    pub fn has_numparams(&self) -> bool { self.inner.borrow().has_numparams() }
+    pub fn register(&self, numparam: i32) { self.inner.borrow_mut().register(numparam) }
     pub fn top(&self) -> i32 { self.inner.borrow().top() }
-    pub fn push(&mut self) { self.inner.borrow_mut().push() }
-    pub fn pop(&mut self) { self.inner.borrow_mut().pop() }
+    pub fn push(&self) { self.inner.borrow_mut().push() }
+    pub fn pop(&self) { self.inner.borrow_mut().pop() }
+    pub fn inner_clone(&self) -> Vec<i32> { self.inner.borrow().inner_clone() }
 }
