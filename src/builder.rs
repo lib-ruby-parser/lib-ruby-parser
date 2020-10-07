@@ -226,17 +226,17 @@ impl Builder {
     pub fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
         if parts.len() == 1 {
             let part = &parts[0];
-            let value = match part {
+            match part {
                 // collapse_string_parts? == true
                 Node::Str { value, .. } => {
-                    value.clone()
+                    let value = value.clone();
+                    return Node::Sym {
+                        loc: collection_map(&Some(&begin_t), &vec![], &Some(&end_t)),
+                        name: value.to_string_lossy(),
+                    }
                 }
-                _ => unreachable!()
+                _ => {}
             };
-            return Node::Sym {
-                loc: collection_map(&Some(&begin_t), &vec![], &Some(&end_t)),
-                name: value.to_string_lossy(),
-            }
         }
 
         Node::Dsym {
@@ -543,9 +543,9 @@ impl Builder {
                 Node::Gvasgn { name, loc, rhs: None }
             },
             Node::Const { name, scope, loc } => {
-                // if !context.is_dynamic_const_definition_allowed() {
-                //     diagnostic :error, :dynamic_const, nil, node.loc.expression
-                // }
+                if !self.context.is_dynamic_const_definition_allowed() {
+                    // diagnostic :error, :dynamic_const, nil, node.loc.expression
+                }
                 Node::Casgn { name, scope, loc, rhs: None }
             },
             Node::Lvar { name, loc: VariableMap { expression: loc, name: name_l, .. } } => {
@@ -1031,7 +1031,7 @@ impl Builder {
             | Node::Index { .. }
             | Node::Super { .. }
             | Node::Zsuper { .. }
-            // | Node::Lambda { .. }
+            | Node::Lambda { .. }
             => {
                 let loc = block_map(&method_call.expression(), &begin_t, &end_t);
                 return Node::Block {
@@ -1053,7 +1053,7 @@ impl Builder {
                 let (args, loc) = rewrite_args_and_loc(args, loc, block_args, block_body);
                 Node::Break { args, loc }
             },
-            _ => unreachable!()
+            _ => unreachable!("unsupported method call {:?}", method_call)
         }
     }
     pub fn block_pass(&self, amper_t: Token, arg: Node) -> Node {
@@ -1299,11 +1299,12 @@ impl Builder {
 
     pub fn keyword_cmd(&self, type_: KeywordCmd, keyword_t: Token, lparen_t: Option<Token>, args: Vec<Node>, rparen_t: Option<Token>) -> Node {
         if type_ == KeywordCmd::Yield && !args.is_empty() {
-            // match args.last() {
-            //     Some(Node::BlockPass { .. }) => {
-            //         diagnostic :error, :block_given_to_yield, nil, loc(keyword_t), [last_arg.loc.expression]
-            //     }
-            // }
+            match args.last() {
+                Some(Node::BlockPass { .. }) => {
+                    // diagnostic :error, :block_given_to_yield, nil, loc(keyword_t), [last_arg.loc.expression]
+                },
+                _ => {}
+            }
         }
 
         let loc = keyword_map(&keyword_t, &lparen_t.as_ref(), &args.iter().collect(), &rparen_t.as_ref());
@@ -1611,7 +1612,7 @@ impl Builder {
             // diagnostic :error, :pm_interp_in_var_name, nil, loc(begin_t).join(loc(end_t))
         }
 
-        match strings.remove(1) {
+        match strings.remove(0) {
             Node::Str { value, loc: CollectionMap { begin, end, expression } } => {
                 let name = value.to_string_lossy();
                 let mut name_l = expression.clone();

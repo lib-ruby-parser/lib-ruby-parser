@@ -52,7 +52,14 @@ impl InnerContext {
     }
 
     pub fn is_class_definition_allowed(&self) -> bool {
-        unimplemented!("is_class_definition_allow")
+        let def_index: Option<usize> = self.stack.iter().rev().position(|i| *i == ContextItem::Def || *i == ContextItem::Defs);
+        let sclass_index: Option<usize> = self.stack.iter().rev().position(|i| *i == ContextItem::Sclass);
+
+        match (def_index, sclass_index) {
+            (None, _) => true,
+            (Some(_), None) => false,
+            (Some(def_index), Some(sclass_index)) => sclass_index < def_index
+        }
     }
 
     pub fn is_module_definition_allowed(&self) -> bool {

@@ -17,13 +17,23 @@ impl TokAdd<char> for Lexer {
 
 impl TokAdd<&LexChar> for Lexer {
     fn tokadd(&mut self, c: &LexChar) {
-        self.tokadd(c.unwrap())
+        match c {
+            LexChar::Multibyte(c) => self.tokadd(*c),
+            LexChar::AsciiByte(c) => self.tokadd(*c),
+            LexChar::NonUtf8Byte(byte) => self.tokadd(*byte),
+            LexChar::EOF => panic!("can't emit EOF")
+        }
     }
 }
 
 impl TokAdd<&mut LexChar> for Lexer {
     fn tokadd(&mut self, c: &mut LexChar) {
-        self.tokadd(c.unwrap())
+        match c {
+            LexChar::Multibyte(c) => self.tokadd(*c),
+            LexChar::AsciiByte(c) => self.tokadd(*c),
+            LexChar::NonUtf8Byte(byte) => self.tokadd(*byte),
+            LexChar::EOF => panic!("can't emit EOF")
+        }
     }
 }
 
