@@ -262,7 +262,7 @@ impl Lexer {
                             if (func & STR_FUNC_EXPAND) == 0 {
                                 self.tokadd('\\');
                                 // goto non_ascii (inlined)
-                                unimplemented!("non_ascii1");
+                                unimplemented!("non_ascii1 {:?}", c);
                             }
                         }
                         if (func & STR_FUNC_REGEXP) != 0 {
@@ -290,7 +290,7 @@ impl Lexer {
                     }
                 }
             } else if !self.parser_is_ascii() {
-                unimplemented!("non_ascii1");
+                unimplemented!("non_ascii1 {:?}", c);
             } else if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
                 self.buffer.pushback(&c);
                 break;

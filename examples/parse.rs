@@ -1,33 +1,59 @@
-use ruby_parser::{Parser, Lexer};
-use std::env;
-use std::fs;
+extern crate clap;
+use clap::Clap;
 
-fn print_usage() -> ! {
-    println!("
-USAGE:
-    cargo run --example parse -- test.rb
-    cargo run --example parse -- -e \"2 + 2\"
-");
-    std::process::exit(1)
+use ruby_parser::Node;
+use std::fs;
+use std::path::Path;
+
+mod helpers;
+use helpers::*;
+
+#[derive(Debug, Clap)]
+struct Args {
+    #[clap(about = "file/dir to parse")]
+    path: Option<String>,
+
+    #[clap(short = 'e', about = "code to evaluate")]
+    code: Option<String>,
+
+    #[clap(short, long, about = "don't print anything except OK/Error per file")]
+    quiet: bool,
+
+    #[clap(short, long, about = "print debug information")]
+    debug: bool,
 }
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    let args: Vec<&str> = args.iter().skip(1).map(|e| &e[..]).collect();
+fn main() -> Result<(), ()> {
+    let args: Args = Args::parse();
+    let callback: &dyn Fn(&Node) = if args.quiet {
+        &|_node: &Node| {}
+    } else {
+        &|node: &Node| println!("{}", node.inspect(0))
+    };
+    let debug = args.debug;
 
-    let source =
-        match args[..] {
-            ["-e", code] => code.to_owned().into_bytes(),
-            [filepath] => fs::read(filepath).expect("Failed to read file"),
-            _ => print_usage()
-        };
-
-    let lexer = Lexer::new(&source, None).unwrap();
-    let mut parser = Parser::new(lexer);
-    parser.set_debug(false);
-
-    match parser.do_parse() {
-        Some(node) => println!("{}", node.inspect(0)),
-        None => println!("None")
+    if let Some(code) = args.code {
+        let node = parse(
+            &code.to_owned().into_bytes(),
+            "(eval)",
+            debug
+        )?;
+        callback(&node)
+    } else if let Some(path) = args.path {
+        let path = Path::new(&path);
+        each_ruby_file(path, &|entry| {
+            let code = fs::read(Path::new(entry)).unwrap();
+            let node = parse(
+                &code,
+                entry,
+                debug
+            ).unwrap_or_else(|_| panic!("failed to parse {}", entry));
+            callback(&node)
+        }).unwrap_or_else(|e| panic!("Error {:?}", e));
+    } else {
+        println!("Nothing to parse");
+        return Err(())
     }
+
+    Ok(())
 }

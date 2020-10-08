@@ -1,14 +1,26 @@
-use std::env;
+extern crate clap;
+use clap::Clap;
+
 use std::fs;
 use ruby_parser::{Lexer, Token};
+use std::path::Path;
 
-fn print_usage() -> ! {
-    println!("
-USAGE:
-    cargo run --example tokenize -- test.rb
-    cargo run --example tokenize -- -e \"2 + 2\"
-");
-    std::process::exit(1)
+mod helpers;
+use helpers::*;
+
+#[derive(Debug, Clap)]
+struct Args {
+    #[clap(about = "file/dir to parse")]
+    path: Option<String>,
+
+    #[clap(short = 'e', about = "code to evaluate")]
+    code: Option<String>,
+
+    #[clap(short, long, about = "don't print anything except OK/Error per file")]
+    quiet: bool,
+
+    #[clap(short, long, about = "print debug information")]
+    debug: bool,
 }
 
 fn token_name(token: &Token) -> String {
@@ -28,30 +40,46 @@ fn rpad2<T: Sized + std::fmt::Debug>(value: &T, total_width: usize) -> String {
     format!("{:width$}", format!("{:?}, ", value), width = total_width)
 }
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    let args: Vec<&str> = args.iter().skip(1).map(|e| &e[..]).collect();
+fn main() -> Result<(), ()> {
+    let args: Args = Args::parse();
+    let callback: &dyn Fn(&Vec<Token>) = if args.quiet {
+        &|_tokens: &Vec<Token>| {}
+    } else {
+        &|tokens: &Vec<Token>| {
+            let tok_name_length  = tokens.iter().map(|tok| format!("{:?}", token_name(tok)).len()).max().unwrap_or(0) + 2;
+            let tok_value_length = tokens.iter().map(|tok| format!("{:?}", token_value(tok)).len()).max().unwrap_or(0) + 2;
 
-    let source =
-        match args[..] {
-            ["-e", code] => code.to_owned().into_bytes(),
-            [filepath] => fs::read(filepath).expect("Failed to read file"),
-            _ => print_usage()
-        };
+            println!("[");
+            for token in tokens {
+                let (_, _, loc) = &token;
+                let name = rpad1(&token_name(&token), tok_name_length);
+                let value = rpad2(&token_value(&token), tok_value_length);
+                println!("    :{}{}[{}, {}]", name, value, loc.begin, loc.end);
+            }
+            println!("]");
+        }
+    };
+    let debug = args.debug;
 
-    let mut lexer = Lexer::new(&source, None).unwrap();
-    lexer.set_debug(true);
-    let tokens = lexer.tokenize_until_eof();
-
-    let tok_name_length  = tokens.iter().map(|tok| format!("{:?}", token_name(tok)).len()).max().unwrap_or(0) + 2;
-    let tok_value_length = tokens.iter().map(|tok| format!("{:?}", token_value(tok)).len()).max().unwrap_or(0) + 2;
-
-    println!("[");
-    for token in tokens {
-        let (_, _, loc) = &token;
-        let name = rpad1(&token_name(&token), tok_name_length);
-        let value = rpad2(&token_value(&token), tok_value_length);
-        println!("    :{}{}[{}, {}]", name, value, loc.begin, loc.end);
+    if let Some(code) = args.code {
+        let tokens = tokenize(
+            &code.to_owned().into_bytes(),
+            "(eval)",
+            debug
+        )?;
+        callback(&tokens)
+    } else if let Some(path) = args.path {
+        let path = Path::new(&path);
+        each_ruby_file(path, &|entry| {
+            let code = fs::read(Path::new(entry)).unwrap();
+            let node = tokenize(
+                &code,
+                entry,
+                debug
+            ).unwrap_or_else(|_| panic!("failed to parse {}", entry));
+            callback(&node)
+        }).unwrap_or_else(|e| panic!("Error {:?}", e));
     }
-    println!("]");
+
+    return Ok(());
 }

@@ -20,3 +20,6 @@ name = "parse"
 
 [build-dependencies]
 rust-bison-skeleton = { path = "../rust-bison-skeleton/rust-bison-skeleton/" }
+
+[dev-dependencies]
+clap = "3.0.0-beta.2"
