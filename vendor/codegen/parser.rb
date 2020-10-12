@@ -140,6 +140,15 @@ end
 
 ParseHelper.prepend(ParseHelperPatch)
 
+module BuilderPatch
+  def initialize(*)
+    super
+    @emit_file_line_as_literals = false
+  end
+end
+
+Parser::Builders::Default.prepend(BuilderPatch)
+
 IGNORE = [
   # we don't support legacy behavior
   'test___ENCODING___legacy_',
@@ -148,6 +157,7 @@ IGNORE = [
   'test_send_index_asgn_legacy',
   'test_send_lambda_legacy',
   'test_endless_method_forwarded_args_legacy',
+  'test_procarg0_legacy',
 
   'test_dedenting_heredoc',
   'test_heredoc',
@@ -157,6 +167,15 @@ IGNORE = [
 
   # parser bug
   'test_unary_num_pow_precedence_0',
+
+  # heredocs difference
+  'test_ruby_bug_11989',
+  'test_ruby_bug_11990',
+  'test_interp_digit_var_2',
+  'test_interp_digit_var_3',
+  'test_interp_digit_var_8',
+  'test_interp_digit_var_9',
+  'test_parser_bug_640',
 ]
 
 Minitest.after_run do

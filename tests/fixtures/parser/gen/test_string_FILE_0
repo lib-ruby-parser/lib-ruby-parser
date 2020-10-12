@@ -1,4 +1,4 @@
 --INPUT
 __FILE__
 --AST
-s(:str, "(assert_parses)")
+s(:__FILE__)

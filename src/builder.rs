@@ -185,7 +185,7 @@ impl Builder {
             },
             [part] => {
                 match part {
-                    Node::Str { .. } | Node::Dstr { .. } => {
+                    Node::Str { .. } | Node::Dstr { .. } | Node::Heredoc { .. } => {
                         // collapse_string_parts? == true
                         if begin_t.is_none() && end_t.is_none() {
                             return part.clone();
@@ -487,7 +487,7 @@ impl Builder {
 
     pub fn nth_ref(&self, token: Token) -> Node {
         Node::NthRef {
-            name: value(&token),
+            name: value(&token).chars().skip(1).collect::<String>().parse::<usize>().unwrap(),
             loc: variable_map(&token)
         }
     }
@@ -946,14 +946,24 @@ impl Builder {
     }
 
     pub fn procarg0(&self, arg: Node) -> Node {
-        Node::Procarg0 {
-            loc: CollectionMap {
-                begin: None,
-                end: None,
-                expression: arg.expression().clone()
+        let (loc, args) = match &arg {
+            Node::Mlhs { items, loc } => {
+                (loc.clone(), items.clone())
             },
-            arg: Box::new(arg)
-        }
+            Node::Arg { loc, .. } => {
+                (
+                    CollectionMap {
+                        begin: None,
+                        end: None,
+                        expression: loc.expression.clone()
+                    },
+                    vec![ arg ]
+                )
+            },
+            other => unreachable!("unsupported procarg0 child {:?}", other)
+        };
+
+        Node::Procarg0 { args, loc }
     }
 
     //
@@ -1165,23 +1175,26 @@ impl Builder {
 
     pub fn match_op(&self, receiver: Node, match_t: Token, arg: Node) -> Node {
         let source_map = send_binary_op_map(&receiver, &match_t, &arg);
-        let captures = self.static_regexp_captures(&receiver);
-        if captures.is_empty() {
-            Node::Send {
-                receiver: Some(Box::new(receiver)),
-                operator: String::from("=~"),
-                args: vec![arg],
-                loc: source_map
-            }
-        } else {
-            for capture in captures {
-                self.static_env.declare(&capture);
-            }
+        match self.static_regexp(&receiver) {
+            Some(regex) => {
+                let captures = self.static_regexp_captures(&regex);
+                for capture in captures {
+                    self.static_env.declare(&capture);
+                }
 
-            Node::MatchWithLvasgn {
-                receiver: Box::new(receiver),
-                arg: Box::new(arg),
-                loc: source_map
+                Node::MatchWithLvasgn {
+                    receiver: Box::new(receiver),
+                    arg: Box::new(arg),
+                    loc: source_map
+                }
+            },
+            None => {
+                Node::Send {
+                    receiver: Some(Box::new(receiver)),
+                    operator: String::from("=~"),
+                    args: vec![arg],
+                    loc: source_map
+                }
             }
         }
     }
@@ -1386,7 +1399,7 @@ impl Builder {
                 Node::Yield { args, loc }
             },
             KeywordCmd::Zsuper => {
-                Node::Zsuper { args, loc }
+                Node::Zsuper { loc }
             },
         }
     }
@@ -1740,7 +1753,10 @@ impl Builder {
                     trailing_comma = true;
                     *match_
                 }
-                e => e
+                e => {
+                    trailing_comma = false;
+                    e
+                }
             }
         }).collect::<Vec<_>>();
 
@@ -1875,6 +1891,12 @@ impl Builder {
                     loc
                 }
             },
+            Node::Regexp { parts, options, loc } => {
+                Node::MatchCurrentLine {
+                    loc: expr_map(&loc.expression),
+                    re: Box::new(Node::Regexp { parts, options, loc }),
+                }
+            }
             _ => cond
         }
     }
@@ -1927,47 +1949,49 @@ impl Builder {
         Some(result)
     }
 
-    pub fn static_regexp(&self, parts: &Vec<Node>, options: &Vec<char>) -> Option<Regex> {
-        if let Some(source) = self.static_string(&parts) {
-            let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
-            reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
-            if options.contains(&'x') {
-                reg_options |= RegexOptions::REGEX_OPTION_EXTEND;
-            }
-            let regex = Regex::with_options(&source, reg_options, onig::Syntax::default());
-
-            match regex {
-                Ok(regex) => return Some(regex),
-                Err(err) => println!("Failed to process static regex source, got error {:?}", err)
-            }
-        }
-
-        None
-    }
-
-    pub fn static_regexp_captures(&self, node: &Node) -> Vec<String> {
+    pub fn static_regexp(&self, node: &Node) -> Option<Regex> {
         match node {
             Node::Regexp { parts, options, .. } => {
                 match &**options {
                     Node::RegOpt { options, .. } => {
-                        if let Some(regex) = self.static_regexp(parts, options) {
-                            let mut result: Vec<String> = vec![];
+                        if let Some(source) = self.static_string(&parts) {
+                            let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
+                            reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
+                            if options.contains(&'x') {
+                                reg_options |= RegexOptions::REGEX_OPTION_EXTEND;
+                            }
 
-                            regex.foreach_name(|name, _| {
-                                result.push(name.to_owned());
-                                true
-                            });
+                            let bytes = onig::EncodedBytes::ascii(source.as_bytes());
+                            let regex = Regex::with_options_and_encoding(
+                                bytes,
+                                reg_options,
+                                onig::Syntax::ruby()
+                            );
 
-                            return result;
+                            match regex {
+                                Ok(regex) => return Some(regex),
+                                Err(err) => println!("Failed to process static regex source, got error {:?}", err, )
+                            }
                         }
-                    },
+                    }
                     _ => {}
                 }
             },
             _ => {}
-        }
+        };
 
-        vec![]
+        None
+    }
+
+    pub fn static_regexp_captures(&self, regex: &Regex) -> Vec<String> {
+        let mut result: Vec<String> = vec![];
+
+        regex.foreach_name(|name, _| {
+            result.push(name.to_owned());
+            true
+        });
+
+        result
     }
 
     pub fn collapse_string_parts(&self) {}

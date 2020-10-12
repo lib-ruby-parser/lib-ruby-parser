@@ -63,7 +63,7 @@ pub enum Node {
     Gvar { name: String, loc: VariableMap },
     Cvar { name: String, loc: VariableMap },
     BackRef { name: String, loc: VariableMap },
-    NthRef { name: String, loc: VariableMap },
+    NthRef { name: usize, loc: VariableMap },
     Lvasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
     Cvasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
     Ivasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
@@ -102,7 +102,7 @@ pub enum Node {
     Return { args: Vec<Node>, loc: KeywordMap },
     Super { args: Vec<Node>, loc: KeywordMap },
     Yield { args: Vec<Node>, loc: KeywordMap },
-    Zsuper { args: Vec<Node>, loc: KeywordMap },
+    Zsuper { loc: KeywordMap },
     AndAsgn { lhs: Box<Node>, rhs: Box<Node>, loc: OpAssignMap },
     OrAsgn { lhs: Box<Node>, rhs: Box<Node>, loc: OpAssignMap },
     OpAsgn { lhs: Box<Node>, rhs: Box<Node>, operator: String, loc: OpAssignMap },
@@ -125,7 +125,7 @@ pub enum Node {
     Kwnilarg { loc: VariableMap },
     Shadowarg { name: String, loc: VariableMap },
     Blockarg { name: String, loc: VariableMap },
-    Procarg0 { arg: Box<Node>, loc: CollectionMap },
+    Procarg0 { args: Vec<Node>, loc: CollectionMap },
     ForwardedArgs { loc: Map },
     Block { call: Box<Node>, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: CollectionMap },
     Lambda { loc: Map },
@@ -154,7 +154,8 @@ pub enum Node {
     MatchNilPattern { loc: VariableMap },
     IFlipFlop { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap },
     EFlipFlop { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap },
-    Numblock { numargs: u8, call: Box<Node>, body: Box<Node>, loc: CollectionMap }
+    Numblock { numargs: u8, call: Box<Node>, body: Box<Node>, loc: CollectionMap },
+    MatchCurrentLine { re: Box<Node>, loc: Map },
 }
 
 impl Node {
@@ -282,6 +283,7 @@ impl Node {
             Self::IFlipFlop { loc, .. } => &loc.expression,
             Self::EFlipFlop { loc, .. } => &loc.expression,
             Self::Numblock { loc, .. } => &loc.expression,
+            Self::MatchCurrentLine { loc, .. } => &loc.expression,
         }
     }
 
@@ -330,7 +332,7 @@ impl Node {
             Node::Gvar { .. } => "gvar",
             Node::Cvar { .. } => "cvar",
             Node::BackRef { .. } => "back_ref",
-            Node::NthRef { .. } => "nthref",
+            Node::NthRef { .. } => "nth_ref",
             Node::Lvasgn { .. } => "lvasgn",
             Node::Cvasgn { .. } => "cvasgn",
             Node::Ivasgn { .. } => "ivasgn",
@@ -420,8 +422,9 @@ impl Node {
             Node::MatchAs { .. } => "match_as",
             Node::MatchNilPattern { .. } => "match_nil_pattern",
             Node::IFlipFlop { .. } => "iflipflop",
-            Node::EFlipFlop { .. } => "eflipflip",
+            Node::EFlipFlop { .. } => "eflipflop",
             Node::Numblock { .. } => "numblock",
+            Node::MatchCurrentLine { .. } => "match_current_line",
         }
     }
 
@@ -494,9 +497,11 @@ impl Node {
             Node::Ivar { name, .. }
             | Node::Gvar { name, .. }
             | Node::Cvar { name, .. }
-            | Node::BackRef { name, .. }
-            | Node::NthRef { name, .. } => {
-                result.push_str(name)
+            | Node::BackRef { name, .. } => {
+                result.push_str(name);
+            }
+            Node::NthRef { name, .. } => {
+                result.push_usize(*name);
             }
             Node::Lvasgn { name, rhs, .. }
             | Node::Cvasgn { name, rhs, .. }
@@ -613,10 +618,10 @@ impl Node {
             | Node::Retry { args, .. }
             | Node::Return { args, .. }
             | Node::Super { args, .. }
-            | Node::Yield { args, .. }
-            | Node::Zsuper { args, .. } => {
+            | Node::Yield { args, .. } => {
                 result.push_nodes(args)
             }
+            Node::Zsuper { .. } => {}
             Node::AndAsgn { lhs, rhs, .. }
             | Node::OrAsgn { lhs, rhs, .. }
             | Node::And { lhs, rhs, .. }
@@ -692,8 +697,8 @@ impl Node {
                 result.push_str(name);
 
             }
-            Node::Procarg0 { arg, .. } => {
-                result.push_node(arg);
+            Node::Procarg0 { args, .. } => {
+                result.push_nodes(args);
             }
             Node::ForwardedArgs { .. } => {}
             Node::Block { call, args, body, .. } => {
@@ -779,6 +784,9 @@ impl Node {
                 result.push_u8(*numargs);
                 result.push_node(body);
             }
+            Node::MatchCurrentLine { re, .. } => {
+                result.push_node(re);
+            }
         }
 
         result.strings()
@@ -815,6 +823,10 @@ impl InspectVec {
     }
 
     pub fn push_u8(&mut self, n: u8) {
+        self.strings.push(format!(", {}", n))
+    }
+
+    pub fn push_usize(&mut self, n: usize) {
         self.strings.push(format!(", {}", n))
     }
 

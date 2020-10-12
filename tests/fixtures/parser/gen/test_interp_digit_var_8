@@ -1,6 +1,0 @@
---INPUT
-<<-"HERE"
-#@1
-HERE
---AST
-s(:str, "#@1\n")

@@ -184,7 +184,7 @@ impl Lexer {
                 if c == '@' {
                     ptr += 1;
                     if ptr >= self.buffer.pend { return None }
-                    // c = self.char_at(ptr);
+                    c = self.char_at(ptr);
                 }
             },
 
@@ -195,6 +195,10 @@ impl Lexer {
             },
 
             _ => return None
+        }
+
+        if !c.is_ascii() || c == '_' || c.is_alpha() {
+            return Some(Self::tSTRING_DVAR)
         }
 
         None

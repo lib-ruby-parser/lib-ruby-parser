@@ -86,11 +86,16 @@ impl Range {
         unimplemented!()
     }
 
-    pub fn to_locs(&self, buffer: &Buffer) -> Option<(FileLoc, FileLoc)> {
-        let begin_loc = FileLoc::from_pos(self.begin_pos, &buffer)?;
-        let end_loc   = FileLoc::from_pos(self.end_pos, &buffer)?;
+    pub fn begin_loc(&self, buffer: &Buffer) -> Option<FileLoc> {
+        FileLoc::from_pos(self.begin_pos, &buffer)
+    }
 
-        Some((begin_loc, end_loc))
+    pub fn end_loc(&self, buffer: &Buffer) -> Option<FileLoc> {
+        FileLoc::from_pos(self.end_pos, &buffer)
+    }
+
+    pub fn to_locs(&self, buffer: &Buffer) -> Option<(FileLoc, FileLoc)> {
+        Some(( self.begin_loc(buffer)?, self.end_loc(buffer)? ))
     }
 }
 

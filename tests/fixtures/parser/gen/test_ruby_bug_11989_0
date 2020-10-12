@@ -1,7 +1,0 @@
---INPUT
-p <<~"E"
-  x\n   y
-E
---AST
-s(:send, nil, "p",
-  s(:str, "x\n   y\n"))

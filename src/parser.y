@@ -442,7 +442,7 @@
                   fitem
                     {
                         $$ = Value::Node(
-                            self.builder.alias($<Token>1, $<Node>2, $<Node>3)
+                            self.builder.alias($<Token>1, $<Node>2, $<Node>4)
                         );
                     }
                 | kALIAS tGVAR tGVAR
@@ -919,6 +919,18 @@
 
    block_command: block_call
                 | block_call call_op2 operation2 command_args
+                    {
+                        $$ = Value::Node(
+                            self.builder.call_method(
+                                Some($<Node>1),
+                                Some($<Token>2),
+                                Some($<Token>3),
+                                None,
+                                $<NodeList>4,
+                                None
+                            )
+                        );
+                    }
                 ;
 
  cmd_brace_block: tLBRACE_ARG
@@ -1116,10 +1128,10 @@
                 | tLPAREN mlhs_inner rparen
                     {
                         $$ = Value::Node(
-                            self.builder.multi_lhs(
-                                Some($<Token>1),
-                                vec![ $<Node>2 ],
-                                Some($<Token>3)
+                            self.builder.begin(
+                                $<Token>1,
+                                Some($<Node>2),
+                                $<Token>3
                             )
                         );
                     }
@@ -1137,10 +1149,15 @@
                     }
                 | tLPAREN mlhs_inner rparen
                     {
+                        let mlhs_items: Vec<Node> = match $<Node>2 {
+                            Node::Mlhs { items, .. } => items,
+                            other => panic!("unsupported mlhs item {:?}", other)
+                        };
+
                         $$ = Value::Node(
                             self.builder.multi_lhs(
                                 Some($<Token>1),
-                                vec![ $<Node>2 ],
+                                mlhs_items,
                                 Some($<Token>3)
                             )
                         );
@@ -1858,7 +1875,7 @@
                 | arg tNMATCH arg
                     {
                         $$ = Value::Node(
-                            self.builder.match_op(
+                            self.builder.binary_op(
                                 $<Node>1,
                                 $<Token>2,
                                 $<Node>3
@@ -2637,7 +2654,7 @@
                         let (cond, do_t) = $<ExprValueDo>2;
                         $$ = Value::Node(
                             self.builder.loop_(
-                                LoopType::While,
+                                LoopType::Until,
                                 $<Token>1,
                                 cond,
                                 do_t,
@@ -3596,7 +3613,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::Node(
                             self.builder.keyword_cmd(
-                                KeywordCmd::Super,
+                                KeywordCmd::Zsuper,
                                 $<Token>1,
                                 None,
                                 vec![],
