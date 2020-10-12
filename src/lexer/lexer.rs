@@ -287,7 +287,7 @@ impl Lexer {
                     if c == '*' {
                         c = self.nextc();
                         if c == '=' {
-                            self.set_yylval_id("**");
+                            self.set_yylval_id("**=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
@@ -302,7 +302,7 @@ impl Lexer {
                         }
                     } else {
                         if c == '=' {
-                            self.set_yylval_id("*");
+                            self.set_yylval_id("*=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
@@ -413,7 +413,7 @@ impl Lexer {
                     if c == '<' {
                         c = self.nextc();
                         if c == '=' {
-                            self.set_yylval_id("<<");
+                            self.set_yylval_id("<<=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
@@ -435,7 +435,7 @@ impl Lexer {
                     if c == '>' {
                         c = self.nextc();
                         if c == '=' {
-                            self.set_yylval_id(">>");
+                            self.set_yylval_id(">>=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
@@ -489,14 +489,14 @@ impl Lexer {
                         self.set_lex_state(EXPR_BEG);
                         c = self.nextc();
                         if c == '=' {
-                            self.set_yylval_id("&&");
+                            self.set_yylval_id("&&=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
                         self.buffer.pushback(&c);
                         return Self::tANDOP;
                     } else if c == '=' {
-                        self.set_yylval_id("&");
+                        self.set_yylval_id("&=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
                     } else if c == '.' {
@@ -523,7 +523,7 @@ impl Lexer {
                         self.set_lex_state(EXPR_BEG);
                         c = self.nextc();
                         if c == '=' {
-                            self.set_yylval_id("||");
+                            self.set_yylval_id("||=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
@@ -535,7 +535,7 @@ impl Lexer {
                         return Self::tOROP;
                     }
                     if c == '=' {
-                        self.set_yylval_id("|");
+                        self.set_yylval_id("|=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
                     }
@@ -555,7 +555,7 @@ impl Lexer {
                         return Self::tPLUS;
                     }
                     if c == '=' {
-                        self.set_yylval_id("+");
+                        self.set_yylval_id("+=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
                     }
@@ -583,7 +583,7 @@ impl Lexer {
                         return Self::tMINUS;
                     }
                     if c == '=' {
-                        self.set_yylval_id("-");
+                        self.set_yylval_id("-=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
                     }
@@ -725,7 +725,7 @@ impl Lexer {
                     }
                     c = self.nextc();
                     if c == '=' {
-                        self.set_yylval_id("/");
+                        self.set_yylval_id("/=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
                     }
@@ -742,7 +742,7 @@ impl Lexer {
                 Some('^') => {
                     c = self.nextc();
                     if c == '=' {
-                        self.set_yylval_id("^");
+                        self.set_yylval_id("^=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
                     }
@@ -1218,7 +1218,7 @@ impl Lexer {
 
         c = self.nextc();
         if c == '=' {
-            self.set_yylval_id("%");
+            self.set_yylval_id("%=");
             self.set_lex_state(EXPR_BEG);
             return Self::tOP_ASGN;
         }

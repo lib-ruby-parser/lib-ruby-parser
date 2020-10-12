@@ -87,7 +87,6 @@ mapping = {
     on___end__: :t__END__,
     on_embvar: :tSTRING_DVAR,
     on_symbols_beg: :tSYMBOLS_BEG,
-    on_nl: :tNL,
 }
 
 ops = {
@@ -122,9 +121,13 @@ $stderr.puts ARGV.first
 Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, _)|
     tok_name =
         case tok_name
+        when :on_nl then next
         when :on_kw then keyword.fetch(tok_value) { raise 'unsupported keyword ' + tok_value  }
         when :on_sp, :on_ignored_sp, :on_ignored_nl, :on_comment, :on_words_sep then next
         when :on_op then ops.fetch(tok_value) { raise 'unsupported op ' + tok_value }
+        when :on_heredoc_end
+            tok_value = tok_value.strip
+            mapping.fetch(tok_name)
         else
             mapping.fetch(tok_name) { raise 'unsupported ' + tok_name.to_s + ' ' + tok_value }
         end
@@ -136,13 +139,17 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, _)|
         strs.pop
     when :tSTRING_CONTENT
         case strs.last
-        when "'" # no escaping
+        when "'", /\A<<-?'\w+'\z/ # no escaping
         when "\"", "/"
-            tok_value = ("\"" + tok_value + "\"").undump
+            tok_value = ("\"" + tok_value.encode('utf-8') + "\"").undump rescue tok_value
+        when /\A<<-?"\w+"\z/, /\A<<-?\w+\z/ # ignore
+        when /%r\[/ # ignore
         else
             raise "unknown str type #{strs.last.inspect}"
         end
+    when :tINTEGER
+        tok_value = tok_value.gsub('_', '')
     end
 
-    puts tok_name.to_s + ' ' + tok_value.bytes.inspect + ' ' + start.join(':')
+    puts tok_name.to_s + ' ' + (tok_value || "").bytes.inspect + ' ' + start.join(':')
 end

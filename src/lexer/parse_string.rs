@@ -35,7 +35,8 @@ impl Lexer {
                 match (quote.heredoc_len(), quote.heredoc_end()) {
                     (Some(len), Some(end)) => {
                         self.lval_start = Some(end);
-                        self.lval_end = Some(end + len)
+                        self.lval_end = Some(end + len);
+                        self.set_yylval_str(TokenBuf::String(self.buffer.substr_at(end, end + len).unwrap()));
                     },
                     _ => {}
                 }
@@ -61,7 +62,7 @@ impl Lexer {
                 self.buffer.pushback(&c); /* dispatch the term at tSTRING_END */
                 return Self::tSPACE;
             }
-            return self.parser_string_term(func);
+            return self.parser_string_term(term, func);
         }
         if space {
             self.buffer.pushback(&c);
@@ -106,11 +107,11 @@ impl Lexer {
         Self::tSTRING_CONTENT
     }
 
-    pub fn parser_string_term(&mut self, func: usize) -> i32 {
+    pub fn parser_string_term(&mut self, term: char, func: usize) -> i32 {
         self.strterm = None;
         if (func & STR_FUNC_REGEXP) != 0 {
             let flags = self.regx_options();
-            self.set_yylval_num(flags);
+            self.set_yylval_num(format!("{}{}", term, flags));
             self.set_lex_state(EXPR_END);
             return Self::tREGEXP_END;
         }
@@ -261,8 +262,7 @@ impl Lexer {
                         if !c.is_ascii() {
                             if (func & STR_FUNC_EXPAND) == 0 {
                                 self.tokadd('\\');
-                                // goto non_ascii (inlined)
-                                unimplemented!("non_ascii1 {:?}", c);
+                                self.tokadd(&c);
                             }
                         }
                         if (func & STR_FUNC_REGEXP) != 0 {
@@ -290,7 +290,7 @@ impl Lexer {
                     }
                 }
             } else if !self.parser_is_ascii() {
-                unimplemented!("non_ascii1 {:?}", c);
+                self.tokadd(&c);
             } else if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
                 self.buffer.pushback(&c);
                 break;
@@ -941,7 +941,6 @@ impl Lexer {
                     }
                 }
                 self.lval_end = Some(self.buffer.pcur + 1);
-                heredoc_end = Some(self.buffer.pcur + 1);
                 if c != '\n' {
                     if c == '\\' { self.buffer.heredoc_line_indent = -1 }
                     return self.heredoc_flush();
@@ -956,6 +955,7 @@ impl Lexer {
                 if c.is_eof() { return self.here_document_error(&here, eos, len) }
 
                 if self.buffer.is_whole_match(&self.buffer.substr_at(eos, eos+len).unwrap(), indent) {
+                    heredoc_end = Some(eos);
                     break;
                 }
             }
@@ -984,6 +984,7 @@ impl Lexer {
         self.token_flush();
         self.strterm = None;
         self.set_lex_state(EXPR_END);
+        self.set_yylval_str(TokenBuf::String(here.id(&self.buffer)));
         return Self::tSTRING_END;
     }
 

@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
+use crate::source::buffer::*;
 
 pub mod str_types {
     pub const STR_FUNC_ESCAPE: usize = 0x01;
@@ -113,6 +114,12 @@ impl HeredocLiteral {
     pub fn set_length(&self, length: usize) { self.inner.borrow_mut().length = length; }
     pub fn set_quote(&self, quote: usize) { self.inner.borrow_mut().quote = quote; }
     pub fn set_func(&self, func: usize) { self.inner.borrow_mut().func = func; }
+
+    pub fn id(&self, buffer: &Buffer) -> String {
+        let start = buffer.lines[self.lastline()].start + self.offset();
+        let len = self.length();
+        buffer.substr_at(start, start + len).unwrap()
+    }
 }
 
 #[derive(Debug, Clone)]

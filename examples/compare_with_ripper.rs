@@ -21,12 +21,20 @@ fn lex_as_ripper(filepath: &str) -> Result<String, String> {
     let mut output = String::from("");
     for token in tokens {
         if token.0 == Lexer::END_OF_INPUT { continue }
+        if token.0 == Lexer::tNL { continue }
         let token_name = Lexer::token_name(&token);
         let token_name =
             match &token_name[..] {
                 "tLPAREN2" => "tLPAREN",
                 "tLCURLY"  => "tLBRACE",
                 "tRCURLY"  => "tRBRACE",
+                "tLBRACK2" => "tLBRACK",
+                "kDO_BLOCK" => "kDO",
+                "kDO_COND" => "kDO",
+                "kIF_MOD" => "kIF",
+                "kUNLESS_MOD" => "kUNLESS",
+                "kWHILE_MOD" => "kWHILE",
+                "tUMINUS_NUM" => "tMINUS",
                 other => other
             }.to_owned();
 
@@ -64,10 +72,10 @@ fn main() {
                 } else {
                     for (lineno, (ripper_line, line)) in ripper_out.lines().zip(out.lines()).enumerate() {
                         if ripper_line != line {
-                            println!("line {}:\nripper: {}\nresult: {}", lineno, ripper_line, line)
+                            println!("file {}, line {}:\nripper: {}\nresult: {}", path, lineno, ripper_line, line);
+                            std::process::exit(1)
                         }
                     }
-                    std::process::exit(1)
                 }
             },
 
