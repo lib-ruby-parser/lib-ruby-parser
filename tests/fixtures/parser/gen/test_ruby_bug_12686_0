@@ -1,5 +1,17 @@
 --INPUT
 f (g rescue nil)
+--LOCATIONS
+~ selector ()
+~~~~~~~~~~~~~~~~ expression ()
+  ~ begin (arg[0])
+               ~ end (arg[0])
+  ~~~~~~~~~~~~~~ expression (arg[0])
+   ~~~~~~~~~~~~ expression (arg[0]/body)
+   ~ selector (arg[0]/body/body)
+   ~ expression (arg[0]/body/body)
+     ~~~~~~ keyword (arg[0]/body/rescue_body[0])
+     ~~~~~~~~~~ expression (arg[0]/body/rescue_body[0])
+            ~~~ expression (arg[0]/body/rescue_body[0]/body)
 --AST
 s(:send, nil, "f",
   s(:begin,

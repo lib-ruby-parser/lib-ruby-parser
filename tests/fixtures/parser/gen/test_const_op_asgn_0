@@ -1,5 +1,10 @@
 --INPUT
 A += 1
+--LOCATIONS
+~ name ()
+~~~~~~ expression ()
+~ name (recv)
+~ expression (recv)
 --AST
 s(:op_asgn,
   s(:casgn, nil, "A"), "+",

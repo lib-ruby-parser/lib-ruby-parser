@@ -1,5 +1,12 @@
 --INPUT
 not(foo)
+--LOCATIONS
+   ~ begin ()
+       ~ end ()
+~~~ selector ()
+~~~~~~~~ expression ()
+    ~~~ name (recv)
+    ~~~ expression (recv)
 --AST
 s(:send,
   s(:lvar, "foo"), "!")

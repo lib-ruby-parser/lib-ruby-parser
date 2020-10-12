@@ -1,5 +1,17 @@
 --INPUT
 { foo: 2, **bar }
+--LOCATIONS
+~ begin ()
+                ~ end ()
+~~~~~~~~~~~~~~~~~ expression ()
+     ~ operator (pair[0])
+  ~~~~~~ expression (pair[0])
+  ~~~ expression (pair[0]/key)
+       ~ expression (pair[0]/value)
+          ~~ operator (pair[1])
+          ~~~~~ expression (pair[1])
+            ~~~ name (pair[1]/value)
+            ~~~ expression (pair[1]/value)
 --AST
 s(:hash,
   s(:pair,

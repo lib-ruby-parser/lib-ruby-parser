@@ -1,5 +1,18 @@
 --INPUT
 case foo; in 1... then true; end
+--LOCATIONS
+~~~~ keyword ()
+                             ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+     ~~~ name (expr)
+     ~~~ expression (expr)
+                  ~~~~ begin (in_body[0])
+          ~~ keyword (in_body[0])
+          ~~~~~~~~~~~~~~~~~ expression (in_body[0])
+              ~~~ operator (in_body[0]/pattern)
+             ~~~~ expression (in_body[0]/pattern)
+             ~ expression (in_body[0]/pattern/left)
+                       ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,
   s(:lvar, "foo"),

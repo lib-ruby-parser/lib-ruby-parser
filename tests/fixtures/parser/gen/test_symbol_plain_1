@@ -1,4 +1,8 @@
 --INPUT
 :'foo'
+--LOCATIONS
+~~ begin ()
+     ~ end ()
+~~~~~~ expression ()
 --AST
 s(:sym, "foo")

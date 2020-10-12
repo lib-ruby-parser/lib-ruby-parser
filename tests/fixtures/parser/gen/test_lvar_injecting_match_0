@@ -1,5 +1,17 @@
 --INPUT
 /(?<match>bar)/ =~ 'bar'; match
+--LOCATIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+                ~~ selector (body)
+~~~~~~~~~~~~~~~~~~~~~~~~ expression (body)
+~ begin (body/re)
+              ~ end (body/re)
+~~~~~~~~~~~~~~~ expression (body/re)
+ ~~~~~~~~~~~~~ expression (body/re/src)
+                expression (body/re/opts)
+                   ~ begin (body/value)
+                       ~ end (body/value)
+                   ~~~~~ expression (body/value)
 --AST
 s(:begin,
   s(:match_with_lvasgn,

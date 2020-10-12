@@ -1,5 +1,20 @@
 --INPUT
 fun(:foo => 1, &baz)
+--LOCATIONS
+   ~ begin ()
+                   ~ end ()
+~~~ selector ()
+~~~~~~~~~~~~~~~~~~~~ expression ()
+    ~~~~~~~~~ expression (arg[0])
+         ~~ operator (arg[0]/pair[0])
+    ~~~~~~~~~ expression (arg[0]/pair[0])
+    ~ begin (arg[0]/pair[0]/key)
+    ~~~~ expression (arg[0]/pair[0]/key)
+            ~ expression (arg[0]/pair[0]/value)
+               ~ operator (arg[1])
+               ~~~~ expression (arg[1])
+                ~~~ name (arg[1]/value)
+                ~~~ expression (arg[1]/value)
 --AST
 s(:send, nil, "fun",
   s(:hash,

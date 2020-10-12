@@ -1,5 +1,20 @@
 --INPUT
 false ? raise do end : tap do end
+--LOCATIONS
+                     ~ colon ()
+      ~ question ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+~~~~~ expression (cond)
+              ~~ begin (truthy)
+                 ~~~ end (truthy)
+        ~~~~~~~~~~~~ expression (truthy)
+        ~~~~~ selector (truthy/call)
+        ~~~~~ expression (truthy/call)
+                           ~~ begin (falsey)
+                              ~~~ end (falsey)
+                       ~~~~~~~~~~ expression (falsey)
+                       ~~~ selector (falsey/call)
+                       ~~~ expression (falsey/call)
 --AST
 s(:if,
   s(:false),

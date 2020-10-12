@@ -1,5 +1,12 @@
 --INPUT
 def self.foo; end
+--LOCATIONS
+~~~ keyword ()
+        ~ operator ()
+         ~~~ name ()
+              ~~~ end ()
+~~~~~~~~~~~~~~~~~ expression ()
+    ~~~~ expression (recv)
 --AST
 s(:defs,
   s(:self), "foo", nil, nil)

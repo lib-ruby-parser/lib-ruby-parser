@@ -1,5 +1,10 @@
 --INPUT
 ->{ }
+--LOCATIONS
+  ~ begin ()
+    ~ end ()
+~~~~~ expression ()
+~~ expression (call)
 --AST
 s(:block,
   s(:lambda), nil, nil)

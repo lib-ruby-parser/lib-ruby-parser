@@ -1,5 +1,11 @@
 --INPUT
 next()
+--LOCATIONS
+~~~~ keyword ()
+~~~~~~ expression ()
+    ~ begin (value)
+     ~ end (value)
+    ~~ expression (value)
 --AST
 s(:next,
   s(:begin))

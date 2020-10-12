@@ -1,5 +1,11 @@
 --INPUT
 ::Foo = 10
+--LOCATIONS
+  ~~~ name ()
+~~ double_colon ()
+~~~~~~~~~~ expression ()
+~~ expression (scope)
+        ~~ expression (value)
 --AST
 s(:casgn,
   s(:cbase), "Foo",

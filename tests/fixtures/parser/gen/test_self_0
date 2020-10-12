@@ -1,4 +1,6 @@
 --INPUT
 self
+--LOCATIONS
+~~~~ expression ()
 --AST
 s(:self)

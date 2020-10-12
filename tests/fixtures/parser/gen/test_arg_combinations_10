@@ -1,5 +1,19 @@
 --INPUT
 def f o=1, p, &b; end
+--LOCATIONS
+~~~ keyword ()
+    ~ name ()
+                  ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~ expression ()
+      ~~~~~~~~~~ expression (args)
+       ~ operator (args/arg[0])
+      ~ name (args/arg[0])
+      ~~~ expression (args/arg[0])
+        ~ expression (args/arg[0]/default)
+           ~ name (args/arg[1])
+           ~ expression (args/arg[1])
+               ~ name (args/arg[2])
+              ~~ expression (args/arg[2])
 --AST
 s(:def, "f",
   s(:args,

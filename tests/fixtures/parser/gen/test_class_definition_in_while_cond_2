@@ -1,5 +1,22 @@
 --INPUT
 while class << self; tap do end; end; break; end
+--LOCATIONS
+                                    ~ begin ()
+                                             ~~~ end ()
+~~~~~ keyword ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+      ~~~~~ keyword (expr)
+            ~~ operator (expr)
+                                 ~~~ end (expr)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (expr)
+               ~~~~ expression (expr/of)
+                         ~~ begin (expr/body)
+                            ~~~ end (expr/body)
+                     ~~~~~~~~~~ expression (expr/body)
+                     ~~~ selector (expr/body/call)
+                     ~~~ expression (expr/body/call)
+                                      ~~~~~ keyword (body)
+                                      ~~~~~ expression (body)
 --AST
 s(:while,
   s(:sclass,

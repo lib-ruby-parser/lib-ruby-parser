@@ -1,5 +1,27 @@
 --INPUT
 true ? 1.tap do |n| p n end : 0
+--LOCATIONS
+                            ~ colon ()
+     ~ question ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+~~~~ expression (cond)
+             ~~ begin (truthy)
+                        ~~~ end (truthy)
+       ~~~~~~~~~~~~~~~~~~~~ expression (truthy)
+         ~~~ selector (truthy/call)
+       ~~~~~ expression (truthy/call)
+       ~ expression (truthy/call/recv)
+                ~ begin (truthy/args)
+                  ~ end (truthy/args)
+                ~~~ expression (truthy/args)
+                 ~ expression (truthy/args/arg[0])
+                 ~ name (truthy/args/arg[0]/item[0])
+                 ~ expression (truthy/args/arg[0]/item[0])
+                    ~ selector (truthy/body)
+                    ~~~ expression (truthy/body)
+                      ~ name (truthy/body/arg[0])
+                      ~ expression (truthy/body/arg[0])
+                              ~ expression (falsey)
 --AST
 s(:if,
   s(:true),

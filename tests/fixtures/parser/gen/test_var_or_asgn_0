@@ -1,5 +1,12 @@
 --INPUT
 a ||= 1
+--LOCATIONS
+  ~~~ operator ()
+~ name ()
+~~~~~~~ expression ()
+~ name (recv)
+~ expression (recv)
+      ~ expression (value)
 --AST
 s(:or_asgn,
   s(:lvasgn, "a"),

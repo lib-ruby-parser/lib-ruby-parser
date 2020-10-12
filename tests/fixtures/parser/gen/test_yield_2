@@ -1,4 +1,9 @@
 --INPUT
 yield()
+--LOCATIONS
+     ~ begin ()
+      ~ end ()
+~~~~~ keyword ()
+~~~~~~~ expression ()
 --AST
 s(:yield)

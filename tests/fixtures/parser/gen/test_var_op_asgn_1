@@ -1,5 +1,11 @@
 --INPUT
 @a |= 1
+--LOCATIONS
+   ~~ operator ()
+~~ name ()
+~~~~~~~ expression ()
+~~ name (recv)
+~~ expression (recv)
 --AST
 s(:op_asgn,
   s(:ivasgn, "@a"), "|",

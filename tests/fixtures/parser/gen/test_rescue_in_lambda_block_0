@@ -1,5 +1,14 @@
 --INPUT
 -> do rescue; end
+--LOCATIONS
+   ~~ begin ()
+              ~~~ end ()
+~~~~~~~~~~~~~~~~~ expression ()
+~~ expression (call)
+      ~~~~~~~ expression (body)
+      ~~~~~~ keyword (body/rescue_body[0])
+            ~ begin (body/rescue_body[0])
+      ~~~~~~~ expression (body/rescue_body[0])
 --AST
 s(:block,
   s(:lambda), nil,

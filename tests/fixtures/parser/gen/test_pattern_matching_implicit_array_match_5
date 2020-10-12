@@ -1,5 +1,22 @@
 --INPUT
 case foo; in x, *y, z then nil; end
+--LOCATIONS
+~~~~ keyword ()
+                                ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+     ~~~ name (expr)
+     ~~~ expression (expr)
+                      ~~~~ begin (in_body[0])
+          ~~ keyword (in_body[0])
+          ~~~~~~~~~~~~~~~~~~~~ expression (in_body[0])
+             ~~~~~~~~ expression (in_body[0]/pattern)
+             ~ name (in_body[0]/pattern/item[0])
+             ~ expression (in_body[0]/pattern/item[0])
+                ~ operator (in_body[0]/pattern/item[1])
+                ~~ expression (in_body[0]/pattern/item[1])
+                    ~ name (in_body[0]/pattern/item[2])
+                    ~ expression (in_body[0]/pattern/item[2])
+                           ~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,
   s(:lvar, "foo"),

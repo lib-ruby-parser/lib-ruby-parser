@@ -1,5 +1,11 @@
 --INPUT
 foo += meth rescue bar
+--LOCATIONS
+    ~~ operator ()
+~~~ name ()
+~~~~~~~~~~~~~~~~~~~~~~ expression ()
+~~~ name (recv)
+~~~ expression (recv)
 --AST
 s(:op_asgn,
   s(:lvasgn, "foo"), "+",

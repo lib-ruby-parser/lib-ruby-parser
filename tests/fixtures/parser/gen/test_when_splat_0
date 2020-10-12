@@ -1,5 +1,26 @@
 --INPUT
 case foo; when 1, *baz; bar; when *foo; end
+--LOCATIONS
+~~~~ keyword ()
+                                        ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+     ~~~ name (expr)
+     ~~~ expression (expr)
+                      ~ begin (when_body[0])
+          ~~~~ keyword (when_body[0])
+          ~~~~~~~~~~~~~~~~~ expression (when_body[0])
+               ~ expression (when_body[0]/cond)
+                  ~ operator (when_body[0]/body)
+                  ~~~~ expression (when_body[0]/body)
+                   ~~~ name (when_body[0]/body/value)
+                   ~~~ expression (when_body[0]/body/value)
+                                      ~ begin (when_body[1])
+                             ~~~~ keyword (when_body[1])
+                             ~~~~~~~~~ expression (when_body[1])
+                                  ~ operator (when_body[1]/cond)
+                                  ~~~~ expression (when_body[1]/cond)
+                                   ~~~ name (when_body[1]/cond/value)
+                                   ~~~ expression (when_body[1]/cond/value)
 --AST
 s(:case,
   s(:lvar, "foo"),

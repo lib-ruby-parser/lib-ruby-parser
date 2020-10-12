@@ -1,5 +1,15 @@
 --INPUT
 break fun foo do end
+--LOCATIONS
+~~~~~ keyword ()
+~~~~~~~~~~~~~~~~~~~~ expression ()
+              ~~ begin (value)
+                 ~~~ end (value)
+      ~~~~~~~~~~~~~~ expression (value)
+      ~~~ selector (value/call)
+      ~~~~~~~ expression (value/call)
+          ~~~ name (value/call/arg[0])
+          ~~~ expression (value/call/arg[0])
 --AST
 s(:break,
   s(:block,

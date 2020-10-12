@@ -1,4 +1,6 @@
 --INPUT
 true
+--LOCATIONS
+~~~~ expression ()
 --AST
 s(:true)

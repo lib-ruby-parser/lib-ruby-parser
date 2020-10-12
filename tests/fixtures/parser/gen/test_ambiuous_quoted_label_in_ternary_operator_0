@@ -1,5 +1,19 @@
 --INPUT
 a ? b & '': nil
+--LOCATIONS
+          ~ colon ()
+  ~ question ()
+~~~~~~~~~~~~~~~ expression ()
+~ selector (cond)
+~ expression (cond)
+      ~ selector (truthy)
+    ~~~~~~ expression (truthy)
+    ~ selector (truthy/recv)
+    ~ expression (truthy/recv)
+        ~ begin (truthy/arg[0])
+         ~ end (truthy/arg[0])
+        ~~ expression (truthy/arg[0])
+            ~~~ expression (falsey)
 --AST
 s(:if,
   s(:send, nil, "a"),

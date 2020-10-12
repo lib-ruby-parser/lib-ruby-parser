@@ -1,5 +1,15 @@
 --INPUT
 foo[1, 2] = 3
+--LOCATIONS
+   ~ begin ()
+        ~ end ()
+          ~ operator ()
+~~~~~~~~~~~~~ expression ()
+~~~ name (recv)
+~~~ expression (recv)
+    ~ expression (index[0])
+       ~ expression (index[1])
+            ~ expression (value)
 --AST
 s(:indexasgn,
   s(:lvar, "foo"),

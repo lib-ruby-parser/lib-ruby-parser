@@ -1,5 +1,15 @@
 --INPUT
 1 in [a]; a
+--LOCATIONS
+~~~~~~~~~~~ expression ()
+  ~~ operator (body)
+~~~~~~~~ expression (body)
+~ expression (body/lhs)
+     ~ begin (body/rhs)
+       ~ end (body/rhs)
+     ~~~ expression (body/rhs)
+      ~ name (body/rhs/item[0])
+      ~ expression (body/rhs/item[0])
 --AST
 s(:begin,
   s(:in_match,

@@ -1,5 +1,25 @@
 --INPUT
 m ->(a: ->{_1}) {a}
+--LOCATIONS
+~ selector ()
+~~~~~~~~~~~~~~~~~~~ expression ()
+                ~ begin (arg[0])
+                  ~ end (arg[0])
+  ~~~~~~~~~~~~~~~~~ expression (arg[0])
+  ~~ expression (arg[0]/call)
+    ~ begin (arg[0]/args)
+              ~ end (arg[0]/args)
+    ~~~~~~~~~~~ expression (arg[0]/args)
+     ~ name (arg[0]/args/arg[0])
+     ~~~~~~~~~ expression (arg[0]/args/arg[0])
+          ~ begin (arg[0]/args/arg[0]/default)
+             ~ end (arg[0]/args/arg[0]/default)
+        ~~~~~~ expression (arg[0]/args/arg[0]/default)
+        ~~ expression (arg[0]/args/arg[0]/default/call)
+           ~~ name (arg[0]/args/arg[0]/default/body)
+           ~~ expression (arg[0]/args/arg[0]/default/body)
+                 ~ name (arg[0]/body)
+                 ~ expression (arg[0]/body)
 --AST
 s(:send, nil, "m",
   s(:block,

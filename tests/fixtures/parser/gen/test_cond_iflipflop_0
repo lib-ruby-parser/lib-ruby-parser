@@ -1,5 +1,16 @@
 --INPUT
 if foo..bar; end
+--LOCATIONS
+~~ keyword ()
+             ~~~ end ()
+           ~ begin ()
+~~~~~~~~~~~~~~~~ expression ()
+      ~~ operator (cond)
+   ~~~~~~~~ expression (cond)
+   ~~~ name (cond/left)
+   ~~~ expression (cond/left)
+        ~~~ name (cond/right)
+        ~~~ expression (cond/right)
 --AST
 s(:if,
   s(:iflipflop,

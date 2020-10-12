@@ -106,7 +106,7 @@ module ParseHelperPatch
         end
       end
 
-      TESTS[name] << { input: code, ast: parsed_ast.inspect }
+      TESTS[name] << { input: code, ast: parsed_ast.inspect, locs: locs(parsed_ast) }
     end
   end
 
@@ -135,6 +135,318 @@ module ParseHelperPatch
         end
       end
     end
+  end
+
+  def locs(ast, path = [])
+    return [] unless ast.is_a?(Parser::AST::Node)
+
+    type = ast.type
+    loc = ast.loc
+
+    result =
+      case loc
+      when Parser::Source::Map::Send
+        ranges(loc, path, :begin, :end, :selector)
+      when Parser::Source::Map::Collection
+        ranges(loc, path, :begin, :end)
+      when Parser::Source::Map::Keyword
+        ranges(loc, path, :begin, :end, :keyword)
+      when Parser::Source::Map::MethodDefinition
+        ranges(loc, path, :keyword, :operator, :name, :end, :assignment)
+      when Parser::Source::Map::Variable
+        ranges(loc, path, :operator, :name)
+      when Parser::Source::Map::Operator
+        ranges(loc, path, :operator)
+      when Parser::Source::Map::For
+        ranges(loc, path, :keyword, :end, :begin)
+      when Parser::Source::Map::Constant
+        ranges(loc, path, :name, :double_colon)
+      when Parser::Source::Map::Condition
+        ranges(loc, path, :keyword, :end, :else, :begin)
+      when Parser::Source::Map::Index
+        ranges(loc, path, :begin, :end, :operator)
+      when Parser::Source::Map::Heredoc
+        ranges(loc, path, :heredoc_body, :heredoc_end)
+      when Parser::Source::Map::Ternary
+        ranges(loc, path, :colon, :question)
+      when Parser::Source::Map::Definition
+        ranges(loc, path, :keyword, :operator, :name, :end)
+      when Parser::Source::Map::RescueBody
+        ranges(loc, path, :keyword, :assoc, :begin)
+      else
+        if loc.instance_of? Parser::Source::Map
+          ranges(loc, path)
+        elsif loc.nil?
+          []
+        else
+          raise "unsupported loc type #{loc.class}"
+        end
+      end
+
+    children =
+    case ast.type
+    when :str, :sym, :lvar, :ivar, :cvar, :gvar, :nil, :true, :false, :self,
+         :int, :float, :rational, :complex, :lambda, :empty_else, :cbase,
+         :back_ref, :nth_ref, :match_var, :arg, :zsuper, :kwrestarg, :forward_args, :restarg,
+         :forwarded_args, :__FILE__, :__LINE__, :__ENCODING__, :regopt, :match_nil_pattern,
+         :kwnilarg, :redo, :match_rest, :kwarg, :shadowarg, :blockarg, :forward_arg
+      []
+    when :dstr, :xstr, :dsym
+      parts = *ast
+      [ *parts.map.with_index { |part, idx| locs(part, path + ["part[#{idx}]"]) } ]
+    when :lvasgn, :ivasgn, :cvasgn, :gvasgn
+      _name, value = *ast
+      [
+        locs(value, path + ['value'])
+      ]
+    when :send, :csend
+      recv, _op, *args = *ast
+      [
+        locs(recv, path + ['recv']),
+        *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }
+      ]
+    when :block_pass, :splat, :defined?, :match_current_line, :kwsplat, :pin
+      value, _ = *ast
+      [
+        locs(value, path + ['value'])
+      ]
+    when :block
+      call, args, body = *ast
+      [
+        locs(call, path + ['call']),
+        locs(args, path + ['args']),
+        locs(body, path + ['body'])
+      ]
+    when :numblock
+      call, _n, body = *ast
+      [
+        locs(call, path + ['call']),
+        locs(body, path + ['body'])
+      ]
+    when :break, :super, :retry, :next, :yield, :return
+      value, _ = *ast
+      [
+        locs(value, path + ['value'])
+      ]
+    when :kwbegin, :begin, :preexe, :postexe, :if_guard, :unless_guard
+      body, * = *ast
+      [
+        locs(body, path + ['body'])
+      ]
+    when :array, :array_pattern, :undef, :array_pattern_with_tail, :hash_pattern, :find_pattern
+      items = *ast
+      [ *items.map.with_index { |item, idx| locs(item, path + ["item[#{idx}]"]) }, ]
+    when :class
+      name, superclass, body = *ast
+      [
+        locs(name, path + ['name']),
+        locs(superclass, path + ['superclass']),
+        locs(body, path + ['body']),
+      ]
+    when :and_asgn, :or_asgn, :op_asgn
+      recv, value = *ast
+      [
+        locs(recv, path + ['recv']),
+        locs(value, path + ['value']),
+      ]
+    when :alias
+      from, to = *ast
+      [
+        locs(from, path + ['from']),
+        locs(to, path + ['to']),
+      ]
+    when :case_match
+      expr, *in_bodies, else_body = *ast
+      [
+        locs(expr, path + ['expr']),
+        *in_bodies.map.with_index { |in_body, idx| locs(in_body, path + ["in_body[#{idx}]"]) },
+        locs(else_body, path + ['else_body'])
+      ]
+    when :case
+      expr, *when_bodies, else_body = *ast
+      [
+        locs(expr, path + ['expr']),
+        *when_bodies.map.with_index { |when_body, idx| locs(when_body, path + ["when_body[#{idx}]"]) },
+        locs(else_body, path + ['else_body'])
+      ]
+    when :masgn, :and, :or, :in_match
+      lhs, rhs = *ast
+      [
+        locs(lhs, path + ['lhs']),
+        locs(rhs, path + ['rhs'])
+      ]
+    when :rescue
+      body, *rescue_bodies, else_ = *ast
+      [
+        locs(body, path + ['body']),
+        *rescue_bodies.map.with_index { |rescue_body, idx| locs(rescue_body, path + ["rescue_body[#{idx}]"]) },
+        locs(else_, path + ['else'])
+      ]
+    when :defs
+      recv, _mid, args, body = *ast
+      [
+        locs(recv, path + ['recv']),
+        locs(args, path + ['args']),
+        locs(body, path + ['body']),
+      ]
+    when :def
+      _mid, args, body = *ast
+      [
+        locs(args, path + ['args']),
+        locs(body, path + ['body']),
+      ]
+    when :while, :until, :while_post, :until_post
+      expr, body = *ast
+      [
+        locs(expr, path + ['expr']),
+        locs(body, path + ['body']),
+      ]
+    when :in_pattern
+      pattern, guard, body = *ast
+      [
+        locs(pattern, path + ['pattern']),
+        locs(guard, path + ['guard']),
+        locs(body, path + ['body']),
+      ]
+    when :if
+      cond, truthy, falsey = *ast
+      [
+        locs(cond, path + ['cond']),
+        locs(truthy, path + ['truthy']),
+        locs(falsey, path + ['falsey']),
+      ]
+    when :const
+      scope, _name = *ast
+      [ locs(scope, path + ['scope']) ]
+    when :mlhs, :procarg0
+      items = *ast
+      [ *items.map.with_index { |item, idx| locs(item, path + ["item[#{idx}]"]) }, ]
+    when :irange, :erange, :iflipflop, :eflipflop
+      left, right = *ast
+      [
+        locs(left, path + ['left']),
+        locs(right, path + ['right']),
+      ]
+    when :sclass
+      of, body = *ast
+      [
+        locs(of, path + ['of']),
+        locs(body, path + ['body']),
+      ]
+    when :hash
+      pairs = *ast
+      [ *pairs.map.with_index { |pair, idx| locs(pair, path + ["pair[#{idx}]"]) } ]
+    when :module
+      name, body = *ast
+      [
+        locs(name, path + ['name']),
+        locs(body, path + ['body']),
+      ]
+    when :args
+      args = *ast
+      [ *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }, ]
+    when :optarg, :kwoptarg
+      _name, default = *ast
+      [ locs(default, path + ['default']) ]
+    when :index
+      recv, *indexes = *ast
+      [
+        locs(recv, path + ['recv']),
+        *indexes.map.with_index { |index, idx| locs(index, path + ["index[#{idx}]"]) }
+      ]
+    when :pair
+      key, value = *ast
+      [
+        locs(key, path + ['key']),
+        locs(value, path + ['value']),
+      ]
+    when :casgn
+      scope, _name, value = *ast
+      [
+        locs(scope, path + ['scope']),
+        locs(value, path + ['value']),
+      ]
+    when :resbody
+      exc_list, var, body = *ast
+      [
+        locs(exc_list, path + ['exc_list']),
+        locs(var, path + ['var']),
+        locs(body, path + ['body']),
+      ]
+    when :match_alt
+      left, right = *ast
+      [
+        locs(left, path + ['left']),
+        locs(right, path + ['right']),
+      ]
+    when :match_with_lvasgn
+      re, value = *ast
+      [
+        locs(re, path + ['re']),
+        locs(value, path + ['value']),
+      ]
+    when :indexasgn
+      recv, *indexes, value = *ast
+      [
+        locs(recv, path + ['recv']),
+        *indexes.map.with_index { |index, idx| locs(index, path + ["index[#{idx}]"]) },
+        locs(value, path + ['value']),
+      ]
+    when :when
+      cond, body = *ast
+      [
+        locs(cond, path + ['cond']),
+        locs(body, path + ['body']),
+      ]
+    when :regexp
+      src, opts = *ast
+      [
+        locs(src, path + ['src']),
+        locs(opts, path + ['opts']),
+      ]
+    when :ensure
+      body, ensure_body = *ast
+      [
+        locs(body, path + ['body']),
+        locs(ensure_body, path + ['ensure_body']),
+      ]
+    when :match_as
+      value, var = *ast
+      [
+        locs(value, path + ['value']),
+        locs(var, path + ['var']),
+      ]
+    when :const_pattern
+      const, pattern = *ast
+      [
+        locs(const, path + ['const']),
+        locs(pattern, path + ['pattern']),
+      ]
+    when :for
+      iterator, iteratee, body = *ast
+      [
+        locs(iterator, path + ['iterator']),
+        locs(iteratee, path + ['iteratee']),
+        locs(body, path + ['body']),
+      ]
+    else
+      puts "unsupported node type #{ast.type}"
+      binding.irb
+      Kernel.exit(1)
+      # locs(ast, path + [subpath])
+    end
+
+    (result + children).flatten.compact
+  end
+
+  def ranges(loc, path, *fields)
+    path = path.join('/')
+    [*fields, :expression].map do |field|
+      range = loc.send(field)
+      if range
+        ' ' * range.begin_pos + '~' * range.length + " #{field} (#{path})"
+      end
+    end.compact
   end
 end
 
@@ -192,6 +504,8 @@ Minitest.after_run do
       fixture = [
         '--INPUT',
         capture[:input],
+        '--LOCATIONS',
+        capture[:locs].join("\n"),
         '--AST',
         capture[:ast]
       ]

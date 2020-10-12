@@ -1,5 +1,16 @@
 --INPUT
 %I[foo #{bar}]
+--LOCATIONS
+~~~ begin ()
+             ~ end ()
+~~~~~~~~~~~~~~ expression ()
+   ~~~ expression (item[0])
+       ~~~~~~ expression (item[1])
+       ~~ begin (item[1]/part[0])
+            ~ end (item[1]/part[0])
+       ~~~~~~ expression (item[1]/part[0])
+         ~~~ name (item[1]/part[0]/body)
+         ~~~ expression (item[1]/part[0]/body)
 --AST
 s(:array,
   s(:sym, "foo"),

@@ -1,5 +1,12 @@
 --INPUT
 meth until foo
+--LOCATIONS
+     ~~~~~ keyword ()
+~~~~~~~~~~~~~~ expression ()
+           ~~~ name (expr)
+           ~~~ expression (expr)
+~~~~ selector (body)
+~~~~ expression (body)
 --AST
 s(:until,
   s(:lvar, "foo"),

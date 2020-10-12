@@ -1,4 +1,9 @@
 --INPUT
 def END; end
+--LOCATIONS
+~~~ keyword ()
+    ~~~ name ()
+         ~~~ end ()
+~~~~~~~~~~~~ expression ()
 --AST
 s(:def, "END", nil, nil)

@@ -1,4 +1,7 @@
 --INPUT
 $foo
+--LOCATIONS
+~~~~ name ()
+~~~~ expression ()
 --AST
 s(:gvar, "$foo")

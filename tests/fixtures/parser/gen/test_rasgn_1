@@ -1,5 +1,13 @@
 --INPUT
 1 + 2 => $a
+--LOCATIONS
+      ~~ operator ()
+         ~~ name ()
+~~~~~~~~~~~ expression ()
+  ~ selector (value)
+~~~~~ expression (value)
+~ expression (value/recv)
+    ~ expression (value/arg[0])
 --AST
 s(:gvasgn, "$a",
   s(:send,

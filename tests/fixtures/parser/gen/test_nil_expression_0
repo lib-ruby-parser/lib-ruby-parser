@@ -1,4 +1,8 @@
 --INPUT
 ()
+--LOCATIONS
+~ begin ()
+ ~ end ()
+~~ expression ()
 --AST
 s(:begin)

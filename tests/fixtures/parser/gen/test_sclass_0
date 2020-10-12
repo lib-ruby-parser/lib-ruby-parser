@@ -1,5 +1,13 @@
 --INPUT
 class << foo; nil; end
+--LOCATIONS
+~~~~~ keyword ()
+      ~~ operator ()
+                   ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~ expression ()
+         ~~~ name (of)
+         ~~~ expression (of)
+              ~~~ expression (body)
 --AST
 s(:sclass,
   s(:lvar, "foo"),

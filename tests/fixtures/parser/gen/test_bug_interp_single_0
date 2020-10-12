@@ -1,5 +1,13 @@
 --INPUT
 "#{1}"
+--LOCATIONS
+~ begin ()
+     ~ end ()
+~~~~~~ expression ()
+ ~~ begin (part[0])
+    ~ end (part[0])
+ ~~~~ expression (part[0])
+   ~ expression (part[0]/body)
 --AST
 s(:dstr,
   s(:begin,

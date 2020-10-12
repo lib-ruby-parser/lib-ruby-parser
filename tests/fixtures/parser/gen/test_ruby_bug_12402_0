@@ -1,5 +1,19 @@
 --INPUT
 foo = raise(bar) rescue nil
+--LOCATIONS
+    ~ operator ()
+~~~ name ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+      ~~~~~~~~~~~~~~~~~~~~~ expression (value)
+           ~ begin (value/body)
+               ~ end (value/body)
+      ~~~~~ selector (value/body)
+      ~~~~~~~~~~ expression (value/body)
+            ~~~ name (value/body/arg[0])
+            ~~~ expression (value/body/arg[0])
+                 ~~~~~~ keyword (value/rescue_body[0])
+                 ~~~~~~~~~~ expression (value/rescue_body[0])
+                        ~~~ expression (value/rescue_body[0]/body)
 --AST
 s(:lvasgn, "foo",
   s(:rescue,

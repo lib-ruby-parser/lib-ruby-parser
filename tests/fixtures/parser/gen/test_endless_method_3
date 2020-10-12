@@ -1,5 +1,23 @@
 --INPUT
 def obj.inc(x) = x + 1
+--LOCATIONS
+~~~ keyword ()
+       ~ operator ()
+        ~~~ name ()
+               ~ assignment ()
+~~~~~~~~~~~~~~~~~~~~~~ expression ()
+    ~~~ selector (recv)
+    ~~~ expression (recv)
+           ~ begin (args)
+             ~ end (args)
+           ~~~ expression (args)
+            ~ name (args/arg[0])
+            ~ expression (args/arg[0])
+                   ~ selector (body)
+                 ~~~~~ expression (body)
+                 ~ name (body/recv)
+                 ~ expression (body/recv)
+                     ~ expression (body/arg[0])
 --AST
 s(:defs,
   s(:send, nil, "obj"), "inc",

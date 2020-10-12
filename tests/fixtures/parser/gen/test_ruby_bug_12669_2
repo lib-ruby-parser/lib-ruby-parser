@@ -1,5 +1,14 @@
 --INPUT
 a = b += raise :x
+--LOCATIONS
+  ~ operator ()
+~ name ()
+~~~~~~~~~~~~~~~~~ expression ()
+      ~~ operator (value)
+    ~ name (value)
+    ~~~~~~~~~~~~~ expression (value)
+    ~ name (value/recv)
+    ~ expression (value/recv)
 --AST
 s(:lvasgn, "a",
   s(:op_asgn,

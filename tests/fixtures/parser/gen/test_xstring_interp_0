@@ -1,5 +1,16 @@
 --INPUT
 `foo#{bar}baz`
+--LOCATIONS
+~ begin ()
+             ~ end ()
+~~~~~~~~~~~~~~ expression ()
+ ~~~ expression (part[0])
+    ~~ begin (part[1])
+         ~ end (part[1])
+    ~~~~~~ expression (part[1])
+      ~~~ name (part[1]/body)
+      ~~~ expression (part[1]/body)
+          ~~~ expression (part[2])
 --AST
 s(:xstr,
   s(:str, "foo"),

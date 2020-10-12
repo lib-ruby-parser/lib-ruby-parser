@@ -1,5 +1,13 @@
 --INPUT
 return(foo)
+--LOCATIONS
+~~~~~~ keyword ()
+~~~~~~~~~~~ expression ()
+      ~ begin (value)
+          ~ end (value)
+      ~~~~~ expression (value)
+       ~~~ name (value/body)
+       ~~~ expression (value/body)
 --AST
 s(:return,
   s(:begin,

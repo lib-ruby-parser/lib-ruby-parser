@@ -1,5 +1,23 @@
 --INPUT
 def foo raise; raise A::B, ''; end
+--LOCATIONS
+~~~ keyword ()
+    ~~~ name ()
+                               ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+        ~~~~~ expression (args)
+        ~~~~~ name (args/arg[0])
+        ~~~~~ expression (args/arg[0])
+               ~~~~~ selector (body)
+               ~~~~~~~~~~~~~~ expression (body)
+                        ~ name (body/arg[0])
+                      ~~ double_colon (body/arg[0])
+                     ~~~~ expression (body/arg[0])
+                     ~ name (body/arg[0]/scope)
+                     ~ expression (body/arg[0]/scope)
+                           ~ begin (body/arg[1])
+                            ~ end (body/arg[1])
+                           ~~ expression (body/arg[1])
 --AST
 s(:def, "foo",
   s(:args,

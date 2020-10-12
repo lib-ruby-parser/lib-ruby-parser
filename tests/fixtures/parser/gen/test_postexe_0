@@ -1,5 +1,11 @@
 --INPUT
 END { 1 }
+--LOCATIONS
+    ~ begin ()
+        ~ end ()
+~~~ keyword ()
+~~~~~~~~~ expression ()
+      ~ expression (body)
 --AST
 s(:postexe,
   s(:int, "1"))

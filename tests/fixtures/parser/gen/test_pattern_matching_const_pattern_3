@@ -1,5 +1,23 @@
 --INPUT
 case foo; in A[1, 2] then true; end
+--LOCATIONS
+~~~~ keyword ()
+                                ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+     ~~~ name (expr)
+     ~~~ expression (expr)
+                     ~~~~ begin (in_body[0])
+          ~~ keyword (in_body[0])
+          ~~~~~~~~~~~~~~~~~~~~ expression (in_body[0])
+              ~ begin (in_body[0]/pattern)
+                   ~ end (in_body[0]/pattern)
+             ~~~~~~~ expression (in_body[0]/pattern)
+             ~ name (in_body[0]/pattern/const)
+             ~ expression (in_body[0]/pattern/const)
+               ~~~~ expression (in_body[0]/pattern/pattern)
+               ~ expression (in_body[0]/pattern/pattern/item[0])
+                  ~ expression (in_body[0]/pattern/pattern/item[1])
+                          ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,
   s(:lvar, "foo"),

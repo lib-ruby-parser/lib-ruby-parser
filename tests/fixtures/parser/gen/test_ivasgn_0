@@ -1,5 +1,10 @@
 --INPUT
 @var = 10
+--LOCATIONS
+     ~ operator ()
+~~~~ name ()
+~~~~~~~~~ expression ()
+       ~~ expression (value)
 --AST
 s(:ivasgn, "@var",
   s(:int, "10"))

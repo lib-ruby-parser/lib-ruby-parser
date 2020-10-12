@@ -1,5 +1,19 @@
 --INPUT
 a, *b, c = bar
+--LOCATIONS
+         ~ operator ()
+~~~~~~~~~~~~~~ expression ()
+~~~~~~~~ expression (lhs)
+~ name (lhs/item[0])
+~ expression (lhs/item[0])
+   ~ operator (lhs/item[1])
+   ~~ expression (lhs/item[1])
+    ~ name (lhs/item[1]/value)
+    ~ expression (lhs/item[1]/value)
+       ~ name (lhs/item[2])
+       ~ expression (lhs/item[2])
+           ~~~ name (rhs)
+           ~~~ expression (rhs)
 --AST
 s(:masgn,
   s(:mlhs,

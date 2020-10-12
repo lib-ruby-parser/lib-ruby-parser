@@ -1,5 +1,12 @@
 --INPUT
 foo.fun bar
+--LOCATIONS
+    ~~~ selector ()
+~~~~~~~~~~~ expression ()
+~~~ name (recv)
+~~~ expression (recv)
+        ~~~ name (arg[0])
+        ~~~ expression (arg[0])
 --AST
 s(:send,
   s(:lvar, "foo"), "fun",

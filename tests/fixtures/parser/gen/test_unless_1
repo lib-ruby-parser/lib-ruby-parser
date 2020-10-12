@@ -1,5 +1,14 @@
 --INPUT
 unless foo; bar; end
+--LOCATIONS
+~~~~~~ keyword ()
+                 ~~~ end ()
+          ~ begin ()
+~~~~~~~~~~~~~~~~~~~~ expression ()
+       ~~~ name (cond)
+       ~~~ expression (cond)
+            ~~~ name (falsey)
+            ~~~ expression (falsey)
 --AST
 s(:if,
   s(:lvar, "foo"), nil,

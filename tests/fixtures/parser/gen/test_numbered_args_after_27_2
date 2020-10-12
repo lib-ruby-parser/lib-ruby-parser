@@ -1,5 +1,16 @@
 --INPUT
 -> { _1 + _9}
+--LOCATIONS
+   ~ begin ()
+            ~ end ()
+~~~~~~~~~~~~~ expression ()
+~~ expression (call)
+        ~ selector (body)
+     ~~~~~~~ expression (body)
+     ~~ name (body/recv)
+     ~~ expression (body/recv)
+          ~~ name (body/arg[0])
+          ~~ expression (body/arg[0])
 --AST
 s(:numblock,
   s(:lambda), 9,

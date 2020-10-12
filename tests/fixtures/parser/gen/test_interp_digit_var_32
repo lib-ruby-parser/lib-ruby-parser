@@ -1,5 +1,10 @@
 --INPUT
  %x{#@1} 
+--LOCATIONS
+ ~~~ begin ()
+       ~ end ()
+ ~~~~~~~ expression ()
+    ~~~ expression (part[0])
 --AST
 s(:xstr,
   s(:str, "#@1"))

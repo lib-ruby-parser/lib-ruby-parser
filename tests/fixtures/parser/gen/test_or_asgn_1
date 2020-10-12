@@ -1,5 +1,18 @@
 --INPUT
 foo[0, 1] ||= 2
+--LOCATIONS
+   ~ begin ()
+        ~ end ()
+          ~~~ operator ()
+~~~~~~~~~~~~~~~ expression ()
+   ~ begin (recv)
+        ~ end (recv)
+~~~~~~~~~ expression (recv)
+~~~ name (recv/recv)
+~~~ expression (recv/recv)
+    ~ expression (recv/index[0])
+       ~ expression (recv/value)
+              ~ expression (value)
 --AST
 s(:or_asgn,
   s(:indexasgn,

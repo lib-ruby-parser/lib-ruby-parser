@@ -1,5 +1,23 @@
 --INPUT
 for a, b in foo; p a, b; end
+--LOCATIONS
+~~~ keyword ()
+                         ~~~ end ()
+               ~ begin ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+    ~~~~ expression (iterator)
+    ~ name (iterator/item[0])
+    ~ expression (iterator/item[0])
+       ~ name (iterator/item[1])
+       ~ expression (iterator/item[1])
+            ~~~ name (iteratee)
+            ~~~ expression (iteratee)
+                 ~ selector (body)
+                 ~~~~~~ expression (body)
+                   ~ name (body/arg[0])
+                   ~ expression (body/arg[0])
+                      ~ name (body/arg[1])
+                      ~ expression (body/arg[1])
 --AST
 s(:for,
   s(:mlhs,

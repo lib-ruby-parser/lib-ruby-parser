@@ -1,5 +1,17 @@
 --INPUT
 td (1_500).toString(); td.num do; end
+--LOCATIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+~~ selector (body)
+~~~~~~~~~~~~~~~~~~~~~ expression (body)
+                   ~ begin (body/arg[0])
+                    ~ end (body/arg[0])
+           ~~~~~~~~ selector (body/arg[0])
+   ~~~~~~~~~~~~~~~~~~ expression (body/arg[0])
+   ~ begin (body/arg[0]/recv)
+         ~ end (body/arg[0]/recv)
+   ~~~~~~~ expression (body/arg[0]/recv)
+    ~~~~~ expression (body/arg[0]/recv/body)
 --AST
 s(:begin,
   s(:send, nil, "td",

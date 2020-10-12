@@ -1,5 +1,12 @@
 --INPUT
 not m foo
+--LOCATIONS
+~~~ selector ()
+~~~~~~~~~ expression ()
+    ~ selector (recv)
+    ~~~~~ expression (recv)
+      ~~~ name (recv/arg[0])
+      ~~~ expression (recv/arg[0])
 --AST
 s(:send,
   s(:send, nil, "m",

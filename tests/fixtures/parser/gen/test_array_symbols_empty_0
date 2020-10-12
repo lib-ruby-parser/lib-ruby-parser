@@ -1,4 +1,8 @@
 --INPUT
 %i[]
+--LOCATIONS
+~~~ begin ()
+   ~ end ()
+~~~~ expression ()
 --AST
 s(:array)

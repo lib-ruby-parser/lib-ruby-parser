@@ -1,5 +1,15 @@
 --INPUT
 begin meth end while foo
+--LOCATIONS
+               ~~~~~ keyword ()
+~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+                     ~~~ name (expr)
+                     ~~~ expression (expr)
+~~~~~ begin (body)
+           ~~~ end (body)
+~~~~~~~~~~~~~~ expression (body)
+      ~~~~ selector (body/body)
+      ~~~~ expression (body/body)
 --AST
 s(:while_post,
   s(:lvar, "foo"),

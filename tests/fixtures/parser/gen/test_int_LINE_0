@@ -1,4 +1,6 @@
 --INPUT
 __LINE__
+--LOCATIONS
+~~~~~~~~ expression ()
 --AST
 s(:__LINE__)

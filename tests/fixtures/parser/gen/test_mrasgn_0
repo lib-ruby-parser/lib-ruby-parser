@@ -1,5 +1,19 @@
 --INPUT
 13.divmod(5) => a,b
+--LOCATIONS
+             ~~ operator ()
+~~~~~~~~~~~~~~~~~~~ expression ()
+                ~~~ expression (lhs)
+                ~ name (lhs/item[0])
+                ~ expression (lhs/item[0])
+                  ~ name (lhs/item[1])
+                  ~ expression (lhs/item[1])
+         ~ begin (rhs)
+           ~ end (rhs)
+   ~~~~~~ selector (rhs)
+~~~~~~~~~~~~ expression (rhs)
+~~ expression (rhs/recv)
+          ~ expression (rhs/arg[0])
 --AST
 s(:masgn,
   s(:mlhs,

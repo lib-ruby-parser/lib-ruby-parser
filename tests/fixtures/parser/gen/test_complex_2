@@ -1,4 +1,6 @@
 --INPUT
 42.1i
+--LOCATIONS
+~~~~~ expression ()
 --AST
 s(:complex, "42.1i")

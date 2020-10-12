@@ -1,5 +1,20 @@
 --INPUT
 f{ |*r, p, &b| }
+--LOCATIONS
+ ~ begin ()
+               ~ end ()
+~~~~~~~~~~~~~~~~ expression ()
+~ selector (call)
+~ expression (call)
+   ~ begin (args)
+             ~ end (args)
+   ~~~~~~~~~~~ expression (args)
+     ~ name (args/arg[0])
+    ~~ expression (args/arg[0])
+        ~ name (args/arg[1])
+        ~ expression (args/arg[1])
+            ~ name (args/arg[2])
+           ~~ expression (args/arg[2])
 --AST
 s(:block,
   s(:send, nil, "f"),

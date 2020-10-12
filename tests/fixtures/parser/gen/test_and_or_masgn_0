@@ -1,5 +1,22 @@
 --INPUT
 foo && (a, b = bar)
+--LOCATIONS
+    ~~ operator ()
+~~~~~~~~~~~~~~~~~~~ expression ()
+~~~ name (lhs)
+~~~ expression (lhs)
+       ~ begin (rhs)
+                  ~ end (rhs)
+       ~~~~~~~~~~~~ expression (rhs)
+             ~ operator (rhs/body)
+        ~~~~~~~~~~ expression (rhs/body)
+        ~~~~ expression (rhs/body/lhs)
+        ~ name (rhs/body/lhs/item[0])
+        ~ expression (rhs/body/lhs/item[0])
+           ~ name (rhs/body/lhs/item[1])
+           ~ expression (rhs/body/lhs/item[1])
+               ~~~ name (rhs/body/rhs)
+               ~~~ expression (rhs/body/rhs)
 --AST
 s(:and,
   s(:lvar, "foo"),

@@ -1,5 +1,18 @@
 --INPUT
 def x; ::A ||= 1; end
+--LOCATIONS
+~~~ keyword ()
+    ~ name ()
+                  ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~ expression ()
+         ~ name (body)
+       ~~ double_colon (body)
+       ~~~~~~~~~ expression (body)
+         ~ name (body/recv)
+       ~~ double_colon (body/recv)
+       ~~~ expression (body/recv)
+       ~~ expression (body/recv/scope)
+               ~ expression (body/value)
 --AST
 s(:def, "x", nil,
   s(:or_asgn,

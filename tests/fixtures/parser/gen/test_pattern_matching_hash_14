@@ -4,6 +4,20 @@ case foo;
         }
           true
       ; end
+--LOCATIONS
+~~~~ keyword ()
+                                                           ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+     ~~~ name (expr)
+     ~~~ expression (expr)
+                   ~~ keyword (in_body[0])
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (in_body[0])
+                      ~ begin (in_body[0]/pattern)
+                                  ~ end (in_body[0]/pattern)
+                      ~~~~~~~~~~~~~ expression (in_body[0]/pattern)
+                       ~ name (in_body[0]/pattern/item[0])
+                       ~~ expression (in_body[0]/pattern/item[0])
+                                              ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,
   s(:lvar, "foo"),

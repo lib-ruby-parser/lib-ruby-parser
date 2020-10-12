@@ -1,4 +1,7 @@
 --INPUT
 retry
+--LOCATIONS
+~~~~~ keyword ()
+~~~~~ expression ()
 --AST
 s(:retry)

@@ -1,4 +1,6 @@
 --INPUT
 __ENCODING__
+--LOCATIONS
+~~~~~~~~~~~~ expression ()
 --AST
 s(:__ENCODING__)

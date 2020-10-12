@@ -1,5 +1,15 @@
 --INPUT
 /foo#{bar}baz/
+--LOCATIONS
+~ begin ()
+             ~ end ()
+~~~~~~~~~~~~~~ expression ()
+ ~~~ expression (src)
+    ~~ begin (opts)
+         ~ end (opts)
+    ~~~~~~ expression (opts)
+      ~~~ name (opts/body)
+      ~~~ expression (opts/body)
 --AST
 s(:regexp,
   s(:str, "foo"),

@@ -1,5 +1,12 @@
 --INPUT
 Bar::Foo = 10
+--LOCATIONS
+     ~~~ name ()
+   ~~ double_colon ()
+~~~~~~~~~~~~~ expression ()
+~~~ name (scope)
+~~~ expression (scope)
+           ~~ expression (value)
 --AST
 s(:casgn,
   s(:const, nil, "Bar"), "Foo",

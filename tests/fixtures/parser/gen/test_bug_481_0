@@ -1,5 +1,16 @@
 --INPUT
 m def x(); end; 1.tap do end
+--LOCATIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+~ selector (body)
+~~~~~~~~~~~~~~ expression (body)
+  ~~~ keyword (body/arg[0])
+      ~ name (body/arg[0])
+           ~~~ end (body/arg[0])
+  ~~~~~~~~~~~~ expression (body/arg[0])
+       ~ begin (body/arg[0]/args)
+        ~ end (body/arg[0]/args)
+       ~~ expression (body/arg[0]/args)
 --AST
 s(:begin,
   s(:send, nil, "m",

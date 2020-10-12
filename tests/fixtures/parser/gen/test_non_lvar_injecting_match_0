@@ -1,5 +1,19 @@
 --INPUT
 /#{1}(?<match>bar)/ =~ 'bar'
+--LOCATIONS
+                    ~~ selector ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+~ begin (recv)
+                  ~ end (recv)
+~~~~~~~~~~~~~~~~~~~ expression (recv)
+ ~~ begin (recv/src)
+    ~ end (recv/src)
+ ~~~~ expression (recv/src)
+   ~ expression (recv/src/body)
+     ~~~~~~~~~~~~~ expression (recv/opts)
+                       ~ begin (arg[0])
+                           ~ end (arg[0])
+                       ~~~~~ expression (arg[0])
 --AST
 s(:send,
   s(:regexp,

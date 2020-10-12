@@ -1,4 +1,6 @@
 --INPUT
 false
+--LOCATIONS
+~~~~~ expression ()
 --AST
 s(:false)

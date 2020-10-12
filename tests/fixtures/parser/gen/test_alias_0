@@ -1,5 +1,11 @@
 --INPUT
 alias :foo bar
+--LOCATIONS
+~~~~~ keyword ()
+~~~~~~~~~~~~~~ expression ()
+      ~ begin (from)
+      ~~~~ expression (from)
+           ~~~ expression (to)
 --AST
 s(:alias,
   s(:sym, "foo"),

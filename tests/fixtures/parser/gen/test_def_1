@@ -1,4 +1,9 @@
 --INPUT
 def String; end
+--LOCATIONS
+~~~ keyword ()
+    ~~~~~~ name ()
+            ~~~ end ()
+~~~~~~~~~~~~~~~ expression ()
 --AST
 s(:def, "String", nil, nil)

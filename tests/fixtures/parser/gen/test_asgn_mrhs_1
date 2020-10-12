@@ -1,5 +1,14 @@
 --INPUT
 foo = *bar
+--LOCATIONS
+    ~ operator ()
+~~~ name ()
+~~~~~~~~~~ expression ()
+      ~~~~ expression (value)
+      ~ operator (value/item[0])
+      ~~~~ expression (value/item[0])
+       ~~~ name (value/item[0]/value)
+       ~~~ expression (value/item[0]/value)
 --AST
 s(:lvasgn, "foo",
   s(:array,

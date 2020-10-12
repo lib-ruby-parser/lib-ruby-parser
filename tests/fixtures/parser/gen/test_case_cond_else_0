@@ -1,5 +1,21 @@
 --INPUT
 case; when foo; 'foo'; else 'bar'; end
+--LOCATIONS
+~~~~ keyword ()
+                                   ~~~ end ()
+                       ~~~~ else ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+              ~ begin (when_body[0])
+      ~~~~ keyword (when_body[0])
+      ~~~~~~~~~~~~~~~ expression (when_body[0])
+           ~~~ name (when_body[0]/cond)
+           ~~~ expression (when_body[0]/cond)
+                ~ begin (when_body[0]/body)
+                    ~ end (when_body[0]/body)
+                ~~~~~ expression (when_body[0]/body)
+                            ~ begin (else_body)
+                                ~ end (else_body)
+                            ~~~~~ expression (else_body)
 --AST
 s(:case, nil,
   s(:when,

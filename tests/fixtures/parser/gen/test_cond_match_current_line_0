@@ -1,5 +1,16 @@
 --INPUT
 if /wat/; end
+--LOCATIONS
+~~ keyword ()
+          ~~~ end ()
+        ~ begin ()
+~~~~~~~~~~~~~ expression ()
+   ~~~~~ expression (cond)
+   ~ begin (cond/value)
+       ~ end (cond/value)
+   ~~~~~ expression (cond/value)
+    ~~~ expression (cond/value/src)
+         expression (cond/value/opts)
 --AST
 s(:if,
   s(:match_current_line,

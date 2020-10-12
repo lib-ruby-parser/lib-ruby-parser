@@ -1,5 +1,10 @@
 --INPUT
 defined? @foo
+--LOCATIONS
+~~~~~~~~ keyword ()
+~~~~~~~~~~~~~ expression ()
+         ~~~~ name (value)
+         ~~~~ expression (value)
 --AST
 s(:defined?,
   s(:ivar, "@foo"))

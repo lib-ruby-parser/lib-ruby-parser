@@ -1,5 +1,16 @@
 --INPUT
 m = -> *args do end
+--LOCATIONS
+  ~ operator ()
+~ name ()
+~~~~~~~~~~~~~~~~~~~ expression ()
+             ~~ begin (value)
+                ~~~ end (value)
+    ~~~~~~~~~~~~~~~ expression (value)
+    ~~ expression (value/call)
+       ~~~~~ expression (value/args)
+        ~~~~ name (value/args/arg[0])
+       ~~~~~ expression (value/args/arg[0])
 --AST
 s(:lvasgn, "m",
   s(:block,

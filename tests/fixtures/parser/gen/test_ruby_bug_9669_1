@@ -3,6 +3,17 @@ o = {
 a:
 1
 }
+--LOCATIONS
+  ~ operator ()
+~ name ()
+~~~~~~~~~~~~ expression ()
+    ~ begin (value)
+           ~ end (value)
+    ~~~~~~~~ expression (value)
+       ~ operator (value/pair[0])
+      ~~~~ expression (value/pair[0])
+      ~ expression (value/pair[0]/key)
+         ~ expression (value/pair[0]/value)
 --AST
 s(:lvasgn, "o",
   s(:hash,

@@ -1,5 +1,12 @@
 --INPUT
 foo::Fun()
+--LOCATIONS
+        ~ begin ()
+         ~ end ()
+     ~~~ selector ()
+~~~~~~~~~~ expression ()
+~~~ name (recv)
+~~~ expression (recv)
 --AST
 s(:send,
   s(:lvar, "foo"), "Fun")

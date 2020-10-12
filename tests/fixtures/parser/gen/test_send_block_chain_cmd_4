@@ -1,5 +1,19 @@
 --INPUT
 meth 1 do end.fun bar do end
+--LOCATIONS
+                      ~~ begin ()
+                         ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+              ~~~ selector (call)
+~~~~~~~~~~~~~~~~~~~~~ expression (call)
+       ~~ begin (call/recv)
+          ~~~ end (call/recv)
+~~~~~~~~~~~~~ expression (call/recv)
+~~~~ selector (call/recv/call)
+~~~~~~ expression (call/recv/call)
+     ~ expression (call/recv/call/arg[0])
+                  ~~~ name (call/arg[0])
+                  ~~~ expression (call/arg[0])
 --AST
 s(:block,
   s(:send,

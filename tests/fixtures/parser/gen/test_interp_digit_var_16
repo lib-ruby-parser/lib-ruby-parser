@@ -1,5 +1,10 @@
 --INPUT
  %W[#@1] 
+--LOCATIONS
+ ~~~ begin ()
+       ~ end ()
+ ~~~~~~~ expression ()
+    ~~~ expression (item[0])
 --AST
 s(:array,
   s(:str, "#@1"))

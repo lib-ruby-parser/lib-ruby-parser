@@ -1,5 +1,11 @@
 --INPUT
 /#)/x
+--LOCATIONS
+~ begin ()
+   ~ end ()
+~~~~~ expression ()
+ ~~ expression (src)
+    ~ expression (opts)
 --AST
 s(:regexp,
   s(:str, "#)"),

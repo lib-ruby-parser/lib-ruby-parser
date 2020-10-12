@@ -1,5 +1,11 @@
 --INPUT
 begin foo!; bar! end
+--LOCATIONS
+~~~~~ begin ()
+                 ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~ expression ()
+      ~~~~ selector (body)
+      ~~~~ expression (body)
 --AST
 s(:kwbegin,
   s(:send, nil, "foo!"),

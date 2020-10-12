@@ -1,5 +1,16 @@
 --INPUT
 while not (true) do end
+--LOCATIONS
+                 ~~ begin ()
+                    ~~~ end ()
+~~~~~ keyword ()
+~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+      ~~~ selector (expr)
+      ~~~~~~~~~~ expression (expr)
+          ~ begin (expr/recv)
+               ~ end (expr/recv)
+          ~~~~~~ expression (expr/recv)
+           ~~~~ expression (expr/recv/body)
 --AST
 s(:while,
   s(:send,

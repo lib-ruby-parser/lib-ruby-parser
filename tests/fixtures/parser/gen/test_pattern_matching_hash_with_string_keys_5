@@ -1,5 +1,28 @@
 --INPUT
 case foo; in "#{ 'a' }": 1 then true; end
+--LOCATIONS
+~~~~ keyword ()
+                                      ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+     ~~~ name (expr)
+     ~~~ expression (expr)
+                           ~~~~ begin (in_body[0])
+          ~~ keyword (in_body[0])
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (in_body[0])
+             ~~~~~~~~~~~~~ expression (in_body[0]/pattern)
+                       ~ operator (in_body[0]/pattern/item[0])
+             ~~~~~~~~~~~~~ expression (in_body[0]/pattern/item[0])
+             ~ begin (in_body[0]/pattern/item[0]/key)
+                      ~ end (in_body[0]/pattern/item[0]/key)
+             ~~~~~~~~~~ expression (in_body[0]/pattern/item[0]/key)
+              ~~ begin (in_body[0]/pattern/item[0]/key/part[0])
+                     ~ end (in_body[0]/pattern/item[0]/key/part[0])
+              ~~~~~~~~ expression (in_body[0]/pattern/item[0]/key/part[0])
+                 ~ begin (in_body[0]/pattern/item[0]/key/part[0]/body)
+                   ~ end (in_body[0]/pattern/item[0]/key/part[0]/body)
+                 ~~~ expression (in_body[0]/pattern/item[0]/key/part[0]/body)
+                         ~ expression (in_body[0]/pattern/item[0]/value)
+                                ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,
   s(:lvar, "foo"),

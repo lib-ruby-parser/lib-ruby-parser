@@ -1,5 +1,15 @@
 --INPUT
 def a; @@var |= 10; end
+--LOCATIONS
+~~~ keyword ()
+    ~ name ()
+                    ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+             ~~ operator (body)
+       ~~~~~ name (body)
+       ~~~~~~~~~~~ expression (body)
+       ~~~~~ name (body/recv)
+       ~~~~~ expression (body/recv)
 --AST
 s(:def, "a", nil,
   s(:op_asgn,

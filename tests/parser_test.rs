@@ -10,6 +10,7 @@ enum TestSection {
     None,
     Input,
     AST,
+    Locations,
 }
 
 #[derive(Debug)]
@@ -24,15 +25,18 @@ impl TestCase {
 
         let mut input: Vec<String> = vec![];
         let mut ast: Vec<String> = vec![];
+        let mut locations: Vec<String> = vec![];
         let mut current_section = TestSection::None;
 
         for line in content.lines() {
             match (line, &current_section) {
-                ("--INPUT", _) => current_section = TestSection::Input,
-                ("--AST",   _) => current_section = TestSection::AST,
-                (_, &TestSection::Input) => input.push(line.to_owned()),
-                (_, &TestSection::AST)   => ast.push(line.to_owned()),
-                (_, &TestSection::None)  => panic!("empty state while parsing fixture on line {:#?}", line)
+                ("--INPUT", _)     => current_section = TestSection::Input,
+                ("--AST",   _)     => current_section = TestSection::AST,
+                ("--LOCATIONS", _) => current_section = TestSection::Locations,
+                (_, &TestSection::Input)     => input.push(line.to_owned()),
+                (_, &TestSection::AST)       => ast.push(line.to_owned()),
+                (_, &TestSection::Locations) => locations.push(line.to_owned()),
+                (_, &TestSection::None)  => panic!("empty state while parsing fixture on line {:#?}", line),
             }
         }
 

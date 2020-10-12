@@ -1,5 +1,20 @@
 --INPUT
 !(a, b = foo)
+--LOCATIONS
+~ selector ()
+~~~~~~~~~~~~~ expression ()
+ ~ begin (recv)
+            ~ end (recv)
+ ~~~~~~~~~~~~ expression (recv)
+       ~ operator (recv/body)
+  ~~~~~~~~~~ expression (recv/body)
+  ~~~~ expression (recv/body/lhs)
+  ~ name (recv/body/lhs/item[0])
+  ~ expression (recv/body/lhs/item[0])
+     ~ name (recv/body/lhs/item[1])
+     ~ expression (recv/body/lhs/item[1])
+         ~~~ name (recv/body/rhs)
+         ~~~ expression (recv/body/rhs)
 --AST
 s(:send,
   s(:begin,

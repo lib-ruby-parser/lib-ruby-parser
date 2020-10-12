@@ -1,5 +1,15 @@
 --INPUT
 fun (f bar)
+--LOCATIONS
+~~~ selector ()
+~~~~~~~~~~~ expression ()
+    ~ begin (arg[0])
+          ~ end (arg[0])
+    ~~~~~~~ expression (arg[0])
+     ~ selector (arg[0]/body)
+     ~~~~~ expression (arg[0]/body)
+       ~~~ name (arg[0]/body/arg[0])
+       ~~~ expression (arg[0]/body/arg[0])
 --AST
 s(:send, nil, "fun",
   s(:begin,

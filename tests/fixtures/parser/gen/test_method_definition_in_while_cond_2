@@ -1,5 +1,25 @@
 --INPUT
 while def foo a = tap do end; end; break; end
+--LOCATIONS
+                                 ~ begin ()
+                                          ~~~ end ()
+~~~~~ keyword ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+      ~~~ keyword (expr)
+          ~~~ name (expr)
+                              ~~~ end (expr)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (expr)
+              ~~~~~~~~~~~~~~ expression (expr/args)
+                ~ operator (expr/args/arg[0])
+              ~ name (expr/args/arg[0])
+              ~~~~~~~~~~~~~~ expression (expr/args/arg[0])
+                      ~~ begin (expr/args/arg[0]/default)
+                         ~~~ end (expr/args/arg[0]/default)
+                  ~~~~~~~~~~ expression (expr/args/arg[0]/default)
+                  ~~~ selector (expr/args/arg[0]/default/call)
+                  ~~~ expression (expr/args/arg[0]/default/call)
+                                   ~~~~~ keyword (body)
+                                   ~~~~~ expression (body)
 --AST
 s(:while,
   s(:def, "foo",

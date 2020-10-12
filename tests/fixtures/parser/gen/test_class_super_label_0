@@ -1,5 +1,17 @@
 --INPUT
 class Foo < a:b; end
+--LOCATIONS
+~~~~~ keyword ()
+          ~ operator ()
+      ~~~ name ()
+                 ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~ expression ()
+      ~~~ name (name)
+      ~~~ expression (name)
+            ~ selector (superclass)
+            ~~~ expression (superclass)
+             ~ begin (superclass/arg[0])
+             ~~ expression (superclass/arg[0])
 --AST
 s(:class,
   s(:const, nil, "Foo"),

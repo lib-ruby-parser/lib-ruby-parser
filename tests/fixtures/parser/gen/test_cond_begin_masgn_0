@@ -1,5 +1,15 @@
 --INPUT
 if (bar; a, b = foo); end
+--LOCATIONS
+~~ keyword ()
+                      ~~~ end ()
+                    ~ begin ()
+~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+   ~ begin (cond)
+                   ~ end (cond)
+   ~~~~~~~~~~~~~~~~~ expression (cond)
+    ~~~ name (cond/body)
+    ~~~ expression (cond/body)
 --AST
 s(:if,
   s(:begin,

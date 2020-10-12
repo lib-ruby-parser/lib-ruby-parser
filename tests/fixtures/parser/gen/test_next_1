@@ -1,5 +1,10 @@
 --INPUT
 next foo
+--LOCATIONS
+~~~~ keyword ()
+~~~~~~~~ expression ()
+     ~~~ name (value)
+     ~~~ expression (value)
 --AST
 s(:next,
   s(:lvar, "foo"))

@@ -1,5 +1,15 @@
 --INPUT
 begin; meth; ensure; bar; end
+--LOCATIONS
+~~~~~ begin ()
+                          ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+             ~~~~~~ keyword (body)
+       ~~~~~~~~~~~~~~~~~ expression (body)
+       ~~~~ selector (body/body)
+       ~~~~ expression (body/body)
+                     ~~~ name (body/ensure_body)
+                     ~~~ expression (body/ensure_body)
 --AST
 s(:kwbegin,
   s(:ensure,

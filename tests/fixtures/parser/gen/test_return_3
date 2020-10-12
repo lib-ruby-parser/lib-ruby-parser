@@ -1,4 +1,7 @@
 --INPUT
 return
+--LOCATIONS
+~~~~~~ keyword ()
+~~~~~~ expression ()
 --AST
 s(:return)

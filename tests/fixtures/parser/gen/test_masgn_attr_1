@@ -1,5 +1,16 @@
 --INPUT
 self::a, foo = foo
+--LOCATIONS
+             ~ operator ()
+~~~~~~~~~~~~~~~~~~ expression ()
+~~~~~~~~~~~~ expression (lhs)
+      ~ selector (lhs/item[0])
+~~~~~~~ expression (lhs/item[0])
+~~~~ expression (lhs/item[0]/recv)
+         ~~~ name (lhs/item[1])
+         ~~~ expression (lhs/item[1])
+               ~~~ name (rhs)
+               ~~~ expression (rhs)
 --AST
 s(:masgn,
   s(:mlhs,

@@ -1,5 +1,14 @@
 --INPUT
 def self.m; _1; end
+--LOCATIONS
+~~~ keyword ()
+        ~ operator ()
+         ~ name ()
+                ~~~ end ()
+~~~~~~~~~~~~~~~~~~~ expression ()
+    ~~~~ expression (recv)
+            ~~ selector (body)
+            ~~ expression (body)
 --AST
 s(:defs,
   s(:self), "m", nil,

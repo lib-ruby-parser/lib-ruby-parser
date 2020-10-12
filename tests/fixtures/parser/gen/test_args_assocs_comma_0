@@ -1,5 +1,17 @@
 --INPUT
 foo[:baz => 1,]
+--LOCATIONS
+   ~ begin ()
+              ~ end ()
+~~~~~~~~~~~~~~~ expression ()
+~~~ name (recv)
+~~~ expression (recv)
+    ~~~~~~~~~ expression (index[0])
+         ~~ operator (index[0]/pair[0])
+    ~~~~~~~~~ expression (index[0]/pair[0])
+    ~ begin (index[0]/pair[0]/key)
+    ~~~~ expression (index[0]/pair[0]/key)
+            ~ expression (index[0]/pair[0]/value)
 --AST
 s(:index,
   s(:lvar, "foo"),

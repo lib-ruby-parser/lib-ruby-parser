@@ -1,5 +1,13 @@
 --INPUT
 * = bar
+--LOCATIONS
+  ~ operator ()
+~~~~~~~ expression ()
+~ expression (lhs)
+~ operator (lhs/item[0])
+~ expression (lhs/item[0])
+    ~~~ name (rhs)
+    ~~~ expression (rhs)
 --AST
 s(:masgn,
   s(:mlhs,

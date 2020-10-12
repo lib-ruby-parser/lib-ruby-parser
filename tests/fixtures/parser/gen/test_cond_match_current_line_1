@@ -1,5 +1,14 @@
 --INPUT
 !/wat/
+--LOCATIONS
+~ selector ()
+~~~~~~ expression ()
+ ~~~~~ expression (recv)
+ ~ begin (recv/value)
+     ~ end (recv/value)
+ ~~~~~ expression (recv/value)
+  ~~~ expression (recv/value/src)
+       expression (recv/value/opts)
 --AST
 s(:send,
   s(:match_current_line,

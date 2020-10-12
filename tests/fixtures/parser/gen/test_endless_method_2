@@ -1,5 +1,17 @@
 --INPUT
 def obj.foo() = 42
+--LOCATIONS
+~~~ keyword ()
+       ~ operator ()
+        ~~~ name ()
+              ~ assignment ()
+~~~~~~~~~~~~~~~~~~ expression ()
+    ~~~ selector (recv)
+    ~~~ expression (recv)
+           ~ begin (args)
+            ~ end (args)
+           ~~ expression (args)
+                ~~ expression (body)
 --AST
 s(:defs,
   s(:send, nil, "obj"), "foo",

@@ -3,6 +3,11 @@ a #
   #
 .foo
 
+--LOCATIONS
+         ~~~ selector ()
+~~~~~~~~~~~~ expression ()
+~ selector (recv)
+~ expression (recv)
 --AST
 s(:send,
   s(:send, nil, "a"), "foo")

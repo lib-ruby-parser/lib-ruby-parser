@@ -1,4 +1,9 @@
 --INPUT
 def f ; end
+--LOCATIONS
+~~~ keyword ()
+    ~ name ()
+        ~~~ end ()
+~~~~~~~~~~~ expression ()
 --AST
 s(:def, "f", nil, nil)

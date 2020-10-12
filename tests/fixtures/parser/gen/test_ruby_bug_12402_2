@@ -1,5 +1,16 @@
 --INPUT
 foo[0] += raise(bar) rescue nil
+--LOCATIONS
+   ~ begin ()
+     ~ end ()
+       ~~ operator ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+   ~ begin (recv)
+     ~ end (recv)
+~~~~~~ expression (recv)
+~~~ name (recv/recv)
+~~~ expression (recv/recv)
+    ~ expression (recv/value)
 --AST
 s(:op_asgn,
   s(:indexasgn,

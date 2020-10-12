@@ -1,5 +1,18 @@
 --INPUT
 fun(*bar, &baz)
+--LOCATIONS
+   ~ begin ()
+              ~ end ()
+~~~ selector ()
+~~~~~~~~~~~~~~~ expression ()
+    ~ operator (arg[0])
+    ~~~~ expression (arg[0])
+     ~~~ name (arg[0]/value)
+     ~~~ expression (arg[0]/value)
+          ~ operator (arg[1])
+          ~~~~ expression (arg[1])
+           ~~~ name (arg[1]/value)
+           ~~~ expression (arg[1]/value)
 --AST
 s(:send, nil, "fun",
   s(:splat,

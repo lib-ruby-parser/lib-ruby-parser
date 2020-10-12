@@ -1,5 +1,24 @@
 --INPUT
 begin; meth; rescue; baz; else foo; ensure; bar end
+--LOCATIONS
+~~~~~ begin ()
+                                                ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+                                    ~~~~~~ keyword (body)
+       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (body)
+                          ~~~~ else (body/body)
+       ~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (body/body)
+       ~~~~ selector (body/body/body)
+       ~~~~ expression (body/body/body)
+             ~~~~~~ keyword (body/body/rescue_body[0])
+                   ~ begin (body/body/rescue_body[0])
+             ~~~~~~~~~~~ expression (body/body/rescue_body[0])
+                     ~~~ name (body/body/rescue_body[0]/body)
+                     ~~~ expression (body/body/rescue_body[0]/body)
+                               ~~~ name (body/body/else)
+                               ~~~ expression (body/body/else)
+                                            ~~~ name (body/ensure_body)
+                                            ~~~ expression (body/ensure_body)
 --AST
 s(:kwbegin,
   s(:ensure,

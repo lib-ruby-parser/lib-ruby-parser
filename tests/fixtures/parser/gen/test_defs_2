@@ -1,5 +1,13 @@
 --INPUT
 def (foo).foo; end
+--LOCATIONS
+~~~ keyword ()
+         ~ operator ()
+          ~~~ name ()
+               ~~~ end ()
+~~~~~~~~~~~~~~~~~~ expression ()
+     ~~~ name (recv)
+     ~~~ expression (recv)
 --AST
 s(:defs,
   s(:lvar, "foo"), "foo", nil, nil)

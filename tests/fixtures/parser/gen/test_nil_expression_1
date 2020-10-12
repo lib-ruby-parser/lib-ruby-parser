@@ -1,4 +1,8 @@
 --INPUT
 begin end
+--LOCATIONS
+~~~~~ begin ()
+      ~~~ end ()
+~~~~~~~~~ expression ()
 --AST
 s(:kwbegin)

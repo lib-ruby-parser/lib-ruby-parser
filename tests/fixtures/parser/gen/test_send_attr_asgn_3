@@ -1,5 +1,12 @@
 --INPUT
 foo::A = 1
+--LOCATIONS
+     ~ name ()
+   ~~ double_colon ()
+~~~~~~~~~~ expression ()
+~~~ name (scope)
+~~~ expression (scope)
+         ~ expression (value)
 --AST
 s(:casgn,
   s(:lvar, "foo"), "A",

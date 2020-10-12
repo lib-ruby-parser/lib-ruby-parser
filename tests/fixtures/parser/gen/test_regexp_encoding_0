@@ -1,5 +1,16 @@
 --INPUT
 /\xa8/n =~ ""
+--LOCATIONS
+        ~~ selector ()
+~~~~~~~~~~~~~ expression ()
+~ begin (re)
+     ~ end (re)
+~~~~~~~ expression (re)
+ ~~~~ expression (re/src)
+      ~ expression (re/opts)
+           ~ begin (value)
+            ~ end (value)
+           ~~ expression (value)
 --AST
 s(:match_with_lvasgn,
   s(:regexp,

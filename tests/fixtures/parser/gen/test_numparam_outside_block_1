@@ -1,5 +1,14 @@
 --INPUT
 module A; _1; end
+--LOCATIONS
+~~~~~~ keyword ()
+       ~ name ()
+              ~~~ end ()
+~~~~~~~~~~~~~~~~~ expression ()
+       ~ name (name)
+       ~ expression (name)
+          ~~ selector (body)
+          ~~ expression (body)
 --AST
 s(:module,
   s(:const, nil, "A"),

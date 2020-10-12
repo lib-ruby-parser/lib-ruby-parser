@@ -1,4 +1,6 @@
 --INPUT
 $10
+--LOCATIONS
+~~~ expression ()
 --AST
 s(:nth_ref, 10)

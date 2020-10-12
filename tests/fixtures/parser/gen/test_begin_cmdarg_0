@@ -1,5 +1,18 @@
 --INPUT
 p begin 1.times do 1 end end
+--LOCATIONS
+~ selector ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+  ~~~~~ begin (arg[0])
+                         ~~~ end (arg[0])
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (arg[0])
+                ~~ begin (arg[0]/body)
+                     ~~~ end (arg[0]/body)
+        ~~~~~~~~~~~~~~~~ expression (arg[0]/body)
+          ~~~~~ selector (arg[0]/body/call)
+        ~~~~~~~ expression (arg[0]/body/call)
+        ~ expression (arg[0]/body/call/recv)
+                   ~ expression (arg[0]/body/body)
 --AST
 s(:send, nil, "p",
   s(:kwbegin,

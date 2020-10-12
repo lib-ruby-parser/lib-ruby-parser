@@ -1,5 +1,10 @@
 --INPUT
 yield foo
+--LOCATIONS
+~~~~~ keyword ()
+~~~~~~~~~ expression ()
+      ~~~ name (value)
+      ~~~ expression (value)
 --AST
 s(:yield,
   s(:lvar, "foo"))

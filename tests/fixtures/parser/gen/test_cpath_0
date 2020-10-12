@@ -1,5 +1,14 @@
 --INPUT
 module ::Foo; end
+--LOCATIONS
+~~~~~~ keyword ()
+       ~~~~~ name ()
+              ~~~ end ()
+~~~~~~~~~~~~~~~~~ expression ()
+         ~~~ name (name)
+       ~~ double_colon (name)
+       ~~~~~ expression (name)
+       ~~ expression (name/scope)
 --AST
 s(:module,
   s(:const,

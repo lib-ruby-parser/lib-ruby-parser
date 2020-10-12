@@ -1,5 +1,18 @@
 --INPUT
 lambda{|;a|a}
+--LOCATIONS
+      ~ begin ()
+            ~ end ()
+~~~~~~~~~~~~~ expression ()
+~~~~~~ selector (call)
+~~~~~~ expression (call)
+       ~ begin (args)
+          ~ end (args)
+       ~~~~ expression (args)
+         ~ name (args/arg[0])
+         ~ expression (args/arg[0])
+           ~ name (body)
+           ~ expression (body)
 --AST
 s(:block,
   s(:send, nil, "lambda"),

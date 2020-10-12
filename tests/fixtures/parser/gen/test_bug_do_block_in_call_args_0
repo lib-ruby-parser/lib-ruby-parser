@@ -1,5 +1,18 @@
 --INPUT
 bar def foo; self.each do end end
+--LOCATIONS
+~~~ selector ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+    ~~~ keyword (arg[0])
+        ~~~ name (arg[0])
+                              ~~~ end (arg[0])
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (arg[0])
+                       ~~ begin (arg[0]/body)
+                          ~~~ end (arg[0]/body)
+             ~~~~~~~~~~~~~~~~ expression (arg[0]/body)
+                  ~~~~ selector (arg[0]/body/call)
+             ~~~~~~~~~ expression (arg[0]/body/call)
+             ~~~~ expression (arg[0]/body/call/recv)
 --AST
 s(:send, nil, "bar",
   s(:def, "foo", nil,

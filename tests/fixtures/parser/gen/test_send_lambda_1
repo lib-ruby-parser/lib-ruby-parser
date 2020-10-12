@@ -1,5 +1,12 @@
 --INPUT
 -> * { }
+--LOCATIONS
+     ~ begin ()
+       ~ end ()
+~~~~~~~~ expression ()
+~~ expression (call)
+   ~ expression (args)
+   ~ expression (args/arg[0])
 --AST
 s(:block,
   s(:lambda),

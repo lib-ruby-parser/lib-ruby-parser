@@ -1,5 +1,11 @@
 --INPUT
 @@var |= 10
+--LOCATIONS
+      ~~ operator ()
+~~~~~ name ()
+~~~~~~~~~~~ expression ()
+~~~~~ name (recv)
+~~~~~ expression (recv)
 --AST
 s(:op_asgn,
   s(:cvasgn, "@@var"), "|",

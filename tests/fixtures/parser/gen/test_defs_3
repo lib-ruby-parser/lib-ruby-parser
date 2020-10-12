@@ -1,5 +1,13 @@
 --INPUT
 def String.foo; end
+--LOCATIONS
+~~~ keyword ()
+          ~ operator ()
+           ~~~ name ()
+                ~~~ end ()
+~~~~~~~~~~~~~~~~~~~ expression ()
+    ~~~~~~ name (recv)
+    ~~~~~~ expression (recv)
 --AST
 s(:defs,
   s(:const, nil, "String"), "foo", nil, nil)

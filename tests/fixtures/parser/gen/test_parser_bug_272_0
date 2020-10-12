@@ -1,5 +1,19 @@
 --INPUT
 a @b do |c|;end
+--LOCATIONS
+     ~~ begin ()
+            ~~~ end ()
+~~~~~~~~~~~~~~~ expression ()
+~ selector (call)
+~~~~ expression (call)
+  ~~ name (call/arg[0])
+  ~~ expression (call/arg[0])
+        ~ begin (args)
+          ~ end (args)
+        ~~~ expression (args)
+         ~ expression (args/arg[0])
+         ~ name (args/arg[0]/item[0])
+         ~ expression (args/arg[0]/item[0])
 --AST
 s(:block,
   s(:send, nil, "a",

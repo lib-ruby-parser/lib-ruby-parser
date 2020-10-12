@@ -1,4 +1,8 @@
 --INPUT
  %s{#@1} 
+--LOCATIONS
+ ~~~ begin ()
+       ~ end ()
+ ~~~~~~~ expression ()
 --AST
 s(:sym, "#@1")

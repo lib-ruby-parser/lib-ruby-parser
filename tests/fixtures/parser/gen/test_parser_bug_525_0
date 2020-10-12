@@ -1,5 +1,25 @@
 --INPUT
 m1 :k => m2 do; m3() do end; end
+--LOCATIONS
+            ~~ begin ()
+                             ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+~~ selector (call)
+~~~~~~~~~~~ expression (call)
+   ~~~~~~~~ expression (call/arg[0])
+      ~~ operator (call/arg[0]/pair[0])
+   ~~~~~~~~ expression (call/arg[0]/pair[0])
+   ~ begin (call/arg[0]/pair[0]/key)
+   ~~ expression (call/arg[0]/pair[0]/key)
+         ~~ selector (call/arg[0]/pair[0]/value)
+         ~~ expression (call/arg[0]/pair[0]/value)
+                     ~~ begin (body)
+                        ~~~ end (body)
+                ~~~~~~~~~~~ expression (body)
+                  ~ begin (body/call)
+                   ~ end (body/call)
+                ~~ selector (body/call)
+                ~~~~ expression (body/call)
 --AST
 s(:block,
   s(:send, nil, "m1",

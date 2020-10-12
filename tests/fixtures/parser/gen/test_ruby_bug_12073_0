@@ -1,5 +1,11 @@
 --INPUT
 a = 1; a b: 1
+--LOCATIONS
+~~~~~~~~~~~~~ expression ()
+  ~ operator (body)
+~ name (body)
+~~~~~ expression (body)
+    ~ expression (body/value)
 --AST
 s(:begin,
   s(:lvasgn, "a",

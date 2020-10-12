@@ -1,5 +1,13 @@
 --INPUT
 foo ? 1 : 2
+--LOCATIONS
+        ~ colon ()
+    ~ question ()
+~~~~~~~~~~~ expression ()
+~~~ name (cond)
+~~~ expression (cond)
+      ~ expression (truthy)
+          ~ expression (falsey)
 --AST
 s(:if,
   s(:lvar, "foo"),

@@ -1,4 +1,7 @@
 --INPUT
 break
+--LOCATIONS
+~~~~~ keyword ()
+~~~~~ expression ()
 --AST
 s(:break)

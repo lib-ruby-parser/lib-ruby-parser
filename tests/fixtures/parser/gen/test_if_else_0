@@ -1,5 +1,17 @@
 --INPUT
 if foo then bar; else baz; end
+--LOCATIONS
+~~ keyword ()
+                           ~~~ end ()
+                 ~~~~ else ()
+       ~~~~ begin ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+   ~~~ name (cond)
+   ~~~ expression (cond)
+            ~~~ name (truthy)
+            ~~~ expression (truthy)
+                      ~~~ name (falsey)
+                      ~~~ expression (falsey)
 --AST
 s(:if,
   s(:lvar, "foo"),

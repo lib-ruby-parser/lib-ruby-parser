@@ -1,4 +1,7 @@
 --INPUT
 next
+--LOCATIONS
+~~~~ keyword ()
+~~~~ expression ()
 --AST
 s(:next)

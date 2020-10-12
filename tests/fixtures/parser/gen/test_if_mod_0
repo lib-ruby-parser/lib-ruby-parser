@@ -1,5 +1,12 @@
 --INPUT
 bar if foo
+--LOCATIONS
+    ~~ keyword ()
+~~~~~~~~~~ expression ()
+       ~~~ name (cond)
+       ~~~ expression (cond)
+~~~ name (truthy)
+~~~ expression (truthy)
 --AST
 s(:if,
   s(:lvar, "foo"),

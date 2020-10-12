@@ -1,5 +1,18 @@
 --INPUT
 {a: if true then 42 end}
+--LOCATIONS
+~ begin ()
+                       ~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+  ~ operator (pair[0])
+ ~~~~~~~~~~~~~~~~~~~~~~ expression (pair[0])
+ ~ expression (pair[0]/key)
+    ~~ keyword (pair[0]/value)
+                    ~~~ end (pair[0]/value)
+            ~~~~ begin (pair[0]/value)
+    ~~~~~~~~~~~~~~~~~~~ expression (pair[0]/value)
+       ~~~~ expression (pair[0]/value/cond)
+                 ~~ expression (pair[0]/value/truthy)
 --AST
 s(:hash,
   s(:pair,

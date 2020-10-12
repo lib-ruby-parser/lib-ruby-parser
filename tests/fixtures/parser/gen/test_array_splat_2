@@ -1,5 +1,13 @@
 --INPUT
 [*foo]
+--LOCATIONS
+~ begin ()
+     ~ end ()
+~~~~~~ expression ()
+ ~ operator (item[0])
+ ~~~~ expression (item[0])
+  ~~~ name (item[0]/value)
+  ~~~ expression (item[0]/value)
 --AST
 s(:array,
   s(:splat,

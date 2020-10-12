@@ -1,5 +1,10 @@
 --INPUT
 super foo
+--LOCATIONS
+~~~~~ keyword ()
+~~~~~~~~~ expression ()
+      ~~~ name (value)
+      ~~~ expression (value)
 --AST
 s(:super,
   s(:lvar, "foo"))

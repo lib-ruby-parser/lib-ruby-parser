@@ -1,4 +1,7 @@
 --INPUT
 redo
+--LOCATIONS
+~~~~ keyword ()
+~~~~ expression ()
 --AST
 s(:redo)

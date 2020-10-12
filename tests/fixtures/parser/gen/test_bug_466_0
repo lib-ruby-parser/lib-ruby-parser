@@ -1,5 +1,26 @@
 --INPUT
 foo "#{(1+1).to_i}" do; end
+--LOCATIONS
+                    ~~ begin ()
+                        ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+~~~ selector (call)
+~~~~~~~~~~~~~~~~~~~ expression (call)
+    ~ begin (call/arg[0])
+                  ~ end (call/arg[0])
+    ~~~~~~~~~~~~~~~ expression (call/arg[0])
+     ~~ begin (call/arg[0]/part[0])
+                 ~ end (call/arg[0]/part[0])
+     ~~~~~~~~~~~~~ expression (call/arg[0]/part[0])
+             ~~~~ selector (call/arg[0]/part[0]/body)
+       ~~~~~~~~~~ expression (call/arg[0]/part[0]/body)
+       ~ begin (call/arg[0]/part[0]/body/recv)
+           ~ end (call/arg[0]/part[0]/body/recv)
+       ~~~~~ expression (call/arg[0]/part[0]/body/recv)
+         ~ selector (call/arg[0]/part[0]/body/recv/body)
+        ~~~ expression (call/arg[0]/part[0]/body/recv/body)
+        ~ expression (call/arg[0]/part[0]/body/recv/body/recv)
+          ~ expression (call/arg[0]/part[0]/body/recv/body/arg[0])
 --AST
 s(:block,
   s(:send, nil, "foo",

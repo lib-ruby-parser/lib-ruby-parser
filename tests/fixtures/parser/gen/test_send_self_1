@@ -1,4 +1,7 @@
 --INPUT
 fun!
+--LOCATIONS
+~~~~ selector ()
+~~~~ expression ()
 --AST
 s(:send, nil, "fun!")

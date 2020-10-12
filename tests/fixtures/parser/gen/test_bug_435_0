@@ -1,5 +1,19 @@
 --INPUT
 "#{-> foo {}}"
+--LOCATIONS
+~ begin ()
+             ~ end ()
+~~~~~~~~~~~~~~ expression ()
+ ~~ begin (part[0])
+            ~ end (part[0])
+ ~~~~~~~~~~~~ expression (part[0])
+          ~ begin (part[0]/body)
+           ~ end (part[0]/body)
+   ~~~~~~~~~ expression (part[0]/body)
+   ~~ expression (part[0]/body/call)
+      ~~~ expression (part[0]/body/args)
+      ~~~ name (part[0]/body/args/arg[0])
+      ~~~ expression (part[0]/body/args/arg[0])
 --AST
 s(:dstr,
   s(:begin,

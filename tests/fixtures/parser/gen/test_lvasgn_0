@@ -1,5 +1,11 @@
 --INPUT
 var = 10; var
+--LOCATIONS
+~~~~~~~~~~~~~ expression ()
+    ~ operator (body)
+~~~ name (body)
+~~~~~~~~ expression (body)
+      ~~ expression (body/value)
 --AST
 s(:begin,
   s(:lvasgn, "var",

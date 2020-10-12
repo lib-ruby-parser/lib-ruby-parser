@@ -1,5 +1,10 @@
 --INPUT
 1 => a
+--LOCATIONS
+  ~~ operator ()
+     ~ name ()
+~~~~~~ expression ()
+~ expression (value)
 --AST
 s(:lvasgn, "a",
   s(:int, "1"))

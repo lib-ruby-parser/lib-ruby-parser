@@ -1,5 +1,10 @@
 --INPUT
 assert dogs
+--LOCATIONS
+~~~~~~ selector ()
+~~~~~~~~~~~ expression ()
+       ~~~~ selector (arg[0])
+       ~~~~ expression (arg[0])
 --AST
 s(:send, nil, "assert",
   s(:send, nil, "dogs"))

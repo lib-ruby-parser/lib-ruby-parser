@@ -1,5 +1,14 @@
 --INPUT
 fun (1).to_i
+--LOCATIONS
+~~~ selector ()
+~~~~~~~~~~~~ expression ()
+        ~~~~ selector (arg[0])
+    ~~~~~~~~ expression (arg[0])
+    ~ begin (arg[0]/recv)
+      ~ end (arg[0]/recv)
+    ~~~ expression (arg[0]/recv)
+     ~ expression (arg[0]/recv/body)
 --AST
 s(:send, nil, "fun",
   s(:send,

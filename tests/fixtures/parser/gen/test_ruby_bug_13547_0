@@ -1,5 +1,14 @@
 --INPUT
 meth[] {}
+--LOCATIONS
+       ~ begin ()
+        ~ end ()
+~~~~~~~~~ expression ()
+    ~ begin (call)
+     ~ end (call)
+~~~~~~ expression (call)
+~~~~ selector (call/recv)
+~~~~ expression (call/recv)
 --AST
 s(:block,
   s(:index,

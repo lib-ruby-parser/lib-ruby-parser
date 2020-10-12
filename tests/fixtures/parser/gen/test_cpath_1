@@ -1,5 +1,15 @@
 --INPUT
 module Bar::Foo; end
+--LOCATIONS
+~~~~~~ keyword ()
+       ~~~~~~~~ name ()
+                 ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~ expression ()
+            ~~~ name (name)
+          ~~ double_colon (name)
+       ~~~~~~~~ expression (name)
+       ~~~ name (name/scope)
+       ~~~ expression (name/scope)
 --AST
 s(:module,
   s(:const,

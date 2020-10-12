@@ -1,5 +1,12 @@
 --INPUT
 class Foo end
+--LOCATIONS
+~~~~~ keyword ()
+      ~~~ name ()
+          ~~~ end ()
+~~~~~~~~~~~~~ expression ()
+      ~~~ name (name)
+      ~~~ expression (name)
 --AST
 s(:class,
   s(:const, nil, "Foo"), nil, nil)

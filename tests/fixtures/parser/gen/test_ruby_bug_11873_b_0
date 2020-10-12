@@ -1,5 +1,25 @@
 --INPUT
 p p{p(p);p p}, tap do end
+--LOCATIONS
+                   ~~ begin ()
+                      ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+~ selector (call)
+~~~~~~~~~~~~~~~~~~ expression (call)
+   ~ begin (call/arg[0])
+            ~ end (call/arg[0])
+  ~~~~~~~~~~~ expression (call/arg[0])
+  ~ selector (call/arg[0]/call)
+  ~ expression (call/arg[0]/call)
+    ~~~~~~~~ expression (call/arg[0]/body)
+     ~ begin (call/arg[0]/body/body)
+       ~ end (call/arg[0]/body/body)
+    ~ selector (call/arg[0]/body/body)
+    ~~~~ expression (call/arg[0]/body/body)
+      ~ selector (call/arg[0]/body/body/arg[0])
+      ~ expression (call/arg[0]/body/body/arg[0])
+               ~~~ selector (call/arg[1])
+               ~~~ expression (call/arg[1])
 --AST
 s(:block,
   s(:send, nil, "p",

@@ -1,5 +1,13 @@
 --INPUT
 fun() { }
+--LOCATIONS
+      ~ begin ()
+        ~ end ()
+~~~~~~~~~ expression ()
+   ~ begin (call)
+    ~ end (call)
+~~~ selector (call)
+~~~~~ expression (call)
 --AST
 s(:block,
   s(:send, nil, "fun"), nil, nil)

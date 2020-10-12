@@ -1,5 +1,14 @@
 --INPUT
 foo::A += m foo
+--LOCATIONS
+     ~ name ()
+   ~~ double_colon ()
+~~~~~~~~~~~~~~~ expression ()
+     ~ name (recv)
+   ~~ double_colon (recv)
+~~~~~~ expression (recv)
+~~~ name (recv/scope)
+~~~ expression (recv/scope)
 --AST
 s(:op_asgn,
   s(:casgn,

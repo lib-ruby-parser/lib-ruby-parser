@@ -1,5 +1,11 @@
 --INPUT
  /#@@1/ 
+--LOCATIONS
+ ~ begin ()
+      ~ end ()
+ ~~~~~~ expression ()
+  ~~~~ expression (src)
+        expression (opts)
 --AST
 s(:regexp,
   s(:str, "#@@1"),

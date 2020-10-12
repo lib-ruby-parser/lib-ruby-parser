@@ -1,6 +1,16 @@
 --INPUT
 class A < B
 end
+--LOCATIONS
+~~~~~ keyword ()
+        ~ operator ()
+      ~ name ()
+            ~~~ end ()
+~~~~~~~~~~~~~~~ expression ()
+      ~ name (name)
+      ~ expression (name)
+          ~ name (superclass)
+          ~ expression (superclass)
 --AST
 s(:class,
   s(:const, nil, "A"),

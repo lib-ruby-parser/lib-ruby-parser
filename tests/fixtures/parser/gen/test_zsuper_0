@@ -1,4 +1,7 @@
 --INPUT
 super
+--LOCATIONS
+~~~~~ keyword ()
+~~~~~ expression ()
 --AST
 s(:zsuper)

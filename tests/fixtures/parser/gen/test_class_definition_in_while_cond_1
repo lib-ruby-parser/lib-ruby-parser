@@ -1,5 +1,26 @@
 --INPUT
 while class Foo a = tap do end; end; break; end
+--LOCATIONS
+                                   ~ begin ()
+                                            ~~~ end ()
+~~~~~ keyword ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+      ~~~~~ keyword (expr)
+            ~~~ name (expr)
+                                ~~~ end (expr)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (expr)
+            ~~~ name (expr/name)
+            ~~~ expression (expr/name)
+                  ~ operator (expr/body)
+                ~ name (expr/body)
+                ~~~~~~~~~~~~~~ expression (expr/body)
+                        ~~ begin (expr/body/value)
+                           ~~~ end (expr/body/value)
+                    ~~~~~~~~~~ expression (expr/body/value)
+                    ~~~ selector (expr/body/value/call)
+                    ~~~ expression (expr/body/value/call)
+                                     ~~~~~ keyword (body)
+                                     ~~~~~ expression (body)
 --AST
 s(:while,
   s(:class,

@@ -1,5 +1,12 @@
 --INPUT
 foo.A += 1
+--LOCATIONS
+    ~ selector ()
+~~~~~~~~~~ expression ()
+    ~ selector (recv)
+~~~~~ expression (recv)
+~~~ name (recv/recv)
+~~~ expression (recv/recv)
 --AST
 s(:op_asgn,
   s(:send,

@@ -1,5 +1,10 @@
 --INPUT
 1...2
+--LOCATIONS
+ ~~~ operator ()
+~~~~~ expression ()
+~ expression (left)
+    ~ expression (right)
 --AST
 s(:erange,
   s(:int, "1"),

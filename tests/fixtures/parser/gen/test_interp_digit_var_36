@@ -2,6 +2,11 @@
 <<-`HERE`
 #@1
 HERE
+--LOCATIONS
+          ~~~~ heredoc_body ()
+              ~~~~ heredoc_end ()
+~~~~~~~~~ expression ()
+          ~~~~ expression (part[0])
 --AST
 s(:xstr,
   s(:str, "#@1\n"))

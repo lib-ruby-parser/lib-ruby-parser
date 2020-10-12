@@ -1,5 +1,12 @@
 --INPUT
 alias $a $b
+--LOCATIONS
+~~~~~ keyword ()
+~~~~~~~~~~~ expression ()
+      ~~ name (from)
+      ~~ expression (from)
+         ~~ name (to)
+         ~~ expression (to)
 --AST
 s(:alias,
   s(:gvar, "$a"),

@@ -1,5 +1,11 @@
 --INPUT
 begin ensure end
+--LOCATIONS
+~~~~~ begin ()
+             ~~~ end ()
+~~~~~~~~~~~~~~~~ expression ()
+      ~~~~~~ keyword (body)
+      ~~~~~~ expression (body)
 --AST
 s(:kwbegin,
   s(:ensure, nil, nil))

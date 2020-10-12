@@ -1,5 +1,19 @@
 --INPUT
 def foo(...); bar(...); end
+--LOCATIONS
+~~~ keyword ()
+    ~~~ name ()
+                        ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+       ~ begin (args)
+           ~ end (args)
+       ~~~~~ expression (args)
+        ~~~ expression (args/arg[0])
+                 ~ begin (body)
+                     ~ end (body)
+              ~~~ selector (body)
+              ~~~~~~~~ expression (body)
+                  ~~~ expression (body/arg[0])
 --AST
 s(:def, "foo",
   s(:args,

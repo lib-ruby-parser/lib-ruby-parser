@@ -1,5 +1,16 @@
 --INPUT
 ->(scope) {}; scope
+--LOCATIONS
+~~~~~~~~~~~~~~~~~~~ expression ()
+          ~ begin (body)
+           ~ end (body)
+~~~~~~~~~~~~ expression (body)
+~~ expression (body/call)
+  ~ begin (body/args)
+        ~ end (body/args)
+  ~~~~~~~ expression (body/args)
+   ~~~~~ name (body/args/arg[0])
+   ~~~~~ expression (body/args/arg[0])
 --AST
 s(:begin,
   s(:block,

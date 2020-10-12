@@ -1,5 +1,17 @@
 --INPUT
 case 1; in 2; 3; else; end
+--LOCATIONS
+~~~~ keyword ()
+                       ~~~ end ()
+                 ~~~~ else ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+     ~ expression (expr)
+            ~ begin (in_body[0])
+        ~~ keyword (in_body[0])
+        ~~~~~~~ expression (in_body[0])
+           ~ expression (in_body[0]/pattern)
+              ~ expression (in_body[0]/body)
+                 ~~~~ expression (else_body)
 --AST
 s(:case_match,
   s(:int, "1"),

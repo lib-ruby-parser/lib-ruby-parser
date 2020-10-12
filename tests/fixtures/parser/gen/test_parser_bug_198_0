@@ -1,5 +1,16 @@
 --INPUT
 [/()\1/, ?#]
+--LOCATIONS
+~ begin ()
+           ~ end ()
+~~~~~~~~~~~~ expression ()
+ ~ begin (item[0])
+      ~ end (item[0])
+ ~~~~~~ expression (item[0])
+  ~~~~ expression (item[0]/src)
+        expression (item[0]/opts)
+         ~ begin (item[1])
+         ~~ expression (item[1])
 --AST
 s(:array,
   s(:regexp,

@@ -1,5 +1,15 @@
 --INPUT
 [ 1, 2 => 3 ]
+--LOCATIONS
+~ begin ()
+            ~ end ()
+~~~~~~~~~~~~~ expression ()
+  ~ expression (item[0])
+     ~~~~~~ expression (item[1])
+       ~~ operator (item[1]/pair[0])
+     ~~~~~~ expression (item[1]/pair[0])
+     ~ expression (item[1]/pair[0]/key)
+          ~ expression (item[1]/pair[0]/value)
 --AST
 s(:array,
   s(:int, "1"),

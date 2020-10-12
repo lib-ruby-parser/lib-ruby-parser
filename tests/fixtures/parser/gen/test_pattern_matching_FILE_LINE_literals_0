@@ -3,6 +3,27 @@
           in [__FILE__, __LINE__, __ENCODING__]
         end
 
+--LOCATIONS
+        ~~~~ keyword ()
+                                                                                                            ~~~ end ()
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+             ~ begin (expr)
+                                                  ~ end (expr)
+             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (expr)
+              ~~~~~~~~ expression (expr/item[0])
+                                 ~ selector (expr/item[1])
+                        ~~~~~~~~~~~~ expression (expr/item[1])
+                        ~~~~~~~~ expression (expr/item[1]/recv)
+                                   ~ expression (expr/item[1]/arg[0])
+                                      ~~~~~~~~~~~~ expression (expr/item[2])
+                                                              ~~ keyword (in_body[0])
+                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (in_body[0])
+                                                                 ~ begin (in_body[0]/pattern)
+                                                                                                  ~ end (in_body[0]/pattern)
+                                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (in_body[0]/pattern)
+                                                                  ~~~~~~~~ expression (in_body[0]/pattern/item[0])
+                                                                            ~~~~~~~~ expression (in_body[0]/pattern/item[1])
+                                                                                      ~~~~~~~~~~~~ expression (in_body[0]/pattern/item[2])
 --AST
 s(:case_match,
   s(:array,

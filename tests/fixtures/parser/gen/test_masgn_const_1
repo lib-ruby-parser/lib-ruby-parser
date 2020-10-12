@@ -1,5 +1,17 @@
 --INPUT
 ::A, foo = foo
+--LOCATIONS
+         ~ operator ()
+~~~~~~~~~~~~~~ expression ()
+~~~~~~~~ expression (lhs)
+  ~ name (lhs/item[0])
+~~ double_colon (lhs/item[0])
+~~~ expression (lhs/item[0])
+~~ expression (lhs/item[0]/scope)
+     ~~~ name (lhs/item[1])
+     ~~~ expression (lhs/item[1])
+           ~~~ name (rhs)
+           ~~~ expression (rhs)
 --AST
 s(:masgn,
   s(:mlhs,

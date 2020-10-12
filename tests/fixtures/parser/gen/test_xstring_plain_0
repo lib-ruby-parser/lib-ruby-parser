@@ -1,5 +1,10 @@
 --INPUT
 `foobar`
+--LOCATIONS
+~ begin ()
+       ~ end ()
+~~~~~~~~ expression ()
+ ~~~~~~ expression (part[0])
 --AST
 s(:xstr,
   s(:str, "foobar"))

@@ -1,5 +1,11 @@
 --INPUT
 super do end
+--LOCATIONS
+      ~~ begin ()
+         ~~~ end ()
+~~~~~~~~~~~~ expression ()
+~~~~~ keyword (call)
+~~~~~ expression (call)
 --AST
 s(:block,
   s(:zsuper), nil, nil)

@@ -1,5 +1,13 @@
 --INPUT
 meth rescue bar
+--LOCATIONS
+~~~~~~~~~~~~~~~ expression ()
+~~~~ selector (body)
+~~~~ expression (body)
+     ~~~~~~ keyword (rescue_body[0])
+     ~~~~~~~~~~ expression (rescue_body[0])
+            ~~~ name (rescue_body[0]/body)
+            ~~~ expression (rescue_body[0]/body)
 --AST
 s(:rescue,
   s(:send, nil, "meth"),

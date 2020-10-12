@@ -1,5 +1,18 @@
 --INPUT
 def f (foo: 1, &b); end
+--LOCATIONS
+~~~ keyword ()
+    ~ name ()
+                    ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+      ~ begin (args)
+                 ~ end (args)
+      ~~~~~~~~~~~~ expression (args)
+       ~~~ name (args/arg[0])
+       ~~~~~~ expression (args/arg[0])
+            ~ expression (args/arg[0]/default)
+                ~ name (args/arg[1])
+               ~~ expression (args/arg[1])
 --AST
 s(:def, "f",
   s(:args,

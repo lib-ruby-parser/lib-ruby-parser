@@ -1,5 +1,21 @@
 --INPUT
 def m; class << self; module M; end; end; end
+--LOCATIONS
+~~~ keyword ()
+    ~ name ()
+                                          ~~~ end ()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+       ~~~~~ keyword (body)
+             ~~ operator (body)
+                                     ~~~ end (body)
+       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (body)
+                ~~~~ expression (body/of)
+                      ~~~~~~ keyword (body/body)
+                             ~ name (body/body)
+                                ~~~ end (body/body)
+                      ~~~~~~~~~~~~~ expression (body/body)
+                             ~ name (body/body/name)
+                             ~ expression (body/body/name)
 --AST
 s(:def, "m", nil,
   s(:sclass,

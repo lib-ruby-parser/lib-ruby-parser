@@ -1,5 +1,14 @@
 --INPUT
 def foo() = 42
+--LOCATIONS
+~~~ keyword ()
+    ~~~ name ()
+          ~ assignment ()
+~~~~~~~~~~~~~~ expression ()
+       ~ begin (args)
+        ~ end (args)
+       ~~ expression (args)
+            ~~ expression (body)
 --AST
 s(:def, "foo",
   s(:args),

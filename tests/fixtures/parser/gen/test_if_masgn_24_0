@@ -1,5 +1,22 @@
 --INPUT
 if (a, b = foo); end
+--LOCATIONS
+~~ keyword ()
+                 ~~~ end ()
+               ~ begin ()
+~~~~~~~~~~~~~~~~~~~~ expression ()
+   ~ begin (cond)
+              ~ end (cond)
+   ~~~~~~~~~~~~ expression (cond)
+         ~ operator (cond/body)
+    ~~~~~~~~~~ expression (cond/body)
+    ~~~~ expression (cond/body/lhs)
+    ~ name (cond/body/lhs/item[0])
+    ~ expression (cond/body/lhs/item[0])
+       ~ name (cond/body/lhs/item[1])
+       ~ expression (cond/body/lhs/item[1])
+           ~~~ name (cond/body/rhs)
+           ~~~ expression (cond/body/rhs)
 --AST
 s(:if,
   s(:begin,

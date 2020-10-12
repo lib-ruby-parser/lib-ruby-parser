@@ -1,5 +1,19 @@
 --INPUT
 f(a ? "a":1)
+--LOCATIONS
+ ~ begin ()
+           ~ end ()
+~ selector ()
+~~~~~~~~~~~~ expression ()
+         ~ colon (arg[0])
+    ~ question (arg[0])
+  ~~~~~~~~~ expression (arg[0])
+  ~ selector (arg[0]/cond)
+  ~ expression (arg[0]/cond)
+      ~ begin (arg[0]/truthy)
+        ~ end (arg[0]/truthy)
+      ~~~ expression (arg[0]/truthy)
+          ~ expression (arg[0]/falsey)
 --AST
 s(:send, nil, "f",
   s(:if,
