@@ -1,4 +1,4 @@
 --INPUT
 __LINE__
 --AST
-s(:int, "__LINE__")
+s(:int, "LINE")

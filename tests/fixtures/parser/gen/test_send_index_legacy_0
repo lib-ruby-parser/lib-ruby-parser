@@ -1,7 +1,0 @@
---INPUT
-foo[1, 2]
---AST
-s(:send,
-  s(:lvar, "foo"), "[]",
-  s(:int, "1"),
-  s(:int, "2"))

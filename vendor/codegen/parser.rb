@@ -39,7 +39,7 @@ TESTS = Hash.new { |hash, test_name| hash[test_name] = [] }
 class Rewriter < Parser::AST::Processor
   # For numeric literals we emit their source, not the value
   def replace_to_original_source(node)
-    node.updated(nil, [node.location.expression.source])
+    node.updated(nil, [node.location.expression.source.gsub('_', '')])
   end
 
   alias on_int replace_to_original_source
@@ -141,7 +141,22 @@ end
 ParseHelper.prepend(ParseHelperPatch)
 
 IGNORE = [
+  # we don't support legacy behavior
   'test___ENCODING___legacy_',
+  'test_emit_arg_inside_procarg0_legacy',
+  'test_send_index_legacy',
+  'test_send_index_asgn_legacy',
+  'test_send_lambda_legacy',
+  'test_endless_method_forwarded_args_legacy',
+
+  'test_dedenting_heredoc',
+  'test_heredoc',
+  'test_slash_newline_in_heredocs',
+  'test_parser_slash_slash_n_escaping_in_literals',
+  'test_bug_heredoc_do_0',
+
+  # parser bug
+  'test_unary_num_pow_precedence_0',
 ]
 
 Minitest.after_run do
@@ -150,6 +165,7 @@ Minitest.after_run do
 
     cases.each_with_index do |capture, idx|
       full_test_name = "#{test_name}_#{idx}".gsub(/_{2,}/, '_')
+      next if IGNORE.include?(full_test_name)
       puts "Creating input/output files for #{full_test_name}"
 
       input_filepath = File.join(TARGET_DIR, full_test_name)

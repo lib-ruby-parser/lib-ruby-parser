@@ -1,7 +1,0 @@
---INPUT
-%q{a\
-b}
---AST
-s(:dstr,
-  s(:str, "a\\\n"),
-  s(:str, "b"))

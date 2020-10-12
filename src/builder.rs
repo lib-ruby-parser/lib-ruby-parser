@@ -291,7 +291,7 @@ impl Builder {
     // Regular expressions
 
     pub fn regexp_options(&self, regexp_end_t: &Token) -> Node {
-        let mut options = value(&regexp_end_t).chars().collect::<Vec<_>>();
+        let mut options = value(&regexp_end_t).chars().skip(1).collect::<Vec<_>>();
         options.sort();
         options.dedup();
 
@@ -660,7 +660,8 @@ impl Builder {
     }
 
     pub fn op_assign(&self, mut lhs: Node, op_t: Token, rhs: Node) -> Node {
-        let operator = value(&op_t);
+        let mut operator = value(&op_t);
+        operator.pop();
         let operator_l = loc(&op_t);
         let expression_l = join_exprs(&lhs, &rhs);
 

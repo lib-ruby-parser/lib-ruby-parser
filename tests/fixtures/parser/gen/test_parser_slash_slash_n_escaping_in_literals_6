@@ -1,5 +1,0 @@
---INPUT
-%Q{a\
-b}
---AST
-s(:str, "ab")

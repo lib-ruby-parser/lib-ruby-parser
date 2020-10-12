@@ -1,8 +1,0 @@
---INPUT
-foo[1, 2] = 3
---AST
-s(:send,
-  s(:lvar, "foo"), "[]=",
-  s(:int, "1"),
-  s(:int, "2"),
-  s(:int, "3"))

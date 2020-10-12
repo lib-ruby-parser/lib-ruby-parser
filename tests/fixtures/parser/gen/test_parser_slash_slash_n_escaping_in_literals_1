@@ -1,9 +1,0 @@
---INPUT
-<<-'HERE'
-a\
-b
-HERE
---AST
-s(:dstr,
-  s(:str, "a\\\n"),
-  s(:str, "b\n"))

@@ -1,7 +1,0 @@
---INPUT
-%s{a\
-b}
---AST
-s(:dsym,
-  s(:str, "a\\\n"),
-  s(:str, "b"))

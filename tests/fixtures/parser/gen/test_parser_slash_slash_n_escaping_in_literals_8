@@ -1,6 +1,0 @@
---INPUT
-%W{a\
-b}
---AST
-s(:array,
-  s(:str, "a\nb"))

@@ -1,5 +1,0 @@
---INPUT
-:"a\
-b"
---AST
-s(:sym, "ab")
