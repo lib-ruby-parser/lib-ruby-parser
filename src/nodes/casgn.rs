@@ -18,7 +18,11 @@ impl<'a> InnerNode<'a> for Casgn {
         &self.expression_l
     }
 
-    fn inspect(&self, level: usize) -> String {
+    fn inspected_children(&self, indent: usize) -> String {
         todo!()
+    }
+
+    fn str_type(&self) -> &'static str {
+        "casgn"
     }
 }

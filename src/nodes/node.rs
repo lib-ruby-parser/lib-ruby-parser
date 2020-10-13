@@ -130,5 +130,6 @@ pub enum Node {
 
 pub trait InnerNode<'a> {
     fn expression(&'a self) -> &'a Range;
-    fn inspect(&self, level: usize) -> String;
+    fn str_type(&self) -> &'static str;
+    fn inspected_children(&self, indent: usize) -> String;
 }
