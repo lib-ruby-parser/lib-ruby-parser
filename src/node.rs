@@ -1,161 +1,582 @@
-use crate::source::Range;
 use crate::source::map::*;
+use crate::source::Range;
 use crate::Loc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum StringValue {
     String(String),
-    Bytes(Vec<u8>)
+    Bytes(Vec<u8>),
 }
 
 impl StringValue {
     pub fn to_string_lossy(&self) -> String {
         match &self {
             StringValue::String(s) => s.clone(),
-            StringValue::Bytes(bytes) => {
-                String::from_utf8_lossy(&bytes).into_owned()
-            }
+            StringValue::Bytes(bytes) => String::from_utf8_lossy(&bytes).into_owned(),
         }
     }
 
     pub fn to_string(&self) -> Option<String> {
         match &self {
             StringValue::String(s) => Some(s.clone()),
-            StringValue::Bytes(bytes) => {
-                match String::from_utf8(bytes.clone()) {
-                    Ok(s) => Some(s),
-                    Err(_) => None
-                }
-            }
+            StringValue::Bytes(bytes) => match String::from_utf8(bytes.clone()) {
+                Ok(s) => Some(s),
+                Err(_) => None,
+            },
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {
-    Begin { statements: Vec<Node>, loc: CollectionMap },
-    Int { value: String, loc: OperatorMap },
-    Float { value: String, loc: OperatorMap },
-    Rational { value: String, loc: OperatorMap },
-    Complex { value: String, loc: OperatorMap },
-    Send { receiver: Option<Box<Node>>, operator: String, args: Vec<Node>, loc: SendMap },
-    CSend { receiver: Option<Box<Node>>, operator: String, args: Vec<Node>, loc: SendMap },
-    Nil { loc: Map },
-    True { loc: Map },
-    False { loc: Map },
-    Self_ { loc: Map },
-    __FILE__ { loc: Map },
-    __LINE__ { loc: Map },
-    __ENCODING__ { loc: Map },
-    Preexe { body: Option<Box<Node>>, loc: KeywordMap },
-    Postexe { body: Option<Box<Node>>, loc: KeywordMap },
-    Lvar { name: String, loc: VariableMap },
-    Rescue { body: Option<Box<Node>>, rescue_bodies: Vec<Node>, else_: Option<Box<Node>>, loc: ConditionMap },
-    Ensure { body: Option<Box<Node>>, ensure: Option<Box<Node>>, loc: ConditionMap },
-    KwBegin { statements: Vec<Node>, loc: CollectionMap },
-    Args { args: Vec<Node>, loc: CollectionMap },
-    Def { name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
-    Defs { definee: Box<Node>, name: String, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: MethodDefinitionMap },
-    Arg { name: String, loc: VariableMap },
-    Sym { name: String, loc: CollectionMap },
-    Alias { to: Box<Node>, from: Box<Node>, loc: KeywordMap },
-    Ivar { name: String, loc: VariableMap },
-    Gvar { name: String, loc: VariableMap },
-    Cvar { name: String, loc: VariableMap },
-    BackRef { name: String, loc: VariableMap },
-    NthRef { name: usize, loc: VariableMap },
-    Lvasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
-    Cvasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
-    Ivasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
-    Gvasgn { name: String, rhs: Option<Box<Node>>, loc: VariableMap },
-    Const { scope: Option<Box<Node>>, name: String, loc: ConstantMap },
-    Casgn { scope: Option<Box<Node>>, name: String, rhs: Option<Box<Node>>, loc: ConstantMap },
-    Index { receiver: Box<Node>, indexes: Vec<Node>, loc: IndexMap },
-    IndexAsgn { receiver: Box<Node>, indexes: Vec<Node>, rhs: Option<Box<Node>>, loc: IndexMap },
-    Undef { names: Vec<Node>, loc: KeywordMap },
-    Pair { key: Box<Node>, value: Box<Node>, loc: OperatorMap },
-    Hash { pairs: Vec<Node>, loc: CollectionMap },
-    Array { elements: Vec<Node>, loc: CollectionMap },
-    Str { value: StringValue, loc: CollectionMap },
-    Dstr { children: Vec<Node>, loc: CollectionMap },
-    Heredoc { children: Vec<Node>, loc: HeredocMap },
-    Xstr { children: Vec<Node>, loc: CollectionMap },
-    XHeredoc { children: Vec<Node>, loc: HeredocMap },
-    Dsym { children: Vec<Node>, loc: CollectionMap },
-    IfMod { cond: Box<Node>, if_true: Option<Box<Node>>, if_false: Option<Box<Node>>, loc: KeywordMap },
-    IfTernary { cond: Box<Node>, if_true: Box<Node>, if_false: Box<Node>, loc: TernaryMap },
-    If { cond: Box<Node>, if_true: Option<Box<Node>>, if_false: Option<Box<Node>>, loc: ConditionMap },
-    WhilePost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
-    While { cond: Box<Node>, body: Option<Box<Node>>, loc: KeywordMap },
-    UntilPost { cond: Box<Node>, body: Box<Node>, loc: KeywordMap },
-    Until { cond: Box<Node>, body: Option<Box<Node>>, loc: KeywordMap },
-    RescueBody { exc_list: Option<Box<Node>>, exc_var: Option<Box<Node>>, stmt: Option<Box<Node>>, loc: RescueBodyMap },
-    Mlhs { items: Vec<Node>, loc: CollectionMap },
-    Splat { arg: Option<Box<Node>>, loc: OperatorMap },
-    Masgn { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
-    Cbase { loc: Map },
-    Break { args: Vec<Node>, loc: KeywordMap },
-    Defined { args: Vec<Node>, loc: KeywordMap },
-    Next { args: Vec<Node>, loc: KeywordMap },
-    Redo { args: Vec<Node>, loc: KeywordMap },
-    Retry { args: Vec<Node>, loc: KeywordMap },
-    Return { args: Vec<Node>, loc: KeywordMap },
-    Super { args: Vec<Node>, loc: KeywordMap },
-    Yield { args: Vec<Node>, loc: KeywordMap },
-    Zsuper { loc: KeywordMap },
-    AndAsgn { lhs: Box<Node>, rhs: Box<Node>, loc: OpAssignMap },
-    OrAsgn { lhs: Box<Node>, rhs: Box<Node>, loc: OpAssignMap },
-    OpAsgn { lhs: Box<Node>, rhs: Box<Node>, operator: String, loc: OpAssignMap },
-    And { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
-    Or { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
-    RegOpt { options: Vec<char>, loc: Map },
-    Regexp { parts: Vec<Node>, options: Box<Node>, loc: CollectionMap },
-    Kwsplat { value: Box<Node>, loc: OperatorMap },
-    Irange { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap  },
-    Erange { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap  },
-    Class { name: Box<Node>, superclass: Option<Box<Node>>, body: Option<Box<Node>>, loc: DefinitionMap },
-    Sclass { expr: Box<Node>, body: Option<Box<Node>>, loc: DefinitionMap },
-    Module { name: Box<Node>, body: Option<Box<Node>>, loc: DefinitionMap },
-    ForwardArg { loc: Map },
-    Optarg { name: String, value: Box<Node>, loc: VariableMap },
-    Restarg { name: Option<String>, loc: VariableMap },
-    Kwarg { name: String, loc: VariableMap  },
-    Kwoptarg { name: String, value: Box<Node>, loc: VariableMap  },
-    Kwrestarg { name: Option<String>, loc: VariableMap },
-    Kwnilarg { loc: VariableMap },
-    Shadowarg { name: String, loc: VariableMap },
-    Blockarg { name: String, loc: VariableMap },
-    Procarg0 { args: Vec<Node>, loc: CollectionMap },
-    ForwardedArgs { loc: Map },
-    Block { call: Box<Node>, args: Option<Box<Node>>, body: Option<Box<Node>>, loc: CollectionMap },
-    Lambda { loc: Map },
-    BlockPass { arg: Box<Node>, loc: OperatorMap },
-    MatchWithLvasgn { receiver: Box<Node>, arg: Box<Node>, loc: SendMap },
-    For { iterator: Box<Node>, iteratee: Box<Node>, body: Option<Box<Node>>, loc: ForMap },
-    When { patterns: Vec<Node>, body: Option<Box<Node>>, loc: KeywordMap },
-    Case { expr: Option<Box<Node>>, when_bodies: Vec<Node>, else_body: Option<Box<Node>>, loc: ConditionMap },
-    MatchVar { name: String, loc: VariableMap },
-    EmptyElse { loc: Map },
-    CaseMatch { expr: Box<Node>, in_bodies: Vec<Node>, else_body: Option<Box<Node>>, loc: ConditionMap },
-    InMatch { lhs: Box<Node>, rhs: Box<Node>, loc: OperatorMap },
-    InPattern { pattern: Box<Node>, guard: Option<Box<Node>>, body: Option<Box<Node>>, loc: KeywordMap },
-    IfGuard { body: Box<Node>, loc: KeywordMap },
-    UnlessGuard { body: Box<Node>, loc: KeywordMap },
-    MatchRest { name: Option<Box<Node>>, loc: OperatorMap },
-    HashPattern { args: Vec<Node>, loc: CollectionMap },
-    ArrayPattern { elements: Vec<Node>, loc: CollectionMap },
-    MatchWithTrailingComma { match_: Box<Node>, loc: Map },
-    ArrayPatternWithTail { elements: Vec<Node>, loc: CollectionMap },
-    FindPattern { elements: Vec<Node>, loc: CollectionMap },
-    ConstPattern { const_: Box<Node>, pattern: Box<Node>, loc: CollectionMap },
-    Pin { var: Box<Node>, loc: SendMap },
-    MatchAlt { left: Box<Node>, right: Box<Node>, loc: OperatorMap },
-    MatchAs { value: Box<Node>, as_: Box<Node>, loc: OperatorMap },
-    MatchNilPattern { loc: VariableMap },
-    IFlipFlop { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap },
-    EFlipFlop { left: Option<Box<Node>>, right: Option<Box<Node>>, loc: OperatorMap },
-    Numblock { numargs: u8, call: Box<Node>, body: Box<Node>, loc: CollectionMap },
-    MatchCurrentLine { re: Box<Node>, loc: Map },
+    // Begin {
+//     statements: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// Int {
+//     value: String,
+//     loc: OperatorMap,
+// },
+// Float {
+//     value: String,
+//     loc: OperatorMap,
+// },
+// Rational {
+//     value: String,
+//     loc: OperatorMap,
+// },
+// Complex {
+//     value: String,
+//     loc: OperatorMap,
+// },
+// Send {
+//     receiver: Option<Box<Node>>,
+//     operator: String,
+//     args: Vec<Node>,
+//     loc: SendMap,
+// },
+// CSend {
+//     receiver: Option<Box<Node>>,
+//     operator: String,
+//     args: Vec<Node>,
+//     loc: SendMap,
+// },
+// Nil {
+//     loc: Map,
+// },
+// True {
+//     loc: Map,
+// },
+// False {
+//     loc: Map,
+// },
+// Self_ {
+//     loc: Map,
+// },
+// __FILE__ {
+//     loc: Map,
+// },
+// __LINE__ {
+//     loc: Map,
+// },
+// __ENCODING__ {
+//     loc: Map,
+// },
+// Preexe {
+//     body: Option<Box<Node>>,
+//     loc: KeywordMap,
+// },
+// Postexe {
+//     body: Option<Box<Node>>,
+//     loc: KeywordMap,
+// },
+// Lvar {
+//     name: String,
+//     loc: VariableMap,
+// },
+// Rescue {
+//     body: Option<Box<Node>>,
+//     rescue_bodies: Vec<Node>,
+//     else_: Option<Box<Node>>,
+//     loc: ConditionMap,
+// },
+// Ensure {
+//     body: Option<Box<Node>>,
+//     ensure: Option<Box<Node>>,
+//     loc: ConditionMap,
+// },
+// KwBegin {
+//     statements: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// Args {
+//     args: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// Def {
+//     name: String,
+//     args: Option<Box<Node>>,
+//     body: Option<Box<Node>>,
+//     loc: MethodDefinitionMap,
+// },
+// Defs {
+//     definee: Box<Node>,
+//     name: String,
+//     args: Option<Box<Node>>,
+//     body: Option<Box<Node>>,
+//     loc: MethodDefinitionMap,
+// },
+// Arg {
+//     name: String,
+//     loc: VariableMap,
+// },
+// Sym {
+//     name: String,
+//     loc: CollectionMap,
+// },
+// Alias {
+//     to: Box<Node>,
+//     from: Box<Node>,
+//     loc: KeywordMap,
+// },
+// Ivar {
+//     name: String,
+//     loc: VariableMap,
+// },
+// Gvar {
+//     name: String,
+//     loc: VariableMap,
+// },
+// Cvar {
+//     name: String,
+//     loc: VariableMap,
+// },
+// BackRef {
+//     name: String,
+//     loc: VariableMap,
+// },
+// NthRef {
+//     name: usize,
+//     loc: VariableMap,
+// },
+// Lvasgn {
+//     name: String,
+//     rhs: Option<Box<Node>>,
+//     loc: VariableMap,
+// },
+// Cvasgn {
+//     name: String,
+//     rhs: Option<Box<Node>>,
+//     loc: VariableMap,
+// },
+// Ivasgn {
+//     name: String,
+//     rhs: Option<Box<Node>>,
+//     loc: VariableMap,
+// },
+// Gvasgn {
+//     name: String,
+//     rhs: Option<Box<Node>>,
+//     loc: VariableMap,
+// },
+// Const {
+//     scope: Option<Box<Node>>,
+//     name: String,
+//     loc: ConstantMap,
+// },
+// Casgn {
+//     scope: Option<Box<Node>>,
+//     name: String,
+//     rhs: Option<Box<Node>>,
+//     loc: ConstantMap,
+// },
+// Index {
+//     receiver: Box<Node>,
+//     indexes: Vec<Node>,
+//     loc: IndexMap,
+// },
+// IndexAsgn {
+//     receiver: Box<Node>,
+//     indexes: Vec<Node>,
+//     rhs: Option<Box<Node>>,
+//     loc: IndexMap,
+// },
+// Undef {
+//     names: Vec<Node>,
+//     loc: KeywordMap,
+// },
+// Pair {
+//     key: Box<Node>,
+//     value: Box<Node>,
+//     loc: OperatorMap,
+// },
+// Hash {
+//     pairs: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// Array {
+//     elements: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// Str {
+//     value: StringValue,
+//     loc: CollectionMap,
+// },
+// Dstr {
+//     children: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// Heredoc {
+//     children: Vec<Node>,
+//     loc: HeredocMap,
+// },
+// Xstr {
+//     children: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// XHeredoc {
+//     children: Vec<Node>,
+//     loc: HeredocMap,
+// },
+// Dsym {
+//     children: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// IfMod {
+//     cond: Box<Node>,
+//     if_true: Option<Box<Node>>,
+//     if_false: Option<Box<Node>>,
+//     loc: KeywordMap,
+// },
+// IfTernary {
+//     cond: Box<Node>,
+//     if_true: Box<Node>,
+//     if_false: Box<Node>,
+//     loc: TernaryMap,
+// },
+// If {
+//     cond: Box<Node>,
+//     if_true: Option<Box<Node>>,
+//     if_false: Option<Box<Node>>,
+//     loc: ConditionMap,
+// },
+// WhilePost {
+//     cond: Box<Node>,
+//     body: Box<Node>,
+//     loc: KeywordMap,
+// },
+// While {
+//     cond: Box<Node>,
+//     body: Option<Box<Node>>,
+//     loc: KeywordMap,
+// },
+// UntilPost {
+//     cond: Box<Node>,
+//     body: Box<Node>,
+//     loc: KeywordMap,
+// },
+// Until {
+//     cond: Box<Node>,
+//     body: Option<Box<Node>>,
+//     loc: KeywordMap,
+// },
+// RescueBody {
+//     exc_list: Option<Box<Node>>,
+//     exc_var: Option<Box<Node>>,
+//     stmt: Option<Box<Node>>,
+//     loc: RescueBodyMap,
+// },
+// Mlhs {
+//     items: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// Splat {
+//     arg: Option<Box<Node>>,
+//     loc: OperatorMap,
+// },
+// Masgn {
+//     lhs: Box<Node>,
+//     rhs: Box<Node>,
+//     loc: OperatorMap,
+// },
+// Cbase {
+//     loc: Map,
+// },
+// Break {
+//     args: Vec<Node>,
+//     loc: KeywordMap,
+// },
+// Defined {
+//     args: Vec<Node>,
+//     loc: KeywordMap,
+// },
+// Next {
+//     args: Vec<Node>,
+//     loc: KeywordMap,
+// },
+// Redo {
+//     args: Vec<Node>,
+//     loc: KeywordMap,
+// },
+// Retry {
+//     loc: KeywordMap,
+// },
+// Return {
+//     args: Vec<Node>,
+//     loc: KeywordMap,
+// },
+// Super {
+//     args: Vec<Node>,
+//     loc: KeywordMap,
+// },
+// Yield {
+//     args: Vec<Node>,
+//     loc: KeywordMap,
+// },
+// Zsuper {
+//     loc: KeywordMap,
+// },
+// AndAsgn {
+//     lhs: Box<Node>,
+//     rhs: Box<Node>,
+//     loc: OpAssignMap,
+// },
+// OrAsgn {
+//     lhs: Box<Node>,
+//     rhs: Box<Node>,
+//     loc: OpAssignMap,
+// },
+// OpAsgn {
+//     lhs: Box<Node>,
+//     rhs: Box<Node>,
+//     operator: String,
+//     loc: OpAssignMap,
+// },
+// And {
+//     lhs: Box<Node>,
+//     rhs: Box<Node>,
+//     loc: OperatorMap,
+// },
+// Or {
+//     lhs: Box<Node>,
+//     rhs: Box<Node>,
+//     loc: OperatorMap,
+// },
+// RegOpt {
+//     options: Vec<char>,
+//     loc: Map,
+// },
+// Regexp {
+//     parts: Vec<Node>,
+//     options: Box<Node>,
+//     loc: CollectionMap,
+// },
+// Kwsplat {
+//     value: Box<Node>,
+//     loc: OperatorMap,
+// },
+// Irange {
+//     left: Option<Box<Node>>,
+//     right: Option<Box<Node>>,
+//     loc: OperatorMap,
+// },
+// Erange {
+//     left: Option<Box<Node>>,
+//     right: Option<Box<Node>>,
+//     loc: OperatorMap,
+// },
+// Class {
+//     name: Box<Node>,
+//     superclass: Option<Box<Node>>,
+//     body: Option<Box<Node>>,
+//     loc: DefinitionMap,
+// },
+// Sclass {
+//     expr: Box<Node>,
+//     body: Option<Box<Node>>,
+//     loc: DefinitionMap,
+// },
+// Module {
+//     name: Box<Node>,
+//     body: Option<Box<Node>>,
+//     loc: DefinitionMap,
+// },
+// ForwardArg {
+//     loc: Map,
+// },
+// Optarg {
+//     name: String,
+//     value: Box<Node>,
+//     loc: VariableMap,
+// },
+// Restarg {
+//     name: Option<String>,
+//     loc: VariableMap,
+// },
+// Kwarg {
+//     name: String,
+//     loc: VariableMap,
+// },
+// Kwoptarg {
+//     name: String,
+//     value: Box<Node>,
+//     loc: VariableMap,
+// },
+// Kwrestarg {
+//     name: Option<String>,
+//     loc: VariableMap,
+// },
+// Kwnilarg {
+//     loc: VariableMap,
+// },
+// Shadowarg {
+//     name: String,
+//     loc: VariableMap,
+// },
+// Blockarg {
+//     name: String,
+//     loc: VariableMap,
+// },
+// Procarg0 {
+//     args: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// ForwardedArgs {
+//     loc: Map,
+// },
+// Block {
+//     call: Box<Node>,
+//     args: Option<Box<Node>>,
+//     body: Option<Box<Node>>,
+//     loc: CollectionMap,
+// },
+// Lambda {
+//     loc: Map,
+// },
+// BlockPass {
+//     arg: Box<Node>,
+//     loc: OperatorMap,
+// },
+// MatchWithLvasgn {
+//     receiver: Box<Node>,
+//     arg: Box<Node>,
+//     loc: SendMap,
+// },
+// For {
+//     iterator: Box<Node>,
+//     iteratee: Box<Node>,
+//     body: Option<Box<Node>>,
+//     loc: ForMap,
+// },
+// When {
+//     patterns: Vec<Node>,
+//     body: Option<Box<Node>>,
+//     loc: KeywordMap,
+// },
+// Case {
+//     expr: Option<Box<Node>>,
+//     when_bodies: Vec<Node>,
+//     else_body: Option<Box<Node>>,
+//     loc: ConditionMap,
+// },
+// MatchVar {
+//     name: String,
+//     loc: VariableMap,
+// },
+// EmptyElse {
+//     loc: Map,
+// },
+// CaseMatch {
+//     expr: Box<Node>,
+//     in_bodies: Vec<Node>,
+//     else_body: Option<Box<Node>>,
+//     loc: ConditionMap,
+// },
+// InMatch {
+//     lhs: Box<Node>,
+//     rhs: Box<Node>,
+//     loc: OperatorMap,
+// },
+// InPattern {
+//     pattern: Box<Node>,
+//     guard: Option<Box<Node>>,
+//     body: Option<Box<Node>>,
+//     loc: KeywordMap,
+// },
+// IfGuard {
+//     body: Box<Node>,
+//     loc: KeywordMap,
+// },
+// UnlessGuard {
+//     body: Box<Node>,
+//     loc: KeywordMap,
+// },
+// MatchRest {
+//     name: Option<Box<Node>>,
+//     loc: OperatorMap,
+// },
+// HashPattern {
+//     args: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// ArrayPattern {
+//     elements: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// MatchWithTrailingComma {
+//     match_: Box<Node>,
+//     loc: Map,
+// },
+// ArrayPatternWithTail {
+//     elements: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// FindPattern {
+//     elements: Vec<Node>,
+//     loc: CollectionMap,
+// },
+// ConstPattern {
+//     const_: Box<Node>,
+//     pattern: Box<Node>,
+//     loc: CollectionMap,
+// },
+// Pin {
+//     var: Box<Node>,
+//     loc: SendMap,
+// },
+// MatchAlt {
+//     left: Box<Node>,
+//     right: Box<Node>,
+//     loc: OperatorMap,
+// },
+// MatchAs {
+//     value: Box<Node>,
+//     as_: Box<Node>,
+//     loc: OperatorMap,
+// },
+// MatchNilPattern {
+//     loc: VariableMap,
+// },
+// IFlipFlop {
+//     left: Option<Box<Node>>,
+//     right: Option<Box<Node>>,
+//     loc: OperatorMap,
+// },
+// EFlipFlop {
+//     left: Option<Box<Node>>,
+//     right: Option<Box<Node>>,
+//     loc: OperatorMap,
+// },
+// Numblock {
+//     numargs: u8,
+//     call: Box<Node>,
+//     body: Box<Node>,
+//     loc: CollectionMap,
+// },
+// MatchCurrentLine {
+//     re: Box<Node>,
+//     loc: Map,
+// },
 }
 
 impl Node {
@@ -351,9 +772,7 @@ impl Node {
             Node::Xstr { .. } => "xstr",
             Node::XHeredoc { .. } => "xstr",
             Node::Dsym { .. } => "dsym",
-            Node::IfMod { .. }
-            | Node::IfTernary { .. }
-            | Node::If { .. } => "if",
+            Node::IfMod { .. } | Node::IfTernary { .. } | Node::If { .. } => "if",
             Node::WhilePost { .. } => "while_post",
             Node::While { .. } => "while",
             Node::UntilPost { .. } => "until_post",
@@ -434,15 +853,25 @@ impl Node {
         match self {
             Node::Begin { statements, .. } => {
                 result.push_nodes(statements);
-            },
+            }
             Node::Int { value, .. }
             | Node::Float { value, .. }
             | Node::Rational { value, .. }
             | Node::Complex { value, .. } => {
                 result.push_str(value);
             }
-            Node::Send { receiver, operator, args, .. }
-            | Node::CSend { receiver, operator, args, .. } => {
+            Node::Send {
+                receiver,
+                operator,
+                args,
+                ..
+            }
+            | Node::CSend {
+                receiver,
+                operator,
+                args,
+                ..
+            } => {
                 result.push_maybe_node_or_nil(receiver);
                 result.push_str(operator);
                 result.push_nodes(args);
@@ -454,14 +883,18 @@ impl Node {
             | Node::__FILE__ { .. }
             | Node::__LINE__ { .. }
             | Node::__ENCODING__ { .. } => {}
-            Node::Preexe { body, .. }
-            | Node::Postexe { body, .. } => {
+            Node::Preexe { body, .. } | Node::Postexe { body, .. } => {
                 result.push_maybe_node(body);
             }
             Node::Lvar { name, .. } => {
                 result.push_str(name);
             }
-            Node::Rescue { body, rescue_bodies, else_, .. } => {
+            Node::Rescue {
+                body,
+                rescue_bodies,
+                else_,
+                ..
+            } => {
                 result.push_maybe_node_or_nil(body);
                 result.push_nodes(rescue_bodies);
                 result.push_maybe_node_or_nil(else_);
@@ -470,26 +903,28 @@ impl Node {
                 result.push_maybe_node_or_nil(body);
                 result.push_maybe_node_or_nil(ensure);
             }
-            Node::KwBegin { statements, .. } => {
-                result.push_nodes(statements)
-            }
-            Node::Args { args, .. } => {
-                result.push_nodes(args)
-            }
-            Node::Def { name, args, body, .. } => {
+            Node::KwBegin { statements, .. } => result.push_nodes(statements),
+            Node::Args { args, .. } => result.push_nodes(args),
+            Node::Def {
+                name, args, body, ..
+            } => {
                 result.push_str(name);
                 result.push_maybe_node_or_nil(args);
                 result.push_maybe_node_or_nil(body);
             }
-            Node::Defs { definee, name, args, body, .. } => {
+            Node::Defs {
+                definee,
+                name,
+                args,
+                body,
+                ..
+            } => {
                 result.push_node(definee);
                 result.push_str(name);
                 result.push_maybe_node_or_nil(args);
                 result.push_maybe_node_or_nil(body);
             }
-            Node::Arg { name, .. } => {
-                result.push_str(name)
-            }
+            Node::Arg { name, .. } => result.push_str(name),
             Node::Alias { to, from, .. } => {
                 result.push_node(to);
                 result.push_node(from)
@@ -520,7 +955,9 @@ impl Node {
                 }
                 result.push_str(name)
             }
-            Node::Casgn { scope, name, rhs, .. } => {
+            Node::Casgn {
+                scope, name, rhs, ..
+            } => {
                 if let Some(scope) = scope {
                     result.push_node(scope)
                 } else {
@@ -531,76 +968,87 @@ impl Node {
                     result.push_node(rhs)
                 }
             }
-            Node::Index { receiver, indexes, .. } => {
+            Node::Index {
+                receiver, indexes, ..
+            } => {
                 result.push_node(receiver);
                 result.push_nodes(indexes);
             }
-            Node::IndexAsgn { receiver, indexes, rhs, .. } => {
+            Node::IndexAsgn {
+                receiver,
+                indexes,
+                rhs,
+                ..
+            } => {
                 result.push_node(receiver);
                 result.push_nodes(indexes);
                 result.push_maybe_node(rhs);
             }
-            Node::Undef { names, .. } => {
-                result.push_nodes(names)
-            }
+            Node::Undef { names, .. } => result.push_nodes(names),
             Node::Pair { key, value, .. } => {
                 result.push_node(key);
                 result.push_node(value)
             }
-            Node::Hash { pairs, .. } => {
-                result.push_nodes(pairs)
-            }
-            Node::Array { elements, .. } => {
-                result.push_nodes(elements)
-            }
-            Node::Str { value, .. } => {
-                match value {
-                    StringValue::String(s) => result.push_str(s),
-                    StringValue::Bytes(bytes) => {
-                        let s = String::from_utf8_lossy(&bytes).into_owned();
-                        result.push_str(&s);
-                    }
+            Node::Hash { pairs, .. } => result.push_nodes(pairs),
+            Node::Array { elements, .. } => result.push_nodes(elements),
+            Node::Str { value, .. } => match value {
+                StringValue::String(s) => result.push_str(s),
+                StringValue::Bytes(bytes) => {
+                    let s = String::from_utf8_lossy(&bytes).into_owned();
+                    result.push_str(&s);
                 }
-            }
-            Node::Sym { name, .. } => {
-                result.push_str(name)
-            }
+            },
+            Node::Sym { name, .. } => result.push_str(name),
             Node::Dstr { children, .. }
             | Node::Dsym { children, .. }
             | Node::Xstr { children, .. }
             | Node::Heredoc { children, .. }
-            | Node::XHeredoc { children, .. } => {
-                result.push_nodes(children)
+            | Node::XHeredoc { children, .. } => result.push_nodes(children),
+            Node::If {
+                cond,
+                if_true,
+                if_false,
+                ..
             }
-            Node::If { cond, if_true, if_false, .. }
-            | Node::IfMod { cond, if_true, if_false, .. } => {
+            | Node::IfMod {
+                cond,
+                if_true,
+                if_false,
+                ..
+            } => {
                 result.push_node(cond);
                 result.push_maybe_node_or_nil(if_true);
                 result.push_maybe_node_or_nil(if_false);
             }
-            Node::IfTernary { cond, if_true, if_false, .. } => {
+            Node::IfTernary {
+                cond,
+                if_true,
+                if_false,
+                ..
+            } => {
                 result.push_node(cond);
                 result.push_node(if_true);
                 result.push_node(if_false);
             }
-            Node::WhilePost { cond, body, .. }
-            | Node::UntilPost { cond, body, .. } => {
+            Node::WhilePost { cond, body, .. } | Node::UntilPost { cond, body, .. } => {
                 result.push_node(cond);
                 result.push_node(body)
             }
-            Node::While { cond, body, .. }
-            | Node::Until { cond, body, .. } => {
+            Node::While { cond, body, .. } | Node::Until { cond, body, .. } => {
                 result.push_node(cond);
                 result.push_maybe_node_or_nil(body);
             }
-            Node::RescueBody { exc_list, exc_var, stmt, .. } => {
+            Node::RescueBody {
+                exc_list,
+                exc_var,
+                stmt,
+                ..
+            } => {
                 result.push_maybe_node_or_nil(exc_list);
                 result.push_maybe_node_or_nil(exc_var);
                 result.push_maybe_node_or_nil(stmt);
             }
-            Node::Mlhs { items, .. } => {
-                result.push_nodes(items)
-            }
+            Node::Mlhs { items, .. } => result.push_nodes(items),
             Node::Splat { arg, .. } => {
                 if let Some(arg) = arg {
                     result.push_node(arg)
@@ -611,16 +1059,14 @@ impl Node {
                 result.push_node(rhs);
             }
             Node::Cbase { .. } => {}
+            Node::Retry { .. } => {}
             Node::Break { args, .. }
             | Node::Defined { args, .. }
             | Node::Next { args, .. }
             | Node::Redo { args, .. }
-            | Node::Retry { args, .. }
             | Node::Return { args, .. }
             | Node::Super { args, .. }
-            | Node::Yield { args, .. } => {
-                result.push_nodes(args)
-            }
+            | Node::Yield { args, .. } => result.push_nodes(args),
             Node::Zsuper { .. } => {}
             Node::AndAsgn { lhs, rhs, .. }
             | Node::OrAsgn { lhs, rhs, .. }
@@ -629,44 +1075,51 @@ impl Node {
                 result.push_node(lhs);
                 result.push_node(rhs);
             }
-            Node::OpAsgn { lhs, rhs, operator, .. } => {
+            Node::OpAsgn {
+                lhs, rhs, operator, ..
+            } => {
                 result.push_node(lhs);
                 result.push_str(operator);
                 result.push_node(rhs);
-            },
+            }
             Node::RegOpt { options, .. } => {
                 for option in options {
                     result.push_str(&format!("{}", option));
                 }
-            },
+            }
             Node::Regexp { parts, options, .. } => {
                 result.push_nodes(parts);
                 result.push_node(options);
-            },
+            }
             Node::Kwsplat { value, .. } => {
                 result.push_node(value);
-            },
+            }
             Node::Irange { left, right, .. }
             | Node::Erange { left, right, .. }
             | Node::IFlipFlop { left, right, .. }
-            | Node::EFlipFlop { left, right, .. }  => {
+            | Node::EFlipFlop { left, right, .. } => {
                 result.push_maybe_node_or_nil(left);
                 result.push_maybe_node_or_nil(right);
-            },
-            Node::Class { name, superclass, body, .. } => {
+            }
+            Node::Class {
+                name,
+                superclass,
+                body,
+                ..
+            } => {
                 result.push_node(name);
                 result.push_maybe_node_or_nil(superclass);
                 result.push_maybe_node_or_nil(body);
-            },
+            }
             Node::Sclass { expr, body, .. } => {
                 result.push_node(expr);
                 result.push_maybe_node_or_nil(body);
-            },
+            }
             Node::Module { name, body, .. } => {
                 result.push_node(name);
                 result.push_maybe_node_or_nil(body);
-            },
-            Node::ForwardArg { .. } => {},
+            }
+            Node::ForwardArg { .. } => {}
             Node::Optarg { name, value, .. } => {
                 result.push_str(name);
                 result.push_node(value);
@@ -678,7 +1131,6 @@ impl Node {
             }
             Node::Kwarg { name, .. } => {
                 result.push_str(name);
-
             }
             Node::Kwoptarg { name, value, .. } => {
                 result.push_str(name);
@@ -695,26 +1147,30 @@ impl Node {
             }
             Node::Blockarg { name, .. } => {
                 result.push_str(name);
-
             }
             Node::Procarg0 { args, .. } => {
                 result.push_nodes(args);
             }
             Node::ForwardedArgs { .. } => {}
-            Node::Block { call, args, body, .. } => {
+            Node::Block {
+                call, args, body, ..
+            } => {
                 result.push_node(call);
                 result.push_maybe_node_or_nil(args);
                 result.push_maybe_node_or_nil(body);
             }
             Node::Lambda { .. } => {}
-            Node::BlockPass { arg, .. } => {
-                result.push_node(arg)
-            }
+            Node::BlockPass { arg, .. } => result.push_node(arg),
             Node::MatchWithLvasgn { receiver, arg, .. } => {
                 result.push_node(receiver);
                 result.push_node(arg);
             }
-            Node::For { iterator, iteratee, body, .. } => {
+            Node::For {
+                iterator,
+                iteratee,
+                body,
+                ..
+            } => {
                 result.push_node(iterator);
                 result.push_node(iteratee);
                 result.push_maybe_node_or_nil(body);
@@ -723,7 +1179,12 @@ impl Node {
                 result.push_nodes(patterns);
                 result.push_maybe_node_or_nil(body);
             }
-            Node::Case { expr, when_bodies, else_body, .. } => {
+            Node::Case {
+                expr,
+                when_bodies,
+                else_body,
+                ..
+            } => {
                 result.push_maybe_node_or_nil(expr);
                 result.push_nodes(when_bodies);
                 result.push_maybe_node_or_nil(else_body);
@@ -732,7 +1193,12 @@ impl Node {
                 result.push_str(name);
             }
             Node::EmptyElse { .. } => {}
-            Node::CaseMatch { expr, in_bodies, else_body, .. } => {
+            Node::CaseMatch {
+                expr,
+                in_bodies,
+                else_body,
+                ..
+            } => {
                 result.push_node(expr);
                 result.push_nodes(in_bodies);
                 result.push_maybe_node_or_nil(else_body);
@@ -741,36 +1207,33 @@ impl Node {
                 result.push_node(lhs);
                 result.push_node(rhs);
             }
-            Node::InPattern { pattern, guard, body, .. } => {
+            Node::InPattern {
+                pattern,
+                guard,
+                body,
+                ..
+            } => {
                 result.push_node(pattern);
                 result.push_maybe_node_or_nil(guard);
                 result.push_maybe_node_or_nil(body);
             }
-            Node::IfGuard { body, .. }
-            | Node::UnlessGuard { body, .. } => {
-                result.push_node(body)
-            }
+            Node::IfGuard { body, .. } | Node::UnlessGuard { body, .. } => result.push_node(body),
             Node::MatchRest { name, .. } => {
                 result.push_maybe_node(name);
             }
             Node::HashPattern { args: elements, .. }
             | Node::ArrayPattern { elements, .. }
             | Node::ArrayPatternWithTail { elements, .. }
-            | Node::FindPattern { elements, .. } => {
-                result.push_nodes(elements)
-            }
-            Node::MatchWithTrailingComma { match_, .. } => {
-                result.push_node(match_)
-            }
-            Node::ConstPattern { const_, pattern, .. } => {
+            | Node::FindPattern { elements, .. } => result.push_nodes(elements),
+            Node::MatchWithTrailingComma { match_, .. } => result.push_node(match_),
+            Node::ConstPattern {
+                const_, pattern, ..
+            } => {
                 result.push_node(const_);
                 result.push_node(pattern)
-
             }
-            Node::Pin { var, .. } => {
-                result.push_node(var)
-            }
-            Node::MatchAlt { left, right, ..} => {
+            Node::Pin { var, .. } => result.push_node(var),
+            Node::MatchAlt { left, right, .. } => {
                 result.push_node(left);
                 result.push_node(right)
             }
@@ -779,7 +1242,12 @@ impl Node {
                 result.push_node(as_)
             }
             Node::MatchNilPattern { .. } => {}
-            Node::Numblock { call, numargs, body, .. } => {
+            Node::Numblock {
+                call,
+                numargs,
+                body,
+                ..
+            } => {
                 result.push_node(call);
                 result.push_u8(*numargs);
                 result.push_node(body);
@@ -798,20 +1266,23 @@ impl Node {
             loc: CollectionMap {
                 begin: None,
                 end: None,
-                expression: Range::new(loc.begin, loc.end)
-            }
+                expression: Range::new(loc.begin, loc.end),
+            },
         }
     }
 }
 
 struct InspectVec {
     indent: usize,
-    strings: Vec<String>
+    strings: Vec<String>,
 }
 
 impl InspectVec {
     pub fn new(indent: usize) -> Self {
-        Self { indent, strings: vec![] }
+        Self {
+            indent,
+            strings: vec![],
+        }
     }
 
     pub fn push_str(&mut self, string: &str) {
@@ -831,7 +1302,8 @@ impl InspectVec {
     }
 
     pub fn push_node(&mut self, node: &Node) {
-        self.strings.push(format!(",\n{}", node.inspect(self.indent + 1)))
+        self.strings
+            .push(format!(",\n{}", node.inspect(self.indent + 1)))
     }
 
     pub fn push_maybe_node(&mut self, node: &Option<Box<Node>>) {
