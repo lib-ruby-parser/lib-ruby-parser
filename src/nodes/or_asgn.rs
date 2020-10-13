@@ -1,3 +1,4 @@
+use crate::nodes::InnerNode;
 use crate::source::Range;
 use crate::Node;
 
@@ -8,4 +9,14 @@ pub struct OrAsgn {
 
     pub expression_l: Range,
     pub operator_l: Range,
+}
+
+impl<'a> InnerNode<'a> for OrAsgn {
+    fn expression(&'a self) -> &'a Range {
+        &self.expression_l
+    }
+
+    fn inspect(&self, level: usize) -> String {
+        todo!()
+    }
 }

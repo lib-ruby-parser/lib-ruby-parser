@@ -1,3 +1,4 @@
+use crate::nodes::InnerNode;
 use crate::source::Range;
 use crate::Node;
 
@@ -11,4 +12,14 @@ pub struct CaseMatch {
     pub else_l: Option<Range>,
     pub end_l: Range,
     pub expression_l: Range,
+}
+
+impl<'a> InnerNode<'a> for CaseMatch {
+    fn expression(&'a self) -> &'a Range {
+        &self.expression_l
+    }
+
+    fn inspect(&self, level: usize) -> String {
+        todo!()
+    }
 }

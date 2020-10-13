@@ -1,4 +1,5 @@
 use crate::nodes::*;
+use crate::source::Range;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {
@@ -125,4 +126,9 @@ pub enum Node {
     Xstr(Xstr),
     Yield(Yield),
     ZSuper(ZSuper),
+}
+
+pub trait InnerNode<'a> {
+    fn expression(&'a self) -> &'a Range;
+    fn inspect(&self, level: usize) -> String;
 }

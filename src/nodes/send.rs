@@ -1,3 +1,4 @@
+use crate::nodes::InnerNode;
 use crate::source::Range;
 use crate::Node;
 
@@ -10,4 +11,14 @@ pub struct Send {
     pub dot_l: Range,
     pub selector_l: Range,
     pub expression_l: Range,
+}
+
+impl<'a> InnerNode<'a> for Send {
+    fn expression(&'a self) -> &'a Range {
+        &self.expression_l
+    }
+
+    fn inspect(&self, level: usize) -> String {
+        todo!()
+    }
 }

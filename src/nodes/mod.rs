@@ -1,4 +1,5 @@
 mod node;
+pub(crate) use node::InnerNode;
 pub use node::Node;
 
 mod alias;

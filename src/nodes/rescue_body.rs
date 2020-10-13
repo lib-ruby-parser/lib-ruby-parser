@@ -1,3 +1,4 @@
+use crate::nodes::InnerNode;
 use crate::source::Range;
 use crate::Node;
 
@@ -11,4 +12,14 @@ pub struct RescueBody {
     pub keyword_l: Range,
     pub assoc_l: Option<Range>,
     pub begin_l: Option<Range>,
+}
+
+impl<'a> InnerNode<'a> for RescueBody {
+    fn expression(&'a self) -> &'a Range {
+        &self.expression_l
+    }
+
+    fn inspect(&self, level: usize) -> String {
+        todo!()
+    }
 }
