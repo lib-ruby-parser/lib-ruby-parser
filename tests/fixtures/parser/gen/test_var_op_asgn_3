@@ -6,7 +6,6 @@ def a; @@var |= 10; end
                     ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~~~~ expression ()
              ~~ operator (body)
-       ~~~~~ name (body)
        ~~~~~~~~~~~ expression (body)
        ~~~~~ name (body/recv)
        ~~~~~ expression (body/recv)

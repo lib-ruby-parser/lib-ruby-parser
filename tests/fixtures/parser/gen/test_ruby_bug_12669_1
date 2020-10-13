@@ -2,7 +2,6 @@
 a += b = raise :x
 --LOCATIONS
   ~~ operator ()
-~ name ()
 ~~~~~~~~~~~~~~~~~ expression ()
 ~ name (recv)
 ~ expression (recv)

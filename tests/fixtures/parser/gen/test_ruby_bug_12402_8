@@ -2,7 +2,6 @@
 foo += raise bar rescue nil
 --LOCATIONS
     ~~ operator ()
-~~~ name ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
 ~~~ name (recv)
 ~~~ expression (recv)

@@ -8,7 +8,7 @@ fun (1).to_i
     ~ begin (arg[0]/recv)
       ~ end (arg[0]/recv)
     ~~~ expression (arg[0]/recv)
-     ~ expression (arg[0]/recv/body)
+     ~ expression (arg[0]/recv/stmt[0])
 --AST
 s(:send, nil, "fun",
   s(:send,

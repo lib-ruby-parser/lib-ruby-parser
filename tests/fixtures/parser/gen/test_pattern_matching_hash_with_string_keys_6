@@ -18,9 +18,9 @@ case foo; in "#{ %q{a} }": 1 then true; end
               ~~ begin (in_body[0]/pattern/item[0]/key/part[0])
                        ~ end (in_body[0]/pattern/item[0]/key/part[0])
               ~~~~~~~~~~ expression (in_body[0]/pattern/item[0]/key/part[0])
-                 ~~~ begin (in_body[0]/pattern/item[0]/key/part[0]/body)
-                     ~ end (in_body[0]/pattern/item[0]/key/part[0]/body)
-                 ~~~~~ expression (in_body[0]/pattern/item[0]/key/part[0]/body)
+                 ~~~ begin (in_body[0]/pattern/item[0]/key/part[0]/stmt[0])
+                     ~ end (in_body[0]/pattern/item[0]/key/part[0]/stmt[0])
+                 ~~~~~ expression (in_body[0]/pattern/item[0]/key/part[0]/stmt[0])
                            ~ expression (in_body[0]/pattern/item[0]/value)
                                   ~~~~ expression (in_body[0]/body)
 --AST

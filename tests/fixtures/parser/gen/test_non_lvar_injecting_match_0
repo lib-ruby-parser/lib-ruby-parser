@@ -9,7 +9,7 @@
  ~~ begin (recv/src)
     ~ end (recv/src)
  ~~~~ expression (recv/src)
-   ~ expression (recv/src/body)
+   ~ expression (recv/src/stmt[0])
      ~~~~~~~~~~~~~ expression (recv/opts)
                        ~ begin (arg[0])
                            ~ end (arg[0])

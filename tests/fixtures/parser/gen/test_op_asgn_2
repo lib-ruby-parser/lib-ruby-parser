@@ -1,7 +1,7 @@
 --INPUT
 foo.A += 1
 --LOCATIONS
-    ~ selector ()
+      ~~ operator ()
 ~~~~~~~~~~ expression ()
     ~ selector (recv)
 ~~~~~ expression (recv)

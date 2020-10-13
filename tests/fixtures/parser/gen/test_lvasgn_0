@@ -2,10 +2,12 @@
 var = 10; var
 --LOCATIONS
 ~~~~~~~~~~~~~ expression ()
-    ~ operator (body)
-~~~ name (body)
-~~~~~~~~ expression (body)
-      ~~ expression (body/value)
+    ~ operator (stmt[0])
+~~~ name (stmt[0])
+~~~~~~~~ expression (stmt[0])
+      ~~ expression (stmt[0]/value)
+          ~~~ name (stmt[1])
+          ~~~ expression (stmt[1])
 --AST
 s(:begin,
   s(:lvasgn, "var",

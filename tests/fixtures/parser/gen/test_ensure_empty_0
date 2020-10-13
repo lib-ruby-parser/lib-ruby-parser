@@ -4,8 +4,8 @@ begin ensure end
 ~~~~~ begin ()
              ~~~ end ()
 ~~~~~~~~~~~~~~~~ expression ()
-      ~~~~~~ keyword (body)
-      ~~~~~~ expression (body)
+      ~~~~~~ keyword (stmt[0])
+      ~~~~~~ expression (stmt[0])
 --AST
 s(:kwbegin,
   s(:ensure, nil, nil))

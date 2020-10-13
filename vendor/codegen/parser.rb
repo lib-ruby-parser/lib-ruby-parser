@@ -441,6 +441,10 @@ module ParseHelperPatch
 
   def ranges(loc, path, *fields)
     path = path.join('/')
+    if %i[and_asgn or_asgn op_asgn].include?(loc.node.type)
+      fields = [:operator]
+    end
+
     [*fields, :expression].map do |field|
       range = loc.send(field)
       if range

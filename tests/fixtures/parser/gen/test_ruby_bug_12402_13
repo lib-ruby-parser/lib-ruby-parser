@@ -1,8 +1,7 @@
 --INPUT
 foo::C ||= raise bar rescue nil
 --LOCATIONS
-     ~ name ()
-   ~~ double_colon ()
+       ~~~ operator ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
      ~ name (recv)
    ~~ double_colon (recv)

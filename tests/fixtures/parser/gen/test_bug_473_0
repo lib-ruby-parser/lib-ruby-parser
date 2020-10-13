@@ -9,9 +9,9 @@ m "#{[]}"
    ~~ begin (arg[0]/part[0])
        ~ end (arg[0]/part[0])
    ~~~~~ expression (arg[0]/part[0])
-     ~ begin (arg[0]/part[0]/body)
-      ~ end (arg[0]/part[0]/body)
-     ~~ expression (arg[0]/part[0]/body)
+     ~ begin (arg[0]/part[0]/stmt[0])
+      ~ end (arg[0]/part[0]/stmt[0])
+     ~~ expression (arg[0]/part[0]/stmt[0])
 --AST
 s(:send, nil, "m",
   s(:dstr,

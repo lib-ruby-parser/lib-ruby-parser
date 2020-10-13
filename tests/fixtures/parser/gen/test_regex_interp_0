@@ -8,8 +8,8 @@
     ~~ begin (opts)
          ~ end (opts)
     ~~~~~~ expression (opts)
-      ~~~ name (opts/body)
-      ~~~ expression (opts/body)
+      ~~~ name (opts/stmt[0])
+      ~~~ expression (opts/stmt[0])
 --AST
 s(:regexp,
   s(:str, "foo"),

@@ -7,7 +7,7 @@ fun (1
     ~ begin (arg[0])
        ~ end (arg[0])
     ~~~~ expression (arg[0])
-     ~ expression (arg[0]/body)
+     ~ expression (arg[0]/stmt[0])
 --AST
 s(:send, nil, "fun",
   s(:begin,

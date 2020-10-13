@@ -8,8 +8,8 @@
     ~~ begin (part[1])
          ~ end (part[1])
     ~~~~~~ expression (part[1])
-      ~~~ name (part[1]/body)
-      ~~~ expression (part[1]/body)
+      ~~~ name (part[1]/stmt[0])
+      ~~~ expression (part[1]/stmt[0])
           ~~~ expression (part[2])
 --AST
 s(:dstr,

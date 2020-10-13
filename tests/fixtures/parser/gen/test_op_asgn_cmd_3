@@ -1,8 +1,7 @@
 --INPUT
 foo::A += m foo
 --LOCATIONS
-     ~ name ()
-   ~~ double_colon ()
+       ~~ operator ()
 ~~~~~~~~~~~~~~~ expression ()
      ~ name (recv)
    ~~ double_colon (recv)

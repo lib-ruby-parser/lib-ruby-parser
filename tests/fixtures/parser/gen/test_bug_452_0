@@ -2,16 +2,23 @@
 td (1_500).toString(); td.num do; end
 --LOCATIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-~~ selector (body)
-~~~~~~~~~~~~~~~~~~~~~ expression (body)
-                   ~ begin (body/arg[0])
-                    ~ end (body/arg[0])
-           ~~~~~~~~ selector (body/arg[0])
-   ~~~~~~~~~~~~~~~~~~ expression (body/arg[0])
-   ~ begin (body/arg[0]/recv)
-         ~ end (body/arg[0]/recv)
-   ~~~~~~~ expression (body/arg[0]/recv)
-    ~~~~~ expression (body/arg[0]/recv/body)
+~~ selector (stmt[0])
+~~~~~~~~~~~~~~~~~~~~~ expression (stmt[0])
+                   ~ begin (stmt[0]/arg[0])
+                    ~ end (stmt[0]/arg[0])
+           ~~~~~~~~ selector (stmt[0]/arg[0])
+   ~~~~~~~~~~~~~~~~~~ expression (stmt[0]/arg[0])
+   ~ begin (stmt[0]/arg[0]/recv)
+         ~ end (stmt[0]/arg[0]/recv)
+   ~~~~~~~ expression (stmt[0]/arg[0]/recv)
+    ~~~~~ expression (stmt[0]/arg[0]/recv/stmt[0])
+                              ~~ begin (stmt[1])
+                                  ~~~ end (stmt[1])
+                       ~~~~~~~~~~~~~~ expression (stmt[1])
+                          ~~~ selector (stmt[1]/call)
+                       ~~~~~~ expression (stmt[1]/call)
+                       ~~ selector (stmt[1]/call/recv)
+                       ~~ expression (stmt[1]/call/recv)
 --AST
 s(:begin,
   s(:send, nil, "td",

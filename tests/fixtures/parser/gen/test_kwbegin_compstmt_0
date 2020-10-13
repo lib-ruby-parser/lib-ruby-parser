@@ -4,8 +4,10 @@ begin foo!; bar! end
 ~~~~~ begin ()
                  ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~ expression ()
-      ~~~~ selector (body)
-      ~~~~ expression (body)
+      ~~~~ selector (stmt[0])
+      ~~~~ expression (stmt[0])
+            ~~~~ selector (stmt[1])
+            ~~~~ expression (stmt[1])
 --AST
 s(:kwbegin,
   s(:send, nil, "foo!"),

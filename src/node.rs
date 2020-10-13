@@ -300,7 +300,7 @@ impl Node {
         sexp
     }
 
-    fn str_type(&self) -> &'static str {
+    pub fn str_type(&self) -> &'static str {
         match self {
             Node::Begin { .. } => "begin",
             Node::Int { .. } => "int",

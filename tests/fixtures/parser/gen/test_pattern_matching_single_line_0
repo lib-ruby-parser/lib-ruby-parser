@@ -2,14 +2,16 @@
 1 in [a]; a
 --LOCATIONS
 ~~~~~~~~~~~ expression ()
-  ~~ operator (body)
-~~~~~~~~ expression (body)
-~ expression (body/lhs)
-     ~ begin (body/rhs)
-       ~ end (body/rhs)
-     ~~~ expression (body/rhs)
-      ~ name (body/rhs/item[0])
-      ~ expression (body/rhs/item[0])
+  ~~ operator (stmt[0])
+~~~~~~~~ expression (stmt[0])
+~ expression (stmt[0]/lhs)
+     ~ begin (stmt[0]/rhs)
+       ~ end (stmt[0]/rhs)
+     ~~~ expression (stmt[0]/rhs)
+      ~ name (stmt[0]/rhs/item[0])
+      ~ expression (stmt[0]/rhs/item[0])
+          ~ name (stmt[1])
+          ~ expression (stmt[1])
 --AST
 s(:begin,
   s(:in_match,

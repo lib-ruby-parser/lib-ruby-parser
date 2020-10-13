@@ -2,10 +2,17 @@
 a = 1; a b: 1
 --LOCATIONS
 ~~~~~~~~~~~~~ expression ()
-  ~ operator (body)
-~ name (body)
-~~~~~ expression (body)
-    ~ expression (body/value)
+  ~ operator (stmt[0])
+~ name (stmt[0])
+~~~~~ expression (stmt[0])
+    ~ expression (stmt[0]/value)
+       ~ selector (stmt[1])
+       ~~~~~~ expression (stmt[1])
+         ~~~~ expression (stmt[1]/arg[0])
+          ~ operator (stmt[1]/arg[0]/pair[0])
+         ~~~~ expression (stmt[1]/arg[0]/pair[0])
+         ~ expression (stmt[1]/arg[0]/pair[0]/key)
+            ~ expression (stmt[1]/arg[0]/pair[0]/value)
 --AST
 s(:begin,
   s(:lvasgn, "a",

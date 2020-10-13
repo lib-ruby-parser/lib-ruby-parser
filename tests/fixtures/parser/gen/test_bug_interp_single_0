@@ -7,7 +7,7 @@
  ~~ begin (part[0])
     ~ end (part[0])
  ~~~~ expression (part[0])
-   ~ expression (part[0]/body)
+   ~ expression (part[0]/stmt[0])
 --AST
 s(:dstr,
   s(:begin,

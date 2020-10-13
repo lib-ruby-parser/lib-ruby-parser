@@ -1,8 +1,7 @@
 --INPUT
 ::A += 1
 --LOCATIONS
-  ~ name ()
-~~ double_colon ()
+    ~~ operator ()
 ~~~~~~~~ expression ()
   ~ name (recv)
 ~~ double_colon (recv)

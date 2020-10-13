@@ -1,8 +1,6 @@
 --INPUT
 foo[0] += raise bar rescue nil
 --LOCATIONS
-   ~ begin ()
-     ~ end ()
        ~~ operator ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
    ~ begin (recv)

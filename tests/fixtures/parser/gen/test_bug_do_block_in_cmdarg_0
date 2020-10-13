@@ -6,11 +6,11 @@ tap (proc do end)
     ~ begin (arg[0])
                 ~ end (arg[0])
     ~~~~~~~~~~~~~ expression (arg[0])
-          ~~ begin (arg[0]/body)
-             ~~~ end (arg[0]/body)
-     ~~~~~~~~~~~ expression (arg[0]/body)
-     ~~~~ selector (arg[0]/body/call)
-     ~~~~ expression (arg[0]/body/call)
+          ~~ begin (arg[0]/stmt[0])
+             ~~~ end (arg[0]/stmt[0])
+     ~~~~~~~~~~~ expression (arg[0]/stmt[0])
+     ~~~~ selector (arg[0]/stmt[0]/call)
+     ~~~~ expression (arg[0]/stmt[0]/call)
 --AST
 s(:send, nil, "tap",
   s(:begin,

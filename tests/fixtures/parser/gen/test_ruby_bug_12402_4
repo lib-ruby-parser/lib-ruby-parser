@@ -1,7 +1,7 @@
 --INPUT
 foo::m += raise(bar) rescue nil
 --LOCATIONS
-     ~ selector ()
+       ~~ operator ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
      ~ selector (recv)
 ~~~~~~ expression (recv)

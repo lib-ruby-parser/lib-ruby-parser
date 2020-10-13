@@ -6,12 +6,12 @@
  ~ begin (recv)
            ~ end (recv)
  ~~~~~~~~~~~ expression (recv)
-     ~~~ operator (recv/body)
-  ~~~~~~~~~ expression (recv/body)
-  ~~~ name (recv/body/left)
-  ~~~ expression (recv/body/left)
-        ~~~ name (recv/body/right)
-        ~~~ expression (recv/body/right)
+     ~~~ operator (recv/stmt[0])
+  ~~~~~~~~~ expression (recv/stmt[0])
+  ~~~ name (recv/stmt[0]/left)
+  ~~~ expression (recv/stmt[0]/left)
+        ~~~ name (recv/stmt[0]/right)
+        ~~~ expression (recv/stmt[0]/right)
 --AST
 s(:send,
   s(:begin,

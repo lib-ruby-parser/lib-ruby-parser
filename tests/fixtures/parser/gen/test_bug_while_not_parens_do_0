@@ -10,7 +10,7 @@ while not (true) do end
           ~ begin (expr/recv)
                ~ end (expr/recv)
           ~~~~~~ expression (expr/recv)
-           ~~~~ expression (expr/recv/body)
+           ~~~~ expression (expr/recv/stmt[0])
 --AST
 s(:while,
   s(:send,

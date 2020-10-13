@@ -4,14 +4,14 @@ begin; rescue LoadError; else; end
 ~~~~~ begin ()
                                ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-                         ~~~~ else (body)
-       ~~~~~~~~~~~~~~~~~~~~~~ expression (body)
-       ~~~~~~ keyword (body/rescue_body[0])
-                       ~ begin (body/rescue_body[0])
-       ~~~~~~~~~~~~~~~~~ expression (body/rescue_body[0])
-              ~~~~~~~~~ expression (body/rescue_body[0]/exc_list)
-              ~~~~~~~~~ name (body/rescue_body[0]/exc_list/item[0])
-              ~~~~~~~~~ expression (body/rescue_body[0]/exc_list/item[0])
+                         ~~~~ else (stmt[0])
+       ~~~~~~~~~~~~~~~~~~~~~~ expression (stmt[0])
+       ~~~~~~ keyword (stmt[0]/rescue_body[0])
+                       ~ begin (stmt[0]/rescue_body[0])
+       ~~~~~~~~~~~~~~~~~ expression (stmt[0]/rescue_body[0])
+              ~~~~~~~~~ expression (stmt[0]/rescue_body[0]/exc_list)
+              ~~~~~~~~~ name (stmt[0]/rescue_body[0]/exc_list/item[0])
+              ~~~~~~~~~ expression (stmt[0]/rescue_body[0]/exc_list/item[0])
 --AST
 s(:kwbegin,
   s(:rescue, nil,

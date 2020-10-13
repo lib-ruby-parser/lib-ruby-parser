@@ -1,11 +1,11 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(runner)]
 
+use ruby_parser::lex_states::*;
 use ruby_parser::{Lexer, Token};
-use std::{convert::TryInto, panic};
 use std::fs;
 use std::process::exit;
-use ruby_parser::lex_states::*;
+use std::{convert::TryInto, panic};
 
 enum TestSection {
     None,
@@ -22,7 +22,7 @@ struct TestCase {
     vars: Vec<String>,
     state: Option<String>,
     input: String,
-    tokens: String
+    tokens: String,
 }
 impl TestCase {
     fn new(path: &str) -> Self {
@@ -38,32 +38,40 @@ impl TestCase {
 
         for line in content.lines() {
             match (line, &current_section) {
-                ("--COND", _)     => cond = true,
-                ("--CMDARG", _)   => cmdarg = true,
-                ("--VARS", _)     => current_section = TestSection::Vars,
-                ("--STATE", _)    => current_section = TestSection::State,
-                ("--INPUT", _)    => current_section = TestSection::Input,
-                ("--TOKENS",   _) => current_section = TestSection::Tokens,
-                (_, &TestSection::Vars)  => vars = line.split(" ").map(|s| s.to_owned()).collect(),
+                ("--COND", _) => cond = true,
+                ("--CMDARG", _) => cmdarg = true,
+                ("--VARS", _) => current_section = TestSection::Vars,
+                ("--STATE", _) => current_section = TestSection::State,
+                ("--INPUT", _) => current_section = TestSection::Input,
+                ("--TOKENS", _) => current_section = TestSection::Tokens,
+                (_, &TestSection::Vars) => vars = line.split(" ").map(|s| s.to_owned()).collect(),
                 (_, &TestSection::State) => state = Some(line.to_owned()),
                 (_, &TestSection::Input) => input.push(line.to_owned()),
-                (_, &TestSection::Tokens)   => tokens.push(line.to_owned()),
-                (_, &TestSection::None)  => panic!("empty state while parsing fixture on line {:#?}", line)
+                (_, &TestSection::Tokens) => tokens.push(line.to_owned()),
+                (_, &TestSection::None) => {
+                    panic!("empty state while parsing fixture on line {:#?}", line)
+                }
             }
         }
 
         let input = input.join("\n");
         let tokens = tokens.join("\n");
 
-        Self { cond, cmdarg, vars, state, input, tokens }
+        Self {
+            cond,
+            cmdarg,
+            vars,
+            state,
+            input,
+            tokens,
+        }
     }
 }
-
 
 enum TestResult {
     Segfault,
     Pass,
-    Failure(String)
+    Failure(String),
 }
 
 fn token_name(token: &Token) -> String {
@@ -85,7 +93,7 @@ fn lex_state(state: &str) -> i32 {
         "expr_endfn" => EXPR_ENDFN,
         "expr_endarg" => EXPR_ENDARG,
         "expr_cmdarg" => EXPR_CMDARG,
-        _ => unimplemented!("Unknown lex state {}", state)
+        _ => unimplemented!("Unknown lex state {}", state),
     }
 }
 
@@ -107,21 +115,34 @@ fn test(fixture_path: &str) -> TestResult {
         }
         lexer.debug = false;
         let tokens = lexer.tokenize_until_eof();
-        let tokens = tokens.iter().map(|token|
-            format!("{} {:?} [{}, {}]", token_name(&token), token.1.to_string_lossy(), token.2.begin, token.2.end)
-        ).collect::<Vec<_>>().join("\n");
+        let tokens = tokens
+            .iter()
+            .map(|token| {
+                format!(
+                    "{} {:?} [{}, {}]",
+                    token_name(&token),
+                    token.1.to_string_lossy(),
+                    token.2.begin,
+                    token.2.end
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
 
         if tokens == test_case.tokens {
             Ok(())
         } else {
-            Err(format!("actual:\n{}\nexpected:\n{}\n", tokens, test_case.tokens))
+            Err(format!(
+                "actual:\n{}\nexpected:\n{}\n",
+                tokens, test_case.tokens
+            ))
         }
     });
 
     match result {
         Err(_) => TestResult::Segfault,
         Ok(Err(output)) => TestResult::Failure(output),
-        Ok(Ok(_)) => TestResult::Pass
+        Ok(Ok(_)) => TestResult::Pass,
     }
 }
 
@@ -133,7 +154,8 @@ fn runner(dirs: &[&'static str]) {
     let mut segfaults: usize = 0;
 
     for dir in dirs {
-        let tests = fs::read_dir(dir).expect(&format!("{} doesn't exist", dir))
+        let tests = fs::read_dir(dir)
+            .expect(&format!("{} doesn't exist", dir))
             .map(|res| res.unwrap().path())
             .map(|path| path.to_str().unwrap().to_owned())
             .collect::<Vec<_>>();
@@ -144,11 +166,11 @@ fn runner(dirs: &[&'static str]) {
                 TestResult::Segfault => {
                     eprintln!("SEG");
                     segfaults += 1;
-                },
+                }
                 TestResult::Pass => {
                     eprintln!("OK");
                     passed += 1;
-                },
+                }
                 TestResult::Failure(output) => {
                     eprintln!("Err:\n{}\n", output);
                     failed += 1;
@@ -157,10 +179,14 @@ fn runner(dirs: &[&'static str]) {
         }
     }
 
-    eprintln!("{} tests passed, {} failed, {} segfaults", passed, failed, segfaults);
+    eprintln!(
+        "{} tests passed, {} failed, {} segfaults",
+        passed, failed, segfaults
+    );
+
     match failed + segfaults {
         0 => exit(0),
-        _ => exit(1)
+        _ => exit(1),
     }
 }
 

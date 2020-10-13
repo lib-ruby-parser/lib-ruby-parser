@@ -6,8 +6,8 @@ break(foo)
      ~ begin (value)
          ~ end (value)
      ~~~~~ expression (value)
-      ~~~ name (value/body)
-      ~~~ expression (value/body)
+      ~~~ name (value/stmt[0])
+      ~~~ expression (value/stmt[0])
 --AST
 s(:break,
   s(:begin,

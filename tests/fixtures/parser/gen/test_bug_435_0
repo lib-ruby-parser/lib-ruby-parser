@@ -7,13 +7,13 @@
  ~~ begin (part[0])
             ~ end (part[0])
  ~~~~~~~~~~~~ expression (part[0])
-          ~ begin (part[0]/body)
-           ~ end (part[0]/body)
-   ~~~~~~~~~ expression (part[0]/body)
-   ~~ expression (part[0]/body/call)
-      ~~~ expression (part[0]/body/args)
-      ~~~ name (part[0]/body/args/arg[0])
-      ~~~ expression (part[0]/body/args/arg[0])
+          ~ begin (part[0]/stmt[0])
+           ~ end (part[0]/stmt[0])
+   ~~~~~~~~~ expression (part[0]/stmt[0])
+   ~~ expression (part[0]/stmt[0]/call)
+      ~~~ expression (part[0]/stmt[0]/args)
+      ~~~ name (part[0]/stmt[0]/args/arg[0])
+      ~~~ expression (part[0]/stmt[0]/args/arg[0])
 --AST
 s(:dstr,
   s(:begin,

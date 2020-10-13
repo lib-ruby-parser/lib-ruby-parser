@@ -5,7 +5,6 @@ a = b += raise :x
 ~ name ()
 ~~~~~~~~~~~~~~~~~ expression ()
       ~~ operator (value)
-    ~ name (value)
     ~~~~~~~~~~~~~ expression (value)
     ~ name (value/recv)
     ~ expression (value/recv)

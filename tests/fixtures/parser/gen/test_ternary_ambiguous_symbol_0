@@ -2,10 +2,22 @@
 t=1;(foo)?t:T
 --LOCATIONS
 ~~~~~~~~~~~~~ expression ()
- ~ operator (body)
-~ name (body)
-~~~ expression (body)
-  ~ expression (body/value)
+ ~ operator (stmt[0])
+~ name (stmt[0])
+~~~ expression (stmt[0])
+  ~ expression (stmt[0]/value)
+           ~ colon (stmt[1])
+         ~ question (stmt[1])
+    ~~~~~~~~~ expression (stmt[1])
+    ~ begin (stmt[1]/cond)
+        ~ end (stmt[1]/cond)
+    ~~~~~ expression (stmt[1]/cond)
+     ~~~ name (stmt[1]/cond/stmt[0])
+     ~~~ expression (stmt[1]/cond/stmt[0])
+          ~ name (stmt[1]/truthy)
+          ~ expression (stmt[1]/truthy)
+            ~ name (stmt[1]/falsey)
+            ~ expression (stmt[1]/falsey)
 --AST
 s(:begin,
   s(:lvasgn, "t",

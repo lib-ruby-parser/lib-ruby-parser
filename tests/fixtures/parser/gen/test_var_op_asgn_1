@@ -2,7 +2,6 @@
 @a |= 1
 --LOCATIONS
    ~~ operator ()
-~~ name ()
 ~~~~~~~ expression ()
 ~~ name (recv)
 ~~ expression (recv)

@@ -12,9 +12,9 @@ m "#{}#{()}"
       ~~ begin (arg[0]/part[1])
           ~ end (arg[0]/part[1])
       ~~~~~ expression (arg[0]/part[1])
-        ~ begin (arg[0]/part[1]/body)
-         ~ end (arg[0]/part[1]/body)
-        ~~ expression (arg[0]/part[1]/body)
+        ~ begin (arg[0]/part[1]/stmt[0])
+         ~ end (arg[0]/part[1]/stmt[0])
+        ~~ expression (arg[0]/part[1]/stmt[0])
 --AST
 s(:send, nil, "m",
   s(:dstr,

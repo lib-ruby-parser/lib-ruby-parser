@@ -8,8 +8,8 @@ begin meth end while foo
 ~~~~~ begin (body)
            ~~~ end (body)
 ~~~~~~~~~~~~~~ expression (body)
-      ~~~~ selector (body/body)
-      ~~~~ expression (body/body)
+      ~~~~ selector (body/stmt[0])
+      ~~~~ expression (body/stmt[0])
 --AST
 s(:while_post,
   s(:lvar, "foo"),

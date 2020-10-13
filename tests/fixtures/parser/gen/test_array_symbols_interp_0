@@ -9,8 +9,8 @@
        ~~ begin (item[1]/part[0])
             ~ end (item[1]/part[0])
        ~~~~~~ expression (item[1]/part[0])
-         ~~~ name (item[1]/part[0]/body)
-         ~~~ expression (item[1]/part[0]/body)
+         ~~~ name (item[1]/part[0]/stmt[0])
+         ~~~ expression (item[1]/part[0]/stmt[0])
 --AST
 s(:array,
   s(:sym, "foo"),

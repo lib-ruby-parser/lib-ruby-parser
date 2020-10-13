@@ -4,12 +4,12 @@ begin; meth; ensure; bar; end
 ~~~~~ begin ()
                           ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-             ~~~~~~ keyword (body)
-       ~~~~~~~~~~~~~~~~~ expression (body)
-       ~~~~ selector (body/body)
-       ~~~~ expression (body/body)
-                     ~~~ name (body/ensure_body)
-                     ~~~ expression (body/ensure_body)
+             ~~~~~~ keyword (stmt[0])
+       ~~~~~~~~~~~~~~~~~ expression (stmt[0])
+       ~~~~ selector (stmt[0]/body)
+       ~~~~ expression (stmt[0]/body)
+                     ~~~ name (stmt[0]/ensure_body)
+                     ~~~ expression (stmt[0]/ensure_body)
 --AST
 s(:kwbegin,
   s(:ensure,

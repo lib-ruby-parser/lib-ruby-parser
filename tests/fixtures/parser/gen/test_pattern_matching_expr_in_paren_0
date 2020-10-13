@@ -12,7 +12,7 @@ case foo; in (1) then true; end
              ~ begin (in_body[0]/pattern)
                ~ end (in_body[0]/pattern)
              ~~~ expression (in_body[0]/pattern)
-              ~ expression (in_body[0]/pattern/body)
+              ~ expression (in_body[0]/pattern/stmt[0])
                       ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,

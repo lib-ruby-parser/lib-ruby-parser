@@ -11,7 +11,7 @@ foo.fun (1) {}
         ~ begin (call/arg[0])
           ~ end (call/arg[0])
         ~~~ expression (call/arg[0])
-         ~ expression (call/arg[0]/body)
+         ~ expression (call/arg[0]/stmt[0])
 --AST
 s(:block,
   s(:send,

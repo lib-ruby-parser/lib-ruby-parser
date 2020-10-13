@@ -8,8 +8,8 @@ if (bar); foo; end
    ~ begin (cond)
        ~ end (cond)
    ~~~~~ expression (cond)
-    ~~~ name (cond/body)
-    ~~~ expression (cond/body)
+    ~~~ name (cond/stmt[0])
+    ~~~ expression (cond/stmt[0])
           ~~~ name (truthy)
           ~~~ expression (truthy)
 --AST

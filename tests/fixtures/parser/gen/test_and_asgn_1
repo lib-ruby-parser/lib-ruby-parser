@@ -1,8 +1,6 @@
 --INPUT
 foo[0, 1] &&= 2
 --LOCATIONS
-   ~ begin ()
-        ~ end ()
           ~~~ operator ()
 ~~~~~~~~~~~~~~~ expression ()
    ~ begin (recv)

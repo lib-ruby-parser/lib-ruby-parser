@@ -1,10 +1,13 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(runner)]
 
-use ruby_parser::{Parser, Lexer};
-use std::panic;
+use ruby_parser::{Lexer, Node, Parser};
 use std::fs;
+use std::panic;
 use std::process::exit;
+
+mod loc;
+use loc::Loc;
 
 enum TestSection {
     None,
@@ -16,7 +19,8 @@ enum TestSection {
 #[derive(Debug)]
 struct TestCase {
     input: String,
-    ast: String
+    ast: String,
+    locs: Vec<String>,
 }
 
 impl TestCase {
@@ -25,56 +29,97 @@ impl TestCase {
 
         let mut input: Vec<String> = vec![];
         let mut ast: Vec<String> = vec![];
-        let mut locations: Vec<String> = vec![];
+        let mut locs: Vec<String> = vec![];
         let mut current_section = TestSection::None;
 
         for line in content.lines() {
             match (line, &current_section) {
-                ("--INPUT", _)     => current_section = TestSection::Input,
-                ("--AST",   _)     => current_section = TestSection::AST,
+                ("--INPUT", _) => current_section = TestSection::Input,
+                ("--AST", _) => current_section = TestSection::AST,
                 ("--LOCATIONS", _) => current_section = TestSection::Locations,
-                (_, &TestSection::Input)     => input.push(line.to_owned()),
-                (_, &TestSection::AST)       => ast.push(line.to_owned()),
-                (_, &TestSection::Locations) => locations.push(line.to_owned()),
-                (_, &TestSection::None)  => panic!("empty state while parsing fixture on line {:#?}", line),
+                (_, &TestSection::Input) => input.push(line.to_owned()),
+                (_, &TestSection::AST) => ast.push(line.to_owned()),
+                (_, &TestSection::Locations) => locs.push(line.to_owned()),
+                (_, &TestSection::None) => {
+                    panic!("empty state while parsing fixture on line {:#?}", line)
+                }
             }
         }
 
         let input = input.join("\n");
         let ast = ast.join("\n");
 
-        Self { input, ast }
+        Self { input, ast, locs }
     }
 }
 
 enum TestResult {
     Segfault,
     Pass,
-    Failure(String)
+    Failure(String),
+}
+
+fn match_locs(locs: Vec<String>, ast: Option<Node>) -> Result<(), String> {
+    match (locs, ast) {
+        (locs, None) => {
+            if !locs.is_empty() {
+                Err("expected ast to be non-empty".to_owned())
+            } else {
+                Ok(())
+            }
+        }
+        (locs, Some(ast)) => {
+            for loc in locs {
+                Loc::new(&loc).test(&ast)?
+            }
+            Ok(())
+        }
+    }
 }
 
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = TestCase::new(fixture_path);
-        let mut parser = Parser::new(Lexer::new(&test_case.input.as_bytes().to_vec(), None).unwrap());
+        let mut parser =
+            Parser::new(Lexer::new(&test_case.input.as_bytes().to_vec(), None).unwrap());
         parser.static_env.declare("foo");
         parser.static_env.declare("bar");
         parser.static_env.declare("baz");
         parser.set_debug(false);
-        let ast = parser.do_parse().map(|node| node.inspect(0)).unwrap_or("nil".to_owned());
 
-        if ast == test_case.ast {
-            Ok(())
-        } else {
-            Err(format!("actual:\n{}\nexpected:\n{}\n", ast, test_case.ast))
+        let ast = parser.do_parse();
+
+        let ast_output = ast
+            .as_ref()
+            .map(|node| node.inspect(0))
+            .unwrap_or("nil".to_owned());
+        if ast_output != test_case.ast {
+            return Err(format!(
+                "AST diff:\nactual:\n{}\nexpected:\n{}\n",
+                ast_output, test_case.ast
+            ));
         }
+
+        if let Err(err) = match_locs(test_case.locs, ast) {
+            return Err(err);
+        }
+
+        Ok(())
     });
 
     match result {
         Err(_) => TestResult::Segfault,
         Ok(Err(output)) => TestResult::Failure(output),
-        Ok(Ok(_)) => TestResult::Pass
+        Ok(Ok(_)) => TestResult::Pass,
     }
+}
+
+fn files_under_dir(dir: &str) -> Vec<String> {
+    fs::read_dir(dir)
+        .expect(&format!("{} doesn't exist", dir))
+        .map(|res| res.unwrap().path())
+        .map(|path| path.to_str().unwrap().to_owned())
+        .collect::<Vec<_>>()
 }
 
 fn runner(dirs: &[&'static str]) {
@@ -85,25 +130,17 @@ fn runner(dirs: &[&'static str]) {
     let mut segfaults: usize = 0;
 
     for dir in dirs {
-        let tests = fs::read_dir(dir).expect(&format!("{} doesn't exist", dir))
-            .map(|res| res.unwrap().path())
-            // .filter(|path| path.extension().unwrap() == "in" )
-            // .map(|mut path| { path.set_extension(""); path })
-            .map(|path| path.to_str().unwrap().to_owned())
-            // .map(|path| path.file_name().unwrap().to_str().unwrap().to_owned() )
-            .collect::<Vec<_>>();
-
-        for filename in tests {
+        for filename in files_under_dir(*dir) {
             eprint!("test {} ... ", filename);
             match test(&filename) {
                 TestResult::Segfault => {
                     eprintln!("SEG");
                     segfaults += 1;
-                },
+                }
                 TestResult::Pass => {
                     eprintln!("OK");
                     passed += 1;
-                },
+                }
                 TestResult::Failure(output) => {
                     eprintln!("Err:\n{}\n", output);
                     failed += 1;
@@ -112,10 +149,14 @@ fn runner(dirs: &[&'static str]) {
         }
     }
 
-    eprintln!("{} tests passed, {} failed, {} segfaults", passed, failed, segfaults);
+    eprintln!(
+        "{} tests passed, {} failed, {} segfaults",
+        passed, failed, segfaults
+    );
+
     match failed + segfaults {
         0 => exit(0),
-        _ => exit(1)
+        _ => exit(1),
     }
 }
 

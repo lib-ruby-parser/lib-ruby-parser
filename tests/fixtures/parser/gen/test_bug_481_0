@@ -2,15 +2,21 @@
 m def x(); end; 1.tap do end
 --LOCATIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-~ selector (body)
-~~~~~~~~~~~~~~ expression (body)
-  ~~~ keyword (body/arg[0])
-      ~ name (body/arg[0])
-           ~~~ end (body/arg[0])
-  ~~~~~~~~~~~~ expression (body/arg[0])
-       ~ begin (body/arg[0]/args)
-        ~ end (body/arg[0]/args)
-       ~~ expression (body/arg[0]/args)
+~ selector (stmt[0])
+~~~~~~~~~~~~~~ expression (stmt[0])
+  ~~~ keyword (stmt[0]/arg[0])
+      ~ name (stmt[0]/arg[0])
+           ~~~ end (stmt[0]/arg[0])
+  ~~~~~~~~~~~~ expression (stmt[0]/arg[0])
+       ~ begin (stmt[0]/arg[0]/args)
+        ~ end (stmt[0]/arg[0]/args)
+       ~~ expression (stmt[0]/arg[0]/args)
+                      ~~ begin (stmt[1])
+                         ~~~ end (stmt[1])
+                ~~~~~~~~~~~~ expression (stmt[1])
+                  ~~~ selector (stmt[1]/call)
+                ~~~~~ expression (stmt[1]/call)
+                ~ expression (stmt[1]/call/recv)
 --AST
 s(:begin,
   s(:send, nil, "m",

@@ -1,7 +1,7 @@
 --INPUT
 a&.b &&= 1
 --LOCATIONS
-   ~ selector ()
+     ~~~ operator ()
 ~~~~~~~~~~ expression ()
    ~ selector (recv)
 ~~~~ expression (recv)
