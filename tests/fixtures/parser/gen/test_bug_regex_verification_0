@@ -4,7 +4,7 @@
 ~ begin ()
    ~ end ()
 ~~~~~ expression ()
- ~~ expression (src)
+ ~~ expression (part[0])
     ~ expression (opts)
 --AST
 s(:regexp,

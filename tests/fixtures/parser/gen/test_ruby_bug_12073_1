@@ -10,14 +10,14 @@ def foo raise; raise A::B, ''; end
         ~~~~~ expression (args/arg[0])
                ~~~~~ selector (body)
                ~~~~~~~~~~~~~~ expression (body)
-                        ~ name (body/arg[0])
-                      ~~ double_colon (body/arg[0])
-                     ~~~~ expression (body/arg[0])
-                     ~ name (body/arg[0]/scope)
-                     ~ expression (body/arg[0]/scope)
-                           ~ begin (body/arg[1])
-                            ~ end (body/arg[1])
-                           ~~ expression (body/arg[1])
+                        ~ name (body/args[0])
+                      ~~ double_colon (body/args[0])
+                     ~~~~ expression (body/args[0])
+                     ~ name (body/args[0]/scope)
+                     ~ expression (body/args[0]/scope)
+                           ~ begin (body/args[1])
+                            ~ end (body/args[1])
+                           ~~ expression (body/args[1])
 --AST
 s(:def, "foo",
   s(:args,

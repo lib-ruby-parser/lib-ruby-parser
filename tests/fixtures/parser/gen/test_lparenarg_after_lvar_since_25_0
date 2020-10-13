@@ -3,13 +3,13 @@ meth (-1.3).abs
 --LOCATIONS
 ~~~~ selector ()
 ~~~~~~~~~~~~~~~ expression ()
-            ~~~ selector (arg[0])
-     ~~~~~~~~~~ expression (arg[0])
-     ~ begin (arg[0]/recv)
-          ~ end (arg[0]/recv)
-     ~~~~~~ expression (arg[0]/recv)
-      ~ operator (arg[0]/recv/stmt[0])
-      ~~~~ expression (arg[0]/recv/stmt[0])
+            ~~~ selector (args[0])
+     ~~~~~~~~~~ expression (args[0])
+     ~ begin (args[0]/recv)
+          ~ end (args[0]/recv)
+     ~~~~~~ expression (args[0]/recv)
+      ~ operator (args[0]/recv/stmt[0])
+      ~~~~ expression (args[0]/recv/stmt[0])
 --AST
 s(:send, nil, "meth",
   s(:send,

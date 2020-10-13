@@ -6,9 +6,9 @@ let () { m(a) do; end }
 ~~~~~~~~~~~~~~~~~~~~~~~ expression ()
 ~~~ selector (call)
 ~~~~~~ expression (call)
-    ~ begin (call/arg[0])
-     ~ end (call/arg[0])
-    ~~ expression (call/arg[0])
+    ~ begin (call/args[0])
+     ~ end (call/args[0])
+    ~~ expression (call/args[0])
               ~~ begin (body)
                   ~~~ end (body)
          ~~~~~~~~~~~~ expression (body)
@@ -16,8 +16,8 @@ let () { m(a) do; end }
             ~ end (body/call)
          ~ selector (body/call)
          ~~~~ expression (body/call)
-           ~ selector (body/call/arg[0])
-           ~ expression (body/call/arg[0])
+           ~ selector (body/call/args[0])
+           ~ expression (body/call/args[0])
 --AST
 s(:block,
   s(:send, nil, "let",

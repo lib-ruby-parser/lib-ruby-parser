@@ -7,7 +7,7 @@
  ~ begin (item[0])
       ~ end (item[0])
  ~~~~~~ expression (item[0])
-  ~~~~ expression (item[0]/src)
+  ~~~~ expression (item[0]/part[0])
         expression (item[0]/opts)
          ~ begin (item[1])
          ~~ expression (item[1])

@@ -3,16 +3,16 @@ bar def foo; self.each do end end
 --LOCATIONS
 ~~~ selector ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-    ~~~ keyword (arg[0])
-        ~~~ name (arg[0])
-                              ~~~ end (arg[0])
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (arg[0])
-                       ~~ begin (arg[0]/body)
-                          ~~~ end (arg[0]/body)
-             ~~~~~~~~~~~~~~~~ expression (arg[0]/body)
-                  ~~~~ selector (arg[0]/body/call)
-             ~~~~~~~~~ expression (arg[0]/body/call)
-             ~~~~ expression (arg[0]/body/call/recv)
+    ~~~ keyword (args[0])
+        ~~~ name (args[0])
+                              ~~~ end (args[0])
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (args[0])
+                       ~~ begin (args[0]/body)
+                          ~~~ end (args[0]/body)
+             ~~~~~~~~~~~~~~~~ expression (args[0]/body)
+                  ~~~~ selector (args[0]/body/call)
+             ~~~~~~~~~ expression (args[0]/body/call)
+             ~~~~ expression (args[0]/body/call/recv)
 --AST
 s(:send, nil, "bar",
   s(:def, "foo", nil,

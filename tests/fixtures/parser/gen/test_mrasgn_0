@@ -13,7 +13,7 @@
    ~~~~~~ selector (rhs)
 ~~~~~~~~~~~~ expression (rhs)
 ~~ expression (rhs/recv)
-          ~ expression (rhs/arg[0])
+          ~ expression (rhs/args[0])
 --AST
 s(:masgn,
   s(:mlhs,

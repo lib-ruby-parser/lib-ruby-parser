@@ -13,7 +13,7 @@ def foo(...); bar(...); end
                      ~ end (body)
               ~~~ selector (body)
               ~~~~~~~~ expression (body)
-                  ~~~ expression (body/arg[0])
+                  ~~~ expression (body/args[0])
 --AST
 s(:def, "foo",
   s(:args,

@@ -9,7 +9,7 @@ if /wat/; end
    ~ begin (cond/value)
        ~ end (cond/value)
    ~~~~~ expression (cond/value)
-    ~~~ expression (cond/value/src)
+    ~~~ expression (cond/value/part[0])
          expression (cond/value/opts)
 --AST
 s(:if,

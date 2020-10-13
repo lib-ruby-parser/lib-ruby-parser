@@ -3,11 +3,11 @@ assert do: true
 --LOCATIONS
 ~~~~~~ selector ()
 ~~~~~~~~~~~~~~~ expression ()
-       ~~~~~~~~ expression (arg[0])
-         ~ operator (arg[0]/pair[0])
-       ~~~~~~~~ expression (arg[0]/pair[0])
-       ~~ expression (arg[0]/pair[0]/key)
-           ~~~~ expression (arg[0]/pair[0]/value)
+       ~~~~~~~~ expression (args[0])
+         ~ operator (args[0]/pair[0])
+       ~~~~~~~~ expression (args[0]/pair[0])
+       ~~ expression (args[0]/pair[0]/key)
+           ~~~~ expression (args[0]/pair[0]/value)
 --AST
 s(:send, nil, "assert",
   s(:hash,

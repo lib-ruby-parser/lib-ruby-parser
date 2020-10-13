@@ -6,7 +6,7 @@
 ~ begin (re)
      ~ end (re)
 ~~~~~~~ expression (re)
- ~~~~ expression (re/src)
+ ~~~~ expression (re/part[0])
       ~ expression (re/opts)
            ~ begin (value)
             ~ end (value)

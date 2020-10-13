@@ -8,8 +8,8 @@ break fun foo do end
       ~~~~~~~~~~~~~~ expression (value)
       ~~~ selector (value/call)
       ~~~~~~~ expression (value/call)
-          ~~~ name (value/call/arg[0])
-          ~~~ expression (value/call/arg[0])
+          ~~~ name (value/call/args[0])
+          ~~~ expression (value/call/args[0])
 --AST
 s(:break,
   s(:block,

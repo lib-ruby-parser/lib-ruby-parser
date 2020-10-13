@@ -14,7 +14,7 @@
                                  ~ selector (expr/item[1])
                         ~~~~~~~~~~~~ expression (expr/item[1])
                         ~~~~~~~~ expression (expr/item[1]/recv)
-                                   ~ expression (expr/item[1]/arg[0])
+                                   ~ expression (expr/item[1]/args[0])
                                       ~~~~~~~~~~~~ expression (expr/item[2])
                                                               ~~ keyword (in_body[0])
                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (in_body[0])

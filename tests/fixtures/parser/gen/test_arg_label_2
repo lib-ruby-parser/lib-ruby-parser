@@ -11,8 +11,8 @@ f { || a:b }
     ~~ expression (args)
        ~ selector (body)
        ~~~ expression (body)
-        ~ begin (body/arg[0])
-        ~~ expression (body/arg[0])
+        ~ begin (body/args[0])
+        ~~ expression (body/args[0])
 --AST
 s(:block,
   s(:send, nil, "f"),

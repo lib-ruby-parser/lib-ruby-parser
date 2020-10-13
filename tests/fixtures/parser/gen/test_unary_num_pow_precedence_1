@@ -6,7 +6,7 @@
    ~~ selector (recv)
  ~~~~~~~ expression (recv)
  ~ expression (recv/recv)
-      ~~ expression (recv/arg[0])
+      ~~ expression (recv/args[0])
 --AST
 s(:send,
   s(:send,

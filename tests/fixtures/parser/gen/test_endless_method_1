@@ -14,7 +14,7 @@ def inc(x) = x + 1
              ~~~~~ expression (body)
              ~ name (body/recv)
              ~ expression (body/recv)
-                 ~ expression (body/arg[0])
+                 ~ expression (body/args[0])
 --AST
 s(:def, "inc",
   s(:args,

@@ -19,8 +19,8 @@ true ? 1.tap do |n| p n end : 0
                  ~ expression (truthy/args/arg[0]/item[0])
                     ~ selector (truthy/body)
                     ~~~ expression (truthy/body)
-                      ~ name (truthy/body/arg[0])
-                      ~ expression (truthy/body/arg[0])
+                      ~ name (truthy/body/args[0])
+                      ~ expression (truthy/body/args[0])
                               ~ expression (falsey)
 --AST
 s(:if,

@@ -7,7 +7,7 @@
   ~ selector (value)
 ~~~~~ expression (value)
 ~ expression (value/recv)
-    ~ expression (value/arg[0])
+    ~ expression (value/args[0])
 --AST
 s(:gvasgn, "$a",
   s(:send,

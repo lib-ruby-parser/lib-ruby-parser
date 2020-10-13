@@ -7,7 +7,7 @@
  ~ begin (recv/value)
      ~ end (recv/value)
  ~~~~~ expression (recv/value)
-  ~~~ expression (recv/value/src)
+  ~~~ expression (recv/value/part[0])
        expression (recv/value/opts)
 --AST
 s(:send,

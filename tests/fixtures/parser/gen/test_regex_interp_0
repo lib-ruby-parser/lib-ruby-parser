@@ -4,12 +4,14 @@
 ~ begin ()
              ~ end ()
 ~~~~~~~~~~~~~~ expression ()
- ~~~ expression (src)
-    ~~ begin (opts)
-         ~ end (opts)
-    ~~~~~~ expression (opts)
-      ~~~ name (opts/stmt[0])
-      ~~~ expression (opts/stmt[0])
+ ~~~ expression (part[0])
+    ~~ begin (part[1])
+         ~ end (part[1])
+    ~~~~~~ expression (part[1])
+      ~~~ name (part[1]/stmt[0])
+      ~~~ expression (part[1]/stmt[0])
+          ~~~ expression (part[2])
+               expression (opts)
 --AST
 s(:regexp,
   s(:str, "foo"),

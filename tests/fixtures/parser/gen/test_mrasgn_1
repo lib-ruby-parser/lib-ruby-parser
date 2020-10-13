@@ -20,7 +20,7 @@
    ~~~~~~ selector (rhs/rhs)
 ~~~~~~~~~~~~ expression (rhs/rhs)
 ~~ expression (rhs/rhs/recv)
-          ~ expression (rhs/rhs/arg[0])
+          ~ expression (rhs/rhs/args[0])
 --AST
 s(:masgn,
   s(:mlhs,

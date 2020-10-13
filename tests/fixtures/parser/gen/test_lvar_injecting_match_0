@@ -7,7 +7,7 @@
 ~ begin (stmt[0]/re)
               ~ end (stmt[0]/re)
 ~~~~~~~~~~~~~~~ expression (stmt[0]/re)
- ~~~~~~~~~~~~~ expression (stmt[0]/re/src)
+ ~~~~~~~~~~~~~ expression (stmt[0]/re/part[0])
                 expression (stmt[0]/re/opts)
                    ~ begin (stmt[0]/value)
                        ~ end (stmt[0]/value)

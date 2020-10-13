@@ -8,7 +8,7 @@ fun(1) { }
      ~ end (call)
 ~~~ selector (call)
 ~~~~~~ expression (call)
-    ~ expression (call/arg[0])
+    ~ expression (call/args[0])
 --AST
 s(:block,
   s(:send, nil, "fun",

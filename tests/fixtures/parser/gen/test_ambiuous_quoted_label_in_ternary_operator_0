@@ -10,9 +10,9 @@ a ? b & '': nil
     ~~~~~~ expression (truthy)
     ~ selector (truthy/recv)
     ~ expression (truthy/recv)
-        ~ begin (truthy/arg[0])
-         ~ end (truthy/arg[0])
-        ~~ expression (truthy/arg[0])
+        ~ begin (truthy/args[0])
+         ~ end (truthy/args[0])
+        ~~ expression (truthy/args[0])
             ~~~ expression (falsey)
 --AST
 s(:if,

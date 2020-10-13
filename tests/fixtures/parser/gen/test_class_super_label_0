@@ -10,8 +10,8 @@ class Foo < a:b; end
       ~~~ expression (name)
             ~ selector (superclass)
             ~~~ expression (superclass)
-             ~ begin (superclass/arg[0])
-             ~~ expression (superclass/arg[0])
+             ~ begin (superclass/args[0])
+             ~~ expression (superclass/args[0])
 --AST
 s(:class,
   s(:const, nil, "Foo"),

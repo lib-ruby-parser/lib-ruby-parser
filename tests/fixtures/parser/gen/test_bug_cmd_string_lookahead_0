@@ -6,9 +6,9 @@ desc "foo" do end
 ~~~~~~~~~~~~~~~~~ expression ()
 ~~~~ selector (call)
 ~~~~~~~~~~ expression (call)
-     ~ begin (call/arg[0])
-         ~ end (call/arg[0])
-     ~~~~~ expression (call/arg[0])
+     ~ begin (call/args[0])
+         ~ end (call/args[0])
+     ~~~~~ expression (call/args[0])
 --AST
 s(:block,
   s(:send, nil, "desc",

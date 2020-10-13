@@ -8,11 +8,11 @@ a = 1; a b: 1
     ~ expression (stmt[0]/value)
        ~ selector (stmt[1])
        ~~~~~~ expression (stmt[1])
-         ~~~~ expression (stmt[1]/arg[0])
-          ~ operator (stmt[1]/arg[0]/pair[0])
-         ~~~~ expression (stmt[1]/arg[0]/pair[0])
-         ~ expression (stmt[1]/arg[0]/pair[0]/key)
-            ~ expression (stmt[1]/arg[0]/pair[0]/value)
+         ~~~~ expression (stmt[1]/args[0])
+          ~ operator (stmt[1]/args[0]/pair[0])
+         ~~~~ expression (stmt[1]/args[0]/pair[0])
+         ~ expression (stmt[1]/args[0]/pair[0]/key)
+            ~ expression (stmt[1]/args[0]/pair[0]/value)
 --AST
 s(:begin,
   s(:lvasgn, "a",

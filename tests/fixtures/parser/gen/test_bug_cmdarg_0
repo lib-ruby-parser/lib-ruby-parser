@@ -3,8 +3,8 @@ assert dogs
 --LOCATIONS
 ~~~~~~ selector ()
 ~~~~~~~~~~~ expression ()
-       ~~~~ selector (arg[0])
-       ~~~~ expression (arg[0])
+       ~~~~ selector (args[0])
+       ~~~~ expression (args[0])
 --AST
 s(:send, nil, "assert",
   s(:send, nil, "dogs"))
