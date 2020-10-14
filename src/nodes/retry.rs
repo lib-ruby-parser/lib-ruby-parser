@@ -6,13 +6,13 @@ pub struct Retry {
     pub expression_l: Range,
 }
 
-impl<'a> InnerNode<'a> for Retry {
-    fn expression(&'a self) -> &'a Range {
+impl InnerNode for Retry {
+    fn expression(&self) -> &Range {
         &self.expression_l
     }
 
-    fn inspected_children(&self, indent: usize) -> String {
-        todo!()
+    fn inspected_children(&self, _indent: usize) -> Vec<String> {
+        vec![]
     }
 
     fn str_type(&self) -> &'static str {

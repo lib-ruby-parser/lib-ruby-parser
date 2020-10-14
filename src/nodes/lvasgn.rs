@@ -1,4 +1,5 @@
 use crate::nodes::InnerNode;
+use crate::nodes::InspectVec;
 use crate::source::Range;
 use crate::Node;
 
@@ -12,13 +13,16 @@ pub struct Lvasgn {
     pub operator_l: Range,
 }
 
-impl<'a> InnerNode<'a> for Lvasgn {
-    fn expression(&'a self) -> &'a Range {
+impl InnerNode for Lvasgn {
+    fn expression(&self) -> &Range {
         &self.expression_l
     }
 
-    fn inspected_children(&self, indent: usize) -> String {
-        todo!()
+    fn inspected_children(&self, indent: usize) -> Vec<String> {
+        let mut result = InspectVec::new(indent);
+        result.push_str(&self.name);
+        result.push_node(&self.value);
+        result.strings()
     }
 
     fn str_type(&self) -> &'static str {

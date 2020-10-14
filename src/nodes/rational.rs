@@ -1,4 +1,5 @@
 use crate::nodes::InnerNode;
+use crate::nodes::InspectVec;
 use crate::source::Range;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -7,13 +8,15 @@ pub struct Rational {
     pub expression_l: Range,
 }
 
-impl<'a> InnerNode<'a> for Rational {
-    fn expression(&'a self) -> &'a Range {
+impl InnerNode for Rational {
+    fn expression(&self) -> &Range {
         &self.expression_l
     }
 
-    fn inspected_children(&self, indent: usize) -> String {
-        todo!()
+    fn inspected_children(&self, indent: usize) -> Vec<String> {
+        let mut result = InspectVec::new(indent);
+        result.push_str(&self.value);
+        result.strings()
     }
 
     fn str_type(&self) -> &'static str {

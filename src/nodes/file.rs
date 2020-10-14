@@ -6,13 +6,13 @@ pub struct File {
     pub expression_l: Range,
 }
 
-impl<'a> InnerNode<'a> for File {
-    fn expression(&'a self) -> &'a Range {
+impl InnerNode for File {
+    fn expression(&self) -> &Range {
         &self.expression_l
     }
 
-    fn inspected_children(&self, indent: usize) -> String {
-        todo!()
+    fn inspected_children(&self, _indent: usize) -> Vec<String> {
+        vec![]
     }
 
     fn str_type(&self) -> &'static str {

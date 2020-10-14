@@ -1,6 +1,6 @@
 mod node;
-pub(crate) use node::InnerNode;
 pub use node::Node;
+pub(crate) use node::{InnerNode, InspectVec};
 
 mod alias;
 mod and;
@@ -249,3 +249,5 @@ pub use x_heredoc::XHeredoc;
 pub use xstr::Xstr;
 pub use yield_::Yield;
 pub use zsuper::ZSuper;
+
+pub use str_::StringValue;

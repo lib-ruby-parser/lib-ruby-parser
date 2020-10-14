@@ -1,4 +1,5 @@
 use crate::nodes::InnerNode;
+use crate::nodes::InspectVec;
 use crate::source::Range;
 use crate::Node;
 
@@ -12,13 +13,20 @@ pub struct Const {
     pub expression_l: Range,
 }
 
-impl<'a> InnerNode<'a> for Const {
-    fn expression(&'a self) -> &'a Range {
+impl InnerNode for Const {
+    fn expression(&self) -> &Range {
         &self.expression_l
     }
 
-    fn inspected_children(&self, indent: usize) -> String {
-        todo!()
+    fn inspected_children(&self, indent: usize) -> Vec<String> {
+        let mut result = InspectVec::new(indent);
+        if let Some(scope) = &self.scope {
+            result.push_node(scope)
+        } else {
+            result.push_nil()
+        }
+        result.push_str(&self.name);
+        result.strings()
     }
 
     fn str_type(&self) -> &'static str {
