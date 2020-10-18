@@ -27,6 +27,7 @@
     use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel, ArgsType};
     use crate::str_term::StrTerm;
     use crate::map_builder::value;
+    use crate::nodes::{Lvar, Mlhs};
 }
 
 %code {
@@ -1150,7 +1151,7 @@
                 | tLPAREN mlhs_inner rparen
                     {
                         let mlhs_items: Vec<Node> = match $<Node>2 {
-                            Node::Mlhs { items, .. } => items,
+                            Node::Mlhs(Mlhs { items, .. }) => items,
                             other => panic!("unsupported mlhs item {:?}", other)
                         };
 
@@ -4904,15 +4905,14 @@ keyword_variable: kNIL
                     {
                         let node =  cast_to_variant!(Node, yystack, yystack.owned_value_at(0));
                         match &node {
-                            Node::Lvar { name, loc } => {
+                            Node::Lvar(Lvar { name, expression_l: _expression_l }) => {
                                 match name.chars().collect::<Vec<_>>()[..] {
                                     ['_', n] if n >= '1' && n <= '9' => {
                                         if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
                                             /* definitely an implicit param */
-                                            let location = loc.expression.clone();
 
                                             if self.max_numparam_stack.has_ordinary_params() {
-                                                // diagnostic :error, :ordinary_param_defined, nil, [nil, location]
+                                                // diagnostic :error, :ordinary_param_defined, nil, [nil, expression_l]
                                             }
 
                                             let mut raw_context = self.context.inner_clone();

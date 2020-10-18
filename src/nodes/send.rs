@@ -9,8 +9,11 @@ pub struct Send {
     pub method_name: String,
     pub args: Vec<Node>,
 
-    pub dot_l: Range,
-    pub selector_l: Range,
+    pub dot_l: Option<Range>,
+    pub selector_l: Option<Range>,
+    pub begin_l: Option<Range>,
+    pub end_l: Option<Range>,
+    pub operator_l: Option<Range>,
     pub expression_l: Range,
 }
 

@@ -6,6 +6,7 @@ use crate::source::Range;
 pub struct MatchVar {
     pub name: String,
 
+    pub name_l: Range,
     pub expression_l: Range,
 }
 

@@ -6,7 +6,6 @@ use crate::source::Range;
 pub struct BackRef {
     pub name: String,
 
-    pub name_l: Range,
     pub expression_l: Range,
 }
 
@@ -22,6 +21,6 @@ impl InnerNode for BackRef {
     }
 
     fn str_type(&self) -> &'static str {
-        "backref"
+        "back_ref"
     }
 }

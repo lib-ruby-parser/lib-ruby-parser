@@ -9,9 +9,10 @@ pub struct If {
     pub if_true: Option<Box<Node>>,
     pub if_false: Option<Box<Node>>,
 
-    pub if_l: Range,
+    pub keyword_l: Range,
+    pub begin_l: Range,
     pub else_l: Option<Range>,
-    pub end_l: Range,
+    pub end_l: Option<Range>,
     pub expression_l: Range,
 }
 

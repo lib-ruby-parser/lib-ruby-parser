@@ -16,10 +16,8 @@ mod static_environment;
 pub use static_environment::StaticEnvironment;
 
 mod parser;
-pub use parser::{Parser, Loc, SymbolKind, Token};
+pub use parser::{Loc, Parser, SymbolKind, Token};
 
-pub mod node;
-pub use node::Node;
 mod builder;
 pub use builder::Builder;
 pub mod map_builder;
@@ -34,12 +32,12 @@ mod variables_stack;
 pub use variables_stack::VariablesStack;
 
 mod error;
-pub use error::{ParseError, ErrorLevel, ErrorMessage};
+pub use error::{ErrorLevel, ErrorMessage, ParseError};
 
 pub mod lex_char;
 
 mod lex_state;
-pub use lex_state::{LexState, lex_states};
+pub use lex_state::{lex_states, LexState};
 
 mod token_buf;
 pub use token_buf::TokenBuf;
@@ -54,3 +52,6 @@ pub mod str_term;
 
 mod context;
 pub use context::{Context, ContextItem};
+
+pub mod nodes;
+pub use nodes::Node;

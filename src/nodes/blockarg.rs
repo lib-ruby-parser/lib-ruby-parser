@@ -6,6 +6,7 @@ use crate::source::Range;
 pub struct Blockarg {
     pub name: String,
 
+    pub amper_l: Range,
     pub name_l: Range,
     pub expression_l: Range,
 }

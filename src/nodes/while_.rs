@@ -8,6 +8,8 @@ pub struct While {
     pub cond: Box<Node>,
     pub body: Option<Box<Node>>,
 
+    pub begin_l: Option<Range>,
+    pub end_l: Option<Range>,
     pub keyword_l: Range,
     pub expression_l: Range,
 }

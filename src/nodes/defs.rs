@@ -11,8 +11,10 @@ pub struct Defs {
     pub body: Option<Box<Node>>,
 
     pub keyword_l: Range,
+    pub operator_l: Range,
     pub name_l: Range,
-    pub end_l: Range,
+    pub assignment_l: Option<Range>,
+    pub end_l: Option<Range>,
     pub expression_l: Range,
 }
 

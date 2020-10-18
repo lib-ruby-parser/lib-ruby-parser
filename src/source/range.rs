@@ -1,11 +1,11 @@
-use std::convert::TryInto;
 use crate::source::buffer::*;
 use crate::source::FileLoc;
+use std::convert::TryInto;
 
 #[derive(Clone, PartialEq)]
 pub struct Range {
     pub begin_pos: usize,
-    pub end_pos: usize
+    pub end_pos: usize,
 }
 
 impl Range {
@@ -54,7 +54,14 @@ impl Range {
     pub fn join(&self, other: &Self) -> Self {
         Self {
             begin_pos: std::cmp::min(self.begin_pos, other.begin_pos),
-            end_pos: std::cmp::max(self.end_pos, other.end_pos)
+            end_pos: std::cmp::max(self.end_pos, other.end_pos),
+        }
+    }
+
+    pub(crate) fn maybe_join(&self, other: &Option<Self>) -> Self {
+        match other {
+            Some(other) => self.join(other),
+            None => self.clone(),
         }
     }
 
@@ -95,7 +102,7 @@ impl Range {
     }
 
     pub fn to_locs(&self, buffer: &Buffer) -> Option<(FileLoc, FileLoc)> {
-        Some(( self.begin_loc(buffer)?, self.end_loc(buffer)? ))
+        Some((self.begin_loc(buffer)?, self.end_loc(buffer)?))
     }
 }
 

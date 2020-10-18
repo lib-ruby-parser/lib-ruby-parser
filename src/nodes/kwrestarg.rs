@@ -6,6 +6,7 @@ use crate::source::Range;
 pub struct Kwrestarg {
     pub name: Option<String>,
 
+    pub dstar_l: Range,
     pub name_l: Option<Range>,
     pub expression_l: Range,
 }

@@ -1,8 +1,8 @@
 extern crate clap;
 use clap::Clap;
 
-use std::fs;
 use ruby_parser::{Lexer, Token};
+use std::fs;
 use std::path::Path;
 
 mod helpers;
@@ -46,8 +46,18 @@ fn main() -> Result<(), ()> {
         &|_tokens: &Vec<Token>| {}
     } else {
         &|tokens: &Vec<Token>| {
-            let tok_name_length  = tokens.iter().map(|tok| format!("{:?}", token_name(tok)).len()).max().unwrap_or(0) + 2;
-            let tok_value_length = tokens.iter().map(|tok| format!("{:?}", token_value(tok)).len()).max().unwrap_or(0) + 2;
+            let tok_name_length = tokens
+                .iter()
+                .map(|tok| format!("{:?}", token_name(tok)).len())
+                .max()
+                .unwrap_or(0)
+                + 2;
+            let tok_value_length = tokens
+                .iter()
+                .map(|tok| format!("{:?}", token_value(tok)).len())
+                .max()
+                .unwrap_or(0)
+                + 2;
 
             println!("[");
             for token in tokens {
@@ -62,23 +72,17 @@ fn main() -> Result<(), ()> {
     let debug = args.debug;
 
     if let Some(code) = args.code {
-        let tokens = tokenize(
-            &code.to_owned().into_bytes(),
-            "(eval)",
-            debug
-        )?;
+        let tokens = tokenize(&code.to_owned().into_bytes(), "(eval)", debug)?;
         callback(&tokens)
     } else if let Some(path) = args.path {
         let path = Path::new(&path);
         each_ruby_file(path, &|entry| {
             let code = fs::read(Path::new(entry)).unwrap();
-            let node = tokenize(
-                &code,
-                entry,
-                debug
-            ).unwrap_or_else(|_| panic!("failed to parse {}", entry));
+            let node = tokenize(&code, entry, debug)
+                .unwrap_or_else(|_| panic!("failed to parse {}", entry));
             callback(&node)
-        }).unwrap_or_else(|e| panic!("Error {:?}", e));
+        })
+        .unwrap_or_else(|e| panic!("Error {:?}", e));
     }
 
     return Ok(());

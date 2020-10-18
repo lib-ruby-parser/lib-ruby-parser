@@ -6,7 +6,6 @@ use crate::source::Range;
 pub struct Arg {
     pub name: String,
 
-    pub name_l: Range,
     pub expression_l: Range,
 }
 

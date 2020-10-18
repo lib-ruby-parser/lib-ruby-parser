@@ -6,8 +6,8 @@ use std::fs;
 use std::panic;
 use std::process::exit;
 
-mod loc;
-use loc::Loc;
+// mod loc;
+// use loc::Loc;
 
 enum TestSection {
     None,
@@ -59,23 +59,23 @@ enum TestResult {
     Failure(String),
 }
 
-fn match_locs(locs: Vec<String>, ast: Option<Node>) -> Result<(), String> {
-    match (locs, ast) {
-        (locs, None) => {
-            if !locs.is_empty() {
-                Err("expected ast to be non-empty".to_owned())
-            } else {
-                Ok(())
-            }
-        }
-        (locs, Some(ast)) => {
-            for loc in locs {
-                Loc::new(&loc).test(&ast)?
-            }
-            Ok(())
-        }
-    }
-}
+// fn match_locs(locs: Vec<String>, ast: Option<Node>) -> Result<(), String> {
+//     match (locs, ast) {
+//         (locs, None) => {
+//             if !locs.is_empty() {
+//                 Err("expected ast to be non-empty".to_owned())
+//             } else {
+//                 Ok(())
+//             }
+//         }
+//         (locs, Some(ast)) => {
+//             for loc in locs {
+//                 Loc::new(&loc).test(&ast)?
+//             }
+//             Ok(())
+//         }
+//     }
+// }
 
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
@@ -100,9 +100,9 @@ fn test(fixture_path: &str) -> TestResult {
             ));
         }
 
-        if let Err(err) = match_locs(test_case.locs, ast) {
-            return Err(err);
-        }
+        // if let Err(err) = match_locs(test_case.locs, ast) {
+        //     return Err(err);
+        // }
 
         Ok(())
     });

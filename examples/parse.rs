@@ -33,26 +33,20 @@ fn main() -> Result<(), ()> {
     let debug = args.debug;
 
     if let Some(code) = args.code {
-        let node = parse(
-            &code.to_owned().into_bytes(),
-            "(eval)",
-            debug
-        )?;
+        let node = parse(&code.to_owned().into_bytes(), "(eval)", debug)?;
         callback(&node)
     } else if let Some(path) = args.path {
         let path = Path::new(&path);
         each_ruby_file(path, &|entry| {
             let code = fs::read(Path::new(entry)).unwrap();
-            let node = parse(
-                &code,
-                entry,
-                debug
-            ).unwrap_or_else(|_| panic!("failed to parse {}", entry));
+            let node =
+                parse(&code, entry, debug).unwrap_or_else(|_| panic!("failed to parse {}", entry));
             callback(&node)
-        }).unwrap_or_else(|e| panic!("Error {:?}", e));
+        })
+        .unwrap_or_else(|e| panic!("Error {:?}", e));
     } else {
         println!("Nothing to parse");
-        return Err(())
+        return Err(());
     }
 
     Ok(())

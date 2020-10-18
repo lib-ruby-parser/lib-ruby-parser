@@ -1,5 +1,6 @@
 use crate::nodes::*;
 use crate::source::Range;
+use crate::Loc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {
@@ -263,6 +264,15 @@ impl Node {
 
     pub fn expression(&self) -> &Range {
         self.inner().expression()
+    }
+
+    pub fn empty_begin(loc: &Loc) -> Self {
+        Node::Begin(Begin {
+            statements: vec![],
+            begin_l: None,
+            end_l: None,
+            expression_l: Range::new(loc.begin, loc.end),
+        })
     }
 }
 

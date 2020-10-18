@@ -8,7 +8,8 @@ pub struct When {
     pub patterns: Vec<Node>,
     pub body: Option<Box<Node>>,
 
-    pub keyword_l: Range,
+    pub when_l: Range,
+    pub begin_l: Range,
     pub expression_l: Range,
 }
 

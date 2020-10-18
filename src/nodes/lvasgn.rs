@@ -6,11 +6,11 @@ use crate::Node;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Lvasgn {
     pub name: String,
-    pub value: Box<Node>,
+    pub value: Option<Box<Node>>,
 
     pub expression_l: Range,
     pub name_l: Range,
-    pub operator_l: Range,
+    pub operator_l: Option<Range>,
 }
 
 impl InnerNode for Lvasgn {
@@ -21,7 +21,9 @@ impl InnerNode for Lvasgn {
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
         result.push_str(&self.name);
-        result.push_node(&self.value);
+        if let Some(value) = &self.value {
+            result.push_node(value);
+        }
         result.strings()
     }
 

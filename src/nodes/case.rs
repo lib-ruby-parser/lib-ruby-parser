@@ -29,6 +29,6 @@ impl InnerNode for Case {
     }
 
     fn str_type(&self) -> &'static str {
-        "str_match"
+        "case"
     }
 }

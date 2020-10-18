@@ -7,10 +7,11 @@ use crate::Node;
 pub struct IndexAsgn {
     pub recv: Box<Node>,
     pub indexes: Vec<Node>,
-    pub value: Box<Node>,
+    pub value: Option<Box<Node>>,
 
     pub begin_l: Range,
     pub end_l: Range,
+    pub operator_l: Option<Range>,
     pub expression_l: Range,
 }
 
@@ -23,7 +24,9 @@ impl InnerNode for IndexAsgn {
         let mut result = InspectVec::new(indent);
         result.push_node(&self.recv);
         result.push_nodes(&self.indexes);
-        result.push_node(&self.value);
+        if let Some(value) = &self.value {
+            result.push_node(&value);
+        }
         result.strings()
     }
 

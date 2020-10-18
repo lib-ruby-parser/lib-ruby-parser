@@ -10,7 +10,7 @@ pub struct Rescue {
     pub else_: Option<Box<Node>>,
 
     pub expression_l: Range,
-    pub else_l: Range,
+    pub else_l: Option<Range>,
 }
 
 impl InnerNode for Rescue {

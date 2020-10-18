@@ -11,7 +11,8 @@ pub struct Def {
 
     pub keyword_l: Range,
     pub name_l: Range,
-    pub end_l: Range,
+    pub end_l: Option<Range>,
+    pub assignment_l: Option<Range>,
     pub expression_l: Range,
 }
 

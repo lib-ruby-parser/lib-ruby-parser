@@ -203,7 +203,7 @@ module ParseHelperPatch
       recv, _op, *args = *ast
       [
         locs(recv, path + ['recv']),
-        *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }
+        *args.map.with_index { |arg, idx| locs(arg, path + ["args[#{idx}]"]) }
       ]
     when :block_pass, :splat, :defined?, :match_current_line, :kwsplat, :pin
       value, _ = *ast
@@ -228,7 +228,10 @@ module ParseHelperPatch
       [
         locs(value, path + ['value'])
       ]
-    when :kwbegin, :begin, :preexe, :postexe, :if_guard, :unless_guard
+    when :kwbegin, :begin
+      stmts = *ast
+      [ *stmts.map.with_index { |stmt, idx| locs(stmt, path + ["stmt[#{idx}]"]) }, ]
+    when :preexe, :postexe, :if_guard, :unless_guard
       body, * = *ast
       [
         locs(body, path + ['body'])
@@ -399,9 +402,9 @@ module ParseHelperPatch
         locs(body, path + ['body']),
       ]
     when :regexp
-      src, opts = *ast
+      *parts, opts = *ast
       [
-        locs(src, path + ['src']),
+        *parts.map.with_index { |part, idx| locs(part, path + ["part[#{idx}]"]) },
         locs(opts, path + ['opts']),
       ]
     when :ensure

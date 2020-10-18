@@ -32,8 +32,8 @@ pub struct Str {
     pub value: StringValue,
 
     pub expression_l: Range,
-    pub begin_l: Range,
-    pub end_l: Range,
+    pub begin_l: Option<Range>,
+    pub end_l: Option<Range>,
 }
 
 impl InnerNode for Str {

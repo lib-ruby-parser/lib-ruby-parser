@@ -7,8 +7,10 @@ use crate::Node;
 pub struct Preexe {
     pub body: Option<Box<Node>>,
 
-    pub expression_l: Range,
     pub keyword_l: Range,
+    pub begin_l: Range,
+    pub end_l: Range,
+    pub expression_l: Range,
 }
 
 impl InnerNode for Preexe {

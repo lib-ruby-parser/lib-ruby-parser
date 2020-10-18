@@ -6,8 +6,9 @@ use crate::source::Range;
 pub struct Sym {
     pub name: String,
 
+    pub begin_l: Option<Range>,
+    pub end_l: Option<Range>,
     pub expression_l: Range,
-    pub begin_l: Range,
 }
 
 impl InnerNode for Sym {

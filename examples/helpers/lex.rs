@@ -1,4 +1,4 @@
-use ruby_parser::{Parser, Lexer, Token};
+use ruby_parser::{Lexer, Parser, Token};
 
 #[allow(dead_code)]
 pub fn lex(source: &Vec<u8>, filename: &str, debug: bool) -> Result<(Parser, Vec<Token>), String> {
@@ -8,6 +8,6 @@ pub fn lex(source: &Vec<u8>, filename: &str, debug: bool) -> Result<(Parser, Vec
     parser.yylexer.buffer.name = filename.to_string();
     match parser.lex() {
         Some(tokens) => Ok((parser, tokens)),
-        None => Err("no tokens".to_owned())
+        None => Err("no tokens".to_owned()),
     }
 }

@@ -6,6 +6,7 @@ use crate::source::Range;
 pub struct Complex {
     pub value: String,
 
+    pub operator_l: Option<Range>,
     pub expression_l: Range,
 }
 

@@ -7,8 +7,8 @@ use crate::Node;
 pub struct FindPattern {
     pub elements: Vec<Node>,
 
-    pub begin_l: Range,
-    pub end_l: Range,
+    pub begin_l: Option<Range>,
+    pub end_l: Option<Range>,
     pub expression_l: Range,
 }
 

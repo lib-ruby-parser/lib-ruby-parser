@@ -7,10 +7,11 @@ use crate::Node;
 pub struct Casgn {
     pub scope: Option<Box<Node>>,
     pub name: String,
-    pub value: Box<Node>,
+    pub value: Option<Box<Node>>,
 
     pub double_colon_l: Option<Range>,
     pub name_l: Range,
+    pub operator_l: Option<Range>,
     pub expression_l: Range,
 }
 
@@ -27,7 +28,9 @@ impl InnerNode for Casgn {
             result.push_nil()
         }
         result.push_str(&self.name);
-        result.push_node(&self.value);
+        if let Some(value) = &self.value {
+            result.push_node(value);
+        }
         result.strings()
     }
 

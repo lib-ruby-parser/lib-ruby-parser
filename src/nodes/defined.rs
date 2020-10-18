@@ -23,6 +23,6 @@ impl InnerNode for Defined {
     }
 
     fn str_type(&self) -> &'static str {
-        "defined"
+        "defined?"
     }
 }
