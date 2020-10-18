@@ -8,10 +8,10 @@ unless foo then bar; else baz; end
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
        ~~~ name (cond)
        ~~~ expression (cond)
-                          ~~~ name (truthy)
-                          ~~~ expression (truthy)
-                ~~~ name (falsey)
-                ~~~ expression (falsey)
+                          ~~~ name (if_true)
+                          ~~~ expression (if_true)
+                ~~~ name (if_false)
+                ~~~ expression (if_false)
 --AST
 s(:if,
   s(:lvar, "foo"),

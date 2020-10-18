@@ -9,10 +9,10 @@ pub struct RescueBody {
     pub exc_var: Option<Box<Node>>,
     pub body: Option<Box<Node>>,
 
-    pub expression_l: Range,
     pub keyword_l: Range,
     pub assoc_l: Option<Range>,
     pub begin_l: Option<Range>,
+    pub expression_l: Range,
 }
 
 impl InnerNode for RescueBody {

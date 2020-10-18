@@ -15,8 +15,8 @@ case foo; in A[x:] then true; end
              ~ name (in_body[0]/pattern/const)
              ~ expression (in_body[0]/pattern/const)
                ~~ expression (in_body[0]/pattern/pattern)
-               ~ name (in_body[0]/pattern/pattern/item[0])
-               ~~ expression (in_body[0]/pattern/pattern/item[0])
+               ~ name (in_body[0]/pattern/pattern/element[0])
+               ~~ expression (in_body[0]/pattern/pattern/element[0])
                         ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,

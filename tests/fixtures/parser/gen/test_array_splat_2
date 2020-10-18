@@ -4,10 +4,10 @@
 ~ begin ()
      ~ end ()
 ~~~~~~ expression ()
- ~ operator (item[0])
- ~~~~ expression (item[0])
-  ~~~ name (item[0]/value)
-  ~~~ expression (item[0]/value)
+ ~ operator (element[0])
+ ~~~~ expression (element[0])
+  ~~~ name (element[0]/value)
+  ~~~ expression (element[0]/value)
 --AST
 s(:array,
   s(:splat,

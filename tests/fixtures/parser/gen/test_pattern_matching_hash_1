@@ -10,10 +10,10 @@ case foo; in a: 1 then true; end
           ~~ keyword (in_body[0])
           ~~~~~~~~~~~~~~~~~ expression (in_body[0])
              ~~~~ expression (in_body[0]/pattern)
-              ~ operator (in_body[0]/pattern/item[0])
-             ~~~~ expression (in_body[0]/pattern/item[0])
-             ~ expression (in_body[0]/pattern/item[0]/key)
-                ~ expression (in_body[0]/pattern/item[0]/value)
+              ~ operator (in_body[0]/pattern/element[0])
+             ~~~~ expression (in_body[0]/pattern/element[0])
+             ~ expression (in_body[0]/pattern/element[0]/key)
+                ~ expression (in_body[0]/pattern/element[0]/value)
                        ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,

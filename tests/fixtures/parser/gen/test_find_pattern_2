@@ -15,11 +15,11 @@ case foo; in Array[*, 1, *] then true; end
              ~~~~~ name (in_body[0]/pattern/const)
              ~~~~~ expression (in_body[0]/pattern/const)
                    ~~~~~~~ expression (in_body[0]/pattern/pattern)
-                   ~ operator (in_body[0]/pattern/pattern/item[0])
-                   ~ expression (in_body[0]/pattern/pattern/item[0])
-                      ~ expression (in_body[0]/pattern/pattern/item[1])
-                         ~ operator (in_body[0]/pattern/pattern/item[2])
-                         ~ expression (in_body[0]/pattern/pattern/item[2])
+                   ~ operator (in_body[0]/pattern/pattern/element[0])
+                   ~ expression (in_body[0]/pattern/pattern/element[0])
+                      ~ expression (in_body[0]/pattern/pattern/element[1])
+                         ~ operator (in_body[0]/pattern/pattern/element[2])
+                         ~ expression (in_body[0]/pattern/pattern/element[2])
                                  ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,

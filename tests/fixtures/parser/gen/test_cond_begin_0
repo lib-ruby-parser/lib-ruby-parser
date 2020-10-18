@@ -10,8 +10,8 @@ if (bar); foo; end
    ~~~~~ expression (cond)
     ~~~ name (cond/stmt[0])
     ~~~ expression (cond/stmt[0])
-          ~~~ name (truthy)
-          ~~~ expression (truthy)
+          ~~~ name (if_true)
+          ~~~ expression (if_true)
 --AST
 s(:if,
   s(:begin,

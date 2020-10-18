@@ -9,7 +9,7 @@ def m; class << self; class C; end; end; end
              ~~ operator (body)
                                     ~~~ end (body)
        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (body)
-                ~~~~ expression (body/of)
+                ~~~~ expression (body/expr)
                       ~~~~~ keyword (body/body)
                             ~ name (body/body)
                                ~~~ end (body/body)

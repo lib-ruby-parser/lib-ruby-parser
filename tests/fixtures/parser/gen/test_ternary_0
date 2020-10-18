@@ -6,8 +6,8 @@ foo ? 1 : 2
 ~~~~~~~~~~~ expression ()
 ~~~ name (cond)
 ~~~ expression (cond)
-      ~ expression (truthy)
-          ~ expression (falsey)
+      ~ expression (if_true)
+          ~ expression (if_false)
 --AST
 s(:if,
   s(:lvar, "foo"),

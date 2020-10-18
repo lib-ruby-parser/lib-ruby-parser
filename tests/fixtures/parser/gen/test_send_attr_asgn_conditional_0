@@ -5,7 +5,7 @@ a&.b = 1
 ~~~~~~~~ expression ()
 ~ selector (recv)
 ~ expression (recv)
-       ~ expression (args[0])
+       ~ expression (arg[0])
 --AST
 s(:csend,
   s(:send, nil, "a"), "b=",

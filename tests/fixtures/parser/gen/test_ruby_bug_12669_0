@@ -9,8 +9,8 @@ a = b = raise :x
     ~~~~~~~~~~~~ expression (value)
         ~~~~~ selector (value/value)
         ~~~~~~~~ expression (value/value)
-              ~ begin (value/value/args[0])
-              ~~ expression (value/value/args[0])
+              ~ begin (value/value/arg[0])
+              ~~ expression (value/value/arg[0])
 --AST
 s(:lvasgn, "a",
   s(:lvasgn, "b",

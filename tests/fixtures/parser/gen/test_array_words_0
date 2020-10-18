@@ -4,8 +4,8 @@
 ~~~ begin ()
           ~ end ()
 ~~~~~~~~~~~ expression ()
-   ~~~ expression (item[0])
-       ~~~ expression (item[1])
+   ~~~ expression (element[0])
+       ~~~ expression (element[1])
 --AST
 s(:array,
   s(:str, "foo"),

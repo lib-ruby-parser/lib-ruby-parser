@@ -10,8 +10,8 @@ def foo() a:b end
        ~~ expression (args)
           ~ selector (body)
           ~~~ expression (body)
-           ~ begin (body/args[0])
-           ~~ expression (body/args[0])
+           ~ begin (body/arg[0])
+           ~~ expression (body/arg[0])
 --AST
 s(:def, "foo",
   s(:args),

@@ -14,10 +14,10 @@ t=1;(foo)?t:T
     ~~~~~ expression (stmt[1]/cond)
      ~~~ name (stmt[1]/cond/stmt[0])
      ~~~ expression (stmt[1]/cond/stmt[0])
-          ~ name (stmt[1]/truthy)
-          ~ expression (stmt[1]/truthy)
-            ~ name (stmt[1]/falsey)
-            ~ expression (stmt[1]/falsey)
+          ~ name (stmt[1]/if_true)
+          ~ expression (stmt[1]/if_true)
+            ~ name (stmt[1]/if_false)
+            ~ expression (stmt[1]/if_false)
 --AST
 s(:begin,
   s(:lvasgn, "t",

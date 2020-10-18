@@ -4,11 +4,10 @@
 ~ selector ()
 ~~~~~~ expression ()
  ~~~~~ expression (recv)
- ~ begin (recv/value)
-     ~ end (recv/value)
- ~~~~~ expression (recv/value)
-  ~~~ expression (recv/value/part[0])
-       expression (recv/value/opts)
+ ~ begin (recv/re)
+     ~ end (recv/re)
+ ~~~~~ expression (recv/re)
+  ~~~ expression (recv/re/part[0])
 --AST
 s(:send,
   s(:match_current_line,

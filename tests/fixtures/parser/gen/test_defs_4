@@ -6,8 +6,8 @@ def String::foo; end
             ~~~ name ()
                  ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~ expression ()
-    ~~~~~~ name (recv)
-    ~~~~~~ expression (recv)
+    ~~~~~~ name (definee)
+    ~~~~~~ expression (definee)
 --AST
 s(:defs,
   s(:const, nil, "String"), "foo", nil, nil)

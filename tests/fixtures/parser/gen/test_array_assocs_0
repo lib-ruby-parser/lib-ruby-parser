@@ -4,11 +4,11 @@
 ~ begin ()
          ~ end ()
 ~~~~~~~~~~ expression ()
-  ~~~~~~ expression (item[0])
-    ~~ operator (item[0]/pair[0])
-  ~~~~~~ expression (item[0]/pair[0])
-  ~ expression (item[0]/pair[0]/key)
-       ~ expression (item[0]/pair[0]/value)
+  ~~~~~~ expression (element[0])
+    ~~ operator (element[0]/pair[0])
+  ~~~~~~ expression (element[0]/pair[0])
+  ~ expression (element[0]/pair[0]/key)
+       ~ expression (element[0]/pair[0]/value)
 --AST
 s(:array,
   s(:hash,

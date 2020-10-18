@@ -9,8 +9,8 @@
       ~~~~~~~ expression (body)
       ~~ name (body/recv)
       ~~ expression (body/recv)
-           ~~ name (body/args[0])
-           ~~ expression (body/args[0])
+           ~~ name (body/arg[0])
+           ~~ expression (body/arg[0])
 --AST
 s(:numblock,
   s(:lambda), 9,

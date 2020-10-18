@@ -3,17 +3,17 @@ undef foo, :bar, :"foo#{1}"
 --LOCATIONS
 ~~~~~ keyword ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-      ~~~ expression (item[0])
-           ~ begin (item[1])
-           ~~~~ expression (item[1])
-                 ~~ begin (item[2])
-                          ~ end (item[2])
-                 ~~~~~~~~~~ expression (item[2])
-                   ~~~ expression (item[2]/part[0])
-                      ~~ begin (item[2]/part[1])
-                         ~ end (item[2]/part[1])
-                      ~~~~ expression (item[2]/part[1])
-                        ~ expression (item[2]/part[1]/stmt[0])
+      ~~~ expression (arg[0])
+           ~ begin (arg[1])
+           ~~~~ expression (arg[1])
+                 ~~ begin (arg[2])
+                          ~ end (arg[2])
+                 ~~~~~~~~~~ expression (arg[2])
+                   ~~~ expression (arg[2]/part[0])
+                      ~~ begin (arg[2]/part[1])
+                         ~ end (arg[2]/part[1])
+                      ~~~~ expression (arg[2]/part[1])
+                        ~ expression (arg[2]/part[1]/stmt[0])
 --AST
 s(:undef,
   s(:sym, "foo"),

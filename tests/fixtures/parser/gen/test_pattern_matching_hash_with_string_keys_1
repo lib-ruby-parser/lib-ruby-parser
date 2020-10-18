@@ -10,8 +10,8 @@ case foo; in "#{ 'a' }": then true; end
           ~~ keyword (in_body[0])
           ~~~~~~~~~~~~~~~~~~~~~~~~ expression (in_body[0])
              ~~~~~~~~~~~ expression (in_body[0]/pattern)
-                  ~ name (in_body[0]/pattern/item[0])
-             ~~~~~~~~~~~ expression (in_body[0]/pattern/item[0])
+                  ~ name (in_body[0]/pattern/element[0])
+             ~~~~~~~~~~~ expression (in_body[0]/pattern/element[0])
                               ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,

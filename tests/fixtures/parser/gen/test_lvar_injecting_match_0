@@ -8,7 +8,6 @@
               ~ end (stmt[0]/re)
 ~~~~~~~~~~~~~~~ expression (stmt[0]/re)
  ~~~~~~~~~~~~~ expression (stmt[0]/re/part[0])
-                expression (stmt[0]/re/opts)
                    ~ begin (stmt[0]/value)
                        ~ end (stmt[0]/value)
                    ~~~~~ expression (stmt[0]/value)

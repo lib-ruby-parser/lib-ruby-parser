@@ -39,6 +39,8 @@ pub enum PatternItem {
     Else,
     Var,
     Options,
+    To,
+    From,
     Item(usize),
     Arg(usize),
     Element(usize),
@@ -98,6 +100,8 @@ impl PatternItem {
             "else" => Self::Else,
             "var" => Self::Var,
             "options" => Self::Options,
+            "to" => Self::To,
+            "from" => Self::From,
 
             other if other.starts_with("item[") => Self::Item(try_value("item")),
             other if other.starts_with("arg[") => Self::Arg(try_value("arg")),
@@ -123,7 +127,7 @@ pub struct Pattern {
 }
 
 impl Pattern {
-    fn new(parts: Vec<&str>) -> Self {
+    fn new(parts: &Vec<String>) -> Self {
         let mut parts = parts
             .iter()
             .map(|e| PatternItem::new(e))
@@ -153,7 +157,7 @@ pub struct Find {
 }
 
 impl<'a> Find {
-    pub fn run(pattern: Vec<&str>, root: &Node) -> Option<Node> {
+    pub fn run(pattern: &Vec<String>, root: &Node) -> Option<Node> {
         let pattern = Pattern::new(pattern);
         let mut this = Self { pattern };
         this.find(&root)
@@ -166,7 +170,6 @@ impl<'a> Find {
     fn find(&mut self, node: &Node) -> Option<Node> {
         self.pattern.pop();
 
-        println!("pattern = {:?}, node = {:?}", self.pattern, node.inspect(0));
         if self.pattern.is_empty() {
             return Some(node.clone());
         }
@@ -188,8 +191,12 @@ impl<'a> Visitor<Option<Node>> for Find {
         panic!("arrays should be handled manually")
     }
 
-    fn on_alias(&mut self, _: &Alias) -> Option<Node> {
-        None
+    fn on_alias(&mut self, node: &Alias) -> Option<Node> {
+        match self.current_pattern() {
+            PatternItem::To => self.find(&node.to),
+            PatternItem::From => self.find(&node.from),
+            _ => None,
+        }
     }
 
     fn on_and(&mut self, node: &And) -> Option<Node> {
@@ -264,8 +271,11 @@ impl<'a> Visitor<Option<Node>> for Find {
         None
     }
 
-    fn on_block_pass(&mut self, _: &BlockPass) -> Option<Node> {
-        None
+    fn on_block_pass(&mut self, node: &BlockPass) -> Option<Node> {
+        match self.current_pattern() {
+            PatternItem::Value => self.find(&node.value),
+            _ => None,
+        }
     }
 
     fn on_break(&mut self, node: &Break) -> Option<Node> {
@@ -873,7 +883,6 @@ impl<'a> Visitor<Option<Node>> for Find {
     }
 
     fn on_send(&mut self, node: &Send) -> Option<Node> {
-        println!("on_send: current pattern = {:?}", self.current_pattern());
         match self.current_pattern() {
             PatternItem::Recv => self.maybe_find(&node.recv),
             PatternItem::Arg(n) => self.find(&node.args[n]),

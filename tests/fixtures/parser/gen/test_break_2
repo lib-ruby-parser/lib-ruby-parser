@@ -3,9 +3,9 @@ break()
 --LOCATIONS
 ~~~~~ keyword ()
 ~~~~~~~ expression ()
-     ~ begin (value)
-      ~ end (value)
-     ~~ expression (value)
+     ~ begin (arg[0])
+      ~ end (arg[0])
+     ~~ expression (arg[0])
 --AST
 s(:break,
   s(:begin))

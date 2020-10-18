@@ -16,9 +16,9 @@ pub trait Visitor<T: Default = ()> {
         T::default()
     }
 
-    #[allow(unused_variables)]
     fn on_alias(&mut self, node: &Alias) -> T {
-        T::default()
+        self.visit(&node.to);
+        self.visit(&node.from)
     }
 
     fn on_and(&mut self, node: &And) -> T {
@@ -72,9 +72,8 @@ pub trait Visitor<T: Default = ()> {
         T::default()
     }
 
-    #[allow(unused_variables)]
     fn on_block_pass(&mut self, node: &BlockPass) -> T {
-        T::default()
+        self.visit(&node.value)
     }
 
     fn on_break(&mut self, node: &Break) -> T {

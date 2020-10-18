@@ -9,9 +9,9 @@ case foo; when 'bar' then bar; end
                      ~~~~ begin (when_body[0])
           ~~~~ keyword (when_body[0])
           ~~~~~~~~~~~~~~~~~~~ expression (when_body[0])
-               ~ begin (when_body[0]/cond)
-                   ~ end (when_body[0]/cond)
-               ~~~~~ expression (when_body[0]/cond)
+               ~ begin (when_body[0]/arg[0])
+                   ~ end (when_body[0]/arg[0])
+               ~~~~~ expression (when_body[0]/arg[0])
                           ~~~ name (when_body[0]/body)
                           ~~~ expression (when_body[0]/body)
 --AST

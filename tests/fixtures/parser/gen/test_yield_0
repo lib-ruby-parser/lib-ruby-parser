@@ -5,8 +5,8 @@ yield(foo)
          ~ end ()
 ~~~~~ keyword ()
 ~~~~~~~~~~ expression ()
-      ~~~ name (value)
-      ~~~ expression (value)
+      ~~~ name (arg[0])
+      ~~~ expression (arg[0])
 --AST
 s(:yield,
   s(:lvar, "foo"))

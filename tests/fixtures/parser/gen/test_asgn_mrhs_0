@@ -5,9 +5,9 @@ foo = bar, 1
 ~~~ name ()
 ~~~~~~~~~~~~ expression ()
       ~~~~~~ expression (value)
-      ~~~ name (value/item[0])
-      ~~~ expression (value/item[0])
-           ~ expression (value/item[1])
+      ~~~ name (value/element[0])
+      ~~~ expression (value/element[0])
+           ~ expression (value/element[1])
 --AST
 s(:lvasgn, "foo",
   s(:array,

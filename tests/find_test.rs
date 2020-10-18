@@ -6,8 +6,12 @@ fn find(src: &str, pattern: Vec<&str>) -> Option<String> {
     let mut parser = Parser::new(lexer);
     parser.set_debug(false);
 
+    let pattern = pattern
+        .into_iter()
+        .map(|e| e.to_owned())
+        .collect::<Vec<_>>();
     let ast = parser.do_parse()?;
-    let node = Find::run(pattern, &ast)?;
+    let node = Find::run(&pattern, &ast)?;
     node.expression().source(&parser.yylexer.buffer)
 }
 

@@ -6,7 +6,7 @@ def self.m() = 1 rescue 2
          ~ name ()
              ~ assignment ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-    ~~~~ expression (recv)
+    ~~~~ expression (definee)
           ~ begin (args)
            ~ end (args)
           ~~ expression (args)

@@ -10,8 +10,8 @@ m { |foo| }
         ~ end (args)
     ~~~~~ expression (args)
      ~~~ expression (args/arg[0])
-     ~~~ name (args/arg[0]/item[0])
-     ~~~ expression (args/arg[0]/item[0])
+     ~~~ name (args/arg[0]/arg[0])
+     ~~~ expression (args/arg[0]/arg[0])
 --AST
 s(:block,
   s(:send, nil, "m"),

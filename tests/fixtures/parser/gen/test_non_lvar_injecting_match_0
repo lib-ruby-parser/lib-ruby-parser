@@ -11,10 +11,9 @@
  ~~~~ expression (recv/part[0])
    ~ expression (recv/part[0]/stmt[0])
      ~~~~~~~~~~~~~ expression (recv/part[1])
-                    expression (recv/opts)
-                       ~ begin (args[0])
-                           ~ end (args[0])
-                       ~~~~~ expression (args[0])
+                       ~ begin (arg[0])
+                           ~ end (arg[0])
+                       ~~~~~ expression (arg[0])
 --AST
 s(:send,
   s(:regexp,

@@ -189,7 +189,7 @@ module ParseHelperPatch
          :int, :float, :rational, :complex, :lambda, :empty_else, :cbase,
          :back_ref, :nth_ref, :match_var, :arg, :zsuper, :kwrestarg, :forward_args, :restarg,
          :forwarded_args, :__FILE__, :__LINE__, :__ENCODING__, :regopt, :match_nil_pattern,
-         :kwnilarg, :redo, :match_rest, :kwarg, :shadowarg, :blockarg, :forward_arg
+         :kwnilarg, :redo, :match_rest, :kwarg, :shadowarg, :blockarg, :forward_arg, :retry
       []
     when :dstr, :xstr, :dsym
       parts = *ast
@@ -203,12 +203,22 @@ module ParseHelperPatch
       recv, _op, *args = *ast
       [
         locs(recv, path + ['recv']),
-        *args.map.with_index { |arg, idx| locs(arg, path + ["args[#{idx}]"]) }
+        *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }
       ]
-    when :block_pass, :splat, :defined?, :match_current_line, :kwsplat, :pin
+    when :block_pass, :splat, :defined?, :kwsplat
       value, _ = *ast
       [
         locs(value, path + ['value'])
+      ]
+    when :pin
+      var, _ = *ast
+      [
+        locs(var, path + ['var'])
+      ]
+    when :match_current_line
+      re, _ = *ast
+      [
+        locs(re, path + ['re'])
       ]
     when :block
       call, args, body = *ast
@@ -223,22 +233,28 @@ module ParseHelperPatch
         locs(call, path + ['call']),
         locs(body, path + ['body'])
       ]
-    when :break, :super, :retry, :next, :yield, :return
-      value, _ = *ast
-      [
-        locs(value, path + ['value'])
-      ]
+    when :super, :yield, :return, :break, :next
+      args = *ast
+      [ *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }, ]
     when :kwbegin, :begin
       stmts = *ast
       [ *stmts.map.with_index { |stmt, idx| locs(stmt, path + ["stmt[#{idx}]"]) }, ]
-    when :preexe, :postexe, :if_guard, :unless_guard
+    when :preexe, :postexe
       body, * = *ast
       [
         locs(body, path + ['body'])
       ]
-    when :array, :array_pattern, :undef, :array_pattern_with_tail, :hash_pattern, :find_pattern
-      items = *ast
-      [ *items.map.with_index { |item, idx| locs(item, path + ["item[#{idx}]"]) }, ]
+    when :if_guard, :unless_guard
+      cond, * = *ast
+      [
+        locs(cond, path + ['cond'])
+      ]
+    when :array, :array_pattern, :array_pattern_with_tail, :hash_pattern, :find_pattern
+      elements = *ast
+      [ *elements.map.with_index { |element, idx| locs(element, path + ["element[#{idx}]"]) }, ]
+    when :undef
+      args = *ast
+      [ *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }, ]
     when :class
       name, superclass, body = *ast
       [
@@ -272,11 +288,17 @@ module ParseHelperPatch
         *when_bodies.map.with_index { |when_body, idx| locs(when_body, path + ["when_body[#{idx}]"]) },
         locs(else_body, path + ['else_body'])
       ]
-    when :masgn, :and, :or, :in_match
+    when :masgn, :and, :or
       lhs, rhs = *ast
       [
         locs(lhs, path + ['lhs']),
         locs(rhs, path + ['rhs'])
+      ]
+    when :in_match
+      value, pattern = *ast
+      [
+        locs(value, path + ['value']),
+        locs(pattern, path + ['pattern'])
       ]
     when :rescue
       body, *rescue_bodies, else_ = *ast
@@ -286,9 +308,9 @@ module ParseHelperPatch
         locs(else_, path + ['else'])
       ]
     when :defs
-      recv, _mid, args, body = *ast
+      definee, _mid, args, body = *ast
       [
-        locs(recv, path + ['recv']),
+        locs(definee, path + ['definee']),
         locs(args, path + ['args']),
         locs(body, path + ['body']),
       ]
@@ -301,7 +323,7 @@ module ParseHelperPatch
     when :while, :until, :while_post, :until_post
       expr, body = *ast
       [
-        locs(expr, path + ['expr']),
+        locs(expr, path + ['cond']),
         locs(body, path + ['body']),
       ]
     when :in_pattern
@@ -312,18 +334,21 @@ module ParseHelperPatch
         locs(body, path + ['body']),
       ]
     when :if
-      cond, truthy, falsey = *ast
+      cond, if_true, if_false = *ast
       [
         locs(cond, path + ['cond']),
-        locs(truthy, path + ['truthy']),
-        locs(falsey, path + ['falsey']),
+        locs(if_true, path + ['if_true']),
+        locs(if_false, path + ['if_false']),
       ]
     when :const
       scope, _name = *ast
       [ locs(scope, path + ['scope']) ]
-    when :mlhs, :procarg0
+    when :mlhs
       items = *ast
       [ *items.map.with_index { |item, idx| locs(item, path + ["item[#{idx}]"]) }, ]
+    when :procarg0
+      args = *ast
+      [ *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }, ]
     when :irange, :erange, :iflipflop, :eflipflop
       left, right = *ast
       [
@@ -331,9 +356,9 @@ module ParseHelperPatch
         locs(right, path + ['right']),
       ]
     when :sclass
-      of, body = *ast
+      expr, body = *ast
       [
-        locs(of, path + ['of']),
+        locs(expr, path + ['expr']),
         locs(body, path + ['body']),
       ]
     when :hash
@@ -373,14 +398,14 @@ module ParseHelperPatch
       exc_list, var, body = *ast
       [
         locs(exc_list, path + ['exc_list']),
-        locs(var, path + ['var']),
+        locs(var, path + ['exc_var']),
         locs(body, path + ['body']),
       ]
     when :match_alt
-      left, right = *ast
+      lhs, rhs = *ast
       [
-        locs(left, path + ['left']),
-        locs(right, path + ['right']),
+        locs(lhs, path + ['lhs']),
+        locs(rhs, path + ['rhs']),
       ]
     when :match_with_lvasgn
       re, value = *ast
@@ -390,34 +415,38 @@ module ParseHelperPatch
       ]
     when :indexasgn
       recv, *indexes, value = *ast
+      if ast.loc.end.end_pos > value.loc.expression.end_pos
+        indexes << value
+        value = nil
+      end
       [
         locs(recv, path + ['recv']),
         *indexes.map.with_index { |index, idx| locs(index, path + ["index[#{idx}]"]) },
-        locs(value, path + ['value']),
+        value ? locs(value, path + ['value']) : [],
       ]
     when :when
-      cond, body = *ast
+      *args, body = *ast
       [
-        locs(cond, path + ['cond']),
+        *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) },
         locs(body, path + ['body']),
       ]
     when :regexp
-      *parts, opts = *ast
+      *parts, options = *ast
       [
         *parts.map.with_index { |part, idx| locs(part, path + ["part[#{idx}]"]) },
-        locs(opts, path + ['opts']),
+        options.children.empty? ? [] : locs(options, path + ['options']),
       ]
     when :ensure
-      body, ensure_body = *ast
+      body, ensure_ = *ast
       [
         locs(body, path + ['body']),
-        locs(ensure_body, path + ['ensure_body']),
+        locs(ensure_, path + ['ensure']),
       ]
     when :match_as
-      value, var = *ast
+      value, as = *ast
       [
         locs(value, path + ['value']),
-        locs(var, path + ['var']),
+        locs(as, path + ['as']),
       ]
     when :const_pattern
       const, pattern = *ast

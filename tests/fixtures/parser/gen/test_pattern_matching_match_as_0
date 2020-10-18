@@ -12,8 +12,8 @@ case foo; in 1 => a then true; end
                ~~ operator (in_body[0]/pattern)
              ~~~~~~ expression (in_body[0]/pattern)
              ~ expression (in_body[0]/pattern/value)
-                  ~ name (in_body[0]/pattern/var)
-                  ~ expression (in_body[0]/pattern/var)
+                  ~ name (in_body[0]/pattern/as)
+                  ~ expression (in_body[0]/pattern/as)
                          ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,

@@ -13,7 +13,7 @@ case foo; in x unless true; nil; end
              ~ expression (in_body[0]/pattern)
                ~~~~~~ keyword (in_body[0]/guard)
                ~~~~~~~~~~~ expression (in_body[0]/guard)
-                      ~~~~ expression (in_body[0]/guard/body)
+                      ~~~~ expression (in_body[0]/guard/cond)
                             ~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,

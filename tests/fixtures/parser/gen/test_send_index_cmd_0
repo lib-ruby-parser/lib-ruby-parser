@@ -8,8 +8,8 @@ foo[m bar]
 ~~~ expression (recv)
     ~ selector (index[0])
     ~~~~~ expression (index[0])
-      ~~~ name (index[0]/args[0])
-      ~~~ expression (index[0]/args[0])
+      ~~~ name (index[0]/arg[0])
+      ~~~ expression (index[0]/arg[0])
 --AST
 s(:index,
   s(:lvar, "foo"),

@@ -1687,7 +1687,7 @@ impl Builder {
                 Node::MatchWithLvasgn(MatchWithLvasgn {
                     re: Box::new(receiver),
                     value: Box::new(arg),
-                    selector_l,
+                    operator_l: selector_l,
                     expression_l,
                 })
             }

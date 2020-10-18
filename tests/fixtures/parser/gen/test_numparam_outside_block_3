@@ -6,7 +6,7 @@ def self.m; _1; end
          ~ name ()
                 ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~ expression ()
-    ~~~~ expression (recv)
+    ~~~~ expression (definee)
             ~~ selector (body)
             ~~ expression (body)
 --AST

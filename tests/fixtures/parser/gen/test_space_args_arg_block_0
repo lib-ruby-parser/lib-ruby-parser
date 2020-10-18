@@ -6,10 +6,10 @@ fun (1) {}
 ~~~~~~~~~~ expression ()
 ~~~ selector (call)
 ~~~~~~~ expression (call)
-    ~ begin (call/args[0])
-      ~ end (call/args[0])
-    ~~~ expression (call/args[0])
-     ~ expression (call/args[0]/stmt[0])
+    ~ begin (call/arg[0])
+      ~ end (call/arg[0])
+    ~~~ expression (call/arg[0])
+     ~ expression (call/arg[0]/stmt[0])
 --AST
 s(:block,
   s(:send, nil, "fun",

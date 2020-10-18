@@ -3,16 +3,16 @@ p begin 1.times do 1 end end
 --LOCATIONS
 ~ selector ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-  ~~~~~ begin (args[0])
-                         ~~~ end (args[0])
-  ~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (args[0])
-                ~~ begin (args[0]/stmt[0])
-                     ~~~ end (args[0]/stmt[0])
-        ~~~~~~~~~~~~~~~~ expression (args[0]/stmt[0])
-          ~~~~~ selector (args[0]/stmt[0]/call)
-        ~~~~~~~ expression (args[0]/stmt[0]/call)
-        ~ expression (args[0]/stmt[0]/call/recv)
-                   ~ expression (args[0]/stmt[0]/body)
+  ~~~~~ begin (arg[0])
+                         ~~~ end (arg[0])
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (arg[0])
+                ~~ begin (arg[0]/stmt[0])
+                     ~~~ end (arg[0]/stmt[0])
+        ~~~~~~~~~~~~~~~~ expression (arg[0]/stmt[0])
+          ~~~~~ selector (arg[0]/stmt[0]/call)
+        ~~~~~~~ expression (arg[0]/stmt[0]/call)
+        ~ expression (arg[0]/stmt[0]/call/recv)
+                   ~ expression (arg[0]/stmt[0]/body)
 --AST
 s(:send, nil, "p",
   s(:kwbegin,

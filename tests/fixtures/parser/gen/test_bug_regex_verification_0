@@ -5,7 +5,7 @@
    ~ end ()
 ~~~~~ expression ()
  ~~ expression (part[0])
-    ~ expression (opts)
+    ~ expression (options)
 --AST
 s(:regexp,
   s(:str, "#)"),

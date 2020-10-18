@@ -4,7 +4,7 @@
  ~~~ begin ()
          ~ end ()
  ~~~~~~~~~ expression ()
-     ~~~ expression (item[0])
+     ~~~ expression (element[0])
 --AST
 s(:array,
   s(:sym, "#@1"))

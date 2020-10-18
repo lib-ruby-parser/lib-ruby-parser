@@ -7,8 +7,8 @@ unless foo; bar; end
 ~~~~~~~~~~~~~~~~~~~~ expression ()
        ~~~ name (cond)
        ~~~ expression (cond)
-            ~~~ name (falsey)
-            ~~~ expression (falsey)
+            ~~~ name (if_false)
+            ~~~ expression (if_false)
 --AST
 s(:if,
   s(:lvar, "foo"), nil,

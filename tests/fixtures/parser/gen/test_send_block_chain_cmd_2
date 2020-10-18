@@ -8,9 +8,9 @@ meth 1 do end::fun bar
 ~~~~~~~~~~~~~ expression (recv)
 ~~~~ selector (recv/call)
 ~~~~~~ expression (recv/call)
-     ~ expression (recv/call/args[0])
-                   ~~~ name (args[0])
-                   ~~~ expression (args[0])
+     ~ expression (recv/call/arg[0])
+                   ~~~ name (arg[0])
+                   ~~~ expression (arg[0])
 --AST
 s(:send,
   s(:block,

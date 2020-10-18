@@ -6,11 +6,10 @@ if /wat/; end
         ~ begin ()
 ~~~~~~~~~~~~~ expression ()
    ~~~~~ expression (cond)
-   ~ begin (cond/value)
-       ~ end (cond/value)
-   ~~~~~ expression (cond/value)
-    ~~~ expression (cond/value/part[0])
-         expression (cond/value/opts)
+   ~ begin (cond/re)
+       ~ end (cond/re)
+   ~~~~~ expression (cond/re)
+    ~~~ expression (cond/re/part[0])
 --AST
 s(:if,
   s(:match_current_line,

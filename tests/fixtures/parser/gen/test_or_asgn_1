@@ -9,7 +9,7 @@ foo[0, 1] ||= 2
 ~~~ name (recv/recv)
 ~~~ expression (recv/recv)
     ~ expression (recv/index[0])
-       ~ expression (recv/value)
+       ~ expression (recv/index[1])
               ~ expression (value)
 --AST
 s(:or_asgn,

@@ -12,12 +12,12 @@ case foo; in [x, *y, z] then true; end
              ~ begin (in_body[0]/pattern)
                       ~ end (in_body[0]/pattern)
              ~~~~~~~~~~ expression (in_body[0]/pattern)
-              ~ name (in_body[0]/pattern/item[0])
-              ~ expression (in_body[0]/pattern/item[0])
-                 ~ operator (in_body[0]/pattern/item[1])
-                 ~~ expression (in_body[0]/pattern/item[1])
-                     ~ name (in_body[0]/pattern/item[2])
-                     ~ expression (in_body[0]/pattern/item[2])
+              ~ name (in_body[0]/pattern/element[0])
+              ~ expression (in_body[0]/pattern/element[0])
+                 ~ operator (in_body[0]/pattern/element[1])
+                 ~~ expression (in_body[0]/pattern/element[1])
+                     ~ name (in_body[0]/pattern/element[2])
+                     ~ expression (in_body[0]/pattern/element[2])
                              ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,

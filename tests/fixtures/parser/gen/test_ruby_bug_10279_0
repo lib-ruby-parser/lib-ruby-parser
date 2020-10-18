@@ -12,7 +12,7 @@
             ~~~~ begin (pair[0]/value)
     ~~~~~~~~~~~~~~~~~~~ expression (pair[0]/value)
        ~~~~ expression (pair[0]/value/cond)
-                 ~~ expression (pair[0]/value/truthy)
+                 ~~ expression (pair[0]/value/if_true)
 --AST
 s(:hash,
   s(:pair,

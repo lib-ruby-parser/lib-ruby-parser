@@ -6,8 +6,8 @@ def obj.inc(x) = x + 1
         ~~~ name ()
                ~ assignment ()
 ~~~~~~~~~~~~~~~~~~~~~~ expression ()
-    ~~~ selector (recv)
-    ~~~ expression (recv)
+    ~~~ selector (definee)
+    ~~~ expression (definee)
            ~ begin (args)
              ~ end (args)
            ~~~ expression (args)
@@ -17,7 +17,7 @@ def obj.inc(x) = x + 1
                  ~~~~~ expression (body)
                  ~ name (body/recv)
                  ~ expression (body/recv)
-                     ~ expression (body/args[0])
+                     ~ expression (body/arg[0])
 --AST
 s(:defs,
   s(:send, nil, "obj"), "inc",

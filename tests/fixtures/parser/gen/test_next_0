@@ -3,11 +3,11 @@ next(foo)
 --LOCATIONS
 ~~~~ keyword ()
 ~~~~~~~~~ expression ()
-    ~ begin (value)
-        ~ end (value)
-    ~~~~~ expression (value)
-     ~~~ name (value/stmt[0])
-     ~~~ expression (value/stmt[0])
+    ~ begin (arg[0])
+        ~ end (arg[0])
+    ~~~~~ expression (arg[0])
+     ~~~ name (arg[0]/stmt[0])
+     ~~~ expression (arg[0]/stmt[0])
 --AST
 s(:next,
   s(:begin,

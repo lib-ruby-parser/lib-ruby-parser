@@ -8,8 +8,8 @@ then bar end
 ~~~~~~~~~~~~~~~~~~~ expression ()
    ~~~ name (cond)
    ~~~ expression (cond)
-            ~~~ name (truthy)
-            ~~~ expression (truthy)
+            ~~~ name (if_true)
+            ~~~ expression (if_true)
 --AST
 s(:if,
   s(:lvar, "foo"),

@@ -16,8 +16,8 @@ foo, bar = meth rescue [1, 2]
                        ~ begin (rhs/rescue_body[0]/body)
                             ~ end (rhs/rescue_body[0]/body)
                        ~~~~~~ expression (rhs/rescue_body[0]/body)
-                        ~ expression (rhs/rescue_body[0]/body/item[0])
-                           ~ expression (rhs/rescue_body[0]/body/item[1])
+                        ~ expression (rhs/rescue_body[0]/body/element[0])
+                           ~ expression (rhs/rescue_body[0]/body/element[1])
 --AST
 s(:masgn,
   s(:mlhs,

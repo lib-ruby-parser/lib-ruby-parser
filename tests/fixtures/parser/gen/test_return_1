@@ -3,8 +3,8 @@ return foo
 --LOCATIONS
 ~~~~~~ keyword ()
 ~~~~~~~~~~ expression ()
-       ~~~ name (value)
-       ~~~ expression (value)
+       ~~~ name (arg[0])
+       ~~~ expression (arg[0])
 --AST
 s(:return,
   s(:lvar, "foo"))

@@ -3,12 +3,12 @@ fun (1).to_i
 --LOCATIONS
 ~~~ selector ()
 ~~~~~~~~~~~~ expression ()
-        ~~~~ selector (args[0])
-    ~~~~~~~~ expression (args[0])
-    ~ begin (args[0]/recv)
-      ~ end (args[0]/recv)
-    ~~~ expression (args[0]/recv)
-     ~ expression (args[0]/recv/stmt[0])
+        ~~~~ selector (arg[0])
+    ~~~~~~~~ expression (arg[0])
+    ~ begin (arg[0]/recv)
+      ~ end (arg[0]/recv)
+    ~~~ expression (arg[0]/recv)
+     ~ expression (arg[0]/recv/stmt[0])
 --AST
 s(:send, nil, "fun",
   s(:send,

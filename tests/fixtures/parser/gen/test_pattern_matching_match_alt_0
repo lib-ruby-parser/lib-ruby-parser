@@ -11,8 +11,8 @@ case foo; in 1 | 2 then true; end
           ~~~~~~~~~~~~~~~~~~ expression (in_body[0])
                ~ operator (in_body[0]/pattern)
              ~~~~~ expression (in_body[0]/pattern)
-             ~ expression (in_body[0]/pattern/left)
-                 ~ expression (in_body[0]/pattern/right)
+             ~ expression (in_body[0]/pattern/lhs)
+                 ~ expression (in_body[0]/pattern/rhs)
                         ~~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,

@@ -3,8 +3,8 @@ meth while foo
 --LOCATIONS
      ~~~~~ keyword ()
 ~~~~~~~~~~~~~~ expression ()
-           ~~~ name (expr)
-           ~~~ expression (expr)
+           ~~~ name (cond)
+           ~~~ expression (cond)
 ~~~~ selector (body)
 ~~~~ expression (body)
 --AST

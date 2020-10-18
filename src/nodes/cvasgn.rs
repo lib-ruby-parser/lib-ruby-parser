@@ -8,9 +8,9 @@ pub struct Cvasgn {
     pub name: String,
     pub value: Option<Box<Node>>,
 
-    pub expression_l: Range,
     pub name_l: Range,
     pub operator_l: Option<Range>,
+    pub expression_l: Range,
 }
 
 impl InnerNode for Cvasgn {

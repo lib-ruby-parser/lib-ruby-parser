@@ -6,7 +6,7 @@ def self.foo; end
          ~~~ name ()
               ~~~ end ()
 ~~~~~~~~~~~~~~~~~ expression ()
-    ~~~~ expression (recv)
+    ~~~~ expression (definee)
 --AST
 s(:defs,
   s(:self), "foo", nil, nil)

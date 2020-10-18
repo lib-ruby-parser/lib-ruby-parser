@@ -8,7 +8,7 @@ pub struct MatchWithLvasgn {
     pub re: Box<Node>,
     pub value: Box<Node>,
 
-    pub selector_l: Range,
+    pub operator_l: Range,
     pub expression_l: Range,
 }
 

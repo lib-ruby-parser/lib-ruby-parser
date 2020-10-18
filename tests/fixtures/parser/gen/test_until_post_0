@@ -3,8 +3,8 @@ begin meth end until foo
 --LOCATIONS
                ~~~~~ keyword ()
 ~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-                     ~~~ name (expr)
-                     ~~~ expression (expr)
+                     ~~~ name (cond)
+                     ~~~ expression (cond)
 ~~~~~ begin (body)
            ~~~ end (body)
 ~~~~~~~~~~~~~~ expression (body)

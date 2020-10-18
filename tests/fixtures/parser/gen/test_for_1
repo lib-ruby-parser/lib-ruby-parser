@@ -11,8 +11,8 @@ for a in foo; p a; end
          ~~~ expression (iteratee)
               ~ selector (body)
               ~~~ expression (body)
-                ~ name (body/args[0])
-                ~ expression (body/args[0])
+                ~ name (body/arg[0])
+                ~ expression (body/arg[0])
 --AST
 s(:for,
   s(:lvasgn, "a"),

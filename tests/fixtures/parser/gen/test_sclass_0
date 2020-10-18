@@ -5,8 +5,8 @@ class << foo; nil; end
       ~~ operator ()
                    ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~~~ expression ()
-         ~~~ name (of)
-         ~~~ expression (of)
+         ~~~ name (expr)
+         ~~~ expression (expr)
               ~~~ expression (body)
 --AST
 s(:sclass,

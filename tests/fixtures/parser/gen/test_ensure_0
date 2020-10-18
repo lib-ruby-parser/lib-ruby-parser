@@ -8,8 +8,8 @@ begin; meth; ensure; bar; end
        ~~~~~~~~~~~~~~~~~ expression (stmt[0])
        ~~~~ selector (stmt[0]/body)
        ~~~~ expression (stmt[0]/body)
-                     ~~~ name (stmt[0]/ensure_body)
-                     ~~~ expression (stmt[0]/ensure_body)
+                     ~~~ name (stmt[0]/ensure)
+                     ~~~ expression (stmt[0]/ensure)
 --AST
 s(:kwbegin,
   s(:ensure,

@@ -5,7 +5,7 @@ foo & 1
 ~~~~~~~ expression ()
 ~~~ name (recv)
 ~~~ expression (recv)
-      ~ expression (args[0])
+      ~ expression (arg[0])
 --AST
 s(:send,
   s(:lvar, "foo"), "&",

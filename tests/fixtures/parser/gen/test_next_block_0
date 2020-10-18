@@ -3,13 +3,13 @@ next fun foo do end
 --LOCATIONS
 ~~~~ keyword ()
 ~~~~~~~~~~~~~~~~~~~ expression ()
-             ~~ begin (value)
-                ~~~ end (value)
-     ~~~~~~~~~~~~~~ expression (value)
-     ~~~ selector (value/call)
-     ~~~~~~~ expression (value/call)
-         ~~~ name (value/call/args[0])
-         ~~~ expression (value/call/args[0])
+             ~~ begin (arg[0])
+                ~~~ end (arg[0])
+     ~~~~~~~~~~~~~~ expression (arg[0])
+     ~~~ selector (arg[0]/call)
+     ~~~~~~~ expression (arg[0]/call)
+         ~~~ name (arg[0]/call/arg[0])
+         ~~~ expression (arg[0]/call/arg[0])
 --AST
 s(:next,
   s(:block,

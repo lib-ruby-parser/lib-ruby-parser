@@ -8,7 +8,7 @@ foo[0] += raise bar rescue nil
 ~~~~~~ expression (recv)
 ~~~ name (recv/recv)
 ~~~ expression (recv/recv)
-    ~ expression (recv/value)
+    ~ expression (recv/index[0])
 --AST
 s(:op_asgn,
   s(:indexasgn,

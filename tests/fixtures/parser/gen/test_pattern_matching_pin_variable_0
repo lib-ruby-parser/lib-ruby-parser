@@ -11,8 +11,8 @@ case foo; in ^foo then nil; end
           ~~~~~~~~~~~~~~~~ expression (in_body[0])
              ~ selector (in_body[0]/pattern)
              ~~~~ expression (in_body[0]/pattern)
-              ~~~ name (in_body[0]/pattern/value)
-              ~~~ expression (in_body[0]/pattern/value)
+              ~~~ name (in_body[0]/pattern/var)
+              ~~~ expression (in_body[0]/pattern/var)
                        ~~~ expression (in_body[0]/body)
 --AST
 s(:case_match,

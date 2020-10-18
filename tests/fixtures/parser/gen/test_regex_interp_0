@@ -11,7 +11,6 @@
       ~~~ name (part[1]/stmt[0])
       ~~~ expression (part[1]/stmt[0])
           ~~~ expression (part[2])
-               expression (opts)
 --AST
 s(:regexp,
   s(:str, "foo"),

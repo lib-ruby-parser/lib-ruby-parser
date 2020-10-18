@@ -6,8 +6,8 @@ foo = m foo
 ~~~~~~~~~~~ expression ()
       ~ selector (value)
       ~~~~~ expression (value)
-        ~~~ name (value/args[0])
-        ~~~ expression (value/args[0])
+        ~~~ name (value/arg[0])
+        ~~~ expression (value/arg[0])
 --AST
 s(:lvasgn, "foo",
   s(:send, nil, "m",

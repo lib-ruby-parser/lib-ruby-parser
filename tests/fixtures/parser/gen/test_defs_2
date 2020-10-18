@@ -6,8 +6,8 @@ def (foo).foo; end
           ~~~ name ()
                ~~~ end ()
 ~~~~~~~~~~~~~~~~~~ expression ()
-     ~~~ name (recv)
-     ~~~ expression (recv)
+     ~~~ name (definee)
+     ~~~ expression (definee)
 --AST
 s(:defs,
   s(:lvar, "foo"), "foo", nil, nil)

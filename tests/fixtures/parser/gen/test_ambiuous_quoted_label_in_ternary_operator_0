@@ -6,14 +6,14 @@ a ? b & '': nil
 ~~~~~~~~~~~~~~~ expression ()
 ~ selector (cond)
 ~ expression (cond)
-      ~ selector (truthy)
-    ~~~~~~ expression (truthy)
-    ~ selector (truthy/recv)
-    ~ expression (truthy/recv)
-        ~ begin (truthy/args[0])
-         ~ end (truthy/args[0])
-        ~~ expression (truthy/args[0])
-            ~~~ expression (falsey)
+      ~ selector (if_true)
+    ~~~~~~ expression (if_true)
+    ~ selector (if_true/recv)
+    ~ expression (if_true/recv)
+        ~ begin (if_true/arg[0])
+         ~ end (if_true/arg[0])
+        ~~ expression (if_true/arg[0])
+            ~~~ expression (if_false)
 --AST
 s(:if,
   s(:send, nil, "a"),

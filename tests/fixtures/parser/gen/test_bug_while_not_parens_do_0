@@ -5,12 +5,12 @@ while not (true) do end
                     ~~~ end ()
 ~~~~~ keyword ()
 ~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-      ~~~ selector (expr)
-      ~~~~~~~~~~ expression (expr)
-          ~ begin (expr/recv)
-               ~ end (expr/recv)
-          ~~~~~~ expression (expr/recv)
-           ~~~~ expression (expr/recv/stmt[0])
+      ~~~ selector (cond)
+      ~~~~~~~~~~ expression (cond)
+          ~ begin (cond/recv)
+               ~ end (cond/recv)
+          ~~~~~~ expression (cond/recv)
+           ~~~~ expression (cond/recv/stmt[0])
 --AST
 s(:while,
   s(:send,
