@@ -1,12 +1,10 @@
+use crate::nodes::InnerNode;
 use crate::nodes::*;
 use crate::source::Range;
 use crate::Loc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {
-    Encoding(Encoding),
-    File(File),
-    Line(Line),
     Alias(Alias),
     And(And),
     AndAsgn(AndAsgn),
@@ -39,9 +37,11 @@ pub enum Node {
     Dsym(Dsym),
     EFlipFlop(EFlipFlop),
     EmptyElse(EmptyElse),
+    Encoding(Encoding),
     Ensure(Ensure),
     Erange(Erange),
     False(False),
+    File(File),
     FindPattern(FindPattern),
     Float(Float),
     For(For),
@@ -72,6 +72,7 @@ pub enum Node {
     Kwrestarg(Kwrestarg),
     Kwsplat(Kwsplat),
     Lambda(Lambda),
+    Line(Line),
     Lvar(Lvar),
     Lvasgn(Lvasgn),
     Masgn(Masgn),
@@ -132,9 +133,6 @@ pub enum Node {
 impl Node {
     pub fn inner(&self) -> &dyn InnerNode {
         match self {
-            Node::Encoding(inner) => inner,
-            Node::File(inner) => inner,
-            Node::Line(inner) => inner,
             Node::Alias(inner) => inner,
             Node::And(inner) => inner,
             Node::AndAsgn(inner) => inner,
@@ -167,9 +165,11 @@ impl Node {
             Node::Dsym(inner) => inner,
             Node::EFlipFlop(inner) => inner,
             Node::EmptyElse(inner) => inner,
+            Node::Encoding(inner) => inner,
             Node::Ensure(inner) => inner,
             Node::Erange(inner) => inner,
             Node::False(inner) => inner,
+            Node::File(inner) => inner,
             Node::FindPattern(inner) => inner,
             Node::Float(inner) => inner,
             Node::For(inner) => inner,
@@ -200,6 +200,7 @@ impl Node {
             Node::Kwrestarg(inner) => inner,
             Node::Kwsplat(inner) => inner,
             Node::Lambda(inner) => inner,
+            Node::Line(inner) => inner,
             Node::Lvar(inner) => inner,
             Node::Lvasgn(inner) => inner,
             Node::Masgn(inner) => inner,
@@ -273,83 +274,5 @@ impl Node {
             end_l: None,
             expression_l: Range::new(loc.begin, loc.end),
         })
-    }
-}
-
-pub trait InnerNode {
-    fn expression(&self) -> &Range;
-    fn str_type(&self) -> &'static str;
-    fn inspected_children(&self, indent: usize) -> Vec<String>;
-
-    fn inspect(&self, indent: usize) -> String {
-        let indented = "  ".repeat(indent);
-        let mut sexp = format!("{}s(:{}", indented, self.str_type());
-
-        for child in self.inspected_children(indent) {
-            sexp.push_str(&child);
-        }
-
-        sexp.push_str(")");
-
-        sexp
-    }
-}
-
-pub struct InspectVec {
-    indent: usize,
-    strings: Vec<String>,
-}
-
-impl InspectVec {
-    pub fn new(indent: usize) -> Self {
-        Self {
-            indent,
-            strings: vec![],
-        }
-    }
-
-    pub fn push_str(&mut self, string: &str) {
-        self.strings.push(format!(", {:?}", string));
-    }
-
-    pub fn push_nil(&mut self) {
-        self.strings.push(", nil".to_owned());
-    }
-
-    pub fn push_u8(&mut self, n: u8) {
-        self.strings.push(format!(", {}", n))
-    }
-
-    pub fn push_usize(&mut self, n: usize) {
-        self.strings.push(format!(", {}", n))
-    }
-
-    pub fn push_node(&mut self, node: &Node) {
-        self.strings
-            .push(format!(",\n{}", node.inspect(self.indent + 1)))
-    }
-
-    pub fn push_maybe_node(&mut self, node: &Option<Box<Node>>) {
-        if let Some(node) = node {
-            self.push_node(node)
-        }
-    }
-
-    pub fn push_maybe_node_or_nil(&mut self, node: &Option<Box<Node>>) {
-        if let Some(node) = node {
-            self.push_node(node)
-        } else {
-            self.push_nil()
-        }
-    }
-
-    pub fn push_nodes(&mut self, nodes: &Vec<Node>) {
-        for node in nodes {
-            self.push_node(node)
-        }
-    }
-
-    pub fn strings(self) -> Vec<String> {
-        self.strings
     }
 }

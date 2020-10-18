@@ -1,6 +1,7 @@
 mod node;
 pub use node::Node;
-pub(crate) use node::{InnerNode, InspectVec};
+mod inner_node;
+pub(crate) use inner_node::{InnerNode, InspectVec};
 
 mod alias;
 mod and;
