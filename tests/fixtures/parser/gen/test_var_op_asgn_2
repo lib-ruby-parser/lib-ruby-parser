@@ -3,7 +3,6 @@
 --LOCATIONS
       ~~ operator ()
 ~~~~~~~~~~~ expression ()
-~~~~~ name (recv)
 ~~~~~ expression (recv)
 --AST
 s(:op_asgn,

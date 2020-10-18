@@ -8,9 +8,7 @@
  ~~~~~~~~~~~ expression (recv)
      ~~~ operator (recv/stmt[0])
   ~~~~~~~~~ expression (recv/stmt[0])
-  ~~~ name (recv/stmt[0]/left)
   ~~~ expression (recv/stmt[0]/left)
-        ~~~ name (recv/stmt[0]/right)
         ~~~ expression (recv/stmt[0]/right)
 --AST
 s(:send,

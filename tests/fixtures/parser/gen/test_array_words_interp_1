@@ -9,10 +9,8 @@
        ~~ begin (element[1]/part[0])
             ~ end (element[1]/part[0])
        ~~~~~~ expression (element[1]/part[0])
-         ~~~ name (element[1]/part[0]/stmt[0])
          ~~~ expression (element[1]/part[0]/stmt[0])
              ~~~ expression (element[1]/part[1])
-                 ~~~~ name (element[1]/part[2])
                  ~~~~ expression (element[1]/part[2])
 --AST
 s(:array,

@@ -4,11 +4,9 @@ foo[m bar]
    ~ begin ()
          ~ end ()
 ~~~~~~~~~~ expression ()
-~~~ name (recv)
 ~~~ expression (recv)
     ~ selector (index[0])
     ~~~~~ expression (index[0])
-      ~~~ name (index[0]/arg[0])
       ~~~ expression (index[0]/arg[0])
 --AST
 s(:index,

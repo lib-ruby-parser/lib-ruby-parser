@@ -6,7 +6,6 @@ foo.fun (1) {}
 ~~~~~~~~~~~~~~ expression ()
     ~~~ selector (call)
 ~~~~~~~~~~~ expression (call)
-~~~ name (call/recv)
 ~~~ expression (call/recv)
         ~ begin (call/arg[0])
           ~ end (call/arg[0])

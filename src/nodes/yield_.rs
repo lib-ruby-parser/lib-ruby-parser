@@ -8,6 +8,8 @@ pub struct Yield {
     pub args: Vec<Node>,
 
     pub keyword_l: Range,
+    pub begin_l: Option<Range>,
+    pub end_l: Option<Range>,
     pub expression_l: Range,
 }
 

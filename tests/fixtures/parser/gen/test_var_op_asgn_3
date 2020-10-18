@@ -7,7 +7,6 @@ def a; @@var |= 10; end
 ~~~~~~~~~~~~~~~~~~~~~~~ expression ()
              ~~ operator (body)
        ~~~~~~~~~~~ expression (body)
-       ~~~~~ name (body/recv)
        ~~~~~ expression (body/recv)
 --AST
 s(:def, "a", nil,

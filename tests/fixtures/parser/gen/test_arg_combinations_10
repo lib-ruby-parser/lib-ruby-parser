@@ -10,7 +10,6 @@ def f o=1, p, &b; end
       ~ name (args/arg[0])
       ~~~ expression (args/arg[0])
         ~ expression (args/arg[0]/default)
-           ~ name (args/arg[1])
            ~ expression (args/arg[1])
                ~ name (args/arg[2])
               ~~ expression (args/arg[2])

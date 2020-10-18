@@ -117,6 +117,8 @@ pub fn print_all_locs(src: &str, node: &Node) {
         }
         Node::Break(node) => {
             print_loc("keyword", &node.keyword_l);
+            maybe_print_loc("begin", &node.begin_l);
+            maybe_print_loc("end", &node.end_l);
             print_loc("expression", &node.expression_l);
 
             foeach_print_all_locs(src, &node.args);
@@ -215,6 +217,8 @@ pub fn print_all_locs(src: &str, node: &Node) {
         }
         Node::Defined(node) => {
             print_loc("keyword", &node.keyword_l);
+            maybe_print_loc("begin", &node.begin_l);
+            maybe_print_loc("end", &node.end_l);
             print_loc("expression", &node.expression_l);
 
             print_all_locs(src, &node.value);
@@ -397,7 +401,7 @@ pub fn print_all_locs(src: &str, node: &Node) {
             maybe_print_all_locs(src, &node.value);
         }
         Node::InMatch(node) => {
-            print_loc("keyword", &node.keyword_l);
+            print_loc("operator", &node.operator_l);
             print_loc("expression", &node.expression_l);
 
             print_all_locs(src, &node.value);
@@ -445,6 +449,7 @@ pub fn print_all_locs(src: &str, node: &Node) {
             foeach_print_all_locs(src, &node.statements)
         }
         Node::Kwnilarg(node) => {
+            print_loc("name", &node.name_l);
             print_loc("expression", &node.expression_l);
         }
         Node::Kwoptarg(node) => {
@@ -601,7 +606,7 @@ pub fn print_all_locs(src: &str, node: &Node) {
             print_all_locs(src, &node.value);
         }
         Node::Pin(node) => {
-            print_loc("operator", &node.operator_l);
+            print_loc("selector", &node.selector_l);
             print_loc("expression", &node.expression_l);
 
             print_all_locs(src, &node.var);
@@ -716,6 +721,8 @@ pub fn print_all_locs(src: &str, node: &Node) {
         }
         Node::Super(node) => {
             print_loc("keyword", &node.keyword_l);
+            maybe_print_loc("begin", &node.begin_l);
+            maybe_print_loc("end", &node.end_l);
             print_loc("expression", &node.expression_l);
 
             foeach_print_all_locs(src, &node.args)
@@ -757,7 +764,7 @@ pub fn print_all_locs(src: &str, node: &Node) {
             print_all_locs(src, &node.body);
         }
         Node::When(node) => {
-            print_loc("when", &node.when_l);
+            print_loc("keyword", &node.keyword_l);
             print_loc("begin", &node.begin_l);
             print_loc("expression", &node.expression_l);
 
@@ -796,6 +803,8 @@ pub fn print_all_locs(src: &str, node: &Node) {
         }
         Node::Yield(node) => {
             print_loc("keyword", &node.keyword_l);
+            maybe_print_loc("begin", &node.begin_l);
+            maybe_print_loc("end", &node.end_l);
             print_loc("expression", &node.expression_l);
 
             foeach_print_all_locs(src, &node.args)

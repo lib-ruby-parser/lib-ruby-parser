@@ -7,7 +7,6 @@ fun(&bar)
 ~~~~~~~~~ expression ()
     ~ operator (arg[0])
     ~~~~ expression (arg[0])
-     ~~~ name (arg[0]/value)
      ~~~ expression (arg[0]/value)
 --AST
 s(:send, nil, "fun",

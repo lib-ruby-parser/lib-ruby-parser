@@ -5,7 +5,6 @@ super(foo)
          ~ end ()
 ~~~~~ keyword ()
 ~~~~~~~~~~ expression ()
-      ~~~ name (arg[0])
       ~~~ expression (arg[0])
 --AST
 s(:super,

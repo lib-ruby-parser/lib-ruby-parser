@@ -83,6 +83,7 @@ fn test(fixture_path: &str) -> TestResult {
             .map(|node| node.inspect(0))
             .unwrap_or("nil".to_owned());
         if ast_output != test_case.ast {
+            println!("{:?}", test_case.input);
             return Err(format!(
                 "AST diff:\nactual:\n{}\nexpected:\n{}\n",
                 ast_output, test_case.ast

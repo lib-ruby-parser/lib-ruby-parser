@@ -2,7 +2,7 @@
 /(?<match>bar)/ =~ 'bar'; match
 --LOCATIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-                ~~ selector (stmt[0])
+~~~~~~~~~~~~~~~~~~~~~~~~ expression (stmt[0])
 ~~~~~~~~~~~~~~~~~~~~~~~~ expression (stmt[0])
 ~ begin (stmt[0]/re)
               ~ end (stmt[0]/re)
@@ -11,7 +11,6 @@
                    ~ begin (stmt[0]/value)
                        ~ end (stmt[0]/value)
                    ~~~~~ expression (stmt[0]/value)
-                          ~~~~~ name (stmt[1])
                           ~~~~~ expression (stmt[1])
 --AST
 s(:begin,

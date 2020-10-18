@@ -8,7 +8,7 @@ pub struct InMatch {
     pub value: Box<Node>,
     pub pattern: Box<Node>,
 
-    pub keyword_l: Range,
+    pub operator_l: Range,
     pub expression_l: Range,
 }
 

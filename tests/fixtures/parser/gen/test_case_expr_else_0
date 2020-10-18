@@ -5,7 +5,6 @@ case foo; when 'bar'; bar; else baz; end
                                      ~~~ end ()
                            ~~~~ else ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-     ~~~ name (expr)
      ~~~ expression (expr)
                     ~ begin (when_body[0])
           ~~~~ keyword (when_body[0])
@@ -13,9 +12,7 @@ case foo; when 'bar'; bar; else baz; end
                ~ begin (when_body[0]/arg[0])
                    ~ end (when_body[0]/arg[0])
                ~~~~~ expression (when_body[0]/arg[0])
-                      ~~~ name (when_body[0]/body)
                       ~~~ expression (when_body[0]/body)
-                                ~~~ name (else_body)
                                 ~~~ expression (else_body)
 --AST
 s(:case,

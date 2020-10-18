@@ -5,13 +5,10 @@ for a in foo do p a; end
                      ~~~ end ()
              ~~ begin ()
 ~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-    ~ name (iterator)
     ~ expression (iterator)
-         ~~~ name (iteratee)
          ~~~ expression (iteratee)
                 ~ selector (body)
                 ~~~ expression (body)
-                  ~ name (body/arg[0])
                   ~ expression (body/arg[0])
 --AST
 s(:for,

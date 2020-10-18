@@ -8,9 +8,7 @@ self::A, foo = foo
     ~~ double_colon (lhs/item[0])
 ~~~~~~~ expression (lhs/item[0])
 ~~~~ expression (lhs/item[0]/scope)
-         ~~~ name (lhs/item[1])
          ~~~ expression (lhs/item[1])
-               ~~~ name (rhs)
                ~~~ expression (rhs)
 --AST
 s(:masgn,

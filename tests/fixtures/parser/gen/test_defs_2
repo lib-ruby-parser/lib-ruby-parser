@@ -6,7 +6,6 @@ def (foo).foo; end
           ~~~ name ()
                ~~~ end ()
 ~~~~~~~~~~~~~~~~~~ expression ()
-     ~~~ name (definee)
      ~~~ expression (definee)
 --AST
 s(:defs,

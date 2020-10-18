@@ -1,7 +1,7 @@
 --INPUT
 /\xa8/n =~ ""
 --LOCATIONS
-        ~~ selector ()
+~~~~~~~~~~~~~ expression ()
 ~~~~~~~~~~~~~ expression ()
 ~ begin (re)
      ~ end (re)

@@ -267,6 +267,10 @@ impl Node {
         self.inner().expression()
     }
 
+    pub fn str_type(&self) -> &'static str {
+        self.inner().str_type()
+    }
+
     pub fn empty_begin(loc: &Loc) -> Self {
         Node::Begin(Begin {
             statements: vec![],

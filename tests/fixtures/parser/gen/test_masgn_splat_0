@@ -4,14 +4,11 @@
             ~ operator ()
 ~~~~~~~~~~~~~~~~~~ expression ()
 ~~~~~~~~~~~ expression (lhs)
-~~~~ name (lhs/item[0])
 ~~~~ expression (lhs/item[0])
-      ~~~~~ name (lhs/item[1])
       ~~~~~ expression (lhs/item[1])
               ~~~~ expression (rhs)
               ~ operator (rhs/element[0])
               ~~~~ expression (rhs/element[0])
-               ~~~ name (rhs/element[0]/value)
                ~~~ expression (rhs/element[0]/value)
 --AST
 s(:masgn,

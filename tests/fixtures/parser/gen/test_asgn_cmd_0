@@ -6,7 +6,6 @@ foo = m foo
 ~~~~~~~~~~~ expression ()
       ~ selector (value)
       ~~~~~ expression (value)
-        ~~~ name (value/arg[0])
         ~~~ expression (value/arg[0])
 --AST
 s(:lvasgn, "foo",

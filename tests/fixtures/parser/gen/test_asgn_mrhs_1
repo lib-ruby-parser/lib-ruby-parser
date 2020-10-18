@@ -7,7 +7,6 @@ foo = *bar
       ~~~~ expression (value)
       ~ operator (value/element[0])
       ~~~~ expression (value/element[0])
-       ~~~ name (value/element[0]/value)
        ~~~ expression (value/element[0]/value)
 --AST
 s(:lvasgn, "foo",

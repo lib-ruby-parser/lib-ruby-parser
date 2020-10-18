@@ -9,7 +9,6 @@
   ~ begin (stmt[0]/args)
         ~ end (stmt[0]/args)
   ~~~~~~~ expression (stmt[0]/args)
-   ~~~~~ name (stmt[0]/args/arg[0])
    ~~~~~ expression (stmt[0]/args/arg[0])
               ~~~~~ selector (stmt[1])
               ~~~~~ expression (stmt[1])

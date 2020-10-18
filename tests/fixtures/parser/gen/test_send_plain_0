@@ -3,7 +3,6 @@ foo.fun
 --LOCATIONS
     ~~~ selector ()
 ~~~~~~~ expression ()
-~~~ name (recv)
 ~~~ expression (recv)
 --AST
 s(:send,

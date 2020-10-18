@@ -8,7 +8,6 @@ def f *r, p, &b; end
       ~~~~~~~~~ expression (args)
        ~ name (args/arg[0])
       ~~ expression (args/arg[0])
-          ~ name (args/arg[1])
           ~ expression (args/arg[1])
               ~ name (args/arg[2])
              ~~ expression (args/arg[2])

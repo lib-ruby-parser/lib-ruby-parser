@@ -5,7 +5,6 @@ foo.a ||= 1
 ~~~~~~~~~~~ expression ()
     ~ selector (recv)
 ~~~~~ expression (recv)
-~~~ name (recv/recv)
 ~~~ expression (recv/recv)
           ~ expression (value)
 --AST

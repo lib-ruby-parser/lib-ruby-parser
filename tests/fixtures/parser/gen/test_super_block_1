@@ -4,7 +4,6 @@ super do end
       ~~ begin ()
          ~~~ end ()
 ~~~~~~~~~~~~ expression ()
-~~~~~ keyword (call)
 ~~~~~ expression (call)
 --AST
 s(:block,

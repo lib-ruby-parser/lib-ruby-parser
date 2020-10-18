@@ -8,7 +8,6 @@ case foo;
 ~~~~ keyword ()
                                                                    ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-     ~~~ name (expr)
      ~~~ expression (expr)
                    ~~ keyword (in_body[0])
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (in_body[0])

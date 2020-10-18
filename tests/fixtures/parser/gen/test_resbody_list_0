@@ -13,7 +13,6 @@ begin; meth; rescue Exception; bar; end
                     ~~~~~~~~~ expression (stmt[0]/rescue_body[0]/exc_list)
                     ~~~~~~~~~ name (stmt[0]/rescue_body[0]/exc_list/element[0])
                     ~~~~~~~~~ expression (stmt[0]/rescue_body[0]/exc_list/element[0])
-                               ~~~ name (stmt[0]/rescue_body[0]/body)
                                ~~~ expression (stmt[0]/rescue_body[0]/body)
 --AST
 s(:kwbegin,

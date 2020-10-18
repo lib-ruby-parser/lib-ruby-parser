@@ -4,7 +4,6 @@ end
 --LOCATIONS
 ~~~~~ keyword ()
         ~ operator ()
-      ~ name ()
             ~~~ end ()
 ~~~~~~~~~~~~~~~ expression ()
       ~ name (name)

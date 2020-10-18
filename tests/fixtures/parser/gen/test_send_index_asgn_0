@@ -5,7 +5,6 @@ foo[1, 2] = 3
         ~ end ()
           ~ operator ()
 ~~~~~~~~~~~~~ expression ()
-~~~ name (recv)
 ~~~ expression (recv)
     ~ expression (index[0])
        ~ expression (index[1])

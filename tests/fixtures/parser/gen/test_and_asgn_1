@@ -6,7 +6,6 @@ foo[0, 1] &&= 2
    ~ begin (recv)
         ~ end (recv)
 ~~~~~~~~~ expression (recv)
-~~~ name (recv/recv)
 ~~~ expression (recv/recv)
     ~ expression (recv/index[0])
        ~ expression (recv/index[1])

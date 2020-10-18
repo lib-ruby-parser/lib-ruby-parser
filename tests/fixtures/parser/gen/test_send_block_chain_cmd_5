@@ -14,7 +14,6 @@ meth 1 do end.fun(bar) {}
 ~~~~ selector (call/recv/call)
 ~~~~~~ expression (call/recv/call)
      ~ expression (call/recv/call/arg[0])
-                  ~~~ name (call/arg[0])
                   ~~~ expression (call/arg[0])
 --AST
 s(:block,

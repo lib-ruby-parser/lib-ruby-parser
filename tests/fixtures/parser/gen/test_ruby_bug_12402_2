@@ -6,7 +6,6 @@ foo[0] += raise(bar) rescue nil
    ~ begin (recv)
      ~ end (recv)
 ~~~~~~ expression (recv)
-~~~ name (recv/recv)
 ~~~ expression (recv/recv)
     ~ expression (recv/index[0])
 --AST

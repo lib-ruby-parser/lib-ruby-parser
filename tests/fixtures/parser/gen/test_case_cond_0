@@ -7,7 +7,6 @@ case; when foo; 'foo'; end
               ~ begin (when_body[0])
       ~~~~ keyword (when_body[0])
       ~~~~~~~~~~~~~~~ expression (when_body[0])
-           ~~~ name (when_body[0]/arg[0])
            ~~~ expression (when_body[0]/arg[0])
                 ~ begin (when_body[0]/body)
                     ~ end (when_body[0]/body)

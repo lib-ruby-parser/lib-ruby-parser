@@ -14,7 +14,6 @@ def f (((a))); end
         ~ begin (args/arg[0]/item[0])
           ~ end (args/arg[0]/item[0])
         ~~~ expression (args/arg[0]/item[0])
-         ~ name (args/arg[0]/item[0]/item[0])
          ~ expression (args/arg[0]/item[0]/item[0])
 --AST
 s(:def, "f",

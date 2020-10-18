@@ -6,11 +6,8 @@ if foo; bar; else baz; end
              ~~~~ else ()
       ~ begin ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-   ~~~ name (cond)
    ~~~ expression (cond)
-        ~~~ name (if_true)
         ~~~ expression (if_true)
-                  ~~~ name (if_false)
                   ~~~ expression (if_false)
 --AST
 s(:if,

@@ -3,7 +3,6 @@ meth until foo
 --LOCATIONS
      ~~~~~ keyword ()
 ~~~~~~~~~~~~~~ expression ()
-           ~~~ name (cond)
            ~~~ expression (cond)
 ~~~~ selector (body)
 ~~~~ expression (body)

@@ -8,16 +8,12 @@ if (bar; a, b = foo); end
    ~ begin (cond)
                    ~ end (cond)
    ~~~~~~~~~~~~~~~~~ expression (cond)
-    ~~~ name (cond/stmt[0])
     ~~~ expression (cond/stmt[0])
               ~ operator (cond/stmt[1])
          ~~~~~~~~~~ expression (cond/stmt[1])
          ~~~~ expression (cond/stmt[1]/lhs)
-         ~ name (cond/stmt[1]/lhs/item[0])
          ~ expression (cond/stmt[1]/lhs/item[0])
-            ~ name (cond/stmt[1]/lhs/item[1])
             ~ expression (cond/stmt[1]/lhs/item[1])
-                ~~~ name (cond/stmt[1]/rhs)
                 ~~~ expression (cond/stmt[1]/rhs)
 --AST
 s(:if,

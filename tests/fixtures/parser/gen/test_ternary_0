@@ -4,7 +4,6 @@ foo ? 1 : 2
         ~ colon ()
     ~ question ()
 ~~~~~~~~~~~ expression ()
-~~~ name (cond)
 ~~~ expression (cond)
       ~ expression (if_true)
           ~ expression (if_false)

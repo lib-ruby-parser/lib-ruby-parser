@@ -6,7 +6,6 @@ a = b += raise :x
 ~~~~~~~~~~~~~~~~~ expression ()
       ~~ operator (value)
     ~~~~~~~~~~~~~ expression (value)
-    ~ name (value/recv)
     ~ expression (value/recv)
 --AST
 s(:lvasgn, "a",

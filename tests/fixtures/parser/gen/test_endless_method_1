@@ -8,11 +8,9 @@ def inc(x) = x + 1
        ~ begin (args)
          ~ end (args)
        ~~~ expression (args)
-        ~ name (args/arg[0])
         ~ expression (args/arg[0])
                ~ selector (body)
              ~~~~~ expression (body)
-             ~ name (body/recv)
              ~ expression (body/recv)
                  ~ expression (body/arg[0])
 --AST

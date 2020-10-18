@@ -3,9 +3,9 @@ alias :foo bar
 --LOCATIONS
 ~~~~~ keyword ()
 ~~~~~~~~~~~~~~ expression ()
-      ~ begin (from)
-      ~~~~ expression (from)
-           ~~~ expression (to)
+      ~ begin (to)
+      ~~~~ expression (to)
+           ~~~ expression (from)
 --AST
 s(:alias,
   s(:sym, "foo"),

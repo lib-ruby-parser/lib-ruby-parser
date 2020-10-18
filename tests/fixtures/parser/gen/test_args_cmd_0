@@ -7,7 +7,6 @@ fun(f bar)
 ~~~~~~~~~~ expression ()
     ~ selector (arg[0])
     ~~~~~ expression (arg[0])
-      ~~~ name (arg[0]/arg[0])
       ~~~ expression (arg[0]/arg[0])
 --AST
 s(:send, nil, "fun",

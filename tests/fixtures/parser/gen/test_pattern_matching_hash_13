@@ -7,7 +7,6 @@ case foo;
 ~~~~ keyword ()
                                                         ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-     ~~~ name (expr)
      ~~~ expression (expr)
                    ~~ keyword (in_body[0])
                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (in_body[0])
@@ -24,7 +23,6 @@ case foo;
                                ~~ expression (in_body[0]/pattern/element[1])
                                             ~ selector (in_body[0]/body)
                                             ~~~ expression (in_body[0]/body)
-                                              ~ name (in_body[0]/body/arg[0])
                                               ~ expression (in_body[0]/body/arg[0])
 --AST
 s(:case_match,

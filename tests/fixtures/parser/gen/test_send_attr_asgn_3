@@ -4,7 +4,6 @@ foo::A = 1
      ~ name ()
    ~~ double_colon ()
 ~~~~~~~~~~ expression ()
-~~~ name (scope)
 ~~~ expression (scope)
          ~ expression (value)
 --AST

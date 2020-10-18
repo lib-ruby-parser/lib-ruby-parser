@@ -269,10 +269,10 @@ module ParseHelperPatch
         locs(value, path + ['value']),
       ]
     when :alias
-      from, to = *ast
+      to, from = *ast
       [
-        locs(from, path + ['from']),
         locs(to, path + ['to']),
+        locs(from, path + ['from']),
       ]
     when :case_match
       expr, *in_bodies, else_body = *ast
@@ -474,7 +474,33 @@ module ParseHelperPatch
   def ranges(loc, path, *fields)
     path = path.join('/')
     if %i[and_asgn or_asgn op_asgn].include?(loc.node.type)
+      # drop locs that are copied from children
       fields = [:operator]
+    end
+
+    if %i[lvar ident arg shadowarg ivar cvar gvar back_ref nth_ref].include?(loc.node.type)
+      # name_l == expression_l
+      fields -= [:name]
+    end
+
+    if %i[class module].include?(loc.node.type)
+      # name_l is copied from name.expression_l
+      fields -= [:name]
+    end
+
+    if %i[retry zsuper redo].include?(loc.node.type)
+      # keyword_l == expression_l
+      fields -= [:keyword]
+    end
+
+    if %i[match_with_lvasgn].include?(loc.node.type)
+      # drop locs that are copied from children
+      fields = [:expression]
+    end
+
+    if %i[int].include?(loc.node.type) && !loc.operator.nil? && loc.operator.source == '+'
+      # `+` in `+2` is not an operator
+      fields -= [:operator]
     end
 
     [*fields, :expression].map do |field|

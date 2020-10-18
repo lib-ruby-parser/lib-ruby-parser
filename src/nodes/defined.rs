@@ -8,6 +8,8 @@ pub struct Defined {
     pub value: Box<Node>,
 
     pub keyword_l: Range,
+    pub begin_l: Option<Range>,
+    pub end_l: Option<Range>,
     pub expression_l: Range,
 }
 

@@ -16,9 +16,7 @@ m ->(a: ->{_1}) {a}
              ~ end (arg[0]/args/arg[0]/default)
         ~~~~~~ expression (arg[0]/args/arg[0]/default)
         ~~ expression (arg[0]/args/arg[0]/default/call)
-           ~~ name (arg[0]/args/arg[0]/default/body)
            ~~ expression (arg[0]/args/arg[0]/default/body)
-                 ~ name (arg[0]/body)
                  ~ expression (arg[0]/body)
 --AST
 s(:send, nil, "m",

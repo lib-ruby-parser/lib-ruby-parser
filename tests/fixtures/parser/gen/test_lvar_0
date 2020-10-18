@@ -1,7 +1,6 @@
 --INPUT
 foo
 --LOCATIONS
-~~~ name ()
 ~~~ expression ()
 --AST
 s(:lvar, "foo")

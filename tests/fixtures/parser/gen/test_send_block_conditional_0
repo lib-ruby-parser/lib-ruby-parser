@@ -6,7 +6,6 @@ foo&.bar {}
 ~~~~~~~~~~~ expression ()
      ~~~ selector (call)
 ~~~~~~~~ expression (call)
-~~~ name (call/recv)
 ~~~ expression (call/recv)
 --AST
 s(:block,

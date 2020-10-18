@@ -9,7 +9,6 @@ f{ |;a| }
    ~ begin (args)
       ~ end (args)
    ~~~~ expression (args)
-     ~ name (args/arg[0])
      ~ expression (args/arg[0])
 --AST
 s(:block,

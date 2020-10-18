@@ -13,7 +13,6 @@ self.a, self[1, 2] = foo
         ~~~~ expression (lhs/item[1]/recv)
              ~ expression (lhs/item[1]/index[0])
                 ~ expression (lhs/item[1]/index[1])
-                     ~~~ name (rhs)
                      ~~~ expression (rhs)
 --AST
 s(:masgn,

@@ -2,7 +2,6 @@
 class Foo end
 --LOCATIONS
 ~~~~~ keyword ()
-      ~~~ name ()
           ~~~ end ()
 ~~~~~~~~~~~~~ expression ()
       ~~~ name (name)

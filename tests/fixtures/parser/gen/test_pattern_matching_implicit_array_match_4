@@ -4,7 +4,6 @@ case foo; in x, y, then nil; end
 ~~~~ keyword ()
                              ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-     ~~~ name (expr)
      ~~~ expression (expr)
                    ~~~~ begin (in_body[0])
           ~~ keyword (in_body[0])

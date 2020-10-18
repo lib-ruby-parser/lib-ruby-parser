@@ -9,7 +9,6 @@ foo = bar = m foo
       ~~~~~~~~~~~ expression (value)
             ~ selector (value/value)
             ~~~~~ expression (value/value)
-              ~~~ name (value/value/arg[0])
               ~~~ expression (value/value/arg[0])
 --AST
 s(:lvasgn, "foo",

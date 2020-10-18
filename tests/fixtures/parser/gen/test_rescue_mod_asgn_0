@@ -9,7 +9,6 @@ foo = meth rescue bar
       ~~~~ expression (value/body)
            ~~~~~~ keyword (value/rescue_body[0])
            ~~~~~~~~~~ expression (value/rescue_body[0])
-                  ~~~ name (value/rescue_body[0]/body)
                   ~~~ expression (value/rescue_body[0]/body)
 --AST
 s(:lvasgn, "foo",

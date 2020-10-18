@@ -9,11 +9,8 @@
        ~ operator (recv/stmt[0])
   ~~~~~~~~~~ expression (recv/stmt[0])
   ~~~~ expression (recv/stmt[0]/lhs)
-  ~ name (recv/stmt[0]/lhs/item[0])
   ~ expression (recv/stmt[0]/lhs/item[0])
-     ~ name (recv/stmt[0]/lhs/item[1])
      ~ expression (recv/stmt[0]/lhs/item[1])
-         ~~~ name (recv/stmt[0]/rhs)
          ~~~ expression (recv/stmt[0]/rhs)
 --AST
 s(:send,

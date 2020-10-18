@@ -5,7 +5,6 @@ class << foo; _1; end
       ~~ operator ()
                   ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~~ expression ()
-         ~~~ name (expr)
          ~~~ expression (expr)
               ~~ selector (body)
               ~~ expression (body)

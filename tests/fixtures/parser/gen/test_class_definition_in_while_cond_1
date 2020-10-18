@@ -6,7 +6,6 @@ while class Foo a = tap do end; end; break; end
 ~~~~~ keyword ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
       ~~~~~ keyword (cond)
-            ~~~ name (cond)
                                 ~~~ end (cond)
       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (cond)
             ~~~ name (cond/name)

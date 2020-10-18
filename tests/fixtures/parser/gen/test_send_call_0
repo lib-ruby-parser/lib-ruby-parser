@@ -4,7 +4,6 @@ foo.(1)
     ~ begin ()
       ~ end ()
 ~~~~~~~ expression ()
-~~~ name (recv)
 ~~~ expression (recv)
      ~ expression (arg[0])
 --AST

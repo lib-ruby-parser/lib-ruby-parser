@@ -9,7 +9,6 @@ f{ |a, *, &b| }
    ~ begin (args)
             ~ end (args)
    ~~~~~~~~~~ expression (args)
-    ~ name (args/arg[0])
     ~ expression (args/arg[0])
        ~ expression (args/arg[1])
            ~ name (args/arg[2])

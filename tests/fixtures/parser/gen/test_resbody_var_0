@@ -11,9 +11,7 @@ begin; meth; rescue => ex; bar; end
                     ~~ assoc (stmt[0]/rescue_body[0])
                          ~ begin (stmt[0]/rescue_body[0])
              ~~~~~~~~~~~~~~~~~ expression (stmt[0]/rescue_body[0])
-                       ~~ name (stmt[0]/rescue_body[0]/exc_var)
                        ~~ expression (stmt[0]/rescue_body[0]/exc_var)
-                           ~~~ name (stmt[0]/rescue_body[0]/body)
                            ~~~ expression (stmt[0]/rescue_body[0]/body)
 --AST
 s(:kwbegin,

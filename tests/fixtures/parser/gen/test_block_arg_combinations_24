@@ -15,7 +15,6 @@ f{ |o=1, *r, p, &b| }
       ~ expression (args/arg[0]/default)
           ~ name (args/arg[1])
          ~~ expression (args/arg[1])
-             ~ name (args/arg[2])
              ~ expression (args/arg[2])
                  ~ name (args/arg[3])
                 ~~ expression (args/arg[3])

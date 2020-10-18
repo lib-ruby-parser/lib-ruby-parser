@@ -5,7 +5,6 @@ foo::Fun()
          ~ end ()
      ~~~ selector ()
 ~~~~~~~~~~ expression ()
-~~~ name (recv)
 ~~~ expression (recv)
 --AST
 s(:send,

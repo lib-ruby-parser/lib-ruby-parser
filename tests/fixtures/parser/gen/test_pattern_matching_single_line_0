@@ -10,7 +10,6 @@
      ~~~ expression (stmt[0]/pattern)
       ~ name (stmt[0]/pattern/element[0])
       ~ expression (stmt[0]/pattern/element[0])
-          ~ name (stmt[1])
           ~ expression (stmt[1])
 --AST
 s(:begin,

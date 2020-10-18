@@ -6,7 +6,6 @@
 ~~~~~~ expression ()
  ~ operator (element[0])
  ~~~~ expression (element[0])
-  ~~~ name (element[0]/value)
   ~~~ expression (element[0]/value)
 --AST
 s(:array,

@@ -3,9 +3,7 @@ bar unless foo
 --LOCATIONS
     ~~~~~~ keyword ()
 ~~~~~~~~~~~~~~ expression ()
-           ~~~ name (cond)
            ~~~ expression (cond)
-~~~ name (if_false)
 ~~~ expression (if_false)
 --AST
 s(:if,

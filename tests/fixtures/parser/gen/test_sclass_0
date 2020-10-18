@@ -5,7 +5,6 @@ class << foo; nil; end
       ~~ operator ()
                    ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~~~ expression ()
-         ~~~ name (expr)
          ~~~ expression (expr)
               ~~~ expression (body)
 --AST

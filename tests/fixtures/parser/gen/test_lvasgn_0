@@ -6,7 +6,6 @@ var = 10; var
 ~~~ name (stmt[0])
 ~~~~~~~~ expression (stmt[0])
       ~~ expression (stmt[0]/value)
-          ~~~ name (stmt[1])
           ~~~ expression (stmt[1])
 --AST
 s(:begin,

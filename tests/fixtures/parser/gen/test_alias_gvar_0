@@ -3,10 +3,8 @@ alias $a $b
 --LOCATIONS
 ~~~~~ keyword ()
 ~~~~~~~~~~~ expression ()
-      ~~ name (from)
-      ~~ expression (from)
-         ~~ name (to)
-         ~~ expression (to)
+      ~~ expression (to)
+         ~~ expression (from)
 --AST
 s(:alias,
   s(:gvar, "$a"),

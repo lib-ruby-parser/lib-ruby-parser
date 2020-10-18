@@ -1340,7 +1340,10 @@ impl Builder {
         let dstar_l = loc(&dstar_t);
         let nil_l = loc(&nil_t);
         let expression_l = dstar_l.join(&nil_l);
-        Node::Kwnilarg(Kwnilarg { expression_l })
+        Node::Kwnilarg(Kwnilarg {
+            name_l: nil_l,
+            expression_l,
+        })
     }
 
     pub fn shadowarg(&self, name_t: Token) -> Node {
@@ -1572,6 +1575,8 @@ impl Builder {
             Node::Break(Break {
                 args,
                 keyword_l,
+                begin_l,
+                end_l,
                 expression_l,
             }) => {
                 let (args, expression_l) =
@@ -1579,6 +1584,8 @@ impl Builder {
                 Node::Break(Break {
                     args,
                     keyword_l: keyword_l.clone(),
+                    begin_l: begin_l.clone(),
+                    end_l: end_l.clone(),
                     expression_l,
                 })
             }
@@ -1903,7 +1910,7 @@ impl Builder {
         Node::When(When {
             patterns,
             body: body.map(Box::new),
-            when_l,
+            keyword_l: when_l,
             begin_l,
             expression_l,
         })
@@ -2056,18 +2063,22 @@ impl Builder {
             }
         }
 
-        let (keyword_l, _begin_l, _end_l, expression_l) =
+        let (keyword_l, begin_l, end_l, expression_l) =
             keyword_map(&keyword_t, &lparen_t, &args, &rparen_t);
 
         match type_ {
             KeywordCmd::Break => Node::Break(Break {
                 args,
                 keyword_l,
+                begin_l,
+                end_l,
                 expression_l,
             }),
             KeywordCmd::Defined => Node::Defined(Defined {
                 value: Box::new(args.pop().unwrap()),
                 keyword_l,
+                begin_l,
+                end_l,
                 expression_l,
             }),
             KeywordCmd::Next => Node::Next(Next {
@@ -2085,11 +2096,15 @@ impl Builder {
             KeywordCmd::Super => Node::Super(Super {
                 args,
                 keyword_l,
+                begin_l,
+                end_l,
                 expression_l,
             }),
             KeywordCmd::Yield => Node::Yield(Yield {
                 args,
                 keyword_l,
+                begin_l,
+                end_l,
                 expression_l,
             }),
             KeywordCmd::Zsuper => Node::ZSuper(ZSuper { expression_l }),
@@ -2400,7 +2415,7 @@ impl Builder {
         Node::InMatch(InMatch {
             value: Box::new(value),
             pattern: Box::new(pattern),
-            keyword_l,
+            operator_l: keyword_l,
             expression_l,
         })
     }
@@ -2661,7 +2676,7 @@ impl Builder {
 
         Node::Pin(Pin {
             var: Box::new(var),
-            operator_l,
+            selector_l: operator_l,
             expression_l,
         })
     }

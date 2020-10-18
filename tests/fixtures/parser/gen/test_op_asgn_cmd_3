@@ -6,7 +6,6 @@ foo::A += m foo
      ~ name (recv)
    ~~ double_colon (recv)
 ~~~~~~ expression (recv)
-~~~ name (recv/scope)
 ~~~ expression (recv/scope)
 --AST
 s(:op_asgn,

@@ -11,11 +11,8 @@ if (a, b = foo); end
          ~ operator (cond/stmt[0])
     ~~~~~~~~~~ expression (cond/stmt[0])
     ~~~~ expression (cond/stmt[0]/lhs)
-    ~ name (cond/stmt[0]/lhs/item[0])
     ~ expression (cond/stmt[0]/lhs/item[0])
-       ~ name (cond/stmt[0]/lhs/item[1])
        ~ expression (cond/stmt[0]/lhs/item[1])
-           ~~~ name (cond/stmt[0]/rhs)
            ~~~ expression (cond/stmt[0]/rhs)
 --AST
 s(:if,

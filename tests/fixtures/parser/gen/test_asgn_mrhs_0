@@ -5,7 +5,6 @@ foo = bar, 1
 ~~~ name ()
 ~~~~~~~~~~~~ expression ()
       ~~~~~~ expression (value)
-      ~~~ name (value/element[0])
       ~~~ expression (value/element[0])
            ~ expression (value/element[1])
 --AST

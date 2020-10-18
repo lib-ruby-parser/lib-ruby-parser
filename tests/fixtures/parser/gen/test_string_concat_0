@@ -6,7 +6,6 @@
        ~ end (part[0])
 ~~~~~~~~ expression (part[0])
  ~~~ expression (part[0]/part[0])
-     ~~ name (part[0]/part[1])
      ~~ expression (part[0]/part[1])
          ~ begin (part[1])
              ~ end (part[1])

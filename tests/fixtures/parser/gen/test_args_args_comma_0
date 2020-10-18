@@ -4,9 +4,7 @@ foo[bar,]
    ~ begin ()
         ~ end ()
 ~~~~~~~~~ expression ()
-~~~ name (recv)
 ~~~ expression (recv)
-    ~~~ name (index[0])
     ~~~ expression (index[0])
 --AST
 s(:index,

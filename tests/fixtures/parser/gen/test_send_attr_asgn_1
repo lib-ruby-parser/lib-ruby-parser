@@ -3,7 +3,6 @@ foo::a = 1
 --LOCATIONS
      ~ selector ()
 ~~~~~~~~~~ expression ()
-~~~ name (recv)
 ~~~ expression (recv)
          ~ expression (arg[0])
 --AST

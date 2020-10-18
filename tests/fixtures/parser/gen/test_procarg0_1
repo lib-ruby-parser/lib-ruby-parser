@@ -12,9 +12,7 @@ m { |(foo, bar)| }
      ~ begin (args/arg[0])
               ~ end (args/arg[0])
      ~~~~~~~~~~ expression (args/arg[0])
-      ~~~ name (args/arg[0]/arg[0])
       ~~~ expression (args/arg[0]/arg[0])
-           ~~~ name (args/arg[0]/arg[1])
            ~~~ expression (args/arg[0]/arg[1])
 --AST
 s(:block,

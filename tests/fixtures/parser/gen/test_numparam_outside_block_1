@@ -2,7 +2,6 @@
 module A; _1; end
 --LOCATIONS
 ~~~~~~ keyword ()
-       ~ name ()
               ~~~ end ()
 ~~~~~~~~~~~~~~~~~ expression ()
        ~ name (name)

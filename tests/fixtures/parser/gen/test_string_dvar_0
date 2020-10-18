@@ -4,13 +4,10 @@
 ~ begin ()
              ~ end ()
 ~~~~~~~~~~~~~~ expression ()
-  ~~ name (part[0])
   ~~ expression (part[0])
     ~ expression (part[1])
-      ~~~ name (part[2])
       ~~~ expression (part[2])
          ~ expression (part[3])
-           ~~ name (part[4])
            ~~ expression (part[4])
 --AST
 s(:dstr,

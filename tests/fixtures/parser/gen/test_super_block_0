@@ -6,9 +6,7 @@ super foo, bar do end
 ~~~~~~~~~~~~~~~~~~~~~ expression ()
 ~~~~~ keyword (call)
 ~~~~~~~~~~~~~~ expression (call)
-      ~~~ name (call/arg[0])
       ~~~ expression (call/arg[0])
-           ~~~ name (call/arg[1])
            ~~~ expression (call/arg[1])
 --AST
 s(:block,

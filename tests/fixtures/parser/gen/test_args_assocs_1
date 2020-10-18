@@ -13,7 +13,6 @@ fun(:foo => 1, &baz)
             ~ expression (arg[0]/pair[0]/value)
                ~ operator (arg[1])
                ~~~~ expression (arg[1])
-                ~~~ name (arg[1]/value)
                 ~~~ expression (arg[1]/value)
 --AST
 s(:send, nil, "fun",

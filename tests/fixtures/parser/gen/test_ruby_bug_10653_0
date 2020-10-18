@@ -15,11 +15,9 @@ true ? 1.tap do |n| p n end : 0
                   ~ end (if_true/args)
                 ~~~ expression (if_true/args)
                  ~ expression (if_true/args/arg[0])
-                 ~ name (if_true/args/arg[0]/arg[0])
                  ~ expression (if_true/args/arg[0]/arg[0])
                     ~ selector (if_true/body)
                     ~~~ expression (if_true/body)
-                      ~ name (if_true/body/arg[0])
                       ~ expression (if_true/body/arg[0])
                               ~ expression (if_false)
 --AST

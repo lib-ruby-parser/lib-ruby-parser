@@ -6,7 +6,6 @@ def foo raise; raise A::B, ''; end
                                ~~~ end ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
         ~~~~~ expression (args)
-        ~~~~~ name (args/arg[0])
         ~~~~~ expression (args/arg[0])
                ~~~~~ selector (body)
                ~~~~~~~~~~~~~~ expression (body)

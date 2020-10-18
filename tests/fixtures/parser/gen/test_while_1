@@ -5,7 +5,6 @@ while foo; meth end
                 ~~~ end ()
 ~~~~~ keyword ()
 ~~~~~~~~~~~~~~~~~~~ expression ()
-      ~~~ name (cond)
       ~~~ expression (cond)
            ~~~~ selector (body)
            ~~~~ expression (body)

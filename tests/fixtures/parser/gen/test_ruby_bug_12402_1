@@ -3,7 +3,6 @@ foo += raise(bar) rescue nil
 --LOCATIONS
     ~~ operator ()
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-~~~ name (recv)
 ~~~ expression (recv)
 --AST
 s(:op_asgn,

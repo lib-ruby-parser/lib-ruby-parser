@@ -4,11 +4,9 @@ a, * = bar
      ~ operator ()
 ~~~~~~~~~~ expression ()
 ~~~~ expression (lhs)
-~ name (lhs/item[0])
 ~ expression (lhs/item[0])
    ~ operator (lhs/item[1])
    ~ expression (lhs/item[1])
-       ~~~ name (rhs)
        ~~~ expression (rhs)
 --AST
 s(:masgn,

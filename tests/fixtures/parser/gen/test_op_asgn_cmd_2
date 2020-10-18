@@ -5,7 +5,6 @@ foo.A += m foo
 ~~~~~~~~~~~~~~ expression ()
     ~ selector (recv)
 ~~~~~ expression (recv)
-~~~ name (recv/recv)
 ~~~ expression (recv/recv)
 --AST
 s(:op_asgn,

@@ -5,7 +5,6 @@ defined?(foo)
             ~ end ()
 ~~~~~~~~ keyword ()
 ~~~~~~~~~~~~~ expression ()
-         ~~~ name (value)
          ~~~ expression (value)
 --AST
 s(:defined?,
