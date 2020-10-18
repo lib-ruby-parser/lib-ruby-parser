@@ -652,7 +652,7 @@ impl Builder {
                     Node::Lvar(Lvar { name, expression_l })
                 } else {
                     Node::Send(Send {
-                        receiver: None,
+                        recv: None,
                         method_name: name,
                         args: vec![],
                         dot_l: None,
@@ -1422,7 +1422,7 @@ impl Builder {
         match self.call_type_for_dot(&dot_t) {
             MethodCallType::Send => Node::Send(Send {
                 method_name,
-                receiver: receiver.map(Box::new),
+                recv: receiver.map(Box::new),
                 args,
                 dot_l,
                 selector_l,
@@ -1434,7 +1434,7 @@ impl Builder {
 
             MethodCallType::CSend => Node::CSend(CSend {
                 method_name,
-                receiver: Box::new(receiver.unwrap()),
+                recv: Box::new(receiver.unwrap()),
                 args,
                 dot_l,
                 selector_l,
@@ -1606,7 +1606,7 @@ impl Builder {
         match self.call_type_for_dot(&Some(dot_t)) {
             MethodCallType::Send => Node::Send(Send {
                 method_name,
-                receiver: Some(Box::new(receiver)),
+                recv: Some(Box::new(receiver)),
                 args: vec![],
                 dot_l: Some(dot_l),
                 selector_l: Some(selector_l),
@@ -1618,7 +1618,7 @@ impl Builder {
 
             MethodCallType::CSend => Node::CSend(CSend {
                 method_name,
-                receiver: Box::new(receiver),
+                recv: Box::new(receiver),
                 args: vec![],
                 dot_l: Some(dot_l),
                 selector_l: Some(selector_l),
@@ -1663,7 +1663,7 @@ impl Builder {
     pub fn binary_op(&self, receiver: Node, operator_t: Token, arg: Node) -> Node {
         let (selector_l, expression_l) = send_binary_op_map(&receiver, &operator_t, &arg);
         Node::Send(Send {
-            receiver: Some(Box::new(receiver)),
+            recv: Some(Box::new(receiver)),
             method_name: value(&operator_t),
             args: vec![arg],
             dot_l: None,
@@ -1686,13 +1686,13 @@ impl Builder {
 
                 Node::MatchWithLvasgn(MatchWithLvasgn {
                     re: Box::new(receiver),
-                    arg: Box::new(arg),
+                    value: Box::new(arg),
                     selector_l,
                     expression_l,
                 })
             }
             None => Node::Send(Send {
-                receiver: Some(Box::new(receiver)),
+                recv: Some(Box::new(receiver)),
                 method_name: String::from("=~"),
                 args: vec![arg],
                 dot_l: None,
@@ -1712,7 +1712,7 @@ impl Builder {
         let op = value(&op_t);
         let method = if op == "+" || op == "-" { op + "@" } else { op };
         Node::Send(Send {
-            receiver: Some(Box::new(receiver)),
+            recv: Some(Box::new(receiver)),
             method_name: method,
             args: vec![],
             dot_l: None,
@@ -1742,7 +1742,7 @@ impl Builder {
             let end_l = maybe_loc(&end_t);
 
             Node::Send(Send {
-                receiver: Some(Box::new(self.check_condition(receiver))),
+                recv: Some(Box::new(self.check_condition(receiver))),
                 method_name: "!".to_owned(),
                 args: vec![],
                 selector_l: Some(selector_l),
@@ -1764,7 +1764,7 @@ impl Builder {
             let selector_l = loc(&not_t);
             let expression_l = nil_node.expression().join(&selector_l);
             Node::Send(Send {
-                receiver: Some(Box::new(nil_node)),
+                recv: Some(Box::new(nil_node)),
                 method_name: "!".to_owned(),
                 args: vec![],
                 selector_l: Some(selector_l),

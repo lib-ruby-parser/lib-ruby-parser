@@ -6,7 +6,7 @@ use crate::Node;
 #[derive(Debug, Clone, PartialEq)]
 pub struct MatchWithLvasgn {
     pub re: Box<Node>,
-    pub arg: Box<Node>,
+    pub value: Box<Node>,
 
     pub selector_l: Range,
     pub expression_l: Range,
@@ -20,7 +20,7 @@ impl InnerNode for MatchWithLvasgn {
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
         result.push_node(&self.re);
-        result.push_node(&self.arg);
+        result.push_node(&self.value);
         result.strings()
     }
 

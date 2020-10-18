@@ -104,6 +104,10 @@ impl Range {
     pub fn to_locs(&self, buffer: &Buffer) -> Option<(FileLoc, FileLoc)> {
         Some((self.begin_loc(buffer)?, self.end_loc(buffer)?))
     }
+
+    pub fn source(&self, buffer: &Buffer) -> Option<String> {
+        buffer.substr_at(self.begin_pos, self.end_pos)
+    }
 }
 
 impl std::fmt::Debug for Range {

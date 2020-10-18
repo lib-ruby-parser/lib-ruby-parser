@@ -5,7 +5,7 @@ use crate::Node;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CSend {
-    pub receiver: Box<Node>,
+    pub recv: Box<Node>,
     pub method_name: String,
     pub args: Vec<Node>,
 
@@ -24,7 +24,7 @@ impl InnerNode for CSend {
 
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
-        result.push_maybe_node_or_nil(&Some(self.receiver.clone()));
+        result.push_node(&self.recv);
         result.push_str(&self.method_name);
         result.push_nodes(&self.args);
         result.strings()
