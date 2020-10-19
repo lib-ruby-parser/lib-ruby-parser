@@ -224,24 +224,15 @@ impl Builder {
     ) -> Node {
         match &parts[..] {
             [] => return self.str_node(begin_t, StringValue::String("".to_owned()), parts, end_t),
-            [part] => {
-                match part {
-                    Node::Str { .. } | Node::Dstr { .. } | Node::Heredoc { .. } => {
-                        // collapse_string_parts? == true
-                        if begin_t.is_none() && end_t.is_none() {
-                            return part.clone();
-                        } else {
-                            match part {
-                                Node::Str(Str { value, .. }) => {
-                                    return self.str_node(begin_t, value.clone(), parts, end_t)
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                    }
-                    _ => {}
-                }
+            [Node::Str(_)] | [Node::Dstr(_)] | [Node::Heredoc(_)]
+                if begin_t.is_none() && end_t.is_none() =>
+            {
+                return parts[0].clone();
             }
+            [Node::Str(Str { value, .. })] => {
+                return self.str_node(begin_t, value.clone(), parts, end_t)
+            }
+            [Node::Dstr(_)] | [Node::Heredoc(_)] => unreachable!(),
             _ => {}
         };
 
@@ -312,24 +303,20 @@ impl Builder {
     }
 
     pub fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
-        if parts.len() == 1 {
-            let part = &parts[0];
-            match part {
-                // collapse_string_parts? == true
-                Node::Str(Str { value, .. }) => {
-                    let value = value.clone();
-                    let (begin_l, end_l, expression_l) =
-                        collection_map(&Some(begin_t), &vec![], &Some(end_t));
-                    return Node::Sym(Sym {
-                        name: value.to_string_lossy(),
-                        begin_l,
-                        end_l,
-                        expression_l,
-                    });
-                }
-                _ => {}
-            };
-        }
+        match &parts[..] {
+            [Node::Str(Str { value, .. })] => {
+                let (begin_l, end_l, expression_l) =
+                    collection_map(&Some(begin_t), &vec![], &Some(end_t));
+
+                return Node::Sym(Sym {
+                    name: value.to_string_lossy(),
+                    begin_l,
+                    end_l,
+                    expression_l,
+                });
+            }
+            _ => {}
+        };
 
         let (begin_l, end_l, expression_l) = collection_map(&Some(begin_t), &parts, &Some(end_t));
         Node::Dsym(Dsym {
@@ -371,7 +358,7 @@ impl Builder {
     // Regular expressions
 
     pub fn regexp_options(&self, regexp_end_t: &Token) -> Node {
-        let mut options = value(&regexp_end_t).chars().skip(1).collect::<Vec<_>>();
+        let mut options = value(&regexp_end_t)[1..].chars().collect::<Vec<_>>();
         options.sort();
         options.dedup();
 
@@ -422,15 +409,12 @@ impl Builder {
     }
 
     pub fn word(&self, parts: Vec<Node>) -> Node {
-        if parts.len() == 1 {
-            let part = &parts[0];
-            match part {
-                Node::Str(_) | Node::Dstr(_) => {
-                    // collapse_string_parts? == true
-                    return part.clone();
-                }
-                _ => {}
+        match &parts[..] {
+            [Node::Str(_)] | [Node::Dstr(_)] => {
+                // collapse_string_parts? == true
+                return parts[0].clone();
             }
+            _ => {}
         }
 
         let (begin_l, end_l, expression_l) = collection_map(&None, &parts, &None);
@@ -627,12 +611,7 @@ impl Builder {
     }
 
     pub fn nth_ref(&self, token: Token) -> Node {
-        let name = value(&token)
-            .chars()
-            .skip(1)
-            .collect::<String>()
-            .parse::<usize>()
-            .unwrap();
+        let name = value(&token)[1..].parse::<usize>().unwrap();
         Node::NthRef(NthRef {
             name,
             expression_l: loc(&token),
@@ -1304,12 +1283,13 @@ impl Builder {
     pub fn kwoptarg(&self, name_t: Token, default: Node) -> Node {
         self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
 
-        let default = Some(default);
-        let (name_l, expression_l) = kwarg_map(&name_t, &default);
+        let label_l = loc(&name_t);
+        let name_l = label_l.adjust_end(-1);
+        let expression_l = default.expression().join(&label_l);
 
         Node::Kwoptarg(Kwoptarg {
             name: value(&name_t),
-            default: Box::new(default.unwrap()),
+            default: Box::new(default),
             name_l,
             expression_l,
         })
@@ -2271,18 +2251,18 @@ impl Builder {
     //
 
     pub fn compstmt(&self, mut statements: Vec<Node>) -> Option<Node> {
-        if statements.is_empty() {
-            None
-        } else if statements.len() == 1 {
-            statements.pop()
-        } else {
-            let (begin_l, end_l, expression_l) = collection_map(&None, &statements, &None);
-            Some(Node::Begin(Begin {
-                statements,
-                begin_l,
-                end_l,
-                expression_l,
-            }))
+        match &statements[..] {
+            [] => None,
+            [_] => statements.pop(),
+            _ => {
+                let (begin_l, end_l, expression_l) = collection_map(&None, &statements, &None);
+                Some(Node::Begin(Begin {
+                    statements,
+                    begin_l,
+                    end_l,
+                    expression_l,
+                }))
+            }
         }
     }
 
@@ -2831,15 +2811,11 @@ impl Builder {
     pub fn check_assignment_to_numparam(&self, _name: &str, _loc: &Range) {}
 
     pub fn check_reserved_for_numparam(&self, name: &str, _loc: &Range) {
-        if name.len() != 2 {
-            return;
-        }
-
-        let c1 = name.chars().nth(0).unwrap();
-        let c2 = name.chars().nth(1).unwrap();
-
-        if c1 == '0' && (c2 >= '1' && c2 <= '9') {
-            // diagnostic :error, "reserved_for_numparam"
+        match name {
+            "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
+                // diagnostic :error, "reserved_for_numparam"
+            }
+            _ => {}
         }
     }
 
