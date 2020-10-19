@@ -266,7 +266,7 @@ impl Builder {
     pub fn character(&self, char_t: Token) -> Node {
         let str_range = loc(&char_t);
 
-        let begin_l = Some(str_range.with(str_range.begin_pos, str_range.begin_pos + 1));
+        let begin_l = Some(str_range.with_end(str_range.begin_pos() + 1));
         let end_l = None;
         let expression_l = str_range;
 
@@ -2483,7 +2483,7 @@ impl Builder {
         let name = value(&name_t);
 
         let expression_l = loc(&name_t);
-        let name_l = expression_l.adjust(0, -1);
+        let name_l = expression_l.adjust_end(-1);
 
         self.check_lvar_name(&name, &name_l);
         self.check_duplicate_pattern_variable(&name, &name_l);
@@ -2523,7 +2523,7 @@ impl Builder {
                 match &begin_l {
                     Some(begin_l) => {
                         let begin_pos_d: i32 = begin_l.size().try_into().unwrap();
-                        name_l = name_l.adjust(begin_pos_d, 0)
+                        name_l = name_l.adjust_begin(begin_pos_d)
                     }
                     _ => {}
                 }
@@ -2531,7 +2531,7 @@ impl Builder {
                 match &end_l {
                     Some(end_l) => {
                         let end_pos_d: i32 = end_l.size().try_into().unwrap();
-                        name_l = name_l.adjust(0, -end_pos_d)
+                        name_l = name_l.adjust_end(-end_pos_d)
                     }
                     _ => {}
                 }

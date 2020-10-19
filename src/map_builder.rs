@@ -71,7 +71,7 @@ pub fn delimited_string_map() {}
 
 pub fn prefix_string_map(symbol: &Token) -> (Range, Range) {
     let str_range = loc(symbol);
-    let begin_l = str_range.with(str_range.begin_pos, str_range.begin_pos + 1);
+    let begin_l = str_range.with_end(str_range.begin_pos() + 1);
     (begin_l, str_range)
 }
 
@@ -82,8 +82,8 @@ pub fn unquoted_map(token: &Token) -> Range {
 // (begin_l, end_l, expr_l), (operator_l, expr_l)
 pub fn pair_keyword_map(key_t: &Token, value: &Node) -> (Range, Range, Range) {
     let key_range = loc(key_t);
-    let key_l = key_range.adjust(0, -1);
-    let colon_l = key_range.adjust((key_range.end_pos - 1).try_into().unwrap(), 0);
+    let key_l = key_range.adjust_end(-1);
+    let colon_l = key_range.with_begin((key_range.end_pos() - 1).try_into().unwrap());
     let expr_l = key_range.join(&value.expression());
 
     (key_l, colon_l, expr_l)
@@ -93,11 +93,11 @@ pub fn pair_quoted_map(begin_t: &Token, end_t: &Token, node: &Node) -> (Token, R
     let end_l = loc(end_t);
 
     let quote_loc = Loc {
-        begin: end_l.end_pos - 2,
-        end: end_l.end_pos - 1,
+        begin: end_l.end_pos() - 2,
+        end: end_l.end_pos() - 1,
     };
 
-    let colon_l = end_l.with(end_l.end_pos - 1, end_l.end_pos);
+    let colon_l = end_l.with_begin(end_l.end_pos() - 1);
 
     let end_t: Token = (end_t.0, end_t.1.clone(), quote_loc);
     let expr_l = loc(begin_t).join(&node.expression());
@@ -208,7 +208,7 @@ pub fn arg_prefix_map(op_t: &Token, name_t: &Option<Token>) -> (Range, Option<Ra
 
 pub fn kwarg_map(name_t: &Token, default: &Option<Node>) -> (Range, Range) {
     let label_l = loc(name_t);
-    let name_l = label_l.adjust(0, -1);
+    let name_l = label_l.adjust_end(-1);
 
     let expr_l = maybe_node_expr(default)
         .map(|l| l.join(&label_l))
