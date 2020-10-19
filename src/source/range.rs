@@ -106,7 +106,9 @@ impl Range {
     }
 
     pub fn source(&self, buffer: &Buffer) -> Option<String> {
-        buffer.substr_at(self.begin_pos, self.end_pos)
+        buffer
+            .substr_at(self.begin_pos, self.end_pos)
+            .map(|e| e.to_owned())
     }
 }
 

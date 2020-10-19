@@ -1,5 +1,5 @@
-use std::io;
 use std::fs;
+use std::io;
 use std::path::Path;
 
 #[allow(dead_code)]

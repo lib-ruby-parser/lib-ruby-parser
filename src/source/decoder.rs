@@ -1,11 +1,11 @@
 use regex::Regex;
-use std::fmt;
 use std::error::Error;
+use std::fmt;
 
 lazy_static! {
     static ref FIRST_TWO_LINES_RE: Regex = Regex::new(r"\A(.*)\n?(.*\n)?").unwrap();
-
-    static ref ENCODING_RE: Regex = Regex::new(r"(?x)
+    static ref ENCODING_RE: Regex = Regex::new(
+        r"(?x)
         [\s\#](en)?coding\s*[:=]\s*
         (
             # Special-case: there's a UTF8-MAC encoding.
@@ -16,7 +16,9 @@ lazy_static! {
             |
             (?P<c>[A-Za-z0-9_-]+)
         )
-    ").unwrap();
+    "
+    )
+    .unwrap();
 }
 
 #[derive(Debug)]
@@ -62,17 +64,18 @@ fn recognize_encoding(source: &Vec<u8>) -> Result<String, InputError> {
 
     let captures = match ENCODING_RE.captures(&encoding_line) {
         Some(captures) => captures,
-        None => return Err(InputError::UnableToRecognizeEncoding)
+        None => return Err(InputError::UnableToRecognizeEncoding),
     };
 
-    let enc = captures.name("a")
+    let enc = captures
+        .name("a")
         .or(captures.name("b"))
         .or(captures.name("c"))
         .map(|m| m.as_str().to_owned());
 
     match enc {
         Some(enc) => Ok(enc),
-        None => Err(InputError::UnableToRecognizeEncoding)
+        None => Err(InputError::UnableToRecognizeEncoding),
     }
 }
 
@@ -80,25 +83,23 @@ fn find_encoding(enc: &str) -> Result<encoding::EncodingRef, InputError> {
     match &enc.to_uppercase()[..] {
         "UTF-8" => Ok(encoding::all::UTF_8),
         "KOI8-R" => Ok(encoding::all::KOI8_R),
-        _ => {
-            Err(InputError::UnsupportdEncoding(enc.to_owned()))
-        }
+        _ => Err(InputError::UnsupportdEncoding(enc.to_owned())),
     }
 }
 
 fn decode(input: &Vec<u8>, enc: &str) -> Result<String, InputError> {
     match find_encoding(enc)?.decode(input, encoding::DecoderTrap::Ignore) {
         Ok(output) => Ok(output),
-        Err(err) => Err(InputError::EncodingError(err.into_owned()))
+        Err(err) => Err(InputError::EncodingError(err.into_owned())),
     }
 }
 
 pub fn decode_input(input: &Vec<u8>, enc: Option<String>) -> Result<(String, String), InputError> {
     match enc {
-        Some(enc) => return Ok(( decode(input, &enc)?, enc )),
+        Some(enc) => return Ok((decode(input, &enc)?, enc)),
         _ => {}
     }
 
     let enc = recognize_encoding(input).unwrap_or("utf-8".to_owned());
-    Ok(( decode(input, &enc)?, enc ))
+    Ok((decode(input, &enc)?, enc))
 }

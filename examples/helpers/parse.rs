@@ -1,4 +1,4 @@
-use ruby_parser::{Parser, Lexer, Node};
+use ruby_parser::{Lexer, Node, Parser};
 
 #[allow(dead_code)]
 pub fn parse(source: &Vec<u8>, filename: &str, debug: bool) -> Result<Node, ()> {
@@ -12,7 +12,7 @@ pub fn parse(source: &Vec<u8>, filename: &str, debug: bool) -> Result<Node, ()> 
         Some(node) => {
             println!("OK");
             Ok(node)
-        },
+        }
         None => {
             println!("Error");
             Err(())

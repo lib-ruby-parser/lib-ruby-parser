@@ -6,7 +6,7 @@ pub struct ReservedWord {
     pub name: &'static str,
     pub id: i32,
     pub modifier_id: i32,
-    pub state: i32
+    pub state: i32,
 }
 
 lazy_static! {
@@ -264,12 +264,12 @@ lazy_static! {
 pub fn reserved_word(tok: &TokenBuf) -> Option<&'static ReservedWord> {
     let tok = match tok {
         TokenBuf::String(s) => s,
-        TokenBuf::Bytes(_) => return None
+        TokenBuf::Bytes(_) => return None,
     };
 
     for res in RESERVED_WORDS.iter() {
         if res.name == tok {
-            return Some(res)
+            return Some(res);
         }
     }
     None

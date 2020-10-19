@@ -10,7 +10,7 @@
 //
 #[derive(Debug, Clone, Default)]
 struct InnerCurrentArgStack {
-    stack: Vec<Option<String>>
+    stack: Vec<Option<String>>,
 }
 
 impl InnerCurrentArgStack {
@@ -38,24 +38,38 @@ impl InnerCurrentArgStack {
     pub fn top(&self) -> Option<String> {
         match self.stack.last() {
             Some(Some(value)) => Some(value.clone()),
-            _ => None
+            _ => None,
         }
     }
 }
 
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Debug, Clone, Default)]
 pub struct CurrentArgStack {
-    inner: Rc<RefCell<InnerCurrentArgStack>>
+    inner: Rc<RefCell<InnerCurrentArgStack>>,
 }
 
 impl CurrentArgStack {
-    pub fn new() -> Self { Self { inner: Rc::new(RefCell::new(InnerCurrentArgStack::new())) } }
-    pub fn push(&self, value: Option<String>) { self.inner.borrow_mut().push(value) }
-    pub fn set(&self, value: Option<String>) { self.inner.borrow_mut().set(value) }
-    pub fn pop(&self) { self.inner.borrow_mut().pop() }
-    pub fn reset(&self) { self.inner.borrow_mut().reset() }
-    pub fn top(&self) -> Option<String> { self.inner.borrow().top() }
+    pub fn new() -> Self {
+        Self {
+            inner: Rc::new(RefCell::new(InnerCurrentArgStack::new())),
+        }
+    }
+    pub fn push(&self, value: Option<String>) {
+        self.inner.borrow_mut().push(value)
+    }
+    pub fn set(&self, value: Option<String>) {
+        self.inner.borrow_mut().set(value)
+    }
+    pub fn pop(&self) {
+        self.inner.borrow_mut().pop()
+    }
+    pub fn reset(&self) {
+        self.inner.borrow_mut().reset()
+    }
+    pub fn top(&self) -> Option<String> {
+        self.inner.borrow().top()
+    }
 }

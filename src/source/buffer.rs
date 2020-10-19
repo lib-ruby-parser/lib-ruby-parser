@@ -1,19 +1,20 @@
-use std::convert::{TryFrom};
 use crate::lex_char::*;
-use crate::source::{decode_input, InputError};
 use crate::source::SourceLine;
+use crate::source::{decode_input, InputError};
+use std::convert::TryFrom;
 
 #[derive(Debug, Clone, Default)]
 pub struct Buffer {
     pub name: String,
     pub input: Vec<char>,
+    pub input_s: String,
     pub encoding: String,
 
     pub lines: Vec<SourceLine>,
     pub line_count: usize,
     pub prevline: Option<usize>, // index
-    pub lastline: usize, // index
-    pub nextline: usize, // index
+    pub lastline: usize,         // index
+    pub nextline: usize,         // index
     pub pbeg: usize,
     pub pcur: usize,
     pub pend: usize,
@@ -30,8 +31,8 @@ pub struct Buffer {
     pub toksize: usize,
     pub tokline: usize,
 
-    pub ruby_sourceline: usize,        /* current line no. */
-    pub ruby_sourcefile: Vec<char>,      /* current source file */
+    pub ruby_sourceline: usize,     /* current line no. */
+    pub ruby_sourcefile: Vec<char>, /* current source file */
     pub ruby_sourcefile_string: Vec<char>,
 
     pub debug: bool,
@@ -41,9 +42,13 @@ impl Buffer {
     const CTRL_Z_CHAR: char = 0x1a as char;
     const CTRL_D_CHAR: char = 0x04 as char;
 
-    pub fn new(name: &str, bytes: Vec<u8>, known_encoding: Option<String>) -> Result<Self, InputError> {
-        let (input, encoding) = decode_input(&bytes, known_encoding)?;
-        let input = input.chars().collect::<Vec<_>>();
+    pub fn new(
+        name: &str,
+        bytes: Vec<u8>,
+        known_encoding: Option<String>,
+    ) -> Result<Self, InputError> {
+        let (input_s, encoding) = decode_input(&bytes, known_encoding)?;
+        let input = input_s.chars().collect::<Vec<_>>();
 
         let mut line = SourceLine { start: 0, end: 0 };
         let mut lines: Vec<SourceLine> = vec![];
@@ -52,23 +57,33 @@ impl Buffer {
             line.end = idx + 1;
             if *c == '\n' {
                 lines.push(line);
-                line = SourceLine { start: idx + 1, end: 0 }
+                line = SourceLine {
+                    start: idx + 1,
+                    end: 0,
+                }
             }
-        };
+        }
         line.end = input.len();
         if !line.is_empty() {
             lines.push(line);
         }
 
-        Ok(
-            Self { name: name.to_owned(), encoding, input, lines, ..Self::default() }
-        )
+        Ok(Self {
+            name: name.to_owned(),
+            encoding,
+            input,
+            input_s,
+            lines,
+            ..Self::default()
+        })
     }
 
     pub fn nextc(&mut self) -> LexChar {
         if self.pcur == self.pend || self.eofp || self.nextline != 0 {
             let n = self.nextline();
-            if self.debug { println!("nextline = {:?}", n); }
+            if self.debug {
+                println!("nextline = {:?}", n);
+            }
             if n.is_err() {
                 return LexChar::EOF;
             }
@@ -78,7 +93,9 @@ impl Buffer {
         if c == '\r' {
             c = self.parser_cr(&mut c);
         }
-        if self.debug { println!("nextc = {:?}", c); }
+        if self.debug {
+            println!("nextc = {:?}", c);
+        }
         return LexChar::new(c);
     }
 
@@ -143,14 +160,15 @@ impl Buffer {
         self.prevline = Some(self.lastline);
         self.lastline = v;
 
-
         Ok(())
     }
 
     pub fn getline(&mut self) -> Result<usize, ()> {
         if self.line_count < self.lines.len() {
             self.line_count += 1;
-            if self.debug { println!("line_count = {}", self.line_count) }
+            if self.debug {
+                println!("line_count = {}", self.line_count)
+            }
             Ok(self.line_count - 1)
         } else {
             Err(())
@@ -162,7 +180,9 @@ impl Buffer {
     }
 
     pub fn set_ptok(&mut self, ptok: usize) {
-        if self.debug { println!("set_ptok({})", ptok); }
+        if self.debug {
+            println!("set_ptok({})", ptok);
+        }
         self.ptok = ptok;
     }
 
@@ -174,7 +194,6 @@ impl Buffer {
         *c
     }
 
-
     pub fn char_at(&self, idx: usize) -> LexChar {
         if let Some(c) = self.input.get(idx) {
             LexChar::new(*c)
@@ -183,9 +202,9 @@ impl Buffer {
         }
     }
 
-    pub fn substr_at(&self, start: usize, end: usize) -> Option<String> {
+    pub fn substr_at(&self, start: usize, end: usize) -> Option<&str> {
         if start <= end && end <= self.input.len() {
-            Some(self.input[start..end].iter().collect())
+            Some(&self.input_s[start..end])
         } else {
             None
         }
@@ -198,10 +217,16 @@ impl Buffer {
     pub fn is_word_match(&self, word: &str) -> bool {
         let len = word.len();
 
-        if self.substr_at(self.pcur, self.pcur + len) != Some(word.to_owned()) { return false }
-        if self.pcur + len == self.pend { return true }
+        if self.substr_at(self.pcur, self.pcur + len) != Some(word) {
+            return false;
+        }
+        if self.pcur + len == self.pend {
+            return true;
+        }
         let c = self.char_at(self.pcur + len);
-        if c.is_space() { return true }
+        if c.is_space() {
+            return true;
+        }
         if c == '\0' || c == Self::CTRL_Z_CHAR || c == Self::CTRL_D_CHAR {
             return true;
         }
@@ -216,10 +241,10 @@ impl Buffer {
             if let Some(c) = c {
                 let eol = *c == '\n' || *c == '#';
                 if eol || !c.is_ascii_whitespace() {
-                    return eol
+                    return eol;
                 }
             };
-        };
+        }
         true
     }
 
@@ -229,27 +254,37 @@ impl Buffer {
 
         if indent > 0 {
             while let Some(c) = self.input.get(ptr) {
-                if !c.is_ascii_whitespace() { break }
+                if !c.is_ascii_whitespace() {
+                    break;
+                }
                 ptr += 1;
             }
         }
 
-        if self.pend < ptr + len { return false }
+        if self.pend < ptr + len {
+            return false;
+        }
 
         if let Ok(n) = isize::try_from(self.pend - (ptr + len)) {
-            if n < 0 { return false }
+            if n < 0 {
+                return false;
+            }
             let last_char = self.input.get(ptr + len);
             let char_after_last_char = self.input.get(ptr + len + 1);
 
             if n > 0 && last_char != Some(&'\n') {
-                if last_char != Some(&'\r') { return false }
-                if n <= 1 || char_after_last_char != Some(&'\n') { return false }
+                if last_char != Some(&'\r') {
+                    return false;
+                }
+                if n <= 1 || char_after_last_char != Some(&'\n') {
+                    return false;
+                }
             }
 
-            let next_len_chars = self.substr_at(ptr, ptr+len);
-            return Some(eos.to_owned()) == next_len_chars
+            let next_len_chars = self.substr_at(ptr, ptr + len);
+            return Some(eos) == next_len_chars;
         } else {
-            return false
+            return false;
         }
     }
 
@@ -271,7 +306,7 @@ impl Buffer {
             if pos >= line.len() {
                 pos -= line.len()
             } else {
-                return Some(( lineno + 1, pos ))
+                return Some((lineno + 1, pos));
             }
         }
 
@@ -279,19 +314,25 @@ impl Buffer {
     }
 }
 
-
 pub trait Pushback<T> {
     fn pushback(&mut self, c: &T);
 }
 
 impl Pushback<Option<char>> for Buffer {
     fn pushback(&mut self, c: &Option<char>) {
-        if c.is_none() { return };
+        if c.is_none() {
+            return;
+        };
         self.pcur -= 1;
-        if self.pcur > self.pbeg && self.input[self.pcur] == '\n' && self.input[self.pcur - 1] == '\r' {
+        if self.pcur > self.pbeg
+            && self.input[self.pcur] == '\n'
+            && self.input[self.pcur - 1] == '\r'
+        {
             self.pcur -= 1;
         }
-        if self.debug { println!("pushback({:?}) pcur = {}", c, self.pcur); }
+        if self.debug {
+            println!("pushback({:?}) pcur = {}", c, self.pcur);
+        }
     }
 }
 

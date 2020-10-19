@@ -1,7 +1,7 @@
 #[derive(Clone, Default)]
 pub struct StackState {
     name: &'static str,
-    stack: usize
+    stack: usize,
 }
 
 impl StackState {

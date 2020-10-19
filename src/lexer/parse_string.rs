@@ -1,16 +1,15 @@
 use std::convert::TryInto;
 
-use crate::lexer::*;
-use crate::source::buffer::*;
-use crate::TokenBuf;
 use crate::lex_char::*;
 use crate::lex_states::*;
-use crate::str_term::{StrTerm, HeredocLiteral, StringLiteral, str_types::*};
+use crate::lexer::*;
 use crate::parser::TokenValue;
+use crate::source::buffer::*;
+use crate::str_term::{str_types::*, HeredocLiteral, StrTerm, StringLiteral};
+use crate::TokenBuf;
 
-
-const ESCAPE_CONTROL: usize =  1;
-const ESCAPE_META   : usize =  2;
+const ESCAPE_CONTROL: usize = 1;
+const ESCAPE_META: usize = 2;
 
 impl Lexer {
     pub const TAB_WIDTH: i32 = 8;
@@ -23,21 +22,33 @@ impl Lexer {
         let mut space = false;
         self.lval_start = Some(self.buffer.pcur);
 
-        if self.debug { println!("func = {}, pcur = {}, ptok = {}, term = {}", func, self.buffer.pcur, self.buffer.ptok, quote.term()); }
+        if self.debug {
+            println!(
+                "func = {}, pcur = {}, ptok = {}, term = {}",
+                func,
+                self.buffer.pcur,
+                self.buffer.ptok,
+                quote.term()
+            );
+        }
 
         if (func & STR_FUNC_TERM) != 0 {
-            if (func & STR_FUNC_QWORDS) != 0 { self.nextc(); } /* delayed term */
+            if (func & STR_FUNC_QWORDS) != 0 {
+                self.nextc();
+            } /* delayed term */
             self.set_lex_state(EXPR_END);
             self.strterm = None;
             if (func & STR_FUNC_REGEXP) != 0 {
-                return Self::tREGEXP_END
+                return Self::tREGEXP_END;
             } else {
                 match (quote.heredoc_len(), quote.heredoc_end()) {
                     (Some(len), Some(end)) => {
                         self.lval_start = Some(end);
                         self.lval_end = Some(end + len);
-                        self.set_yylval_str(TokenBuf::String(self.buffer.substr_at(end, end + len).unwrap()));
-                    },
+                        self.set_yylval_str(TokenBuf::String(
+                            self.buffer.substr_at(end, end + len).unwrap().to_owned(),
+                        ));
+                    }
                     _ => {}
                 }
                 return Self::tSTRING_END;
@@ -48,7 +59,9 @@ impl Lexer {
             loop {
                 c = self.nextc();
 
-                if !c.is_space() { break }
+                if !c.is_space() {
+                    break;
+                }
             }
             space = true;
         }
@@ -117,7 +130,7 @@ impl Lexer {
         }
         if (func & STR_FUNC_LABEL) != 0 && self.is_label_suffix(0) {
             self.nextc();
-            self.set_lex_state(EXPR_BEG|EXPR_LABEL);
+            self.set_lex_state(EXPR_BEG | EXPR_LABEL);
             return Self::tLABEL_END;
         }
         self.set_lex_state(EXPR_END);
@@ -125,7 +138,9 @@ impl Lexer {
     }
 
     pub fn set_yylval_num(&mut self, flags: String) {
-        if self.debug { println!("set_yylval_num {:#?}", flags); }
+        if self.debug {
+            println!("set_yylval_num {:#?}", flags);
+        }
         self.lval = Some(TokenValue::String(flags));
     }
 
@@ -136,14 +151,16 @@ impl Lexer {
         self.newtok();
         loop {
             c = self.nextc();
-            if !c.is_alpha() { break }
+            if !c.is_alpha() {
+                break;
+            }
 
-            let ch =  c.unwrap();
+            let ch = c.unwrap();
 
             match ch {
                 'o' | 'n' | 'e' | 's' | 'u' | 'i' | 'x' | 'm' => {
                     result.push(ch);
-                },
+                }
                 _ => {
                     self.tokadd(&c);
                 }
@@ -163,7 +180,9 @@ impl Lexer {
         let mut c: LexChar;
         let mut ptr: usize = self.buffer.pcur;
 
-        if ptr + 1 >= self.buffer.pend { return None }
+        if ptr + 1 >= self.buffer.pend {
+            return None;
+        }
         c = self.char_at(ptr);
         ptr += 1;
 
@@ -172,45 +191,57 @@ impl Lexer {
                 c = self.char_at(ptr);
                 if c == '-' {
                     ptr += 1;
-                    if ptr >= self.buffer.pend { return None }
-                    // c = self.char_at(ptr);
+                    if ptr >= self.buffer.pend {
+                        return None;
+                    }
+                // c = self.char_at(ptr);
                 } else if c.is_global_name_punct() || c.is_digit() {
                     return Some(Self::tSTRING_DVAR);
                 }
-            },
+            }
 
             Some('@') => {
                 c = self.char_at(ptr);
                 if c == '@' {
                     ptr += 1;
-                    if ptr >= self.buffer.pend { return None }
+                    if ptr >= self.buffer.pend {
+                        return None;
+                    }
                     c = self.char_at(ptr);
                 }
-            },
+            }
 
             Some('{') => {
                 self.buffer.pcur = ptr;
                 self.command_start = true;
-                return Some(Self::tSTRING_DBEG)
-            },
+                return Some(Self::tSTRING_DBEG);
+            }
 
-            _ => return None
+            _ => return None,
         }
 
         if !c.is_ascii() || c == '_' || c.is_alpha() {
-            return Some(Self::tSTRING_DVAR)
+            return Some(Self::tSTRING_DVAR);
         }
 
         None
     }
 
-    pub fn tokadd_string(&mut self, func: usize, term: char, paren: Option<char>, nest: &mut usize) -> Option<LexChar> {
+    pub fn tokadd_string(
+        &mut self,
+        func: usize,
+        term: char,
+        paren: Option<char>,
+        nest: &mut usize,
+    ) -> Option<LexChar> {
         let mut c: LexChar;
         let _erred = false;
 
         loop {
             c = self.nextc();
-            if c.is_eof() { break; }
+            if c.is_eof() {
+                break;
+            }
 
             if self.buffer.heredoc_indent > 0 {
                 self.parser_update_heredoc_indent(&c);
@@ -224,7 +255,10 @@ impl Lexer {
                     break;
                 }
                 *nest -= 1;
-            } else if ((func & STR_FUNC_EXPAND) != 0) && c == '#' && self.buffer.pcur < self.buffer.pend {
+            } else if ((func & STR_FUNC_EXPAND) != 0)
+                && c == '#'
+                && self.buffer.pcur < self.buffer.pend
+            {
                 let c2 = self.char_at(self.buffer.pcur);
                 if c2 == '$' || c2 == '@' || c2 == '{' {
                     self.buffer.pushback(&c);
@@ -235,33 +269,41 @@ impl Lexer {
                 c = self.nextc();
                 match c.to_option() {
                     Some('\n') => {
-                        if (func & STR_FUNC_QWORDS) != 0 { break }
+                        if (func & STR_FUNC_QWORDS) != 0 {
+                            break;
+                        }
                         if (func & STR_FUNC_EXPAND) != 0 {
                             if (func & STR_FUNC_INDENT) == 0 || self.buffer.heredoc_indent < 0 {
                                 continue;
                             }
                             if c == term {
-                                return Some(LexChar::new('\\'))
+                                return Some(LexChar::new('\\'));
                             }
                         }
                         self.tokadd('\\');
                         break;
-                    },
+                    }
                     Some('\\') => {
-                        if (func & STR_FUNC_ESCAPE) != 0 { self.tokadd(&c) }
+                        if (func & STR_FUNC_ESCAPE) != 0 {
+                            self.tokadd(&c)
+                        }
                         break;
-                    },
+                    }
                     Some('u') => {
                         if (func & STR_FUNC_EXPAND) == 0 {
                             self.tokadd('\\');
                             break;
                         }
-                        self.tokadd_utf8(Some(term), func & STR_FUNC_SYMBOL, func & STR_FUNC_REGEXP);
+                        self.tokadd_utf8(
+                            Some(term),
+                            func & STR_FUNC_SYMBOL,
+                            func & STR_FUNC_REGEXP,
+                        );
                         continue;
-                    },
+                    }
                     None => {
                         return None;
-                    },
+                    }
                     _ => {
                         if !c.is_ascii() {
                             if (func & STR_FUNC_EXPAND) == 0 {
@@ -282,7 +324,9 @@ impl Lexer {
                             continue;
                         } else if (func & STR_FUNC_EXPAND) != 0 {
                             self.buffer.pushback(&c);
-                            if (func & STR_FUNC_ESCAPE) != 0 { self.tokadd('\\') }
+                            if (func & STR_FUNC_ESCAPE) != 0 {
+                                self.tokadd('\\')
+                            }
                             c = self.read_escape(0);
                         } else if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
                             // ignore backslashed spaces in %w
@@ -306,7 +350,9 @@ impl Lexer {
     }
 
     pub fn set_yylval_str(&mut self, value: TokenBuf) {
-        if self.debug { println!("set_yylval_str {:#?}", &value); }
+        if self.debug {
+            println!("set_yylval_str {:#?}", &value);
+        }
         self.lval = Some(value.to_token_value());
     }
 
@@ -316,7 +362,9 @@ impl Lexer {
 
     pub fn parser_update_heredoc_indent(&mut self, c: &LexChar) -> bool {
         if self.buffer.heredoc_line_indent == -1 {
-            if *c == '\n' { self.buffer.heredoc_line_indent = 0 }
+            if *c == '\n' {
+                self.buffer.heredoc_line_indent = 0
+            }
         } else {
             if *c == ' ' {
                 self.buffer.heredoc_line_indent += 1;
@@ -346,15 +394,13 @@ impl Lexer {
         for _ in 0..len {
             match self.buffer.char_at(s).to_option() {
                 None => break,
-                Some(c) => {
-                    match usize::from_str_radix(&c.to_string(), 16) {
-                        Ok(hex) => {
-                            result <<= 4;
-                            result |= hex;
-                        },
-                        Err(_) => break
+                Some(c) => match usize::from_str_radix(&c.to_string(), 16) {
+                    Ok(hex) => {
+                        result <<= 4;
+                        result |= hex;
                     }
-                }
+                    Err(_) => break,
+                },
             }
             s += 1;
         }
@@ -372,8 +418,8 @@ impl Lexer {
                 Some(c) if (c > '0' && c <= '7') => {
                     result <<= 3;
                     result |= ((c as u8) - ('0' as u8)) as usize;
-                },
-                _ => break
+                }
+                _ => break,
             }
             s += 1;
         }
@@ -383,9 +429,10 @@ impl Lexer {
     }
 
     pub fn tokcopy(&mut self, n: usize) {
-        let substr = self.buffer.substr_at(self.buffer.pcur - n, self.buffer.pcur).unwrap_or_else(||
-            panic!("no substr {}..{}", self.buffer.pcur - n, self.buffer.pcur)
-        );
+        let substr = self
+            .buffer
+            .substr_at(self.buffer.pcur - n, self.buffer.pcur)
+            .unwrap_or_else(|| panic!("no substr {}..{}", self.buffer.pcur - n, self.buffer.pcur));
         self.tokenbuf.append(&substr);
     }
 
@@ -395,10 +442,22 @@ impl Lexer {
 
     pub fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool {
         let mut numlen = 0;
-        let codepoint = self.scan_hex(self.buffer.pcur, if wide { self.buffer.pend - self.buffer.pcur } else { 4 }, &mut numlen);
+        let codepoint = self.scan_hex(
+            self.buffer.pcur,
+            if wide {
+                self.buffer.pend - self.buffer.pcur
+            } else {
+                4
+            },
+            &mut numlen,
+        );
         self.literal_flush(self.buffer.pcur);
         self.buffer.pcur += numlen;
-        if if wide { numlen == 0 || numlen > 6 } else { numlen < 4 } {
+        if if wide {
+            numlen == 0 || numlen > 6
+        } else {
+            numlen < 4
+        } {
             self.yyerror0("invalid Unicode escape");
             return wide && numlen > 0;
         }
@@ -424,38 +483,60 @@ impl Lexer {
         true
     }
 
-    pub fn tokadd_utf8(&mut self, term: Option<char>, _symbol_literal: usize, regexp_literal: usize) {
+    pub fn tokadd_utf8(
+        &mut self,
+        term: Option<char>,
+        _symbol_literal: usize,
+        regexp_literal: usize,
+    ) {
         let open_brace = '{';
         let close_brace = '}';
         let mut got_multiple_codepoints = false;
 
-        if regexp_literal != 0 { self.tokadd('\\'); self.tokadd('u') }
+        if regexp_literal != 0 {
+            self.tokadd('\\');
+            self.tokadd('u')
+        }
 
         if self.buffer.peek(open_brace) {
             let mut second: Option<usize> = None;
             let mut c;
             let mut last = self.nextc();
-            if self.buffer.pcur >= self.buffer.pend { return self.tokadd_utf8_unterminated() }
+            if self.buffer.pcur >= self.buffer.pend {
+                return self.tokadd_utf8_unterminated();
+            }
             loop {
                 c = self.buffer.char_at(self.buffer.pcur);
-                if !c.is_space() { break }
+                if !c.is_space() {
+                    break;
+                }
                 self.buffer.pcur += 1;
-                if !( self.buffer.pcur < self.buffer.pend ) { break }
+                if !(self.buffer.pcur < self.buffer.pend) {
+                    break;
+                }
             }
             while c != close_brace {
-                if c == term { return self.tokadd_utf8_unterminated() }
+                if c == term {
+                    return self.tokadd_utf8_unterminated();
+                }
                 if got_multiple_codepoints {
                     second = Some(self.buffer.pcur);
                 }
-                if regexp_literal != 0 { self.tokadd(&last) }
+                if regexp_literal != 0 {
+                    self.tokadd(&last)
+                }
                 if !self.tokadd_codepoint(regexp_literal, true) {
                     break;
                 }
                 loop {
                     c = self.char_at(self.buffer.pcur);
-                    if !c.is_space() { break }
+                    if !c.is_space() {
+                        break;
+                    }
                     self.buffer.pcur += 1;
-                    if self.buffer.pcur >= self.buffer.pend { return self.tokadd_utf8_unterminated() }
+                    if self.buffer.pcur >= self.buffer.pend {
+                        return self.tokadd_utf8_unterminated();
+                    }
                     last = c;
                 }
                 if term.is_none() && second.is_some() {
@@ -477,7 +558,9 @@ impl Lexer {
                 }
             }
 
-            if regexp_literal != 0 { self.tokadd(close_brace) }
+            if regexp_literal != 0 {
+                self.tokadd(close_brace)
+            }
             self.nextc();
         } else {
             if !self.tokadd_codepoint(regexp_literal, false) {
@@ -488,18 +571,9 @@ impl Lexer {
 
     pub fn simple_re_meta(&mut self, c: &LexChar) -> bool {
         match c.to_option() {
-            Some('$')
-            | Some('*')
-            | Some('+')
-            | Some('.')
-            | Some('?')
-            | Some('^')
-            | Some('|')
-            | Some(')')
-            | Some(']')
-            | Some('}')
-            | Some('>') => true,
-            _ => false
+            Some('$') | Some('*') | Some('+') | Some('.') | Some('?') | Some('^') | Some('|')
+            | Some(')') | Some(']') | Some('}') | Some('>') => true,
+            _ => false,
         }
     }
 
@@ -519,34 +593,32 @@ impl Lexer {
             match c.to_option() {
                 Some('\n') => return Ok(()),
 
-                Some('0')
-                | Some('1')
-                | Some('2')
-                | Some('3')
-                | Some('4')
-                | Some('5')
-                | Some('6')
-                | Some('7') => {
+                Some('0') | Some('1') | Some('2') | Some('3') | Some('4') | Some('5')
+                | Some('6') | Some('7') => {
                     self.buffer.pcur -= 1;
                     self.scan_oct(self.buffer.pcur, 3, &mut numlen);
                     self.buffer.pcur += numlen;
                     self.tokcopy(numlen + 1);
                     return Ok(());
-                },
+                }
 
                 Some('x') => {
                     self.tok_hex(&mut numlen);
-                    if numlen == 0 { return Err(()) }
+                    if numlen == 0 {
+                        return Err(());
+                    }
                     self.tokcopy(numlen + 2);
-                    return Ok(())
-                },
+                    return Ok(());
+                }
 
-                Some('M') =>  {
-                    if (flags & ESCAPE_META) != 0 { return self.tokadd_escape_eof() }
+                Some('M') => {
+                    if (flags & ESCAPE_META) != 0 {
+                        return self.tokadd_escape_eof();
+                    }
                     c = self.nextc();
                     if c != '-' {
                         self.buffer.pushback(&c);
-                        return self.tokadd_escape_eof()
+                        return self.tokadd_escape_eof();
                     }
                     self.tokcopy(3);
                     flags |= ESCAPE_META;
@@ -556,18 +628,20 @@ impl Lexer {
                     if c == '\\' {
                         continue;
                     } else if c.is_eof() {
-                        return self.tokadd_escape_eof()
+                        return self.tokadd_escape_eof();
                     }
                     self.tokadd(&c);
-                    return Ok(())
+                    return Ok(());
                 }
 
                 Some('C') => {
-                    if (flags & ESCAPE_CONTROL) != 0 { return self.tokadd_escape_eof() }
+                    if (flags & ESCAPE_CONTROL) != 0 {
+                        return self.tokadd_escape_eof();
+                    }
                     c = self.nextc();
                     if c != '-' {
                         self.buffer.pushback(&c);
-                        return self.tokadd_escape_eof()
+                        return self.tokadd_escape_eof();
                     }
                     self.tokcopy(3);
 
@@ -576,14 +650,16 @@ impl Lexer {
                     if c == '\\' {
                         continue;
                     } else if c.is_eof() {
-                        return self.tokadd_escape_eof()
+                        return self.tokadd_escape_eof();
                     }
                     self.tokadd(&c);
-                    return Ok(())
-                },
+                    return Ok(());
+                }
 
                 Some('c') => {
-                    if (flags & ESCAPE_CONTROL) != 0 { return self.tokadd_escape_eof() }
+                    if (flags & ESCAPE_CONTROL) != 0 {
+                        return self.tokadd_escape_eof();
+                    }
                     self.tokcopy(2);
                     flags |= ESCAPE_CONTROL;
 
@@ -592,21 +668,19 @@ impl Lexer {
                     if c == '\\' {
                         continue;
                     } else if c.is_eof() {
-                        return self.tokadd_escape_eof()
+                        return self.tokadd_escape_eof();
                     }
                     self.tokadd(&c);
-                    return Ok(())
-                },
+                    return Ok(());
+                }
 
                 // eof:
-                None => {
-                    return self.tokadd_escape_eof()
-                },
+                None => return self.tokadd_escape_eof(),
 
                 Some(other) => {
                     self.tokadd('\\');
                     self.tokadd(other);
-                    return Ok(())
+                    return Ok(());
                 }
             }
         }
@@ -625,7 +699,7 @@ impl Lexer {
         if *numlen == 0 {
             self.yyerror0("invalid hex escape");
             self.token_flush();
-            return LexChar::new(0)
+            return LexChar::new(0);
         }
         self.buffer.pcur += *numlen;
         LexChar::new(c as u8)
@@ -638,49 +712,51 @@ impl Lexer {
         c = self.nextc();
         match c.to_option() {
             Some('\\') => return c,
-            Some('n')  => return LexChar::new('\n'),
-            Some('t')  => return LexChar::new('\t'),
-            Some('r')  => return LexChar::new('\r'),
-            Some('f')  => return LexChar::new(Self::LF_CHAR),
-            Some('v')  => return LexChar::new(Self::VTAB_CHAR),
-            Some('a')  => return LexChar::new(0x07_u8),
-            Some('e')  => return LexChar::new(0x1b_u8),
+            Some('n') => return LexChar::new('\n'),
+            Some('t') => return LexChar::new('\t'),
+            Some('r') => return LexChar::new('\r'),
+            Some('f') => return LexChar::new(Self::LF_CHAR),
+            Some('v') => return LexChar::new(Self::VTAB_CHAR),
+            Some('a') => return LexChar::new(0x07_u8),
+            Some('e') => return LexChar::new(0x1b_u8),
 
-            Some('0')
-            | Some('1')
-            | Some('2')
-            | Some('3')
-            | Some('4')
-            | Some('5')
-            | Some('6')
-            | Some('7')
-            | Some('8')
-            | Some('9') => {
+            Some('0') | Some('1') | Some('2') | Some('3') | Some('4') | Some('5') | Some('6')
+            | Some('7') | Some('8') | Some('9') => {
                 self.buffer.pushback(&c);
                 let c = self.scan_oct(self.buffer.pcur, 3, &mut numlen);
                 self.buffer.pcur += numlen;
-                return LexChar::new(c as u8)
-            },
+                return LexChar::new(c as u8);
+            }
 
             Some('x') => {
                 let c = self.tok_hex(&mut numlen);
-                if numlen == 0 { return LexChar::EOF }
-                return c
-            },
+                if numlen == 0 {
+                    return LexChar::EOF;
+                }
+                return c;
+            }
 
             Some('b') => return LexChar::new(0x08_u8),
             Some('s') => return LexChar::new(' '),
 
             Some('M') => {
-                if (flags & ESCAPE_META) != 0 { return self.read_escape_eof() }
+                if (flags & ESCAPE_META) != 0 {
+                    return self.read_escape_eof();
+                }
                 c = self.nextc();
-                if c != '-' { return self.read_escape_eof() }
+                if c != '-' {
+                    return self.read_escape_eof();
+                }
                 c = self.nextc();
                 if c == '\\' {
-                    if self.buffer.peek('u') { return self.read_escape_eof() }
-                    return self.read_escape(flags|ESCAPE_META).map_as_u8(|byte| byte | 0x80);
+                    if self.buffer.peek('u') {
+                        return self.read_escape_eof();
+                    }
+                    return self
+                        .read_escape(flags | ESCAPE_META)
+                        .map_as_u8(|byte| byte | 0x80);
                 } else if c.is_eof() || !c.is_ascii() {
-                    return self.read_escape_eof()
+                    return self.read_escape_eof();
                 } else {
                     if let Some(c2) = self.escaped_control_code(&c) {
                         if c.is_control() || (flags & ESCAPE_CONTROL) == 0 {
@@ -689,27 +765,33 @@ impl Lexer {
                             self.warn(&format!("invalid character syntax; use \\C-\\M-\\{}", c2));
                         }
                     } else if c.is_control() {
-                        return self.read_escape_eof()
+                        return self.read_escape_eof();
                     }
                     return c.map_as_u8(|c| (c & 0xff) | 0x80);
                 }
-            },
+            }
 
-            Some('C')
-            | Some('c') => {
-                if c == 'C' { // C fallthrough
+            Some('C') | Some('c') => {
+                if c == 'C' {
+                    // C fallthrough
                     c = self.nextc();
-                    if c != '-' { return self.read_escape_eof() }
+                    if c != '-' {
+                        return self.read_escape_eof();
+                    }
                 }
-                if (flags & ESCAPE_CONTROL) != 0 { return self.read_escape_eof() }
+                if (flags & ESCAPE_CONTROL) != 0 {
+                    return self.read_escape_eof();
+                }
                 c = self.nextc();
                 if c == '\\' {
-                    if self.buffer.peek('u') { return self.read_escape_eof() }
-                    c = self.read_escape(flags|ESCAPE_CONTROL)
+                    if self.buffer.peek('u') {
+                        return self.read_escape_eof();
+                    }
+                    c = self.read_escape(flags | ESCAPE_CONTROL)
                 } else if c == '?' {
-                    return LexChar::new(0x7f_u8)
+                    return LexChar::new(0x7f_u8);
                 } else if c.is_eof() || !c.is_ascii() {
-                    return self.read_escape_eof()
+                    return self.read_escape_eof();
                 } else {
                     if let Some(c2) = self.escaped_control_code(&c) {
                         if c.is_control() {
@@ -720,23 +802,24 @@ impl Lexer {
                             }
                         } else {
                             if (flags & ESCAPE_META) != 0 {
-                                self.warn(&format!("invalid character syntax; use \\M-\\C-\\{}", c2));
+                                self.warn(&format!(
+                                    "invalid character syntax; use \\M-\\C-\\{}",
+                                    c2
+                                ));
                             } else {
                                 self.warn(&format!("invalid character syntax; use \\C-\\{}", c2));
                             }
                         }
                     } else if c.is_control() {
-                        return self.read_escape_eof()
+                        return self.read_escape_eof();
                     }
                 }
                 return c.map_as_u8(|c| c & 0x9f);
-            },
+            }
 
-            None => {
-                return self.read_escape_eof()
-            },
+            None => return self.read_escape_eof(),
 
-            _ => return c
+            _ => return c,
         }
     }
 
@@ -746,9 +829,9 @@ impl Lexer {
 
     pub fn heredoc_identifier(&mut self) -> Option<i32> {
         /*
-        * term_len is length of `<<"END"` except `END`,
-        * in this case term_len is 4 (<, <, " and ").
-        */
+         * term_len is length of `<<"END"` except `END`,
+         * in this case term_len is 4 (<, <, " and ").
+         */
         let len;
         let mut offset = self.buffer.pcur - self.buffer.pbeg;
         let mut c = self.nextc();
@@ -770,9 +853,16 @@ impl Lexer {
         }
 
         if c == '\'' || c == '"' || c == '`' {
-            if c == '\'' { func |= str_squote }
-            if c == '"'  { func |= str_dquote }
-            if c == '`'  { func |= str_xquote; token = Self::tXSTRING_BEG }
+            if c == '\'' {
+                func |= str_squote
+            }
+            if c == '"' {
+                func |= str_dquote
+            }
+            if c == '`' {
+                func |= str_xquote;
+                token = Self::tXSTRING_BEG
+            }
 
             quote += 1;
             offset += 1;
@@ -780,7 +870,9 @@ impl Lexer {
 
             loop {
                 c = self.nextc();
-                if c == term { break }
+                if c == term {
+                    break;
+                }
 
                 if c.is_eof() || c == '\r' || c == '\n' {
                     self.yyerror0("unterminated here document identifier");
@@ -800,36 +892,37 @@ impl Lexer {
                 if let Some(n) = self.parser_precise_mbclen(self.buffer.pcur - 1) {
                     self.buffer.pcur += n - 1;
                 } else {
-                    return Some(Self::END_OF_INPUT)
+                    return Some(Self::END_OF_INPUT);
                 }
                 c = self.nextc();
-                if c.is_eof() || !self.parser_is_identchar() { break }
+                if c.is_eof() || !self.parser_is_identchar() {
+                    break;
+                }
             }
             self.buffer.pushback(&c);
         }
 
         len = self.buffer.pcur - (self.buffer.pbeg + offset) - quote;
 
-        let id = self.buffer.substr_at(self.buffer.ptok, self.buffer.pcur).unwrap();
+        let id = self
+            .buffer
+            .substr_at(self.buffer.ptok, self.buffer.pcur)
+            .unwrap()
+            .to_owned();
         self.set_yylval_str(TokenBuf::String(id));
         self.lval_start = Some(self.buffer.ptok);
         self.lval_end = Some(self.buffer.pcur);
 
         self.buffer.goto_eol();
 
-
-        self.strterm = Some(
-            StrTerm::new_heredoc(
-                HeredocLiteral::new(
-                    self.buffer.lastline,
-                    offset,
-                    self.buffer.ruby_sourceline,
-                    len,
-                    quote,
-                    func
-                )
-            )
-        );
+        self.strterm = Some(StrTerm::new_heredoc(HeredocLiteral::new(
+            self.buffer.lastline,
+            offset,
+            self.buffer.ruby_sourceline,
+            len,
+            quote,
+            func,
+        )));
 
         self.token_flush();
         self.buffer.heredoc_indent = indent;
@@ -867,11 +960,14 @@ impl Lexer {
             /* not beginning of line, cannot be the terminator */
         } else if self.buffer.heredoc_line_indent == -1 {
             /* `heredoc_line_indent == -1` means
-            * - "after an interpolation in the same line", or
-            * - "in a continuing line"
-            */
+             * - "after an interpolation in the same line", or
+             * - "in a continuing line"
+             */
             self.buffer.heredoc_line_indent = 0;
-        } else if self.buffer.is_whole_match(&self.buffer.substr_at(eos, eos+len).unwrap(), indent) {
+        } else if self
+            .buffer
+            .is_whole_match(&self.buffer.substr_at(eos, eos + len).unwrap(), indent)
+        {
             return self.here_document_restore(&here);
         }
 
@@ -886,17 +982,19 @@ impl Lexer {
                             if ptr_end == ptr || self.buffer.input[ptr_end - 1] != '\r' {
                                 ptr_end += 1;
                             }
-                        },
+                        }
                         '\r' => {
                             ptr_end -= 1;
-                        },
+                        }
                         _ => {}
                     }
                 }
 
                 if self.buffer.heredoc_indent > 0 {
                     let mut i = 0;
-                    while (ptr + i < ptr_end) && self.parser_update_heredoc_indent(&self.char_at(ptr + i)) {
+                    while (ptr + i < ptr_end)
+                        && self.parser_update_heredoc_indent(&self.char_at(ptr + i))
+                    {
                         i += 1;
                     }
                     self.buffer.heredoc_line_indent = 0;
@@ -904,9 +1002,16 @@ impl Lexer {
 
                 match self.buffer.substr_at(ptr, ptr_end) {
                     Some(s) => str_.append(&s),
-                    _ => { panic!("no substr {}..{} (len = {})", ptr, ptr_end, self.buffer.input.len()) }
+                    _ => panic!(
+                        "no substr {}..{} (len = {})",
+                        ptr,
+                        ptr_end,
+                        self.buffer.input.len()
+                    ),
                 };
-                if ptr_end < self.buffer.pend { str_.push('\n') }
+                if ptr_end < self.buffer.pend {
+                    str_.push('\n')
+                }
                 self.buffer.goto_eol();
                 if self.buffer.heredoc_indent > 0 {
                     return self.heredoc_flush_str(str_);
@@ -916,7 +1021,10 @@ impl Lexer {
                     return self.here_document_error(&here, eos, len);
                 }
 
-                if self.buffer.is_whole_match(&self.buffer.substr_at(eos, eos+len).unwrap(), indent) {
+                if self
+                    .buffer
+                    .is_whole_match(&self.buffer.substr_at(eos, eos + len).unwrap(), indent)
+                {
                     break;
                 }
             }
@@ -930,7 +1038,9 @@ impl Lexer {
                     }
                     self.buffer.heredoc_line_indent = -1;
                 }
-                if let Some(t) = t { return t }
+                if let Some(t) = t {
+                    return t;
+                }
                 self.tokadd('#');
                 c = self.nextc();
             }
@@ -940,13 +1050,17 @@ impl Lexer {
                 match self.tokadd_string(func, '\n', None, &mut 0) {
                     Some(cc) => c = cc,
                     None => {
-                        if self.buffer.eofp { return self.here_document_error(&here, eos, len) }
+                        if self.buffer.eofp {
+                            return self.here_document_error(&here, eos, len);
+                        }
                         return self.here_document_restore(&here);
                     }
                 }
                 self.lval_end = Some(self.buffer.pcur + 1);
                 if c != '\n' {
-                    if c == '\\' { self.buffer.heredoc_line_indent = -1 }
+                    if c == '\\' {
+                        self.buffer.heredoc_line_indent = -1
+                    }
                     return self.heredoc_flush();
                 }
                 let cc = self.nextc();
@@ -956,9 +1070,14 @@ impl Lexer {
                     return self.heredoc_flush();
                 }
                 c = self.nextc();
-                if c.is_eof() { return self.here_document_error(&here, eos, len) }
+                if c.is_eof() {
+                    return self.here_document_error(&here, eos, len);
+                }
 
-                if self.buffer.is_whole_match(&self.buffer.substr_at(eos, eos+len).unwrap(), indent) {
+                if self
+                    .buffer
+                    .is_whole_match(&self.buffer.substr_at(eos, eos + len).unwrap(), indent)
+                {
                     heredoc_end = Some(eos);
                     break;
                 }
@@ -969,14 +1088,23 @@ impl Lexer {
         self.heredoc_restore(&here);
         self.token_flush();
         let heredoc_len = Some(here.length());
-        self.strterm = self.new_strterm(func | STR_FUNC_TERM, 0 as char, Some(0 as char), heredoc_end, heredoc_len);
+        self.strterm = self.new_strterm(
+            func | STR_FUNC_TERM,
+            0 as char,
+            Some(0 as char),
+            heredoc_end,
+            heredoc_len,
+        );
         self.set_yylval_str(str_);
         return Self::tSTRING_CONTENT;
     }
 
     pub fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32 {
         self.heredoc_restore(&here);
-        self.compile_error(&format!("can't find string \"{:#?}\" anywhere before EOF", self.buffer.substr_at(eos, eos+len)));
+        self.compile_error(&format!(
+            "can't find string \"{:#?}\" anywhere before EOF",
+            self.buffer.substr_at(eos, eos + len)
+        ));
         self.token_flush();
         self.strterm = None;
         self.set_lex_state(EXPR_END);
@@ -988,7 +1116,7 @@ impl Lexer {
         self.token_flush();
         self.strterm = None;
         self.set_lex_state(EXPR_END);
-        self.set_yylval_str(TokenBuf::String(here.id(&self.buffer)));
+        self.set_yylval_str(TokenBuf::String(here.id(&self.buffer).to_owned()));
         return Self::tSTRING_END;
     }
 
@@ -1000,7 +1128,7 @@ impl Lexer {
 
     pub fn heredoc_flush(&mut self) -> i32 {
         let str_ = self.tok();
-        return self.heredoc_flush_str(str_)
+        return self.heredoc_flush_str(str_);
     }
 
     pub fn heredoc_restore(&mut self, here: &HeredocLiteral) {
@@ -1013,8 +1141,9 @@ impl Lexer {
         self.buffer.ptok = self.buffer.pbeg + here.offset() - here.quote();
         self.buffer.heredoc_end = self.buffer.ruby_sourceline;
         self.buffer.ruby_sourceline = here.sourceline();
-        if self.buffer.eofp { self.buffer.nextline = 0 }
+        if self.buffer.eofp {
+            self.buffer.nextline = 0
+        }
         self.buffer.eofp = false;
     }
-
 }

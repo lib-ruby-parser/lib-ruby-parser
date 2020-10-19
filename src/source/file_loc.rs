@@ -4,7 +4,7 @@ use crate::source::buffer::*;
 pub struct FileLoc {
     pub filename: String,
     pub line: usize,
-    pub col: usize
+    pub col: usize,
 }
 
 impl std::fmt::Debug for FileLoc {
@@ -17,6 +17,10 @@ impl FileLoc {
     pub fn from_pos(pos: usize, buffer: &Buffer) -> Option<Self> {
         let filename = buffer.name.clone();
         let (line, col) = buffer.line_col_for_pos(pos)?;
-        Some(Self { filename, line, col })
+        Some(Self {
+            filename,
+            line,
+            col,
+        })
     }
 }

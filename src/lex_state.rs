@@ -1,11 +1,13 @@
 #[derive(Clone)]
 pub struct LexState {
-    value: i32
+    value: i32,
 }
 
 impl LexState {
     pub fn new() -> Self {
-        Self { value: lex_states::EXPR_BEG }
+        Self {
+            value: lex_states::EXPR_BEG,
+        }
     }
 
     pub fn is(&self, value: i32) -> bool {
@@ -31,7 +33,9 @@ impl LexState {
 
 impl Default for LexState {
     fn default() -> Self {
-        Self { value: lex_states::EXPR_BEG }
+        Self {
+            value: lex_states::EXPR_BEG,
+        }
     }
 }
 
@@ -60,24 +64,58 @@ impl std::fmt::Debug for LexState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut states: Vec<&'static str> = vec![];
 
-        if self.is_some(lex_states::EXPR_BEG) { states.push("EXPR_BEG") }
-        if self.is_some(lex_states::EXPR_END) { states.push("EXPR_END") }
-        if self.is_some(lex_states::EXPR_ENDARG) { states.push("EXPR_ENDARG") }
-        if self.is_some(lex_states::EXPR_ENDFN) { states.push("EXPR_ENDFN") }
-        if self.is_some(lex_states::EXPR_ARG) { states.push("EXPR_ARG") }
-        if self.is_some(lex_states::EXPR_CMDARG) { states.push("EXPR_CMDARG") }
-        if self.is_some(lex_states::EXPR_MID) { states.push("EXPR_MID") }
-        if self.is_some(lex_states::EXPR_FNAME) { states.push("EXPR_FNAME") }
-        if self.is_some(lex_states::EXPR_DOT) { states.push("EXPR_DOT") }
-        if self.is_some(lex_states::EXPR_CLASS) { states.push("EXPR_CLASS") }
-        if self.is_some(lex_states::EXPR_LABEL) { states.push("EXPR_LABEL") }
-        if self.is_some(lex_states::EXPR_FITEM) { states.push("EXPR_FITEM") }
-        if self.is_some(lex_states::EXPR_NONE) { states.push("EXPR_NONE") }
+        if self.is_some(lex_states::EXPR_BEG) {
+            states.push("EXPR_BEG")
+        }
+        if self.is_some(lex_states::EXPR_END) {
+            states.push("EXPR_END")
+        }
+        if self.is_some(lex_states::EXPR_ENDARG) {
+            states.push("EXPR_ENDARG")
+        }
+        if self.is_some(lex_states::EXPR_ENDFN) {
+            states.push("EXPR_ENDFN")
+        }
+        if self.is_some(lex_states::EXPR_ARG) {
+            states.push("EXPR_ARG")
+        }
+        if self.is_some(lex_states::EXPR_CMDARG) {
+            states.push("EXPR_CMDARG")
+        }
+        if self.is_some(lex_states::EXPR_MID) {
+            states.push("EXPR_MID")
+        }
+        if self.is_some(lex_states::EXPR_FNAME) {
+            states.push("EXPR_FNAME")
+        }
+        if self.is_some(lex_states::EXPR_DOT) {
+            states.push("EXPR_DOT")
+        }
+        if self.is_some(lex_states::EXPR_CLASS) {
+            states.push("EXPR_CLASS")
+        }
+        if self.is_some(lex_states::EXPR_LABEL) {
+            states.push("EXPR_LABEL")
+        }
+        if self.is_some(lex_states::EXPR_FITEM) {
+            states.push("EXPR_FITEM")
+        }
+        if self.is_some(lex_states::EXPR_NONE) {
+            states.push("EXPR_NONE")
+        }
 
-        if self.is_some(lex_states::EXPR_VALUE) { states.push("++ EXPR_VALUE ++") }
-        if self.is_some(lex_states::EXPR_BEG_ANY) { states.push("++ EXPR_BEG_ANY ++") }
-        if self.is_some(lex_states::EXPR_END_ANY) { states.push("++ EXPR_END_ANY ++") }
-        if self.is_some(lex_states::EXPR_END_ANY) { states.push("++ EXPR_END_ANY ++") }
+        if self.is_some(lex_states::EXPR_VALUE) {
+            states.push("++ EXPR_VALUE ++")
+        }
+        if self.is_some(lex_states::EXPR_BEG_ANY) {
+            states.push("++ EXPR_BEG_ANY ++")
+        }
+        if self.is_some(lex_states::EXPR_END_ANY) {
+            states.push("++ EXPR_END_ANY ++")
+        }
+        if self.is_some(lex_states::EXPR_END_ANY) {
+            states.push("++ EXPR_END_ANY ++")
+        }
 
         f.write_str(&states.join("|"))
     }

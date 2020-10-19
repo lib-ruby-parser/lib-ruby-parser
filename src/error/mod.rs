@@ -1,6 +1,6 @@
 mod error;
-mod message;
 mod level;
+mod message;
 
 pub use error::ParseError;
 pub use level::ErrorLevel;

@@ -1,9 +1,9 @@
-use crate::Lexer;
-use crate::source::buffer::*;
-use crate::TokenBuf;
-use crate::lexer::TokAdd;
-use crate::lex_states::*;
 use crate::lex_char::*;
+use crate::lex_states::*;
+use crate::lexer::TokAdd;
+use crate::source::buffer::*;
+use crate::Lexer;
+use crate::TokenBuf;
 
 impl Lexer {
     const NUM_SUFFIX_R: i8 = 1 << 0;
@@ -34,16 +34,22 @@ impl Lexer {
                 if !c.is_eof() && c.is_hexdigit() {
                     loop {
                         if c == '_' {
-                            if nondigit.is_some() { break }
+                            if nondigit.is_some() {
+                                break;
+                            }
                             nondigit = Some(c.clone());
                             continue;
                         }
-                        if !c.is_hexdigit() { break }
+                        if !c.is_hexdigit() {
+                            break;
+                        }
                         nondigit = None;
                         self.tokadd(&c);
 
                         c = self.nextc();
-                        if c.is_eof() { break }
+                        if c.is_eof() {
+                            break;
+                        }
                     }
                 }
                 self.buffer.pushback(&c);
@@ -64,16 +70,22 @@ impl Lexer {
                 if c == '0' || c == '1' {
                     loop {
                         if c == '_' {
-                            if nondigit.is_some() { break }
+                            if nondigit.is_some() {
+                                break;
+                            }
                             nondigit = Some(c.clone());
                             continue;
                         }
-                        if c != '0' && c != '1' { break }
+                        if c != '0' && c != '1' {
+                            break;
+                        }
                         nondigit = None;
                         self.tokadd(&c);
 
                         c = self.nextc();
-                        if c.is_eof() { break }
+                        if c.is_eof() {
+                            break;
+                        }
                     }
                 }
                 self.buffer.pushback(&c);
@@ -94,16 +106,22 @@ impl Lexer {
                 if !c.is_eof() && c.is_digit() {
                     loop {
                         if c == '_' {
-                            if nondigit.is_some() { break }
+                            if nondigit.is_some() {
+                                break;
+                            }
                             nondigit = Some(c.clone());
                             continue;
                         }
-                        if !c.is_digit() { break }
+                        if !c.is_digit() {
+                            break;
+                        }
                         nondigit = None;
                         self.tokadd(&c);
 
                         c = self.nextc();
-                        if c.is_eof() { break }
+                        if c.is_eof() {
+                            break;
+                        }
                     }
                 }
                 self.buffer.pushback(&c);
@@ -150,22 +168,16 @@ impl Lexer {
 
         loop {
             match c.to_option() {
-                Some('0') |
-                Some('1') |
-                Some('2') |
-                Some('3') |
-                Some('4') |
-                Some('5') |
-                Some('6') |
-                Some('7') |
-                Some('8') |
-                Some('9') => {
+                Some('0') | Some('1') | Some('2') | Some('3') | Some('4') | Some('5')
+                | Some('6') | Some('7') | Some('8') | Some('9') => {
                     nondigit = None;
                     self.tokadd(&c);
-                },
+                }
 
                 Some('.') => {
-                    if nondigit.is_some() { return self.trailing_uc(&nondigit) }
+                    if nondigit.is_some() {
+                        return self.trailing_uc(&nondigit);
+                    }
                     if seen_point.is_some() || seen_e {
                         return self.decode_num(c, nondigit, is_float, seen_e, seen_point);
                     } else {
@@ -181,10 +193,9 @@ impl Lexer {
                     self.tokadd(&c);
                     is_float = true;
                     nondigit = None;
-                },
+                }
 
-                Some('e') |
-                Some('E') => {
+                Some('e') | Some('E') => {
                     if let Some(nondigit_value) = &nondigit {
                         self.buffer.pushback(&c);
                         c = nondigit_value.clone();
@@ -205,40 +216,58 @@ impl Lexer {
                     is_float = true;
                     self.tokadd(&c);
                     nondigit = if c == '-' || c == '+' { Some(c) } else { None };
-                },
+                }
 
                 Some('_') => {
-                    if nondigit.is_some() { return self.decode_num(c, nondigit, is_float, seen_e, seen_point); }
+                    if nondigit.is_some() {
+                        return self.decode_num(c, nondigit, is_float, seen_e, seen_point);
+                    }
                     nondigit = Some(c);
-                },
+                }
 
-                _ => { return self.decode_num(c, nondigit, is_float, seen_e, seen_point) }
+                _ => return self.decode_num(c, nondigit, is_float, seen_e, seen_point),
             }
 
             c = self.nextc();
         }
     }
 
-    pub fn parse_octal(&mut self, c: &mut LexChar, nondigit: &mut Option<LexChar>, start: usize) -> Option<i32> {
+    pub fn parse_octal(
+        &mut self,
+        c: &mut LexChar,
+        nondigit: &mut Option<LexChar>,
+        start: usize,
+    ) -> Option<i32> {
         loop {
             if *c == '_' {
-                if nondigit.is_some() { break }
+                if nondigit.is_some() {
+                    break;
+                }
                 *nondigit = Some(c.clone());
                 continue;
             }
-            if *c < '0' || *c > '9' { break }
-            if *c > '7' { self.invalid_octal(); return None }
+            if *c < '0' || *c > '9' {
+                break;
+            }
+            if *c > '7' {
+                self.invalid_octal();
+                return None;
+            }
             *nondigit = None;
             self.tokadd(&*c);
 
             *c = self.nextc();
-            if c.is_eof() { break }
+            if c.is_eof() {
+                break;
+            }
         }
 
         if self.toklen() > start {
             self.buffer.pushback(c);
             self.tokfix();
-            if nondigit.is_some() { return Some(self.trailing_uc(&nondigit)) }
+            if nondigit.is_some() {
+                return Some(self.trailing_uc(&nondigit));
+            }
             let suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
             let mut tok = self.tok();
             tok.prepend("0");
@@ -263,7 +292,14 @@ impl Lexer {
         Self::END_OF_INPUT // (format!("trailing `{}' in number", nondigit.clone().unwrap().unwrap()))
     }
 
-    fn decode_num(&mut self, c: LexChar, nondigit: Option<LexChar>, is_float: bool, seen_e: bool, seen_point: Option<usize>) -> i32 {
+    fn decode_num(
+        &mut self,
+        c: LexChar,
+        nondigit: Option<LexChar>,
+        is_float: bool,
+        seen_e: bool,
+        seen_point: Option<usize>,
+    ) -> i32 {
         self.buffer.pushback(&c);
         if nondigit.is_some() {
             self.trailing_uc(&nondigit);
@@ -271,13 +307,22 @@ impl Lexer {
         return self.parse_numeric_footer(is_float, seen_e, seen_point);
     }
 
-    fn parse_numeric_footer(&mut self, is_float: bool, seen_e: bool, seen_point: Option<usize>) -> i32 {
+    fn parse_numeric_footer(
+        &mut self,
+        is_float: bool,
+        seen_e: bool,
+        seen_point: Option<usize>,
+    ) -> i32 {
         self.tokfix();
         if is_float {
             let mut token_type: i32 = Self::tFLOAT;
             let v;
 
-            let suffix = self.number_literal_suffix(if seen_e { Self::NUM_SUFFIX_I } else { Self::NUM_SUFFIX_ALL });
+            let suffix = self.number_literal_suffix(if seen_e {
+                Self::NUM_SUFFIX_I
+            } else {
+                Self::NUM_SUFFIX_ALL
+            });
             if (suffix & Self::NUM_SUFFIX_R) != 0 {
                 let mut value = self.tok();
                 value.push('r');
@@ -293,7 +338,12 @@ impl Lexer {
         return self.set_integer_literal(self.tok(), suffix);
     }
 
-    fn parse_rational(&mut self, tok: TokenBuf, _len: usize, _seen_point: Option<usize>) -> TokenBuf {
+    fn parse_rational(
+        &mut self,
+        tok: TokenBuf,
+        _len: usize,
+        _seen_point: Option<usize>,
+    ) -> TokenBuf {
         tok
     }
 
@@ -310,7 +360,9 @@ impl Lexer {
 
     pub fn no_digits(&mut self) -> i32 {
         self.yyerror0("numeric literal without digits");
-        if self.buffer.peek('_') { self.nextc(); }
+        if self.buffer.peek('_') {
+            self.nextc();
+        }
         self.set_integer_literal(TokenBuf::String("0".to_owned()), 0)
     }
 
@@ -322,7 +374,9 @@ impl Lexer {
 
         loop {
             c = self.nextc();
-            if c.is_eof() { break }
+            if c.is_eof() {
+                break;
+            }
 
             if (mask & Self::NUM_SUFFIX_I != 0) && c == 'i' {
                 result |= mask & Self::NUM_SUFFIX_I;

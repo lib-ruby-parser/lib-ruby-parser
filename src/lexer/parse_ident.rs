@@ -1,9 +1,9 @@
+use crate::lex_char::*;
 use crate::lexer::*;
+use crate::reserved_word;
 use crate::source::buffer::*;
 use crate::TokenBuf;
-use crate::{LexState, lex_states::*};
-use crate::lex_char::*;
-use crate::reserved_word;
+use crate::{lex_states::*, LexState};
 
 impl Lexer {
     pub fn parser_is_identchar(&self) -> bool {
@@ -15,7 +15,7 @@ impl Lexer {
         self.set_yyval_name(ident.clone());
         match ident {
             TokenBuf::String(s) => s,
-            TokenBuf::Bytes(_) => unreachable!("locals can't have non-utf chars")
+            TokenBuf::Bytes(_) => unreachable!("locals can't have non-utf chars"),
         }
     }
 
@@ -25,7 +25,7 @@ impl Lexer {
         // MRI has some weird logic of comparing given ID with tLAST_OP_ID
         // and then checking & ID_SCOPE_MASK
         if let Some(first_char) = ident.chars().nth(0) {
-            return !first_char.is_ascii_uppercase()
+            return !first_char.is_ascii_uppercase();
         }
         false
     }
@@ -38,17 +38,25 @@ impl Lexer {
 
         loop {
             if !c.is_ascii() { /* mb = ENC_CODERANGE_UNKNOWN */ }
-            if self.tokadd_mbchar(&c).is_err() { return Self::END_OF_INPUT }
+            if self.tokadd_mbchar(&c).is_err() {
+                return Self::END_OF_INPUT;
+            }
             c = self.nextc();
 
-            if !self.parser_is_identchar() { break }
+            if !self.parser_is_identchar() {
+                break;
+            }
         }
 
         if (c == '!' || c == '?') && !self.buffer.peek('=') {
             result = Self::tFID;
             self.tokadd(&c);
-        } else if c == '=' && self.is_lex_state_some(EXPR_FNAME) &&
-                (!self.buffer.peek('~') && !self.buffer.peek('>') && (!self.buffer.peek('=') || (self.buffer.peek_n('>', 1)))) {
+        } else if c == '='
+            && self.is_lex_state_some(EXPR_FNAME)
+            && (!self.buffer.peek('~')
+                && !self.buffer.peek('>')
+                && (!self.buffer.peek('=') || (self.buffer.peek_n('>', 1))))
+        {
             result = Self::tIDENTIFIER;
             self.tokadd(&c)
         } else {
@@ -59,13 +67,15 @@ impl Lexer {
 
         if self.is_label_possible(cmd_state) {
             if self.is_label_suffix(0) {
-                self.set_lex_state(EXPR_ARG|EXPR_LABELED);
+                self.set_lex_state(EXPR_ARG | EXPR_LABELED);
                 self.nextc();
                 self.set_yyval_name(self.tok());
                 return Self::tLABEL;
             }
         }
-        if /* mb == ENC_CODERANGE_7BIT && */ !self.is_lex_state_some(EXPR_DOT) {
+        if
+        /* mb == ENC_CODERANGE_7BIT && */
+        !self.is_lex_state_some(EXPR_DOT) {
             if let Some(kw) = reserved_word(&self.tok()) {
                 let state: LexState = self.state.clone();
                 if state.is_some(EXPR_FNAME) {
@@ -80,21 +90,23 @@ impl Lexer {
                 if kw.id == Self::kDO {
                     if self.is_lambda_beginning() {
                         self.lpar_beg = -1; /* make lambda_beginning_p() == FALSE in the body of "-> do ... end" */
-                        return Self::kDO_LAMBDA
+                        return Self::kDO_LAMBDA;
                     }
-                    if self.is_cond_active() { return Self::kDO_COND }
+                    if self.is_cond_active() {
+                        return Self::kDO_COND;
+                    }
                     if self.is_cmdarg_active() && !state.is_some(EXPR_CMDARG) {
-                        return Self::kDO_BLOCK
+                        return Self::kDO_BLOCK;
                     }
-                    return Self::kDO
+                    return Self::kDO;
                 }
                 if state.is_some(EXPR_BEG | EXPR_LABELED) {
-                    return kw.id.clone()
+                    return kw.id.clone();
                 } else {
                     if kw.id != kw.modifier_id {
                         self.set_lex_state(EXPR_BEG | EXPR_LABEL)
                     }
-                    return kw.modifier_id.clone()
+                    return kw.modifier_id.clone();
                 }
             }
         }
@@ -112,14 +124,16 @@ impl Lexer {
         }
 
         ident = self.tokenize_ident(&last_state);
-        if result == Self::tCONSTANT && self.is_var_name(&ident) { result = Self::tIDENTIFIER }
+        if result == Self::tCONSTANT && self.is_var_name(&ident) {
+            result = Self::tIDENTIFIER
+        }
         if !last_state.is_some(EXPR_DOT|EXPR_FNAME) &&
             result == Self::tIDENTIFIER && /* not EXPR_FNAME, not attrasgn */
-            self.is_lvar_defined(&ident) {
-            self.set_lex_state(EXPR_END|EXPR_LABEL);
+            self.is_lvar_defined(&ident)
+        {
+            self.set_lex_state(EXPR_END | EXPR_LABEL);
         }
 
         result
     }
-
 }
