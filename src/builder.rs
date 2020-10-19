@@ -377,7 +377,7 @@ impl Builder {
 
         Node::RegOpt(RegOpt {
             options,
-            expression_l: loc(&regexp_end_t),
+            expression_l: loc(&regexp_end_t).adjust_begin(1),
         })
     }
 
@@ -389,7 +389,7 @@ impl Builder {
         options: Node,
     ) -> Node {
         let begin_l = loc(&begin_t);
-        let end_l = loc(&end_t);
+        let end_l = loc(&end_t).resize(1);
         let expression_l = begin_l.join(options.expression());
         Node::Regexp(Regexp {
             parts,
