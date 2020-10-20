@@ -90,16 +90,16 @@ mapping = {
 }
 
 ops = {
-    '='   => :tEQL,     '&'   => :tAMPER2,  '|'   => :tPIPE,
+    '='   => :tEQL,     '&'   => :tAMPER,  '|'   => :tPIPE,
     '!'   => :tBANG,    '^'   => :tCARET,   '+'   => :tPLUS,
-    '-'   => :tMINUS,   '*'   => :tSTAR2,   '/'   => :tDIVIDE,
+    '-'   => :tMINUS,   '*'   => :tSTAR,    '/'   => :tDIVIDE,
     '%'   => :tPERCENT, '~'   => :tTILDE,   ','   => :tCOMMA,
     ';'   => :tSEMI,    '.'   => :tDOT,     '..'  => :tDOT2,
-    '...' => :tDOT3,    '['   => :tLBRACK2, ']'   => :tRBRACK,
-    '('   => :tLPAREN2, ')'   => :tRPAREN,  '?'   => :tEH,
+    '...' => :tDOT3,    '['   => :tLBRACK,  ']'   => :tRBRACK,
+    '('   => :tLPAREN,  ')'   => :tRPAREN,  '?'   => :tEH,
     ':'   => :tCOLON,   '&&'  => :tANDOP,   '||'  => :tOROP,
     '-@'  => :tUMINUS,  '+@'  => :tUPLUS,   '~@'  => :tTILDE,
-    '**'  => :tPOW,     '->'  => :tLAMBDA,  '=~'  => :tMATCH,
+    '**'  => :tDSTAR,   '->'  => :tLAMBDA,  '=~'  => :tMATCH,
     '!~'  => :tNMATCH,  '=='  => :tEQ,      '!='  => :tNEQ,
     '>'   => :tGT,      '>>'  => :tRSHFT,   '>='  => :tGEQ,
     '<'   => :tLT,      '<<'  => :tLSHFT,   '<='  => :tLEQ,
@@ -149,6 +149,8 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, _)|
         end
     when :tINTEGER
         tok_value = tok_value.gsub('_', '')
+    when :tLABEL
+        tok_value = tok_value.delete_suffix(':')
     end
 
     puts tok_name.to_s + ' ' + (tok_value || "").bytes.inspect + ' ' + start.join(':')

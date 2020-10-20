@@ -34,14 +34,20 @@ pub(crate) mod str_types {
 }
 
 #[derive(Debug, Clone, Default)]
+pub(crate) struct HeredocEnd {
+    pub(crate) start: usize,
+    pub(crate) end: usize,
+    pub(crate) value: String,
+}
+
+#[derive(Debug, Clone, Default)]
 struct InnerStringLiteral {
     // struct rb_strterm_literal_struct
     pub(crate) nest: usize,
     pub(crate) func: usize,
     pub(crate) paren: Option<char>,
     pub(crate) term: char,
-    pub(crate) heredoc_end: Option<usize>,
-    pub(crate) heredoc_len: Option<usize>,
+    pub(crate) heredoc_end: Option<HeredocEnd>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -55,8 +61,7 @@ impl StringLiteral {
         func: usize,
         paren: Option<char>,
         term: char,
-        heredoc_end: Option<usize>,
-        heredoc_len: Option<usize>,
+        heredoc_end: Option<HeredocEnd>,
     ) -> Self {
         Self {
             inner: Rc::new(RefCell::new(InnerStringLiteral {
@@ -65,7 +70,6 @@ impl StringLiteral {
                 paren,
                 term,
                 heredoc_end,
-                heredoc_len,
             })),
         }
     }
@@ -98,11 +102,8 @@ impl StringLiteral {
         self.inner.borrow_mut().term = term;
     }
 
-    pub(crate) fn heredoc_end(&self) -> Option<usize> {
+    pub(crate) fn heredoc_end(&self) -> Option<HeredocEnd> {
         self.inner.borrow().heredoc_end.clone()
-    }
-    pub(crate) fn heredoc_len(&self) -> Option<usize> {
-        self.inner.borrow().heredoc_len.clone()
     }
 }
 

@@ -18,7 +18,8 @@ USAGE:
 
 fn lex_as_ripper(filepath: &str) -> Result<String, String> {
     let source = fs::read(filepath).map_err(|_| "failed to read a file".to_owned())?;
-    let (parser, tokens) = lex(&source, filepath, false)?;
+    let (parser, mut tokens) = lex(&source, filepath, false)?;
+    tokens.sort_by(|a, b| a.loc.begin.cmp(&b.loc.begin));
 
     let mut output = String::from("");
     for token in tokens {
@@ -36,11 +37,16 @@ fn lex_as_ripper(filepath: &str) -> Result<String, String> {
             "tLBRACK2" => "tLBRACK",
             "kDO_BLOCK" => "kDO",
             "kDO_COND" => "kDO",
+            "kDO_LAMBDA" => "kDO",
             "kIF_MOD" => "kIF",
             "kUNLESS_MOD" => "kUNLESS",
             "kWHILE_MOD" => "kWHILE",
             "tUMINUS_NUM" => "tMINUS",
             "tXSTRING_BEG" => "tSTRING_BEG",
+            "tFID" => "tIDENTIFIER",
+            "tAMPER2" => "tAMPER",
+            "tSTAR2" => "tSTAR",
+            "tPOW" => "tDSTAR",
             other => other,
         }
         .to_owned();
@@ -52,7 +58,7 @@ fn lex_as_ripper(filepath: &str) -> Result<String, String> {
             .line_col_for_pos(token.loc.begin)
             .ok_or_else(|| format!("token {:#?} has invalid range", token))?;
 
-        output.push_str(&format!("{} {:?} {}:{}\n", token_name, bytes, line, col))
+        output.push_str(&format!("{} {:?} {}:{}\n", token_name, bytes, line, col));
     }
     Ok(output)
 }
@@ -66,9 +72,9 @@ fn main() {
         _ => print_usage(),
     };
 
-    each_ruby_file(
-        Path::new(path),
-        &|path| match (ripper_lex(path), lex_as_ripper(path)) {
+    each_ruby_file(Path::new(path), &|path| {
+        print!("{}  ", path);
+        match (ripper_lex(path), lex_as_ripper(path)) {
             (Ok(ripper_out), Ok(out)) => {
                 if ripper_out == out {
                     println!("OK")
@@ -90,7 +96,7 @@ fn main() {
             (Err(err), _) => println!("Given file can't be parsed by ripper: {}", err),
 
             (Ok(_), Err(err)) => println!("Given file is valid, but can't be parsed: {}", err),
-        },
-    )
+        };
+    })
     .unwrap();
 }

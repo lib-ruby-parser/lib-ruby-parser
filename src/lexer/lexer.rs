@@ -6,7 +6,7 @@ use crate::parser::TokenValue;
 use crate::parser::{Loc, Token};
 use crate::source::buffer::*;
 use crate::source::InputError;
-use crate::str_term::{str_types, StrTerm, StringLiteral};
+use crate::str_term::{str_types, HeredocEnd, StrTerm, StringLiteral};
 use crate::Context;
 use crate::StackState;
 use crate::StaticEnvironment;
@@ -113,6 +113,7 @@ impl Lexer {
 
         let begin = std::mem::replace(&mut self.lval_start, None).unwrap_or(self.buffer.ptok);
         let mut end = std::mem::replace(&mut self.lval_end, None).unwrap_or(self.buffer.pcur);
+
         let mut token_value = self
             .lval
             .clone()
@@ -436,8 +437,6 @@ impl Lexer {
                     {
                         if let Some(token) = self.heredoc_identifier() {
                             return token;
-                        } else {
-                            return Self::END_OF_INPUT;
                         }
                     }
                     if self.is_after_operator() {
@@ -509,8 +508,7 @@ impl Lexer {
                     } else {
                         0
                     };
-                    self.strterm =
-                        self.new_strterm(str_types::str_dquote | label, '"', None, None, None);
+                    self.strterm = self.new_strterm(str_types::str_dquote | label, '"', None, None);
                     self.buffer.set_ptok(self.buffer.pcur - 1);
                     return Self::tSTRING_BEG;
                 }
@@ -528,7 +526,7 @@ impl Lexer {
                         }
                         return Self::tBACK_REF2;
                     }
-                    self.strterm = self.new_strterm(str_types::str_xquote, '`', None, None, None);
+                    self.strterm = self.new_strterm(str_types::str_xquote, '`', None, None);
                     return Self::tXSTRING_BEG;
                 }
 
@@ -539,7 +537,7 @@ impl Lexer {
                         0
                     };
                     self.strterm =
-                        self.new_strterm(str_types::str_squote | label, '\'', None, None, None);
+                        self.new_strterm(str_types::str_squote | label, '\'', None, None);
                     self.buffer.set_ptok(self.buffer.pcur - 1);
                     return Self::tSTRING_BEG;
                 }
@@ -813,11 +811,11 @@ impl Lexer {
                     match c.to_option() {
                         Some('\'') => {
                             self.strterm =
-                                self.new_strterm(str_types::str_ssym, c.unwrap(), None, None, None)
+                                self.new_strterm(str_types::str_ssym, c.unwrap(), None, None)
                         }
                         Some('"') => {
                             self.strterm =
-                                self.new_strterm(str_types::str_dsym, c.unwrap(), None, None, None)
+                                self.new_strterm(str_types::str_dsym, c.unwrap(), None, None)
                         }
                         _ => self.buffer.pushback(&c),
                     }
@@ -827,8 +825,7 @@ impl Lexer {
 
                 Some('/') => {
                     if self.is_beg() {
-                        self.strterm =
-                            self.new_strterm(str_types::str_regexp, '/', None, None, None);
+                        self.strterm = self.new_strterm(str_types::str_regexp, '/', None, None);
                         return Self::tREGEXP_BEG;
                     }
                     c = self.nextc();
@@ -840,8 +837,7 @@ impl Lexer {
                     self.buffer.pushback(&c);
                     if self.is_spacearg(&c, space_seen) {
                         self.arg_ambiguous('/');
-                        self.strterm =
-                            self.new_strterm(str_types::str_regexp, '/', None, None, None);
+                        self.strterm = self.new_strterm(str_types::str_regexp, '/', None, None);
                         return Self::tREGEXP_END;
                     }
                     self.set_lex_state(if self.is_after_operator() {
@@ -1111,8 +1107,7 @@ impl Lexer {
         func: usize,
         term: char,
         paren: Option<char>,
-        heredoc_end: Option<usize>,
-        heredoc_len: Option<usize>,
+        heredoc_end: Option<HeredocEnd>,
     ) -> Option<StrTerm> {
         Some(StrTerm::new_literal(StringLiteral::new(
             0,
@@ -1120,7 +1115,6 @@ impl Lexer {
             paren,
             term,
             heredoc_end,
-            heredoc_len,
         )))
     }
 
@@ -1351,48 +1345,39 @@ impl Lexer {
         self.buffer.ptok = ptok - 1;
         match c.to_option() {
             Some('Q') => {
-                self.strterm =
-                    self.new_strterm(str_types::str_dquote, term.unwrap(), paren, None, None);
+                self.strterm = self.new_strterm(str_types::str_dquote, term.unwrap(), paren, None);
                 return Self::tSTRING_BEG;
             }
             Some('q') => {
-                self.strterm =
-                    self.new_strterm(str_types::str_squote, term.unwrap(), paren, None, None);
+                self.strterm = self.new_strterm(str_types::str_squote, term.unwrap(), paren, None);
                 return Self::tSTRING_BEG;
             }
             Some('W') => {
-                self.strterm =
-                    self.new_strterm(str_types::str_dword, term.unwrap(), paren, None, None);
+                self.strterm = self.new_strterm(str_types::str_dword, term.unwrap(), paren, None);
                 return Self::tWORDS_BEG;
             }
             Some('w') => {
-                self.strterm =
-                    self.new_strterm(str_types::str_sword, term.unwrap(), paren, None, None);
+                self.strterm = self.new_strterm(str_types::str_sword, term.unwrap(), paren, None);
                 return Self::tQWORDS_BEG;
             }
             Some('I') => {
-                self.strterm =
-                    self.new_strterm(str_types::str_dword, term.unwrap(), paren, None, None);
+                self.strterm = self.new_strterm(str_types::str_dword, term.unwrap(), paren, None);
                 return Self::tSYMBOLS_BEG;
             }
             Some('i') => {
-                self.strterm =
-                    self.new_strterm(str_types::str_sword, term.unwrap(), paren, None, None);
+                self.strterm = self.new_strterm(str_types::str_sword, term.unwrap(), paren, None);
                 return Self::tQSYMBOLS_BEG;
             }
             Some('x') => {
-                self.strterm =
-                    self.new_strterm(str_types::str_xquote, term.unwrap(), paren, None, None);
+                self.strterm = self.new_strterm(str_types::str_xquote, term.unwrap(), paren, None);
                 return Self::tXSTRING_BEG;
             }
             Some('r') => {
-                self.strterm =
-                    self.new_strterm(str_types::str_regexp, term.unwrap(), paren, None, None);
+                self.strterm = self.new_strterm(str_types::str_regexp, term.unwrap(), paren, None);
                 return Self::tREGEXP_BEG;
             }
             Some('s') => {
-                self.strterm =
-                    self.new_strterm(str_types::str_ssym, term.unwrap(), paren, None, None);
+                self.strterm = self.new_strterm(str_types::str_ssym, term.unwrap(), paren, None);
                 self.set_lex_state(EXPR_FNAME | EXPR_FITEM);
                 return Self::tSYMBEG;
             }
