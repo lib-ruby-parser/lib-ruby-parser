@@ -13,6 +13,7 @@ impl Default for TokenBuf {
 }
 
 impl TokenBuf {
+    #[allow(dead_code)]
     pub(crate) fn into_bytes(self) -> Vec<u8> {
         match self {
             TokenBuf::String(s) => s.into_bytes(),

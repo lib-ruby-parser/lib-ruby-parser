@@ -89,9 +89,11 @@ impl StringLiteral {
     pub(crate) fn set_func(&self, func: usize) {
         self.inner.borrow_mut().func = func;
     }
+    #[allow(dead_code)]
     pub(crate) fn set_paren(&self, paren: Option<char>) {
         self.inner.borrow_mut().paren = paren;
     }
+    #[allow(dead_code)]
     pub(crate) fn set_term(&self, term: char) {
         self.inner.borrow_mut().term = term;
     }
@@ -160,21 +162,27 @@ impl HeredocLiteral {
         self.inner.borrow().func
     }
 
+    #[allow(dead_code)]
     pub(crate) fn set_lastline(&self, lastline: usize) {
         self.inner.borrow_mut().lastline = lastline;
     }
+    #[allow(dead_code)]
     pub(crate) fn set_offset(&self, offset: usize) {
         self.inner.borrow_mut().offset = offset;
     }
+    #[allow(dead_code)]
     pub(crate) fn set_sourceline(&self, sourceline: usize) {
         self.inner.borrow_mut().sourceline = sourceline;
     }
+    #[allow(dead_code)]
     pub(crate) fn set_length(&self, length: usize) {
         self.inner.borrow_mut().length = length;
     }
+    #[allow(dead_code)]
     pub(crate) fn set_quote(&self, quote: usize) {
         self.inner.borrow_mut().quote = quote;
     }
+    #[allow(dead_code)]
     pub(crate) fn set_func(&self, func: usize) {
         self.inner.borrow_mut().func = func;
     }

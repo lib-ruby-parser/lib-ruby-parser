@@ -48,19 +48,23 @@ impl VariablesStack {
         }
     }
 
-    pub(crate) fn push(&mut self) {
+    pub(crate) fn push(&self) {
         self.inner.borrow_mut().push()
     }
-    pub(crate) fn pop(&mut self) {
+    pub(crate) fn pop(&self) {
         self.inner.borrow_mut().pop()
     }
-    pub(crate) fn reset(&mut self) {
+
+    #[allow(dead_code)]
+    pub(crate) fn reset(&self) {
         self.inner.borrow_mut().reset()
     }
-    pub(crate) fn declare(&mut self, name: &str) {
+    #[allow(dead_code)]
+    pub(crate) fn declare(&self, name: &str) {
         self.inner.borrow_mut().declare(name)
     }
-    pub(crate) fn is_declared(&mut self, name: &str) -> bool {
+    #[allow(dead_code)]
+    pub(crate) fn is_declared(&self, name: &str) -> bool {
         self.inner.borrow_mut().is_declared(name)
     }
 }

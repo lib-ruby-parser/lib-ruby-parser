@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::convert::TryInto;
 
 use crate::map_builder::*;
@@ -6,7 +7,10 @@ use crate::nodes::*;
 use crate::parser::TokenValue;
 // use crate::source::map::*;
 use crate::source::Range;
-use crate::{Context, CurrentArgStack, Lexer, MaxNumparamStack, Node, StaticEnvironment, Token};
+use crate::{
+    Context, CurrentArgStack, Lexer, MaxNumparamStack, Node, StaticEnvironment, Token,
+    VariablesStack,
+};
 use onig::{Regex, RegexOptions};
 
 #[derive(Debug, PartialEq)]
@@ -57,6 +61,8 @@ pub struct Builder {
     context: Context,
     current_arg_stack: CurrentArgStack,
     max_numparam_stack: MaxNumparamStack,
+    pattern_variables: VariablesStack,
+    pattern_hash_keys: VariablesStack,
 }
 
 impl Builder {
@@ -65,12 +71,16 @@ impl Builder {
         context: Context,
         current_arg_stack: CurrentArgStack,
         max_numparam_stack: MaxNumparamStack,
+        pattern_variables: VariablesStack,
+        pattern_hash_keys: VariablesStack,
     ) -> Self {
         Self {
             static_env,
             context,
             current_arg_stack,
             max_numparam_stack,
+            pattern_variables,
+            pattern_hash_keys,
         }
     }
 
@@ -198,8 +208,6 @@ impl Builder {
             }
         }
     }
-
-    pub(crate) fn string(&self) {}
 
     pub(crate) fn string_internal(&self, string_t: Token) -> Node {
         let expression_l = unquoted_map(&string_t);
@@ -704,9 +712,9 @@ impl Builder {
         })
     }
 
-    pub(crate) fn __encoding__(&self, _encoding_t: Token) -> Node {
+    pub(crate) fn __encoding__(&self, encoding_t: Token) -> Node {
         Node::Encoding(Encoding {
-            expression_l: loc(&_encoding_t),
+            expression_l: loc(&encoding_t),
         })
     }
 
@@ -1212,6 +1220,8 @@ impl Builder {
         args: Vec<Node>,
         end_t: Option<Token>,
     ) -> Option<Node> {
+        self.check_duplicate_args(&args, &mut HashMap::new());
+
         if begin_t.is_none() && args.is_empty() && end_t.is_none() {
             return None;
         }
@@ -2583,7 +2593,7 @@ impl Builder {
         kwargs: Vec<Node>,
         rbrace_t: Option<Token>,
     ) -> Node {
-        self.check_duplicate_args(&kwargs);
+        self.check_duplicate_args(&kwargs, &mut HashMap::new());
         let (begin_l, end_l, expression_l) = collection_map(&lbrace_t, &kwargs, &rbrace_t);
         Node::HashPattern(HashPattern {
             elements: kwargs,
@@ -2840,9 +2850,90 @@ impl Builder {
         }
     }
 
-    pub(crate) fn check_duplicate_args(&self, _args: &Vec<Node>) {}
-    pub(crate) fn check_duplicate_arg(&self) {}
-    pub(crate) fn check_assignment_to_numparam(&self, _name: &str, _loc: &Range) {}
+    pub(crate) fn check_duplicate_args<'a>(
+        &self,
+        args: &'a Vec<Node>,
+        map: &mut HashMap<String, &'a Node>,
+    ) {
+        for arg in args {
+            match arg {
+                Node::Arg(_)
+                | Node::Optarg(_)
+                | Node::Blockarg(_)
+                | Node::Kwarg(_)
+                | Node::Kwoptarg(_)
+                | Node::Restarg(_)
+                | Node::Kwrestarg(_) => {
+                    self.check_duplicate_arg(arg, map);
+                }
+                Node::Mlhs(Mlhs { items, .. }) | Node::Procarg0(Procarg0 { args: items, .. }) => {
+                    self.check_duplicate_args(items, map);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn arg_name<'a>(&self, node: &'a Node) -> Option<&'a String> {
+        match node {
+            Node::Arg(Arg { name, .. })
+            | Node::Optarg(Optarg { name, .. })
+            | Node::Restarg(Restarg {
+                name: Some(name), ..
+            })
+            | Node::Kwarg(Kwarg { name, .. })
+            | Node::Kwoptarg(Kwoptarg { name, .. })
+            | Node::Kwrestarg(Kwrestarg {
+                name: Some(name), ..
+            })
+            | Node::Blockarg(Blockarg { name, .. }) => Some(name),
+
+            Node::Restarg(_) | Node::Kwrestarg(_) => None,
+            _ => unreachable!("unsupported arg {:?}", node),
+        }
+    }
+
+    pub(crate) fn check_duplicate_arg<'a>(
+        &self,
+        this_arg: &'a Node,
+        map: &mut HashMap<String, &'a Node>,
+    ) {
+        let this_name = match self.arg_name(this_arg) {
+            Some(name) => name,
+            None => return,
+        };
+
+        let that_arg = map.get(this_name);
+
+        match that_arg {
+            None => {
+                map.insert(this_name.to_owned(), this_arg);
+            }
+            Some(that_arg) => {
+                let that_name = match self.arg_name(*that_arg) {
+                    Some(name) => name,
+                    None => return,
+                };
+                if self.arg_name_collides(this_name, that_name) {
+                    // duplicate_argument
+                }
+            }
+        }
+    }
+
+    pub(crate) fn check_assignment_to_numparam(&self, name: &str, loc: &Range) {
+        let assigning_to_numparam = self.context.is_in_dynamic_block()
+            && match name {
+                "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => true,
+                _ => false,
+            }
+            && self.max_numparam_stack.has_numparams();
+
+        if assigning_to_numparam {
+            loc.begin_pos();
+            // diagnostic :error, :cant_assign_to_numparam, { :name => name }, loc
+        }
+    }
 
     pub(crate) fn check_reserved_for_numparam(&self, name: &str, _loc: &Range) {
         match name {
@@ -2853,12 +2944,45 @@ impl Builder {
         }
     }
 
-    pub(crate) fn arg_name_collides(&self, _this_name: &str, _that_name: &str) -> bool {
-        false
+    pub(crate) fn arg_name_collides(&self, this_name: &str, that_name: &str) -> bool {
+        &this_name[0..1] != "_" && this_name == that_name
     }
-    pub(crate) fn check_lvar_name(&self, _name: &str, _loc: &Range) {}
-    pub(crate) fn check_duplicate_pattern_variable(&self, _name: &str, _loc: &Range) {}
-    pub(crate) fn check_duplicate_pattern_key(&self, _name: &str, _loc: &Range) {}
+
+    pub(crate) fn check_lvar_name(&self, name: &str, loc: &Range) {
+        let first = name.chars().nth(0).unwrap();
+        let rest = &name[1..];
+
+        if (first.is_lowercase() || first == '_')
+            && rest.chars().all(|c| c.is_alphanumeric() || c == '_')
+        {
+            // OK
+        } else {
+            loc.begin_pos();
+            // diagnostic :error, :lvar_name, { name: name }, loc
+        }
+    }
+
+    pub(crate) fn check_duplicate_pattern_variable(&self, name: &str, loc: &Range) {
+        if name.starts_with("_") {
+            return;
+        }
+
+        if self.pattern_variables.is_declared(name) {
+            loc.begin_pos();
+            // diagnostic :error, :duplicate_variable_name, { name: name.to_s }, loc
+        }
+
+        self.pattern_variables.declare(name)
+    }
+
+    pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: &Range) {
+        if self.pattern_hash_keys.is_declared(name) {
+            loc.begin_pos();
+            // diagnostic :error, :duplicate_pattern_key, { name: name.to_s }, loc
+        }
+
+        self.pattern_hash_keys.declare(name)
+    }
 
     //
     // Helpers
@@ -2933,12 +3057,22 @@ impl Builder {
         result
     }
 
-    pub(crate) fn collapse_string_parts(&self) {}
-
-    pub(crate) fn string_value(&self) {}
-
-    pub(crate) fn diagnostic(&self) {}
-    pub(crate) fn validate_definee(&self, _definee: &Node) {}
+    pub(crate) fn validate_definee(&self, definee: &Node) {
+        match definee {
+            Node::Int(_)
+            | Node::Str(_)
+            | Node::Dstr(_)
+            | Node::Sym(_)
+            | Node::Dsym(_)
+            | Node::Heredoc(_)
+            | Node::Regexp(_)
+            | Node::Array(_)
+            | Node::Hash(_) => {
+                // diagnostic :error, :singleton_literal, nil, definee.loc.expression
+            }
+            _ => {}
+        }
+    }
 }
 
 pub(crate) fn loc(token: &Token) -> Range {

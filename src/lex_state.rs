@@ -4,12 +4,6 @@ pub(crate) struct LexState {
 }
 
 impl LexState {
-    pub(crate) fn new() -> Self {
-        Self {
-            value: lex_states::EXPR_BEG,
-        }
-    }
-
     pub(crate) fn is(&self, value: i32) -> bool {
         self.value == value
     }

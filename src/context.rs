@@ -26,21 +26,27 @@ impl InnerContext {
     pub(crate) fn push_class(&mut self) {
         self.push(ContextItem::Class)
     }
+
     pub(crate) fn push_module(&mut self) {
         self.push(ContextItem::Module)
     }
+
     pub(crate) fn push_sclass(&mut self) {
         self.push(ContextItem::Sclass)
     }
+
     pub(crate) fn push_def(&mut self) {
         self.push(ContextItem::Def)
     }
+
     pub(crate) fn push_defs(&mut self) {
         self.push(ContextItem::Defs)
     }
+
     pub(crate) fn push_block(&mut self) {
         self.push(ContextItem::Block)
     }
+
     pub(crate) fn push_lambda(&mut self) {
         self.push(ContextItem::Lambda)
     }
@@ -56,21 +62,27 @@ impl InnerContext {
     pub(crate) fn is_in_class(&self) -> bool {
         self.is_in(ContextItem::Class)
     }
+
     pub(crate) fn is_in_module(&self) -> bool {
         self.is_in(ContextItem::Module)
     }
+
     pub(crate) fn is_in_sclass(&self) -> bool {
         self.is_in(ContextItem::Sclass)
     }
+
     pub(crate) fn is_in_def(&self) -> bool {
         self.is_in(ContextItem::Def)
     }
+
     pub(crate) fn is_in_defs(&self) -> bool {
         self.is_in(ContextItem::Defs)
     }
+
     pub(crate) fn is_in_block(&self) -> bool {
         self.is_in(ContextItem::Block)
     }
+
     pub(crate) fn is_in_lambda(&self) -> bool {
         self.is_in(ContextItem::Lambda)
     }
@@ -137,21 +149,27 @@ impl Context {
     pub(crate) fn push_class(&self) {
         self.inner.borrow_mut().push_class()
     }
+
     pub(crate) fn push_module(&self) {
         self.inner.borrow_mut().push_module()
     }
+
     pub(crate) fn push_sclass(&self) {
         self.inner.borrow_mut().push_sclass()
     }
+
     pub(crate) fn push_def(&self) {
         self.inner.borrow_mut().push_def()
     }
+
     pub(crate) fn push_defs(&self) {
         self.inner.borrow_mut().push_defs()
     }
+
     pub(crate) fn push_block(&self) {
         self.inner.borrow_mut().push_block()
     }
+
     pub(crate) fn push_lambda(&self) {
         self.inner.borrow_mut().push_lambda()
     }
@@ -160,6 +178,7 @@ impl Context {
         self.inner.borrow_mut().pop();
     }
 
+    #[allow(dead_code)]
     pub(crate) fn reset(&self) {
         self.inner.borrow_mut().reset();
     }
@@ -167,25 +186,38 @@ impl Context {
     pub(crate) fn is_in_class(&self) -> bool {
         self.inner.borrow().is_in_class()
     }
+
+    #[allow(dead_code)]
     pub(crate) fn is_in_module(&self) -> bool {
         self.inner.borrow().is_in_module()
     }
+
+    #[allow(dead_code)]
     pub(crate) fn is_in_sclass(&self) -> bool {
         self.inner.borrow().is_in_sclass()
     }
+
+    #[allow(dead_code)]
     pub(crate) fn is_in_def(&self) -> bool {
         self.inner.borrow().is_in_def()
     }
+
+    #[allow(dead_code)]
     pub(crate) fn is_in_defs(&self) -> bool {
         self.inner.borrow().is_in_defs()
     }
+
+    #[allow(dead_code)]
     pub(crate) fn is_in_block(&self) -> bool {
         self.inner.borrow().is_in_block()
     }
+
+    #[allow(dead_code)]
     pub(crate) fn is_in_lambda(&self) -> bool {
         self.inner.borrow().is_in_lambda()
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_indirectly_in_def(&self) -> bool {
         self.inner.borrow().is_indirectly_in_def()
     }

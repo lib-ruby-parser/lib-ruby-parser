@@ -5716,7 +5716,9 @@ impl Parser {
                 static_env.clone(),
                 context.clone(),
                 current_arg_stack.clone(),
-                max_numparam_stack.clone()
+                max_numparam_stack.clone(),
+                pattern_variables.clone(),
+                pattern_hash_keys.clone(),
             ),
             context,
             current_arg_stack,

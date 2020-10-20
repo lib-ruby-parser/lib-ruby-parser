@@ -42,6 +42,7 @@ impl LexChar {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_upper(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_ascii_uppercase()
@@ -50,6 +51,7 @@ impl LexChar {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_lower(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_ascii_lowercase()
@@ -90,6 +92,7 @@ impl LexChar {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_blank(&self) -> bool {
         if let Some(c) = self.to_option() {
             c == SPACE || c == TAB
@@ -122,10 +125,7 @@ impl LexChar {
         }
     }
 
-    // pub(crate) fn to_option(&self) -> Option<char> {
-    //     if let LexChar::Some(c) = self { Some(*c) } else { None }
-    // }
-
+    #[allow(dead_code)]
     pub(crate) fn map<F: FnOnce(char) -> LexChar>(&self, f: F) -> LexChar {
         match self.to_option() {
             Some(c) => f(c),

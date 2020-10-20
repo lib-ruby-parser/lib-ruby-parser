@@ -9,28 +9,17 @@ impl StackState {
         Self { name, stack: 0 }
     }
 
-    pub(crate) fn clear(&mut self) {
-        self.stack = 0
-    }
-
     pub(crate) fn push(&mut self, bit: bool) {
         let bit_value = if bit { 1 } else { 0 };
         self.stack = (self.stack << 1) | bit_value
     }
 
     pub(crate) fn pop(&mut self) {
-        // let bit_value = self.stack & 1;
         self.stack >>= 1;
-
-        // bit_value == 1
     }
 
     pub(crate) fn is_active(&self) -> bool {
         (self.stack & 1) == 1
-    }
-
-    pub(crate) fn is_empty(&self) -> bool {
-        self.stack == 0
     }
 }
 

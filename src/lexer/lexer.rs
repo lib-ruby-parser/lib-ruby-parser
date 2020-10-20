@@ -78,6 +78,7 @@ impl Lexer {
             cmdarg_stack: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
             buffer: Buffer::new("(eval)", bytes.to_owned(), known_encoding)?,
+            context: Context::new(),
             ..Self::default()
         })
     }

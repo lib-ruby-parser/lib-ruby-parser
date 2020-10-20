@@ -66,6 +66,7 @@ impl CurrentArgStack {
     pub(crate) fn pop(&self) {
         self.inner.borrow_mut().pop()
     }
+    #[allow(dead_code)]
     pub(crate) fn reset(&self) {
         self.inner.borrow_mut().reset()
     }
