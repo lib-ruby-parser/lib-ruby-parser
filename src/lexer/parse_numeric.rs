@@ -10,7 +10,7 @@ impl Lexer {
     const NUM_SUFFIX_I: i8 = 1 << 1;
     const NUM_SUFFIX_ALL: i8 = 3;
 
-    pub fn parse_numeric(&mut self, prefix: char) -> i32 {
+    pub(crate) fn parse_numeric(&mut self, prefix: char) -> i32 {
         let mut c = LexChar::new(prefix);
 
         let mut is_float: bool = false;
@@ -232,7 +232,7 @@ impl Lexer {
         }
     }
 
-    pub fn parse_octal(
+    pub(crate) fn parse_octal(
         &mut self,
         c: &mut LexChar,
         nondigit: &mut Option<LexChar>,
@@ -358,7 +358,7 @@ impl Lexer {
         token_type
     }
 
-    pub fn no_digits(&mut self) -> i32 {
+    pub(crate) fn no_digits(&mut self) -> i32 {
         self.yyerror0("numeric literal without digits");
         if self.buffer.peek('_') {
             self.nextc();
@@ -366,7 +366,7 @@ impl Lexer {
         self.set_integer_literal(TokenBuf::String("0".to_owned()), 0)
     }
 
-    pub fn number_literal_suffix(&mut self, mask: i8) -> i8 {
+    pub(crate) fn number_literal_suffix(&mut self, mask: i8) -> i8 {
         let mut c: LexChar;
         let mut mask = mask;
         let mut result: i8 = 0;
@@ -402,7 +402,7 @@ impl Lexer {
         result
     }
 
-    pub fn set_integer_literal(&mut self, mut value: TokenBuf, suffix: i8) -> i32 {
+    pub(crate) fn set_integer_literal(&mut self, mut value: TokenBuf, suffix: i8) -> i32 {
         let mut token_type = Self::tINTEGER;
         if suffix & Self::NUM_SUFFIX_R != 0 {
             value.push('r');

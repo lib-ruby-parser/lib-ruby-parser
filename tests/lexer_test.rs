@@ -4,8 +4,8 @@
 use ruby_parser::lex_states::*;
 use ruby_parser::{Lexer, Token};
 use std::fs;
+use std::panic;
 use std::process::exit;
-use std::{convert::TryInto, panic};
 
 enum TestSection {
     None,
@@ -75,10 +75,7 @@ enum TestResult {
 }
 
 fn token_name(token: &Token) -> String {
-    let (id, _, _) = token;
-    let first_token: usize = Lexer::YYerror.try_into().unwrap();
-    let id_usize: usize = (*id).try_into().unwrap(); // minus first token ID
-    Lexer::TOKEN_NAMES[id_usize - first_token + 1].to_owned()
+    Lexer::token_name(token)
 }
 
 fn lex_state(state: &str) -> i32 {
@@ -121,9 +118,9 @@ fn test(fixture_path: &str) -> TestResult {
                 format!(
                     "{} {:?} [{}, {}]",
                     token_name(&token),
-                    token.1.to_string_lossy(),
-                    token.2.begin,
-                    token.2.end
+                    token.to_string_lossy(),
+                    token.loc.begin,
+                    token.loc.end
                 )
             })
             .collect::<Vec<_>>()

@@ -1,9 +1,8 @@
 use ruby_parser::traverse::Find;
-use ruby_parser::{Lexer, Parser};
+use ruby_parser::Parser;
 
 fn find(src: &str, pattern: Vec<&str>) -> Option<String> {
-    let lexer = Lexer::new(&src.as_bytes().to_vec(), None).ok()?;
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(&src.as_bytes().to_vec()).ok()?;
     parser.set_debug(false);
 
     let pattern = pattern

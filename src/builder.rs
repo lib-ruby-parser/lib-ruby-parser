@@ -10,13 +10,13 @@ use crate::{Context, CurrentArgStack, Lexer, MaxNumparamStack, Node, StaticEnvir
 use onig::{Regex, RegexOptions};
 
 #[derive(Debug, PartialEq)]
-pub enum LoopType {
+pub(crate) enum LoopType {
     While,
     Until,
 }
 
 #[derive(Debug, PartialEq)]
-pub enum KeywordCmd {
+pub(crate) enum KeywordCmd {
     Break,
     Defined,
     Next,
@@ -34,19 +34,19 @@ enum MethodCallType {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum LogicalOp {
+pub(crate) enum LogicalOp {
     And,
     Or,
 }
 
 #[derive(Debug, Clone)]
-pub enum PKwLabel {
+pub(crate) enum PKwLabel {
     PlainLabel(Token),
     QuotedLabel((Token, Vec<Node>, Token)),
 }
 
 #[derive(Debug, Clone)]
-pub enum ArgsType {
+pub(crate) enum ArgsType {
     Args(Option<Node>),
     Numargs(u8),
 }
@@ -60,7 +60,7 @@ pub struct Builder {
 }
 
 impl Builder {
-    pub fn new(
+    pub(crate) fn new(
         static_env: StaticEnvironment,
         context: Context,
         current_arg_stack: CurrentArgStack,
@@ -80,19 +80,19 @@ impl Builder {
 
     // Singletons
 
-    pub fn nil(&self, nil_t: Token) -> Node {
+    pub(crate) fn nil(&self, nil_t: Token) -> Node {
         Node::Nil(Nil {
             expression_l: loc(&nil_t),
         })
     }
 
-    pub fn true_(&self, true_t: Token) -> Node {
+    pub(crate) fn true_(&self, true_t: Token) -> Node {
         Node::True(True {
             expression_l: loc(&true_t),
         })
     }
 
-    pub fn false_(&self, false_t: Token) -> Node {
+    pub(crate) fn false_(&self, false_t: Token) -> Node {
         Node::False(False {
             expression_l: loc(&false_t),
         })
@@ -100,7 +100,7 @@ impl Builder {
 
     // Numerics
 
-    pub fn integer(&self, integer_t: Token) -> Node {
+    pub(crate) fn integer(&self, integer_t: Token) -> Node {
         Node::Int(Int {
             value: value(&integer_t),
             expression_l: loc(&integer_t),
@@ -108,7 +108,7 @@ impl Builder {
         })
     }
 
-    pub fn float(&self, float_t: Token) -> Node {
+    pub(crate) fn float(&self, float_t: Token) -> Node {
         Node::Float(Float {
             value: value(&float_t),
             expression_l: loc(&float_t),
@@ -116,7 +116,7 @@ impl Builder {
         })
     }
 
-    pub fn rational(&self, rational_t: Token) -> Node {
+    pub(crate) fn rational(&self, rational_t: Token) -> Node {
         Node::Rational(Rational {
             value: value(&rational_t),
             expression_l: loc(&rational_t),
@@ -124,7 +124,7 @@ impl Builder {
         })
     }
 
-    pub fn complex(&self, complex_t: Token) -> Node {
+    pub(crate) fn complex(&self, complex_t: Token) -> Node {
         Node::Complex(Complex {
             value: value(&complex_t),
             expression_l: loc(&complex_t),
@@ -132,7 +132,7 @@ impl Builder {
         })
     }
 
-    pub fn unary_num(&self, unary_t: Token, mut numeric: Node) -> Node {
+    pub(crate) fn unary_num(&self, unary_t: Token, mut numeric: Node) -> Node {
         let sign = value(&unary_t);
         let new_operator_l = loc(&unary_t);
 
@@ -166,7 +166,7 @@ impl Builder {
         }
     }
 
-    pub fn __line__(&self, line_t: Token) -> Node {
+    pub(crate) fn __line__(&self, line_t: Token) -> Node {
         Node::Line(Line {
             expression_l: loc(&line_t),
         })
@@ -174,7 +174,7 @@ impl Builder {
 
     // Strings
 
-    pub fn str_node(
+    pub(crate) fn str_node(
         &self,
         begin_t: Option<Token>,
         value: StringValue,
@@ -199,12 +199,11 @@ impl Builder {
         }
     }
 
-    pub fn string(&self) {}
+    pub(crate) fn string(&self) {}
 
-    pub fn string_internal(&self, string_t: Token) -> Node {
+    pub(crate) fn string_internal(&self, string_t: Token) -> Node {
         let expression_l = unquoted_map(&string_t);
-        let (_, value, _) = string_t;
-        let value = match value {
+        let value = match string_t.token_value {
             TokenValue::String(s) => StringValue::String(s),
             TokenValue::InvalidString(bytes) => StringValue::Bytes(bytes),
         };
@@ -216,7 +215,7 @@ impl Builder {
         })
     }
 
-    pub fn string_compose(
+    pub(crate) fn string_compose(
         &self,
         begin_t: Option<Token>,
         parts: Vec<Node>,
@@ -254,15 +253,14 @@ impl Builder {
         }
     }
 
-    pub fn character(&self, char_t: Token) -> Node {
+    pub(crate) fn character(&self, char_t: Token) -> Node {
         let str_range = loc(&char_t);
 
         let begin_l = Some(str_range.with_end(str_range.begin_pos() + 1));
         let end_l = None;
         let expression_l = str_range;
 
-        let (_, value, _) = char_t;
-        let value = match value {
+        let value = match char_t.token_value {
             TokenValue::String(s) => StringValue::String(s),
             TokenValue::InvalidString(bytes) => StringValue::Bytes(bytes),
         };
@@ -274,7 +272,7 @@ impl Builder {
         })
     }
 
-    pub fn __file__(&self, file_t: Token) -> Node {
+    pub(crate) fn __file__(&self, file_t: Token) -> Node {
         Node::File(File {
             expression_l: loc(&file_t),
         })
@@ -282,7 +280,7 @@ impl Builder {
 
     // Symbols
 
-    pub fn symbol(&self, start_t: Token, value_t: Token) -> Node {
+    pub(crate) fn symbol(&self, start_t: Token, value_t: Token) -> Node {
         let expression_l = loc(&start_t).join(&loc(&value_t));
         let begin_l = Some(loc(&start_t));
         Node::Sym(Sym {
@@ -293,7 +291,7 @@ impl Builder {
         })
     }
 
-    pub fn symbol_internal(&self, symbol_t: Token) -> Node {
+    pub(crate) fn symbol_internal(&self, symbol_t: Token) -> Node {
         Node::Sym(Sym {
             name: value(&symbol_t),
             begin_l: None,
@@ -302,7 +300,7 @@ impl Builder {
         })
     }
 
-    pub fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
+    pub(crate) fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
         match &parts[..] {
             [Node::Str(Str { value, .. })] => {
                 let (begin_l, end_l, expression_l) =
@@ -329,7 +327,7 @@ impl Builder {
 
     // Executable strings
 
-    pub fn xstring_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
+    pub(crate) fn xstring_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
         match string_map(&Some(begin_t), &parts, &Some(end_t)) {
             StringMap::CollectionMap((begin_l, end_l, expression_l)) => Node::Xstr(Xstr {
                 parts,
@@ -350,14 +348,14 @@ impl Builder {
 
     // Indented (interpolated, noninterpolated, executable) strings
 
-    pub fn dedent_string(&self, node: Node, _dedent_level: i32) -> Node {
+    pub(crate) fn dedent_string(&self, node: Node, _dedent_level: i32) -> Node {
         // FIXME
         node
     }
 
     // Regular expressions
 
-    pub fn regexp_options(&self, regexp_end_t: &Token) -> Node {
+    pub(crate) fn regexp_options(&self, regexp_end_t: &Token) -> Node {
         let mut options = value(&regexp_end_t)[1..].chars().collect::<Vec<_>>();
         options.sort();
         options.dedup();
@@ -368,7 +366,7 @@ impl Builder {
         })
     }
 
-    pub fn regexp_compose(
+    pub(crate) fn regexp_compose(
         &self,
         begin_t: Token,
         parts: Vec<Node>,
@@ -389,7 +387,12 @@ impl Builder {
 
     // Arrays
 
-    pub fn array(&self, begin_t: Option<Token>, elements: Vec<Node>, end_t: Option<Token>) -> Node {
+    pub(crate) fn array(
+        &self,
+        begin_t: Option<Token>,
+        elements: Vec<Node>,
+        end_t: Option<Token>,
+    ) -> Node {
         let (begin_l, end_l, expression_l) = collection_map(&begin_t, &elements, &end_t);
         Node::Array(Array {
             elements,
@@ -399,7 +402,7 @@ impl Builder {
         })
     }
 
-    pub fn splat(&self, star_t: Token, value: Option<Node>) -> Node {
+    pub(crate) fn splat(&self, star_t: Token, value: Option<Node>) -> Node {
         let (operator_l, expression_l) = unary_op_map(&star_t, &value);
         Node::Splat(Splat {
             operator_l,
@@ -408,7 +411,7 @@ impl Builder {
         })
     }
 
-    pub fn word(&self, parts: Vec<Node>) -> Node {
+    pub(crate) fn word(&self, parts: Vec<Node>) -> Node {
         match &parts[..] {
             [Node::Str(_)] | [Node::Dstr(_)] => {
                 // collapse_string_parts? == true
@@ -426,7 +429,7 @@ impl Builder {
         })
     }
 
-    pub fn words_compose(&self, begin_t: Token, elements: Vec<Node>, end_t: Token) -> Node {
+    pub(crate) fn words_compose(&self, begin_t: Token, elements: Vec<Node>, end_t: Token) -> Node {
         let (begin_l, end_l, expression_l) =
             collection_map(&Some(begin_t), &elements, &Some(end_t));
         Node::Array(Array {
@@ -437,7 +440,7 @@ impl Builder {
         })
     }
 
-    pub fn symbols_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
+    pub(crate) fn symbols_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
         let parts = parts
             .into_iter()
             .map(|part| match part {
@@ -478,7 +481,7 @@ impl Builder {
 
     // Hashes
 
-    pub fn pair(&self, key: Node, assoc_t: Token, value: Node) -> Node {
+    pub(crate) fn pair(&self, key: Node, assoc_t: Token, value: Node) -> Node {
         let (operator_l, expression_l) = binary_op_map(&key, &assoc_t, &value);
         Node::Pair(Pair {
             key: Box::new(key),
@@ -488,7 +491,7 @@ impl Builder {
         })
     }
 
-    pub fn pair_keyword(&self, key_t: Token, value_node: Node) -> Node {
+    pub(crate) fn pair_keyword(&self, key_t: Token, value_node: Node) -> Node {
         let (key_l, colon_l, expression_l) = pair_keyword_map(&key_t, &value_node);
         let key = Node::Sym(Sym {
             name: value(&key_t),
@@ -504,7 +507,13 @@ impl Builder {
         })
     }
 
-    pub fn pair_quoted(&self, begin_t: Token, parts: Vec<Node>, end_t: Token, value: Node) -> Node {
+    pub(crate) fn pair_quoted(
+        &self,
+        begin_t: Token,
+        parts: Vec<Node>,
+        end_t: Token,
+        value: Node,
+    ) -> Node {
         let (end_t, colon_l, expression_l) = pair_quoted_map(&begin_t, &end_t, &value);
 
         let key = self.symbol_compose(begin_t, parts, end_t);
@@ -517,7 +526,7 @@ impl Builder {
         })
     }
 
-    pub fn kwsplat(&self, dstar_t: Token, arg: Node) -> Node {
+    pub(crate) fn kwsplat(&self, dstar_t: Token, arg: Node) -> Node {
         let operator_l = loc(&dstar_t);
         let expression_l = arg.expression().join(&operator_l);
 
@@ -528,7 +537,7 @@ impl Builder {
         })
     }
 
-    pub fn associate(
+    pub(crate) fn associate(
         &self,
         begin_t: Option<Token>,
         pairs: Vec<Node>,
@@ -545,7 +554,12 @@ impl Builder {
 
     // Ranges
 
-    pub fn range_inclusive(&self, lhs: Option<Node>, dot2_t: Token, rhs: Option<Node>) -> Node {
+    pub(crate) fn range_inclusive(
+        &self,
+        lhs: Option<Node>,
+        dot2_t: Token,
+        rhs: Option<Node>,
+    ) -> Node {
         let (operator_l, expression_l) = range_map(&lhs, &dot2_t, &rhs);
         Node::Irange(Irange {
             left: lhs.map(Box::new),
@@ -555,7 +569,12 @@ impl Builder {
         })
     }
 
-    pub fn range_exclusive(&self, lhs: Option<Node>, dot3_t: Token, rhs: Option<Node>) -> Node {
+    pub(crate) fn range_exclusive(
+        &self,
+        lhs: Option<Node>,
+        dot3_t: Token,
+        rhs: Option<Node>,
+    ) -> Node {
         let (operator_l, expression_l) = range_map(&lhs, &dot3_t, &rhs);
         Node::Erange(Erange {
             left: lhs.map(Box::new),
@@ -569,55 +588,55 @@ impl Builder {
     // Access
     //
 
-    pub fn self_(&self, token: Token) -> Node {
+    pub(crate) fn self_(&self, token: Token) -> Node {
         Node::Self_(Self_ {
             expression_l: loc(&token),
         })
     }
 
-    pub fn lvar(&self, token: Token) -> Node {
+    pub(crate) fn lvar(&self, token: Token) -> Node {
         Node::Lvar(Lvar {
             name: value(&token),
             expression_l: loc(&token),
         })
     }
 
-    pub fn ivar(&self, token: Token) -> Node {
+    pub(crate) fn ivar(&self, token: Token) -> Node {
         Node::Ivar(Ivar {
             name: value(&token),
             expression_l: loc(&token),
         })
     }
 
-    pub fn gvar(&self, token: Token) -> Node {
+    pub(crate) fn gvar(&self, token: Token) -> Node {
         Node::Gvar(Gvar {
             name: value(&token),
             expression_l: loc(&token),
         })
     }
 
-    pub fn cvar(&self, token: Token) -> Node {
+    pub(crate) fn cvar(&self, token: Token) -> Node {
         Node::Cvar(Cvar {
             name: value(&token),
             expression_l: loc(&token),
         })
     }
 
-    pub fn back_ref(&self, token: Token) -> Node {
+    pub(crate) fn back_ref(&self, token: Token) -> Node {
         Node::BackRef(BackRef {
             name: value(&token),
             expression_l: loc(&token),
         })
     }
 
-    pub fn nth_ref(&self, token: Token) -> Node {
+    pub(crate) fn nth_ref(&self, token: Token) -> Node {
         let name = value(&token)[1..].parse::<usize>().unwrap();
         Node::NthRef(NthRef {
             name,
             expression_l: loc(&token),
         })
     }
-    pub fn accessible(&self, node: Node) -> Node {
+    pub(crate) fn accessible(&self, node: Node) -> Node {
         match node {
             Node::Lvar(Lvar { name, expression_l }) => {
                 if self.static_env.is_declared(&name) {
@@ -647,7 +666,7 @@ impl Builder {
         }
     }
 
-    pub fn const_(&self, name_t: Token) -> Node {
+    pub(crate) fn const_(&self, name_t: Token) -> Node {
         let (double_colon_l, name_l, expression_l) = constant_map(&None, &None, &name_t);
         Node::Const(Const {
             scope: None,
@@ -658,7 +677,7 @@ impl Builder {
         })
     }
 
-    pub fn const_global(&self, t_colon3: Token, name_t: Token) -> Node {
+    pub(crate) fn const_global(&self, t_colon3: Token, name_t: Token) -> Node {
         let cbase = Node::Cbase(Cbase {
             expression_l: loc(&t_colon3),
         });
@@ -673,7 +692,7 @@ impl Builder {
         })
     }
 
-    pub fn const_fetch(&self, scope: Node, t_colon2: Token, name_t: Token) -> Node {
+    pub(crate) fn const_fetch(&self, scope: Node, t_colon2: Token, name_t: Token) -> Node {
         let scope = Some(scope);
         let (double_colon_l, name_l, expression_l) = constant_map(&scope, &Some(t_colon2), &name_t);
         Node::Const(Const {
@@ -685,7 +704,7 @@ impl Builder {
         })
     }
 
-    pub fn __encoding__(&self, _encoding_t: Token) -> Node {
+    pub(crate) fn __encoding__(&self, _encoding_t: Token) -> Node {
         Node::Encoding(Encoding {
             expression_l: loc(&_encoding_t),
         })
@@ -695,7 +714,7 @@ impl Builder {
     // Assignments
     //
 
-    pub fn assignable(&self, node: Node) -> Node {
+    pub(crate) fn assignable(&self, node: Node) -> Node {
         match node {
             Node::Cvar(Cvar { name, expression_l }) => Node::Cvasgn(Cvasgn {
                 name,
@@ -771,7 +790,7 @@ impl Builder {
         }
     }
 
-    pub fn const_op_assignable(&self, node: Node) -> Node {
+    pub(crate) fn const_op_assignable(&self, node: Node) -> Node {
         match node {
             Node::Const(Const {
                 scope,
@@ -792,7 +811,7 @@ impl Builder {
         }
     }
 
-    pub fn assign(&self, mut lhs: Node, eql_t: Token, new_rhs: Node) -> Node {
+    pub(crate) fn assign(&self, mut lhs: Node, eql_t: Token, new_rhs: Node) -> Node {
         let op_l = Some(loc(&eql_t));
         let expr_l = join_exprs(&lhs, &new_rhs);
 
@@ -863,7 +882,7 @@ impl Builder {
         }
     }
 
-    pub fn op_assign(&self, mut lhs: Node, op_t: Token, rhs: Node) -> Node {
+    pub(crate) fn op_assign(&self, mut lhs: Node, op_t: Token, rhs: Node) -> Node {
         let mut operator = value(&op_t);
         operator.pop();
         let operator_l = loc(&op_t);
@@ -927,7 +946,7 @@ impl Builder {
         }
     }
 
-    pub fn multi_lhs(
+    pub(crate) fn multi_lhs(
         &self,
         begin_t: Option<Token>,
         items: Vec<Node>,
@@ -942,7 +961,7 @@ impl Builder {
         })
     }
 
-    pub fn multi_assign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
+    pub(crate) fn multi_assign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
         let (operator_l, expression_l) = binary_op_map(&lhs, &eql_t, &rhs);
         Node::Masgn(Masgn {
             lhs: Box::new(lhs),
@@ -952,11 +971,11 @@ impl Builder {
         })
     }
 
-    pub fn rassign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
+    pub(crate) fn rassign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
         self.assign(rhs, eql_t, lhs)
     }
 
-    pub fn multi_rassign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
+    pub(crate) fn multi_rassign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
         self.multi_assign(rhs, eql_t, lhs)
     }
 
@@ -964,7 +983,7 @@ impl Builder {
     // Class and module definition
     //
 
-    pub fn def_class(
+    pub(crate) fn def_class(
         &self,
         class_t: Token,
         name: Node,
@@ -989,7 +1008,7 @@ impl Builder {
         })
     }
 
-    pub fn def_sclass(
+    pub(crate) fn def_sclass(
         &self,
         class_t: Token,
         lshift_t: Token,
@@ -1012,7 +1031,7 @@ impl Builder {
         })
     }
 
-    pub fn def_module(
+    pub(crate) fn def_module(
         &self,
         module_t: Token,
         name: Node,
@@ -1036,7 +1055,7 @@ impl Builder {
     // Method (un)definition
     //
 
-    pub fn def_method(
+    pub(crate) fn def_method(
         &self,
         def_t: Token,
         name_t: Token,
@@ -1063,7 +1082,7 @@ impl Builder {
         })
     }
 
-    pub fn def_endless_method(
+    pub(crate) fn def_endless_method(
         &self,
         def_t: Token,
         name_t: Token,
@@ -1093,7 +1112,7 @@ impl Builder {
         })
     }
 
-    pub fn def_singleton(
+    pub(crate) fn def_singleton(
         &self,
         def_t: Token,
         definee: Node,
@@ -1126,7 +1145,7 @@ impl Builder {
         })
     }
 
-    pub fn def_endless_singleton(
+    pub(crate) fn def_endless_singleton(
         &self,
         def_t: Token,
         definee: Node,
@@ -1162,7 +1181,7 @@ impl Builder {
         })
     }
 
-    pub fn undef_method(&self, undef_t: Token, names: Vec<Node>) -> Node {
+    pub(crate) fn undef_method(&self, undef_t: Token, names: Vec<Node>) -> Node {
         let keyword_l = loc(&undef_t);
         let expression_l = keyword_l.maybe_join(&collection_expr(&names));
         Node::Undef(Undef {
@@ -1172,7 +1191,7 @@ impl Builder {
         })
     }
 
-    pub fn alias(&self, alias_t: Token, to: Node, from: Node) -> Node {
+    pub(crate) fn alias(&self, alias_t: Token, to: Node, from: Node) -> Node {
         let keyword_l = loc(&alias_t);
         let expression_l = keyword_l.join(from.expression());
         Node::Alias(Alias {
@@ -1187,7 +1206,7 @@ impl Builder {
     // Formal arguments
     //
 
-    pub fn args(
+    pub(crate) fn args(
         &self,
         begin_t: Option<Token>,
         args: Vec<Node>,
@@ -1206,7 +1225,7 @@ impl Builder {
         }))
     }
 
-    pub fn forward_only_args(&self, begin_t: Token, dots_t: Token, end_t: Token) -> Node {
+    pub(crate) fn forward_only_args(&self, begin_t: Token, dots_t: Token, end_t: Token) -> Node {
         let args = vec![self.forward_arg(dots_t)];
         let (begin_l, end_l, expression_l) = collection_map(&Some(begin_t), &args, &Some(end_t));
         Node::Args(Args {
@@ -1217,13 +1236,13 @@ impl Builder {
         })
     }
 
-    pub fn forward_arg(&self, dots_t: Token) -> Node {
+    pub(crate) fn forward_arg(&self, dots_t: Token) -> Node {
         Node::ForwardArg(ForwardArg {
             expression_l: loc(&dots_t),
         })
     }
 
-    pub fn arg(&self, name_t: Token) -> Node {
+    pub(crate) fn arg(&self, name_t: Token) -> Node {
         self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
         Node::Arg(Arg {
             name: value(&name_t),
@@ -1231,7 +1250,7 @@ impl Builder {
         })
     }
 
-    pub fn optarg(&self, name_t: Token, eql_t: Token, default: Node) -> Node {
+    pub(crate) fn optarg(&self, name_t: Token, eql_t: Token, default: Node) -> Node {
         self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
 
         let operator_l = loc(&eql_t);
@@ -1247,7 +1266,7 @@ impl Builder {
         })
     }
 
-    pub fn restarg(&self, star_t: Token, name_t: Option<Token>) -> Node {
+    pub(crate) fn restarg(&self, star_t: Token, name_t: Option<Token>) -> Node {
         let name = match &name_t {
             Some(name_t) => {
                 self.check_reserved_for_numparam(&value(name_t), &loc(name_t));
@@ -1268,7 +1287,7 @@ impl Builder {
         })
     }
 
-    pub fn kwarg(&self, name_t: Token) -> Node {
+    pub(crate) fn kwarg(&self, name_t: Token) -> Node {
         self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
 
         let (name_l, expression_l) = kwarg_map(&name_t, &None);
@@ -1280,7 +1299,7 @@ impl Builder {
         })
     }
 
-    pub fn kwoptarg(&self, name_t: Token, default: Node) -> Node {
+    pub(crate) fn kwoptarg(&self, name_t: Token, default: Node) -> Node {
         self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
 
         let label_l = loc(&name_t);
@@ -1295,7 +1314,7 @@ impl Builder {
         })
     }
 
-    pub fn kwrestarg(&self, dstar_t: Token, name_t: Option<Token>) -> Node {
+    pub(crate) fn kwrestarg(&self, dstar_t: Token, name_t: Option<Token>) -> Node {
         let name = match &name_t {
             Some(name_t) => {
                 self.check_reserved_for_numparam(&value(name_t), &loc(name_t));
@@ -1316,7 +1335,7 @@ impl Builder {
         })
     }
 
-    pub fn kwnilarg(&self, dstar_t: Token, nil_t: Token) -> Node {
+    pub(crate) fn kwnilarg(&self, dstar_t: Token, nil_t: Token) -> Node {
         let dstar_l = loc(&dstar_t);
         let nil_l = loc(&nil_t);
         let expression_l = dstar_l.join(&nil_l);
@@ -1326,7 +1345,7 @@ impl Builder {
         })
     }
 
-    pub fn shadowarg(&self, name_t: Token) -> Node {
+    pub(crate) fn shadowarg(&self, name_t: Token) -> Node {
         self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
         Node::Shadowarg(Shadowarg {
             name: value(&name_t),
@@ -1334,7 +1353,7 @@ impl Builder {
         })
     }
 
-    pub fn blockarg(&self, amper_t: Token, name_t: Token) -> Node {
+    pub(crate) fn blockarg(&self, amper_t: Token, name_t: Token) -> Node {
         self.check_reserved_for_numparam(&value(&name_t), &loc(&name_t));
 
         let amper_l = loc(&amper_t);
@@ -1349,7 +1368,7 @@ impl Builder {
         })
     }
 
-    pub fn procarg0(&self, arg: Node) -> Node {
+    pub(crate) fn procarg0(&self, arg: Node) -> Node {
         match arg {
             Node::Mlhs(Mlhs {
                 items,
@@ -1378,18 +1397,21 @@ impl Builder {
 
     fn call_type_for_dot(&self, dot_t: &Option<Token>) -> MethodCallType {
         match dot_t {
-            Some((Lexer::tANDDOT, _, _)) => MethodCallType::CSend,
+            Some(Token {
+                token_type: Lexer::tANDDOT,
+                ..
+            }) => MethodCallType::CSend,
             _ => MethodCallType::Send,
         }
     }
 
-    pub fn forwarded_args(&self, dots_t: Token) -> Node {
+    pub(crate) fn forwarded_args(&self, dots_t: Token) -> Node {
         Node::ForwardedArgs(ForwardedArgs {
             expression_l: loc(&dots_t),
         })
     }
 
-    pub fn call_method(
+    pub(crate) fn call_method(
         &self,
         receiver: Option<Node>,
         dot_t: Option<Token>,
@@ -1429,13 +1451,13 @@ impl Builder {
         }
     }
 
-    pub fn call_lambda(&self, lambda_t: Token) -> Node {
+    pub(crate) fn call_lambda(&self, lambda_t: Token) -> Node {
         Node::Lambda(Lambda {
             expression_l: loc(&lambda_t),
         })
     }
 
-    pub fn block(
+    pub(crate) fn block(
         &self,
         method_call: Node,
         begin_t: Token,
@@ -1572,7 +1594,7 @@ impl Builder {
             _ => unreachable!("unsupported method call {:?}", method_call),
         }
     }
-    pub fn block_pass(&self, amper_t: Token, value: Node) -> Node {
+    pub(crate) fn block_pass(&self, amper_t: Token, value: Node) -> Node {
         let amper_l = loc(&amper_t);
         let expression_l = value.expression().join(&amper_l);
 
@@ -1583,7 +1605,7 @@ impl Builder {
         })
     }
 
-    pub fn attr_asgn(&self, receiver: Node, dot_t: Token, selector_t: Token) -> Node {
+    pub(crate) fn attr_asgn(&self, receiver: Node, dot_t: Token, selector_t: Token) -> Node {
         let method_name = value(&selector_t) + "=";
 
         let dot_l = loc(&dot_t);
@@ -1617,7 +1639,13 @@ impl Builder {
         }
     }
 
-    pub fn index(&self, recv: Node, lbrack_t: Token, indexes: Vec<Node>, rbrack_t: Token) -> Node {
+    pub(crate) fn index(
+        &self,
+        recv: Node,
+        lbrack_t: Token,
+        indexes: Vec<Node>,
+        rbrack_t: Token,
+    ) -> Node {
         let (begin_l, end_l, expression_l) = index_map(&recv, &lbrack_t, &rbrack_t);
         Node::Index(Index {
             recv: Box::new(recv),
@@ -1628,7 +1656,7 @@ impl Builder {
         })
     }
 
-    pub fn index_asgn(
+    pub(crate) fn index_asgn(
         &self,
         recv: Node,
         lbrack_t: Token,
@@ -1647,7 +1675,7 @@ impl Builder {
         })
     }
 
-    pub fn binary_op(&self, receiver: Node, operator_t: Token, arg: Node) -> Node {
+    pub(crate) fn binary_op(&self, receiver: Node, operator_t: Token, arg: Node) -> Node {
         let (selector_l, expression_l) = send_binary_op_map(&receiver, &operator_t, &arg);
         Node::Send(Send {
             recv: Some(Box::new(receiver)),
@@ -1662,7 +1690,7 @@ impl Builder {
         })
     }
 
-    pub fn match_op(&self, receiver: Node, match_t: Token, arg: Node) -> Node {
+    pub(crate) fn match_op(&self, receiver: Node, match_t: Token, arg: Node) -> Node {
         let (selector_l, expression_l) = send_binary_op_map(&receiver, &match_t, &arg);
         match self.static_regexp(&receiver) {
             Some(regex) => {
@@ -1692,7 +1720,7 @@ impl Builder {
         }
     }
 
-    pub fn unary_op(&self, op_t: Token, receiver: Node) -> Node {
+    pub(crate) fn unary_op(&self, op_t: Token, receiver: Node) -> Node {
         let selector_l = loc(&op_t);
         let expression_l = receiver.expression().join(&selector_l);
 
@@ -1711,7 +1739,7 @@ impl Builder {
         })
     }
 
-    pub fn not_op(
+    pub(crate) fn not_op(
         &self,
         not_t: Token,
         begin_t: Option<Token>,
@@ -1770,7 +1798,7 @@ impl Builder {
 
     // Logical operations: and, or
 
-    pub fn logical_op(&self, type_: LogicalOp, lhs: Node, op_t: Token, rhs: Node) -> Node {
+    pub(crate) fn logical_op(&self, type_: LogicalOp, lhs: Node, op_t: Token, rhs: Node) -> Node {
         let (operator_l, expression_l) = binary_op_map(&lhs, &op_t, &rhs);
         let lhs = Box::new(lhs);
         let rhs = Box::new(rhs);
@@ -1792,7 +1820,7 @@ impl Builder {
 
     // Conditionals
 
-    pub fn condition(
+    pub(crate) fn condition(
         &self,
         cond_t: Token,
         cond: Node,
@@ -1826,7 +1854,7 @@ impl Builder {
         })
     }
 
-    pub fn condition_mod(
+    pub(crate) fn condition_mod(
         &self,
         if_true: Option<Node>,
         if_false: Option<Node>,
@@ -1850,7 +1878,7 @@ impl Builder {
         })
     }
 
-    pub fn ternary(
+    pub(crate) fn ternary(
         &self,
         cond: Node,
         question_t: Token,
@@ -1872,7 +1900,7 @@ impl Builder {
 
     // Case matching
 
-    pub fn when(
+    pub(crate) fn when(
         &self,
         when_t: Token,
         patterns: Vec<Node>,
@@ -1896,7 +1924,7 @@ impl Builder {
         })
     }
 
-    pub fn case(
+    pub(crate) fn case(
         &self,
         case_t: Token,
         expr: Option<Node>,
@@ -1923,7 +1951,7 @@ impl Builder {
 
     // Loops
 
-    pub fn loop_(
+    pub(crate) fn loop_(
         &self,
         loop_type: LoopType,
         keyword_t: Token,
@@ -1960,7 +1988,13 @@ impl Builder {
         }
     }
 
-    pub fn loop_mod(&self, loop_type: LoopType, body: Node, keyword_t: Token, cond: Node) -> Node {
+    pub(crate) fn loop_mod(
+        &self,
+        loop_type: LoopType,
+        body: Node,
+        keyword_t: Token,
+        cond: Node,
+    ) -> Node {
         let (keyword_l, expression_l) = keyword_mod_map(&body, &keyword_t, &cond);
         let cond = Box::new(self.check_condition(cond));
 
@@ -1996,7 +2030,7 @@ impl Builder {
         }
     }
 
-    pub fn for_(
+    pub(crate) fn for_(
         &self,
         for_t: Token,
         iterator: Node,
@@ -2026,7 +2060,7 @@ impl Builder {
 
     // Keywords
 
-    pub fn keyword_cmd(
+    pub(crate) fn keyword_cmd(
         &self,
         type_: KeywordCmd,
         keyword_t: Token,
@@ -2093,7 +2127,7 @@ impl Builder {
 
     // BEGIN, END
 
-    pub fn preexe(
+    pub(crate) fn preexe(
         &self,
         preexe_t: Token,
         lbrace_t: Token,
@@ -2113,7 +2147,7 @@ impl Builder {
             expression_l,
         })
     }
-    pub fn postexe(
+    pub(crate) fn postexe(
         &self,
         postexe_t: Token,
         lbrace_t: Token,
@@ -2136,7 +2170,7 @@ impl Builder {
 
     // Exception handling
 
-    pub fn rescue_body(
+    pub(crate) fn rescue_body(
         &self,
         rescue_t: Token,
         exc_list: Option<Node>,
@@ -2159,7 +2193,7 @@ impl Builder {
         })
     }
 
-    pub fn begin_body(
+    pub(crate) fn begin_body(
         &self,
         compound_stmt: Option<Node>,
         rescue_bodies: Vec<Node>,
@@ -2250,7 +2284,7 @@ impl Builder {
     // Expression grouping
     //
 
-    pub fn compstmt(&self, mut statements: Vec<Node>) -> Option<Node> {
+    pub(crate) fn compstmt(&self, mut statements: Vec<Node>) -> Option<Node> {
         match &statements[..] {
             [] => None,
             [_] => statements.pop(),
@@ -2266,7 +2300,7 @@ impl Builder {
         }
     }
 
-    pub fn begin(&self, begin_t: Token, body: Option<Node>, end_t: Token) -> Node {
+    pub(crate) fn begin(&self, begin_t: Token, body: Option<Node>, end_t: Token) -> Node {
         let begin_l = loc(&begin_t);
         let end_l = loc(&end_t);
         let expression_l = begin_l.join(&end_l);
@@ -2313,7 +2347,7 @@ impl Builder {
         }
     }
 
-    pub fn begin_keyword(&self, begin_t: Token, body: Option<Node>, end_t: Token) -> Node {
+    pub(crate) fn begin_keyword(&self, begin_t: Token, body: Option<Node>, end_t: Token) -> Node {
         let begin_l = loc(&begin_t);
         let end_l = loc(&end_t);
         let expression_l = begin_l.join(&end_l);
@@ -2358,7 +2392,7 @@ impl Builder {
     // Pattern matching
     //
 
-    pub fn case_match(
+    pub(crate) fn case_match(
         &self,
         case_t: Token,
         expr: Node,
@@ -2390,7 +2424,7 @@ impl Builder {
         })
     }
 
-    pub fn in_match(&self, value: Node, in_t: Token, pattern: Node) -> Node {
+    pub(crate) fn in_match(&self, value: Node, in_t: Token, pattern: Node) -> Node {
         let (keyword_l, expression_l) = binary_op_map(&value, &in_t, &pattern);
         Node::InMatch(InMatch {
             value: Box::new(value),
@@ -2400,7 +2434,7 @@ impl Builder {
         })
     }
 
-    pub fn in_pattern(
+    pub(crate) fn in_pattern(
         &self,
         in_t: Token,
         pattern: Node,
@@ -2426,7 +2460,7 @@ impl Builder {
         })
     }
 
-    pub fn if_guard(&self, if_t: Token, cond: Node) -> Node {
+    pub(crate) fn if_guard(&self, if_t: Token, cond: Node) -> Node {
         let (keyword_l, expression_l) = guard_map(&if_t, &cond);
         Node::IfGuard(IfGuard {
             cond: Box::new(cond),
@@ -2434,7 +2468,7 @@ impl Builder {
             expression_l,
         })
     }
-    pub fn unless_guard(&self, unless_t: Token, cond: Node) -> Node {
+    pub(crate) fn unless_guard(&self, unless_t: Token, cond: Node) -> Node {
         let (keyword_l, expression_l) = guard_map(&unless_t, &cond);
         Node::UnlessGuard(UnlessGuard {
             cond: Box::new(cond),
@@ -2443,7 +2477,7 @@ impl Builder {
         })
     }
 
-    pub fn match_var(&self, name_t: Token) -> Node {
+    pub(crate) fn match_var(&self, name_t: Token) -> Node {
         let name = value(&name_t);
         let name_l = loc(&name_t);
         let expression_l = name_l.clone();
@@ -2459,7 +2493,7 @@ impl Builder {
         })
     }
 
-    pub fn match_hash_var(&self, name_t: Token) -> Node {
+    pub(crate) fn match_hash_var(&self, name_t: Token) -> Node {
         let name = value(&name_t);
 
         let expression_l = loc(&name_t);
@@ -2475,7 +2509,7 @@ impl Builder {
             expression_l,
         })
     }
-    pub fn match_hash_var_from_str(
+    pub(crate) fn match_hash_var_from_str(
         &self,
         begin_t: Token,
         mut strings: Vec<Node>,
@@ -2533,7 +2567,7 @@ impl Builder {
         }
     }
 
-    pub fn match_rest(&self, star_t: Token, name_t: Option<Token>) -> Node {
+    pub(crate) fn match_rest(&self, star_t: Token, name_t: Option<Token>) -> Node {
         let name = name_t.map(|t| self.match_var(t));
         let (operator_l, expression_l) = unary_op_map(&star_t, &name);
         Node::MatchRest(MatchRest {
@@ -2543,7 +2577,7 @@ impl Builder {
         })
     }
 
-    pub fn hash_pattern(
+    pub(crate) fn hash_pattern(
         &self,
         lbrace_t: Option<Token>,
         kwargs: Vec<Node>,
@@ -2559,7 +2593,7 @@ impl Builder {
         })
     }
 
-    pub fn array_pattern(
+    pub(crate) fn array_pattern(
         &self,
         lbrack_t: Option<Token>,
         elements: Vec<Node>,
@@ -2608,7 +2642,7 @@ impl Builder {
         }
     }
 
-    pub fn find_pattern(
+    pub(crate) fn find_pattern(
         &self,
         lbrack_t: Option<Token>,
         elements: Vec<Node>,
@@ -2623,14 +2657,14 @@ impl Builder {
         })
     }
 
-    pub fn match_with_trailing_comma(&self, match_: Node, comma_t: Token) -> Node {
+    pub(crate) fn match_with_trailing_comma(&self, match_: Node, comma_t: Token) -> Node {
         Node::MatchWithTrailingComma(MatchWithTrailingComma {
             expression_l: match_.expression().join(&loc(&comma_t)),
             match_: Box::new(match_),
         })
     }
 
-    pub fn const_pattern(
+    pub(crate) fn const_pattern(
         &self,
         const_: Node,
         ldelim_t: Token,
@@ -2650,7 +2684,7 @@ impl Builder {
         })
     }
 
-    pub fn pin(&self, pin_t: Token, var: Node) -> Node {
+    pub(crate) fn pin(&self, pin_t: Token, var: Node) -> Node {
         let operator_l = loc(&pin_t);
         let expression_l = var.expression().join(&operator_l);
 
@@ -2661,7 +2695,7 @@ impl Builder {
         })
     }
 
-    pub fn match_alt(&self, left: Node, pipe_t: Token, right: Node) -> Node {
+    pub(crate) fn match_alt(&self, left: Node, pipe_t: Token, right: Node) -> Node {
         let (operator_l, expression_l) = binary_op_map(&left, &pipe_t, &right);
         Node::MatchAlt(MatchAlt {
             lhs: Box::new(left),
@@ -2671,7 +2705,7 @@ impl Builder {
         })
     }
 
-    pub fn match_as(&self, value: Node, assoc_t: Token, as_: Node) -> Node {
+    pub(crate) fn match_as(&self, value: Node, assoc_t: Token, as_: Node) -> Node {
         let (operator_l, expression_l) = binary_op_map(&value, &assoc_t, &as_);
         Node::MatchAs(MatchAs {
             value: Box::new(value),
@@ -2681,7 +2715,7 @@ impl Builder {
         })
     }
 
-    pub fn match_nil_pattern(&self, dstar_t: Token, nil_t: Token) -> Node {
+    pub(crate) fn match_nil_pattern(&self, dstar_t: Token, nil_t: Token) -> Node {
         let operator_l = loc(&dstar_t);
         let name_l = loc(&nil_t);
         let expression_l = operator_l.join(&name_l);
@@ -2693,7 +2727,7 @@ impl Builder {
         })
     }
 
-    pub fn match_pair(&self, p_kw_label: PKwLabel, value_node: Node) -> Node {
+    pub(crate) fn match_pair(&self, p_kw_label: PKwLabel, value_node: Node) -> Node {
         match p_kw_label {
             PKwLabel::PlainLabel(label_t) => {
                 self.check_duplicate_pattern_key(&value(&label_t), &loc(&label_t));
@@ -2712,7 +2746,7 @@ impl Builder {
         }
     }
 
-    pub fn match_label(&self, p_kw_label: PKwLabel) -> Node {
+    pub(crate) fn match_label(&self, p_kw_label: PKwLabel) -> Node {
         match p_kw_label {
             PKwLabel::PlainLabel(label_t) => self.match_hash_var(label_t),
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
@@ -2725,7 +2759,7 @@ impl Builder {
     // Verification
     //
 
-    pub fn check_condition(&self, cond: Node) -> Node {
+    pub(crate) fn check_condition(&self, cond: Node) -> Node {
         match cond {
             Node::Begin(Begin {
                 statements,
@@ -2806,11 +2840,11 @@ impl Builder {
         }
     }
 
-    pub fn check_duplicate_args(&self, _args: &Vec<Node>) {}
-    pub fn check_duplicate_arg(&self) {}
-    pub fn check_assignment_to_numparam(&self, _name: &str, _loc: &Range) {}
+    pub(crate) fn check_duplicate_args(&self, _args: &Vec<Node>) {}
+    pub(crate) fn check_duplicate_arg(&self) {}
+    pub(crate) fn check_assignment_to_numparam(&self, _name: &str, _loc: &Range) {}
 
-    pub fn check_reserved_for_numparam(&self, name: &str, _loc: &Range) {
+    pub(crate) fn check_reserved_for_numparam(&self, name: &str, _loc: &Range) {
         match name {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
                 // diagnostic :error, "reserved_for_numparam"
@@ -2819,18 +2853,18 @@ impl Builder {
         }
     }
 
-    pub fn arg_name_collides(&self, _this_name: &str, _that_name: &str) -> bool {
+    pub(crate) fn arg_name_collides(&self, _this_name: &str, _that_name: &str) -> bool {
         false
     }
-    pub fn check_lvar_name(&self, _name: &str, _loc: &Range) {}
-    pub fn check_duplicate_pattern_variable(&self, _name: &str, _loc: &Range) {}
-    pub fn check_duplicate_pattern_key(&self, _name: &str, _loc: &Range) {}
+    pub(crate) fn check_lvar_name(&self, _name: &str, _loc: &Range) {}
+    pub(crate) fn check_duplicate_pattern_variable(&self, _name: &str, _loc: &Range) {}
+    pub(crate) fn check_duplicate_pattern_key(&self, _name: &str, _loc: &Range) {}
 
     //
     // Helpers
     //
 
-    pub fn static_string(&self, nodes: &Vec<Node>) -> Option<String> {
+    pub(crate) fn static_string(&self, nodes: &Vec<Node>) -> Option<String> {
         let mut result = String::from("");
 
         for node in nodes {
@@ -2853,7 +2887,7 @@ impl Builder {
         Some(result)
     }
 
-    pub fn static_regexp(&self, node: &Node) -> Option<Regex> {
+    pub(crate) fn static_regexp(&self, node: &Node) -> Option<Regex> {
         match node {
             Node::Regexp(Regexp { parts, options, .. }) => match &**options {
                 Node::RegOpt(RegOpt { options, .. }) => {
@@ -2888,7 +2922,7 @@ impl Builder {
         None
     }
 
-    pub fn static_regexp_captures(&self, regex: &Regex) -> Vec<String> {
+    pub(crate) fn static_regexp_captures(&self, regex: &Regex) -> Vec<String> {
         let mut result: Vec<String> = vec![];
 
         regex.foreach_name(|name, _| {
@@ -2899,24 +2933,22 @@ impl Builder {
         result
     }
 
-    pub fn collapse_string_parts(&self) {}
+    pub(crate) fn collapse_string_parts(&self) {}
 
-    pub fn string_value(&self) {}
+    pub(crate) fn string_value(&self) {}
 
-    pub fn diagnostic(&self) {}
-    pub fn validate_definee(&self, _definee: &Node) {}
+    pub(crate) fn diagnostic(&self) {}
+    pub(crate) fn validate_definee(&self, _definee: &Node) {}
 }
 
-pub fn loc(token: &Token) -> Range {
-    let (_, _, loc) = token;
-    Range::new(loc.begin, loc.end)
+pub(crate) fn loc(token: &Token) -> Range {
+    Range::new(token.loc.begin, token.loc.end)
 }
 
-pub fn value(token: &Token) -> String {
-    let (_, token_value, _) = token;
-    token_value.to_string_lossy()
+pub(crate) fn value(token: &Token) -> String {
+    token.token_value.to_string_lossy()
 }
 
-pub fn join_exprs(left_expr: &Node, right_expr: &Node) -> Range {
+pub(crate) fn join_exprs(left_expr: &Node, right_expr: &Node) -> Range {
     left_expr.expression().join(right_expr.expression())
 }

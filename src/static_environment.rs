@@ -9,45 +9,45 @@ struct InnerStaticEnvironment {
 const FORWARD_ARGS: &'static str = "FORWARD_ARGS";
 
 impl InnerStaticEnvironment {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             variables: HashSet::new(),
             stack: vec![],
         }
     }
 
-    pub fn reset(&mut self) {
+    pub(crate) fn reset(&mut self) {
         self.variables.clear();
         self.stack.clear();
     }
 
-    pub fn extend_static(&mut self) {
+    pub(crate) fn extend_static(&mut self) {
         let mut variables: HashSet<String> = HashSet::new();
         std::mem::swap(&mut variables, &mut self.variables);
         self.stack.push(variables);
     }
 
-    pub fn extend_dynamic(&mut self) {
+    pub(crate) fn extend_dynamic(&mut self) {
         self.stack.push(self.variables.clone());
     }
 
-    pub fn unextend(&mut self) {
+    pub(crate) fn unextend(&mut self) {
         self.variables = self.stack.pop().unwrap();
     }
 
-    pub fn declare(&mut self, name: &str) {
+    pub(crate) fn declare(&mut self, name: &str) {
         self.variables.insert(name.to_owned());
     }
 
-    pub fn is_declared(&self, name: &str) -> bool {
+    pub(crate) fn is_declared(&self, name: &str) -> bool {
         self.variables.get(name).is_some()
     }
 
-    pub fn declare_forward_args(&mut self) {
+    pub(crate) fn declare_forward_args(&mut self) {
         self.declare(FORWARD_ARGS);
     }
 
-    pub fn is_forward_args_declared(&self) -> bool {
+    pub(crate) fn is_forward_args_declared(&self) -> bool {
         self.is_declared(FORWARD_ARGS)
     }
 }

@@ -1,32 +1,32 @@
 #[derive(Clone)]
-pub struct LexState {
+pub(crate) struct LexState {
     value: i32,
 }
 
 impl LexState {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             value: lex_states::EXPR_BEG,
         }
     }
 
-    pub fn is(&self, value: i32) -> bool {
+    pub(crate) fn is(&self, value: i32) -> bool {
         self.value == value
     }
 
-    pub fn is_some(&self, states: i32) -> bool {
+    pub(crate) fn is_some(&self, states: i32) -> bool {
         (self.value & states) != 0
     }
 
-    pub fn is_all(&self, states: i32) -> bool {
+    pub(crate) fn is_all(&self, states: i32) -> bool {
         (self.value & states) == states
     }
 
-    pub fn set(&mut self, value: i32) {
+    pub(crate) fn set(&mut self, value: i32) {
         self.value = value
     }
 
-    pub fn get(&self) -> i32 {
+    pub(crate) fn get(&self) -> i32 {
         self.value
     }
 }

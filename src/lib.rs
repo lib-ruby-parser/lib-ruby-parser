@@ -15,21 +15,23 @@ pub mod meta;
 mod static_environment;
 pub use static_environment::StaticEnvironment;
 
+pub mod parse_value;
+
 mod parser;
-pub use parser::{Loc, Parser, SymbolKind, Token};
+pub use parser::{Loc, Parser, SymbolKind, Token, TokenValue};
 
 mod builder;
 pub use builder::Builder;
 pub mod map_builder;
 
 mod current_arg_stack;
-pub use current_arg_stack::CurrentArgStack;
+pub(crate) use current_arg_stack::CurrentArgStack;
 
 mod max_numparam_stack;
-pub use max_numparam_stack::MaxNumparamStack;
+pub(crate) use max_numparam_stack::MaxNumparamStack;
 
 mod variables_stack;
-pub use variables_stack::VariablesStack;
+pub(crate) use variables_stack::VariablesStack;
 
 mod error;
 pub use error::{ErrorLevel, ErrorMessage, ParseError};
@@ -37,21 +39,22 @@ pub use error::{ErrorLevel, ErrorMessage, ParseError};
 pub mod lex_char;
 
 mod lex_state;
-pub use lex_state::{lex_states, LexState};
+pub use lex_state::lex_states;
+pub(crate) use lex_state::LexState;
 
 mod token_buf;
-pub use token_buf::TokenBuf;
+pub(crate) use token_buf::TokenBuf;
 
 mod reserved_words;
-pub use reserved_words::reserved_word;
+pub(crate) use reserved_words::reserved_word;
 
 mod stack_state;
-pub use stack_state::StackState;
+pub(crate) use stack_state::StackState;
 
 pub mod str_term;
 
 mod context;
-pub use context::{Context, ContextItem};
+pub(crate) use context::{Context, ContextItem};
 
 pub mod nodes;
 pub use nodes::Node;

@@ -19,10 +19,7 @@ impl StringValue {
     pub fn to_string(&self) -> Option<String> {
         match &self {
             StringValue::String(s) => Some(s.clone()),
-            StringValue::Bytes(bytes) => match String::from_utf8(bytes.clone()) {
-                Ok(s) => Some(s),
-                Err(_) => None,
-            },
+            StringValue::Bytes(bytes) => String::from_utf8(bytes.clone()).ok(),
         }
     }
 }

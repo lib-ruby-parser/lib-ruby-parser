@@ -1,7 +1,7 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(runner)]
 
-use ruby_parser::{Lexer, Node, Parser};
+use ruby_parser::{Node, Parser};
 use std::fs;
 use std::panic;
 use std::process::exit;
@@ -69,8 +69,7 @@ fn match_locs(locs: Vec<String>, ast: Node) -> Result<(), String> {
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = TestCase::new(fixture_path);
-        let mut parser =
-            Parser::new(Lexer::new(&test_case.input.as_bytes().to_vec(), None).unwrap());
+        let mut parser = Parser::new(&test_case.input.as_bytes().to_vec()).unwrap();
         parser.static_env.declare("foo");
         parser.static_env.declare("bar");
         parser.static_env.declare("baz");

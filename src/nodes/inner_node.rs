@@ -20,47 +20,47 @@ pub trait InnerNode {
     }
 }
 
-pub struct InspectVec {
+pub(crate) struct InspectVec {
     indent: usize,
     strings: Vec<String>,
 }
 
 impl InspectVec {
-    pub fn new(indent: usize) -> Self {
+    pub(crate) fn new(indent: usize) -> Self {
         Self {
             indent,
             strings: vec![],
         }
     }
 
-    pub fn push_str(&mut self, string: &str) {
+    pub(crate) fn push_str(&mut self, string: &str) {
         self.strings.push(format!(", {:?}", string));
     }
 
-    pub fn push_nil(&mut self) {
+    pub(crate) fn push_nil(&mut self) {
         self.strings.push(", nil".to_owned());
     }
 
-    pub fn push_u8(&mut self, n: u8) {
+    pub(crate) fn push_u8(&mut self, n: u8) {
         self.strings.push(format!(", {}", n))
     }
 
-    pub fn push_usize(&mut self, n: usize) {
+    pub(crate) fn push_usize(&mut self, n: usize) {
         self.strings.push(format!(", {}", n))
     }
 
-    pub fn push_node(&mut self, node: &Node) {
+    pub(crate) fn push_node(&mut self, node: &Node) {
         self.strings
             .push(format!(",\n{}", node.inspect(self.indent + 1)))
     }
 
-    pub fn push_maybe_node(&mut self, node: &Option<Box<Node>>) {
+    pub(crate) fn push_maybe_node(&mut self, node: &Option<Box<Node>>) {
         if let Some(node) = node {
             self.push_node(node)
         }
     }
 
-    pub fn push_maybe_node_or_nil(&mut self, node: &Option<Box<Node>>) {
+    pub(crate) fn push_maybe_node_or_nil(&mut self, node: &Option<Box<Node>>) {
         if let Some(node) = node {
             self.push_node(node)
         } else {
@@ -68,13 +68,13 @@ impl InspectVec {
         }
     }
 
-    pub fn push_nodes(&mut self, nodes: &Vec<Node>) {
+    pub(crate) fn push_nodes(&mut self, nodes: &Vec<Node>) {
         for node in nodes {
             self.push_node(node)
         }
     }
 
-    pub fn strings(self) -> Vec<String> {
+    pub(crate) fn strings(self) -> Vec<String> {
         self.strings
     }
 }

@@ -28,6 +28,10 @@
     use crate::str_term::StrTerm;
     use crate::map_builder::value;
     use crate::nodes::{Lvar, Mlhs};
+    use crate::parse_value::ParseValue as Value;
+    use crate::parse_value::*;
+    use crate::Node;
+    use crate::source::InputError;
 }
 
 %code {
@@ -354,7 +358,7 @@
         bodystmt: compstmt opt_rescue
                   k_else
                     {
-                        let opt_rescue = $<Borrow:NodeList>2;
+                        let opt_rescue = $<NodeList>2;
                         if opt_rescue.is_empty() {
                             self.yyerror(&@3, "else without rescue is useless");
                         }
@@ -1299,7 +1303,7 @@
                 | primary_value call_op tIDENTIFIER
                     {
                         let op_t = $<Token>2;
-                        if op_t.0 == Lexer::tANDDOT {
+                        if op_t.token_type == Lexer::tANDDOT {
                             self.yyerror(&@2, "&. inside multiple assignment destination");
                             return Self::YYERROR;
                         }
@@ -1325,7 +1329,7 @@
                 | primary_value call_op tCONSTANT
                     {
                         let op_t = $<Token>2;
-                        if op_t.0 == Lexer::tANDDOT {
+                        if op_t.token_type == Lexer::tANDDOT {
                             self.yyerror(&@2, "&. inside multiple assignment destination");
                             return Self::YYERROR;
                         }
@@ -1495,7 +1499,7 @@
                 | op
                     {
                         self.yylexer.set_lex_state(EXPR_ENDFN);
-                        $$ = $<RAW>1;
+                        $$ = $1;
                     }
                 | reswords
                 ;
@@ -2258,7 +2262,7 @@
 
     command_args:   {
                         let lookahead =
-                            match self.last_token.0 {
+                            match self.last_token.token_type {
                                 Lexer::tLPAREN2
                                 | Lexer::tLPAREN
                                 | Lexer:: tLPAREN_ARG
@@ -2274,7 +2278,7 @@
                   call_args
                     {
                         let lookahead =
-                            match self.last_token.0 {
+                            match self.last_token.token_type {
                                 Lexer::tLBRACE_ARG => true,
                                 _ => false
                             };
@@ -3171,7 +3175,7 @@
 opt_block_args_tail:
                   tCOMMA block_args_tail
                     {
-                        $$ = $<RAW>2;
+                        $$ = $2;
                     }
                 | /* none */
                     {
@@ -3308,7 +3312,7 @@ opt_block_args_tail:
                     }
                 | opt_nl tSEMI bv_decls opt_nl
                     {
-                        $$ = $<RAW>3;
+                        $$ = $3;
                     }
                 ;
 
@@ -4518,12 +4522,13 @@ opt_block_args_tail:
 
           regexp: tREGEXP_BEG regexp_contents tREGEXP_END
                     {
-                        let opts = self.builder.regexp_options($<Borrow:Token>3);
+                        let regexp_end = $<Token>3;
+                        let opts = self.builder.regexp_options(&regexp_end);
                         $$ = Value::Node(
                             self.builder.regexp_compose(
                                 $<Token>1,
                                 $<NodeList>2,
-                                $<Token>3,
+                                regexp_end,
                                 opts
                             )
                         );
@@ -4693,12 +4698,12 @@ xstring_contents: /* none */
                     {
                         let mut strterm: Option<StrTerm> = None;
                         std::mem::swap(&mut strterm, &mut self.yylexer.strterm);
-                        $<StrTerm>$ = Value::StrTerm(strterm);
+                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(strterm);
                         self.yylexer.set_lex_state(EXPR_BEG);
                     }
                   string_dvar
                     {
-                        self.yylexer.strterm = $<StrTerm>2;
+                        self.yylexer.strterm = $<MaybeStrTerm>2;
                         $$ = $3;
                     }
                 | tSTRING_DBEG
@@ -4709,7 +4714,7 @@ xstring_contents: /* none */
                     {
                         let mut strterm: Option<StrTerm> = None;
                         std::mem::swap(&mut strterm, &mut self.yylexer.strterm);
-                        $<StrTerm>$ = Value::StrTerm(strterm);
+                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(strterm);
                     }
                     {
                         $<Num>$ = Value::Num( self.yylexer.state.get() );
@@ -4727,7 +4732,7 @@ xstring_contents: /* none */
                     {
                         self.yylexer.cond_pop();
                         self.yylexer.cmdarg_pop();
-                        self.yylexer.strterm = $<StrTerm>3;
+                        self.yylexer.strterm = $<MaybeStrTerm>3;
                         self.yylexer.set_lex_state($<Num>4);
                         self.yylexer.brace_nest = $<Num>5;
                         self.yylexer.buffer.heredoc_indent = $<Num>6;
@@ -4903,7 +4908,7 @@ keyword_variable: kNIL
 
          var_ref: user_variable
                     {
-                        let node =  cast_to_variant!(Node, yystack, yystack.owned_value_at(0));
+                        let node = Node::from(yystack.owned_value_at(0));
                         match &node {
                             Node::Lvar(Lvar { name, expression_l: _expression_l }) => {
                                 match name.chars().collect::<Vec<_>>()[..] {
@@ -5087,7 +5092,7 @@ keyword_variable: kNIL
 
    opt_args_tail: tCOMMA args_tail
                     {
-                        $$ = $<RAW>2;
+                        $$ = $2;
                     }
                 | /* none */
                     {
@@ -5177,22 +5182,22 @@ keyword_variable: kNIL
        f_bad_arg: tCONSTANT
                     {
                         self.yyerror(&@1, "formal argument cannot be a constant");
-                        $$ = $<RAW>1;
+                        $$ = $1;
                     }
                 | tIVAR
                     {
                         self.yyerror(&@1, "formal argument cannot be an instance variable");
-                        $$ = $<RAW>1;
+                        $$ = $1;
                     }
                 | tGVAR
                     {
                         self.yyerror(&@1, "formal argument cannot be a global variable");
-                        $$ = $<RAW>1;
+                        $$ = $1;
                     }
                 | tCVAR
                     {
                         self.yyerror(&@1, "formal argument cannot be a class variable");
-                        $$ = $<RAW>1;
+                        $$ = $1;
                     }
                 ;
 
@@ -5556,19 +5561,19 @@ keyword_variable: kNIL
 
           rparen: opt_nl tRPAREN
                     {
-                        $$ = $<RAW>2;
+                        $$ = $2;
                     }
                 ;
 
         rbracket: opt_nl tRBRACK
                     {
-                        $$ = $<RAW>2;
+                        $$ = $2;
                     }
                 ;
 
           rbrace: opt_nl tRCURLY
                     {
-                        $$ = $<RAW>2;
+                        $$ = $2;
                     }
                 ;
 
@@ -5599,214 +5604,8 @@ keyword_variable: kNIL
 
 %%
 
-use crate::Node;
-
-#[derive(Clone)]
-pub enum Value {
-    Stolen,
-    None,
-    Token(Token),
-    TokenList(Vec<Token>),
-    Node(Node),
-    NodeList(Vec<Node>),
-    Bool(bool),
-    StrTerm(Option<StrTerm>),
-    Num(i32),
-
-    /* For custom superclass rule */
-    Superclass(Option<(Token, Node)>),
-
-    /* For custom opt_ensure rule */
-    OptEnsure(Option<(Token, Option<Node>)>),
-
-    /* For custom opt_else rule */
-    OptElse(Option<(Token, Option<Node>)>),
-
-    /* For custom exc_var rule */
-    ExcVar(Option<(Token, Node)>),
-
-    /* For custom if_tail rule */
-    IfTail(Option<(Token, Option<Node>)>),
-
-    /* For custom expr_value_do rule */
-    ExprValueDo(( Node, Token )),
-
-    /* For custom p_kw_label rule */
-    PKwLabel( PKwLabel ),
-
-    /* For custom brace_body rule */
-    BraceBody(( ArgsType, Option<Node> )),
-
-    /* For custom cmd_brace_block rule */
-    CmdBraceBlock(( Token, ArgsType, Option<Node>, Token )),
-
-    /* For custom paren_args rule  */
-    ParenArgs(( Token, Vec<Node>, Token )),
-
-    /* For custom opt_paren_args rule  */
-    OptParenArgs(( Option<Token>, Vec<Node>, Option<Token> )),
-
-    /* For custom lambda_body rule  */
-    LambdaBody(( Token, Option<Node>, Token )),
-
-    /* For custom do_block rule  */
-    DoBlock(( Token, ArgsType, Option<Node>, Token )),
-
-    /* For custom brace_block rule  */
-    BraceBlock(( Token, ArgsType, Option<Node>, Token )),
-
-    /* For custom defs_head rule */
-    DefsHead(( Token, Node, Token, Token )),
-
-    /* For custom defn_head rule */
-    DefnHead(( Token, Token )),
-
-    /* For custom begin_block rule  */
-    BeginBlock(( Token, Option<Node>, Token )),
-
-    /* For custom cases rule */
-    Cases(( Vec<Node>, Option<(Token, Option<Node>)> )),
-
-    /* For custom case_body rule */
-    CaseBody(( Vec<Node>, Option<(Token, Option<Node>)> )),
-
-    /* For custom p_cases rule */
-    PCases(( Vec<Node>, Option<(Token, Option<Node>)> )),
-
-    /* For custom p_case_body rule */
-    PCaseBody(( Vec<Node>, Option<(Token, Option<Node>)> )),
-
-    /* For custom compstmt rule */
-    MaybeNode( Option<Node> ),
-
-    /* For custom do_body rule */
-    DoBody(( ArgsType, Option<Node> )),
-
-    /* For custom p_top_expr rule */
-    PTopExpr(( Node, Option<Node> )),
-}
-
-impl Value {
-    pub fn from_token(token: Token) -> Self {
-        Self::Token(token)
-    }
-}
-
-impl std::fmt::Debug for Value {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { //'
-        match self {
-            Value::None => {
-                f.write_str("Token::None")
-            },
-            Value::Stolen => {
-                f.write_str("Token::Stolen")
-            },
-            Value::Token((token_type, token_value, loc)) => {
-                f.write_fmt(format_args!("Token({}, {:?}, {:?})", token_type, token_value, loc))
-            },
-            Value::TokenList(tokens) => {
-                f.write_fmt(format_args!("TokenList({:?})", tokens))
-            },
-            Value::Node(node) => {
-                f.write_fmt(format_args!("Node({:?})", node))
-            },
-            Value::NodeList(nodes) => {
-                f.write_fmt(format_args!("NodeList({:?})", nodes))
-            },
-            Value::Bool(value) => {
-                f.write_fmt(format_args!("Bool({:?})", value))
-            },
-            Value::StrTerm(value) => {
-                f.write_fmt(format_args!("StrTerm({:?})", value))
-            },
-            Value::Num(value) => {
-                f.write_fmt(format_args!("Num({:?})", value))
-            },
-            Value::Superclass(data) => {
-                f.write_fmt(format_args!("Superclass({:?})", data))
-            },
-            Value::OptEnsure(data) => {
-                f.write_fmt(format_args!("OptEnsure({:?})", data))
-            },
-            Value::OptElse(data) => {
-                f.write_fmt(format_args!("OptElse({:?})", data))
-            },
-            Value::ExcVar(data) => {
-                f.write_fmt(format_args!("ExcVar({:?})", data))
-            },
-            Value::IfTail(data) => {
-                f.write_fmt(format_args!("IfTail({:?})", data))
-            },
-            Value::ExprValueDo((node, token)) => {
-                f.write_fmt(format_args!("ExprValueDo({:?}, {:?})", node, token))
-            },
-            Value::PKwLabel(label) => {
-                f.write_fmt(format_args!("PKwLabel({:?})", label))
-            },
-            Value::BraceBody((args, body)) => {
-                f.write_fmt(format_args!("BraceBody({:?}, {:?})", args, body))
-            },
-            Value::CmdBraceBlock((start, args, body, end)) => {
-                f.write_fmt(format_args!("CmdBraceBlock({:?}, {:?}, {:?}, {:?})", start, args, body, end))
-            },
-            Value::ParenArgs((start, nodes, end)) => {
-                f.write_fmt(format_args!("ParenArgs({:?}, {:?}, {:?})", start, nodes, end))
-            },
-            Value::OptParenArgs((start, nodes, end)) => {
-                f.write_fmt(format_args!("OptParenArgs({:?}, {:?}, {:?})", start, nodes, end))
-            },
-            Value::LambdaBody((start, nodes, end)) => {
-                f.write_fmt(format_args!("LambdaBody({:?}, {:?}, {:?})", start, nodes, end))
-            },
-            Value::DoBlock((start, args, body, end)) => {
-                f.write_fmt(format_args!("DoBlock({:?}, {:?}, {:?}, {:?})", start, args, body, end))
-            },
-            Value::BraceBlock((start, args, body, end)) => {
-                f.write_fmt(format_args!("BraceBlock({:?}, {:?}, {:?}, {:?})", start, args, body, end))
-            },
-            Value::DefsHead((def, singleton, dot, name)) => {
-                f.write_fmt(format_args!("DefsHead({:?}, {:?}, {:?}, {:?})", def, singleton, dot, name))
-            },
-            Value::DefnHead((def, name)) => {
-                f.write_fmt(format_args!("DefnHead({:?}, {:?})", def, name))
-            },
-            Value::BeginBlock((start, body, end)) => {
-                f.write_fmt(format_args!("BeginBlock({:?}, {:?}, {:?})", start, body, end))
-            },
-            Value::Cases((whens, else_)) => {
-                f.write_fmt(format_args!("Cases({:?}, {:?})", whens, else_))
-            },
-            Value::CaseBody((whens, else_)) => {
-                f.write_fmt(format_args!("CaseBody({:?}, {:?})", whens, else_))
-            },
-            Value::PCases((whens, else_)) => {
-                f.write_fmt(format_args!("PCases({:?}, {:?})", whens, else_))
-            },
-            Value::PCaseBody((whens, else_)) => {
-                f.write_fmt(format_args!("PCaseBody({:?}, {:?})", whens, else_))
-            },
-            Value::MaybeNode(maybe_node) => {
-                f.write_fmt(format_args!("MaybeNode({:?})", maybe_node))
-            },
-            Value::DoBody((args, body)) => {
-                f.write_fmt(format_args!("DoBody({:?}, {:?})", args, body))
-            },
-            Value::PTopExpr((pattern, guard)) => {
-                f.write_fmt(format_args!("PTopExpr({:?}, {:?})", pattern, guard))
-            },
-        }
-    }
-}
-
 #[allow(non_upper_case_globals)]
 impl Lexer {
-    // Dummy tokens to satisfy tests for now
-    pub const tSTRING: i32 = 1_000;
-    pub const tSYMBOL: i32 = 1_001;
-    pub const tUNARY_NUM: i32 = 1_002;
-    pub const tREGEXP_OPT: i32 = 1_003;
-    pub const tCHARACTER: i32 = 1_004;
-
     fn report_syntax_error(&self, ctx: &Context) {
         if self.debug { eprintln!("syntax error: {:?}", ctx) }
     }
@@ -5818,7 +5617,12 @@ impl Lexer {
 }
 
 impl Parser {
-    pub fn new(lexer: Lexer) -> Self {
+    pub fn new(bytes: &Vec<u8>) -> Result<Self, InputError> {
+        let lexer = Lexer::new(bytes, None)?;
+        Ok(Self::new_with_lexer(lexer))
+    }
+
+    pub fn new_with_lexer(lexer: Lexer) -> Self {
         let static_env = lexer.static_env.clone();
         let context = lexer.context.clone();
         let current_arg_stack = CurrentArgStack::new();
@@ -5845,7 +5649,11 @@ impl Parser {
             pattern_hash_keys,
             static_env,
             yylexer: lexer,
-            last_token: (0, TokenValue::String("".to_owned()), Loc { begin: 0, end: 0 }),
+            last_token: Token {
+                token_type: 0,
+                token_value: TokenValue::String("".to_owned()),
+                loc: Loc { begin: 0, end: 0 }
+            },
             tokens: vec![],
         }
     }

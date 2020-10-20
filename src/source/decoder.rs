@@ -62,21 +62,16 @@ fn recognize_encoding(source: &Vec<u8>) -> Result<String, InputError> {
 
     let encoding_line = String::from(String::from_utf8_lossy(encoding_line));
 
-    let captures = match ENCODING_RE.captures(&encoding_line) {
-        Some(captures) => captures,
-        None => return Err(InputError::UnableToRecognizeEncoding),
-    };
+    let captures = ENCODING_RE
+        .captures(&encoding_line)
+        .ok_or(InputError::UnableToRecognizeEncoding)?;
 
-    let enc = captures
+    captures
         .name("a")
         .or(captures.name("b"))
         .or(captures.name("c"))
-        .map(|m| m.as_str().to_owned());
-
-    match enc {
-        Some(enc) => Ok(enc),
-        None => Err(InputError::UnableToRecognizeEncoding),
-    }
+        .map(|m| m.as_str().to_owned())
+        .ok_or(InputError::UnableToRecognizeEncoding)
 }
 
 fn find_encoding(enc: &str) -> Result<encoding::EncodingRef, InputError> {
@@ -88,16 +83,14 @@ fn find_encoding(enc: &str) -> Result<encoding::EncodingRef, InputError> {
 }
 
 fn decode(input: &Vec<u8>, enc: &str) -> Result<String, InputError> {
-    match find_encoding(enc)?.decode(input, encoding::DecoderTrap::Ignore) {
-        Ok(output) => Ok(output),
-        Err(err) => Err(InputError::EncodingError(err.into_owned())),
-    }
+    find_encoding(enc)?
+        .decode(input, encoding::DecoderTrap::Ignore)
+        .map_err(|err| InputError::EncodingError(err.into_owned()))
 }
 
 pub fn decode_input(input: &Vec<u8>, enc: Option<String>) -> Result<(String, String), InputError> {
-    match enc {
-        Some(enc) => return Ok((decode(input, &enc)?, enc)),
-        _ => {}
+    if let Some(enc) = enc {
+        return Ok((decode(input, &enc)?, enc));
     }
 
     let enc = recognize_encoding(input).unwrap_or("utf-8".to_owned());

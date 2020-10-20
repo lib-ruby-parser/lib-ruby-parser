@@ -3,15 +3,15 @@ use crate::Lexer;
 use crate::TokenBuf;
 
 pub struct ReservedWord {
-    pub name: &'static str,
-    pub id: i32,
-    pub modifier_id: i32,
-    pub state: i32,
+    pub(crate) name: &'static str,
+    pub(crate) id: i32,
+    pub(crate) modifier_id: i32,
+    pub(crate) state: i32,
 }
 
 lazy_static! {
     // must be in sync with defs/keywords
-    pub static ref RESERVED_WORDS: Vec<ReservedWord> = vec![
+    pub(crate) static ref RESERVED_WORDS: Vec<ReservedWord> = vec![
         ReservedWord {
             name: "__ENCODING__",
             id: Lexer::k__ENCODING__,
@@ -261,7 +261,7 @@ lazy_static! {
     ];
 }
 
-pub fn reserved_word(tok: &TokenBuf) -> Option<&'static ReservedWord> {
+pub(crate) fn reserved_word(tok: &TokenBuf) -> Option<&'static ReservedWord> {
     let tok = match tok {
         TokenBuf::String(s) => s,
         TokenBuf::Bytes(_) => return None,

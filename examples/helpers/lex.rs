@@ -1,9 +1,8 @@
-use ruby_parser::{Lexer, Parser, Token};
+use ruby_parser::{Parser, Token};
 
 #[allow(dead_code)]
 pub fn lex(source: &Vec<u8>, filename: &str, debug: bool) -> Result<(Parser, Vec<Token>), String> {
-    let lexer = Lexer::new(&source, None).map_err(|e| e.to_string())?;
-    let mut parser = Parser::new(lexer);
+    let mut parser = Parser::new(&source).map_err(|e| e.to_string())?;
     parser.set_debug(debug);
     parser.yylexer.buffer.name = filename.to_string();
     match parser.lex() {

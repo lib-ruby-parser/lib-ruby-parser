@@ -10,32 +10,32 @@ pub struct Buffer {
     pub input_s: String,
     pub encoding: String,
 
-    pub lines: Vec<SourceLine>,
-    pub line_count: usize,
-    pub prevline: Option<usize>, // index
-    pub lastline: usize,         // index
-    pub nextline: usize,         // index
-    pub pbeg: usize,
-    pub pcur: usize,
-    pub pend: usize,
-    pub ptok: usize,
+    pub(crate) lines: Vec<SourceLine>,
+    pub(crate) line_count: usize,
+    pub(crate) prevline: Option<usize>, // index
+    pub(crate) lastline: usize,         // index
+    pub(crate) nextline: usize,         // index
+    pub(crate) pbeg: usize,
+    pub(crate) pcur: usize,
+    pub(crate) pend: usize,
+    pub(crate) ptok: usize,
 
-    pub eofp: bool,
-    pub cr_seen: bool,
+    pub(crate) eofp: bool,
+    pub(crate) cr_seen: bool,
 
-    pub heredoc_end: usize,
-    pub heredoc_indent: i32,
-    pub heredoc_line_indent: i32,
+    pub(crate) heredoc_end: usize,
+    pub(crate) heredoc_indent: i32,
+    pub(crate) heredoc_line_indent: i32,
 
-    pub tokidx: usize,
-    pub toksize: usize,
-    pub tokline: usize,
+    pub(crate) tokidx: usize,
+    pub(crate) toksize: usize,
+    pub(crate) tokline: usize,
 
-    pub ruby_sourceline: usize,     /* current line no. */
-    pub ruby_sourcefile: Vec<char>, /* current source file */
-    pub ruby_sourcefile_string: Vec<char>,
+    pub(crate) ruby_sourceline: usize,     /* current line no. */
+    pub(crate) ruby_sourcefile: Vec<char>, /* current source file */
+    pub(crate) ruby_sourcefile_string: Vec<char>,
 
-    pub debug: bool,
+    pub(crate) debug: bool,
 }
 
 impl Buffer {
@@ -78,7 +78,7 @@ impl Buffer {
         })
     }
 
-    pub fn nextc(&mut self) -> LexChar {
+    pub(crate) fn nextc(&mut self) -> LexChar {
         if self.pcur == self.pend || self.eofp || self.nextline != 0 {
             let n = self.nextline();
             if self.debug {
@@ -99,26 +99,26 @@ impl Buffer {
         return LexChar::new(c);
     }
 
-    pub fn goto_eol(&mut self) {
+    pub(crate) fn goto_eol(&mut self) {
         self.pcur = self.pend;
     }
 
-    pub fn is_eol(&self) -> bool {
+    pub(crate) fn is_eol(&self) -> bool {
         self.pcur >= self.pend
     }
 
-    pub fn is_eol_n(&self, n: usize) -> bool {
+    pub(crate) fn is_eol_n(&self, n: usize) -> bool {
         self.pcur + n >= self.pend
     }
 
-    pub fn peek(&self, c: char) -> bool {
+    pub(crate) fn peek(&self, c: char) -> bool {
         self.peek_n(c, 0)
     }
-    pub fn peek_n(&self, c: char, n: usize) -> bool {
+    pub(crate) fn peek_n(&self, c: char, n: usize) -> bool {
         !self.is_eol_n(n) && c == self.input[self.pcur + n]
     }
 
-    pub fn nextline(&mut self) -> Result<(), ()> {
+    pub(crate) fn nextline(&mut self) -> Result<(), ()> {
         let mut v = self.nextline;
         self.nextline = 0;
 
@@ -163,7 +163,7 @@ impl Buffer {
         Ok(())
     }
 
-    pub fn getline(&mut self) -> Result<usize, ()> {
+    pub(crate) fn getline(&mut self) -> Result<usize, ()> {
         if self.line_count < self.lines.len() {
             self.line_count += 1;
             if self.debug {
@@ -175,18 +175,18 @@ impl Buffer {
         }
     }
 
-    pub fn token_flush(&mut self) {
+    pub(crate) fn token_flush(&mut self) {
         self.set_ptok(self.pcur);
     }
 
-    pub fn set_ptok(&mut self, ptok: usize) {
+    pub(crate) fn set_ptok(&mut self, ptok: usize) {
         if self.debug {
             println!("set_ptok({})", ptok);
         }
         self.ptok = ptok;
     }
 
-    pub fn parser_cr(&mut self, c: &mut char) -> char {
+    pub(crate) fn parser_cr(&mut self, c: &mut char) -> char {
         if self.peek('\n') {
             self.pcur += 1;
             *c = '\n';
@@ -194,7 +194,7 @@ impl Buffer {
         *c
     }
 
-    pub fn char_at(&self, idx: usize) -> LexChar {
+    pub(crate) fn char_at(&self, idx: usize) -> LexChar {
         if let Some(c) = self.input.get(idx) {
             LexChar::new(*c)
         } else {
@@ -202,7 +202,7 @@ impl Buffer {
         }
     }
 
-    pub fn substr_at(&self, start: usize, end: usize) -> Option<&str> {
+    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&str> {
         if start <= end && end <= self.input.len() {
             Some(&self.input_s[start..end])
         } else {
@@ -210,11 +210,11 @@ impl Buffer {
         }
     }
 
-    pub fn was_bol(&self) -> bool {
+    pub(crate) fn was_bol(&self) -> bool {
         self.pcur == self.pbeg + 1
     }
 
-    pub fn is_word_match(&self, word: &str) -> bool {
+    pub(crate) fn is_word_match(&self, word: &str) -> bool {
         let len = word.len();
 
         if self.substr_at(self.pcur, self.pcur + len) != Some(word) {
@@ -233,7 +233,7 @@ impl Buffer {
         false
     }
 
-    pub fn is_looking_at_eol(&self) -> bool {
+    pub(crate) fn is_looking_at_eol(&self) -> bool {
         let mut ptr = self.pcur;
         while ptr < self.pend {
             let c = self.input.get(ptr);
@@ -248,7 +248,7 @@ impl Buffer {
         true
     }
 
-    pub fn is_whole_match(&self, eos: &str, indent: usize) -> bool {
+    pub(crate) fn is_whole_match(&self, eos: &str, indent: usize) -> bool {
         let mut ptr = self.pbeg;
         let len = eos.len();
 
@@ -288,7 +288,7 @@ impl Buffer {
         }
     }
 
-    pub fn eof_no_decrement(&mut self) {
+    pub(crate) fn eof_no_decrement(&mut self) {
         if let Some(prevline) = self.prevline {
             if !self.eofp {
                 self.lastline = prevline;

@@ -22,10 +22,10 @@ fn lex_as_ripper(filepath: &str) -> Result<String, String> {
 
     let mut output = String::from("");
     for token in tokens {
-        if token.0 == Lexer::END_OF_INPUT {
+        if token.token_type == Lexer::END_OF_INPUT {
             continue;
         }
-        if token.0 == Lexer::tNL {
+        if token.token_type == Lexer::tNL {
             continue;
         }
         let token_name = Lexer::token_name(&token);
@@ -44,14 +44,14 @@ fn lex_as_ripper(filepath: &str) -> Result<String, String> {
         }
         .to_owned();
 
-        let bytes = token.1.to_bytes();
-        let start = parser.yylexer.buffer.line_col_for_pos(token.2.begin);
-        match start {
-            Some((line, col)) => {
-                output.push_str(&format!("{} {:?} {}:{}\n", token_name, bytes, line, col))
-            }
-            None => return Err(format!("token {:#?} has invalid range", token)),
-        }
+        let bytes = token.to_bytes();
+        let (line, col) = parser
+            .yylexer
+            .buffer
+            .line_col_for_pos(token.loc.begin)
+            .ok_or_else(|| format!("token {:#?} has invalid range", token))?;
+
+        output.push_str(&format!("{} {:?} {}:{}\n", token_name, bytes, line, col))
     }
     Ok(output)
 }

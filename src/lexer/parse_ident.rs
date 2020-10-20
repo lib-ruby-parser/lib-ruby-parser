@@ -6,11 +6,11 @@ use crate::TokenBuf;
 use crate::{lex_states::*, LexState};
 
 impl Lexer {
-    pub fn parser_is_identchar(&self) -> bool {
+    pub(crate) fn parser_is_identchar(&self) -> bool {
         !self.buffer.eofp && self.is_identchar(self.buffer.pcur - 1, self.buffer.pend)
     }
 
-    pub fn tokenize_ident(&mut self, _last_state: &LexState) -> String {
+    pub(crate) fn tokenize_ident(&mut self, _last_state: &LexState) -> String {
         let ident = self.tok();
         self.set_yyval_name(ident.clone());
         match ident {
@@ -20,7 +20,7 @@ impl Lexer {
     }
 
     // This method is called is_local_id in MRI, not sure why
-    pub fn is_var_name(&self, ident: &str) -> bool {
+    pub(crate) fn is_var_name(&self, ident: &str) -> bool {
         // FIXME: unclear what it can be
         // MRI has some weird logic of comparing given ID with tLAST_OP_ID
         // and then checking & ID_SCOPE_MASK
@@ -30,7 +30,7 @@ impl Lexer {
         false
     }
 
-    pub fn parse_ident(&mut self, c: &LexChar, cmd_state: bool) -> i32 {
+    pub(crate) fn parse_ident(&mut self, c: &LexChar, cmd_state: bool) -> i32 {
         let mut c = c.clone();
         let mut result: i32;
         let last_state: LexState = self.state.clone();

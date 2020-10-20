@@ -2,7 +2,6 @@ pub mod buffer;
 mod comment;
 mod decoder;
 mod file_loc;
-pub mod map;
 mod range;
 mod source_line;
 

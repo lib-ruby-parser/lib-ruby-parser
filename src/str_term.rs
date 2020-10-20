@@ -2,55 +2,55 @@ use crate::source::buffer::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub mod str_types {
-    pub const STR_FUNC_ESCAPE: usize = 0x01;
-    pub const STR_FUNC_EXPAND: usize = 0x02;
-    pub const STR_FUNC_REGEXP: usize = 0x04;
-    pub const STR_FUNC_QWORDS: usize = 0x08;
-    pub const STR_FUNC_SYMBOL: usize = 0x10;
-    pub const STR_FUNC_INDENT: usize = 0x20;
-    pub const STR_FUNC_LABEL: usize = 0x40;
-    pub const STR_FUNC_LIST: usize = 0x4000;
-    pub const STR_FUNC_TERM: usize = 0x8000;
+pub(crate) mod str_types {
+    pub(crate) const STR_FUNC_ESCAPE: usize = 0x01;
+    pub(crate) const STR_FUNC_EXPAND: usize = 0x02;
+    pub(crate) const STR_FUNC_REGEXP: usize = 0x04;
+    pub(crate) const STR_FUNC_QWORDS: usize = 0x08;
+    pub(crate) const STR_FUNC_SYMBOL: usize = 0x10;
+    pub(crate) const STR_FUNC_INDENT: usize = 0x20;
+    pub(crate) const STR_FUNC_LABEL: usize = 0x40;
+    pub(crate) const STR_FUNC_LIST: usize = 0x4000;
+    pub(crate) const STR_FUNC_TERM: usize = 0x8000;
 
     #[allow(non_upper_case_globals)]
-    pub const str_label: usize = STR_FUNC_LABEL;
+    pub(crate) const str_label: usize = STR_FUNC_LABEL;
     #[allow(non_upper_case_globals)]
-    pub const str_squote: usize = 0;
+    pub(crate) const str_squote: usize = 0;
     #[allow(non_upper_case_globals)]
-    pub const str_dquote: usize = STR_FUNC_EXPAND;
+    pub(crate) const str_dquote: usize = STR_FUNC_EXPAND;
     #[allow(non_upper_case_globals)]
-    pub const str_xquote: usize = STR_FUNC_EXPAND;
+    pub(crate) const str_xquote: usize = STR_FUNC_EXPAND;
     #[allow(non_upper_case_globals)]
-    pub const str_regexp: usize = STR_FUNC_REGEXP | STR_FUNC_ESCAPE | STR_FUNC_EXPAND;
+    pub(crate) const str_regexp: usize = STR_FUNC_REGEXP | STR_FUNC_ESCAPE | STR_FUNC_EXPAND;
     #[allow(non_upper_case_globals)]
-    pub const str_sword: usize = STR_FUNC_QWORDS | STR_FUNC_LIST;
+    pub(crate) const str_sword: usize = STR_FUNC_QWORDS | STR_FUNC_LIST;
     #[allow(non_upper_case_globals)]
-    pub const str_dword: usize = STR_FUNC_QWORDS | STR_FUNC_EXPAND | STR_FUNC_LIST;
+    pub(crate) const str_dword: usize = STR_FUNC_QWORDS | STR_FUNC_EXPAND | STR_FUNC_LIST;
     #[allow(non_upper_case_globals)]
-    pub const str_ssym: usize = STR_FUNC_SYMBOL;
+    pub(crate) const str_ssym: usize = STR_FUNC_SYMBOL;
     #[allow(non_upper_case_globals)]
-    pub const str_dsym: usize = STR_FUNC_SYMBOL | STR_FUNC_EXPAND;
+    pub(crate) const str_dsym: usize = STR_FUNC_SYMBOL | STR_FUNC_EXPAND;
 }
 
 #[derive(Debug, Clone, Default)]
 struct InnerStringLiteral {
     // struct rb_strterm_literal_struct
-    pub nest: usize,
-    pub func: usize,
-    pub paren: Option<char>,
-    pub term: char,
-    pub heredoc_end: Option<usize>,
-    pub heredoc_len: Option<usize>,
+    pub(crate) nest: usize,
+    pub(crate) func: usize,
+    pub(crate) paren: Option<char>,
+    pub(crate) term: char,
+    pub(crate) heredoc_end: Option<usize>,
+    pub(crate) heredoc_len: Option<usize>,
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct StringLiteral {
+pub(crate) struct StringLiteral {
     inner: Rc<RefCell<InnerStringLiteral>>,
 }
 
 impl StringLiteral {
-    pub fn new(
+    pub(crate) fn new(
         nest: usize,
         func: usize,
         paren: Option<char>,
@@ -70,36 +70,36 @@ impl StringLiteral {
         }
     }
 
-    pub fn nest(&self) -> usize {
+    pub(crate) fn nest(&self) -> usize {
         self.inner.borrow().nest
     }
-    pub fn func(&self) -> usize {
+    pub(crate) fn func(&self) -> usize {
         self.inner.borrow().func
     }
-    pub fn paren(&self) -> Option<char> {
+    pub(crate) fn paren(&self) -> Option<char> {
         self.inner.borrow().paren
     }
-    pub fn term(&self) -> char {
+    pub(crate) fn term(&self) -> char {
         self.inner.borrow().term
     }
 
-    pub fn set_nest(&self, nest: usize) {
+    pub(crate) fn set_nest(&self, nest: usize) {
         self.inner.borrow_mut().nest = nest;
     }
-    pub fn set_func(&self, func: usize) {
+    pub(crate) fn set_func(&self, func: usize) {
         self.inner.borrow_mut().func = func;
     }
-    pub fn set_paren(&self, paren: Option<char>) {
+    pub(crate) fn set_paren(&self, paren: Option<char>) {
         self.inner.borrow_mut().paren = paren;
     }
-    pub fn set_term(&self, term: char) {
+    pub(crate) fn set_term(&self, term: char) {
         self.inner.borrow_mut().term = term;
     }
 
-    pub fn heredoc_end(&self) -> Option<usize> {
+    pub(crate) fn heredoc_end(&self) -> Option<usize> {
         self.inner.borrow().heredoc_end.clone()
     }
-    pub fn heredoc_len(&self) -> Option<usize> {
+    pub(crate) fn heredoc_len(&self) -> Option<usize> {
         self.inner.borrow().heredoc_len.clone()
     }
 }
@@ -116,12 +116,12 @@ struct InnerHeredocLiteral {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct HeredocLiteral {
+pub(crate) struct HeredocLiteral {
     inner: Rc<RefCell<InnerHeredocLiteral>>,
 }
 
 impl HeredocLiteral {
-    pub fn new(
+    pub(crate) fn new(
         lastline: usize,
         offset: usize,
         sourceline: usize,
@@ -141,45 +141,45 @@ impl HeredocLiteral {
         }
     }
 
-    pub fn lastline(&self) -> usize {
+    pub(crate) fn lastline(&self) -> usize {
         self.inner.borrow().lastline.clone()
     }
-    pub fn offset(&self) -> usize {
+    pub(crate) fn offset(&self) -> usize {
         self.inner.borrow().offset
     }
-    pub fn sourceline(&self) -> usize {
+    pub(crate) fn sourceline(&self) -> usize {
         self.inner.borrow().sourceline
     }
-    pub fn length(&self) -> usize {
+    pub(crate) fn length(&self) -> usize {
         self.inner.borrow().length
     }
-    pub fn quote(&self) -> usize {
+    pub(crate) fn quote(&self) -> usize {
         self.inner.borrow().quote
     }
-    pub fn func(&self) -> usize {
+    pub(crate) fn func(&self) -> usize {
         self.inner.borrow().func
     }
 
-    pub fn set_lastline(&self, lastline: usize) {
+    pub(crate) fn set_lastline(&self, lastline: usize) {
         self.inner.borrow_mut().lastline = lastline;
     }
-    pub fn set_offset(&self, offset: usize) {
+    pub(crate) fn set_offset(&self, offset: usize) {
         self.inner.borrow_mut().offset = offset;
     }
-    pub fn set_sourceline(&self, sourceline: usize) {
+    pub(crate) fn set_sourceline(&self, sourceline: usize) {
         self.inner.borrow_mut().sourceline = sourceline;
     }
-    pub fn set_length(&self, length: usize) {
+    pub(crate) fn set_length(&self, length: usize) {
         self.inner.borrow_mut().length = length;
     }
-    pub fn set_quote(&self, quote: usize) {
+    pub(crate) fn set_quote(&self, quote: usize) {
         self.inner.borrow_mut().quote = quote;
     }
-    pub fn set_func(&self, func: usize) {
+    pub(crate) fn set_func(&self, func: usize) {
         self.inner.borrow_mut().func = func;
     }
 
-    pub fn id<'a>(&self, buffer: &'a Buffer) -> &'a str {
+    pub(crate) fn id<'a>(&self, buffer: &'a Buffer) -> &'a str {
         let start = buffer.lines[self.lastline()].start + self.offset();
         let len = self.length();
         buffer.substr_at(start, start + len).unwrap()
@@ -187,18 +187,18 @@ impl HeredocLiteral {
 }
 
 #[derive(Debug, Clone)]
-pub enum StrTerm {
+pub(crate) enum StrTerm {
     // struct rb_strterm_struct
     StringLiteral(StringLiteral),
     HeredocLiteral(HeredocLiteral),
 }
 
 impl StrTerm {
-    pub fn new_literal(literal: StringLiteral) -> Self {
+    pub(crate) fn new_literal(literal: StringLiteral) -> Self {
         Self::StringLiteral(literal)
     }
 
-    pub fn new_heredoc(heredoc: HeredocLiteral) -> Self {
+    pub(crate) fn new_heredoc(heredoc: HeredocLiteral) -> Self {
         Self::HeredocLiteral(heredoc)
     }
 }

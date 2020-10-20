@@ -4,7 +4,7 @@ const MAGIC_COMMENTS: [&'static str; 4] =
     ["coding", "encoding", "frozen_string_literal", "warn_indent"];
 
 impl Lexer {
-    pub fn comment_at_top(&self) -> bool {
+    pub(crate) fn comment_at_top(&self) -> bool {
         let mut ptr = self.buffer.pbeg;
         let ptr_end = self.buffer.pcur - 1;
         if self.buffer.line_count != (if self.has_shebang { 2 } else { 1 }) {
@@ -19,7 +19,7 @@ impl Lexer {
         return true;
     }
 
-    pub fn set_file_encoding(&mut self, mut str_: usize, send: usize) {
+    pub(crate) fn set_file_encoding(&mut self, mut str_: usize, send: usize) {
         let mut sep = false;
         let beg;
 
@@ -101,7 +101,7 @@ impl Lexer {
         let _enc_name = self.buffer.substr_at(beg, str_).unwrap();
     }
 
-    pub fn magic_comment_marker(&self, str_: usize, len: usize) -> usize {
+    pub(crate) fn magic_comment_marker(&self, str_: usize, len: usize) -> usize {
         let mut i = 2;
 
         while i < len {
@@ -130,7 +130,7 @@ impl Lexer {
         0
     }
 
-    pub fn parser_magic_comment(&self, mut str_: usize, mut len: usize) -> bool {
+    pub(crate) fn parser_magic_comment(&self, mut str_: usize, mut len: usize) -> bool {
         let mut indicator = false;
         let mut name;
         let mut beg;

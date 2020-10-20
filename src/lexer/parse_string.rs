@@ -14,7 +14,7 @@ const ESCAPE_META: usize = 2;
 impl Lexer {
     pub const TAB_WIDTH: i32 = 8;
 
-    pub fn parse_string(&mut self, quote: StringLiteral) -> i32 {
+    pub(crate) fn parse_string(&mut self, quote: StringLiteral) -> i32 {
         let func = quote.func();
         let term = quote.term();
         let paren = quote.paren();
@@ -120,7 +120,7 @@ impl Lexer {
         Self::tSTRING_CONTENT
     }
 
-    pub fn parser_string_term(&mut self, term: char, func: usize) -> i32 {
+    pub(crate) fn parser_string_term(&mut self, term: char, func: usize) -> i32 {
         self.strterm = None;
         if (func & STR_FUNC_REGEXP) != 0 {
             let flags = self.regx_options();
@@ -137,14 +137,14 @@ impl Lexer {
         return Self::tSTRING_END;
     }
 
-    pub fn set_yylval_num(&mut self, flags: String) {
+    pub(crate) fn set_yylval_num(&mut self, flags: String) {
         if self.debug {
             println!("set_yylval_num {:#?}", flags);
         }
         self.lval = Some(TokenValue::String(flags));
     }
 
-    pub fn regx_options(&mut self) -> String {
+    pub(crate) fn regx_options(&mut self) -> String {
         let mut c: LexChar;
         let mut result = String::from("");
 
@@ -176,7 +176,7 @@ impl Lexer {
         return result;
     }
 
-    pub fn parser_peek_variable_name(&mut self) -> Option<i32> {
+    pub(crate) fn parser_peek_variable_name(&mut self) -> Option<i32> {
         let mut c: LexChar;
         let mut ptr: usize = self.buffer.pcur;
 
@@ -227,7 +227,7 @@ impl Lexer {
         None
     }
 
-    pub fn tokadd_string(
+    pub(crate) fn tokadd_string(
         &mut self,
         func: usize,
         term: char,
@@ -349,18 +349,18 @@ impl Lexer {
         Some(c)
     }
 
-    pub fn set_yylval_str(&mut self, value: TokenBuf) {
+    pub(crate) fn set_yylval_str(&mut self, value: TokenBuf) {
         if self.debug {
             println!("set_yylval_str {:#?}", &value);
         }
         self.lval = Some(value.to_token_value());
     }
 
-    pub fn flush_string_content(&mut self) {
+    pub(crate) fn flush_string_content(&mut self) {
         // noop
     }
 
-    pub fn parser_update_heredoc_indent(&mut self, c: &LexChar) -> bool {
+    pub(crate) fn parser_update_heredoc_indent(&mut self, c: &LexChar) -> bool {
         if self.buffer.heredoc_line_indent == -1 {
             if *c == '\n' {
                 self.buffer.heredoc_line_indent = 0
@@ -383,11 +383,11 @@ impl Lexer {
         true
     }
 
-    pub fn tokadd_utf8_unterminated(&mut self) {
+    pub(crate) fn tokadd_utf8_unterminated(&mut self) {
         unimplemented!("tokadd_utf8_unterminated")
     }
 
-    pub fn scan_hex(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
+    pub(crate) fn scan_hex(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
         let mut s = start;
         let mut result = 0;
 
@@ -409,7 +409,7 @@ impl Lexer {
         result
     }
 
-    pub fn scan_oct(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
+    pub(crate) fn scan_oct(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
         let mut s = start;
         let mut result: usize = 0;
 
@@ -428,7 +428,7 @@ impl Lexer {
         result
     }
 
-    pub fn tokcopy(&mut self, n: usize) {
+    pub(crate) fn tokcopy(&mut self, n: usize) {
         let substr = self
             .buffer
             .substr_at(self.buffer.pcur - n, self.buffer.pcur)
@@ -436,11 +436,11 @@ impl Lexer {
         self.tokenbuf.append(&substr);
     }
 
-    pub fn tokaddmbc(&mut self, codepoint: usize) {
+    pub(crate) fn tokaddmbc(&mut self, codepoint: usize) {
         self.tokadd(std::char::from_u32(codepoint.try_into().unwrap()).unwrap())
     }
 
-    pub fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool {
+    pub(crate) fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool {
         let mut numlen = 0;
         let codepoint = self.scan_hex(
             self.buffer.pcur,
@@ -483,7 +483,7 @@ impl Lexer {
         true
     }
 
-    pub fn tokadd_utf8(
+    pub(crate) fn tokadd_utf8(
         &mut self,
         term: Option<char>,
         _symbol_literal: usize,
@@ -569,7 +569,7 @@ impl Lexer {
         }
     }
 
-    pub fn simple_re_meta(&mut self, c: &LexChar) -> bool {
+    pub(crate) fn simple_re_meta(&mut self, c: &LexChar) -> bool {
         match c.to_option() {
             Some('$') | Some('*') | Some('+') | Some('.') | Some('?') | Some('^') | Some('|')
             | Some(')') | Some(']') | Some('}') | Some('>') => true,
@@ -577,13 +577,13 @@ impl Lexer {
         }
     }
 
-    pub fn tokadd_escape_eof(&mut self) -> Result<(), ()> {
+    pub(crate) fn tokadd_escape_eof(&mut self) -> Result<(), ()> {
         self.yyerror0("Invalid escape character syntax");
         self.token_flush();
         Err(())
     }
 
-    pub fn tokadd_escape(&mut self) -> Result<(), ()> {
+    pub(crate) fn tokadd_escape(&mut self) -> Result<(), ()> {
         let mut c;
         let mut flags = 0;
         let mut numlen = 0;
@@ -686,13 +686,13 @@ impl Lexer {
         }
     }
 
-    pub fn read_escape_eof(&mut self) -> LexChar {
+    pub(crate) fn read_escape_eof(&mut self) -> LexChar {
         self.yyerror0("Invalid escape character syntax");
         self.token_flush();
         unimplemented!("read_escape_eof")
     }
 
-    pub fn tok_hex(&mut self, numlen: &mut usize) -> LexChar {
+    pub(crate) fn tok_hex(&mut self, numlen: &mut usize) -> LexChar {
         let c;
 
         c = self.scan_hex(self.buffer.pcur, 2, numlen);
@@ -705,7 +705,7 @@ impl Lexer {
         LexChar::new(c as u8)
     }
 
-    pub fn read_escape(&mut self, flags: usize) -> LexChar {
+    pub(crate) fn read_escape(&mut self, flags: usize) -> LexChar {
         let mut c;
         let mut numlen: usize = 0;
 
@@ -823,11 +823,11 @@ impl Lexer {
         }
     }
 
-    pub fn parser_is_ascii(&self) -> bool {
+    pub(crate) fn parser_is_ascii(&self) -> bool {
         self.char_at(self.buffer.pcur - 1).is_ascii()
     }
 
-    pub fn heredoc_identifier(&mut self) -> Option<i32> {
+    pub(crate) fn heredoc_identifier(&mut self) -> Option<i32> {
         /*
          * term_len is length of `<<"END"` except `END`,
          * in this case term_len is 4 (<, <, " and ").
@@ -930,7 +930,7 @@ impl Lexer {
         return Some(token);
     }
 
-    pub fn here_document(&mut self, here: HeredocLiteral) -> i32 {
+    pub(crate) fn here_document(&mut self, here: HeredocLiteral) -> i32 {
         self.lval_start = Some(self.buffer.pcur);
 
         let mut c;
@@ -1099,7 +1099,12 @@ impl Lexer {
         return Self::tSTRING_CONTENT;
     }
 
-    pub fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32 {
+    pub(crate) fn here_document_error(
+        &mut self,
+        here: &HeredocLiteral,
+        eos: usize,
+        len: usize,
+    ) -> i32 {
         self.heredoc_restore(&here);
         self.compile_error(&format!(
             "can't find string \"{:#?}\" anywhere before EOF",
@@ -1111,7 +1116,7 @@ impl Lexer {
         return Self::tSTRING_END;
     }
 
-    pub fn here_document_restore(&mut self, here: &HeredocLiteral) -> i32 {
+    pub(crate) fn here_document_restore(&mut self, here: &HeredocLiteral) -> i32 {
         self.heredoc_restore(&here);
         self.token_flush();
         self.strterm = None;
@@ -1120,18 +1125,18 @@ impl Lexer {
         return Self::tSTRING_END;
     }
 
-    pub fn heredoc_flush_str(&mut self, str_: TokenBuf) -> i32 {
+    pub(crate) fn heredoc_flush_str(&mut self, str_: TokenBuf) -> i32 {
         self.set_yylval_str(str_);
         self.flush_string_content();
         return Self::tSTRING_CONTENT;
     }
 
-    pub fn heredoc_flush(&mut self) -> i32 {
+    pub(crate) fn heredoc_flush(&mut self) -> i32 {
         let str_ = self.tok();
         return self.heredoc_flush_str(str_);
     }
 
-    pub fn heredoc_restore(&mut self, here: &HeredocLiteral) {
+    pub(crate) fn heredoc_restore(&mut self, here: &HeredocLiteral) {
         self.strterm = None;
         let line = here.lastline();
         self.buffer.lastline = line;

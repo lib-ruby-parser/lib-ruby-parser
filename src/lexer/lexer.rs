@@ -18,20 +18,20 @@ pub struct Lexer {
     pub buffer: Buffer,
     pub debug: bool,
 
-    pub lval: Option<TokenValue>,
-    pub lval_start: Option<usize>,
-    pub lval_end: Option<usize>,
+    pub(crate) lval: Option<TokenValue>,
+    pub(crate) lval_start: Option<usize>,
+    pub(crate) lval_end: Option<usize>,
 
-    pub strterm: Option<StrTerm>,
-    pub state: LexState,
-    pub paren_nest: i32,
-    pub lpar_beg: i32,
-    pub brace_nest: i32,
+    pub(crate) strterm: Option<StrTerm>,
+    pub(crate) state: LexState,
+    pub(crate) paren_nest: i32,
+    pub(crate) lpar_beg: i32,
+    pub(crate) brace_nest: i32,
 
     cond_stack: StackState,
     cmdarg_stack: StackState,
 
-    pub tokenbuf: TokenBuf,
+    pub(crate) tokenbuf: TokenBuf,
 
     // enc: Encoding,
     // token_info: TokenInfo,
@@ -47,11 +47,11 @@ pub struct Lexer {
 
     max_numparam: usize,
 
-    pub context: Context,
-    pub in_kwarg: bool,
+    pub(crate) context: Context,
+    pub(crate) in_kwarg: bool,
 
-    pub command_start: bool,
-    pub has_shebang: bool,
+    pub(crate) command_start: bool,
+    pub(crate) has_shebang: bool,
     token_seen: bool,
     token_info_enabled: bool,
 
@@ -66,11 +66,11 @@ pub struct Lexer {
 }
 
 impl Lexer {
-    pub const NULL_CHAR: char = 0x00 as char;
-    pub const CTRL_D_CHAR: char = 0x04 as char;
-    pub const CTRL_Z_CHAR: char = 0x1a as char;
-    pub const LF_CHAR: char = 0x0c as char;
-    pub const VTAB_CHAR: char = 0x0b as char;
+    pub(crate) const NULL_CHAR: char = 0x00 as char;
+    pub(crate) const CTRL_D_CHAR: char = 0x04 as char;
+    pub(crate) const CTRL_Z_CHAR: char = 0x1a as char;
+    pub(crate) const LF_CHAR: char = 0x0c as char;
+    pub(crate) const VTAB_CHAR: char = 0x0b as char;
 
     pub fn new(bytes: &Vec<u8>, known_encoding: Option<String>) -> Result<Self, InputError> {
         Ok(Self {
@@ -93,7 +93,10 @@ impl Lexer {
         loop {
             let token = self.yylex();
             match token {
-                (Self::END_OF_INPUT, _, _) => break,
+                Token {
+                    token_type: Self::END_OF_INPUT,
+                    ..
+                } => break,
                 _ => tokens.push(token),
             }
         }
@@ -101,7 +104,7 @@ impl Lexer {
         tokens
     }
 
-    pub fn yylex(&mut self) -> Token {
+    pub(crate) fn yylex(&mut self) -> Token {
         self.lval = None;
         // println!("before yylex: {:#?}", self);
 
@@ -131,35 +134,39 @@ impl Lexer {
             end = begin + 1;
         }
 
-        let token = (token_type, token_value, Loc { begin, end });
+        let token = Token {
+            token_type,
+            token_value,
+            loc: Loc { begin, end },
+        };
         if self.debug {
             println!(
                 "yylex ({:?}, {:?}, {:?})",
                 Self::token_name(&token),
-                token.1,
-                token.2
+                token.token_value,
+                token.loc
             );
         }
         token
     }
 
-    pub fn nextc(&mut self) -> LexChar {
+    pub(crate) fn nextc(&mut self) -> LexChar {
         self.buffer.nextc()
     }
-    pub fn char_at(&self, idx: usize) -> LexChar {
+    pub(crate) fn char_at(&self, idx: usize) -> LexChar {
         self.buffer.char_at(idx)
     }
-    pub fn token_flush(&mut self) {
+    pub(crate) fn token_flush(&mut self) {
         self.buffer.token_flush()
     }
 
     pub fn token_name(token: &Token) -> String {
-        let (id, _, _) = token;
-        let first_token: usize = Self::YYerror.try_into().unwrap();
-        let id_usize: usize = (*id).try_into().unwrap(); // minus first token ID
-        if id_usize > first_token + 1 {
-            Self::TOKEN_NAMES[id_usize - first_token + 1].to_owned()
-        } else if *id == Self::END_OF_INPUT {
+        let id = token.token_type;
+        let first_token = Self::YYerror;
+        if id > first_token + 1 {
+            let pos: usize = (id - first_token + 1).try_into().unwrap();
+            Self::TOKEN_NAMES[pos].to_owned()
+        } else if id == Self::END_OF_INPUT {
             "EOF".to_owned()
         } else {
             panic!(
@@ -169,7 +176,7 @@ impl Lexer {
         }
     }
 
-    pub fn parser_yylex(&mut self) -> i32 {
+    pub(crate) fn parser_yylex(&mut self) -> i32 {
         let mut c: LexChar;
         let mut space_seen: bool = false;
         let cmd_state: bool;
@@ -1030,36 +1037,36 @@ impl Lexer {
         self.state.set(states)
     }
 
-    pub fn is_lex_state_some(&self, states: i32) -> bool {
+    pub(crate) fn is_lex_state_some(&self, states: i32) -> bool {
         self.state.is_some(states)
     }
 
-    pub fn is_lex_state_all(&self, states: i32) -> bool {
+    pub(crate) fn is_lex_state_all(&self, states: i32) -> bool {
         self.state.is_all(states)
     }
 
-    pub fn warn(&self, message: &str) {
+    pub(crate) fn warn(&self, message: &str) {
         if self.debug {
             println!("WARNING: {}", message)
         }
     }
 
-    pub fn set_yylval_id(&mut self, id: &str) {
+    pub(crate) fn set_yylval_id(&mut self, id: &str) {
         if self.debug {
             println!("set_yylval_id({})", id);
         }
         self.lval = Some(TokenValue::String(id.to_owned()));
     }
 
-    pub fn is_spacearg(&self, c: &LexChar, space_seen: bool) -> bool {
+    pub(crate) fn is_spacearg(&self, c: &LexChar, space_seen: bool) -> bool {
         self.is_arg() && space_seen && !c.is_space()
     }
 
-    pub fn is_beg(&self) -> bool {
+    pub(crate) fn is_beg(&self) -> bool {
         self.is_lex_state_some(EXPR_BEG_ANY) || self.is_lex_state_all(EXPR_ARG | EXPR_LABELED)
     }
 
-    pub fn warn_balanced(
+    pub(crate) fn warn_balanced(
         &self,
         token_type: i32,
         op: &str,
@@ -1076,29 +1083,29 @@ impl Lexer {
         token_type
     }
 
-    pub fn is_after_operator(&self) -> bool {
+    pub(crate) fn is_after_operator(&self) -> bool {
         self.is_lex_state_some(EXPR_FNAME | EXPR_DOT)
     }
 
-    pub fn compile_error(&self, message: &str) {
+    pub(crate) fn compile_error(&self, message: &str) {
         if self.debug {
             println!("Compile error: {}", message)
         }
     }
 
-    pub fn is_end(&self) -> bool {
+    pub(crate) fn is_end(&self) -> bool {
         self.is_lex_state_some(EXPR_END_ANY)
     }
 
-    pub fn is_arg(&self) -> bool {
+    pub(crate) fn is_arg(&self) -> bool {
         self.is_lex_state_some(EXPR_ARG_ANY)
     }
 
-    pub fn is_label_possible(&self, cmd_state: bool) -> bool {
+    pub(crate) fn is_label_possible(&self, cmd_state: bool) -> bool {
         (self.is_lex_state_some(EXPR_LABEL | EXPR_ENDFN) && !cmd_state) || self.is_arg()
     }
 
-    pub fn new_strterm(
+    pub(crate) fn new_strterm(
         &self,
         func: usize,
         term: char,
@@ -1116,7 +1123,7 @@ impl Lexer {
         )))
     }
 
-    pub fn escaped_control_code(&self, c: &LexChar) -> Option<char> {
+    pub(crate) fn escaped_control_code(&self, c: &LexChar) -> Option<char> {
         if *c == ' ' {
             return Some('s');
         }
@@ -1138,20 +1145,20 @@ impl Lexer {
         None
     }
 
-    pub fn parse_qmark_ternary(&mut self, c: &LexChar) -> Result<i32, ()> {
+    pub(crate) fn parse_qmark_ternary(&mut self, c: &LexChar) -> Result<i32, ()> {
         self.buffer.pushback(c);
         self.set_lex_state(EXPR_VALUE);
         Ok(Self::tEH)
     }
 
-    pub fn warn_space_char(&mut self, c: char, prefix: &str) {
+    pub(crate) fn warn_space_char(&mut self, c: char, prefix: &str) {
         self.warn(&format!(
             "invalid character syntax; use \"{}\"\\{}",
             prefix, c
         ))
     }
 
-    pub fn parse_qmark(&mut self, space_seen: bool) -> Result<i32, ()> {
+    pub(crate) fn parse_qmark(&mut self, space_seen: bool) -> Result<i32, ()> {
         // let enc;
         let mut c;
         let lit;
@@ -1227,7 +1234,7 @@ impl Lexer {
         return Ok(Self::tCHAR);
     }
 
-    pub fn arg_ambiguous(&self, c: char) -> bool {
+    pub(crate) fn arg_ambiguous(&self, c: char) -> bool {
         self.warn(&format!(
             "ambiguous first argument; put parentheses or a space even after `{}' operator",
             c
@@ -1235,38 +1242,38 @@ impl Lexer {
         true
     }
 
-    // pub fn tokadd(&mut self, c: &LexChar) {
+    // pub(crate) fn tokadd(&mut self, c: &LexChar) {
     //     let c = c.unwrap();
     //     self.tokenbuf.push(c);
     // }
 
-    // pub fn tokadd_byte(&mut self, byte: u8) {
+    // pub(crate) fn tokadd_byte(&mut self, byte: u8) {
     //     unimplemented!()
     // }
 
-    pub fn toklen(&self) -> usize {
+    pub(crate) fn toklen(&self) -> usize {
         match &self.tokenbuf {
             TokenBuf::String(s) => s.len(),
             TokenBuf::Bytes(_) => unreachable!("toklen is supposed to be used with String"),
         }
     }
 
-    pub fn tokfix(&self) {
+    pub(crate) fn tokfix(&self) {
         // nop
     }
 
-    pub fn tok(&self) -> TokenBuf {
+    pub(crate) fn tok(&self) -> TokenBuf {
         self.tokenbuf.clone()
     }
 
-    pub fn yyerror0(&self, message: &str) {
+    pub(crate) fn yyerror0(&self, message: &str) {
         if self.debug {
             println!("yyerror0: {}", message)
         }
         panic!("{}", message)
     }
 
-    pub fn is_lambda_beginning(&self) -> bool {
+    pub(crate) fn is_lambda_beginning(&self) -> bool {
         self.lpar_beg == self.paren_nest
     }
 
@@ -1294,7 +1301,7 @@ impl Lexer {
         self.cmdarg_stack.is_active()
     }
 
-    pub fn percent_unknown(&mut self, term: &LexChar) -> i32 {
+    pub(crate) fn percent_unknown(&mut self, term: &LexChar) -> i32 {
         self.buffer.pushback(term);
         let len = self.parser_precise_mbclen(self.buffer.pcur);
         if let Some(len) = len {
@@ -1304,7 +1311,7 @@ impl Lexer {
         return Self::END_OF_INPUT;
     }
 
-    pub fn percent_quatation(&mut self, c: &LexChar, ptok: usize) -> i32 {
+    pub(crate) fn percent_quatation(&mut self, c: &LexChar, ptok: usize) -> i32 {
         let mut c = c.clone();
         let mut term: LexChar;
         let mut paren: Option<char>;
@@ -1395,7 +1402,7 @@ impl Lexer {
         }
     }
 
-    pub fn parse_percent(&mut self, space_seen: bool, last_state: LexState) -> i32 {
+    pub(crate) fn parse_percent(&mut self, space_seen: bool, last_state: LexState) -> i32 {
         let c: LexChar;
         let ptok = self.buffer.pcur;
 
@@ -1429,7 +1436,7 @@ impl Lexer {
         );
     }
 
-    pub fn parse_gvar(&mut self, last_state: LexState) -> i32 {
+    pub(crate) fn parse_gvar(&mut self, last_state: LexState) -> i32 {
         let ptr = self.buffer.pcur;
         let mut c;
 
@@ -1543,7 +1550,7 @@ impl Lexer {
         return Self::tGVAR;
     }
 
-    pub fn parse_atmark(&mut self, last_state: LexState) -> i32 {
+    pub(crate) fn parse_atmark(&mut self, last_state: LexState) -> i32 {
         let ptr = self.buffer.pcur;
         let mut result: i32 = Self::tIVAR;
         let mut c = self.nextc();
@@ -1598,7 +1605,7 @@ impl Lexer {
         return result;
     }
 
-    pub fn tokadd_ident(&mut self, c: &LexChar) -> bool {
+    pub(crate) fn tokadd_ident(&mut self, c: &LexChar) -> bool {
         let mut c = c.clone();
         loop {
             if self.tokadd_mbchar(&c).is_err() {
@@ -1615,23 +1622,23 @@ impl Lexer {
         return false;
     }
 
-    pub fn newtok(&mut self) {
+    pub(crate) fn newtok(&mut self) {
         self.buffer.tokidx = 0;
         self.buffer.tokline = self.buffer.ruby_sourceline;
         self.tokenbuf = TokenBuf::default();
     }
 
-    pub fn is_identchar(&self, begin: usize, _end: usize) -> bool {
+    pub(crate) fn is_identchar(&self, begin: usize, _end: usize) -> bool {
         self.buffer.input[begin].is_ascii_alphanumeric()
             || self.buffer.input[begin] == '_'
             || !self.buffer.input[begin].is_ascii()
     }
 
-    pub fn literal_flush(&mut self, ptok: usize) {
+    pub(crate) fn literal_flush(&mut self, ptok: usize) {
         self.buffer.set_ptok(ptok);
     }
 
-    pub fn set_yylval_literal(&mut self, value: TokenBuf) {
+    pub(crate) fn set_yylval_literal(&mut self, value: TokenBuf) {
         if self.debug {
             println!(
                 "set_yylval_literal({:#?}) ptok = {}, pcur = {}",
@@ -1641,7 +1648,7 @@ impl Lexer {
         self.lval = Some(value.to_token_value());
     }
 
-    pub fn tokadd_mbchar(&mut self, c: &LexChar) -> Result<(), ()> {
+    pub(crate) fn tokadd_mbchar(&mut self, c: &LexChar) -> Result<(), ()> {
         match c {
             LexChar::EOF => Err(()),
             _ => {
@@ -1651,23 +1658,23 @@ impl Lexer {
         }
     }
 
-    pub fn parser_precise_mbclen(&mut self, _ptr: usize) -> Option<usize> {
+    pub(crate) fn parser_precise_mbclen(&mut self, _ptr: usize) -> Option<usize> {
         // FIXME: mbc = multibyte char, so we need to do some byte work once we take String instead of String
         Some(1)
     }
 
-    pub fn is_label_suffix(&mut self, n: usize) -> bool {
+    pub(crate) fn is_label_suffix(&mut self, n: usize) -> bool {
         self.buffer.peek_n(':', n) && !self.buffer.peek_n(':', n + 1)
     }
 
-    pub fn set_yyval_name(&mut self, name: TokenBuf) {
+    pub(crate) fn set_yyval_name(&mut self, name: TokenBuf) {
         if self.debug {
             println!("set_yyval_name({:#?})", name);
         }
         self.lval = Some(name.to_token_value());
     }
 
-    pub fn is_lvar_defined(&self, name: &str) -> bool {
+    pub(crate) fn is_lvar_defined(&self, name: &str) -> bool {
         self.static_env.is_declared(name)
     }
 }

@@ -1,5 +1,5 @@
 #[derive(Debug, Clone)]
-pub enum LexChar {
+pub(crate) enum LexChar {
     Multibyte(char),
     AsciiByte(char),
     NonUtf8Byte(u8),
@@ -15,11 +15,11 @@ const PUNCT: [char; 21] = [
 ];
 
 impl LexChar {
-    pub fn is_eof(&self) -> bool {
+    pub(crate) fn is_eof(&self) -> bool {
         self == &LexChar::EOF
     }
 
-    pub fn unwrap(&self) -> char {
+    pub(crate) fn unwrap(&self) -> char {
         match self {
             LexChar::Multibyte(c) | LexChar::AsciiByte(c) => *c,
             LexChar::NonUtf8Byte(_) => panic!("LexChar is non-utf8, can't turn it into a char"),
@@ -27,14 +27,14 @@ impl LexChar {
         }
     }
 
-    pub fn to_option(&self) -> Option<char> {
+    pub(crate) fn to_option(&self) -> Option<char> {
         match self {
             LexChar::Multibyte(c) | LexChar::AsciiByte(c) => Some(*c),
             _ => None,
         }
     }
 
-    pub fn is_ascii(&self) -> bool {
+    pub(crate) fn is_ascii(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_ascii()
         } else {
@@ -42,7 +42,7 @@ impl LexChar {
         }
     }
 
-    pub fn is_upper(&self) -> bool {
+    pub(crate) fn is_upper(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_ascii_uppercase()
         } else {
@@ -50,7 +50,7 @@ impl LexChar {
         }
     }
 
-    pub fn is_lower(&self) -> bool {
+    pub(crate) fn is_lower(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_ascii_lowercase()
         } else {
@@ -58,7 +58,7 @@ impl LexChar {
         }
     }
 
-    pub fn is_alpha(&self) -> bool {
+    pub(crate) fn is_alpha(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_ascii_alphabetic()
         } else {
@@ -66,7 +66,7 @@ impl LexChar {
         }
     }
 
-    pub fn is_digit(&self) -> bool {
+    pub(crate) fn is_digit(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_ascii_digit()
         } else {
@@ -74,7 +74,7 @@ impl LexChar {
         }
     }
 
-    pub fn is_alnum(&self) -> bool {
+    pub(crate) fn is_alnum(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_ascii_alphanumeric()
         } else {
@@ -82,7 +82,7 @@ impl LexChar {
         }
     }
 
-    pub fn is_hexdigit(&self) -> bool {
+    pub(crate) fn is_hexdigit(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_ascii_hexdigit()
         } else {
@@ -90,7 +90,7 @@ impl LexChar {
         }
     }
 
-    pub fn is_blank(&self) -> bool {
+    pub(crate) fn is_blank(&self) -> bool {
         if let Some(c) = self.to_option() {
             c == SPACE || c == TAB
         } else {
@@ -98,7 +98,7 @@ impl LexChar {
         }
     }
 
-    pub fn is_space(&self) -> bool {
+    pub(crate) fn is_space(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_ascii_whitespace() || c == VTAB
         } else {
@@ -106,7 +106,7 @@ impl LexChar {
         }
     }
 
-    pub fn is_global_name_punct(&self) -> bool {
+    pub(crate) fn is_global_name_punct(&self) -> bool {
         if let Some(c) = self.to_option() {
             PUNCT.contains(&c)
         } else {
@@ -114,7 +114,7 @@ impl LexChar {
         }
     }
 
-    pub fn is_control(&self) -> bool {
+    pub(crate) fn is_control(&self) -> bool {
         if let Some(c) = self.to_option() {
             c.is_control()
         } else {
@@ -122,18 +122,18 @@ impl LexChar {
         }
     }
 
-    // pub fn to_option(&self) -> Option<char> {
+    // pub(crate) fn to_option(&self) -> Option<char> {
     //     if let LexChar::Some(c) = self { Some(*c) } else { None }
     // }
 
-    pub fn map<F: FnOnce(char) -> LexChar>(&self, f: F) -> LexChar {
+    pub(crate) fn map<F: FnOnce(char) -> LexChar>(&self, f: F) -> LexChar {
         match self.to_option() {
             Some(c) => f(c),
             _ => LexChar::EOF,
         }
     }
 
-    pub fn map_as_u8<F: FnOnce(u8) -> u8>(&self, f: F) -> LexChar {
+    pub(crate) fn map_as_u8<F: FnOnce(u8) -> u8>(&self, f: F) -> LexChar {
         match &self {
             LexChar::Multibyte(_) => {
                 unreachable!("applying bitmask to multibyte char");
@@ -145,7 +145,7 @@ impl LexChar {
     }
 }
 
-pub trait LexCharNew<T> {
+pub(crate) trait LexCharNew<T> {
     fn new(c: T) -> Self;
 }
 

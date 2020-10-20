@@ -1,12 +1,16 @@
 extern crate clap;
 use clap::Clap;
 
+extern crate pprof;
+
 use ruby_parser::Node;
 use std::fs;
 use std::path::Path;
 
 mod helpers;
 use helpers::*;
+
+use std::fs::File;
 
 #[derive(Debug, Clap)]
 struct Args {
@@ -36,6 +40,8 @@ fn print_ast(_src: &str, node: &Node) {
 }
 
 fn main() -> Result<(), ()> {
+    let guard = pprof::ProfilerGuard::new(100).unwrap();
+
     let args: Args = Args::parse();
     let callback: &dyn Fn(&str, &Node) = if args.quiet {
         &print_quite
@@ -50,18 +56,26 @@ fn main() -> Result<(), ()> {
         let node = parse(&code.to_owned().into_bytes(), "(eval)", debug)?;
         callback(&code, &node)
     } else if let Some(path) = args.path {
-        let path = Path::new(&path);
-        each_ruby_file(path, &|entry| {
-            let code = fs::read(Path::new(entry)).unwrap();
-            let node =
-                parse(&code, entry, debug).unwrap_or_else(|_| panic!("failed to parse {}", entry));
-            callback(&String::from_utf8_lossy(&code), &node)
-        })
-        .unwrap_or_else(|e| panic!("Error {:?}", e));
+        for _ in 1..20 {
+            let path = Path::new(&path);
+            each_ruby_file(path, &|entry| {
+                let code = fs::read(Path::new(entry)).unwrap();
+                let node = parse(&code, entry, debug)
+                    .unwrap_or_else(|_| panic!("failed to parse {}", entry));
+                callback(&String::from_utf8_lossy(&code), &node)
+            })
+            .unwrap_or_else(|e| panic!("Error {:?}", e));
+        }
     } else {
         println!("Nothing to parse");
-        return Err(());
     }
+
+    if let Ok(report) = guard.report().build() {
+        let file = File::create("flamegraph.svg").unwrap();
+        report.flamegraph(file).unwrap();
+    };
+
+    println!("DOne");
 
     Ok(())
 }
