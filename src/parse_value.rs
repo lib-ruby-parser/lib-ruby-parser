@@ -71,7 +71,11 @@ impl From<ParseValue> for Num {
     }
 }
 
-pub(crate) type Superclass = Option<(Token, Node)>;
+#[derive(Debug, Clone)]
+pub(crate) struct Superclass {
+    pub(crate) lt_t: Option<Token>,
+    pub(crate) value: Option<Node>,
+}
 impl From<ParseValue> for Superclass {
     fn from(value: ParseValue) -> Superclass {
         match value {
@@ -81,7 +85,12 @@ impl From<ParseValue> for Superclass {
     }
 }
 
-pub(crate) type OptEnsure = Option<(Token, Option<Node>)>;
+#[derive(Debug, Clone)]
+pub(crate) struct Ensure {
+    pub(crate) ensure_t: Token,
+    pub(crate) body: Option<Node>,
+}
+pub(crate) type OptEnsure = Option<Ensure>;
 impl From<ParseValue> for OptEnsure {
     fn from(value: ParseValue) -> OptEnsure {
         match value {
@@ -91,16 +100,54 @@ impl From<ParseValue> for OptEnsure {
     }
 }
 
-// they are equivalent
-pub(crate) type OptElse = OptEnsure;
+#[derive(Debug, Clone)]
+pub(crate) struct Else {
+    pub(crate) else_t: Token,
+    pub(crate) body: Option<Node>,
+}
+pub(crate) type OptElse = Option<Else>;
+impl From<ParseValue> for OptElse {
+    fn from(value: ParseValue) -> OptElse {
+        match value {
+            ParseValue::OptElse(value) => value,
+            other => unimplemented!("expected OptElse, got {:?}", other),
+        }
+    }
+}
 
-// they are equivalent
-pub(crate) type ExcVar = Superclass;
+#[derive(Debug, Clone)]
+pub(crate) struct ExcVar {
+    pub(crate) assoc_t: Option<Token>,
+    pub(crate) exc_var: Option<Node>,
+}
+impl From<ParseValue> for ExcVar {
+    fn from(value: ParseValue) -> ExcVar {
+        match value {
+            ParseValue::ExcVar(value) => value,
+            other => unimplemented!("expected ExcVar, got {:?}", other),
+        }
+    }
+}
 
-// they are equivalent
-pub(crate) type IfTail = OptElse;
+#[derive(Debug, Clone)]
+pub(crate) struct IfTail {
+    pub(crate) keyword_t: Option<Token>,
+    pub(crate) body: Option<Node>,
+}
+impl From<ParseValue> for IfTail {
+    fn from(value: ParseValue) -> IfTail {
+        match value {
+            ParseValue::IfTail(value) => value,
+            other => unimplemented!("expected IfTail, got {:?}", other),
+        }
+    }
+}
 
-pub(crate) type ExprValueDo = (Node, Token);
+#[derive(Debug, Clone)]
+pub(crate) struct ExprValueDo {
+    pub(crate) value: Node,
+    pub(crate) do_t: Token,
+}
 impl From<ParseValue> for ExprValueDo {
     fn from(value: ParseValue) -> ExprValueDo {
         match value {
@@ -119,7 +166,11 @@ impl From<ParseValue> for PKwLabel {
     }
 }
 
-pub(crate) type BraceBody = (ArgsType, Option<Node>);
+#[derive(Debug, Clone)]
+pub(crate) struct BraceBody {
+    pub(crate) args_type: ArgsType,
+    pub(crate) body: Option<Node>,
+}
 impl From<ParseValue> for BraceBody {
     fn from(value: ParseValue) -> BraceBody {
         match value {
@@ -129,7 +180,13 @@ impl From<ParseValue> for BraceBody {
     }
 }
 
-pub(crate) type CmdBraceBlock = (Token, ArgsType, Option<Node>, Token);
+#[derive(Debug, Clone)]
+pub(crate) struct CmdBraceBlock {
+    pub(crate) begin_t: Token,
+    pub(crate) args_type: ArgsType,
+    pub(crate) body: Option<Node>,
+    pub(crate) end_t: Token,
+}
 impl From<ParseValue> for CmdBraceBlock {
     fn from(value: ParseValue) -> CmdBraceBlock {
         match value {
@@ -139,7 +196,12 @@ impl From<ParseValue> for CmdBraceBlock {
     }
 }
 
-pub(crate) type ParenArgs = (Token, Vec<Node>, Token);
+#[derive(Debug, Clone)]
+pub(crate) struct ParenArgs {
+    pub(crate) begin_t: Token,
+    pub(crate) args: Vec<Node>,
+    pub(crate) end_t: Token,
+}
 impl From<ParseValue> for ParenArgs {
     fn from(value: ParseValue) -> ParenArgs {
         match value {
@@ -149,7 +211,12 @@ impl From<ParseValue> for ParenArgs {
     }
 }
 
-pub(crate) type OptParenArgs = (Option<Token>, Vec<Node>, Option<Token>);
+#[derive(Debug, Clone)]
+pub(crate) struct OptParenArgs {
+    pub(crate) begin_t: Option<Token>,
+    pub(crate) args: Vec<Node>,
+    pub(crate) end_t: Option<Token>,
+}
 impl From<ParseValue> for OptParenArgs {
     fn from(value: ParseValue) -> OptParenArgs {
         match value {
@@ -159,7 +226,12 @@ impl From<ParseValue> for OptParenArgs {
     }
 }
 
-pub(crate) type BeginBlock = (Token, Option<Node>, Token);
+#[derive(Debug, Clone)]
+pub(crate) struct BeginBlock {
+    pub(crate) begin_t: Token,
+    pub(crate) body: Option<Node>,
+    pub(crate) end_t: Token,
+}
 impl From<ParseValue> for BeginBlock {
     fn from(value: ParseValue) -> BeginBlock {
         match value {
@@ -169,16 +241,60 @@ impl From<ParseValue> for BeginBlock {
     }
 }
 
-// they are equivalent
-pub(crate) type LambdaBody = BeginBlock;
+#[derive(Debug, Clone)]
+pub(crate) struct LambdaBody {
+    pub(crate) begin_t: Token,
+    pub(crate) body: Option<Node>,
+    pub(crate) end_t: Token,
+}
+impl From<ParseValue> for LambdaBody {
+    fn from(value: ParseValue) -> LambdaBody {
+        match value {
+            ParseValue::LambdaBody(value) => value,
+            other => unimplemented!("expected LambdaBody, got {:?}", other),
+        }
+    }
+}
 
-// they are equivalent
-pub(crate) type DoBlock = CmdBraceBlock;
+#[derive(Debug, Clone)]
+pub(crate) struct DoBlock {
+    pub(crate) begin_t: Token,
+    pub(crate) args_type: ArgsType,
+    pub(crate) body: Option<Node>,
+    pub(crate) end_t: Token,
+}
+impl From<ParseValue> for DoBlock {
+    fn from(value: ParseValue) -> DoBlock {
+        match value {
+            ParseValue::DoBlock(value) => value,
+            other => unimplemented!("expected DoBlock, got {:?}", other),
+        }
+    }
+}
 
-// they are equivalent
-pub(crate) type BraceBlock = CmdBraceBlock;
+#[derive(Debug, Clone)]
+pub(crate) struct BraceBlock {
+    pub(crate) begin_t: Token,
+    pub(crate) args_type: ArgsType,
+    pub(crate) body: Option<Node>,
+    pub(crate) end_t: Token,
+}
+impl From<ParseValue> for BraceBlock {
+    fn from(value: ParseValue) -> BraceBlock {
+        match value {
+            ParseValue::BraceBlock(value) => value,
+            other => unimplemented!("expected BraceBlock, got {:?}", other),
+        }
+    }
+}
 
-pub(crate) type DefsHead = (Token, Node, Token, Token);
+#[derive(Debug, Clone)]
+pub(crate) struct DefsHead {
+    pub(crate) def_t: Token,
+    pub(crate) definee: Node,
+    pub(crate) dot_t: Token,
+    pub(crate) name_t: Token,
+}
 impl From<ParseValue> for DefsHead {
     fn from(value: ParseValue) -> DefsHead {
         match value {
@@ -188,7 +304,11 @@ impl From<ParseValue> for DefsHead {
     }
 }
 
-pub(crate) type DefnHead = (Token, Token);
+#[derive(Debug, Clone)]
+pub(crate) struct DefnHead {
+    pub(crate) def_t: Token,
+    pub(crate) name_t: Token,
+}
 impl From<ParseValue> for DefnHead {
     fn from(value: ParseValue) -> DefnHead {
         match value {
@@ -198,7 +318,11 @@ impl From<ParseValue> for DefnHead {
     }
 }
 
-pub(crate) type Cases = (Vec<Node>, Option<(Token, Option<Node>)>);
+#[derive(Debug, Clone)]
+pub(crate) struct Cases {
+    pub(crate) when_bodies: Vec<Node>,
+    pub(crate) opt_else: OptElse,
+}
 impl From<ParseValue> for Cases {
     fn from(value: ParseValue) -> Cases {
         match value {
@@ -208,14 +332,47 @@ impl From<ParseValue> for Cases {
     }
 }
 
-// they are equivalent
-pub(crate) type CaseBody = Cases;
+#[derive(Debug, Clone)]
+pub(crate) struct CaseBody {
+    pub(crate) when_bodies: Vec<Node>,
+    pub(crate) opt_else: OptElse,
+}
+impl From<ParseValue> for CaseBody {
+    fn from(value: ParseValue) -> CaseBody {
+        match value {
+            ParseValue::CaseBody(value) => value,
+            other => unimplemented!("expected CaseBody, got {:?}", other),
+        }
+    }
+}
 
-// they are equivalent
-pub(crate) type PCases = Cases;
+#[derive(Debug, Clone)]
+pub(crate) struct PCases {
+    pub(crate) in_bodies: Vec<Node>,
+    pub(crate) opt_else: OptElse,
+}
+impl From<ParseValue> for PCases {
+    fn from(value: ParseValue) -> PCases {
+        match value {
+            ParseValue::PCases(value) => value,
+            other => unimplemented!("expected PCases, got {:?}", other),
+        }
+    }
+}
 
-// they are equivalent
-pub(crate) type PCaseBody = Cases;
+#[derive(Debug, Clone)]
+pub(crate) struct PCaseBody {
+    pub(crate) in_bodies: Vec<Node>,
+    pub(crate) opt_else: OptElse,
+}
+impl From<ParseValue> for PCaseBody {
+    fn from(value: ParseValue) -> PCaseBody {
+        match value {
+            ParseValue::PCaseBody(value) => value,
+            other => unimplemented!("expected PCaseBody, got {:?}", other),
+        }
+    }
+}
 
 pub(crate) type MaybeNode = Option<Node>;
 impl From<ParseValue> for MaybeNode {
@@ -227,10 +384,25 @@ impl From<ParseValue> for MaybeNode {
     }
 }
 
-// they are equivalent
-pub(crate) type DoBody = BraceBody;
+#[derive(Debug, Clone)]
+pub(crate) struct DoBody {
+    pub(crate) args_type: ArgsType,
+    pub(crate) body: Option<Node>,
+}
+impl From<ParseValue> for DoBody {
+    fn from(value: ParseValue) -> DoBody {
+        match value {
+            ParseValue::DoBody(value) => value,
+            other => unimplemented!("expected DoBody, got {:?}", other),
+        }
+    }
+}
 
-pub(crate) type PTopExpr = (Node, Option<Node>);
+#[derive(Debug, Clone)]
+pub(crate) struct PTopExpr {
+    pub(crate) pattern: Node,
+    pub(crate) guard: Option<Node>,
+}
 impl From<ParseValue> for PTopExpr {
     fn from(value: ParseValue) -> PTopExpr {
         match value {

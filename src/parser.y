@@ -342,35 +342,38 @@
         top_stmt: stmt
                 | klBEGIN begin_block
                     {
-                        let (begin, stmt, end) = $<BeginBlock>2;
+                        let BeginBlock { begin_t, body, end_t } = $<BeginBlock>2;
                         $$ = Value::Node(
-                            self.builder.preexe($<Token>1, begin, stmt, end)
+                            self.builder.preexe($<Token>1, begin_t, body, end_t)
                         );
                     }
                 ;
 
      begin_block: tLCURLY top_compstmt tRCURLY
                     {
-                        $$ = Value::BeginBlock(( $<Token>1, $<MaybeNode>2, $<Token>3 ));
+                        $$ = Value::BeginBlock(
+                            BeginBlock {
+                                begin_t: $<Token>1,
+                                body: $<MaybeNode>2,
+                                end_t: $<Token>3
+                            }
+                        );
                     }
                 ;
 
         bodystmt: compstmt opt_rescue
                   k_else
-                    {
-                        let opt_rescue = $<NodeList>2;
-                        if opt_rescue.is_empty() {
-                            self.yyerror(&@3, "else without rescue is useless");
-                        }
-                        $<none>$ = Value::None;
-                    }
                   compstmt
                   opt_ensure
                     {
                         let compound_stmt = $<MaybeNode>1;
                         let rescue_bodies = $<NodeList>2;
-                        let else_ = Some(( $<Token>3, $<MaybeNode>5 ));
-                        let ensure = $<OptEnsure>6;
+                        if rescue_bodies.is_empty() {
+                            self.yyerror(&@3, "else without rescue is useless");
+                        }
+
+                        let else_ = Some(( $<Token>3, $<MaybeNode>4 ));
+                        let ensure = $<OptEnsure>5.map(|ensure| (ensure.ensure_t, ensure.body));
 
                         $$ = Value::MaybeNode(
                             self.builder.begin_body(
@@ -387,7 +390,7 @@
                     {
                         let compound_stmt = $<MaybeNode>1;
                         let rescue_bodies = $<NodeList>2;
-                        let ensure = $<OptEnsure>3;
+                        let ensure = $<OptEnsure>3.map(|ensure| (ensure.ensure_t, ensure.body));
 
                         $$ = Value::MaybeNode(
                             self.builder.begin_body(
@@ -886,7 +889,12 @@
                     {
                         self.context.push_def();
 
-                        $$ = Value::DefnHead(( $<Token>1, $<Token>2 ));
+                        $$ = Value::DefnHead(
+                            DefnHead {
+                                def_t: $<Token>1,
+                                name_t: $<Token>2
+                            }
+                        );
                     }
                 ;
 
@@ -899,7 +907,14 @@
                         self.yylexer.set_lex_state(EXPR_ENDFN|EXPR_LABEL);
                         self.context.push_defs();
 
-                        $$ = Value::DefsHead(( $<Token>1, $<Node>2, $<Token>3, $<Token>5 ));
+                        $$ = Value::DefsHead(
+                            DefsHead {
+                                def_t: $<Token>1,
+                                definee: $<Node>2,
+                                dot_t: $<Token>3,
+                                name_t: $<Token>5
+                            }
+                        );
                     }
                 ;
 
@@ -913,7 +928,12 @@
                     {
                         self.yylexer.cond_pop();
 
-                        $$ = Value::ExprValueDo(( $<Node>2, $<Token>3 ));
+                        $$ = Value::ExprValueDo(
+                            ExprValueDo {
+                                value: $<Node>2,
+                                do_t: $<Token>3
+                            }
+                        );
                     }
                 ;
 
@@ -945,8 +965,15 @@
                   brace_body tRCURLY
                     {
                         self.context.pop();
-                        let (args, body) = $<BraceBody>3;
-                        $$ = Value::CmdBraceBlock(( $<Token>1, args, body, $<Token>4 ));
+                        let BraceBody { args_type, body } = $<BraceBody>3;
+                        $$ = Value::CmdBraceBlock(
+                            CmdBraceBlock {
+                                begin_t: $<Token>1,
+                                args_type,
+                                body,
+                                end_t: $<Token>4
+                            }
+                        );
                     }
                 ;
 
@@ -976,13 +1003,13 @@
                             $<NodeList>2,
                             None
                         );
-                        let (begin_t, args, body, end_t) = $<CmdBraceBlock>3;
+                        let CmdBraceBlock { begin_t, args_type, body, end_t } = $<CmdBraceBlock>3;
 
                         $$ = Value::Node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args,
+                                args_type,
                                 body,
                                 end_t
                             )
@@ -1011,13 +1038,13 @@
                             $<NodeList>4,
                             None
                         );
-                        let (begin_t, args, body, end_t) = $<CmdBraceBlock>5;
+                        let CmdBraceBlock { begin_t, args_type, body, end_t } = $<CmdBraceBlock>5;
 
                         $$ = Value::Node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args,
+                                args_type,
                                 body,
                                 end_t
                             )
@@ -1046,13 +1073,13 @@
                             $<NodeList>4,
                             None
                         );
-                        let (begin_t, args, body, end_t) = $<CmdBraceBlock>5;
+                        let CmdBraceBlock { begin_t, args_type, body, end_t } = $<CmdBraceBlock>5;
 
                         $$ = Value::Node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args,
+                                args_type,
                                 body,
                                 end_t
                             )
@@ -1967,7 +1994,7 @@
                     }
                 | defn_head f_paren_args tEQL arg
                     {
-                        let (def_t, name_t) = $<DefnHead>1;
+                        let DefnHead { def_t, name_t } = $<DefnHead>1;
 
                         let name = value(&name_t);
                         if name.ends_with('=') {
@@ -1992,7 +2019,7 @@
                     }
                 | defn_head f_paren_args tEQL arg kRESCUE_MOD arg
                     {
-                        let (def_t, name_t) = $<DefnHead>1;
+                        let DefnHead { def_t, name_t } = $<DefnHead>1;
 
                         let rescue_body = self.builder.rescue_body(
                             $<Token>5,
@@ -2028,7 +2055,7 @@
                     }
                 | defs_head f_paren_args tEQL arg
                     {
-                        let (def_t, definee, dot_t, name_t) = $<DefsHead>1;
+                        let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
 
                         $$ = Value::Node(
                             self.builder.def_endless_singleton(
@@ -2050,7 +2077,7 @@
                     }
                 | defs_head f_paren_args tEQL arg kRESCUE_MOD arg
                     {
-                        let (def_t, definee, dot_t, name_t) = $<DefsHead>1;
+                        let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
 
                         let rescue_body = self.builder.rescue_body(
                             $<Token>5,
@@ -2169,7 +2196,13 @@
 
       paren_args: tLPAREN2 opt_call_args rparen
                     {
-                        $$ = Value::ParenArgs(( $<Token>1, $<NodeList>2, $<Token>3 ));
+                        $$ = Value::ParenArgs(
+                            ParenArgs {
+                                begin_t: $<Token>1,
+                                args: $<NodeList>2,
+                                end_t: $<Token>3
+                            }
+                        );
                     }
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
@@ -2182,7 +2215,13 @@
                             $<NodeList>2,
                             vec![ self.builder.forwarded_args($<Token>4) ]
                         ].concat();
-                        $$ = Value::ParenArgs(( $<Token>1, args, $<Token>5 ));
+                        $$ = Value::ParenArgs(
+                            ParenArgs {
+                                begin_t: $<Token>1,
+                                args,
+                                end_t: $<Token>5
+                            }
+                        );
                     }
                 | tLPAREN2 args_forward rparen
                     {
@@ -2191,18 +2230,36 @@
                             return Self::YYERROR;
                         }
 
-                        $$ = Value::ParenArgs(( $<Token>1, vec![ self.builder.forwarded_args($<Token>2) ], $<Token>3 ));
+                        $$ = Value::ParenArgs(
+                            ParenArgs {
+                                begin_t: $<Token>1,
+                                args: vec![ self.builder.forwarded_args($<Token>2) ],
+                                end_t: $<Token>3
+                            }
+                        );
                     }
                 ;
 
   opt_paren_args: none
                     {
-                        $$ = Value::OptParenArgs(( None, vec![], None ));
+                        $$ = Value::OptParenArgs(
+                            OptParenArgs {
+                                begin_t: None,
+                                args: vec![],
+                                end_t: None
+                            }
+                        );
                     }
                 | paren_args
                     {
-                        let (lparen, body, rparen) = $<ParenArgs>1;
-                        $$ = Value::OptParenArgs(( Some(lparen), body, Some(rparen) ));
+                        let ParenArgs { begin_t, args, end_t } = $<ParenArgs>1;
+                        $$ = Value::OptParenArgs(
+                            OptParenArgs {
+                                begin_t: Some(begin_t),
+                                args,
+                                end_t: Some(end_t)
+                            }
+                        );
                     }
                 ;
 
@@ -2565,13 +2622,13 @@
                             vec![],
                             None
                         );
-                        let (begin_t, args, body, end_t) = $<BraceBlock>2;
+                        let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>2;
 
                         $$ = Value::Node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args,
+                                args_type,
                                 body,
                                 end_t
                             )
@@ -2580,12 +2637,12 @@
                 | method_call
                 | method_call brace_block
                     {
-                        let (begin_t, args, body, end_t) = $<BraceBlock>2;
+                        let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>2;
                         $$ = Value::Node(
                             self.builder.block(
                                 $<Node>1,
                                 begin_t,
-                                args,
+                                args_type,
                                 body,
                                 end_t
                             )
@@ -2597,10 +2654,7 @@
                   if_tail
                   k_end
                     {
-                        let (else_t, else_) = match $<IfTail>5 {
-                            Some((else_t, else_)) => (Some(else_t), else_),
-                            None => (None, None)
-                        };
+                        let IfTail { keyword_t, body: else_body } = $<IfTail>5;
 
                         $$ = Value::Node(
                             self.builder.condition(
@@ -2608,8 +2662,8 @@
                                 $<Node>2,
                                 $<Token>3,
                                 $<MaybeNode>4,
-                                else_t,
-                                else_,
+                                keyword_t,
+                                else_body,
                                 Some($<Token>6)
                             )
                         );
@@ -2619,17 +2673,14 @@
                   opt_else
                   k_end
                     {
-                        let (else_t, else_) = match $<OptElse>5 {
-                            Some((else_t, else_)) => (Some(else_t), else_),
-                            None => (None, None)
-                        };
+                        let (else_t, body) = $<OptElse>5.map(|else_| (Some(else_.else_t), else_.body)).unwrap_or_else(|| (None, None));
 
                         $$ = Value::Node(
                             self.builder.condition(
                                 $<Token>1,
                                 $<Node>2,
                                 $<Token>3,
-                                else_,
+                                body,
                                 else_t,
                                 $<MaybeNode>4,
                                 Some($<Token>6)
@@ -2640,12 +2691,12 @@
                   compstmt
                   k_end
                     {
-                        let (cond, do_t) = $<ExprValueDo>2;
+                        let ExprValueDo { value, do_t } = $<ExprValueDo>2;
                         $$ = Value::Node(
                             self.builder.loop_(
                                 LoopType::While,
                                 $<Token>1,
-                                cond,
+                                value,
                                 do_t,
                                 $<MaybeNode>3,
                                 $<Token>4
@@ -2656,12 +2707,12 @@
                   compstmt
                   k_end
                     {
-                        let (cond, do_t) = $<ExprValueDo>2;
+                        let ExprValueDo { value, do_t } = $<ExprValueDo>2;
                         $$ = Value::Node(
                             self.builder.loop_(
                                 LoopType::Until,
                                 $<Token>1,
-                                cond,
+                                value,
                                 do_t,
                                 $<MaybeNode>3,
                                 $<Token>4
@@ -2676,11 +2727,8 @@
                   case_body
                   k_end
                     {
-                        let (when_bodies, else_) = $<CaseBody>5;
-                        let (else_t, else_body) = match else_ {
-                            Some((else_t, else_body)) => (Some(else_t), else_body),
-                            None => (None, None)
-                        };
+                        let CaseBody { when_bodies, opt_else } = $<CaseBody>5;
+                        let (else_t, else_body) = opt_else.map(|else_| (Some(else_.else_t), else_.body)).unwrap_or_else(|| (None, None));
 
                         $$ = Value::Node(
                             self.builder.case(
@@ -2701,11 +2749,8 @@
                   case_body
                   k_end
                     {
-                        let (when_bodies, else_) = $<CaseBody>4;
-                        let (else_t, else_body) = match else_ {
-                            Some((else_t, else_body)) => (Some(else_t), else_body),
-                            None => (None, None)
-                        };
+                        let CaseBody { when_bodies, opt_else } = $<CaseBody>4;
+                        let (else_t, else_body) = opt_else.map(|else_| (Some(else_.else_t), else_.body)).unwrap_or_else(|| (None, None));
 
                         $$ = Value::Node(
                             self.builder.case(
@@ -2722,11 +2767,8 @@
                   p_case_body
                   k_end
                     {
-                        let (in_bodies, else_) = $<PCaseBody>4;
-                        let (else_t, else_body) = match else_ {
-                            Some((else_t, else_body)) => (Some(else_t), else_body),
-                            None => (None, None)
-                        };
+                        let PCaseBody { in_bodies, opt_else } = $<PCaseBody>4;
+                        let (else_t, else_body) = opt_else.map(|else_| (Some(else_.else_t), else_.body)).unwrap_or_else(|| (None, None));
 
                         $$ = Value::Node(
                             self.builder.case_match(
@@ -2743,13 +2785,13 @@
                   compstmt
                   k_end
                     {
-                        let (iteratee, do_t) = $<ExprValueDo>4;
+                        let ExprValueDo { value, do_t } = $<ExprValueDo>4;
                         $$ = Value::Node(
                             self.builder.for_(
                                 $<Token>1,
                                 $<Node>2,
                                 $<Token>3,
-                                iteratee,
+                                value,
                                 do_t,
                                 $<MaybeNode>5,
                                 $<Token>6
@@ -2771,17 +2813,14 @@
                             return Self::YYERROR;
                         }
 
-                        let (lt_t, superclass) = match $<Superclass>3 {
-                            Some((lt_t, superclass)) => (Some(lt_t), Some(superclass)),
-                            None => (None, None)
-                        };
+                        let Superclass { lt_t, value } = $<Superclass>3;
 
                         $$ = Value::Node(
                             self.builder.def_class(
                                 $<Token>1,
                                 $<Node>2,
                                 lt_t,
-                                superclass,
+                                value,
                                 $<MaybeNode>5,
                                 $<Token>6
                             )
@@ -2850,7 +2889,7 @@
                   bodystmt
                   k_end
                     {
-                        let (def_t, name_t) = $<DefnHead>1;
+                        let DefnHead { def_t, name_t } = $<DefnHead>1;
 
                         $$ = Value::Node(
                             self.builder.def_method(
@@ -2873,7 +2912,7 @@
                   bodystmt
                   k_end
                     {
-                        let (def_t, definee, dot_t, name_t) = $<DefsHead>1;
+                        let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
 
                         $$ = Value::Node(
                             self.builder.def_singleton(
@@ -3032,34 +3071,32 @@
 
          if_tail: opt_else
                     {
-                        $$ = Value::IfTail($<OptElse>1);
+                        let (keyword_t, body) = $<OptElse>1.map(|else_| (Some(else_.else_t), else_.body)).unwrap_or_else(|| (None, None));
+                        $$ = Value::IfTail(IfTail { keyword_t, body });
                     }
                 | k_elsif expr_value then
                   compstmt
                   if_tail
                     {
-                        let (else_t, else_body) = match $<IfTail>5 {
-                            Some((else_t, else_body)) => ( Some(else_t), else_body ),
-                            None => (None, None)
-                        };
+                        let IfTail { keyword_t, body: else_body } = $<IfTail>5;
 
                         let elsif_t = $<Token>1;
 
                         $$ = Value::IfTail(
-                            Some((
-                                elsif_t.clone(),
-                                Some(
+                            IfTail {
+                                keyword_t: Some(elsif_t.clone()),
+                                body: Some(
                                     self.builder.condition(
-                                        elsif_t.clone(),
+                                        elsif_t,
                                         $<Node>2,
                                         $<Token>3,
                                         $<MaybeNode>4,
-                                        else_t,
+                                        keyword_t,
                                         else_body,
                                         None
                                     )
                                 )
-                            ))
+                            }
                         );
                     }
                 ;
@@ -3070,9 +3107,9 @@
                     }
                 | k_else compstmt
                     {
-                        let token = $<Token>1;
-                        let node  = $<MaybeNode>2;
-                        $$ = Value::OptElse( Some((token, node)) );
+                        let else_t = $<Token>1;
+                        let body   = $<MaybeNode>2;
+                        $$ = Value::OptElse(Some(Else { else_t, body }));
                     }
                 ;
 
@@ -3365,7 +3402,7 @@ opt_block_args_tail:
                         } else {
                             ArgsType::Args($<MaybeNode>3)
                         };
-                        let (begin_t, body, end_t) = $<LambdaBody>5;
+                        let LambdaBody { begin_t, body, end_t } = $<LambdaBody>5;
 
                         self.max_numparam_stack.pop();
                         self.static_env.unextend();
@@ -3413,7 +3450,13 @@ opt_block_args_tail:
                   compstmt tRCURLY
                     {
                         self.context.pop();
-                        $$ = Value::LambdaBody(( $<Token>1, $<MaybeNode>3, $<Token>4 ));
+                        $$ = Value::LambdaBody(
+                            LambdaBody {
+                                begin_t: $<Token>1,
+                                body: $<MaybeNode>3,
+                                end_t: $<Token>4
+                            }
+                        );
                     }
                 | kDO_LAMBDA
                     {
@@ -3422,7 +3465,13 @@ opt_block_args_tail:
                   bodystmt k_end
                     {
                         self.context.pop();
-                        $$ = Value::LambdaBody(( $<Token>1, $<MaybeNode>3, $<Token>4 ));
+                        $$ = Value::LambdaBody(
+                            LambdaBody {
+                                begin_t: $<Token>1,
+                                body: $<MaybeNode>3,
+                                end_t: $<Token>4
+                            }
+                        );
                     }
                 ;
 
@@ -3432,20 +3481,27 @@ opt_block_args_tail:
                     }
                   do_body k_end
                     {
-                        let (args, body) = $<DoBody>3;
+                        let DoBody { args_type, body } = $<DoBody>3;
                         self.context.pop();
-                        $$ = Value::DoBlock(( $<Token>1, args, body, $<Token>4 ));
+                        $$ = Value::DoBlock(
+                            DoBlock {
+                                begin_t: $<Token>1,
+                                args_type,
+                                body,
+                                end_t: $<Token>4
+                            }
+                        );
                     }
                 ;
 
       block_call: command do_block
                     {
-                        let (begin_t, block_args, body, end_t) = $<DoBlock>2;
+                        let DoBlock { begin_t, args_type, body, end_t } = $<DoBlock>2;
                         $$ = Value::Node(
                             self.builder.block(
                                 $<Node>1,
                                 begin_t,
-                                block_args,
+                                args_type,
                                 body,
                                 end_t
                             )
@@ -3453,36 +3509,36 @@ opt_block_args_tail:
                     }
                 | block_call call_op2 operation2 opt_paren_args
                     {
-                        let (lparen_t, args, rparen_t) = $<OptParenArgs>4;
+                        let OptParenArgs { begin_t, args, end_t } = $<OptParenArgs>4;
                         $$ = Value::Node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
-                                lparen_t,
+                                begin_t,
                                 args,
-                                rparen_t
+                                end_t
                             )
                         );
                     }
                 | block_call call_op2 operation2 opt_paren_args brace_block
                     {
-                        let (lparen_t, args, rparen_t) = $<OptParenArgs>4;
+                        let OptParenArgs { begin_t, args, end_t } = $<OptParenArgs>4;
                         let method_call = self.builder.call_method(
                             Some($<Node>1),
                             Some($<Token>2),
                             Some($<Token>3),
-                            lparen_t,
+                            begin_t,
                             args,
-                            rparen_t
+                            end_t
                         );
 
-                        let (begin_t, args, body, end_t) = $<BraceBlock>5;
+                        let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>5;
                         $$ = Value::Node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args,
+                                args_type,
                                 body,
                                 end_t
                             )
@@ -3499,12 +3555,12 @@ opt_block_args_tail:
                             None
                         );
 
-                        let (begin_t, args, body, end_t) = $<DoBlock>5;
+                        let DoBlock { begin_t, args_type, body, end_t } = $<DoBlock>5;
                         $$ = Value::Node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args,
+                                args_type,
                                 body,
                                 end_t
                             )
@@ -3514,46 +3570,46 @@ opt_block_args_tail:
 
      method_call: fcall paren_args
                     {
-                        let (lparen_t, args, rparen_t) = $<ParenArgs>2;
+                        let ParenArgs { begin_t, args, end_t } = $<ParenArgs>2;
 
                         $$ = Value::Node(
                             self.builder.call_method(
                                 None,
                                 None,
                                 Some($<Token>1),
-                                Some(lparen_t),
+                                Some(begin_t),
                                 args,
-                                Some(rparen_t)
+                                Some(end_t)
                             )
                         );
                     }
                 | primary_value call_op operation2 opt_paren_args
                     {
-                        let (lparen_t, args, rparen_t) = $<OptParenArgs>4;
+                        let OptParenArgs { begin_t, args, end_t } = $<OptParenArgs>4;
 
                         $$ = Value::Node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
-                                lparen_t,
+                                begin_t,
                                 args,
-                                rparen_t
+                                end_t
                             )
                         );
                     }
                 | primary_value tCOLON2 operation2 paren_args
                     {
-                        let (lparen_t, args, rparen_t) = $<ParenArgs>4;
+                        let ParenArgs { begin_t, args, end_t } = $<ParenArgs>4;
 
                         $$ = Value::Node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
-                                Some(lparen_t),
+                                Some(begin_t),
                                 args,
-                                Some(rparen_t)
+                                Some(end_t)
                             )
                         );
                     }
@@ -3572,45 +3628,45 @@ opt_block_args_tail:
                     }
                 | primary_value call_op paren_args
                     {
-                        let (lparen_t, args, rparen_t) = $<ParenArgs>3;
+                        let ParenArgs { begin_t, args, end_t } = $<ParenArgs>3;
 
                         $$ = Value::Node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
                                 None,
-                                Some(lparen_t),
+                                Some(begin_t),
                                 args,
-                                Some(rparen_t)
+                                Some(end_t)
                             )
                         );
                     }
                 | primary_value tCOLON2 paren_args
                     {
-                        let (lparen_t, args, rparen_t) = $<ParenArgs>3;
+                        let ParenArgs { begin_t, args, end_t } = $<ParenArgs>3;
 
                         $$ = Value::Node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
                                 None,
-                                Some(lparen_t),
+                                Some(begin_t),
                                 args,
-                                Some(rparen_t)
+                                Some(end_t)
                             )
                         );
                     }
                 | kSUPER paren_args
                     {
-                        let (lparen_t, args, rparen_t) = $<ParenArgs>2;
+                        let ParenArgs { begin_t, args, end_t } = $<ParenArgs>2;
 
                         $$ = Value::Node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Super,
                                 $<Token>1,
-                                Some(lparen_t),
+                                Some(begin_t),
                                 args,
-                                Some(rparen_t)
+                                Some(end_t)
                             )
                         );
                     }
@@ -3645,10 +3701,17 @@ opt_block_args_tail:
                     }
                   brace_body tRCURLY
                     {
-                        let (args, body) = $<BraceBody>3;
+                        let BraceBody { args_type, body } = $<BraceBody>3;
                         self.context.pop();
 
-                        $$ = Value::BraceBlock(( $<Token>1, args, body, $<Token>4 ));
+                        $$ = Value::BraceBlock(
+                            BraceBlock {
+                                begin_t: $<Token>1,
+                                args_type,
+                                body,
+                                end_t: $<Token>4
+                            }
+                        );
                     }
                 | k_do
                     {
@@ -3656,10 +3719,17 @@ opt_block_args_tail:
                     }
                   do_body k_end
                     {
-                        let (args, body) = $<DoBody>3;
+                        let DoBody { args_type, body } = $<DoBody>3;
                         self.context.pop();
 
-                        $$ = Value::BraceBlock(( $<Token>1, args, body, $<Token>4 ));
+                        $$ = Value::BraceBlock(
+                            BraceBlock {
+                                begin_t: $<Token>1,
+                                args_type,
+                                body,
+                                end_t: $<Token>4
+                            }
+                        );
                     }
                 ;
 
@@ -3669,7 +3739,7 @@ opt_block_args_tail:
                     }
                   opt_block_param compstmt
                     {
-                        let args = if self.max_numparam_stack.has_numparams() {
+                        let args_type = if self.max_numparam_stack.has_numparams() {
                             ArgsType::Numargs(self.max_numparam_stack.top() as u8)
                         } else {
                             ArgsType::Args($<MaybeNode>2)
@@ -3678,7 +3748,12 @@ opt_block_args_tail:
                         self.max_numparam_stack.pop();
                         self.static_env.unextend();
 
-                        $$ = Value::BraceBody(( args, $<MaybeNode>3 ));
+                        $$ = Value::BraceBody(
+                            BraceBody {
+                                args_type,
+                                body: $<MaybeNode>3
+                            }
+                        );
                     }
                 ;
 
@@ -3689,7 +3764,7 @@ opt_block_args_tail:
                     }
                   opt_block_param bodystmt
                     {
-                        let args = if self.max_numparam_stack.has_numparams() {
+                        let args_type = if self.max_numparam_stack.has_numparams() {
                             ArgsType::Numargs(self.max_numparam_stack.top() as u8)
                         } else {
                             ArgsType::Args($<MaybeNode>2)
@@ -3699,7 +3774,9 @@ opt_block_args_tail:
                         self.static_env.unextend();
                         self.yylexer.cmdarg_pop();
 
-                        $$ = Value::DoBody(( args, $<MaybeNode>3 ));
+                        $$ = Value::DoBody(
+                            DoBody { args_type, body: $<MaybeNode>3 }
+                        );
                     }
                 ;
 
@@ -3734,20 +3811,20 @@ opt_block_args_tail:
                   cases
                     {
                         let when = self.builder.when($<Token>1, $<NodeList>2, $<Token>3, $<MaybeNode>4);
-                        let (whens, else_) = $<Cases>5;
-                        let whens = [ vec![when], whens ].concat();
-                        $$ = Value::CaseBody(( whens, else_ ));
+                        let Cases { when_bodies, opt_else } = $<Cases>5;
+                        let when_bodies = [ vec![when], when_bodies ].concat();
+                        $$ = Value::CaseBody(CaseBody { when_bodies, opt_else });
                     }
                 ;
 
            cases: opt_else
                     {
-                        $$ = Value::Cases(( vec![], $<OptElse>1 ));
+                        $$ = Value::Cases(Cases { when_bodies: vec![], opt_else: $<OptElse>1 });
                     }
                 | case_body
                     {
-                        let (whens, _) = $<CaseBody>1;
-                        $$ = Value::Cases(( whens, None ));
+                        let CaseBody { when_bodies, .. } = $<CaseBody>1;
+                        $$ = Value::Cases(Cases { when_bodies, opt_else: None });
                     }
                 ;
 
@@ -3768,10 +3845,10 @@ opt_block_args_tail:
                   compstmt
                   p_cases
                     {
-                        let (whens, else_) = $<PCases>7;
-                        let (pattern, guard) = $<PTopExpr>3;
+                        let PCases { in_bodies, opt_else } = $<PCases>7;
+                        let PTopExpr { pattern, guard } = $<PTopExpr>3;
 
-                        let whens = [
+                        let in_bodies = [
                             vec![
                                 self.builder.in_pattern(
                                     $<Token>1,
@@ -3781,36 +3858,36 @@ opt_block_args_tail:
                                     $<MaybeNode>6
                                 )
                             ],
-                            whens
+                            in_bodies
                         ].concat();
-                        $$ = Value::PCaseBody(( whens, else_ ));
+                        $$ = Value::PCaseBody(PCaseBody { in_bodies, opt_else  });
                     }
                 ;
 
          p_cases: opt_else
                     {
-                        $$ = Value::PCases(( vec![], $<OptElse>1 ));
+                        $$ = Value::PCases(PCases { in_bodies: vec![], opt_else: $<OptElse>1 });
                     }
                 | p_case_body
                     {
-                        let (whens, _) = $<PCaseBody>1;
-                        $$ = Value::PCases(( whens, None ));
+                        let PCaseBody { in_bodies, .. } = $<PCaseBody>1;
+                        $$ = Value::PCases(PCases { in_bodies, opt_else: None });
                     }
                 ;
 
       p_top_expr: p_top_expr_body
                     {
-                        $$ = Value::PTopExpr(( $<Node>1, None ));
+                        $$ = Value::PTopExpr(PTopExpr { pattern: $<Node>1, guard: None });
                     }
                 | p_top_expr_body kIF_MOD expr_value
                     {
                         let guard = self.builder.if_guard($<Token>2, $<Node>3);
-                        $$ = Value::PTopExpr(( $<Node>1, Some(guard) ));
+                        $$ = Value::PTopExpr(PTopExpr { pattern: $<Node>1, guard: Some(guard) });
                     }
                 | p_top_expr_body kUNLESS_MOD expr_value
                     {
                         let guard = self.builder.unless_guard($<Token>2, $<Node>3);
-                        $$ = Value::PTopExpr(( $<Node>1, Some(guard) ));
+                        $$ = Value::PTopExpr(PTopExpr { pattern: $<Node>1, guard: Some(guard) });
                     }
                 ;
 
@@ -4401,10 +4478,7 @@ opt_block_args_tail:
                   compstmt
                   opt_rescue
                     {
-                        let (assoc_t, exc_var) = match $<ExcVar>3 {
-                            Some((assoc_t, exc_var)) => ( Some(assoc_t), Some(exc_var) ),
-                            None => (None, None)
-                        };
+                        let ExcVar { assoc_t, exc_var } = $<ExcVar>3;
 
                         let exc_list = $<NodeList>2;
                         let exc_list = if exc_list.is_empty() {
@@ -4444,21 +4518,21 @@ opt_block_args_tail:
 
          exc_var: tASSOC lhs
                     {
-                        let token = $<Token>1;
-                        let node = $<Node>2;
-                        $$ = Value::ExcVar( Some((token, node)) );
+                        let assoc_t = Some($<Token>1);
+                        let exc_var = Some($<Node>2);
+                        $$ = Value::ExcVar(ExcVar { assoc_t, exc_var });
                     }
                 | none
                     {
-                        $$ = Value::ExcVar(None);
+                        $$ = Value::ExcVar(ExcVar { assoc_t: None, exc_var: None });
                     }
                 ;
 
       opt_ensure: k_ensure compstmt
                     {
-                        let token = $<Token>1;
-                        let node = $<MaybeNode>2;
-                        $$ = Value::OptEnsure( Some((token, node)) );
+                        let ensure_t = $<Token>1;
+                        let body = $<MaybeNode>2;
+                        $$ = Value::OptEnsure(Some(Ensure { ensure_t, body }));
                     }
                 | none
                     {
@@ -5001,13 +5075,15 @@ keyword_variable: kNIL
                     }
                   expr_value term
                     {
-                        let token = $<Token>1;
-                        let node  = $<Node>3;
-                        $$ = Value::Superclass( Some((token, node)) );
+                        let lt_t  = Some($<Token>1);
+                        let value = Some($<Node>3);
+                        $$ = Value::Superclass(
+                            Superclass { lt_t, value }
+                        );
                     }
                 | /* none */
                     {
-                        $$ = Value::Superclass(None);
+                        $$ = Value::Superclass(Superclass { lt_t: None, value: None });
                     }
                 ;
 
