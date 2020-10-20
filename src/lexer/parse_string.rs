@@ -944,7 +944,7 @@ impl Lexer {
         // let enc = self.p.enc;
         // let base_enc = 0;
         let bol;
-        let mut heredoc_end = None;
+        let heredoc_end;
 
         eos = self.buffer.lines[here.lastline()].start + here.offset();
         len = here.length();
@@ -1025,6 +1025,8 @@ impl Lexer {
                     .buffer
                     .is_whole_match(&self.buffer.substr_at(eos, eos + len).unwrap(), indent)
                 {
+                    self.lval_end = Some(self.buffer.pend - 1);
+                    heredoc_end = Some(self.buffer.ptok);
                     break;
                 }
             }
@@ -1078,7 +1080,7 @@ impl Lexer {
                     .buffer
                     .is_whole_match(&self.buffer.substr_at(eos, eos + len).unwrap(), indent)
                 {
-                    heredoc_end = Some(eos);
+                    heredoc_end = Some(self.buffer.ptok);
                     break;
                 }
             }
@@ -1122,6 +1124,8 @@ impl Lexer {
         self.strterm = None;
         self.set_lex_state(EXPR_END);
         self.set_yylval_str(TokenBuf::String(here.id(&self.buffer).to_owned()));
+        self.lval_start = Some(self.buffer.pend);
+        self.lval_end = Some(self.buffer.pend + here.length());
         return Self::tSTRING_END;
     }
 

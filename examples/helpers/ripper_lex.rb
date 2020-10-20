@@ -142,7 +142,7 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, _)|
         when "'", /\A<<-?'\w+'\z/ # no escaping
         when "\"", "/"
             tok_value = ("\"" + tok_value.encode('utf-8') + "\"").undump rescue tok_value
-        when /\A<<-?"\w+"\z/, /\A<<-?\w+\z/ # ignore
+        when /\A<</ # ignore
         when /%r\[/ # ignore
         else
             raise "unknown str type #{strs.last.inspect}"

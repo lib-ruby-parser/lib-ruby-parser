@@ -40,6 +40,7 @@ fn lex_as_ripper(filepath: &str) -> Result<String, String> {
             "kUNLESS_MOD" => "kUNLESS",
             "kWHILE_MOD" => "kWHILE",
             "tUMINUS_NUM" => "tMINUS",
+            "tXSTRING_BEG" => "tSTRING_BEG",
             other => other,
         }
         .to_owned();

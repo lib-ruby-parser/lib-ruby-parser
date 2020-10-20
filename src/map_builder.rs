@@ -122,9 +122,11 @@ pub(crate) fn string_map(
             let end_t = end_t
                 .as_ref()
                 .unwrap_or_else(|| panic!("heredoc must have end_t"));
-            let expr_l = collection_expr(&parts).unwrap_or_else(|| loc(end_t));
+            let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| loc(end_t));
+            let expression_l = loc(begin_t);
+            let heredoc_end_l = loc(end_t);
 
-            return StringMap::HeredocMap((loc(begin_t), loc(end_t), expr_l));
+            return StringMap::HeredocMap((heredoc_body_l, heredoc_end_l, expression_l));
         }
     }
 
