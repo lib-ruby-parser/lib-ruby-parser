@@ -1,7 +1,0 @@
---STATE
-expr_arg
---INPUT
-%=1
---TOKENS
-tOP_ASGN "%" [0, 2]
-tINTEGER "1" [2, 3]

@@ -1,6 +1,0 @@
---STATE
-expr_beg
---INPUT
-?\t
---TOKENS
-tINTEGER "?\\t" [0, 3]

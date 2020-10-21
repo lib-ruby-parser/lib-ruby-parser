@@ -1,6 +1,0 @@
---INPUT
-"\u{1 2 }"
---TOKENS
-tSTRING_BEG "\"" [0, 1]
-tSTRING_CONTENT "\u0001\u0002" [1, 9]
-tSTRING_END "\"" [9, 10]

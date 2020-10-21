@@ -1,5 +1,0 @@
---INPUT
-identifier?=
---TOKENS
-tIDENTIFIER "identifier" [0, 10]
-tCHARACTER "=" [10, 12]

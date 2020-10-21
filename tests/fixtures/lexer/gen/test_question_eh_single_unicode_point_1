@@ -1,4 +1,0 @@
---INPUT
-?\u{a}
---TOKENS
-tCHARACTER "\n" [0, 6]

@@ -1,6 +1,0 @@
---INPUT
-"\あ"
---TOKENS
-tSTRING_BEG "\"" [0, 1]
-tSTRING_CONTENT "あ" [1, 3]
-tSTRING_END "\"" [3, 4]

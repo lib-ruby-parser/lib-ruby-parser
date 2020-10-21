@@ -1,9 +1,0 @@
---STATE
-expr_end
---INPUT
-#foo
-+ 1
---TOKENS
-tNL "\n" [4, 5]
-tUMINUS_NUM "+" [5, 6]
-tINTEGER "1" [7, 8]

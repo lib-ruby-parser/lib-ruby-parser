@@ -1,6 +1,0 @@
---STATE
-expr_beg
---INPUT
-?\v
---TOKENS
-tINTEGER "?\\v" [0, 3]

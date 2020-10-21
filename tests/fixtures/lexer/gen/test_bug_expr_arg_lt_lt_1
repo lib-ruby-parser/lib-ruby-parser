@@ -1,9 +1,0 @@
---STATE
-expr_arg
---INPUT
- <<EOS
-EOS
---TOKENS
-tSTRING_BEG "<<\"" [1, 6]
-tSTRING_END "EOS" [7, 10]
-tNL "\n" [6, 7]

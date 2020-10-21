@@ -1,6 +1,0 @@
---STATE
-expr_beg
---INPUT
-?\v
---TOKENS
-tCHARACTER "\v" [0, 3]

@@ -1,9 +1,0 @@
---INPUT
-<<-E
-	\
-E
---TOKENS
-tSTRING_BEG "<<\"" [0, 4]
-tSTRING_CONTENT "\a\b\e\f\r\t\v\n" [5, 14]
-tSTRING_END "E" [14, 15]
-tNL "\n" [4, 5]

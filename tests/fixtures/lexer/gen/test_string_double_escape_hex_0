@@ -1,0 +1,6 @@
+--INPUT
+"n = \x61\x62\x63"
+--TOKENS
+tSTRING_BEG "\"" [0, 1]
+tSTRING_CONTENT "n = abc" [1, 17]
+tSTRING_END "\"" [17, 18]

@@ -1,7 +1,0 @@
---INPUT
-{'a":':
---TOKENS
-tLBRACE "{" [0, 1]
-tSTRING_BEG "\\'" [1, 2]
-tSTRING_CONTENT "a\":" [2, 5]
-tLABEL_END "\\'" [5, 7]

@@ -1,7 +1,0 @@
---INPUT
-%r{blah\}blah}
---TOKENS
-tREGEXP_BEG "%r{" [0, 3]
-tSTRING_CONTENT "blah\\}blah" [3, 13]
-tSTRING_END "}" [13, 14]
-tREGEXP_OPT "" [14, 14]

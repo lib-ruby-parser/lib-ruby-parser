@@ -1,6 +1,0 @@
---STATE
-expr_beg
---INPUT
-?\r
---TOKENS
-tCHARACTER "\r" [0, 3]
