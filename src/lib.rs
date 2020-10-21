@@ -36,7 +36,7 @@ pub(crate) use variables_stack::VariablesStack;
 mod error;
 pub use error::{ErrorLevel, ErrorMessage, ParseError};
 
-pub mod lex_char;
+pub mod maybe_byte;
 
 mod lex_state;
 pub use lex_state::lex_states;

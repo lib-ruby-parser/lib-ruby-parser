@@ -1,64 +1,61 @@
 use crate::parser::TokenValue;
 
-#[derive(Debug, Clone)]
-pub(crate) enum TokenBuf {
-    String(String),
-    Bytes(Vec<u8>),
-}
-
-impl Default for TokenBuf {
-    fn default() -> Self {
-        TokenBuf::String("".to_owned())
-    }
+#[derive(Debug, Clone, Default)]
+pub(crate) struct TokenBuf {
+    bytes: Vec<u8>,
 }
 
 impl TokenBuf {
-    #[allow(dead_code)]
-    pub(crate) fn into_bytes(self) -> Vec<u8> {
-        match self {
-            TokenBuf::String(s) => s.into_bytes(),
-            TokenBuf::Bytes(bytes) => bytes,
-        }
+    pub fn new(bytes: Vec<u8>) -> Self {
+        Self { bytes }
     }
 
-    pub(crate) fn push(&mut self, c: char) {
-        match self {
-            TokenBuf::String(s) => s.push(c),
-            TokenBuf::Bytes(bytes) => bytes.append(&mut c.to_string().into_bytes()),
-        }
+    pub(crate) fn push(&mut self, byte: u8) {
+        self.bytes.push(byte);
     }
 
     pub(crate) fn append(&mut self, part: &str) {
-        match self {
-            TokenBuf::String(s) => s.push_str(part),
-            TokenBuf::Bytes(bytes) => bytes.append(&mut part.to_string().into_bytes()),
-        }
+        self.bytes.append(&mut part.to_string().into_bytes())
     }
 
     pub(crate) fn prepend(&mut self, part: &str) {
-        match self {
-            TokenBuf::String(s) => {
-                *s = format!("{}{}", part, s);
-            }
-            TokenBuf::Bytes(bytes) => {
-                let mut tmp = part.as_bytes().to_vec();
-                tmp.extend(bytes.iter());
-                *bytes = tmp;
-            }
+        let mut tmp = part.as_bytes().to_vec();
+        tmp.extend(self.bytes.iter());
+        self.bytes = tmp;
+    }
+
+    pub(crate) fn borrow_string(&self) -> Result<&str, &Vec<u8>> {
+        match std::str::from_utf8(&self.bytes) {
+            Ok(s) => Ok(s),
+            Err(_) => Err(&self.bytes),
+        }
+    }
+
+    pub(crate) fn to_string(self) -> Result<String, Vec<u8>> {
+        match std::str::from_utf8(&self.bytes) {
+            Ok(s) => Ok(s.to_owned()),
+            Err(_) => Err(self.bytes),
         }
     }
 
     pub(crate) fn to_token_value(self) -> TokenValue {
-        match self {
-            TokenBuf::String(s) => TokenValue::String(s),
-            TokenBuf::Bytes(bytes) => TokenValue::InvalidString(bytes),
+        match self.to_string() {
+            Ok(s) => TokenValue::String(s),
+            Err(bytes) => TokenValue::InvalidString(bytes),
         }
     }
 
+    pub(crate) fn len(&self) -> usize {
+        self.bytes.len()
+    }
+
     pub(crate) fn clear(&mut self) {
-        match self {
-            TokenBuf::String(s) => s.clear(),
-            TokenBuf::Bytes(bytes) => bytes.clear(),
-        }
+        self.bytes.clear()
+    }
+}
+
+impl PartialEq<str> for TokenBuf {
+    fn eq(&self, other: &str) -> bool {
+        other.as_bytes() == self.bytes
     }
 }

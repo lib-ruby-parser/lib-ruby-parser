@@ -1,3 +1,5 @@
+$VERBOSE = nil
+
 require 'ripper';
 keyword = {
     '__ENCODING__' => :k__ENCODING__,
@@ -69,7 +71,7 @@ mapping = {
     on_CHAR: :tCHAR,
     on_ivar: :tIVAR,
     on_label: :tLABEL,
-    on_backref: :tBACKREF,
+    on_backref: :tBACK_REF,
     on_qwords_beg: :tQWORDS_BEG,
     on_gvar: :tGVAR,
     on_tlambda: :tLAMBDA,
@@ -98,7 +100,7 @@ ops = {
     '...' => :tDOT3,    '['   => :tLBRACK,  ']'   => :tRBRACK,
     '('   => :tLPAREN,  ')'   => :tRPAREN,  '?'   => :tEH,
     ':'   => :tCOLON,   '&&'  => :tANDOP,   '||'  => :tOROP,
-    '-@'  => :tUMINUS,  '+@'  => :tUPLUS,   '~@'  => :tTILDE,
+    '-@'  => :tMINUS,   '+@'  => :tPLUS,    '~@'  => :tTILDE,
     '**'  => :tDSTAR,   '->'  => :tLAMBDA,  '=~'  => :tMATCH,
     '!~'  => :tNMATCH,  '=='  => :tEQ,      '!='  => :tNEQ,
     '>'   => :tGT,      '>>'  => :tRSHFT,   '>='  => :tGEQ,
@@ -118,7 +120,7 @@ ops = {
 strs = []
 
 $stderr.puts ARGV.first
-Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, _)|
+Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
     tok_name =
         case tok_name
         when :on_nl then next
@@ -133,15 +135,43 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, _)|
         end
 
     case tok_name
-    when :tSTRING_BEG, :tREGEXP_BEG
+    when :tIDENTIFIER
+        if state.to_int == Ripper::EXPR_ENDFN
+            # :sym case, we need to pop :tSYMBEG
+            strs.pop
+        end
+    when :tSTRING_BEG, :tREGEXP_BEG, :tXSTRING_BEG, :tQWORDS_BEG, :tQSYMBOLS_BEG, :tSYMBEG, :tSYMBOLS_BEG
         strs.push(tok_value)
     when :tSTRING_END, :tREGEXP_END
         strs.pop
     when :tSTRING_CONTENT
         case strs.last
-        when "'", /\A<<-?'\w+'\z/ # no escaping
-        when "\"", "/"
-            tok_value = ("\"" + tok_value.encode('utf-8') + "\"").undump rescue tok_value
+        when /\A<<-?'\w+'\z/ # no escaping
+        when '"', '`', /\A%W/, /\A%I/, ':"',
+            '%<', '%{', '%(', '%[', '%!', '%@', '%#', '%%', '%^', '%&', '%*', '%-', '%_', '%=', '%+', '%~', '%:', '%;', '%\\', '%"', '%|', '%?', '%/', '%,', '%.', '%\'', '%`', '%$'
+            begin
+                tok_value = eval('"' + tok_value.encode('utf-8') + '"')
+            rescue SyntaxError, EncodingError
+                $stderr.puts("Can't dump squote str part #{tok_value.inspect}")
+                puts "<<UNKNOWN>>"
+                next
+            end
+        when "'", /\A%w/, /\A%i/, ":'", '%q('
+            begin
+                tok_value = eval("'" + tok_value.encode('utf-8') + "'")
+            rescue SyntaxError, EncodingError
+                $stderr.puts("Can't dump dquote str part #{tok_value.inspect}")
+                puts "<<UNKNOWN>>"
+                next
+            end
+        when "/", /\A%r/
+            begin
+                tok_value = eval("/" + tok_value.encode('utf-8') + "/").source
+            rescue SyntaxError, EncodingError
+                $stderr.puts("Can't dump regex part #{tok_value.inspect}")
+                puts "<<UNKNOWN>>"
+                next
+            end
         when /\A<</ # ignore
         when /%r\[/ # ignore
         else
@@ -151,6 +181,16 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, _)|
         tok_value = tok_value.gsub('_', '')
     when :tLABEL
         tok_value = tok_value.delete_suffix(':')
+    when :tCHAR
+        begin
+            tok_value = eval('"' + tok_value.delete_prefix('?') + '"')
+        rescue SyntaxError, EncodingError
+            $stderr.puts("Can't dump char #{tok_value.inspect}")
+            puts "<<UNKNOWN>>"
+            next
+        end
+    when :tCOMMENT
+        next
     end
 
     puts tok_name.to_s + ' ' + (tok_value || "").bytes.inspect + ' ' + start.join(':')

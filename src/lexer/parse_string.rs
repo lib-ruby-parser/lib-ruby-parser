@@ -1,8 +1,8 @@
 use std::convert::TryInto;
 
-use crate::lex_char::*;
 use crate::lex_states::*;
 use crate::lexer::*;
+use crate::maybe_byte::*;
 use crate::parser::TokenValue;
 use crate::source::buffer::*;
 use crate::str_term::{str_types::*, HeredocEnd, HeredocLiteral, StrTerm, StringLiteral};
@@ -18,7 +18,7 @@ impl Lexer {
         let func = quote.func();
         let term = quote.term();
         let paren = quote.paren();
-        let mut c: LexChar;
+        let mut c: MaybeByte;
         let mut space = false;
         self.lval_start = Some(self.buffer.pcur);
 
@@ -45,7 +45,7 @@ impl Lexer {
                     Some(heredoc_end) => {
                         self.lval_start = Some(heredoc_end.start);
                         self.lval_end = Some(heredoc_end.end);
-                        self.set_yylval_str(TokenBuf::String(heredoc_end.value));
+                        self.set_yylval_str(TokenBuf::new(heredoc_end.value.as_bytes().to_vec()));
                     }
                     _ => {}
                 }
@@ -84,7 +84,7 @@ impl Lexer {
             if let Some(t) = self.parser_peek_variable_name() {
                 return t;
             }
-            self.tokadd('#');
+            self.tokadd(b'#');
             c = self.nextc();
         }
         self.buffer.pushback(&c);
@@ -112,17 +112,17 @@ impl Lexer {
         }
 
         self.tokfix();
-        self.set_yylval_str(self.tok());
+        self.set_yylval_str(self.tokenbuf.clone());
         self.flush_string_content();
 
         Self::tSTRING_CONTENT
     }
 
-    pub(crate) fn parser_string_term(&mut self, term: char, func: usize) -> i32 {
+    pub(crate) fn parser_string_term(&mut self, term: u8, func: usize) -> i32 {
         self.strterm = None;
         if (func & STR_FUNC_REGEXP) != 0 {
             let flags = self.regx_options();
-            self.set_yylval_num(format!("{}{}", term, flags));
+            self.set_yylval_num(format!("{}{}", term as char, flags));
             self.set_lex_state(EXPR_END);
             return Self::tREGEXP_END;
         }
@@ -143,7 +143,7 @@ impl Lexer {
     }
 
     pub(crate) fn regx_options(&mut self) -> String {
-        let mut c: LexChar;
+        let mut c: MaybeByte;
         let mut result = String::from("");
 
         self.newtok();
@@ -156,8 +156,8 @@ impl Lexer {
             let ch = c.unwrap();
 
             match ch {
-                'o' | 'n' | 'e' | 's' | 'u' | 'i' | 'x' | 'm' => {
-                    result.push(ch);
+                b'o' | b'n' | b'e' | b's' | b'u' | b'i' | b'x' | b'm' => {
+                    result.push(ch as char);
                 }
                 _ => {
                     self.tokadd(&c);
@@ -168,14 +168,14 @@ impl Lexer {
         self.buffer.pushback(&c);
         if self.toklen() > 0 {
             self.tokfix();
-            self.compile_error(&format!("unknown regexp options - {:#?}", self.tok()));
+            self.compile_error(&format!("unknown regexp options - {:#?}", self.tokenbuf));
         }
 
         return result;
     }
 
     pub(crate) fn parser_peek_variable_name(&mut self) -> Option<i32> {
-        let mut c: LexChar;
+        let mut c: MaybeByte;
         let mut ptr: usize = self.buffer.pcur;
 
         if ptr + 1 >= self.buffer.pend {
@@ -185,7 +185,7 @@ impl Lexer {
         ptr += 1;
 
         match c.to_option() {
-            Some('$') => {
+            Some(b'$') => {
                 c = self.char_at(ptr);
                 if c == '-' {
                     ptr += 1;
@@ -198,7 +198,7 @@ impl Lexer {
                 }
             }
 
-            Some('@') => {
+            Some(b'@') => {
                 c = self.char_at(ptr);
                 if c == '@' {
                     ptr += 1;
@@ -209,7 +209,7 @@ impl Lexer {
                 }
             }
 
-            Some('{') => {
+            Some(b'{') => {
                 self.buffer.pcur = ptr;
                 self.command_start = true;
                 return Some(Self::tSTRING_DBEG);
@@ -228,11 +228,11 @@ impl Lexer {
     pub(crate) fn tokadd_string(
         &mut self,
         func: usize,
-        term: char,
-        paren: Option<char>,
+        term: u8,
+        paren: Option<u8>,
         nest: &mut usize,
-    ) -> Option<LexChar> {
-        let mut c: LexChar;
+    ) -> Option<MaybeByte> {
+        let mut c: MaybeByte;
         let _erred = false;
 
         loop {
@@ -266,38 +266,35 @@ impl Lexer {
                 self.literal_flush(self.buffer.pcur - 1);
                 c = self.nextc();
                 match c.to_option() {
-                    Some('\n') => {
+                    Some(b'\n') => {
                         if (func & STR_FUNC_QWORDS) != 0 {
-                            break;
-                        }
-                        if (func & STR_FUNC_EXPAND) != 0 {
+                            // break;
+                        } else if (func & STR_FUNC_EXPAND) != 0 {
                             if (func & STR_FUNC_INDENT) == 0 || self.buffer.heredoc_indent < 0 {
                                 continue;
                             }
                             if c == term {
-                                return Some(LexChar::new('\\'));
+                                return Some(MaybeByte::new('\\'));
                             }
                         }
-                        self.tokadd('\\');
-                        break;
+                        self.tokadd(b'\\');
                     }
-                    Some('\\') => {
+                    Some(b'\\') => {
                         if (func & STR_FUNC_ESCAPE) != 0 {
                             self.tokadd(&c)
                         }
-                        break;
                     }
-                    Some('u') => {
+                    Some(b'u') => {
                         if (func & STR_FUNC_EXPAND) == 0 {
-                            self.tokadd('\\');
-                            break;
+                            self.tokadd(b'\\');
+                        } else {
+                            self.tokadd_utf8(
+                                Some(term),
+                                func & STR_FUNC_SYMBOL,
+                                func & STR_FUNC_REGEXP,
+                            );
+                            continue;
                         }
-                        self.tokadd_utf8(
-                            Some(term),
-                            func & STR_FUNC_SYMBOL,
-                            func & STR_FUNC_REGEXP,
-                        );
-                        continue;
                     }
                     None => {
                         return None;
@@ -305,7 +302,7 @@ impl Lexer {
                     _ => {
                         if !c.is_ascii() {
                             if (func & STR_FUNC_EXPAND) == 0 {
-                                self.tokadd('\\');
+                                self.tokadd(b'\\');
                                 self.tokadd(&c);
                             }
                         }
@@ -323,13 +320,13 @@ impl Lexer {
                         } else if (func & STR_FUNC_EXPAND) != 0 {
                             self.buffer.pushback(&c);
                             if (func & STR_FUNC_ESCAPE) != 0 {
-                                self.tokadd('\\')
+                                self.tokadd(b'\\')
                             }
                             c = self.read_escape(0);
                         } else if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
                             // ignore backslashed spaces in %w
                         } else if c != term && c != paren {
-                            self.tokadd('\\');
+                            self.tokadd(b'\\');
                             self.buffer.pushback(&c);
                             continue;
                         }
@@ -337,6 +334,7 @@ impl Lexer {
                 }
             } else if !self.parser_is_ascii() {
                 self.tokadd(&c);
+                continue;
             } else if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
                 self.buffer.pushback(&c);
                 break;
@@ -349,7 +347,7 @@ impl Lexer {
 
     pub(crate) fn set_yylval_str(&mut self, value: TokenBuf) {
         if self.debug {
-            println!("set_yylval_str {:#?}", &value);
+            println!("set_yylval_str {:#?}", value);
         }
         self.lval = Some(value.to_token_value());
     }
@@ -358,7 +356,7 @@ impl Lexer {
         // noop
     }
 
-    pub(crate) fn parser_update_heredoc_indent(&mut self, c: &LexChar) -> bool {
+    pub(crate) fn parser_update_heredoc_indent(&mut self, c: &MaybeByte) -> bool {
         if self.buffer.heredoc_line_indent == -1 {
             if *c == '\n' {
                 self.buffer.heredoc_line_indent = 0
@@ -390,9 +388,9 @@ impl Lexer {
         let mut result = 0;
 
         for _ in 0..len {
-            match self.buffer.char_at(s).to_option() {
+            match self.buffer.byte_at(s).to_option() {
                 None => break,
-                Some(c) => match usize::from_str_radix(&c.to_string(), 16) {
+                Some(c) => match usize::from_str_radix(&(c as char).to_string(), 16) {
                     Ok(hex) => {
                         result <<= 4;
                         result |= hex;
@@ -412,8 +410,8 @@ impl Lexer {
         let mut result: usize = 0;
 
         for _ in 0..len {
-            match self.buffer.char_at(s).to_option() {
-                Some(c) if (c > '0' && c <= '7') => {
+            match self.buffer.byte_at(s).to_option() {
+                Some(c) if (c >= b'0' && c <= b'7') => {
                     result <<= 3;
                     result |= ((c as u8) - ('0' as u8)) as usize;
                 }
@@ -435,7 +433,11 @@ impl Lexer {
     }
 
     pub(crate) fn tokaddmbc(&mut self, codepoint: usize) {
-        self.tokadd(std::char::from_u32(codepoint.try_into().unwrap()).unwrap())
+        let utf8_char = std::char::from_u32(codepoint.try_into().unwrap()).unwrap();
+        let utf8_bytes = utf8_char.to_string().into_bytes();
+        for byte in utf8_bytes {
+            self.tokadd(byte)
+        }
     }
 
     pub(crate) fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool {
@@ -470,9 +472,9 @@ impl Lexer {
         if regexp_literal != 0 {
             self.tokcopy(numlen);
         } else if codepoint >= 0x80 {
-            if self.buffer.encoding != "utf-8" {
-                panic!("UTF-8 mixed within source");
-            }
+            // if self.buffer.encoding != "utf-8" {
+            //     panic!("UTF-8 mixed within source");
+            // }
             self.tokaddmbc(codepoint);
         } else {
             self.tokadd(codepoint as u8)
@@ -483,17 +485,17 @@ impl Lexer {
 
     pub(crate) fn tokadd_utf8(
         &mut self,
-        term: Option<char>,
+        term: Option<u8>,
         _symbol_literal: usize,
         regexp_literal: usize,
     ) {
-        let open_brace = '{';
-        let close_brace = '}';
+        let open_brace = b'{';
+        let close_brace = b'}';
         let mut got_multiple_codepoints = false;
 
         if regexp_literal != 0 {
-            self.tokadd('\\');
-            self.tokadd('u')
+            self.tokadd(b'\\');
+            self.tokadd(b'u')
         }
 
         if self.buffer.peek(open_brace) {
@@ -504,7 +506,7 @@ impl Lexer {
                 return self.tokadd_utf8_unterminated();
             }
             loop {
-                c = self.buffer.char_at(self.buffer.pcur);
+                c = self.buffer.byte_at(self.buffer.pcur);
                 if !c.is_space() {
                     break;
                 }
@@ -567,10 +569,10 @@ impl Lexer {
         }
     }
 
-    pub(crate) fn simple_re_meta(&mut self, c: &LexChar) -> bool {
+    pub(crate) fn simple_re_meta(&mut self, c: &MaybeByte) -> bool {
         match c.to_option() {
-            Some('$') | Some('*') | Some('+') | Some('.') | Some('?') | Some('^') | Some('|')
-            | Some(')') | Some(']') | Some('}') | Some('>') => true,
+            Some(b'$') | Some(b'*') | Some(b'+') | Some(b'.') | Some(b'?') | Some(b'^')
+            | Some(b'|') | Some(b')') | Some(b']') | Some(b'}') | Some(b'>') => true,
             _ => false,
         }
     }
@@ -589,10 +591,10 @@ impl Lexer {
         loop {
             c = self.nextc();
             match c.to_option() {
-                Some('\n') => return Ok(()),
+                Some(b'\n') => return Ok(()),
 
-                Some('0') | Some('1') | Some('2') | Some('3') | Some('4') | Some('5')
-                | Some('6') | Some('7') => {
+                Some(b'0') | Some(b'1') | Some(b'2') | Some(b'3') | Some(b'4') | Some(b'5')
+                | Some(b'6') | Some(b'7') => {
                     self.buffer.pcur -= 1;
                     self.scan_oct(self.buffer.pcur, 3, &mut numlen);
                     self.buffer.pcur += numlen;
@@ -600,7 +602,7 @@ impl Lexer {
                     return Ok(());
                 }
 
-                Some('x') => {
+                Some(b'x') => {
                     self.tok_hex(&mut numlen);
                     if numlen == 0 {
                         return Err(());
@@ -609,7 +611,7 @@ impl Lexer {
                     return Ok(());
                 }
 
-                Some('M') => {
+                Some(b'M') => {
                     if (flags & ESCAPE_META) != 0 {
                         return self.tokadd_escape_eof();
                     }
@@ -632,7 +634,7 @@ impl Lexer {
                     return Ok(());
                 }
 
-                Some('C') => {
+                Some(b'C') => {
                     if (flags & ESCAPE_CONTROL) != 0 {
                         return self.tokadd_escape_eof();
                     }
@@ -654,7 +656,7 @@ impl Lexer {
                     return Ok(());
                 }
 
-                Some('c') => {
+                Some(b'c') => {
                     if (flags & ESCAPE_CONTROL) != 0 {
                         return self.tokadd_escape_eof();
                     }
@@ -676,7 +678,7 @@ impl Lexer {
                 None => return self.tokadd_escape_eof(),
 
                 Some(other) => {
-                    self.tokadd('\\');
+                    self.tokadd(b'\\');
                     self.tokadd(other);
                     return Ok(());
                 }
@@ -684,60 +686,60 @@ impl Lexer {
         }
     }
 
-    pub(crate) fn read_escape_eof(&mut self) -> LexChar {
+    pub(crate) fn read_escape_eof(&mut self) -> MaybeByte {
         self.yyerror0("Invalid escape character syntax");
         self.token_flush();
         unimplemented!("read_escape_eof")
     }
 
-    pub(crate) fn tok_hex(&mut self, numlen: &mut usize) -> LexChar {
+    pub(crate) fn tok_hex(&mut self, numlen: &mut usize) -> MaybeByte {
         let c;
 
         c = self.scan_hex(self.buffer.pcur, 2, numlen);
         if *numlen == 0 {
             self.yyerror0("invalid hex escape");
             self.token_flush();
-            return LexChar::new(0);
+            return MaybeByte::new(0);
         }
         self.buffer.pcur += *numlen;
-        LexChar::new(c as u8)
+        MaybeByte::new(c as u8)
     }
 
-    pub(crate) fn read_escape(&mut self, flags: usize) -> LexChar {
+    pub(crate) fn read_escape(&mut self, flags: usize) -> MaybeByte {
         let mut c;
         let mut numlen: usize = 0;
 
         c = self.nextc();
         match c.to_option() {
-            Some('\\') => return c,
-            Some('n') => return LexChar::new('\n'),
-            Some('t') => return LexChar::new('\t'),
-            Some('r') => return LexChar::new('\r'),
-            Some('f') => return LexChar::new(Self::LF_CHAR),
-            Some('v') => return LexChar::new(Self::VTAB_CHAR),
-            Some('a') => return LexChar::new(0x07_u8),
-            Some('e') => return LexChar::new(0x1b_u8),
+            Some(b'\\') => return c,
+            Some(b'n') => return MaybeByte::new('\n'),
+            Some(b't') => return MaybeByte::new('\t'),
+            Some(b'r') => return MaybeByte::new('\r'),
+            Some(b'f') => return MaybeByte::new(Self::LF_CHAR),
+            Some(b'v') => return MaybeByte::new(Self::VTAB_CHAR),
+            Some(b'a') => return MaybeByte::new(0x07_u8),
+            Some(b'e') => return MaybeByte::new(0x1b_u8),
 
-            Some('0') | Some('1') | Some('2') | Some('3') | Some('4') | Some('5') | Some('6')
-            | Some('7') | Some('8') | Some('9') => {
+            Some(b'0') | Some(b'1') | Some(b'2') | Some(b'3') | Some(b'4') | Some(b'5')
+            | Some(b'6') | Some(b'7') | Some(b'8') | Some(b'9') => {
                 self.buffer.pushback(&c);
                 let c = self.scan_oct(self.buffer.pcur, 3, &mut numlen);
                 self.buffer.pcur += numlen;
-                return LexChar::new(c as u8);
+                return MaybeByte::new(c as u8);
             }
 
-            Some('x') => {
+            Some(b'x') => {
                 let c = self.tok_hex(&mut numlen);
                 if numlen == 0 {
-                    return LexChar::EOF;
+                    return MaybeByte::EndOfInput;
                 }
                 return c;
             }
 
-            Some('b') => return LexChar::new(0x08_u8),
-            Some('s') => return LexChar::new(' '),
+            Some(b'b') => return MaybeByte::new(0x08_u8),
+            Some(b's') => return MaybeByte::new(' '),
 
-            Some('M') => {
+            Some(b'M') => {
                 if (flags & ESCAPE_META) != 0 {
                     return self.read_escape_eof();
                 }
@@ -747,12 +749,12 @@ impl Lexer {
                 }
                 c = self.nextc();
                 if c == '\\' {
-                    if self.buffer.peek('u') {
+                    if self.buffer.peek(b'u') {
                         return self.read_escape_eof();
                     }
                     return self
                         .read_escape(flags | ESCAPE_META)
-                        .map_as_u8(|byte| byte | 0x80);
+                        .map(|byte| MaybeByte::Some(byte | 0x80));
                 } else if c.is_eof() || !c.is_ascii() {
                     return self.read_escape_eof();
                 } else {
@@ -765,11 +767,11 @@ impl Lexer {
                     } else if c.is_control() {
                         return self.read_escape_eof();
                     }
-                    return c.map_as_u8(|c| (c & 0xff) | 0x80);
+                    return c.map(|c| MaybeByte::Some((c & 0xff) | 0x80));
                 }
             }
 
-            Some('C') | Some('c') => {
+            Some(b'C') | Some(b'c') => {
                 if c == 'C' {
                     // C fallthrough
                     c = self.nextc();
@@ -782,12 +784,12 @@ impl Lexer {
                 }
                 c = self.nextc();
                 if c == '\\' {
-                    if self.buffer.peek('u') {
+                    if self.buffer.peek(b'u') {
                         return self.read_escape_eof();
                     }
                     c = self.read_escape(flags | ESCAPE_CONTROL)
                 } else if c == '?' {
-                    return LexChar::new(0x7f_u8);
+                    return MaybeByte::new(0x7f_u8);
                 } else if c.is_eof() || !c.is_ascii() {
                     return self.read_escape_eof();
                 } else {
@@ -812,7 +814,7 @@ impl Lexer {
                         return self.read_escape_eof();
                     }
                 }
-                return c.map_as_u8(|c| c & 0x9f);
+                return c.map(|c| MaybeByte::Some(c & 0x9f));
             }
 
             None => return self.read_escape_eof(),
@@ -906,8 +908,9 @@ impl Lexer {
             .buffer
             .substr_at(self.buffer.ptok, self.buffer.pcur)
             .unwrap()
-            .to_owned();
-        self.set_yylval_str(TokenBuf::String(id));
+            .as_bytes()
+            .to_vec();
+        self.set_yylval_str(TokenBuf::new(id));
         self.lval_start = Some(self.buffer.ptok);
         self.lval_end = Some(self.buffer.pcur);
 
@@ -938,7 +941,7 @@ impl Lexer {
         let mut ptr;
         let mut ptr_end;
         let len;
-        let mut str_ = TokenBuf::String("".to_owned());
+        let mut str_ = TokenBuf::new(vec![]);
         // let enc = self.p.enc;
         // let base_enc = 0;
         let bol;
@@ -978,13 +981,13 @@ impl Lexer {
                 ptr_end = self.buffer.pend;
                 if ptr_end > ptr {
                     match self.buffer.input[ptr_end - 1] {
-                        '\n' => {
+                        b'\n' => {
                             ptr_end -= 1;
-                            if ptr_end == ptr || self.buffer.input[ptr_end - 1] != '\r' {
+                            if ptr_end == ptr || self.buffer.input[ptr_end - 1] != b'\r' {
                                 ptr_end += 1;
                             }
                         }
-                        '\r' => {
+                        b'\r' => {
                             ptr_end -= 1;
                         }
                         _ => {}
@@ -1011,11 +1014,11 @@ impl Lexer {
                     ),
                 };
                 if ptr_end < self.buffer.pend {
-                    str_.push('\n')
+                    str_.push(b'\n')
                 }
                 self.buffer.goto_eol();
                 if self.buffer.heredoc_indent > 0 {
-                    return self.heredoc_flush_str(str_);
+                    return self.heredoc_flush_str(&str_);
                 }
                 if self.nextc().is_eof() {
                     str_.clear();
@@ -1030,7 +1033,7 @@ impl Lexer {
                     heredoc_end_start = self.buffer.pbeg;
                     heredoc_end_end = heredoc_end_start;
                     loop {
-                        let c = self.buffer.char_at(heredoc_end_end);
+                        let c = self.buffer.byte_at(heredoc_end_end);
                         if c.is_eof() || c == '\n' {
                             break;
                         }
@@ -1057,13 +1060,13 @@ impl Lexer {
                 if let Some(t) = t {
                     return t;
                 }
-                self.tokadd('#');
+                self.tokadd(b'#');
                 c = self.nextc();
             }
             loop {
                 self.buffer.pushback(&c);
                 // enc = self.p.enc;
-                match self.tokadd_string(func, '\n', None, &mut 0) {
+                match self.tokadd_string(func, b'\n', None, &mut 0) {
                     Some(cc) => c = cc,
                     None => {
                         if self.buffer.eofp {
@@ -1099,7 +1102,7 @@ impl Lexer {
                     heredoc_end_start = self.buffer.pbeg;
                     heredoc_end_end = heredoc_end_start;
                     loop {
-                        let c = self.buffer.char_at(heredoc_end_end);
+                        let c = self.buffer.byte_at(heredoc_end_end);
                         if c.is_eof() || c == '\n' {
                             break;
                         }
@@ -1115,15 +1118,15 @@ impl Lexer {
                     break;
                 }
             }
-            str_ = self.tok();
+            str_ = self.tokenbuf.clone();
         }
 
         self.heredoc_restore(&here);
         self.token_flush();
         self.strterm = self.new_strterm(
             func | STR_FUNC_TERM,
-            0 as char,
-            Some(0 as char),
+            0 as u8,
+            Some(0 as u8),
             Some(HeredocEnd {
                 start: heredoc_end_start,
                 end: heredoc_end_end,
@@ -1156,21 +1159,20 @@ impl Lexer {
         self.token_flush();
         self.strterm = None;
         self.set_lex_state(EXPR_END);
-        self.set_yylval_str(TokenBuf::String(here.id(&self.buffer).to_owned()));
+        self.set_yylval_str(TokenBuf::new(here.id(&self.buffer).as_bytes().to_vec()));
         self.lval_start = Some(self.buffer.pend);
         self.lval_end = Some(self.buffer.pend + here.length());
         return Self::tSTRING_END;
     }
 
-    pub(crate) fn heredoc_flush_str(&mut self, str_: TokenBuf) -> i32 {
-        self.set_yylval_str(str_);
+    pub(crate) fn heredoc_flush_str(&mut self, str_: &TokenBuf) -> i32 {
+        self.set_yylval_str(str_.clone());
         self.flush_string_content();
         return Self::tSTRING_CONTENT;
     }
 
     pub(crate) fn heredoc_flush(&mut self) -> i32 {
-        let str_ = self.tok();
-        return self.heredoc_flush_str(str_);
+        return self.heredoc_flush_str(&self.tokenbuf.clone());
     }
 
     pub(crate) fn heredoc_restore(&mut self, here: &HeredocLiteral) {

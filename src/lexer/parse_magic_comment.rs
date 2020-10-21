@@ -28,31 +28,31 @@ impl Lexer {
                 return;
             }
             match self.char_at(str_ + 6).to_option() {
-                Some('C') | Some('c') => {
+                Some(b'C') | Some(b'c') => {
                     str_ += 6;
                     continue;
                 }
-                Some('O') | Some('o') => {
+                Some(b'O') | Some(b'o') => {
                     str_ += 5;
                     continue;
                 }
-                Some('D') | Some('d') => {
+                Some(b'D') | Some(b'd') => {
                     str_ += 4;
                     continue;
                 }
-                Some('I') | Some('i') => {
+                Some(b'I') | Some(b'i') => {
                     str_ += 3;
                     continue;
                 }
-                Some('N') | Some('n') => {
+                Some(b'N') | Some(b'n') => {
                     str_ += 2;
                     continue;
                 }
-                Some('G') | Some('g') => {
+                Some(b'G') | Some(b'g') => {
                     str_ += 1;
                     continue;
                 }
-                Some('=') | Some(':') => {
+                Some(b'=') | Some(b':') => {
                     sep = true;
                     str_ += 6;
                 }
@@ -106,13 +106,13 @@ impl Lexer {
 
         while i < len {
             match self.char_at(str_ + i).to_option() {
-                Some('-') => {
+                Some(b'-') => {
                     if self.char_at(str_ + i - 1) == '*' && self.char_at(str_ + i - 2) == '-' {
                         return str_ + i + 1;
                     }
                     i += 2
                 }
-                Some('*') => {
+                Some(b'*') => {
                     if i + 1 >= len {
                         return 0;
                     }

@@ -1,10 +1,8 @@
 extern crate clap;
 use clap::Clap;
-extern crate pprof;
 
 use ruby_parser::{Lexer, Token};
 use std::fs;
-use std::fs::File;
 use std::path::Path;
 
 mod helpers;
@@ -42,8 +40,6 @@ fn rpad2<T: Sized + std::fmt::Debug>(value: &T, total_width: usize) -> String {
 }
 
 fn main() -> Result<(), ()> {
-    let guard = pprof::ProfilerGuard::new(100).unwrap();
-
     let args: Args = Args::parse();
     let callback: &dyn Fn(&Vec<Token>) = if args.quiet {
         &|_tokens: &Vec<Token>| {}
@@ -81,21 +77,14 @@ fn main() -> Result<(), ()> {
         callback(&tokens)
     } else if let Some(path) = args.path {
         let path = Path::new(&path);
-        for _ in 1..20 {
-            each_ruby_file(path, &|entry| {
-                let code = fs::read(Path::new(entry)).unwrap();
-                let node = tokenize(&code, entry, debug)
-                    .unwrap_or_else(|_| panic!("failed to parse {}", entry));
-                callback(&node)
-            })
-            .unwrap_or_else(|e| panic!("Error {:?}", e));
-        }
+        each_ruby_file(path, &|entry| {
+            let code = fs::read(Path::new(entry)).unwrap();
+            let node = tokenize(&code, entry, debug)
+                .unwrap_or_else(|_| panic!("failed to parse {}", entry));
+            callback(&node)
+        })
+        .unwrap_or_else(|e| panic!("Error {:?}", e));
     }
-
-    if let Ok(report) = guard.report().build() {
-        let file = File::create("flamegraph.svg").unwrap();
-        report.flamegraph(file).unwrap();
-    };
 
     return Ok(());
 }

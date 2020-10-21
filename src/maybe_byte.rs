@@ -1,35 +1,32 @@
 #[derive(Debug, Clone)]
-pub(crate) enum LexChar {
-    Multibyte(char),
-    AsciiByte(char),
-    NonUtf8Byte(u8),
-    EOF,
+pub(crate) enum MaybeByte {
+    Some(u8),
+    EndOfInput,
 }
 
-const SPACE: char = ' ';
-const TAB: char = '\t';
-const VTAB: char = '\x0b';
-const PUNCT: [char; 21] = [
-    '!', '"', '$', '&', '\'', '*', '+', ',', '.', '/', '0', ':', ';', '<', '=', '>', '?', '@',
-    '\\', '`', '~',
+const SPACE: u8 = b' ';
+const TAB: u8 = b'\t';
+const VTAB: u8 = b'\x0b';
+const PUNCT: [u8; 21] = [
+    b'!', b'"', b'$', b'&', b'\'', b'*', b'+', b',', b'.', b'/', b'0', b':', b';', b'<', b'=',
+    b'>', b'?', b'@', b'\\', b'`', b'~',
 ];
 
-impl LexChar {
+impl MaybeByte {
     pub(crate) fn is_eof(&self) -> bool {
-        self == &LexChar::EOF
+        self == &MaybeByte::EndOfInput
     }
 
-    pub(crate) fn unwrap(&self) -> char {
+    pub(crate) fn unwrap(&self) -> u8 {
         match self {
-            LexChar::Multibyte(c) | LexChar::AsciiByte(c) => *c,
-            LexChar::NonUtf8Byte(_) => panic!("LexChar is non-utf8, can't turn it into a char"),
-            _ => panic!("LexChar is empty, can't unwrap()"),
+            MaybeByte::Some(byte) => *byte,
+            _ => panic!("MaybeByte::EndOfInput has no bytes"),
         }
     }
 
-    pub(crate) fn to_option(&self) -> Option<char> {
+    pub(crate) fn to_option(&self) -> Option<u8> {
         match self {
-            LexChar::Multibyte(c) | LexChar::AsciiByte(c) => Some(*c),
+            MaybeByte::Some(c) => Some(*c),
             _ => None,
         }
     }
@@ -103,7 +100,7 @@ impl LexChar {
 
     pub(crate) fn is_space(&self) -> bool {
         if let Some(c) = self.to_option() {
-            c.is_ascii_whitespace() || c == VTAB
+            c == b' ' || (b'\t' <= c && c <= b'\r')
         } else {
             false
         }
@@ -119,64 +116,42 @@ impl LexChar {
 
     pub(crate) fn is_control(&self) -> bool {
         if let Some(c) = self.to_option() {
-            c.is_control()
+            (c as char).is_control()
         } else {
             false
         }
     }
 
     #[allow(dead_code)]
-    pub(crate) fn map<F: FnOnce(char) -> LexChar>(&self, f: F) -> LexChar {
+    pub(crate) fn map<F: FnOnce(u8) -> MaybeByte>(&self, f: F) -> MaybeByte {
         match self.to_option() {
             Some(c) => f(c),
-            _ => LexChar::EOF,
-        }
-    }
-
-    pub(crate) fn map_as_u8<F: FnOnce(u8) -> u8>(&self, f: F) -> LexChar {
-        match &self {
-            LexChar::Multibyte(_) => {
-                unreachable!("applying bitmask to multibyte char");
-            }
-            LexChar::NonUtf8Byte(c) => LexChar::new(f(*c)),
-            LexChar::AsciiByte(c) => LexChar::new(f(*c as u8)),
-            LexChar::EOF => LexChar::EOF,
+            _ => MaybeByte::EndOfInput,
         }
     }
 }
 
-pub(crate) trait LexCharNew<T> {
+pub(crate) trait MaybeByteNew<T> {
     fn new(c: T) -> Self;
 }
 
-impl LexCharNew<char> for LexChar {
+impl MaybeByteNew<char> for MaybeByte {
     fn new(c: char) -> Self {
-        match c.len_utf8() {
-            1 => {
-                let byte = c as u8;
-                if byte <= 127 {
-                    LexChar::AsciiByte(c)
-                } else {
-                    LexChar::NonUtf8Byte(byte)
-                }
-            }
-            _ => LexChar::Multibyte(c),
+        if c.len_utf8() > 1 {
+            unreachable!("Can't construct MaybeByte from a multibyte char {:?}", c)
         }
+        MaybeByte::Some(c as u8)
     }
 }
 
-impl LexCharNew<u8> for LexChar {
+impl MaybeByteNew<u8> for MaybeByte {
     fn new(byte: u8) -> Self {
-        if byte <= 127 {
-            LexChar::AsciiByte(byte as char)
-        } else {
-            LexChar::NonUtf8Byte(byte)
-        }
+        MaybeByte::Some(byte)
     }
 }
 
-impl PartialEq<char> for LexChar {
-    fn eq(&self, other: &char) -> bool {
+impl PartialEq<u8> for MaybeByte {
+    fn eq(&self, other: &u8) -> bool {
         match self.to_option() {
             Some(c) => c == *other,
             _ => false,
@@ -184,22 +159,47 @@ impl PartialEq<char> for LexChar {
     }
 }
 
-impl PartialEq<Option<char>> for LexChar {
-    fn eq(&self, other: &Option<char>) -> bool {
+impl PartialEq<char> for MaybeByte {
+    fn eq(&self, other: &char) -> bool {
+        if other.len_utf8() > 1 {
+            return false;
+        }
+        match self.to_option() {
+            Some(c) => c == *other as u8,
+            _ => false,
+        }
+    }
+}
+
+impl PartialEq<Option<u8>> for MaybeByte {
+    fn eq(&self, other: &Option<u8>) -> bool {
         &self.to_option() == other
     }
 }
 
-impl PartialEq for LexChar {
-    fn eq(&self, other: &LexChar) -> bool {
+impl PartialEq for MaybeByte {
+    fn eq(&self, other: &MaybeByte) -> bool {
         self.to_option() == other.to_option()
     }
 }
 
-impl PartialOrd<char> for LexChar {
-    fn partial_cmp(&self, other: &char) -> Option<std::cmp::Ordering> {
+impl PartialOrd<u8> for MaybeByte {
+    fn partial_cmp(&self, other: &u8) -> Option<std::cmp::Ordering> {
         match self.to_option() {
             Some(c) => Some(c.cmp(other)),
+            _ => Some(std::cmp::Ordering::Less),
+        }
+    }
+}
+
+impl PartialOrd<char> for MaybeByte {
+    fn partial_cmp(&self, other: &char) -> Option<std::cmp::Ordering> {
+        if other.len_utf8() > 1 {
+            unreachable!("can't compare byte and multibyte char");
+        }
+
+        match self.to_option() {
+            Some(c) => Some(c.cmp(&(*other as u8))),
             _ => Some(std::cmp::Ordering::Less),
         }
     }

@@ -1,8 +1,7 @@
-use crate::lex_char::*;
 use crate::lexer::*;
+use crate::maybe_byte::*;
 use crate::reserved_word;
 use crate::source::buffer::*;
-use crate::TokenBuf;
 use crate::{lex_states::*, LexState};
 
 impl Lexer {
@@ -11,11 +10,10 @@ impl Lexer {
     }
 
     pub(crate) fn tokenize_ident(&mut self, _last_state: &LexState) -> String {
-        let ident = self.tok();
-        self.set_yyval_name(ident.clone());
-        match ident {
-            TokenBuf::String(s) => s,
-            TokenBuf::Bytes(_) => unreachable!("locals can't have non-utf chars"),
+        self.set_yyval_name();
+        match self.tokenbuf.borrow_string() {
+            Ok(s) => s.to_owned(),
+            Err(bytes) => unreachable!("locals can't have non-utf chars: {:?}", bytes),
         }
     }
 
@@ -30,7 +28,7 @@ impl Lexer {
         false
     }
 
-    pub(crate) fn parse_ident(&mut self, c: &LexChar, cmd_state: bool) -> i32 {
+    pub(crate) fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32 {
         let mut c = c.clone();
         let mut result: i32;
         let last_state: LexState = self.state.clone();
@@ -48,14 +46,14 @@ impl Lexer {
             }
         }
 
-        if (c == '!' || c == '?') && !self.buffer.peek('=') {
+        if (c == '!' || c == '?') && !self.buffer.peek(b'=') {
             result = Self::tFID;
             self.tokadd(&c);
         } else if c == '='
             && self.is_lex_state_some(EXPR_FNAME)
-            && (!self.buffer.peek('~')
-                && !self.buffer.peek('>')
-                && (!self.buffer.peek('=') || (self.buffer.peek_n('>', 1))))
+            && (!self.buffer.peek(b'~')
+                && !self.buffer.peek(b'>')
+                && (!self.buffer.peek(b'=') || (self.buffer.peek_n(b'>', 1))))
         {
             result = Self::tIDENTIFIER;
             self.tokadd(&c)
@@ -69,18 +67,18 @@ impl Lexer {
             if self.is_label_suffix(0) {
                 self.set_lex_state(EXPR_ARG | EXPR_LABELED);
                 self.nextc();
-                self.set_yyval_name(self.tok());
+                self.set_yyval_name();
                 return Self::tLABEL;
             }
         }
         if
         /* mb == ENC_CODERANGE_7BIT && */
         !self.is_lex_state_some(EXPR_DOT) {
-            if let Some(kw) = reserved_word(&self.tok()) {
+            if let Some(kw) = reserved_word(&self.tokenbuf) {
                 let state: LexState = self.state.clone();
                 if state.is_some(EXPR_FNAME) {
                     self.set_lex_state(EXPR_ENDFN);
-                    self.set_yyval_name(self.tok());
+                    self.set_yyval_name();
                     return kw.id.clone();
                 }
                 self.set_lex_state(kw.state);

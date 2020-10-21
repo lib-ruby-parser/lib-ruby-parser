@@ -45,8 +45,8 @@ struct InnerStringLiteral {
     // struct rb_strterm_literal_struct
     pub(crate) nest: usize,
     pub(crate) func: usize,
-    pub(crate) paren: Option<char>,
-    pub(crate) term: char,
+    pub(crate) paren: Option<u8>,
+    pub(crate) term: u8,
     pub(crate) heredoc_end: Option<HeredocEnd>,
 }
 
@@ -59,8 +59,8 @@ impl StringLiteral {
     pub(crate) fn new(
         nest: usize,
         func: usize,
-        paren: Option<char>,
-        term: char,
+        paren: Option<u8>,
+        term: u8,
         heredoc_end: Option<HeredocEnd>,
     ) -> Self {
         Self {
@@ -80,10 +80,10 @@ impl StringLiteral {
     pub(crate) fn func(&self) -> usize {
         self.inner.borrow().func
     }
-    pub(crate) fn paren(&self) -> Option<char> {
+    pub(crate) fn paren(&self) -> Option<u8> {
         self.inner.borrow().paren
     }
-    pub(crate) fn term(&self) -> char {
+    pub(crate) fn term(&self) -> u8 {
         self.inner.borrow().term
     }
 
@@ -94,11 +94,11 @@ impl StringLiteral {
         self.inner.borrow_mut().func = func;
     }
     #[allow(dead_code)]
-    pub(crate) fn set_paren(&self, paren: Option<char>) {
+    pub(crate) fn set_paren(&self, paren: Option<u8>) {
         self.inner.borrow_mut().paren = paren;
     }
     #[allow(dead_code)]
-    pub(crate) fn set_term(&self, term: char) {
+    pub(crate) fn set_term(&self, term: u8) {
         self.inner.borrow_mut().term = term;
     }
 

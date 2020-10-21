@@ -1,4 +1,4 @@
-use crate::lex_char::*;
+use crate::maybe_byte::*;
 use crate::source::SourceLine;
 use crate::source::{decode_input, InputError};
 use std::convert::TryFrom;
@@ -6,7 +6,7 @@ use std::convert::TryFrom;
 #[derive(Debug, Clone, Default)]
 pub struct Buffer {
     pub name: String,
-    pub input: Vec<char>,
+    pub input: Vec<u8>,
     pub input_s: String,
     pub encoding: String,
 
@@ -48,14 +48,14 @@ impl Buffer {
         known_encoding: Option<String>,
     ) -> Result<Self, InputError> {
         let (input_s, encoding) = decode_input(&bytes, known_encoding)?;
-        let input = input_s.chars().collect::<Vec<_>>();
+        let input = input_s.bytes().collect::<Vec<_>>();
 
         let mut line = SourceLine { start: 0, end: 0 };
         let mut lines: Vec<SourceLine> = vec![];
 
         for (idx, c) in input.iter().enumerate() {
             line.end = idx + 1;
-            if *c == '\n' {
+            if *c == b'\n' {
                 lines.push(line);
                 line = SourceLine {
                     start: idx + 1,
@@ -78,25 +78,25 @@ impl Buffer {
         })
     }
 
-    pub(crate) fn nextc(&mut self) -> LexChar {
+    pub(crate) fn nextc(&mut self) -> MaybeByte {
         if self.pcur == self.pend || self.eofp || self.nextline != 0 {
             let n = self.nextline();
             if self.debug {
                 println!("nextline = {:?}", n);
             }
             if n.is_err() {
-                return LexChar::EOF;
+                return MaybeByte::EndOfInput;
             }
         }
         let mut c = self.input[self.pcur];
         self.pcur += 1;
-        if c == '\r' {
+        if c == b'\r' {
             c = self.parser_cr(&mut c);
         }
         if self.debug {
             println!("nextc = {:?}", c);
         }
-        return LexChar::new(c);
+        return MaybeByte::new(c);
     }
 
     pub(crate) fn goto_eol(&mut self) {
@@ -111,10 +111,10 @@ impl Buffer {
         self.pcur + n >= self.pend
     }
 
-    pub(crate) fn peek(&self, c: char) -> bool {
+    pub(crate) fn peek(&self, c: u8) -> bool {
         self.peek_n(c, 0)
     }
-    pub(crate) fn peek_n(&self, c: char, n: usize) -> bool {
+    pub(crate) fn peek_n(&self, c: u8, n: usize) -> bool {
         !self.is_eol_n(n) && c == self.input[self.pcur + n]
     }
 
@@ -127,7 +127,7 @@ impl Buffer {
                 return Err(());
             }
 
-            if self.pend > self.pbeg && self.input[self.pend - 1] != '\n' {
+            if self.pend > self.pbeg && self.input[self.pend - 1] != b'\n' {
                 self.eofp = true;
                 self.goto_eol();
                 return Err(());
@@ -186,19 +186,19 @@ impl Buffer {
         self.ptok = ptok;
     }
 
-    pub(crate) fn parser_cr(&mut self, c: &mut char) -> char {
-        if self.peek('\n') {
+    pub(crate) fn parser_cr(&mut self, c: &mut u8) -> u8 {
+        if self.peek(b'\n') {
             self.pcur += 1;
-            *c = '\n';
+            *c = b'\n';
         }
         *c
     }
 
-    pub(crate) fn char_at(&self, idx: usize) -> LexChar {
+    pub(crate) fn byte_at(&self, idx: usize) -> MaybeByte {
         if let Some(c) = self.input.get(idx) {
-            LexChar::new(*c)
+            MaybeByte::new(*c)
         } else {
-            LexChar::EOF
+            MaybeByte::EndOfInput
         }
     }
 
@@ -223,7 +223,7 @@ impl Buffer {
         if self.pcur + len == self.pend {
             return true;
         }
-        let c = self.char_at(self.pcur + len);
+        let c = self.byte_at(self.pcur + len);
         if c.is_space() {
             return true;
         }
@@ -239,7 +239,7 @@ impl Buffer {
             let c = self.input.get(ptr);
             ptr += 1;
             if let Some(c) = c {
-                let eol = *c == '\n' || *c == '#';
+                let eol = *c == b'\n' || *c == b'#';
                 if eol || !c.is_ascii_whitespace() {
                     return eol;
                 }
@@ -269,14 +269,14 @@ impl Buffer {
             if n < 0 {
                 return false;
             }
-            let last_char = self.input.get(ptr + len);
-            let char_after_last_char = self.input.get(ptr + len + 1);
+            let last_char = self.byte_at(ptr + len);
+            let char_after_last_char = self.byte_at(ptr + len + 1);
 
-            if n > 0 && last_char != Some(&'\n') {
-                if last_char != Some(&'\r') {
+            if n > 0 && last_char != b'\n' {
+                if last_char != b'\r' {
                     return false;
                 }
-                if n <= 1 || char_after_last_char != Some(&'\n') {
+                if n <= 1 || char_after_last_char != b'\n' {
                     return false;
                 }
             }
@@ -297,7 +297,7 @@ impl Buffer {
         self.pbeg = self.lines[self.lastline].start;
         self.pend = self.pbeg + self.lines[self.lastline].len();
         self.pcur = self.pend;
-        self.pushback(&LexChar::new(1));
+        self.pushback(&MaybeByte::new(1));
         self.set_ptok(self.pcur);
     }
 
@@ -318,15 +318,15 @@ pub trait Pushback<T> {
     fn pushback(&mut self, c: &T);
 }
 
-impl Pushback<Option<char>> for Buffer {
-    fn pushback(&mut self, c: &Option<char>) {
+impl Pushback<Option<u8>> for Buffer {
+    fn pushback(&mut self, c: &Option<u8>) {
         if c.is_none() {
             return;
         };
         self.pcur -= 1;
         if self.pcur > self.pbeg
-            && self.input[self.pcur] == '\n'
-            && self.input[self.pcur - 1] == '\r'
+            && self.byte_at(self.pcur) == b'\n'
+            && self.byte_at(self.pcur - 1) == b'\r'
         {
             self.pcur -= 1;
         }
@@ -336,14 +336,14 @@ impl Pushback<Option<char>> for Buffer {
     }
 }
 
-impl Pushback<LexChar> for Buffer {
-    fn pushback(&mut self, c: &LexChar) {
+impl Pushback<MaybeByte> for Buffer {
+    fn pushback(&mut self, c: &MaybeByte) {
         self.pushback(&c.to_option())
     }
 }
 
 impl Pushback<char> for Buffer {
-    fn pushback(&mut self, c: &char) {
-        self.pushback(&Some(*c))
+    fn pushback(&mut self, _c: &char) {
+        self.pushback(&Some(1))
     }
 }

@@ -26,10 +26,7 @@ impl ParseError {
         let (start_loc, end_loc) = self.range.to_locs(&buffer)?;
         debug_assert!(start_loc.line == end_loc.line, "multi-line error");
         let line_no = start_loc.line;
-        let line = buffer.lines[line_no - 1]
-            .source(&buffer.input)
-            .iter()
-            .collect::<String>();
+        let line = buffer.lines[line_no - 1].source(&buffer.input);
 
         Some(format!(
             "{:#?}: {:#?}: {}\n{}:{}: {}\n{}:{}: {}",

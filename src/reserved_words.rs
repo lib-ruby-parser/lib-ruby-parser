@@ -262,13 +262,8 @@ lazy_static! {
 }
 
 pub(crate) fn reserved_word(tok: &TokenBuf) -> Option<&'static ReservedWord> {
-    let tok = match tok {
-        TokenBuf::String(s) => s,
-        TokenBuf::Bytes(_) => return None,
-    };
-
     for res in RESERVED_WORDS.iter() {
-        if res.name == tok {
+        if tok == res.name {
             return Some(res);
         }
     }

@@ -31,7 +31,7 @@ pub enum InputError {
 
 impl fmt::Display for InputError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "{:?}", self)
     }
 }
 
@@ -74,17 +74,17 @@ fn recognize_encoding(source: &Vec<u8>) -> Result<String, InputError> {
         .ok_or(InputError::UnableToRecognizeEncoding)
 }
 
-fn find_encoding(enc: &str) -> Result<encoding::EncodingRef, InputError> {
-    match &enc.to_uppercase()[..] {
-        "UTF-8" => Ok(encoding::all::UTF_8),
-        "KOI8-R" => Ok(encoding::all::KOI8_R),
-        _ => Err(InputError::UnsupportdEncoding(enc.to_owned())),
-    }
-}
-
 fn decode(input: &Vec<u8>, enc: &str) -> Result<String, InputError> {
-    find_encoding(enc)?
-        .decode(input, encoding::DecoderTrap::Ignore)
+    let enc: encoding::EncodingRef = match &enc.to_uppercase()[..] {
+        "ASCII-8BIT" | "BINARY" => {
+            return Ok(String::from_utf8_lossy(input).into_owned());
+        }
+        "UTF-8" => encoding::all::UTF_8,
+        "KOI8-R" => encoding::all::KOI8_R,
+        _ => return Err(InputError::UnsupportdEncoding(enc.to_owned())),
+    };
+
+    enc.decode(input, encoding::DecoderTrap::Ignore)
         .map_err(|err| InputError::EncodingError(err.into_owned()))
 }
 
