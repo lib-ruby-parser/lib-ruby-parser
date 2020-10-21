@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::nodes::InnerNode;
 use crate::nodes::*;
 use crate::source::Range;
@@ -271,12 +273,12 @@ impl Node {
         self.inner().str_type()
     }
 
-    pub fn empty_begin(loc: &Loc) -> Self {
+    pub fn dummy_node(loc: &Loc) -> Self {
         Node::Begin(Begin {
             statements: vec![],
             begin_l: None,
             end_l: None,
-            expression_l: Range::new(loc.begin, loc.end),
+            expression_l: Range::new(loc.begin, loc.end, Rc::new(vec![])),
         })
     }
 }

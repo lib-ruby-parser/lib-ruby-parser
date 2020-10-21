@@ -2,11 +2,12 @@ use crate::maybe_byte::*;
 use crate::source::SourceLine;
 use crate::source::{decode_input, InputError};
 use std::convert::TryFrom;
+use std::rc::Rc;
 
 #[derive(Debug, Clone, Default)]
 pub struct Buffer {
     pub name: String,
-    pub input: Vec<u8>,
+    pub input: Rc<Vec<u8>>,
     pub input_s: String,
     pub encoding: String,
 
@@ -71,7 +72,7 @@ impl Buffer {
         Ok(Self {
             name: name.to_owned(),
             encoding,
-            input,
+            input: Rc::new(input),
             input_s,
             lines,
             ..Self::default()

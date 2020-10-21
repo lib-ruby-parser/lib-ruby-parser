@@ -22,7 +22,6 @@ pub use parser::{Loc, Parser, SymbolKind, Token, TokenValue};
 
 mod builder;
 pub use builder::Builder;
-pub mod map_builder;
 
 mod current_arg_stack;
 pub(crate) use current_arg_stack::CurrentArgStack;

@@ -21,12 +21,14 @@
 }
 
 %code use {
+    use std::rc::Rc;
+
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
     use crate::lex_states::*;
     use crate::{Context as ParserContext, ContextItem};
     use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel, ArgsType};
     use crate::str_term::StrTerm;
-    use crate::map_builder::value;
+    use crate::builder::value;
     use crate::nodes::{Lvar, Mlhs};
     use crate::parse_value::ParseValue as Value;
     use crate::parse_value::*;
@@ -777,7 +779,7 @@
                 | backref tOP_ASGN command_rhs
                     {
                         // TODO: backref_error
-                        $$ = Value::Node( Node::empty_begin(&@$) );
+                        $$ = Value::Node( Node::dummy_node(&@$) );
                     }
                 ;
 
@@ -5705,6 +5707,7 @@ impl Parser {
         let max_numparam_stack = MaxNumparamStack::new();
         let pattern_variables = VariablesStack::new();
         let pattern_hash_keys = VariablesStack::new();
+        let source_buffer = Rc::clone(&lexer.buffer.input);
 
         Self {
             yy_error_verbose: true,
@@ -5719,6 +5722,7 @@ impl Parser {
                 max_numparam_stack.clone(),
                 pattern_variables.clone(),
                 pattern_hash_keys.clone(),
+                source_buffer,
             ),
             context,
             current_arg_stack,

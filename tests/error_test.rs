@@ -1,4 +1,5 @@
 use ruby_parser::{source::buffer::*, source::Range, ErrorLevel, ErrorMessage, ParseError};
+use std::rc::Rc;
 
 #[test]
 fn it_renders() {
@@ -10,7 +11,7 @@ fn it_renders() {
         ErrorMessage::CvarName {
             name: "@@foo".to_owned(),
         },
-        Range::new(8, 12),
+        Range::new(8, 12, Rc::clone(&buffer.input)),
     );
 
     assert_eq!(

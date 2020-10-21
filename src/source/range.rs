@@ -1,17 +1,23 @@
 use crate::source::buffer::*;
 use crate::source::FileLoc;
 use std::convert::TryInto;
+use std::rc::Rc;
 
 #[derive(Clone, PartialEq)]
 pub struct Range {
     begin_pos: usize,
     end_pos: usize,
+    source: Rc<Vec<u8>>,
 }
 
 impl Range {
-    pub fn new(begin_pos: usize, end_pos: usize) -> Self {
+    pub fn new(begin_pos: usize, end_pos: usize, source: Rc<Vec<u8>>) -> Self {
         debug_assert!(end_pos >= begin_pos);
-        Self { begin_pos, end_pos }
+        Self {
+            begin_pos,
+            end_pos,
+            source,
+        }
     }
 
     pub fn begin(&self) -> Self {
@@ -35,23 +41,23 @@ impl Range {
     }
 
     pub fn with_begin(&self, begin_pos: usize) -> Self {
-        Self::new(begin_pos, self.end_pos)
+        Self::new(begin_pos, self.end_pos, Rc::clone(&self.source))
     }
 
     pub fn with_end(&self, end_pos: usize) -> Self {
-        Self::new(self.begin_pos, end_pos)
+        Self::new(self.begin_pos, end_pos, Rc::clone(&self.source))
     }
 
     pub fn adjust_begin(&self, d: i32) -> Self {
         let begin_pos: i32 = self.begin_pos.try_into().unwrap();
         let begin_pos: usize = (begin_pos + d).try_into().unwrap();
-        Self::new(begin_pos, self.end_pos)
+        Self::new(begin_pos, self.end_pos, Rc::clone(&self.source))
     }
 
     pub fn adjust_end(&self, d: i32) -> Self {
         let end_pos: i32 = self.end_pos.try_into().unwrap();
         let end_pos: usize = (end_pos + d).try_into().unwrap();
-        Self::new(self.begin_pos, end_pos)
+        Self::new(self.begin_pos, end_pos, Rc::clone(&self.source))
     }
 
     pub fn resize(&self, new_size: usize) -> Self {
@@ -62,6 +68,7 @@ impl Range {
         Self::new(
             std::cmp::min(self.begin_pos, other.begin_pos),
             std::cmp::max(self.end_pos, other.end_pos),
+            Rc::clone(&self.source),
         )
     }
 

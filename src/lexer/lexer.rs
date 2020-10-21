@@ -33,16 +33,8 @@ pub struct Lexer {
 
     pub(crate) tokenbuf: TokenBuf,
 
-    // enc: Encoding,
-    // token_info: TokenInfo,
-    // case_labels: VALUE,
-    // compile_option: VALUE,
-
-    // debug_buffer: VALUE,
-    // debug_output: VALUE,
     cur_arg: String,
 
-    // ast: AST,
     node_id: usize,
 
     max_numparam: usize,
