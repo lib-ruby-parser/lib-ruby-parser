@@ -51,6 +51,7 @@ fn lex_as_ripper(filepath: &str) -> Result<String, String> {
             "tNTH_REF" => "tBACK_REF",
             "tLPAREN_ARG" => "tLPAREN",
             "tLBRACE_ARG" => "tLBRACE",
+            "tUPLUS" => "tPLUS",
             other => other,
         }
         .to_owned();

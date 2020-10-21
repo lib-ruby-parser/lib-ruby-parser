@@ -1031,7 +1031,11 @@ impl Lexer {
                 {
                     self.lval_end = Some(self.buffer.pend - 1);
                     heredoc_end_start = self.buffer.pbeg;
-                    heredoc_end_end = heredoc_end_start;
+                    let mut heredoc_end_starts_at = heredoc_end_start;
+                    while self.buffer.byte_at(heredoc_end_starts_at) == b' ' {
+                        heredoc_end_starts_at += 1;
+                    }
+                    heredoc_end_end = heredoc_end_starts_at;
                     loop {
                         let c = self.buffer.byte_at(heredoc_end_end);
                         if c.is_eof() || c == '\n' {
@@ -1041,7 +1045,7 @@ impl Lexer {
                     }
                     heredoc_end_value = self
                         .buffer
-                        .substr_at(self.buffer.pcur - 1, heredoc_end_end)
+                        .substr_at(heredoc_end_starts_at, heredoc_end_end)
                         .unwrap()
                         .to_owned();
                     break;
@@ -1100,7 +1104,11 @@ impl Lexer {
                     // self.lval_start = Some(self.buffer.pcur + 1);
 
                     heredoc_end_start = self.buffer.pbeg;
-                    heredoc_end_end = heredoc_end_start;
+                    let mut heredoc_end_starts_at = heredoc_end_start;
+                    while self.buffer.byte_at(heredoc_end_starts_at) == b' ' {
+                        heredoc_end_starts_at += 1;
+                    }
+                    heredoc_end_end = heredoc_end_starts_at;
                     loop {
                         let c = self.buffer.byte_at(heredoc_end_end);
                         if c.is_eof() || c == '\n' {
@@ -1110,9 +1118,8 @@ impl Lexer {
                     }
                     heredoc_end_value = self
                         .buffer
-                        .substr_at(self.buffer.pcur - 1, heredoc_end_end)
+                        .substr_at(heredoc_end_starts_at, heredoc_end_end)
                         .unwrap()
-                        .trim()
                         .to_owned();
 
                     break;

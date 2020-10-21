@@ -6,7 +6,6 @@ pub(crate) enum MaybeByte {
 
 const SPACE: u8 = b' ';
 const TAB: u8 = b'\t';
-const VTAB: u8 = b'\x0b';
 const PUNCT: [u8; 21] = [
     b'!', b'"', b'$', b'&', b'\'', b'*', b'+', b',', b'.', b'/', b'0', b':', b';', b'<', b'=',
     b'>', b'?', b'@', b'\\', b'`', b'~',

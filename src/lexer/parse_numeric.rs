@@ -38,6 +38,10 @@ impl Lexer {
                                 break;
                             }
                             nondigit = Some(c.clone());
+                            c = self.nextc();
+                            if c.is_eof() {
+                                break;
+                            }
                             continue;
                         }
                         if !c.is_hexdigit() {

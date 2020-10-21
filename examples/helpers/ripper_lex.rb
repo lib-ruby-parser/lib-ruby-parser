@@ -119,6 +119,15 @@ ops = {
 
 strs = []
 
+def eval_as(start_t, tok_value, end_t, error_message)
+    begin
+        eval(start_t + tok_value.encode('utf-8') + end_t)
+    rescue SyntaxError, EncodingError
+        $stderr.puts("Can't dump #{error_message} part #{tok_value.inspect}")
+        nil
+    end
+end
+
 $stderr.puts ARGV.first
 Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
     tok_name =
@@ -140,7 +149,7 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
             # :sym case, we need to pop :tSYMBEG
             strs.pop
         end
-    when :tSTRING_BEG, :tREGEXP_BEG, :tXSTRING_BEG, :tQWORDS_BEG, :tQSYMBOLS_BEG, :tSYMBEG, :tSYMBOLS_BEG
+    when :tSTRING_BEG, :tREGEXP_BEG, :tXSTRING_BEG, :tQWORDS_BEG, :tQSYMBOLS_BEG, :tSYMBEG, :tSYMBOLS_BEG, :tWORDS_BEG
         strs.push(tok_value)
     when :tSTRING_END, :tREGEXP_END
         strs.pop
@@ -148,30 +157,22 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
         case strs.last
         when /\A<<-?'\w+'\z/ # no escaping
         when '"', '`', /\A%W/, /\A%I/, ':"',
-            '%<', '%{', '%(', '%[', '%!', '%@', '%#', '%%', '%^', '%&', '%*', '%-', '%_', '%=', '%+', '%~', '%:', '%;', '%\\', '%"', '%|', '%?', '%/', '%,', '%.', '%\'', '%`', '%$'
-            begin
-                tok_value = eval('"' + tok_value.encode('utf-8') + '"')
-            rescue SyntaxError, EncodingError
-                $stderr.puts("Can't dump squote str part #{tok_value.inspect}")
-                puts "<<UNKNOWN>>"
-                next
-            end
-        when "'", /\A%w/, /\A%i/, ":'", '%q('
-            begin
-                tok_value = eval("'" + tok_value.encode('utf-8') + "'")
-            rescue SyntaxError, EncodingError
-                $stderr.puts("Can't dump dquote str part #{tok_value.inspect}")
-                puts "<<UNKNOWN>>"
-                next
-            end
+            '%<', '%{', '%(', '%[', '%!', '%@', '%#', '%%', '%^', '%&', '%*', '%-', '%_', '%=', '%+', '%~', '%:', '%;', '%\\', '%"', '%|', '%?', '%/', '%,', '%.', '%\'', '%`', '%$',
+            '%x('
+            tok_value = eval_as('"', tok_value, '"', "dquote str")
+            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
+        when "'", /\A%i/, ":'", '%q('
+            tok_value = eval_as("'", tok_value, "'", "squote str")
+            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
+        when /\A%w/
+            tok_value = eval_as("%w(", tok_value, ")", "%w")
+            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
+            raise "bug" if tok_value.length != 1
+            tok_value = tok_value[0]
         when "/", /\A%r/
-            begin
-                tok_value = eval("/" + tok_value.encode('utf-8') + "/").source
-            rescue SyntaxError, EncodingError
-                $stderr.puts("Can't dump regex part #{tok_value.inspect}")
-                puts "<<UNKNOWN>>"
-                next
-            end
+            tok_value = eval_as('/', tok_value, '/', "rexex")
+            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
+            tok_value = tok_value.source
         when /\A<</ # ignore
         when /%r\[/ # ignore
         else
