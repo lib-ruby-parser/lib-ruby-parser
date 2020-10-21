@@ -2,7 +2,7 @@ use ruby_parser::traverse::Find;
 use ruby_parser::Parser;
 
 fn find(src: &str, pattern: Vec<&str>) -> Option<String> {
-    let mut parser = Parser::new(&src.as_bytes().to_vec()).ok()?;
+    let mut parser = Parser::new(&src.as_bytes().to_vec(), "(find_test)").ok()?;
     parser.set_debug(false);
 
     let pattern = pattern
@@ -11,7 +11,7 @@ fn find(src: &str, pattern: Vec<&str>) -> Option<String> {
         .collect::<Vec<_>>();
     let ast = parser.do_parse()?;
     let node = Find::run(&pattern, &ast)?;
-    node.expression().source(&parser.yylexer.buffer)
+    node.expression().source()
 }
 
 #[test]

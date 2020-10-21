@@ -39,7 +39,7 @@ fn rpad2<T: Sized + std::fmt::Debug>(value: &T, total_width: usize) -> String {
     format!("{:width$}", format!("{:?}, ", value), width = total_width)
 }
 
-fn main() -> Result<(), ()> {
+fn main() -> Result<(), String> {
     let args: Args = Args::parse();
     let callback: &dyn Fn(&Vec<Token>) = if args.quiet {
         &|_tokens: &Vec<Token>| {}

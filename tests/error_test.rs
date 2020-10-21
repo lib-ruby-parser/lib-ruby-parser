@@ -15,7 +15,7 @@ fn it_renders() {
     );
 
     assert_eq!(
-        error.render(&buffer).unwrap(),
+        error.render().unwrap(),
         vec![
             "(test_render):2:1: warning: `@@foo' is not allowed as a class variable name",
             "(test_render):2: very long line 2",

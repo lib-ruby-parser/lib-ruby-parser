@@ -4,7 +4,7 @@ use ruby_parser::Node;
 fn print_loc(name: &str, loc: &Range) {
     println!(
         "{}{} {}",
-        " ".repeat(loc.begin_pos()),
+        " ".repeat(loc.begin_pos),
         "~".repeat(loc.size()),
         name
     )

@@ -9,8 +9,8 @@ use crate::parser::TokenValue;
 // use crate::source::map::*;
 use crate::source::Range;
 use crate::{
-    Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node, StaticEnvironment, Token,
-    VariablesStack,
+    source::buffer::Input, Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node,
+    StaticEnvironment, Token, VariablesStack,
 };
 
 #[derive(Debug, PartialEq)]
@@ -63,7 +63,7 @@ pub struct Builder {
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
-    source: Rc<Vec<u8>>,
+    source: Rc<Input>,
 }
 
 impl Builder {
@@ -74,7 +74,7 @@ impl Builder {
         max_numparam_stack: MaxNumparamStack,
         pattern_variables: VariablesStack,
         pattern_hash_keys: VariablesStack,
-        source: Rc<Vec<u8>>,
+        source: Rc<Input>,
     ) -> Self {
         Self {
             static_env,
@@ -267,7 +267,7 @@ impl Builder {
     pub(crate) fn character(&self, char_t: Token) -> Node {
         let str_range = self.loc(&char_t);
 
-        let begin_l = Some(str_range.with_end(str_range.begin_pos() + 1));
+        let begin_l = Some(str_range.with_end(str_range.begin_pos + 1));
         let end_l = None;
         let expression_l = str_range;
 
@@ -513,7 +513,7 @@ impl Builder {
     pub(crate) fn pair_keyword(&self, key_t: Token, value_node: Node) -> Node {
         let key_range = self.loc(&key_t);
         let key_l = key_range.adjust_end(-1);
-        let colon_l = key_range.with_begin((key_range.end_pos() - 1).try_into().unwrap());
+        let colon_l = key_range.with_begin((key_range.end_pos - 1).try_into().unwrap());
         let expression_l = key_range.join(&value_node.expression());
 
         let key = Node::Sym(Sym {
@@ -540,11 +540,11 @@ impl Builder {
         let end_l = self.loc(&end_t);
 
         let quote_loc = Loc {
-            begin: end_l.end_pos() - 2,
-            end: end_l.end_pos() - 1,
+            begin: end_l.end_pos - 2,
+            end: end_l.end_pos - 1,
         };
 
-        let colon_l = end_l.with_begin(end_l.end_pos() - 1);
+        let colon_l = end_l.with_begin(end_l.end_pos - 1);
 
         let end_t: Token = Token {
             token_type: end_t.token_type,
@@ -2402,7 +2402,6 @@ impl Builder {
                 .unwrap_or_else(|| self.loc(&ensure_t));
 
             let expression_l = begin_l.join(&end_l);
-            let else_l = self.maybe_loc(&None);
 
             result = Some(Node::Ensure(Ensure {
                 body: result.map(|node| Box::new(node)),
@@ -3071,7 +3070,7 @@ impl Builder {
             && self.max_numparam_stack.has_numparams();
 
         if assigning_to_numparam {
-            loc.begin_pos();
+            loc.begin_pos;
             // diagnostic :error, :cant_assign_to_numparam, { :name => name }, loc
         }
     }
@@ -3098,7 +3097,7 @@ impl Builder {
         {
             // OK
         } else {
-            loc.begin_pos();
+            loc.begin_pos;
             // diagnostic :error, :lvar_name, { name: name }, loc
         }
     }
@@ -3109,7 +3108,7 @@ impl Builder {
         }
 
         if self.pattern_variables.is_declared(name) {
-            loc.begin_pos();
+            loc.begin_pos;
             // diagnostic :error, :duplicate_variable_name, { name: name.to_s }, loc
         }
 
@@ -3118,7 +3117,7 @@ impl Builder {
 
     pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: &Range) {
         if self.pattern_hash_keys.is_declared(name) {
-            loc.begin_pos();
+            loc.begin_pos;
             // diagnostic :error, :duplicate_pattern_key, { name: name.to_s }, loc
         }
 

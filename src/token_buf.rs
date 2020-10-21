@@ -6,16 +6,20 @@ pub(crate) struct TokenBuf {
 }
 
 impl TokenBuf {
-    pub fn new(bytes: Vec<u8>) -> Self {
-        Self { bytes }
+    pub fn new(bytes: &[u8]) -> Self {
+        Self {
+            bytes: bytes.to_owned(),
+        }
     }
 
     pub(crate) fn push(&mut self, byte: u8) {
         self.bytes.push(byte);
     }
 
-    pub(crate) fn append(&mut self, part: &str) {
-        self.bytes.append(&mut part.to_string().into_bytes())
+    pub(crate) fn append(&mut self, bytes: &[u8]) {
+        for byte in bytes {
+            self.push(*byte)
+        }
     }
 
     pub(crate) fn prepend(&mut self, part: &str) {

@@ -64,12 +64,16 @@ impl Lexer {
     pub(crate) const LF_CHAR: u8 = 0x0c;
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
-    pub fn new(bytes: &Vec<u8>, known_encoding: Option<String>) -> Result<Self, InputError> {
+    pub fn new(
+        bytes: &Vec<u8>,
+        name: &str,
+        known_encoding: Option<String>,
+    ) -> Result<Self, InputError> {
         Ok(Self {
             cond_stack: StackState::new("cond"),
             cmdarg_stack: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
-            buffer: Buffer::new("(eval)", bytes.to_owned(), known_encoding)?,
+            buffer: Buffer::new(name, bytes.to_owned(), known_encoding)?,
             context: Context::new(),
             ..Self::default()
         })
@@ -111,7 +115,7 @@ impl Lexer {
             .clone()
             .or_else(||
                 // take raw value if nothing was manually captured
-                self.buffer.substr_at(begin, end).map(|s| TokenValue::String(s.to_owned())))
+                self.buffer.substr_at(begin, end).map(|s| TokenValue::String(String::from_utf8(s.to_vec()).unwrap())))
             .unwrap_or(TokenValue::String("".to_owned()));
 
         // match self.strterm {
@@ -1006,7 +1010,7 @@ impl Lexer {
                 }
 
                 Some(b'_') => {
-                    if self.buffer.was_bol() && self.buffer.is_whole_match("__END__", 0) {
+                    if self.buffer.was_bol() && self.buffer.is_whole_match(b"__END__", 0) {
                         self.buffer.eofp = true;
                         return Self::END_OF_INPUT;
                     }
@@ -1606,9 +1610,9 @@ impl Lexer {
     }
 
     pub(crate) fn is_identchar(&self, begin: usize, _end: usize) -> bool {
-        self.buffer.input[begin].is_ascii_alphanumeric()
-            || self.buffer.input[begin] == b'_'
-            || !self.buffer.input[begin].is_ascii()
+        self.buffer.input.bytes[begin].is_ascii_alphanumeric()
+            || self.buffer.input.bytes[begin] == b'_'
+            || !self.buffer.input.bytes[begin].is_ascii()
     }
 
     pub(crate) fn literal_flush(&mut self, ptok: usize) {

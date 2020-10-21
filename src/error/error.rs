@@ -1,4 +1,3 @@
-use crate::source::buffer::*;
 use crate::source::Range;
 use crate::{ErrorLevel, ErrorMessage};
 
@@ -22,23 +21,28 @@ impl ParseError {
         self.message.render()
     }
 
-    pub fn render(&self, buffer: &Buffer) -> Option<String> {
-        let (start_loc, end_loc) = self.range.to_locs(&buffer)?;
-        debug_assert!(start_loc.line == end_loc.line, "multi-line error");
-        let line_no = start_loc.line;
-        let line = buffer.lines[line_no - 1].source(&buffer.input);
+    pub fn render(&self) -> Option<String> {
+        let (line_no, line_loc) = self.range.expand_to_line()?;
+        println!("{}, {:?}", line_no, line_loc);
+        let line = line_loc.source()?;
 
-        Some(format!(
-            "{:#?}: {:#?}: {}\n{}:{}: {}\n{}:{}: {}",
-            start_loc,
-            self.level,
-            self.message.render(),
-            buffer.name,
-            line_no,
-            line,
-            buffer.name,
-            line_no,
-            "^~~"
-        ))
+        let filename = &self.range.input.name;
+        let (start_col, _) = self.range.begin_line_col()?;
+
+        let prefix = format!("{}:{}", filename, line_no + 1);
+
+        Some(
+            format!(
+                "{prefix}:{start_col}: {level:?}: {message}\n{prefix}: {line}\n{prefix}: {highlight}",
+                prefix = prefix,
+                start_col = start_col,
+                level = self.level,
+                message = self.message.render(),
+                line = line,
+                highlight = "^~~"
+            )
+            .trim()
+            .to_owned(),
+        )
     }
 }

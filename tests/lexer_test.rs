@@ -97,7 +97,12 @@ fn lex_state(state: &str) -> i32 {
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = TestCase::new(fixture_path);
-        let mut lexer = Lexer::new(&test_case.input.as_bytes().to_vec(), None).unwrap();
+        let mut lexer = Lexer::new(
+            &test_case.input.as_bytes().to_vec(),
+            &format!("(test {})", fixture_path),
+            None,
+        )
+        .unwrap();
         for var in test_case.vars {
             lexer.static_env.declare(&var);
         }

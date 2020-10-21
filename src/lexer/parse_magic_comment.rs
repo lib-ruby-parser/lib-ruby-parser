@@ -65,7 +65,7 @@ impl Lexer {
                     }
                 }
             }
-            if self.buffer.substr_at(str_ - 6, str_) == Some("coding") {
+            if self.buffer.substr_at(str_ - 6, str_) == Some(b"coding") {
                 break;
             }
         }
@@ -286,7 +286,8 @@ impl Lexer {
             }
 
             n = end - beg;
-            name = self.buffer.substr_at(beg, beg + n).unwrap();
+            name =
+                String::from_utf8(self.buffer.substr_at(beg, beg + n).unwrap().to_vec()).unwrap();
             let name = name.replace("-", "_");
             for known in MAGIC_COMMENTS.iter() {
                 if &&name == known {

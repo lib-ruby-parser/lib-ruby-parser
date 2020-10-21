@@ -41,7 +41,7 @@ fn print_full(_str: &str, node: &Node) {
     println!("{:#?}", node)
 }
 
-fn main() -> Result<(), ()> {
+fn main() -> Result<(), String> {
     let args: Args = Args::parse();
     let callback: &dyn Fn(&str, &Node) = if args.quiet {
         &print_quite

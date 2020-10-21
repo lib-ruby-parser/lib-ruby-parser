@@ -363,23 +363,17 @@ impl Loc {
         match Find::run(&self.pattern, root) {
             Some(node) => match self.name.get(&node) {
                 Some(range) => {
-                    if range.begin_pos() != self.begin {
+                    if range.begin_pos != self.begin {
                         return Err(format!(
                             "begin of {:?} - {:?} doesn't match, expected {}, got {}",
-                            self.pattern,
-                            self.name,
-                            self.begin,
-                            range.begin_pos()
+                            self.pattern, self.name, self.begin, range.begin_pos
                         ));
                     }
 
-                    if range.end_pos() != self.end {
+                    if range.end_pos != self.end {
                         return Err(format!(
                             "end of {:?} - {:?} doesn't match, expected {}, got {}",
-                            self.pattern,
-                            self.name,
-                            self.end,
-                            range.end_pos()
+                            self.pattern, self.name, self.end, range.end_pos
                         ));
                     }
 

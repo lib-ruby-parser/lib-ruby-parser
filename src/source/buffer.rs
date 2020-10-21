@@ -4,14 +4,49 @@ use crate::source::{decode_input, InputError};
 use std::convert::TryFrom;
 use std::rc::Rc;
 
+#[derive(Debug, Default)]
+pub struct Input {
+    pub name: String,
+    pub(crate) bytes: Vec<u8>,
+    pub(crate) lines: Vec<SourceLine>,
+}
+
+impl Input {
+    pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
+        if let Some(c) = self.bytes.get(idx) {
+            Some(*c)
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&[u8]> {
+        if start <= end && end <= self.bytes.len() {
+            Some(&self.bytes[start..end])
+        } else {
+            None
+        }
+    }
+
+    pub fn line_col_for_pos(&self, mut pos: usize) -> Option<(usize, usize)> {
+        for (lineno, line) in self.lines.iter().enumerate() {
+            if pos >= line.len() {
+                pos -= line.len()
+            } else {
+                return Some((lineno, pos));
+            }
+        }
+
+        None
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct Buffer {
-    pub name: String,
-    pub input: Rc<Vec<u8>>,
+    pub input: Rc<Input>,
     pub input_s: String,
     pub encoding: String,
 
-    pub(crate) lines: Vec<SourceLine>,
     pub(crate) line_count: usize,
     pub(crate) prevline: Option<usize>, // index
     pub(crate) lastline: usize,         // index
@@ -49,12 +84,12 @@ impl Buffer {
         known_encoding: Option<String>,
     ) -> Result<Self, InputError> {
         let (input_s, encoding) = decode_input(&bytes, known_encoding)?;
-        let input = input_s.bytes().collect::<Vec<_>>();
+        let bytes = input_s.bytes().collect::<Vec<_>>();
 
         let mut line = SourceLine { start: 0, end: 0 };
         let mut lines: Vec<SourceLine> = vec![];
 
-        for (idx, c) in input.iter().enumerate() {
+        for (idx, c) in bytes.iter().enumerate() {
             line.end = idx + 1;
             if *c == b'\n' {
                 lines.push(line);
@@ -64,17 +99,21 @@ impl Buffer {
                 }
             }
         }
-        line.end = input.len();
+        line.end = bytes.len();
         if !line.is_empty() {
             lines.push(line);
         }
 
-        Ok(Self {
+        let input = Input {
             name: name.to_owned(),
+            bytes,
+            lines,
+        };
+
+        Ok(Self {
             encoding,
             input: Rc::new(input),
             input_s,
-            lines,
             ..Self::default()
         })
     }
@@ -89,7 +128,7 @@ impl Buffer {
                 return MaybeByte::EndOfInput;
             }
         }
-        let mut c = self.input[self.pcur];
+        let mut c = self.input.bytes[self.pcur];
         self.pcur += 1;
         if c == b'\r' {
             c = self.parser_cr(&mut c);
@@ -116,7 +155,7 @@ impl Buffer {
         self.peek_n(c, 0)
     }
     pub(crate) fn peek_n(&self, c: u8, n: usize) -> bool {
-        !self.is_eol_n(n) && c == self.input[self.pcur + n]
+        !self.is_eol_n(n) && c == self.input.bytes[self.pcur + n]
     }
 
     pub(crate) fn nextline(&mut self) -> Result<(), ()> {
@@ -128,7 +167,7 @@ impl Buffer {
                 return Err(());
             }
 
-            if self.pend > self.pbeg && self.input[self.pend - 1] != b'\n' {
+            if self.pend > self.pbeg && self.input.bytes[self.pend - 1] != b'\n' {
                 self.eofp = true;
                 self.goto_eol();
                 return Err(());
@@ -147,7 +186,7 @@ impl Buffer {
         }
         // TODO: after here-document without terminator
 
-        let line = &self.lines[v];
+        let line = &self.input.lines[v];
 
         if self.heredoc_end > 0 {
             self.ruby_sourceline = self.heredoc_end;
@@ -165,7 +204,7 @@ impl Buffer {
     }
 
     pub(crate) fn getline(&mut self) -> Result<usize, ()> {
-        if self.line_count < self.lines.len() {
+        if self.line_count < self.input.lines.len() {
             self.line_count += 1;
             if self.debug {
                 println!("line_count = {}", self.line_count)
@@ -196,19 +235,14 @@ impl Buffer {
     }
 
     pub(crate) fn byte_at(&self, idx: usize) -> MaybeByte {
-        if let Some(c) = self.input.get(idx) {
-            MaybeByte::new(*c)
-        } else {
-            MaybeByte::EndOfInput
+        match self.input.byte_at(idx) {
+            Some(byte) => MaybeByte::Some(byte),
+            None => MaybeByte::EndOfInput,
         }
     }
 
-    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&str> {
-        if start <= end && end <= self.input.len() {
-            Some(&self.input_s[start..end])
-        } else {
-            None
-        }
+    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&[u8]> {
+        self.input.substr_at(start, end)
     }
 
     pub(crate) fn was_bol(&self) -> bool {
@@ -218,7 +252,7 @@ impl Buffer {
     pub(crate) fn is_word_match(&self, word: &str) -> bool {
         let len = word.len();
 
-        if self.substr_at(self.pcur, self.pcur + len) != Some(word) {
+        if self.substr_at(self.pcur, self.pcur + len) != Some(word.as_bytes()) {
             return false;
         }
         if self.pcur + len == self.pend {
@@ -237,7 +271,7 @@ impl Buffer {
     pub(crate) fn is_looking_at_eol(&self) -> bool {
         let mut ptr = self.pcur;
         while ptr < self.pend {
-            let c = self.input.get(ptr);
+            let c = self.input.bytes.get(ptr);
             ptr += 1;
             if let Some(c) = c {
                 let eol = *c == b'\n' || *c == b'#';
@@ -249,12 +283,12 @@ impl Buffer {
         true
     }
 
-    pub(crate) fn is_whole_match(&self, eos: &str, indent: usize) -> bool {
+    pub(crate) fn is_whole_match(&self, eos: &[u8], indent: usize) -> bool {
         let mut ptr = self.pbeg;
         let len = eos.len();
 
         if indent > 0 {
-            while let Some(c) = self.input.get(ptr) {
+            while let Some(c) = self.input.bytes.get(ptr) {
                 if !c.is_ascii_whitespace() {
                     break;
                 }
@@ -295,23 +329,15 @@ impl Buffer {
                 self.lastline = prevline;
             }
         }
-        self.pbeg = self.lines[self.lastline].start;
-        self.pend = self.pbeg + self.lines[self.lastline].len();
+        self.pbeg = self.input.lines[self.lastline].start;
+        self.pend = self.pbeg + self.input.lines[self.lastline].len();
         self.pcur = self.pend;
         self.pushback(&MaybeByte::new(1));
         self.set_ptok(self.pcur);
     }
 
-    pub fn line_col_for_pos(&self, mut pos: usize) -> Option<(usize, usize)> {
-        for (lineno, line) in self.lines.iter().enumerate() {
-            if pos >= line.len() {
-                pos -= line.len()
-            } else {
-                return Some((lineno + 1, pos));
-            }
-        }
-
-        None
+    pub fn line_col_for_pos(&self, pos: usize) -> Option<(usize, usize)> {
+        self.input.line_col_for_pos(pos)
     }
 }
 

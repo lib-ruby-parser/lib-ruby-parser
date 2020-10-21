@@ -1,22 +1,27 @@
-use crate::source::buffer::*;
-use crate::source::FileLoc;
+use crate::source::buffer::Input;
 use std::convert::TryInto;
 use std::rc::Rc;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone)]
 pub struct Range {
-    begin_pos: usize,
-    end_pos: usize,
-    source: Rc<Vec<u8>>,
+    pub begin_pos: usize,
+    pub end_pos: usize,
+    pub input: Rc<Input>,
+}
+
+impl PartialEq for Range {
+    fn eq(&self, other: &Self) -> bool {
+        self.begin_pos == other.begin_pos && self.end_pos == other.end_pos
+    }
 }
 
 impl Range {
-    pub fn new(begin_pos: usize, end_pos: usize, source: Rc<Vec<u8>>) -> Self {
+    pub fn new(begin_pos: usize, end_pos: usize, input: Rc<Input>) -> Self {
         debug_assert!(end_pos >= begin_pos);
         Self {
             begin_pos,
             end_pos,
-            source,
+            input,
         }
     }
 
@@ -41,23 +46,27 @@ impl Range {
     }
 
     pub fn with_begin(&self, begin_pos: usize) -> Self {
-        Self::new(begin_pos, self.end_pos, Rc::clone(&self.source))
+        Self::new(begin_pos, self.end_pos, Rc::clone(&self.input))
     }
 
     pub fn with_end(&self, end_pos: usize) -> Self {
-        Self::new(self.begin_pos, end_pos, Rc::clone(&self.source))
+        Self::new(self.begin_pos, end_pos, Rc::clone(&self.input))
+    }
+
+    pub fn with(&self, begin_pos: usize, end_pos: usize) -> Self {
+        Self::new(begin_pos, end_pos, Rc::clone(&self.input))
     }
 
     pub fn adjust_begin(&self, d: i32) -> Self {
         let begin_pos: i32 = self.begin_pos.try_into().unwrap();
         let begin_pos: usize = (begin_pos + d).try_into().unwrap();
-        Self::new(begin_pos, self.end_pos, Rc::clone(&self.source))
+        Self::new(begin_pos, self.end_pos, Rc::clone(&self.input))
     }
 
     pub fn adjust_end(&self, d: i32) -> Self {
         let end_pos: i32 = self.end_pos.try_into().unwrap();
         let end_pos: usize = (end_pos + d).try_into().unwrap();
-        Self::new(self.begin_pos, end_pos, Rc::clone(&self.source))
+        Self::new(self.begin_pos, end_pos, Rc::clone(&self.input))
     }
 
     pub fn resize(&self, new_size: usize) -> Self {
@@ -68,7 +77,7 @@ impl Range {
         Self::new(
             std::cmp::min(self.begin_pos, other.begin_pos),
             std::cmp::max(self.end_pos, other.end_pos),
-            Rc::clone(&self.source),
+            Rc::clone(&self.input),
         )
     }
 
@@ -107,30 +116,33 @@ impl Range {
         unimplemented!()
     }
 
-    pub fn begin_loc(&self, buffer: &Buffer) -> Option<FileLoc> {
-        FileLoc::from_pos(self.begin_pos, &buffer)
+    pub fn begin_line_col(&self) -> Option<(usize, usize)> {
+        self.input.line_col_for_pos(self.begin_pos)
     }
 
-    pub fn end_loc(&self, buffer: &Buffer) -> Option<FileLoc> {
-        FileLoc::from_pos(self.end_pos, &buffer)
+    pub fn end_line_col(&self) -> Option<(usize, usize)> {
+        self.input.line_col_for_pos(self.end_pos)
     }
 
-    pub fn to_locs(&self, buffer: &Buffer) -> Option<(FileLoc, FileLoc)> {
-        Some((self.begin_loc(buffer)?, self.end_loc(buffer)?))
+    pub fn expand_to_line(&self) -> Option<(usize, Self)> {
+        println!(
+            "self.begin_line_col() = {:?}, self.end_line_col() = {:?}",
+            self.begin_line_col(),
+            self.end_line_col()
+        );
+        let (begin_line, _) = self.begin_line_col()?;
+        let (end_line, _) = self.end_line_col()?;
+        if begin_line != end_line {
+            unreachable!("multi-line error")
+        }
+        let line_no = begin_line;
+        let line = &self.input.lines[line_no];
+        Some((line_no, self.with(line.start, line.end)))
     }
 
-    pub fn source(&self, buffer: &Buffer) -> Option<String> {
-        buffer
-            .substr_at(self.begin_pos, self.end_pos)
-            .map(|e| e.to_owned())
-    }
-
-    pub fn begin_pos(&self) -> usize {
-        self.begin_pos
-    }
-
-    pub fn end_pos(&self) -> usize {
-        self.end_pos
+    pub fn source(&self) -> Option<String> {
+        let bytes = self.input.substr_at(self.begin_pos, self.end_pos)?;
+        Some(String::from_utf8_lossy(bytes).into_owned())
     }
 }
 

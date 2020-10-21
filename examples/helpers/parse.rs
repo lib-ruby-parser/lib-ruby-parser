@@ -1,10 +1,10 @@
-use ruby_parser::{Node, Parser};
+use ruby_parser::{Lexer, Node, Parser};
 
 #[allow(dead_code)]
-pub fn parse(source: &Vec<u8>, filename: &str, debug: bool) -> Result<Node, ()> {
+pub fn parse(source: &Vec<u8>, filename: &str, debug: bool) -> Result<Node, String> {
     print!("parsing {} ... ", filename);
-    let mut parser = Parser::new(&source).unwrap();
-    parser.yylexer.buffer.name = filename.to_owned();
+    let lexer = Lexer::new(source, filename, None).map_err(|e| e.to_string())?;
+    let mut parser = Parser::new_with_lexer(lexer);
     parser.set_debug(debug);
 
     match parser.do_parse() {
@@ -14,7 +14,7 @@ pub fn parse(source: &Vec<u8>, filename: &str, debug: bool) -> Result<Node, ()> 
         }
         None => {
             println!("Error");
-            Err(())
+            Err("Got no tokens".to_owned())
         }
     }
 }

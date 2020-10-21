@@ -166,7 +166,7 @@ impl Lexer {
             } else {
                 self.buffer.pushback(&c);
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                return self.set_integer_literal(&mut TokenBuf::new(b"0".to_vec()), suffix);
+                return self.set_integer_literal(&mut TokenBuf::new(b"0"), suffix);
             }
         }
 
@@ -352,7 +352,7 @@ impl Lexer {
         if self.buffer.peek(b'_') {
             self.nextc();
         }
-        self.set_integer_literal(&mut TokenBuf::new(b"0".to_vec()), 0)
+        self.set_integer_literal(&mut TokenBuf::new(b"0"), 0)
     }
 
     pub(crate) fn number_literal_suffix(&mut self, mask: i8) -> i8 {

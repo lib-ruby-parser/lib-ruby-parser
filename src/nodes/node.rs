@@ -2,6 +2,7 @@ use std::rc::Rc;
 
 use crate::nodes::InnerNode;
 use crate::nodes::*;
+use crate::source::buffer::Input;
 use crate::source::Range;
 use crate::Loc;
 
@@ -278,7 +279,7 @@ impl Node {
             statements: vec![],
             begin_l: None,
             end_l: None,
-            expression_l: Range::new(loc.begin, loc.end, Rc::new(vec![])),
+            expression_l: Range::new(loc.begin, loc.end, Rc::new(Input::default())),
         })
     }
 }

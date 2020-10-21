@@ -5695,8 +5695,8 @@ impl Lexer {
 }
 
 impl Parser {
-    pub fn new(bytes: &Vec<u8>) -> Result<Self, InputError> {
-        let lexer = Lexer::new(bytes, None)?;
+    pub fn new(bytes: &Vec<u8>, name: &str) -> Result<Self, InputError> {
+        let lexer = Lexer::new(bytes, name, None)?;
         Ok(Self::new_with_lexer(lexer))
     }
 

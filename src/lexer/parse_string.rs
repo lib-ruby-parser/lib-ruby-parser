@@ -45,7 +45,7 @@ impl Lexer {
                     Some(heredoc_end) => {
                         self.lval_start = Some(heredoc_end.start);
                         self.lval_end = Some(heredoc_end.end);
-                        self.set_yylval_str(TokenBuf::new(heredoc_end.value.as_bytes().to_vec()));
+                        self.set_yylval_str(TokenBuf::new(heredoc_end.value.as_bytes()));
                     }
                     _ => {}
                 }
@@ -907,10 +907,9 @@ impl Lexer {
         let id = self
             .buffer
             .substr_at(self.buffer.ptok, self.buffer.pcur)
-            .unwrap()
-            .as_bytes()
-            .to_vec();
-        self.set_yylval_str(TokenBuf::new(id));
+            .unwrap();
+        let id = TokenBuf::new(id);
+        self.set_yylval_str(id);
         self.lval_start = Some(self.buffer.ptok);
         self.lval_end = Some(self.buffer.pcur);
 
@@ -941,16 +940,16 @@ impl Lexer {
         let mut ptr;
         let mut ptr_end;
         let len;
-        let mut str_ = TokenBuf::new(vec![]);
+        let mut str_ = TokenBuf::new(b"");
         // let enc = self.p.enc;
         // let base_enc = 0;
         let bol;
 
         let heredoc_end_start: usize;
         let mut heredoc_end_end: usize;
-        let heredoc_end_value: String;
+        let heredoc_end_value: &[u8];
 
-        eos = self.buffer.lines[here.lastline()].start + here.offset();
+        eos = self.buffer.input.lines[here.lastline()].start + here.offset();
         len = here.length();
         func = here.func();
         indent = here.func() & STR_FUNC_INDENT;
@@ -977,13 +976,13 @@ impl Lexer {
 
         if (func & STR_FUNC_EXPAND) == 0 {
             loop {
-                ptr = self.buffer.lines[self.buffer.lastline].start;
+                ptr = self.buffer.input.lines[self.buffer.lastline].start;
                 ptr_end = self.buffer.pend;
                 if ptr_end > ptr {
-                    match self.buffer.input[ptr_end - 1] {
+                    match self.buffer.input.bytes[ptr_end - 1] {
                         b'\n' => {
                             ptr_end -= 1;
-                            if ptr_end == ptr || self.buffer.input[ptr_end - 1] != b'\r' {
+                            if ptr_end == ptr || self.buffer.input.bytes[ptr_end - 1] != b'\r' {
                                 ptr_end += 1;
                             }
                         }
@@ -1010,7 +1009,7 @@ impl Lexer {
                         "no substr {}..{} (len = {})",
                         ptr,
                         ptr_end,
-                        self.buffer.input.len()
+                        self.buffer.input.bytes.len()
                     ),
                 };
                 if ptr_end < self.buffer.pend {
@@ -1046,8 +1045,7 @@ impl Lexer {
                     heredoc_end_value = self
                         .buffer
                         .substr_at(heredoc_end_starts_at, heredoc_end_end)
-                        .unwrap()
-                        .to_owned();
+                        .unwrap();
                     break;
                 }
             }
@@ -1119,14 +1117,15 @@ impl Lexer {
                     heredoc_end_value = self
                         .buffer
                         .substr_at(heredoc_end_starts_at, heredoc_end_end)
-                        .unwrap()
-                        .to_owned();
+                        .unwrap();
 
                     break;
                 }
             }
             str_ = self.tokenbuf.clone();
         }
+
+        let heredoc_value = String::from_utf8(heredoc_end_value.to_vec()).unwrap();
 
         self.heredoc_restore(&here);
         self.token_flush();
@@ -1137,7 +1136,7 @@ impl Lexer {
             Some(HeredocEnd {
                 start: heredoc_end_start,
                 end: heredoc_end_end,
-                value: heredoc_end_value,
+                value: heredoc_value,
             }),
         );
         self.set_yylval_str(str_);
@@ -1166,7 +1165,7 @@ impl Lexer {
         self.token_flush();
         self.strterm = None;
         self.set_lex_state(EXPR_END);
-        self.set_yylval_str(TokenBuf::new(here.id(&self.buffer).as_bytes().to_vec()));
+        self.set_yylval_str(TokenBuf::new(here.id(&self.buffer)));
         self.lval_start = Some(self.buffer.pend);
         self.lval_end = Some(self.buffer.pend + here.length());
         return Self::tSTRING_END;
@@ -1186,8 +1185,8 @@ impl Lexer {
         self.strterm = None;
         let line = here.lastline();
         self.buffer.lastline = line;
-        self.buffer.pbeg = self.buffer.lines[line].start;
-        self.buffer.pend = self.buffer.pbeg + self.buffer.lines[line].len();
+        self.buffer.pbeg = self.buffer.input.lines[line].start;
+        self.buffer.pend = self.buffer.pbeg + self.buffer.input.lines[line].len();
         self.buffer.pcur = self.buffer.pbeg + here.offset() + here.length() + here.quote();
         self.buffer.ptok = self.buffer.pbeg + here.offset() - here.quote();
         self.buffer.heredoc_end = self.buffer.ruby_sourceline;

@@ -69,7 +69,11 @@ fn match_locs(locs: Vec<String>, ast: Node) -> Result<(), String> {
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = TestCase::new(fixture_path);
-        let mut parser = Parser::new(&test_case.input.as_bytes().to_vec()).unwrap();
+        let mut parser = Parser::new(
+            &test_case.input.as_bytes().to_vec(),
+            &format!("(test {})", fixture_path),
+        )
+        .unwrap();
         parser.static_env.declare("foo");
         parser.static_env.declare("bar");
         parser.static_env.declare("baz");
