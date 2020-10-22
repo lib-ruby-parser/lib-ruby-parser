@@ -269,15 +269,17 @@ impl Lexer {
                     Some(b'\n') => {
                         if (func & STR_FUNC_QWORDS) != 0 {
                             // break;
-                        } else if (func & STR_FUNC_EXPAND) != 0 {
-                            if (func & STR_FUNC_INDENT) == 0 || self.buffer.heredoc_indent < 0 {
-                                continue;
+                        } else {
+                            if (func & STR_FUNC_EXPAND) != 0 {
+                                if (func & STR_FUNC_INDENT) == 0 || self.buffer.heredoc_indent < 0 {
+                                    continue;
+                                }
+                                if c == term {
+                                    return Some(MaybeByte::new('\\'));
+                                }
                             }
-                            if c == term {
-                                return Some(MaybeByte::new('\\'));
-                            }
+                            self.tokadd(b'\\');
                         }
-                        self.tokadd(b'\\');
                     }
                     Some(b'\\') => {
                         if (func & STR_FUNC_ESCAPE) != 0 {

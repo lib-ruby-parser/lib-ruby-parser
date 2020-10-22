@@ -63,7 +63,13 @@ fn lex_as_ripper(filepath: &str) -> Result<String, String> {
             .line_col_for_pos(token.loc.begin)
             .ok_or_else(|| format!("token {:#?} has invalid range", token))?;
 
-        output.push_str(&format!("{} {:?} {}:{}\n", token_name, bytes, line, col));
+        output.push_str(&format!(
+            "{} {:?} {}:{}\n",
+            token_name,
+            bytes,
+            line + 1,
+            col
+        ));
     }
     Ok(output)
 }

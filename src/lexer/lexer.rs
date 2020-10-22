@@ -1301,7 +1301,7 @@ impl Lexer {
         return Self::END_OF_INPUT;
     }
 
-    pub(crate) fn percent_quatation(&mut self, c: &MaybeByte, ptok: usize) -> i32 {
+    pub(crate) fn percent_quotation(&mut self, c: &MaybeByte, ptok: usize) -> i32 {
         let mut c = c.clone();
         let mut term: MaybeByte;
         let mut paren: Option<u8>;
@@ -1389,7 +1389,7 @@ impl Lexer {
 
         if self.is_beg() {
             c = self.nextc();
-            return self.percent_quatation(&c, ptok);
+            return self.percent_quotation(&c, ptok);
         }
 
         c = self.nextc();
@@ -1399,7 +1399,7 @@ impl Lexer {
             return Self::tOP_ASGN;
         }
         if self.is_spacearg(&c, space_seen) || (self.is_lex_state_some(EXPR_FITEM) && c == 's') {
-            return self.percent_quatation(&c, ptok);
+            return self.percent_quotation(&c, ptok);
         }
         self.set_lex_state(if self.is_after_operator() {
             EXPR_ARG
