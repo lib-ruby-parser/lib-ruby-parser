@@ -155,13 +155,15 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
         strs.pop
     when :tSTRING_CONTENT
         case strs.last
-        when /\A<<-?'\w+'\z/ # no escaping
+        when /\A<<-?'\w+'\z/
+            tok_value = eval_as("<<'HERE'\n", tok_value, 'HERE', "heredoc")
+            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
         when '"', '`', /\A%W/, /\A%I/, ':"',
             '%<', '%{', '%(', '%[', '%!', '%@', '%#', '%%', '%^', '%&', '%*', '%-', '%_', '%=', '%+', '%~', '%:', '%;', '%\\', '%"', '%|', '%?', '%/', '%,', '%.', '%\'', '%`', '%$',
-            '%x('
+            '%x(', '%Q{'
             tok_value = eval_as('"', tok_value, '"', "dquote str")
             (puts "<<UNKNOWN>>"; next) if tok_value.nil?
-        when "'", /\A%i/, ":'", '%q('
+        when "'", /\A%i/, ":'", '%q(', '%s{'
             tok_value = eval_as("'", tok_value, "'", "squote str")
             (puts "<<UNKNOWN>>"; next) if tok_value.nil?
         when /\A%w/
@@ -173,7 +175,9 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
             tok_value = eval_as('/', tok_value, '/', "rexex")
             (puts "<<UNKNOWN>>"; next) if tok_value.nil?
             tok_value = tok_value.source
-        when /\A<</ # ignore
+        when /\A<</
+            tok_value = eval_as("<<HERE\n", tok_value, 'HERE', "heredoc")
+            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
         when /%r\[/ # ignore
         else
             raise "unknown str type #{strs.last.inspect}"

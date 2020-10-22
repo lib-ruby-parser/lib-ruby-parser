@@ -147,6 +147,7 @@ impl Lexer {
                 }
             }
             if c == 'o' || c == 'O' {
+                self.tokadd(&c);
                 // prefixed octal
                 c = self.nextc();
                 if c.is_eof() || c == '_' || !c.is_digit() {
