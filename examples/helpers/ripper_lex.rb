@@ -160,7 +160,7 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
             (puts "<<UNKNOWN>>"; next) if tok_value.nil?
         when '"', '`', /\A%W/, /\A%I/, ':"',
             '%<', '%{', '%(', '%[', '%!', '%@', '%#', '%%', '%^', '%&', '%*', '%-', '%_', '%=', '%+', '%~', '%:', '%;', '%\\', '%"', '%|', '%?', '%/', '%,', '%.', '%\'', '%`', '%$',
-            '%x(', '%Q{'
+            '%x(', '%Q{', '%Q['
             tok_value = eval_as('"', tok_value, '"', "dquote str")
             (puts "<<UNKNOWN>>"; next) if tok_value.nil?
         when "'", /\A%i/, ":'", '%q(', '%s{'
@@ -182,8 +182,6 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
         else
             raise "unknown str type #{strs.last.inspect}"
         end
-    when :tINTEGER
-        tok_value = tok_value.gsub('_', '')
     when :tLABEL
         tok_value = tok_value.delete_suffix(':')
     when :tCHAR

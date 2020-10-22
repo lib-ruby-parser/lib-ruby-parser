@@ -30,6 +30,7 @@ impl Lexer {
             c = self.nextc();
             if c == 'x' || c == 'X' {
                 // hexadecimal
+                self.tokadd(&c);
                 c = self.nextc();
                 if !c.is_eof() && c.is_hexdigit() {
                     loop {
@@ -38,6 +39,7 @@ impl Lexer {
                                 break;
                             }
                             nondigit = Some(c.clone());
+                            self.tokadd(&c);
                             c = self.nextc();
                             if c.is_eof() {
                                 break;
@@ -65,11 +67,12 @@ impl Lexer {
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.clone();
-                tok.prepend("0x");
+                tok.prepend("0");
                 return self.set_integer_literal(&mut tok, suffix);
             }
             if c == 'b' || c == 'B' {
                 // binary
+                self.tokadd(&c);
                 c = self.nextc();
                 if c == '0' || c == '1' {
                     loop {
@@ -78,6 +81,11 @@ impl Lexer {
                                 break;
                             }
                             nondigit = Some(c.clone());
+                            self.tokadd(&c);
+                            c = self.nextc();
+                            if c.is_eof() {
+                                break;
+                            }
                             continue;
                         }
                         if c != '0' && c != '1' {
@@ -101,11 +109,12 @@ impl Lexer {
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.clone();
-                tok.prepend("0b");
+                tok.prepend("0");
                 return self.set_integer_literal(&mut tok, suffix);
             }
             if c == 'd' || c == 'D' {
                 // decimal
+                self.tokadd(&c);
                 c = self.nextc();
                 if !c.is_eof() && c.is_digit() {
                     loop {
@@ -114,6 +123,11 @@ impl Lexer {
                                 break;
                             }
                             nondigit = Some(c.clone());
+                            self.tokadd(&c);
+                            c = self.nextc();
+                            if c.is_eof() {
+                                break;
+                            }
                             continue;
                         }
                         if !c.is_digit() {
@@ -137,7 +151,7 @@ impl Lexer {
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.clone();
-                tok.prepend("0d");
+                tok.prepend("0");
                 return self.set_integer_literal(&mut tok, suffix);
             }
             if c == '_' {
@@ -224,6 +238,7 @@ impl Lexer {
                 }
 
                 Some(b'_') => {
+                    self.tokadd(&c);
                     if nondigit.is_some() {
                         return self.decode_num(c, nondigit, is_float, seen_e);
                     }
@@ -249,6 +264,11 @@ impl Lexer {
                     break;
                 }
                 *nondigit = Some(c.clone());
+                self.tokadd(&*c);
+                *c = self.nextc();
+                if c.is_eof() {
+                    break;
+                }
                 continue;
             }
             if *c < '0' || *c > '9' {
