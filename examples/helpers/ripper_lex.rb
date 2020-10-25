@@ -77,7 +77,7 @@ mapping = {
     on_tlambda: :tLAMBDA,
     on_tlambeg: :tLAMBEG,
     on_float: :tFLOAT,
-    on_backtick: :tXSTRING_BEG,
+    on_backtick: :tBACKTICK,
     on_cvar: :tCVAR,
     on_imaginary: :tIMAGINARY,
     on_rational: :tRATIONAL,
@@ -107,7 +107,7 @@ ops = {
     '<'   => :tLT,      '<<'  => :tLSHFT,   '<='  => :tLEQ,
     '=>'  => :tASSOC,   '::'  => :tCOLON2,  '===' => :tEQQ,
     '<=>' => :tCMP,     '[]'  => :tAREF,    '[]=' => :tASET,
-    '{'   => :tLCURLY,  '}'   => :tRCURLY,  '`'   => :tBACK_REF2,
+    '{'   => :tLCURLY,  '}'   => :tRCURLY,  '`'   => :tBACKTICK,
     '!@'  => :tBANG,    '&.'  => :tANDDOT,
 
     '+='  => :tOP_ASGN, '-='  => :tOP_ASGN, '||=' => :tOP_ASGN,
@@ -119,12 +119,79 @@ ops = {
 
 strs = []
 
-def eval_as(start_t, tok_value, end_t, error_message)
+def eval_as(start_t, tok_value, end_t, kind)
     begin
         eval(start_t + tok_value.encode('utf-8') + end_t)
     rescue SyntaxError, EncodingError
-        $stderr.puts("Can't dump #{error_message} part #{tok_value.inspect}")
+        $stderr.puts("Can't dump #{kind} part #{tok_value.inspect}")
         nil
+    end
+end
+
+def rotate_bracket(lbrack)
+    case lbrack
+    when '<' then '>'
+    when '(' then ')'
+    when '[' then ']'
+    when '{' then '}'
+    else
+        # %r|foo|
+        lbrack
+    end
+end
+
+TAKE_SELF = ->(v) { v.to_s }
+RE_SOURCE = ->(re) { re.source }
+ARRAY_FIRST = ->(v) {
+    raise 'expected array' unless v.is_a?(Array)
+    raise 'expected 1 element' if v.length != 1
+    v[0].to_s
+}
+
+def `(s)
+    s
+end
+
+def str_for_str_beg(str_beg)
+    case str_beg
+    when /\A<<-?'\w+'\z/, /\A<<~'\w+'\z/
+        ["<<'HERE'\n", "HERE", 'non-interp heredoc', TAKE_SELF]
+    when /\A<<-?\w+\z/, /\A<<-?"\w+"\z/, /\A<<~\w+\z/, /\A<<~"\w+"\z/
+        ["<<HERE\n", 'HERE', 'interp heredoc', TAKE_SELF]
+    when '"'
+        ['"', '"', '" str', TAKE_SELF]
+    when "'"
+        ["'", "'", '\' str', TAKE_SELF]
+    when /\A%r(.)/
+        [str_beg, rotate_bracket($1), 'regex', RE_SOURCE]
+    when '/'
+        ['/', '/', 'regex', RE_SOURCE]
+    when /\A%w(.)/
+        [str_beg, rotate_bracket($1), 'non-interp words', ARRAY_FIRST]
+    when /\A%W(.)/
+        [str_beg, rotate_bracket($1), 'interp words', ARRAY_FIRST]
+    when /\A%i(.)/
+        [str_beg, rotate_bracket($1), 'non-interp symbols', ARRAY_FIRST]
+    when /\A%I(.)/
+        [str_beg, rotate_bracket($1), 'interp symbols', ARRAY_FIRST]
+    when /\A%q(.)/
+        [str_beg, rotate_bracket($1), '%q() string', TAKE_SELF]
+    when /\A%Q(.)/
+        [str_beg, rotate_bracket($1), '%Q() string', TAKE_SELF]
+    when /\A%x(.)/
+        [str_beg, rotate_bracket($1), '%x() string', TAKE_SELF]
+    when ':"'
+        [':"', '"', 'dsymbol', TAKE_SELF]
+    when ":'"
+        [":'", "'", 'ssymbol', TAKE_SELF]
+    when '`'
+        ['`', '`', 'xstring', TAKE_SELF]
+    when /\A%s(.)/
+        [str_beg, rotate_bracket($1), '%s() string', TAKE_SELF]
+    when /\A%(.)/
+        [str_beg, rotate_bracket($1), '%() string', TAKE_SELF]
+    else
+        raise "unsupported str_beg #{str_beg.inspect}"
     end
 end
 
@@ -149,38 +216,36 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
             # :sym case, we need to pop :tSYMBEG
             strs.pop
         end
+    when :tBACKTICK
+        if (state.to_int & Ripper::EXPR_BEG) != 0
+            # `string`
+            strs.push(tok_value)
+        else
+            # :` - state is EXPR_ENDFN here
+        end
     when :tSTRING_BEG, :tREGEXP_BEG, :tXSTRING_BEG, :tQWORDS_BEG, :tQSYMBOLS_BEG, :tSYMBEG, :tSYMBOLS_BEG, :tWORDS_BEG
         strs.push(tok_value)
     when :tSTRING_END, :tREGEXP_END
         strs.pop
     when :tSTRING_CONTENT
-        case strs.last
-        when /\A<<-?'\w+'\z/
-            tok_value = eval_as("<<'HERE'\n", tok_value, 'HERE', "heredoc")
-            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
-        when '"', '`', /\A%W/, /\A%I/, ':"',
-            '%<', '%{', '%(', '%[', '%!', '%@', '%#', '%%', '%^', '%&', '%*', '%-', '%_', '%=', '%+', '%~', '%:', '%;', '%\\', '%"', '%|', '%?', '%/', '%,', '%.', '%\'', '%`', '%$',
-            '%x(', '%Q{', '%Q['
-            tok_value = eval_as('"', tok_value, '"', "dquote str")
-            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
-        when "'", /\A%i/, ":'", '%q(', '%s{'
-            tok_value = eval_as("'", tok_value, "'", "squote str")
-            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
-        when /\A%w/
-            tok_value = eval_as("%w(", tok_value, ")", "%w")
-            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
-            raise "bug" if tok_value.length != 1
-            tok_value = tok_value[0]
-        when "/", /\A%r/
-            tok_value = eval_as('/', tok_value, '/', "rexex")
-            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
-            tok_value = tok_value.source
-        when /\A<</
-            tok_value = eval_as("<<HERE\n", tok_value, 'HERE', "heredoc")
-            (puts "<<UNKNOWN>>"; next) if tok_value.nil?
-        when /%r\[/ # ignore
-        else
-            raise "unknown str type #{strs.last.inspect}"
+        (str_beg, str_end, kind, fn) = str_for_str_beg(strs.last)
+        if kind.include?('heredoc') && !tok_value.end_with?("\n")
+            tok_value += "\n"
+        end
+        begin
+            enc = tok_value.encoding
+            tok_value = fn.call(
+                eval(str_beg.encode(enc) + tok_value + str_end.encode(enc))
+            )
+        rescue SyntaxError, EncodingError => e
+            $stderr.puts(<<~MSG)
+                Can't dump #{kind}:
+                tok_value = #{tok_value.inspect}
+                wrapped = #{(str_beg.encode(enc) + tok_value + str_end.encode(enc)).inspect}
+                got error #{e.class}: #{e.message.inspect}
+            MSG
+            puts "<<UNKNOWN>>"
+            next
         end
     when :tLABEL
         tok_value = tok_value.delete_suffix(':')

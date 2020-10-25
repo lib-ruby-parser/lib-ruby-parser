@@ -7,6 +7,8 @@ pub fn ripper_lex(filepath: &str) -> Result<String, String> {
         .output()
         .map_err(|_| "failed to execute process".to_owned())?;
 
+    println!("{}", String::from_utf8_lossy(&out.stderr));
+
     if out.status.success() {
         String::from_utf8(out.stdout).map_err(|_| "non-utf8 output".to_owned())
     } else {

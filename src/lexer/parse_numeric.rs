@@ -181,7 +181,10 @@ impl Lexer {
             } else {
                 self.buffer.pushback(&c);
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                return self.set_integer_literal(&mut TokenBuf::new(b"0"), suffix);
+
+                let mut tok = self.tokenbuf.clone();
+                tok.push(b'0');
+                return self.set_integer_literal(&mut tok, suffix);
             }
         }
 

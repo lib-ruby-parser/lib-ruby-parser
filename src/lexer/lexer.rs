@@ -840,7 +840,7 @@ impl Lexer {
                     self.set_lex_state(if self.is_after_operator() {
                         EXPR_ARG
                     } else {
-                        EXPR_END
+                        EXPR_BEG
                     });
                     return self.warn_balanced(
                         Self::tDIVIDE,
