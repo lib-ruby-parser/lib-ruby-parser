@@ -7,7 +7,7 @@ impl Lexer {
     pub(crate) fn comment_at_top(&self) -> bool {
         let mut ptr = self.buffer.pbeg;
         let ptr_end = self.buffer.pcur - 1;
-        if self.buffer.line_count != (if self.has_shebang { 2 } else { 1 }) {
+        if self.buffer.line_count != (if self.buffer.has_shebang { 2 } else { 1 }) {
             return false;
         }
         while ptr < ptr_end {

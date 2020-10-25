@@ -39,7 +39,7 @@ TESTS = Hash.new { |hash, test_name| hash[test_name] = [] }
 class Rewriter < Parser::AST::Processor
   # For numeric literals we emit their source, not the value
   def replace_to_original_source(node)
-    node.updated(nil, [node.location.expression.source.gsub('_', '')])
+    node.updated(nil, [node.location.expression.source])
   end
 
   alias on_int replace_to_original_source

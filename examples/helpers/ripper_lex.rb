@@ -195,7 +195,6 @@ def str_for_str_beg(str_beg)
     end
 end
 
-$stderr.puts ARGV.first
 filename = ARGV.first
 src = File.read(filename)
 lines = src.lines

@@ -67,6 +67,8 @@ pub struct Buffer {
     pub(crate) toksize: usize,
     pub(crate) tokline: usize,
 
+    pub(crate) has_shebang: bool,
+
     pub(crate) ruby_sourceline: usize,     /* current line no. */
     pub(crate) ruby_sourcefile: Vec<char>, /* current source file */
     pub(crate) ruby_sourcefile_string: Vec<char>,
@@ -110,12 +112,42 @@ impl Buffer {
             lines,
         };
 
-        Ok(Self {
+        let mut this = Self {
             encoding,
             input: Rc::new(input),
             input_s,
             ..Self::default()
-        })
+        };
+
+        this.prepare();
+
+        Ok(this)
+    }
+
+    fn prepare(&mut self) {
+        let c = self.nextc();
+        match c.to_option() {
+            Some(b'#') => {
+                if self.peek(b'!') {
+                    self.has_shebang = true;
+                }
+            }
+            Some(0xef) => {
+                // handle UTF-8 BOM marker
+                if self.pend - self.pcur >= 2
+                    && self.byte_at(self.pcur) == 0xbb
+                    && self.byte_at(self.pcur + 1) == 0xbf
+                {
+                    self.pcur += 2;
+                    self.pbeg = self.pcur;
+                    return;
+                }
+            }
+            None => return,
+            _ => {}
+        }
+
+        self.pushback(&c)
     }
 
     pub(crate) fn nextc(&mut self) -> MaybeByte {

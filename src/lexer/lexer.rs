@@ -43,7 +43,6 @@ pub struct Lexer {
     pub(crate) in_kwarg: bool,
 
     pub(crate) command_start: bool,
-    pub(crate) has_shebang: bool,
     token_seen: bool,
     token_info_enabled: bool,
 
