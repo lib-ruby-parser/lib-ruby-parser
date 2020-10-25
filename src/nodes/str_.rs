@@ -3,24 +3,21 @@ use crate::nodes::InspectVec;
 use crate::source::Range;
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum StringValue {
-    String(String),
-    Bytes(Vec<u8>),
+pub struct StringValue {
+    pub bytes: Vec<u8>,
 }
 
 impl StringValue {
     pub fn to_string_lossy(&self) -> String {
-        match &self {
-            StringValue::String(s) => s.clone(),
-            StringValue::Bytes(bytes) => String::from_utf8_lossy(&bytes).into_owned(),
-        }
+        String::from_utf8_lossy(&self.bytes).into_owned()
     }
 
     pub fn to_string(&self) -> Option<String> {
-        match &self {
-            StringValue::String(s) => Some(s.clone()),
-            StringValue::Bytes(bytes) => String::from_utf8(bytes.clone()).ok(),
-        }
+        String::from_utf8(self.bytes.clone()).ok()
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.bytes
     }
 }
 
@@ -40,11 +37,7 @@ impl InnerNode for Str {
 
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
-        let value = match &self.value {
-            StringValue::String(s) => s.to_owned(),
-            StringValue::Bytes(bytes) => String::from_utf8_lossy(&bytes).into_owned(),
-        };
-        result.push_str(&value);
+        result.push_str(&self.value.to_string_lossy());
         result.strings()
     }
 

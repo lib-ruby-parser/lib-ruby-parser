@@ -215,8 +215,10 @@ impl Builder {
     pub(crate) fn string_internal(&self, string_t: Token) -> Node {
         let expression_l = self.loc(&string_t);
         let value = match string_t.token_value {
-            TokenValue::String(s) => StringValue::String(s),
-            TokenValue::InvalidString(bytes) => StringValue::Bytes(bytes),
+            TokenValue::String(s) => StringValue {
+                bytes: s.as_bytes().to_owned(),
+            },
+            TokenValue::InvalidString(bytes) => StringValue { bytes },
         };
         Node::Str(Str {
             value,
@@ -233,7 +235,7 @@ impl Builder {
         end_t: Option<Token>,
     ) -> Node {
         match &parts[..] {
-            [] => return self.str_node(begin_t, StringValue::String("".to_owned()), parts, end_t),
+            [] => return self.str_node(begin_t, StringValue { bytes: vec![] }, parts, end_t),
             [Node::Str(_)] | [Node::Dstr(_)] | [Node::Heredoc(_)]
                 if begin_t.is_none() && end_t.is_none() =>
             {
@@ -272,8 +274,10 @@ impl Builder {
         let expression_l = str_range;
 
         let value = match char_t.token_value {
-            TokenValue::String(s) => StringValue::String(s),
-            TokenValue::InvalidString(bytes) => StringValue::Bytes(bytes),
+            TokenValue::String(s) => StringValue {
+                bytes: s.as_bytes().to_owned(),
+            },
+            TokenValue::InvalidString(bytes) => StringValue { bytes },
         };
         Node::Str(Str {
             value,
@@ -360,9 +364,54 @@ impl Builder {
 
     // Indented (interpolated, noninterpolated, executable) strings
 
-    pub(crate) fn dedent_string(&self, node: Node, _dedent_level: i32) -> Node {
-        // FIXME
-        node
+    pub(crate) fn heredoc_dedent(&self, node: &mut Node, dedent_level: i32) {
+        if dedent_level == 0 {
+            return;
+        }
+
+        let dedent_level: usize = dedent_level.try_into().unwrap();
+
+        match node {
+            Node::Heredoc(Heredoc { parts, .. }) | Node::XHeredoc(XHeredoc { parts, .. }) => {
+                for part in parts.iter_mut() {
+                    match part {
+                        Node::Str(Str { value, .. }) => Self::dedent_string(value, dedent_level),
+                        Node::Begin(_) => {}
+                        _ => unimplemented!("unsupported heredoc child {}", part.str_type()),
+                    }
+                }
+            }
+            other => unimplemented!("unsupported heredoc_dedent argument {}", other.str_type()),
+        }
+    }
+
+    const TAB_WIDTH: usize = 8;
+
+    pub fn dedent_string(s: &mut StringValue, width: usize) {
+        let mut col: usize = 0;
+        let mut i: usize = 0;
+
+        loop {
+            if !(i < s.bytes.len() && col < width) {
+                break;
+            }
+
+            if s.bytes[i] == b' ' {
+                col += 1;
+            } else if s.bytes[i] == b'\t' {
+                let n = Self::TAB_WIDTH * (col / Self::TAB_WIDTH + 1);
+                if n > Self::TAB_WIDTH {
+                    break;
+                }
+                col = n;
+            } else {
+                break;
+            }
+
+            i += 1;
+        }
+
+        s.bytes = s.bytes[i..].to_owned()
     }
 
     // Regular expressions

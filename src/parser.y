@@ -4580,19 +4580,21 @@ opt_block_args_tail:
 
          string1: tSTRING_BEG string_contents tSTRING_END
                     {
-                        let string = self.builder.string_compose(Some($<Token>1), $<NodeList>2, Some($<Token>3));
-                        $$ = Value::Node(
-                            self.builder.dedent_string(string, self.yylexer.buffer.heredoc_indent)
-                        );
+                        let mut string = self.builder.string_compose(Some($<Token>1), $<NodeList>2, Some($<Token>3));
+                        let indent = self.yylexer.buffer.heredoc_indent;
+                        self.yylexer.buffer.heredoc_indent = 0;
+                        self.builder.heredoc_dedent(&mut string, indent);
+                        $$ = Value::Node(string);
                     }
                 ;
 
          xstring: tXSTRING_BEG xstring_contents tSTRING_END
                     {
-                        let string = self.builder.xstring_compose($<Token>1, $<NodeList>2, $<Token>3);
-                        $$ = Value::Node(
-                            self.builder.dedent_string(string, self.yylexer.buffer.heredoc_indent)
-                        );
+                        let mut string = self.builder.xstring_compose($<Token>1, $<NodeList>2, $<Token>3);
+                        let indent = self.yylexer.buffer.heredoc_indent;
+                        self.yylexer.buffer.heredoc_indent = 0;
+                        self.builder.heredoc_dedent(&mut string, indent);
+                        $$ = Value::Node(string);
                     }
                 ;
 

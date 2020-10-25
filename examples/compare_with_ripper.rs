@@ -27,6 +27,8 @@ fn lex_as_ripper(filepath: &str) -> Result<String, String> {
             continue;
         }
         let token_name = Lexer::token_name(&token);
+        let bytes = token.to_bytes();
+
         let token_name = match &token_name[..] {
             "tNL" | "tSPACE" | "tSP" => continue,
             "tLPAREN2" => "tLPAREN",
@@ -57,7 +59,6 @@ fn lex_as_ripper(filepath: &str) -> Result<String, String> {
         }
         .to_owned();
 
-        let bytes = token.to_bytes();
         let (line, col) = parser
             .yylexer
             .buffer

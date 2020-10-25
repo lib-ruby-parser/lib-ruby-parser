@@ -196,7 +196,11 @@ def str_for_str_beg(str_beg)
 end
 
 $stderr.puts ARGV.first
-Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
+filename = ARGV.first
+src = File.read(filename)
+lines = src.lines
+
+Ripper.lex(src).each do |(start, tok_name, tok_value, state)|
     tok_name =
         case tok_name
         when :on_nl then next
@@ -229,14 +233,34 @@ Ripper.lex(File.read(ARGV.first)).each do |(start, tok_name, tok_value, state)|
         strs.pop
     when :tSTRING_CONTENT
         (str_beg, str_end, kind, fn) = str_for_str_beg(strs.last)
+        added_nl = false
         if kind.include?('heredoc') && !tok_value.end_with?("\n")
             tok_value += "\n"
+            added_nl = true
+        end
+        if strs.last.include?('~') # squiggly heredoc
+            # We emit strings WITH leading chars and do ltrim in the AST builder.
+            # Tokens don't match, and so we un-dedent string by adding back more spaces from the original src
+            (line, col) = start
+            loop do
+                c = lines[line - 1][col - 1]
+                if c != ' ' && c != "\t"
+                    break
+                end
+                col -= 1
+                tok_value = c + tok_value
+            end
+
+            start = [line, col]
         end
         begin
             enc = tok_value.encoding
             tok_value = fn.call(
                 eval(str_beg.encode(enc) + tok_value + str_end.encode(enc))
             )
+            if added_nl
+                tok_value = tok_value[0..-2]
+            end
         rescue SyntaxError, EncodingError => e
             $stderr.puts(<<~MSG)
                 Can't dump #{kind}:
