@@ -6,7 +6,6 @@ use crate::Node;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Return {
     pub args: Vec<Node>,
-
     pub keyword_l: Range,
     pub expression_l: Range,
 }
@@ -16,6 +15,7 @@ impl InnerNode for Return {
         &self.expression_l
     }
 
+
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
         result.push_nodes(&self.args);
@@ -24,5 +24,14 @@ impl InnerNode for Return {
 
     fn str_type(&self) -> &'static str {
         "return"
+    }
+
+    fn print_with_locs(&self) {
+        println!("{}", self.inspect(0));
+        self.expression_l.print("expression");
+        self.keyword_l.print("keyword");
+        for node in self.args.iter() {
+            node.inner().print_with_locs();
+        }
     }
 }

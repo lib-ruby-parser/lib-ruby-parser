@@ -251,4 +251,5 @@ pub use xstr::Xstr;
 pub use yield_::Yield;
 pub use zsuper::ZSuper;
 
-pub use str_::StringValue;
+mod string_value;
+pub use string_value::StringValue;

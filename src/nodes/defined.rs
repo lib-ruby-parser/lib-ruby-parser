@@ -6,7 +6,6 @@ use crate::Node;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Defined {
     pub value: Box<Node>,
-
     pub keyword_l: Range,
     pub begin_l: Option<Range>,
     pub end_l: Option<Range>,
@@ -18,6 +17,7 @@ impl InnerNode for Defined {
         &self.expression_l
     }
 
+
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
         result.push_node(&self.value);
@@ -26,5 +26,18 @@ impl InnerNode for Defined {
 
     fn str_type(&self) -> &'static str {
         "defined?"
+    }
+
+    fn print_with_locs(&self) {
+        println!("{}", self.inspect(0));
+        self.expression_l.print("expression");
+        if let Some(range) = &self.end_l {
+            range.print("end");
+        }
+        if let Some(range) = &self.begin_l {
+            range.print("begin");
+        }
+        self.keyword_l.print("keyword");
+        self.value.inner().print_with_locs();
     }
 }

@@ -7,7 +7,6 @@ use crate::Node;
 pub struct WhilePost {
     pub cond: Box<Node>,
     pub body: Box<Node>,
-
     pub keyword_l: Range,
     pub expression_l: Range,
 }
@@ -16,6 +15,7 @@ impl InnerNode for WhilePost {
     fn expression(&self) -> &Range {
         &self.expression_l
     }
+
 
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
@@ -26,5 +26,13 @@ impl InnerNode for WhilePost {
 
     fn str_type(&self) -> &'static str {
         "while_post"
+    }
+
+    fn print_with_locs(&self) {
+        println!("{}", self.inspect(0));
+        self.expression_l.print("expression");
+        self.keyword_l.print("keyword");
+        self.body.inner().print_with_locs();
+        self.cond.inner().print_with_locs();
     }
 }

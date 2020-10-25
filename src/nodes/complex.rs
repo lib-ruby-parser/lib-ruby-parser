@@ -5,7 +5,6 @@ use crate::source::Range;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Complex {
     pub value: String,
-
     pub operator_l: Option<Range>,
     pub expression_l: Range,
 }
@@ -15,6 +14,7 @@ impl InnerNode for Complex {
         &self.expression_l
     }
 
+
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
         result.push_str(&self.value);
@@ -23,5 +23,13 @@ impl InnerNode for Complex {
 
     fn str_type(&self) -> &'static str {
         "complex"
+    }
+
+    fn print_with_locs(&self) {
+        println!("{}", self.inspect(0));
+        self.expression_l.print("expression");
+        if let Some(range) = &self.operator_l {
+            range.print("operator");
+        }
     }
 }

@@ -5,7 +5,6 @@ use crate::source::Range;
 #[derive(Debug, Clone, PartialEq)]
 pub struct RegOpt {
     pub options: Vec<char>,
-
     pub expression_l: Range,
 }
 
@@ -14,15 +13,19 @@ impl InnerNode for RegOpt {
         &self.expression_l
     }
 
+
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
-        for option in &self.options {
-            result.push_str(&format!("{}", option));
-        }
+        result.push_chars(&self.options);
         result.strings()
     }
 
     fn str_type(&self) -> &'static str {
         "regopt"
+    }
+
+    fn print_with_locs(&self) {
+        println!("{}", self.inspect(0));
+        self.expression_l.print("expression");
     }
 }

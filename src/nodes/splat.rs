@@ -6,7 +6,6 @@ use crate::Node;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Splat {
     pub value: Option<Box<Node>>,
-
     pub operator_l: Range,
     pub expression_l: Range,
 }
@@ -16,15 +15,23 @@ impl InnerNode for Splat {
         &self.expression_l
     }
 
+
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
-        if let Some(value) = &self.value {
-            result.push_node(value);
-        }
+        result.push_maybe_node(&self.value);
         result.strings()
     }
 
     fn str_type(&self) -> &'static str {
         "splat"
+    }
+
+    fn print_with_locs(&self) {
+        println!("{}", self.inspect(0));
+        self.expression_l.print("expression");
+        self.operator_l.print("operator");
+        if let Some(node) = &self.value {
+            node.inner().print_with_locs();
+        }
     }
 }

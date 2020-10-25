@@ -1382,13 +1382,13 @@ impl Builder {
             _ => None,
         };
 
-        let star_l = self.loc(&star_t);
+        let operator_l = self.loc(&star_t);
         let name_l = self.maybe_loc(&name_t);
-        let expression_l = star_l.maybe_join(&name_l);
+        let expression_l = operator_l.maybe_join(&name_l);
 
         Node::Restarg(Restarg {
             name,
-            star_l,
+            operator_l,
             name_l,
             expression_l,
         })
@@ -1431,13 +1431,13 @@ impl Builder {
             _ => None,
         };
 
-        let dstar_l = self.loc(&dstar_t);
+        let operator_l = self.loc(&dstar_t);
         let name_l = self.maybe_loc(&name_t);
-        let expression_l = dstar_l.maybe_join(&name_l);
+        let expression_l = operator_l.maybe_join(&name_l);
 
         Node::Kwrestarg(Kwrestarg {
             name,
-            dstar_l,
+            operator_l,
             name_l,
             expression_l,
         })
@@ -1464,13 +1464,13 @@ impl Builder {
     pub(crate) fn blockarg(&self, amper_t: Token, name_t: Token) -> Node {
         self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
 
-        let amper_l = self.loc(&amper_t);
+        let operator_l = self.loc(&amper_t);
         let name_l = self.loc(&name_t);
-        let expression_l = amper_l.join(&name_l);
+        let expression_l = operator_l.join(&name_l);
 
         Node::Blockarg(Blockarg {
             name: value(&name_t),
-            amper_l,
+            operator_l,
             name_l,
             expression_l,
         })
@@ -2188,7 +2188,7 @@ impl Builder {
         end_t: Token,
     ) -> Node {
         let keyword_l = self.loc(&for_t);
-        let in_l = self.loc(&in_t);
+        let operator_l = self.loc(&in_t);
         let begin_l = self.loc(&do_t);
         let end_l = self.loc(&end_t);
         let expression_l = keyword_l.join(&end_l);
@@ -2198,7 +2198,7 @@ impl Builder {
             iteratee: Box::new(iteratee),
             body: body.map(Box::new),
             keyword_l,
-            in_l,
+            operator_l,
             begin_l,
             end_l,
             expression_l,

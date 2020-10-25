@@ -7,7 +7,6 @@ use crate::Node;
 pub struct Index {
     pub recv: Box<Node>,
     pub indexes: Vec<Node>,
-
     pub begin_l: Range,
     pub end_l: Range,
     pub expression_l: Range,
@@ -18,6 +17,7 @@ impl InnerNode for Index {
         &self.expression_l
     }
 
+
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
         result.push_node(&self.recv);
@@ -27,5 +27,16 @@ impl InnerNode for Index {
 
     fn str_type(&self) -> &'static str {
         "index"
+    }
+
+    fn print_with_locs(&self) {
+        println!("{}", self.inspect(0));
+        self.expression_l.print("expression");
+        self.end_l.print("end");
+        self.begin_l.print("begin");
+        for node in self.indexes.iter() {
+            node.inner().print_with_locs();
+        }
+        self.recv.inner().print_with_locs();
     }
 }

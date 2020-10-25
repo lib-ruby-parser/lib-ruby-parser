@@ -1,0 +1,2560 @@
+-
+    struct_name: Alias
+    str_type: alias
+    filename: alias
+    fields:
+        -
+            field_name: to
+            field_type: Node
+            always_print: false
+        -
+            field_name: from
+            field_type: Node
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: AndAsgn
+    str_type: and_asgn
+    filename: and_asgn
+    fields:
+        -
+            field_name: recv
+            field_type: Node
+            always_print: false
+        -
+            field_name: value
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: And
+    str_type: and
+    filename: and
+    fields:
+        -
+            field_name: lhs
+            field_type: Node
+            always_print: false
+        -
+            field_name: rhs
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Arg
+    str_type: arg
+    filename: arg
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Args
+    str_type: args
+    filename: args
+    fields:
+        -
+            field_name: args
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+-
+    struct_name: Array
+    str_type: array
+    filename: array
+    fields:
+        -
+            field_name: elements
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: ArrayPattern
+    str_type: array_pattern
+    filename: array_pattern
+    fields:
+        -
+            field_name: elements
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: ArrayPatternWithTail
+    str_type: array_pattern_with_tail
+    filename: array_pattern_with_tail
+    fields:
+        -
+            field_name: elements
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: BackRef
+    str_type: back_ref
+    filename: back_ref
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Begin
+    str_type: begin
+    filename: begin
+    fields:
+        -
+            field_name: statements
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Block
+    str_type: block
+    filename: block
+    fields:
+        -
+            field_name: call
+            field_type: Node
+            always_print: false
+        -
+            field_name: args
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: BlockPass
+    str_type: block_pass
+    filename: block_pass
+    fields:
+        -
+            field_name: value
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Blockarg
+    str_type: blockarg
+    filename: blockarg
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Break
+    str_type: break
+    filename: break_
+    fields:
+        -
+            field_name: args
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Case
+    str_type: case
+    filename: case
+    fields:
+        -
+            field_name: expr
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: when_bodies
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: else_body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: else_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: CaseMatch
+    filename: case_match
+    str_type: case_match
+    fields:
+        -
+            field_name: expr
+            field_type: Node
+            always_print: false
+        -
+            field_name: in_bodies
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: else_body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: else_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Casgn
+    filename: casgn
+    str_type: casgn
+    fields:
+        -
+            field_name: scope
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: value
+            field_type: MaybeNode
+            always_print: false
+        -
+            field_name: double_colon_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Cbase
+    str_type: cbase
+    filename: cbase
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Class
+    str_type: class
+    filename: class
+    fields:
+        -
+            field_name: name
+            field_type: Node
+            always_print: false
+        -
+            field_name: superclass
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Complex
+    str_type: complex
+    filename: complex
+    fields:
+        -
+            field_name: value
+            field_type: Str
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Const
+    str_type: const
+    filename: const_
+    fields:
+        -
+            field_name: scope
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: double_colon_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: ConstPattern
+    str_type: const_pattern
+    filename: const_pattern
+    fields:
+        -
+            field_name: const_
+            field_type: Node
+            always_print: false
+        -
+            field_name: pattern
+            field_type: Node
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: CSend
+    str_type: csend
+    filename: csend
+    fields:
+        -
+            field_name: recv
+            field_type: Node
+            always_print: false
+        -
+            field_name: method_name
+            field_type: Str
+            always_print: false
+        -
+            field_name: args
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: dot_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: selector_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Cvar
+    str_type: cvar
+    filename: cvar
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Cvasgn
+    str_type: cvasgn
+    filename: cvasgn
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: value
+            field_type: MaybeNode
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Def
+    str_type: def
+    filename: def
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: args
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: assignment_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Defined
+    filename: defined
+    str_type: defined?
+    fields:
+        -
+            field_name: value
+            field_type: Node
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Defs
+    str_type: defs
+    filename: defs
+    fields:
+        -
+            field_name: definee
+            field_type: Node
+            always_print: false
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: args
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: assignment_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Dstr
+    str_type: dstr
+    filename: dstr
+    fields:
+        -
+            field_name: parts
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Dsym
+    str_type: dsym
+    filename: dsym
+    fields:
+        -
+            field_name: parts
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: EFlipFlop
+    str_type: eflipflop
+    filename: eflipflop
+    fields:
+        -
+            field_name: left
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: right
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: EmptyElse
+    str_type: empty_else
+    filename: empty_else
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Encoding
+    str_type: __ENCODING__
+    filename: encoding_
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Ensure
+    str_type: ensure
+    filename: ensure
+    fields:
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: ensure
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Erange
+    str_type: erange
+    filename: erange
+    fields:
+        -
+            field_name: left
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: right
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: False
+    str_type: false
+    filename: false_
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: File
+    str_type: __FILE__
+    filename: file
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: FindPattern
+    str_type: find_pattern
+    filename: find_pattern
+    fields:
+        -
+            field_name: elements
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Float
+    str_type: float
+    filename: float
+    fields:
+        -
+            field_name: value
+            field_type: Str
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: For
+    str_type: for
+    filename: for_
+    fields:
+        -
+            field_name: iterator
+            field_type: Node
+            always_print: false
+        -
+            field_name: iteratee
+            field_type: Node
+            always_print: false
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: ForwardArg
+    str_type: forward_arg
+    filename: forward_arg
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: ForwardedArgs
+    str_type: forwarded_args
+    filename: forwarded_args
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Gvar
+    str_type: gvar
+    filename: gvar
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Gvasgn
+    str_type: gvasgn
+    filename: gvasgn
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: value
+            field_type: MaybeNode
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+-
+    struct_name: Hash
+    str_type: hash
+    filename: hash
+    fields:
+        -
+            field_name: pairs
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: HashPattern
+    str_type: hash_pattern
+    filename: hash_pattern
+    fields:
+        -
+            field_name: elements
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Heredoc
+    str_type: dstr
+    filename: heredoc
+    fields:
+        -
+            field_name: parts
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: heredoc_body_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: heredoc_end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: If
+    str_type: if
+    filename: if_
+    fields:
+        -
+            field_name: cond
+            field_type: Node
+            always_print: false
+        -
+            field_name: if_true
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: if_false
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: else_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: IfGuard
+    str_type: if_guard
+    filename: if_guard
+    fields:
+        -
+            field_name: cond
+            field_type: Node
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: IfMod
+    str_type: if
+    filename: if_mod
+    fields:
+        -
+            field_name: cond
+            field_type: Node
+            always_print: false
+        -
+            field_name: if_true
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: if_false
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: IfTernary
+    str_type: if
+    filename: if_ternary
+    fields:
+        -
+            field_name: cond
+            field_type: Node
+            always_print: false
+        -
+            field_name: if_true
+            field_type: Node
+            always_print: false
+        -
+            field_name: if_false
+            field_type: Node
+            always_print: false
+        -
+            field_name: question_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: colon_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: IFlipFlop
+    str_type: iflipflop
+    filename: iflipflop
+    fields:
+        -
+            field_name: left
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: right
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: InMatch
+    str_type: in_match
+    filename: in_match
+    fields:
+        -
+            field_name: value
+            field_type: Node
+            always_print: false
+        -
+            field_name: pattern
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: InPattern
+    str_type: in_pattern
+    filename: in_pattern
+    fields:
+        -
+            field_name: pattern
+            field_type: Node
+            always_print: false
+        -
+            field_name: guard
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Index
+    str_type: index
+    filename: index
+    fields:
+        -
+            field_name: recv
+            field_type: Node
+            always_print: false
+        -
+            field_name: indexes
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: IndexAsgn
+    str_type: indexasgn
+    filename: index_asgn
+    fields:
+        -
+            field_name: recv
+            field_type: Node
+            always_print: false
+        -
+            field_name: indexes
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: value
+            field_type: MaybeNode
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Int
+    str_type: int
+    filename: int
+    fields:
+        -
+            field_name: value
+            field_type: Str
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Irange
+    str_type: irange
+    filename: irange
+    fields:
+        -
+            field_name: left
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: right
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Ivar
+    str_type: ivar
+    filename: ivar
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Ivasgn
+    str_type: ivasgn
+    filename: ivasgn
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: value
+            field_type: MaybeNode
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+-
+    struct_name: Kwarg
+    str_type: kwarg
+    filename: kwarg
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: KwBegin
+    str_type: kwbegin
+    filename: kwbegin
+    fields:
+        -
+            field_name: statements
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+-
+    struct_name: Kwnilarg
+    str_type: kwnilarg
+    filename: kwnilarg
+    fields:
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Kwoptarg
+    str_type: kwoptarg
+    filename: kwoptarg
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: default
+            field_type: Node
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Kwrestarg
+    str_type: kwrestarg
+    filename: kwrestarg
+    fields:
+        -
+            field_name: name
+            field_type: MaybeStr
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: name_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Kwsplat
+    str_type: kwsplat
+    filename: kwsplat
+    fields:
+        -
+            field_name: value
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Lambda
+    str_type: lambda
+    filename: lambda
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Line
+    str_type: __LINE__
+    filename: line
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Lvar
+    str_type: lvar
+    filename: lvar
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Lvasgn
+    str_type: lvasgn
+    filename: lvasgn
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: value
+            field_type: MaybeNode
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+-
+    struct_name: Masgn
+    str_type: masgn
+    filename: masgn
+    fields:
+        -
+            field_name: lhs
+            field_type: Node
+            always_print: false
+        -
+            field_name: rhs
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: MatchAlt
+    str_type: match_alt
+    filename: match_alt
+    fields:
+        -
+            field_name: lhs
+            field_type: Node
+            always_print: false
+        -
+            field_name: rhs
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: MatchAs
+    str_type: match_as
+    filename: match_as
+    fields:
+        -
+            field_name: value
+            field_type: Node
+            always_print: false
+        -
+            field_name: as_
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: MatchCurrentLine
+    str_type: match_current_line
+    filename: match_current_line
+    fields:
+        -
+            field_name: re
+            field_type: Node
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: MatchNilPattern
+    str_type: match_nil_pattern
+    filename: match_nil_pattern
+    fields:
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: MatchRest
+    str_type: match_rest
+    filename: match_rest
+    fields:
+        -
+            field_name: name
+            field_type: MaybeNode
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: MatchVar
+    str_type: match_var
+    filename: match_var
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: MatchWithLvasgn
+    str_type: match_with_lvasgn
+    filename: match_with_lvasgn
+    fields:
+        -
+            field_name: re
+            field_type: Node
+            always_print: false
+        -
+            field_name: value
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+# TODO: remove
+-
+    struct_name: MatchWithTrailingComma
+    str_type: match_with_trailing_comma
+    filename: match_with_trailing_comma
+    fields:
+        -
+            field_name: match_
+            field_type: Node
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Mlhs
+    str_type: mlhs
+    filename: mlhs
+    fields:
+        -
+            field_name: items
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Module
+    str_type: module
+    filename: module
+    fields:
+        -
+            field_name: name
+            field_type: Node
+            always_print: false
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Next
+    str_type: next
+    filename: next
+    fields:
+        -
+            field_name: args
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Nil
+    str_type: nil
+    filename: nil
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: NthRef
+    str_type: nth_ref
+    filename: nth_ref
+    fields:
+        -
+            field_name: name
+            field_type: Usize
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Numblock
+    str_type: numblock
+    filename: numblock
+    fields:
+        -
+            field_name: call
+            field_type: Node
+            always_print: false
+        -
+            field_name: numargs
+            field_type: U8
+            always_print: false
+        -
+            field_name: body
+            field_type: Node
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: OpAsgn
+    str_type: op_asgn
+    filename: op_asgn
+    fields:
+        -
+            field_name: recv
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator
+            field_type: Str
+            always_print: false
+        -
+            field_name: value
+            field_type: Node
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Optarg
+    str_type: optarg
+    filename: optarg
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: default
+            field_type: Node
+            always_print: false
+        -
+            field_name: name_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Or
+    str_type: or
+    filename: or
+    fields:
+        -
+            field_name: lhs
+            field_type: Node
+            always_print: false
+        -
+            field_name: rhs
+            field_type: Node
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: OrAsgn
+    str_type: or_asgn
+    filename: or_asgn
+    fields:
+        -
+            field_name: recv
+            field_type: Node
+            always_print: false
+        -
+            field_name: value
+            field_type: Node
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Pair
+    str_type: pair
+    filename: pair
+    fields:
+        -
+            field_name: key
+            field_type: Node
+            always_print: false
+        -
+            field_name: value
+            field_type: Node
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Pin
+    str_type: pin
+    filename: pin
+    fields:
+        -
+            field_name: var
+            field_type: Node
+            always_print: false
+        -
+            field_name: selector_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Postexe
+    str_type: postexe
+    filename: postexe
+    fields:
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Preexe
+    str_type: preexe
+    filename: preexe
+    fields:
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Procarg0
+    str_type: procarg0
+    filename: procarg0
+    fields:
+        -
+            field_name: args
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Rational
+    str_type: rational
+    filename: rational
+    fields:
+        -
+            field_name: value
+            field_type: Str
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Redo
+    str_type: redo
+    filename: redo
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: RegOpt
+    str_type: regopt
+    filename: reg_opt
+    fields:
+        -
+            field_name: options
+            field_type: Chars
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Regexp
+    str_type: regexp
+    filename: regexp
+    fields:
+        -
+            field_name: parts
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: options
+            field_type: Node
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Rescue
+    str_type: rescue
+    filename: rescue
+    fields:
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: rescue_bodies
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: else_
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: else_l
+            field_type: MaybeRange
+            always_print: false
+-
+    struct_name: RescueBody
+    str_type: resbody
+    filename: rescue_body
+    fields:
+        -
+            field_name: exc_list
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: exc_var
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: assoc_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Restarg
+    str_type: restarg
+    filename: restarg
+    fields:
+        -
+            field_name: name
+            field_type: MaybeStr
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: name_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Retry
+    str_type: retry
+    filename: retry
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Return
+    str_type: return
+    filename: return_
+    fields:
+        -
+            field_name: args
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: SClass
+    str_type: sclass
+    filename: sclass
+    fields:
+        -
+            field_name: expr
+            field_type: Node
+            always_print: false
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Self_
+    str_type: self
+    filename: self_
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Send
+    str_type: send
+    filename: send
+    fields:
+        -
+            field_name: recv
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: method_name
+            field_type: Str
+            always_print: false
+        -
+            field_name: args
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: dot_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: selector_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Shadowarg
+    str_type: shadowarg
+    filename: shadowarg
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Splat
+    str_type: splat
+    filename: splat
+    fields:
+        -
+            field_name: value
+            field_type: MaybeNode
+            always_print: false
+        -
+            field_name: operator_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Str
+    str_type: str
+    filename: str_
+    fields:
+        -
+            field_name: value
+            field_type: StringValue
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+-
+    struct_name: Super
+    str_type: super
+    filename: super_
+    fields:
+        -
+            field_name: args
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Sym
+    str_type: sym
+    filename: sym
+    fields:
+        -
+            field_name: name
+            field_type: Str
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: True
+    str_type: true
+    filename: true_
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Undef
+    str_type: undef
+    filename: undef
+    fields:
+        -
+            field_name: names
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: UnlessGuard
+    str_type: unless_guard
+    filename: unless_guard
+    fields:
+        -
+            field_name: cond
+            field_type: Node
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Until
+    str_type: until
+    filename: until
+    fields:
+        -
+            field_name: cond
+            field_type: Node
+            always_print: false
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: UntilPost
+    str_type: until_post
+    filename: until_post
+    fields:
+        -
+            field_name: cond
+            field_type: Node
+            always_print: false
+        -
+            field_name: body
+            field_type: Node
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: When
+    str_type: when
+    filename: when
+    fields:
+        -
+            field_name: patterns
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: While
+    str_type: while
+    filename: while_
+    fields:
+        -
+            field_name: cond
+            field_type: Node
+            always_print: false
+        -
+            field_name: body
+            field_type: MaybeNode
+            always_print: true
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: WhilePost
+    str_type: while_post
+    filename: while_post
+    fields:
+        -
+            field_name: cond
+            field_type: Node
+            always_print: false
+        -
+            field_name: body
+            field_type: Node
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: XHeredoc
+    str_type: xstr
+    filename: x_heredoc
+    fields:
+        -
+            field_name: parts
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: heredoc_body_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: heredoc_end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Xstr
+    str_type: xstr
+    filename: xstr
+    fields:
+        -
+            field_name: parts
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: end_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: Yield
+    str_type: yield
+    filename: yield_
+    fields:
+        -
+            field_name: args
+            field_type: Nodes
+            always_print: false
+        -
+            field_name: keyword_l
+            field_type: Range
+            always_print: false
+        -
+            field_name: begin_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: end_l
+            field_type: MaybeRange
+            always_print: false
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false
+-
+    struct_name: ZSuper
+    str_type: zsuper
+    filename: zsuper
+    fields:
+        -
+            field_name: expression_l
+            field_type: Range
+            always_print: false

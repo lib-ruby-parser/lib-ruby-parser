@@ -8,7 +8,6 @@ pub struct OpAsgn {
     pub recv: Box<Node>,
     pub operator: String,
     pub value: Box<Node>,
-
     pub expression_l: Range,
     pub operator_l: Range,
 }
@@ -17,6 +16,7 @@ impl InnerNode for OpAsgn {
     fn expression(&self) -> &Range {
         &self.expression_l
     }
+
 
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
@@ -28,5 +28,13 @@ impl InnerNode for OpAsgn {
 
     fn str_type(&self) -> &'static str {
         "op_asgn"
+    }
+
+    fn print_with_locs(&self) {
+        println!("{}", self.inspect(0));
+        self.operator_l.print("operator");
+        self.expression_l.print("expression");
+        self.value.inner().print_with_locs();
+        self.recv.inner().print_with_locs();
     }
 }

@@ -7,7 +7,6 @@ use crate::Node;
 pub struct InMatch {
     pub value: Box<Node>,
     pub pattern: Box<Node>,
-
     pub operator_l: Range,
     pub expression_l: Range,
 }
@@ -16,6 +15,7 @@ impl InnerNode for InMatch {
     fn expression(&self) -> &Range {
         &self.expression_l
     }
+
 
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
@@ -26,5 +26,13 @@ impl InnerNode for InMatch {
 
     fn str_type(&self) -> &'static str {
         "in_match"
+    }
+
+    fn print_with_locs(&self) {
+        println!("{}", self.inspect(0));
+        self.expression_l.print("expression");
+        self.operator_l.print("operator");
+        self.pattern.inner().print_with_locs();
+        self.value.inner().print_with_locs();
     }
 }

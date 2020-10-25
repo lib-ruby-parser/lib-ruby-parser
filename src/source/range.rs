@@ -144,6 +144,15 @@ impl Range {
         let bytes = self.input.substr_at(self.begin_pos, self.end_pos)?;
         Some(String::from_utf8_lossy(bytes).into_owned())
     }
+
+    pub fn print(&self, name: &str) {
+        println!(
+            "{}{} {}",
+            " ".repeat(self.begin_pos),
+            "~".repeat(self.size()),
+            name
+        )
+    }
 }
 
 impl std::fmt::Debug for Range {

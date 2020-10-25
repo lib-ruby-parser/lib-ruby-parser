@@ -1,3 +1,4 @@
+use crate::nodes::StringValue;
 use crate::source::Range;
 use crate::Node;
 
@@ -18,6 +19,8 @@ pub trait InnerNode {
 
         sexp
     }
+
+    fn print_with_locs(&self);
 }
 
 pub(crate) struct InspectVec {
@@ -37,15 +40,21 @@ impl InspectVec {
         self.strings.push(format!(", {:?}", string));
     }
 
+    pub(crate) fn push_maybe_str(&mut self, string: &Option<String>) {
+        if let Some(string) = string {
+            self.strings.push(format!(", {:?}", string));
+        }
+    }
+
     pub(crate) fn push_nil(&mut self) {
         self.strings.push(", nil".to_owned());
     }
 
-    pub(crate) fn push_u8(&mut self, n: u8) {
+    pub(crate) fn push_u8(&mut self, n: &u8) {
         self.strings.push(format!(", {}", n))
     }
 
-    pub(crate) fn push_usize(&mut self, n: usize) {
+    pub(crate) fn push_usize(&mut self, n: &usize) {
         self.strings.push(format!(", {}", n))
     }
 
@@ -72,6 +81,16 @@ impl InspectVec {
         for node in nodes {
             self.push_node(node)
         }
+    }
+
+    pub(crate) fn push_chars(&mut self, chars: &Vec<char>) {
+        for c in chars {
+            self.push_str(&format!("{}", c));
+        }
+    }
+
+    pub(crate) fn push_string_value(&mut self, s: &StringValue) {
+        self.push_str(&s.to_string_lossy())
     }
 
     pub(crate) fn strings(self) -> Vec<String> {

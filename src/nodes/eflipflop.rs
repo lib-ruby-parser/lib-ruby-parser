@@ -7,7 +7,6 @@ use crate::Node;
 pub struct EFlipFlop {
     pub left: Option<Box<Node>>,
     pub right: Option<Box<Node>>,
-
     pub operator_l: Range,
     pub expression_l: Range,
 }
@@ -16,6 +15,7 @@ impl InnerNode for EFlipFlop {
     fn expression(&self) -> &Range {
         &self.expression_l
     }
+
 
     fn inspected_children(&self, indent: usize) -> Vec<String> {
         let mut result = InspectVec::new(indent);
@@ -26,5 +26,17 @@ impl InnerNode for EFlipFlop {
 
     fn str_type(&self) -> &'static str {
         "eflipflop"
+    }
+
+    fn print_with_locs(&self) {
+        println!("{}", self.inspect(0));
+        self.expression_l.print("expression");
+        self.operator_l.print("operator");
+        if let Some(node) = &self.right {
+            node.inner().print_with_locs();
+        }
+        if let Some(node) = &self.left {
+            node.inner().print_with_locs();
+        }
     }
 }

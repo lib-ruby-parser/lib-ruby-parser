@@ -32,7 +32,8 @@ struct Args {
 fn print_quite(_src: &str, _node: &Node) {}
 
 fn print_locations(src: &str, node: &Node) {
-    print_all_locs(src, node);
+    println!("{}", src);
+    node.inner().print_with_locs();
 }
 fn print_ast(_src: &str, node: &Node) {
     println!("{}", node.inspect(0));
