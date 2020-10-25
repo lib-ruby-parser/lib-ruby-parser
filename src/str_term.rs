@@ -1,4 +1,3 @@
-use crate::source::buffer::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -186,12 +185,6 @@ impl HeredocLiteral {
     #[allow(dead_code)]
     pub(crate) fn set_func(&self, func: usize) {
         self.inner.borrow_mut().func = func;
-    }
-
-    pub(crate) fn id<'a>(&self, buffer: &'a Buffer) -> &'a [u8] {
-        let start = buffer.input.lines[self.lastline()].start + self.offset();
-        let len = self.length();
-        buffer.substr_at(start, start + len).unwrap()
     }
 }
 

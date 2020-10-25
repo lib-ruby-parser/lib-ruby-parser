@@ -943,13 +943,9 @@ impl Lexer {
         let mut ptr_end;
         let len;
         let mut str_ = TokenBuf::new(b"");
-        // let enc = self.p.enc;
-        // let base_enc = 0;
         let bol;
 
-        let heredoc_end_start: usize;
-        let mut heredoc_end_end: usize;
-        let heredoc_end_value: &[u8];
+        let heredoc_end: HeredocEnd;
 
         eos = self.buffer.input.lines[here.lastline()].start + here.offset();
         len = here.length();
@@ -1031,23 +1027,7 @@ impl Lexer {
                     .is_whole_match(&self.buffer.substr_at(eos, eos + len).unwrap(), indent)
                 {
                     self.lval_end = Some(self.buffer.pend - 1);
-                    heredoc_end_start = self.buffer.pbeg;
-                    let mut heredoc_end_starts_at = heredoc_end_start;
-                    while self.buffer.byte_at(heredoc_end_starts_at) == b' ' {
-                        heredoc_end_starts_at += 1;
-                    }
-                    heredoc_end_end = heredoc_end_starts_at;
-                    loop {
-                        let c = self.buffer.byte_at(heredoc_end_end);
-                        if c.is_eof() || c == '\n' {
-                            break;
-                        }
-                        heredoc_end_end += 1;
-                    }
-                    heredoc_end_value = self
-                        .buffer
-                        .substr_at(heredoc_end_starts_at, heredoc_end_end)
-                        .unwrap();
+                    heredoc_end = self.compute_heredoc_end();
                     break;
                 }
             }
@@ -1101,25 +1081,7 @@ impl Lexer {
                     .buffer
                     .is_whole_match(&self.buffer.substr_at(eos, eos + len).unwrap(), indent)
                 {
-                    // self.lval_start = Some(self.buffer.pcur + 1);
-
-                    heredoc_end_start = self.buffer.pbeg;
-                    let mut heredoc_end_starts_at = heredoc_end_start;
-                    while self.buffer.byte_at(heredoc_end_starts_at) == b' ' {
-                        heredoc_end_starts_at += 1;
-                    }
-                    heredoc_end_end = heredoc_end_starts_at;
-                    loop {
-                        let c = self.buffer.byte_at(heredoc_end_end);
-                        if c.is_eof() || c == '\n' {
-                            break;
-                        }
-                        heredoc_end_end += 1;
-                    }
-                    heredoc_end_value = self
-                        .buffer
-                        .substr_at(heredoc_end_starts_at, heredoc_end_end)
-                        .unwrap();
+                    heredoc_end = self.compute_heredoc_end();
 
                     break;
                 }
@@ -1127,22 +1089,37 @@ impl Lexer {
             str_ = self.tokenbuf.clone();
         }
 
-        let heredoc_value = String::from_utf8(heredoc_end_value.to_vec()).unwrap();
-
         self.heredoc_restore(&here);
         self.token_flush();
         self.strterm = self.new_strterm(
             func | STR_FUNC_TERM,
             0 as u8,
             Some(0 as u8),
-            Some(HeredocEnd {
-                start: heredoc_end_start,
-                end: heredoc_end_end,
-                value: heredoc_value,
-            }),
+            Some(heredoc_end),
         );
         self.set_yylval_str(str_);
         return Self::tSTRING_CONTENT;
+    }
+
+    pub(crate) fn compute_heredoc_end(&self) -> HeredocEnd {
+        let start = self.buffer.pbeg;
+        let mut end_starts_at = start;
+        while self.buffer.byte_at(end_starts_at) == b' ' {
+            end_starts_at += 1;
+        }
+        let mut end = end_starts_at;
+        loop {
+            let c = self.buffer.byte_at(end);
+            if c.is_eof() || c == '\n' {
+                break;
+            }
+            end += 1;
+        }
+        let value = self.buffer.substr_at(end_starts_at, end).unwrap();
+
+        let value = String::from_utf8(value.to_vec()).unwrap();
+
+        HeredocEnd { start, end, value }
     }
 
     pub(crate) fn here_document_error(
@@ -1163,13 +1140,16 @@ impl Lexer {
     }
 
     pub(crate) fn here_document_restore(&mut self, here: &HeredocLiteral) -> i32 {
+        let heredoc_end = self.compute_heredoc_end();
+        self.lval_start = Some(heredoc_end.start);
+        self.lval_end = Some(heredoc_end.end);
+        self.set_yylval_str(TokenBuf::new(heredoc_end.value.as_bytes()));
+
         self.heredoc_restore(&here);
         self.token_flush();
         self.strterm = None;
         self.set_lex_state(EXPR_END);
-        self.set_yylval_str(TokenBuf::new(here.id(&self.buffer)));
-        self.lval_start = Some(self.buffer.pend);
-        self.lval_end = Some(self.buffer.pend + here.length());
+
         return Self::tSTRING_END;
     }
 
