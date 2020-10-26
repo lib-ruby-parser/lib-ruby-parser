@@ -31,15 +31,11 @@ fn token_value(token: &Token) -> String {
     token.to_string_lossy()
 }
 
-fn rpad1<T: Sized + std::fmt::Display>(value: &T, total_width: usize) -> String {
-    format!("{:width$}", format!("{}, ", value), width = total_width)
-}
-
-fn rpad2<T: Sized + std::fmt::Debug>(value: &T, total_width: usize) -> String {
+fn rpad<T: Sized + std::fmt::Debug>(value: &T, total_width: usize) -> String {
     format!("{:width$}", format!("{:?}, ", value), width = total_width)
 }
 
-fn main() -> Result<(), String> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Args = Args::parse();
     let callback: &dyn Fn(&Vec<Token>) = if args.quiet {
         &|_tokens: &Vec<Token>| {}
@@ -60,8 +56,8 @@ fn main() -> Result<(), String> {
 
             println!("[");
             for token in tokens {
-                let name = rpad1(&token_name(&token), tok_name_length);
-                let value = rpad2(&token_value(&token), tok_value_length);
+                let name = rpad(&token_name(&token), tok_name_length);
+                let value = rpad(&token_value(&token), tok_value_length);
                 println!(
                     "    :{}{}[{}, {}]",
                     name, value, token.loc.begin, token.loc.end
@@ -78,12 +74,11 @@ fn main() -> Result<(), String> {
     } else if let Some(path) = args.path {
         let path = Path::new(&path);
         each_ruby_file(path, &|entry| {
-            let code = fs::read(Path::new(entry)).unwrap();
-            let node = tokenize(&code, entry, debug)
-                .unwrap_or_else(|_| panic!("failed to parse {}", entry));
-            callback(&node)
-        })
-        .unwrap_or_else(|e| panic!("Error {:?}", e));
+            let code = fs::read(Path::new(entry))?;
+            let node = tokenize(&code, entry, debug)?;
+            callback(&node);
+            Ok(())
+        })?;
     }
 
     return Ok(());

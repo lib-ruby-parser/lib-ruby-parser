@@ -49,7 +49,7 @@ fn compare(path: &str) -> Result<(), ()> {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     let args: Vec<&str> = args.iter().skip(1).map(|e| &e[..]).collect();
 
@@ -58,11 +58,10 @@ fn main() {
         _ => print_usage(),
     };
 
-    // let mut erred_files = std::sync::Mutex::new(vec![]);
-
     each_async_ruby_file(Path::new(path), &|path| match compare(&path) {
         Ok(_) => {}
         Err(_) => {}
-    })
-    .unwrap();
+    })?;
+
+    Ok(())
 }

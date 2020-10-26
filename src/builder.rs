@@ -344,21 +344,28 @@ impl Builder {
     // Executable strings
 
     pub(crate) fn xstring_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
-        match self.string_map(&Some(begin_t), &parts, &Some(end_t)) {
-            StringMap::CollectionMap((begin_l, end_l, expression_l)) => Node::Xstr(Xstr {
+        if value(&begin_t).starts_with("<<") {
+            let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(&end_t));
+            let heredoc_end_l = self.loc(&end_t);
+            let expression_l = self.loc(&begin_t);
+
+            Node::XHeredoc(XHeredoc {
                 parts,
-                begin_l: begin_l.unwrap(),
-                end_l: end_l.unwrap(),
+                heredoc_body_l,
+                heredoc_end_l,
                 expression_l,
-            }),
-            StringMap::HeredocMap((heredoc_body_l, heredoc_end_l, expression_l)) => {
-                Node::XHeredoc(XHeredoc {
-                    parts,
-                    heredoc_body_l,
-                    heredoc_end_l,
-                    expression_l,
-                })
-            }
+            })
+        } else {
+            let begin_l = self.loc(&begin_t);
+            let end_l = self.loc(&end_t);
+            let expression_l = begin_l.join(&end_l);
+
+            Node::Xstr(Xstr {
+                parts,
+                begin_l,
+                end_l,
+                expression_l,
+            })
         }
     }
 

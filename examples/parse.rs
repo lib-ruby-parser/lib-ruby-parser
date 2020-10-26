@@ -42,7 +42,7 @@ fn print_full(_str: &str, node: &Node) {
     println!("{:#?}", node)
 }
 
-fn main() -> Result<(), String> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Args = Args::parse();
     let callback: &dyn Fn(&str, &Node) = if args.quiet {
         &print_quite
@@ -61,12 +61,11 @@ fn main() -> Result<(), String> {
     } else if let Some(path) = args.path {
         let path = Path::new(&path);
         each_ruby_file(path, &|entry| {
-            let code = fs::read(Path::new(entry)).unwrap();
-            let node =
-                parse(&code, entry, debug).unwrap_or_else(|_| panic!("failed to parse {}", entry));
-            callback(&String::from_utf8_lossy(&code), &node)
-        })
-        .unwrap_or_else(|e| panic!("Error {:?}", e));
+            let code = fs::read(Path::new(entry))?;
+            let node = parse(&code, entry, debug)?;
+            callback(&String::from_utf8_lossy(&code), &node);
+            Ok(())
+        })?;
     } else {
         println!("Nothing to parse");
     }

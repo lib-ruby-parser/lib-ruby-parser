@@ -1185,7 +1185,7 @@
                     {
                         let mlhs_items: Vec<Node> = match $<Node>2 {
                             Node::Mlhs(Mlhs { items, .. }) => items,
-                            other => panic!("unsupported mlhs item {:?}", other)
+                            other => unreachable!("unsupported mlhs item {:?}", other)
                         };
 
                         $$ = Value::Node(
@@ -5688,6 +5688,7 @@ keyword_variable: kNIL
 impl Lexer {
     fn report_syntax_error(&self, ctx: &Context) {
         if self.debug { eprintln!("syntax error: {:?}", ctx) }
+        panic!("syntax error: {:?}", ctx);
     }
 
     fn yyerror(&mut self, loc: &Loc, msg: &str) {
