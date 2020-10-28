@@ -18,7 +18,11 @@ USAGE:
 fn compare(path: &str) -> Result<(), ()> {
     match (ripper_lex(path), lex_as_ripper(path)) {
         (Ok(ripper_out), Ok(out)) => {
-            for (lineno, (ripper_line, line)) in ripper_out.lines().zip(out.lines()).enumerate() {
+            let ripper_lines = ripper_out.lines();
+            let eof = vec!["--EOF"].into_iter().cycle();
+            let lines = out.lines().chain(eof);
+
+            for (lineno, (ripper_line, line)) in ripper_lines.zip(lines).enumerate() {
                 if ripper_line == "<<UNKNOWN>>" {
                     // Part of the regex with interpolation
                     // that can't be dumped

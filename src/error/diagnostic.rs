@@ -23,7 +23,6 @@ impl Diagnostic {
 
     pub fn render(&self) -> Option<String> {
         let (line_no, line_loc) = self.range.expand_to_line()?;
-        println!("{}, {:?}", line_no, line_loc);
         let line = line_loc.source()?;
 
         let filename = &self.range.input.name;
@@ -44,5 +43,13 @@ impl Diagnostic {
             .trim()
             .to_owned(),
         )
+    }
+
+    pub fn is_warning(&self) -> bool {
+        matches!(self.level, ErrorLevel::Warning)
+    }
+
+    pub fn is_error(&self) -> bool {
+        matches!(self.level, ErrorLevel::Error)
     }
 }

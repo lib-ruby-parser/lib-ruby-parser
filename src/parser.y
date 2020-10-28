@@ -18,6 +18,8 @@
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
     tokens: Vec<Token>,
+    diagnostics: Vec<Diagnostic>,
+    source_buffer: Rc<Input>,
 }
 
 %code use {
@@ -34,6 +36,9 @@
     use crate::parse_value::*;
     use crate::Node;
     use crate::source::InputError;
+    use crate::source::buffer::Input;
+    use crate::source::Range;
+    use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 }
 
 %code {
@@ -371,7 +376,8 @@
                         let compound_stmt = $<MaybeNode>1;
                         let rescue_bodies = $<NodeList>2;
                         if rescue_bodies.is_empty() {
-                            self.yyerror(&@3, "else without rescue is useless");
+                            self.yyerror(&@3, DiagnosticMessage::ElseWithoutRescue);
+                            return Self::YYERROR;
                         }
 
                         let else_ = Some(( $<Token>3, $<MaybeNode>4 ));
@@ -437,7 +443,7 @@
    stmt_or_begin: stmt
                 | klBEGIN
                     {
-                        self.yyerror(&@1, "BEGIN is permitted only at toplevel");
+                        self.yyerror(&@1, DiagnosticMessage::BeginNotAtTopLevel);
                         return Self::YYERROR;
                     }
                   begin_block
@@ -477,7 +483,7 @@
                     }
                 | kALIAS tGVAR tNTH_REF
                     {
-                        self.yyerror(&@3, "can't make alias for the number variables");
+                        self.yyerror(&@3, DiagnosticMessage::AliasNthRef);
                         return Self::YYERROR;
                     }
                 | kUNDEF undef_list
@@ -1333,7 +1339,7 @@
                     {
                         let op_t = $<Token>2;
                         if op_t.token_type == Lexer::tANDDOT {
-                            self.yyerror(&@2, "&. inside multiple assignment destination");
+                            self.yyerror(&@2, DiagnosticMessage::CsendInsideMasgn);
                             return Self::YYERROR;
                         }
 
@@ -1359,7 +1365,7 @@
                     {
                         let op_t = $<Token>2;
                         if op_t.token_type == Lexer::tANDDOT {
-                            self.yyerror(&@2, "&. inside multiple assignment destination");
+                            self.yyerror(&@2, DiagnosticMessage::CsendInsideMasgn);
                             return Self::YYERROR;
                         }
 
@@ -1492,8 +1498,8 @@
 
            cname: tIDENTIFIER
                     {
-                        self.yyerror(&@1, "class/module name must be CONSTANT");
-                        $$ = $1;
+                        self.yyerror(&@1, DiagnosticMessage::ClassOrModuleNameMustBeConstant);
+                        return Self::YYERROR;
                     }
                 | tCONSTANT
                 ;
@@ -2000,7 +2006,8 @@
 
                         let name = value(&name_t);
                         if name.ends_with('=') {
-                            self.yyerror(&@1, "setter method cannot be defined in an endless method definition");
+                            self.yyerror(&@1, DiagnosticMessage::EndlessSetterDefinition);
+                            return Self::YYERROR;
                         }
 
                         $$ = Value::Node(
@@ -2209,7 +2216,7 @@
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            self.yyerror(&@4, "unexpected ...");
+                            self.yyerror(&@4, DiagnosticMessage::UnexpectedToken("...".to_owned()));
                             return Self::YYERROR;
                         }
 
@@ -2228,7 +2235,7 @@
                 | tLPAREN2 args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            self.yyerror(&@2, "unexpected ...");
+                            self.yyerror(&@2, DiagnosticMessage::UnexpectedToken("...".to_owned()));
                             return Self::YYERROR;
                         }
 
@@ -2807,7 +2814,7 @@
                   k_end
                     {
                         if !self.context.is_class_definition_allowed() {
-                            self.yyerror(&@1, "class definition in method body");
+                            self.yyerror(&@1, DiagnosticMessage::ClassDefinitionInMethodBody);
                             return Self::YYERROR;
                         }
 
@@ -2865,7 +2872,7 @@
                   k_end
                     {
                         if !self.context.is_module_definition_allowed() {
-                            self.yyerror(&@1, "module definition in method body");
+                            self.yyerror(&@1, DiagnosticMessage::ModuleDefinitionInMethodBody);
                             return Self::YYERROR;
                         }
 
@@ -3048,7 +3055,7 @@
         k_return: kRETURN
                     {
                         if self.context.is_in_class() {
-                            self.yyerror(&@1, "Invalid return in class/module body");
+                            self.yyerror(&@1, DiagnosticMessage::InvalidReturnInClassOrModuleBody);
                             return Self::YYERROR;
                         }
                         $$ = $1;
@@ -4440,7 +4447,8 @@ opt_block_args_tail:
                         let name = value(&ident_t);
 
                         if !self.static_env.is_declared(&name) {
-                            self.yyerror(&@2, &format!("{}: no such local variable", name));
+                            self.yyerror(&@2, DiagnosticMessage::NoSuchLocalVariable(name));
+                            return Self::YYERROR;
                         }
 
                         let lvar = self.builder.accessible(self.builder.lvar(ident_t));
@@ -4983,14 +4991,18 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         let node = Node::from(yystack.owned_value_at(0));
-                        if let Node::Lvar(Lvar { name, expression_l: _expression_l }) = &node {
+                        if let Node::Lvar(Lvar { name, expression_l }) = &node {
                             match name.chars().collect::<Vec<_>>()[..] {
                                 ['_', n] if n >= '1' && n <= '9' => {
                                     if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
                                         /* definitely an implicit param */
 
                                         if self.max_numparam_stack.has_ordinary_params() {
-                                            // diagnostic :error, :ordinary_param_defined, nil, [nil, expression_l]
+                                            self.yyerror0(
+                                                DiagnosticMessage::OrdinaryParamDefined,
+                                                expression_l.clone(),
+                                            );
+                                            return Self::YYERROR;
                                         }
 
                                         let mut raw_context = self.context.inner_clone();
@@ -5005,7 +5017,11 @@ keyword_variable: kNIL
                                                 let outer_scope_has_numparams = raw_max_numparam_stack.pop().unwrap() > 0;
 
                                                 if outer_scope_has_numparams {
-                                                    // diagnostic :error, :numparam_used_in_outer_scope, nil, [nil, location]
+                                                    self.yyerror0(
+                                                        DiagnosticMessage::NumparamUsed,
+                                                        expression_l.clone()
+                                                    );
+                                                    return Self::YYERROR;
                                                 } else {
                                                     /* for now it's ok, but an outer scope can also be a block
                                                         with numparams, so we need to continue */
@@ -5254,23 +5270,23 @@ keyword_variable: kNIL
 
        f_bad_arg: tCONSTANT
                     {
-                        self.yyerror(&@1, "formal argument cannot be a constant");
-                        $$ = $1;
+                        self.yyerror(&@1, DiagnosticMessage::ConstArgument);
+                        return Self::YYERROR;
                     }
                 | tIVAR
                     {
-                        self.yyerror(&@1, "formal argument cannot be an instance variable");
-                        $$ = $1;
+                        self.yyerror(&@1, DiagnosticMessage::IvarArgument);
+                        return Self::YYERROR;
                     }
                 | tGVAR
                     {
-                        self.yyerror(&@1, "formal argument cannot be a global variable");
-                        $$ = $1;
+                        self.yyerror(&@1, DiagnosticMessage::GvarArgument);
+                        return Self::YYERROR;
                     }
                 | tCVAR
                     {
-                        self.yyerror(&@1, "formal argument cannot be a class variable");
-                        $$ = $1;
+                        self.yyerror(&@1, DiagnosticMessage::CvarArgument);
+                        return Self::YYERROR;
                     }
                 ;
 
@@ -5330,7 +5346,7 @@ keyword_variable: kNIL
                     {
                         let ident_t = $<Token>1;
                         if let Err(e) = self.check_kwarg_name(&ident_t) {
-                            self.yyerror(&@1, &e);
+                            self.yyerror(&@1, e);
                         }
 
                         let ident = value(&ident_t);
@@ -5677,19 +5693,6 @@ keyword_variable: kNIL
 
 %%
 
-#[allow(non_upper_case_globals)]
-impl Lexer {
-    fn report_syntax_error(&self, ctx: &Context) {
-        if self.debug { eprintln!("syntax error: {:?}", ctx) }
-        println!("syntax error: {:?}", ctx);
-    }
-
-    fn yyerror(&mut self, loc: &Loc, msg: &str) {
-        if self.debug { eprintln!("yyerror: {:?} {:?}", loc, msg) }
-        println!("{:?} {}", loc, msg)
-    }
-}
-
 impl Parser {
     pub fn new(bytes: &[u8], name: &str) -> Result<Self, InputError> {
         let lexer = Lexer::new(bytes, name, None)?;
@@ -5718,7 +5721,7 @@ impl Parser {
                 max_numparam_stack.clone(),
                 pattern_variables.clone(),
                 pattern_hash_keys.clone(),
-                source_buffer,
+                source_buffer.clone(),
             ),
             context,
             current_arg_stack,
@@ -5726,26 +5729,38 @@ impl Parser {
             pattern_variables,
             pattern_hash_keys,
             static_env,
-            yylexer: lexer,
             last_token: Token {
                 token_type: 0,
                 token_value: TokenValue::String("".to_owned()),
                 loc: Loc { begin: 0, end: 0 }
             },
             tokens: vec![],
+            diagnostics: vec![],
+            source_buffer: source_buffer,
+            yylexer: lexer,
         }
     }
 
     pub fn do_parse(&mut self) -> Option<Node> {
         self.parse();
-        std::mem::replace(&mut self.result, None)
+
+        for d in self.diagnostics.iter() {
+            if let Some(d) = d.render() {
+                println!("{}", d);
+            } else {
+                println!("failed to render a diagnostic");
+            }
+        }
+
+        self.result.take()
     }
 
     pub fn lex(&mut self) -> Option<Vec<Token>> {
         self.do_parse()?;
-        Some(
-            std::mem::replace(&mut self.tokens, vec![])
-        )
+        let mut tokens = vec![];
+        tokens.append(&mut self.tokens);
+
+        Some(tokens)
     }
 
     pub fn set_debug(&mut self, debug: bool) {
@@ -5758,19 +5773,48 @@ impl Parser {
     }
 
     fn next_token(&mut self) -> Token {
-        let token = self.yylexer.yylex();
+        let mut token = self.yylexer.yylex();
         self.last_token = token.clone();
         self.tokens.push(token.clone());
+
+        self.diagnostics.append(&mut self.yylexer.diagnostics);
+
         token
     }
 
-    fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), String> {
+    fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), DiagnosticMessage> {
         let name = value(ident_t);
         let first_char = name.chars().next().unwrap();
         if first_char.is_lowercase() {
             Ok(())
         } else {
-            Err("formal argument cannot be a constant".to_owned())
+            Err(DiagnosticMessage::ConstArgument)
         }
+    }
+
+    fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage) {
+        eprintln!("yyerror: {:?} {:?}", loc, message.render());
+        let diagnostic = Diagnostic::new(
+            ErrorLevel::Error,
+            message,
+            Range::new(loc.begin, loc.end, Rc::clone(&self.source_buffer))
+        );
+        self.diagnostics.push(diagnostic);
+    }
+
+    fn yyerror0(&mut self, message: DiagnosticMessage, range: Range) {
+        eprintln!("yyerror0: {:?} {:?}", range, message.render());
+        self.diagnostics.push(Diagnostic::new(ErrorLevel::Error, message, range));
+    }
+
+    fn report_syntax_error(&mut self, ctx: &Context) {
+        eprintln!("report_syntax_error: {:?}", ctx);
+        let id: usize = ctx.token().code().try_into().unwrap();
+        let diagnostic = Diagnostic::new(
+            ErrorLevel::Error,
+            DiagnosticMessage::UnexpectedToken(Lexer::TOKEN_NAMES[id].to_owned()),
+            Range::new(ctx.location().begin, ctx.location().end, Rc::clone(&self.source_buffer))
+        );
+        self.diagnostics.push(diagnostic);
     }
 }

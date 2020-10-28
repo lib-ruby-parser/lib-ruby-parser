@@ -24,7 +24,7 @@ struct Args {
 }
 
 fn token_name(token: &Token) -> String {
-    Lexer::token_name(token)
+    Lexer::token_name(token.token_type)
 }
 
 fn token_value(token: &Token) -> String {

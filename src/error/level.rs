@@ -2,7 +2,6 @@
 pub enum ErrorLevel {
     Warning,
     Error,
-    Fatal,
 }
 
 impl std::fmt::Debug for ErrorLevel {
@@ -10,7 +9,6 @@ impl std::fmt::Debug for ErrorLevel {
         match self {
             Self::Warning => f.write_str("warning"),
             Self::Error => f.write_str("error"),
-            Self::Fatal => f.write_str("fatal"),
         }
     }
 }

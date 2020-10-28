@@ -137,7 +137,7 @@ impl Lexer {
         if self.debug {
             println!(
                 "yylex ({:?}, {:?}, {:?})",
-                Self::token_name(&token),
+                Self::token_name(token.token_type),
                 token.token_value,
                 token.loc
             );
@@ -155,8 +155,7 @@ impl Lexer {
         self.buffer.token_flush()
     }
 
-    pub fn token_name(token: &Token) -> String {
-        let id = token.token_type;
+    pub fn token_name(id: i32) -> String {
         let first_token = Self::YYerror;
         if id > first_token + 1 {
             let pos: usize = (id - first_token + 1).try_into().unwrap();
@@ -164,10 +163,7 @@ impl Lexer {
         } else if id == Self::END_OF_INPUT {
             "EOF".to_owned()
         } else {
-            panic!(
-                "token_name fails, {:?} (first token = {})",
-                token, first_token
-            )
+            panic!("token_name fails, {} (first token = {})", id, first_token)
         }
     }
 

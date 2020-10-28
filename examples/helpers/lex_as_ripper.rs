@@ -11,10 +11,10 @@ pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
 
     let mut output = String::from("");
     for token in tokens {
-        if Lexer::token_name(&token) == "EOF" {
+        if Lexer::token_name(token.token_type) == "EOF" {
             continue;
         }
-        let token_name = Lexer::token_name(&token);
+        let token_name = Lexer::token_name(token.token_type);
         let bytes = token.to_bytes();
 
         let token_name = match &token_name[..] {

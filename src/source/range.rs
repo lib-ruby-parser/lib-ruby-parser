@@ -125,19 +125,14 @@ impl Range {
     }
 
     pub fn expand_to_line(&self) -> Option<(usize, Self)> {
-        println!(
-            "self.begin_line_col() = {:?}, self.end_line_col() = {:?}",
-            self.begin_line_col(),
-            self.end_line_col()
-        );
         let (begin_line, _) = self.begin_line_col()?;
         let (end_line, _) = self.end_line_col()?;
         if begin_line != end_line {
-            unreachable!("multi-line error")
+            return None;
         }
         let line_no = begin_line;
         let line = &self.input.lines[line_no];
-        Some((line_no, self.with(line.start, line.end)))
+        Some((line_no, self.with(line.start, line.end - 1)))
     }
 
     pub fn source(&self) -> Option<String> {

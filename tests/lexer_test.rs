@@ -75,7 +75,7 @@ enum TestResult {
 }
 
 fn token_name(token: &Token) -> String {
-    Lexer::token_name(token)
+    Lexer::token_name(token.token_type)
 }
 
 fn lex_state(state: &str) -> i32 {
