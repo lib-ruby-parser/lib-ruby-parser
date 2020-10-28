@@ -3,6 +3,7 @@
 %define api.parser.struct { Parser }
 %define api.location.type { Loc }
 %define api.value.type { Value }
+%define api.parse_error.type { Diagnostic }
 
 %define parse.error custom
 %define parse.trace
@@ -376,8 +377,7 @@
                         let compound_stmt = $<MaybeNode>1;
                         let rescue_bodies = $<NodeList>2;
                         if rescue_bodies.is_empty() {
-                            self.yyerror(&@3, DiagnosticMessage::ElseWithoutRescue);
-                            return Self::YYERROR;
+                            return self.yyerror(&@3, DiagnosticMessage::ElseWithoutRescue);
                         }
 
                         let else_ = Some(( $<Token>3, $<MaybeNode>4 ));
@@ -443,8 +443,7 @@
    stmt_or_begin: stmt
                 | klBEGIN
                     {
-                        self.yyerror(&@1, DiagnosticMessage::BeginNotAtTopLevel);
-                        return Self::YYERROR;
+                        return self.yyerror(&@1, DiagnosticMessage::BeginNotAtTopLevel);
                     }
                   begin_block
                     {
@@ -483,8 +482,7 @@
                     }
                 | kALIAS tGVAR tNTH_REF
                     {
-                        self.yyerror(&@3, DiagnosticMessage::AliasNthRef);
-                        return Self::YYERROR;
+                        return self.yyerror(&@3, DiagnosticMessage::AliasNthRef);
                     }
                 | kUNDEF undef_list
                     {
@@ -562,7 +560,7 @@
                 | klEND tLCURLY compstmt tRCURLY
                     {
                         if self.context.is_in_def() {
-                            self.warn(&@1, "END in method; use at_exit")
+                            self.warn(&@1, DiagnosticMessage::EndInMethod);
                         }
 
                         $$ = Value::Node(
@@ -696,7 +694,7 @@
                                 $<Node>1,
                                 $<Token>2,
                                 $<Node>3
-                            )
+                            )?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket tOP_ASGN command_rhs
@@ -711,7 +709,7 @@
                                 ),
                                 $<Token>5,
                                 $<Node>6
-                            )
+                            )?
                         );
                     }
                 | primary_value call_op tIDENTIFIER tOP_ASGN command_rhs
@@ -728,7 +726,7 @@
                                 ),
                                 $<Token>4,
                                 $<Node>5
-                            )
+                            )?
                         );
                     }
                 | primary_value call_op tCONSTANT tOP_ASGN command_rhs
@@ -745,7 +743,7 @@
                                 ),
                                 $<Token>4,
                                 $<Node>5
-                            )
+                            )?
                         );
                     }
                 | primary_value tCOLON2 tCONSTANT tOP_ASGN command_rhs
@@ -762,7 +760,7 @@
                                 const_,
                                 $<Token>4,
                                 $<Node>5
-                            )
+                            )?
                         );
                     }
                 | primary_value tCOLON2 tIDENTIFIER tOP_ASGN command_rhs
@@ -779,7 +777,7 @@
                                 ),
                                 $<Token>4,
                                 $<Node>5
-                            )
+                            )?
                         );
                     }
                 | backref tOP_ASGN command_rhs
@@ -1020,7 +1018,7 @@
                                 args_type,
                                 body,
                                 end_t
-                            )
+                            )?
                         );
                     }
                 | primary_value call_op operation2 command_args %prec tLOWEST
@@ -1055,7 +1053,7 @@
                                 args_type,
                                 body,
                                 end_t
-                            )
+                            )?
                         );
                     }
                 | primary_value tCOLON2 operation2 command_args %prec tLOWEST
@@ -1090,7 +1088,7 @@
                                 args_type,
                                 body,
                                 end_t
-                            )
+                            )?
                         );
                     }
                 | kSUPER command_args
@@ -1102,7 +1100,7 @@
                                 None,
                                 $<NodeList>2,
                                 None
-                            )
+                            )?
                         );
                     }
                 | kYIELD command_args
@@ -1114,7 +1112,7 @@
                                 None,
                                 $<NodeList>2,
                                 None
-                            )
+                            )?
                         );
                     }
                 | k_return call_args
@@ -1126,7 +1124,7 @@
                                 None,
                                 $<NodeList>2,
                                 None
-                            )
+                            )?
                         );
                     }
                 | kBREAK call_args
@@ -1138,7 +1136,7 @@
                                 None,
                                 $<NodeList>2,
                                 None
-                            )
+                            )?
                         );
                     }
                 | kNEXT call_args
@@ -1150,7 +1148,7 @@
                                 None,
                                 $<NodeList>2,
                                 None
-                            )
+                            )?
                         );
                     }
                 ;
@@ -1315,13 +1313,13 @@
        mlhs_node: user_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<Node>1)
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<Node>1)
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
@@ -1339,8 +1337,7 @@
                     {
                         let op_t = $<Token>2;
                         if op_t.token_type == Lexer::tANDDOT {
-                            self.yyerror(&@2, DiagnosticMessage::CsendInsideMasgn);
-                            return Self::YYERROR;
+                            return self.yyerror(&@2, DiagnosticMessage::CsendInsideMasgn);
                         }
 
                         $$ = Value::Node(
@@ -1365,8 +1362,7 @@
                     {
                         let op_t = $<Token>2;
                         if op_t.token_type == Lexer::tANDDOT {
-                            self.yyerror(&@2, DiagnosticMessage::CsendInsideMasgn);
-                            return Self::YYERROR;
+                            return self.yyerror(&@2, DiagnosticMessage::CsendInsideMasgn);
                         }
 
                         $$ = Value::Node(
@@ -1386,7 +1382,7 @@
                                     $<Token>2,
                                     $<Token>3
                                 )
-                            )
+                            )?
                         );
                     }
                 | tCOLON3 tCONSTANT
@@ -1397,7 +1393,7 @@
                                     $<Token>1,
                                     $<Token>2
                                 )
-                            )
+                            )?
                         );
                     }
                 | backref
@@ -1405,7 +1401,7 @@
                         $$ = Value::Node(
                             self.builder.assignable(
                                 $<Node>1
-                            )
+                            )?
                         );
                     }
                 ;
@@ -1413,13 +1409,13 @@
              lhs: user_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<Node>1)
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<Node>1)
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
@@ -1472,7 +1468,7 @@
                                     $<Token>2,
                                     $<Token>3,
                                 )
-                            )
+                            )?
                         );
                     }
                 | tCOLON3 tCONSTANT
@@ -1483,7 +1479,7 @@
                                     $<Token>1,
                                     $<Token>2,
                                 )
-                            )
+                            )?
                         );
                     }
                 | backref
@@ -1491,15 +1487,14 @@
                         $$ = Value::Node(
                             self.builder.assignable(
                                 $<Node>1
-                            )
+                            )?
                         );
                     }
                 ;
 
            cname: tIDENTIFIER
                     {
-                        self.yyerror(&@1, DiagnosticMessage::ClassOrModuleNameMustBeConstant);
-                        return Self::YYERROR;
+                        return self.yyerror(&@1, DiagnosticMessage::ClassOrModuleNameMustBeConstant);
                     }
                 | tCONSTANT
                 ;
@@ -1624,7 +1619,7 @@
                                 $<Node>1,
                                 $<Token>2,
                                 $<Node>3
-                            )
+                            )?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket tOP_ASGN arg_rhs
@@ -1639,7 +1634,7 @@
                                 ),
                                 $<Token>5,
                                 $<Node>6
-                            )
+                            )?
                         );
                     }
                 | primary_value call_op tIDENTIFIER tOP_ASGN arg_rhs
@@ -1656,7 +1651,7 @@
                                 ),
                                 $<Token>4,
                                 $<Node>5
-                            )
+                            )?
                         );
                     }
                 | primary_value call_op tCONSTANT tOP_ASGN arg_rhs
@@ -1673,7 +1668,7 @@
                                 ),
                                 $<Token>4,
                                 $<Node>5
-                            )
+                            )?
                         );
                     }
                 | primary_value tCOLON2 tIDENTIFIER tOP_ASGN arg_rhs
@@ -1690,7 +1685,7 @@
                                 ),
                                 $<Token>4,
                                 $<Node>5
-                            )
+                            )?
                         );
                     }
                 | primary_value tCOLON2 tCONSTANT tOP_ASGN arg_rhs
@@ -1707,7 +1702,7 @@
                                 const_,
                                 $<Token>4,
                                 $<Node>5
-                            )
+                            )?
                         );
                     }
                 | tCOLON3 tCONSTANT tOP_ASGN arg_rhs
@@ -1723,7 +1718,7 @@
                                 const_,
                                 $<Token>3,
                                 $<Node>4
-                            )
+                            )?
                         );
                     }
                 | backref tOP_ASGN arg_rhs
@@ -1733,7 +1728,7 @@
                                 $<Node>1,
                                 $<Token>2,
                                 $<Node>3
-                            )
+                            )?
                         );
                     }
                 | arg tDOT2 arg
@@ -1985,7 +1980,7 @@
                                 None,
                                 vec![ $<Node>3 ],
                                 None
-                            )
+                            )?
                         );
                     }
                 | arg tEH arg opt_nl tCOLON arg
@@ -2006,8 +2001,7 @@
 
                         let name = value(&name_t);
                         if name.ends_with('=') {
-                            self.yyerror(&@1, DiagnosticMessage::EndlessSetterDefinition);
-                            return Self::YYERROR;
+                            return self.yyerror(&@1, DiagnosticMessage::EndlessSetterDefinition);
                         }
 
                         $$ = Value::Node(
@@ -2017,7 +2011,7 @@
                                 $<MaybeNode>2,
                                 $<Token>3,
                                 Some($<Node>4)
-                            )
+                            )?
                         );
 
                         self.yylexer.cmdarg_pop();
@@ -2053,7 +2047,7 @@
                                 $<MaybeNode>2,
                                 $<Token>3,
                                 method_body
-                            )
+                            )?
                         );
 
                         self.yylexer.cmdarg_pop();
@@ -2075,7 +2069,7 @@
                                 $<MaybeNode>2,
                                 $<Token>3,
                                 Some($<Node>4)
-                            )
+                            )?
                         );
 
                         self.yylexer.cmdarg_pop();
@@ -2113,7 +2107,7 @@
                                 $<MaybeNode>2,
                                 $<Token>3,
                                 method_body
-                            )
+                            )?
                         );
 
                         self.yylexer.cmdarg_pop();
@@ -2143,11 +2137,12 @@
                     }
                 | rel_expr relop arg   %prec tGT
                     {
-                        self.warn(&@2, "comparison after comparison");
+                        let op_t = $<Token>2;
+                        self.warn(&@2, DiagnosticMessage::ComparisonAfterComparison(value(&op_t)));
                         $$ = Value::Node(
                             self.builder.binary_op(
                                 $<Node>1,
-                                $<Token>2,
+                                op_t,
                                 $<Node>3
                             )
                         );
@@ -2216,8 +2211,7 @@
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            self.yyerror(&@4, DiagnosticMessage::UnexpectedToken("...".to_owned()));
-                            return Self::YYERROR;
+                            return self.yyerror(&@4, DiagnosticMessage::UnexpectedToken("...".to_owned()));
                         }
 
                         let args = [
@@ -2235,8 +2229,7 @@
                 | tLPAREN2 args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            self.yyerror(&@2, DiagnosticMessage::UnexpectedToken("...".to_owned()));
-                            return Self::YYERROR;
+                            return self.yyerror(&@2, DiagnosticMessage::UnexpectedToken("...".to_owned()));
                         }
 
                         $$ = Value::ParenArgs(
@@ -2544,7 +2537,7 @@
                                 None,
                                 vec![],
                                 None
-                            )
+                            )?
                         );
                     }
                 | kYIELD tLPAREN2 call_args rparen
@@ -2556,7 +2549,7 @@
                                 Some($<Token>2),
                                 $<NodeList>3,
                                 Some($<Token>4)
-                            )
+                            )?
                         );
                     }
                 | kYIELD tLPAREN2 rparen
@@ -2568,7 +2561,7 @@
                                 Some($<Token>2),
                                 vec![],
                                 Some($<Token>3)
-                            )
+                            )?
                         );
                     }
                 | kYIELD
@@ -2580,7 +2573,7 @@
                                 None,
                                 vec![],
                                 None
-                            )
+                            )?
                         );
                     }
                 | kDEFINED opt_nl tLPAREN2 expr rparen
@@ -2592,7 +2585,7 @@
                                 Some($<Token>3),
                                 vec![ $<Node>4 ],
                                 Some($<Token>5)
-                            )
+                            )?
                         );
                     }
                 | kNOT tLPAREN2 expr rparen
@@ -2636,7 +2629,7 @@
                                 args_type,
                                 body,
                                 end_t
-                            )
+                            )?
                         );
                     }
                 | method_call
@@ -2650,7 +2643,7 @@
                                 args_type,
                                 body,
                                 end_t
-                            )
+                            )?
                         );
                     }
                 | lambda
@@ -2814,8 +2807,7 @@
                   k_end
                     {
                         if !self.context.is_class_definition_allowed() {
-                            self.yyerror(&@1, DiagnosticMessage::ClassDefinitionInMethodBody);
-                            return Self::YYERROR;
+                            return self.yyerror(&@1, DiagnosticMessage::ClassDefinitionInMethodBody);
                         }
 
                         let Superclass { lt_t, value } = $<Superclass>3;
@@ -2872,8 +2864,7 @@
                   k_end
                     {
                         if !self.context.is_module_definition_allowed() {
-                            self.yyerror(&@1, DiagnosticMessage::ModuleDefinitionInMethodBody);
-                            return Self::YYERROR;
+                            return self.yyerror(&@1, DiagnosticMessage::ModuleDefinitionInMethodBody);
                         }
 
                         $$ = Value::Node(
@@ -2903,7 +2894,7 @@
                                 $<MaybeNode>2,
                                 $<MaybeNode>3,
                                 $<Token>4
-                            )
+                            )?
                         );
 
                         self.yylexer.cmdarg_pop();
@@ -2928,7 +2919,7 @@
                                 $<MaybeNode>2,
                                 $<MaybeNode>3,
                                 $<Token>4
-                            )
+                            )?
                         );
 
                         self.yylexer.cmdarg_pop();
@@ -2946,7 +2937,7 @@
                                 None,
                                 vec![],
                                 None
-                            )
+                            )?
                         );
                     }
                 | kNEXT
@@ -2958,7 +2949,7 @@
                                 None,
                                 vec![],
                                 None
-                            )
+                            )?
                         );
                     }
                 | kREDO
@@ -2970,7 +2961,7 @@
                                 None,
                                 vec![],
                                 None
-                            )
+                            )?
                         );
                     }
                 | kRETRY
@@ -2982,7 +2973,7 @@
                                 None,
                                 vec![],
                                 None
-                            )
+                            )?
                         );
                     }
                 ;
@@ -3055,8 +3046,7 @@
         k_return: kRETURN
                     {
                         if self.context.is_in_class() {
-                            self.yyerror(&@1, DiagnosticMessage::InvalidReturnInClassOrModuleBody);
-                            return Self::YYERROR;
+                            return self.yyerror(&@1, DiagnosticMessage::InvalidReturnInClassOrModuleBody);
                         }
                         $$ = $1;
                     }
@@ -3125,7 +3115,7 @@
           f_marg: f_norm_arg
                     {
                         $$ = Value::Node(
-                            self.builder.arg($<Token>1)
+                            self.builder.arg($<Token>1)?
                         );
                     }
                 | tLPAREN f_margs rparen
@@ -3178,13 +3168,13 @@
      f_rest_marg: tSTAR f_norm_arg
                     {
                         $$ = Value::Node(
-                            self.builder.restarg($<Token>1, Some($<Token>2))
+                            self.builder.restarg($<Token>1, Some($<Token>2))?
                         );
                     }
                 | tSTAR
                     {
                         $$ = Value::Node(
-                            self.builder.restarg($<Token>1, None)
+                            self.builder.restarg($<Token>1, None)?
                         );
                     }
                 ;
@@ -3375,7 +3365,7 @@ opt_block_args_tail:
                         let ident_t = $<Token>1;
                         self.static_env.declare(&value(&ident_t));
                         $$ = Value::Node(
-                            self.builder.shadowarg(ident_t)
+                            self.builder.shadowarg(ident_t)?
                         );
                     }
                 | f_bad_arg
@@ -3420,7 +3410,7 @@ opt_block_args_tail:
                                 args,
                                 body,
                                 end_t
-                            )
+                            )?
                         );
                     }
                 ;
@@ -3509,7 +3499,7 @@ opt_block_args_tail:
                                 args_type,
                                 body,
                                 end_t
-                            )
+                            )?
                         );
                     }
                 | block_call call_op2 operation2 opt_paren_args
@@ -3546,7 +3536,7 @@ opt_block_args_tail:
                                 args_type,
                                 body,
                                 end_t
-                            )
+                            )?
                         );
                     }
                 | block_call call_op2 operation2 command_args do_block
@@ -3568,7 +3558,7 @@ opt_block_args_tail:
                                 args_type,
                                 body,
                                 end_t
-                            )
+                            )?
                         );
                     }
                 ;
@@ -3672,7 +3662,7 @@ opt_block_args_tail:
                                 Some(begin_t),
                                 args,
                                 Some(end_t)
-                            )
+                            )?
                         );
                     }
                 | kSUPER
@@ -3684,7 +3674,7 @@ opt_block_args_tail:
                                 None,
                                 vec![],
                                 None
-                            )
+                            )?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
@@ -4171,25 +4161,25 @@ opt_block_args_tail:
                     }
                 | p_args_head tSTAR tIDENTIFIER
                     {
-                        let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3));
+                        let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3))?;
                         let nodes = [ $<NodeList>1, vec![ match_rest ] ].concat();
                         $$ = Value::NodeList(nodes);
                     }
                 | p_args_head tSTAR tIDENTIFIER tCOMMA p_args_post
                     {
-                        let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3));
+                        let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3))?;
                         let nodes = [ $<NodeList>1, vec![ match_rest ], $<NodeList>5 ].concat();
                         $$ = Value::NodeList(nodes);
                     }
                 | p_args_head tSTAR
                     {
-                        let match_rest = self.builder.match_rest($<Token>2, None);
+                        let match_rest = self.builder.match_rest($<Token>2, None)?;
                         let nodes = [ $<NodeList>1, vec![ match_rest ] ].concat();
                         $$ = Value::NodeList(nodes);
                     }
                 | p_args_head tSTAR tCOMMA p_args_post
                     {
-                        let match_rest = self.builder.match_rest($<Token>2, None);
+                        let match_rest = self.builder.match_rest($<Token>2, None)?;
                         let nodes = [ $<NodeList>1, vec![ match_rest ], $<NodeList>4 ].concat();
                         $$ = Value::NodeList(nodes);
                     }
@@ -4237,13 +4227,13 @@ opt_block_args_tail:
           p_rest: tSTAR tIDENTIFIER
                     {
                         $$ = Value::Node(
-                            self.builder.match_rest($<Token>1, Some($<Token>2))
+                            self.builder.match_rest($<Token>1, Some($<Token>2))?
                         );
                     }
                 | tSTAR
                     {
                         $$ = Value::Node(
-                            self.builder.match_rest($<Token>1, None)
+                            self.builder.match_rest($<Token>1, None)?
                         );
                     }
                 ;
@@ -4291,7 +4281,7 @@ opt_block_args_tail:
                             self.builder.match_pair(
                                 $<PKwLabel>1,
                                 $<Node>2
-                            )
+                            )?
                         );
                     }
                 | p_kw_label
@@ -4299,7 +4289,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.match_label(
                                 $<PKwLabel>1,
-                            )
+                            )?
                         );
                     }
                 ;
@@ -4322,7 +4312,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::NodeList(
                             vec![
-                                self.builder.match_rest($<Token>1, Some($<Token>2))
+                                self.builder.match_rest($<Token>1, Some($<Token>2))?
                             ]
                         );
                     }
@@ -4330,7 +4320,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::NodeList(
                             vec![
-                                self.builder.match_rest($<Token>1, None)
+                                self.builder.match_rest($<Token>1, None)?
                             ]
                         );
                     }
@@ -4427,7 +4417,7 @@ opt_block_args_tail:
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.accessible($<Node>1)
+                            self.builder.accessible($<Node>1)?
                         );
                     }
                 | lambda
@@ -4436,7 +4426,7 @@ opt_block_args_tail:
       p_variable: tIDENTIFIER
                     {
                         $$ = Value::Node(
-                            self.builder.match_var($<Token>1)
+                            self.builder.match_var($<Token>1)?
                         );
                     }
                 ;
@@ -4447,11 +4437,10 @@ opt_block_args_tail:
                         let name = value(&ident_t);
 
                         if !self.static_env.is_declared(&name) {
-                            self.yyerror(&@2, DiagnosticMessage::NoSuchLocalVariable(name));
-                            return Self::YYERROR;
+                            return self.yyerror(&@2, DiagnosticMessage::NoSuchLocalVariable(name));
                         }
 
-                        let lvar = self.builder.accessible(self.builder.lvar(ident_t));
+                        let lvar = self.builder.accessible(self.builder.lvar(ident_t))?;
                         $$ = Value::Node(
                             self.builder.pin($<Token>1, lvar)
                         );
@@ -4991,18 +4980,17 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         let node = Node::from(yystack.owned_value_at(0));
-                        if let Node::Lvar(Lvar { name, expression_l }) = &node {
+                        if let Node::Lvar(Lvar { name, .. }) = &node {
                             match name.chars().collect::<Vec<_>>()[..] {
                                 ['_', n] if n >= '1' && n <= '9' => {
                                     if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
                                         /* definitely an implicit param */
 
                                         if self.max_numparam_stack.has_ordinary_params() {
-                                            self.yyerror0(
+                                            return self.yyerror(
+                                                &@1,
                                                 DiagnosticMessage::OrdinaryParamDefined,
-                                                expression_l.clone(),
                                             );
-                                            return Self::YYERROR;
                                         }
 
                                         let mut raw_context = self.context.inner_clone();
@@ -5017,11 +5005,10 @@ keyword_variable: kNIL
                                                 let outer_scope_has_numparams = raw_max_numparam_stack.pop().unwrap() > 0;
 
                                                 if outer_scope_has_numparams {
-                                                    self.yyerror0(
+                                                    return self.yyerror(
+                                                        &@1,
                                                         DiagnosticMessage::NumparamUsed,
-                                                        expression_l.clone()
                                                     );
-                                                    return Self::YYERROR;
                                                 } else {
                                                     /* for now it's ok, but an outer scope can also be a block
                                                         with numparams, so we need to continue */
@@ -5042,13 +5029,13 @@ keyword_variable: kNIL
                         }
 
                         $$ = Value::Node(
-                            self.builder.accessible(node)
+                            self.builder.accessible(node)?
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.accessible($<Node>1)
+                            self.builder.accessible($<Node>1)?
                         );
                     }
                 ;
@@ -5056,13 +5043,13 @@ keyword_variable: kNIL
          var_lhs: user_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<Node>1)
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<Node>1)
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 ;
@@ -5270,23 +5257,19 @@ keyword_variable: kNIL
 
        f_bad_arg: tCONSTANT
                     {
-                        self.yyerror(&@1, DiagnosticMessage::ConstArgument);
-                        return Self::YYERROR;
+                        return self.yyerror(&@1, DiagnosticMessage::ConstArgument);
                     }
                 | tIVAR
                     {
-                        self.yyerror(&@1, DiagnosticMessage::IvarArgument);
-                        return Self::YYERROR;
+                        return self.yyerror(&@1, DiagnosticMessage::IvarArgument);
                     }
                 | tGVAR
                     {
-                        self.yyerror(&@1, DiagnosticMessage::GvarArgument);
-                        return Self::YYERROR;
+                        return self.yyerror(&@1, DiagnosticMessage::GvarArgument);
                     }
                 | tCVAR
                     {
-                        self.yyerror(&@1, DiagnosticMessage::CvarArgument);
-                        return Self::YYERROR;
+                        return self.yyerror(&@1, DiagnosticMessage::CvarArgument);
                     }
                 ;
 
@@ -5314,7 +5297,7 @@ keyword_variable: kNIL
                     {
                         self.current_arg_stack.set(None);
                         $$ = Value::Node(
-                            self.builder.arg($<Token>1)
+                            self.builder.arg($<Token>1)?
                         );
                     }
                 | tLPAREN f_margs rparen
@@ -5345,9 +5328,7 @@ keyword_variable: kNIL
          f_label: tLABEL
                     {
                         let ident_t = $<Token>1;
-                        if let Err(e) = self.check_kwarg_name(&ident_t) {
-                            self.yyerror(&@1, e);
-                        }
+                        self.check_kwarg_name(&ident_t)?;
 
                         let ident = value(&ident_t);
                         self.static_env.declare(&ident);
@@ -5364,14 +5345,14 @@ keyword_variable: kNIL
                     {
                         self.current_arg_stack.set(None);
                         $$ = Value::Node(
-                            self.builder.kwoptarg($<Token>1, $<Node>2)
+                            self.builder.kwoptarg($<Token>1, $<Node>2)?
                         );
                     }
                 | f_label
                     {
                         self.current_arg_stack.set(None);
                         $$ = Value::Node(
-                            self.builder.kwarg($<Token>1)
+                            self.builder.kwarg($<Token>1)?
                         );
                     }
                 ;
@@ -5379,13 +5360,13 @@ keyword_variable: kNIL
       f_block_kw: f_label primary_value
                     {
                         $$ = Value::Node(
-                            self.builder.kwoptarg($<Token>1, $<Node>2)
+                            self.builder.kwoptarg($<Token>1, $<Node>2)?
                         );
                     }
                 | f_label
                     {
                         $$ = Value::Node(
-                            self.builder.kwarg($<Token>1)
+                            self.builder.kwarg($<Token>1)?
                         );
                     }
                 ;
@@ -5435,7 +5416,7 @@ keyword_variable: kNIL
                         self.static_env.declare(&value(&ident_t));
                         $$ = Value::NodeList(
                             vec![
-                                self.builder.kwrestarg($<Token>1, Some(ident_t))
+                                self.builder.kwrestarg($<Token>1, Some(ident_t))?
                             ]
                         );
                     }
@@ -5443,7 +5424,7 @@ keyword_variable: kNIL
                     {
                         $$ = Value::NodeList(
                             vec![
-                                self.builder.kwrestarg($<Token>1, None)
+                                self.builder.kwrestarg($<Token>1, None)?
                             ]
                         );
                     }
@@ -5457,7 +5438,7 @@ keyword_variable: kNIL
                                 $<Token>1,
                                 $<Token>2,
                                 $<Node>3
-                            )
+                            )?
                         );
                     }
                 ;
@@ -5470,7 +5451,7 @@ keyword_variable: kNIL
                                 $<Token>1,
                                 $<Token>2,
                                 $<Node>3
-                            )
+                            )?
                         );
                     }
                 ;
@@ -5510,7 +5491,7 @@ keyword_variable: kNIL
 
                         $$ = Value::NodeList(
                             vec![
-                                self.builder.restarg($<Token>1, Some(ident_t))
+                                self.builder.restarg($<Token>1, Some(ident_t))?
                             ]
                         );
                     }
@@ -5518,7 +5499,7 @@ keyword_variable: kNIL
                     {
                         $$ = Value::NodeList(
                             vec![
-                                self.builder.restarg($<Token>1, None)
+                                self.builder.restarg($<Token>1, None)?
                             ]
                         );
                     }
@@ -5533,7 +5514,7 @@ keyword_variable: kNIL
                         let ident_t = $<Token>2;
                         self.static_env.declare(&value(&ident_t));
                         $$ = Value::Node(
-                            self.builder.blockarg($<Token>1, ident_t)
+                            self.builder.blockarg($<Token>1, ident_t)?
                         );
                     }
                 ;
@@ -5768,12 +5749,18 @@ impl Parser {
         self.yylexer.set_debug(debug);
     }
 
-    pub fn warn(&self, loc: &Loc, message: &str) {
-        eprintln!("warn: {:?} {:?}", loc, message)
+    pub fn warn(&mut self, loc: &Loc, message: DiagnosticMessage) {
+        eprintln!("warn: {:?} {:?}", loc, message);
+        let diagnostic = Diagnostic::new(
+            ErrorLevel::Warning,
+            message,
+            Range::new(loc.begin, loc.end, Rc::clone(&self.source_buffer))
+        );
+        self.diagnostics.push(diagnostic);
     }
 
     fn next_token(&mut self) -> Token {
-        let mut token = self.yylexer.yylex();
+        let token = self.yylexer.yylex();
         self.last_token = token.clone();
         self.tokens.push(token.clone());
 
@@ -5782,29 +5769,36 @@ impl Parser {
         token
     }
 
-    fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), DiagnosticMessage> {
+    fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), Diagnostic> {
         let name = value(ident_t);
         let first_char = name.chars().next().unwrap();
         if first_char.is_lowercase() {
             Ok(())
         } else {
-            Err(DiagnosticMessage::ConstArgument)
+            let range = Range::new(ident_t.loc.begin, ident_t.loc.end, Rc::clone(&self.source_buffer));
+            Err(
+                Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::ConstArgument,
+                    range
+                )
+            )
         }
     }
 
-    fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage) {
+    fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage) -> Result<i32, Diagnostic> {
         eprintln!("yyerror: {:?} {:?}", loc, message.render());
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,
             message,
             Range::new(loc.begin, loc.end, Rc::clone(&self.source_buffer))
         );
-        self.diagnostics.push(diagnostic);
+        Err(diagnostic)
     }
 
-    fn yyerror0(&mut self, message: DiagnosticMessage, range: Range) {
-        eprintln!("yyerror0: {:?} {:?}", range, message.render());
-        self.diagnostics.push(Diagnostic::new(ErrorLevel::Error, message, range));
+    fn on_yyerror0(&mut self, diagnostic: Diagnostic) {
+        eprintln!("yyerror0: {:?}", diagnostic);
+        self.diagnostics.push(diagnostic);
     }
 
     fn report_syntax_error(&mut self, ctx: &Context) {

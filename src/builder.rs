@@ -6,12 +6,12 @@ use std::rc::Rc;
 use crate::nodes::StringValue;
 use crate::nodes::*;
 use crate::parser::TokenValue;
-// use crate::source::map::*;
 use crate::source::Range;
 use crate::{
     source::buffer::Input, Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node,
     StaticEnvironment, Token, VariablesStack,
 };
+use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum LoopType {
@@ -737,19 +737,23 @@ impl Builder {
             expression_l: self.loc(&token),
         })
     }
-    pub(crate) fn accessible(&self, node: Node) -> Node {
+    pub(crate) fn accessible(&self, node: Node) -> Result<Node, Diagnostic> {
         match node {
             Node::Lvar(Lvar { name, expression_l }) => {
                 if self.static_env.is_declared(&name) {
                     if let Some(current_arg) = self.current_arg_stack.top() {
                         if current_arg == name {
-                            panic!("diagnostic :error, :circular_argument_reference, { :var_name => name.to_s }, node.loc.expression")
+                            return Err(Diagnostic::new(
+                                ErrorLevel::Error,
+                                DiagnosticMessage::CircularArgumentReference(name),
+                                expression_l,
+                            ));
                         }
                     }
 
-                    Node::Lvar(Lvar { name, expression_l })
+                    Ok(Node::Lvar(Lvar { name, expression_l }))
                 } else {
-                    Node::Send(Send {
+                    Ok(Node::Send(Send {
                         recv: None,
                         method_name: name,
                         args: vec![],
@@ -759,10 +763,10 @@ impl Builder {
                         end_l: None,
                         operator_l: None,
                         expression_l,
-                    })
+                    }))
                 }
             }
-            _ => node,
+            _ => Ok(node),
         }
     }
 
@@ -821,8 +825,8 @@ impl Builder {
     // Assignments
     //
 
-    pub(crate) fn assignable(&self, node: Node) -> Node {
-        match node {
+    pub(crate) fn assignable(&self, node: Node) -> Result<Node, Diagnostic> {
+        let node = match node {
             Node::Cvar(Cvar { name, expression_l }) => Node::Cvasgn(Cvasgn {
                 name,
                 value: None,
@@ -852,7 +856,11 @@ impl Builder {
                 name_l,
             }) => {
                 if !self.context.is_dynamic_const_definition_allowed() {
-                    panic!("diagnostic :error, :dynamic_const, nil, node.loc.expression")
+                    return Err(Diagnostic::new(
+                        ErrorLevel::Error,
+                        DiagnosticMessage::DynamicConstantAssignment,
+                        expression_l,
+                    ));
                 }
                 Node::Casgn(Casgn {
                     name,
@@ -865,8 +873,8 @@ impl Builder {
                 })
             }
             Node::Lvar(Lvar { name, expression_l }) => {
-                self.check_assignment_to_numparam(&name, &expression_l);
-                self.check_reserved_for_numparam(&name, &expression_l);
+                self.check_assignment_to_numparam(&name, &expression_l)?;
+                self.check_reserved_for_numparam(&name, &expression_l)?;
 
                 self.static_env.declare(&name);
 
@@ -879,22 +887,73 @@ impl Builder {
                 })
             }
 
-            Node::Nil(Nil { .. })
-            | Node::Self_(Self_ { .. })
-            | Node::True(True { .. })
-            | Node::False(False { .. })
-            | Node::File(File { .. })
-            | Node::Line(Line { .. })
-            | Node::Encoding(Encoding { .. }) => {
-                panic!("diagnostic :error, :invalid_assignment, nil, node.loc.expression");
-                node
+            Node::Self_(Self_ { expression_l }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantAssignToSelf,
+                    expression_l,
+                ));
             }
-            Node::BackRef(BackRef { .. }) | Node::NthRef(NthRef { .. }) => {
-                panic!("diagnostic :error, :backref_assignment, nil, node.loc.expression");
-                node
+            Node::Nil(Nil { expression_l }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantAssignToNil,
+                    expression_l,
+                ));
+            }
+            Node::True(True { expression_l }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantAssignToTrue,
+                    expression_l,
+                ));
+            }
+            Node::False(False { expression_l }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantAssignToFalse,
+                    expression_l,
+                ));
+            }
+            Node::File(File { expression_l }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantAssignToFile,
+                    expression_l,
+                ));
+            }
+            Node::Line(Line { expression_l }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantAssignToLine,
+                    expression_l,
+                ));
+            }
+            Node::Encoding(Encoding { expression_l }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantAssignToEncoding,
+                    expression_l,
+                ));
+            }
+            Node::BackRef(BackRef { expression_l, name }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantSetVariable(name),
+                    expression_l,
+                ));
+            }
+            Node::NthRef(NthRef { expression_l, name }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantSetVariable(format!("${}", name)),
+                    expression_l,
+                ));
             }
             _ => unreachable!("{:?} can't be used in assignment", node),
-        }
+        };
+
+        Ok(node)
     }
 
     pub(crate) fn const_op_assignable(&self, node: Node) -> Node {
@@ -989,7 +1048,12 @@ impl Builder {
         }
     }
 
-    pub(crate) fn op_assign(&self, mut lhs: Node, op_t: Token, rhs: Node) -> Node {
+    pub(crate) fn op_assign(
+        &self,
+        mut lhs: Node,
+        op_t: Token,
+        rhs: Node,
+    ) -> Result<Node, Diagnostic> {
         let mut operator = value(&op_t);
         operator.pop();
         let operator_l = self.loc(&op_t);
@@ -1020,9 +1084,19 @@ impl Builder {
                     operator_l: None,
                 });
             }
-            Node::BackRef { .. } | Node::NthRef { .. } => {
-                panic!("diagnostic :error, :backref_assignment, nil, lhs.loc.expression");
-                return rhs;
+            Node::BackRef(BackRef { expression_l, name }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantSetVariable(name),
+                    expression_l,
+                ));
+            }
+            Node::NthRef(NthRef { expression_l, name }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::CantSetVariable(format!("${}", name)),
+                    expression_l,
+                ));
             }
             _ => unreachable!("unsupported op_assign lhs {:?}", lhs),
         };
@@ -1030,7 +1104,7 @@ impl Builder {
         let recv = Box::new(lhs);
         let value = Box::new(rhs);
 
-        match &operator[..] {
+        let result = match &operator[..] {
             "&&" => Node::AndAsgn(AndAsgn {
                 recv,
                 value,
@@ -1050,7 +1124,9 @@ impl Builder {
                 operator_l,
                 expression_l,
             }),
-        }
+        };
+
+        Ok(result)
     }
 
     pub(crate) fn multi_lhs(
@@ -1171,15 +1247,15 @@ impl Builder {
         args: Option<Node>,
         body: Option<Node>,
         end_t: Token,
-    ) -> Node {
-        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
+    ) -> Result<Node, Diagnostic> {
+        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t))?;
 
         let keyword_l = self.loc(&def_t);
         let name_l = self.loc(&name_t);
         let end_l = self.loc(&end_t);
         let expression_l = keyword_l.join(&end_l);
 
-        Node::Def(Def {
+        Ok(Node::Def(Def {
             name: value(&name_t),
             args: args.map(Box::new),
             body: body.map(Box::new),
@@ -1188,7 +1264,7 @@ impl Builder {
             assignment_l: None,
             end_l: Some(end_l),
             expression_l,
-        })
+        }))
     }
 
     pub(crate) fn def_endless_method(
@@ -1198,8 +1274,8 @@ impl Builder {
         args: Option<Node>,
         assignment_t: Token,
         body: Option<Node>,
-    ) -> Node {
-        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
+    ) -> Result<Node, Diagnostic> {
+        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t))?;
 
         let body_l = maybe_node_expr(&body)
             .unwrap_or_else(|| unreachable!("endless method always has a body"));
@@ -1209,7 +1285,7 @@ impl Builder {
         let name_l = self.loc(&name_t);
         let assignment_l = self.loc(&assignment_t);
 
-        Node::Def(Def {
+        Ok(Node::Def(Def {
             name: value(&name_t),
             args: args.map(Box::new),
             body: body.map(Box::new),
@@ -1218,7 +1294,7 @@ impl Builder {
             assignment_l: Some(assignment_l),
             end_l: None,
             expression_l,
-        })
+        }))
     }
 
     pub(crate) fn def_singleton(
@@ -1230,9 +1306,9 @@ impl Builder {
         args: Option<Node>,
         body: Option<Node>,
         end_t: Token,
-    ) -> Node {
-        self.validate_definee(&definee);
-        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
+    ) -> Result<Node, Diagnostic> {
+        self.validate_definee(&definee)?;
+        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t))?;
 
         let keyword_l = self.loc(&def_t);
         let operator_l = self.loc(&dot_t);
@@ -1240,7 +1316,7 @@ impl Builder {
         let end_l = self.loc(&end_t);
         let expression_l = keyword_l.join(&end_l);
 
-        Node::Defs(Defs {
+        Ok(Node::Defs(Defs {
             definee: Box::new(definee),
             name: value(&name_t),
             args: args.map(Box::new),
@@ -1251,7 +1327,7 @@ impl Builder {
             assignment_l: None,
             end_l: Some(end_l),
             expression_l,
-        })
+        }))
     }
 
     pub(crate) fn def_endless_singleton(
@@ -1263,9 +1339,9 @@ impl Builder {
         args: Option<Node>,
         assignment_t: Token,
         body: Option<Node>,
-    ) -> Node {
-        self.validate_definee(&definee);
-        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
+    ) -> Result<Node, Diagnostic> {
+        self.validate_definee(&definee)?;
+        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t))?;
 
         let body_l = maybe_node_expr(&body)
             .unwrap_or_else(|| unreachable!("endless method always has body"));
@@ -1276,7 +1352,7 @@ impl Builder {
         let assignment_l = self.loc(&assignment_t);
         let expression_l = keyword_l.join(&body_l);
 
-        Node::Defs(Defs {
+        Ok(Node::Defs(Defs {
             definee: Box::new(definee),
             name: value(&name_t),
             args: args.map(Box::new),
@@ -1287,7 +1363,7 @@ impl Builder {
             assignment_l: Some(assignment_l),
             end_l: None,
             expression_l,
-        })
+        }))
     }
 
     pub(crate) fn undef_method(&self, undef_t: Token, names: Vec<Node>) -> Node {
@@ -1355,34 +1431,39 @@ impl Builder {
         })
     }
 
-    pub(crate) fn arg(&self, name_t: Token) -> Node {
-        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
-        Node::Arg(Arg {
+    pub(crate) fn arg(&self, name_t: Token) -> Result<Node, Diagnostic> {
+        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t))?;
+        Ok(Node::Arg(Arg {
             name: value(&name_t),
             expression_l: self.loc(&name_t),
-        })
+        }))
     }
 
-    pub(crate) fn optarg(&self, name_t: Token, eql_t: Token, default: Node) -> Node {
-        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
+    pub(crate) fn optarg(
+        &self,
+        name_t: Token,
+        eql_t: Token,
+        default: Node,
+    ) -> Result<Node, Diagnostic> {
+        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t))?;
 
         let operator_l = self.loc(&eql_t);
         let name_l = self.loc(&name_t);
         let expression_l = self.loc(&name_t).join(default.expression());
 
-        Node::Optarg(Optarg {
+        Ok(Node::Optarg(Optarg {
             name: value(&name_t),
             default: Box::new(default),
             name_l,
             operator_l,
             expression_l,
-        })
+        }))
     }
 
-    pub(crate) fn restarg(&self, star_t: Token, name_t: Option<Token>) -> Node {
+    pub(crate) fn restarg(&self, star_t: Token, name_t: Option<Token>) -> Result<Node, Diagnostic> {
         let name = match &name_t {
             Some(name_t) => {
-                self.check_reserved_for_numparam(&value(name_t), &self.loc(name_t));
+                self.check_reserved_for_numparam(&value(name_t), &self.loc(name_t))?;
                 Some(value(name_t))
             }
             _ => None,
@@ -1392,46 +1473,50 @@ impl Builder {
         let name_l = self.maybe_loc(&name_t);
         let expression_l = operator_l.maybe_join(&name_l);
 
-        Node::Restarg(Restarg {
+        Ok(Node::Restarg(Restarg {
             name,
             operator_l,
             name_l,
             expression_l,
-        })
+        }))
     }
 
-    pub(crate) fn kwarg(&self, name_t: Token) -> Node {
-        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
+    pub(crate) fn kwarg(&self, name_t: Token) -> Result<Node, Diagnostic> {
+        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t))?;
 
         let expression_l = self.loc(&name_t);
         let name_l = expression_l.adjust_end(-1);
 
-        Node::Kwarg(Kwarg {
+        Ok(Node::Kwarg(Kwarg {
             name: value(&name_t),
             name_l,
             expression_l,
-        })
+        }))
     }
 
-    pub(crate) fn kwoptarg(&self, name_t: Token, default: Node) -> Node {
-        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
+    pub(crate) fn kwoptarg(&self, name_t: Token, default: Node) -> Result<Node, Diagnostic> {
+        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t))?;
 
         let label_l = self.loc(&name_t);
         let name_l = label_l.adjust_end(-1);
         let expression_l = default.expression().join(&label_l);
 
-        Node::Kwoptarg(Kwoptarg {
+        Ok(Node::Kwoptarg(Kwoptarg {
             name: value(&name_t),
             default: Box::new(default),
             name_l,
             expression_l,
-        })
+        }))
     }
 
-    pub(crate) fn kwrestarg(&self, dstar_t: Token, name_t: Option<Token>) -> Node {
+    pub(crate) fn kwrestarg(
+        &self,
+        dstar_t: Token,
+        name_t: Option<Token>,
+    ) -> Result<Node, Diagnostic> {
         let name = match &name_t {
             Some(name_t) => {
-                self.check_reserved_for_numparam(&value(name_t), &self.loc(name_t));
+                self.check_reserved_for_numparam(&value(name_t), &self.loc(name_t))?;
                 Some(value(name_t))
             }
             _ => None,
@@ -1441,12 +1526,12 @@ impl Builder {
         let name_l = self.maybe_loc(&name_t);
         let expression_l = operator_l.maybe_join(&name_l);
 
-        Node::Kwrestarg(Kwrestarg {
+        Ok(Node::Kwrestarg(Kwrestarg {
             name,
             operator_l,
             name_l,
             expression_l,
-        })
+        }))
     }
 
     pub(crate) fn kwnilarg(&self, dstar_t: Token, nil_t: Token) -> Node {
@@ -1459,27 +1544,27 @@ impl Builder {
         })
     }
 
-    pub(crate) fn shadowarg(&self, name_t: Token) -> Node {
-        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
-        Node::Shadowarg(Shadowarg {
+    pub(crate) fn shadowarg(&self, name_t: Token) -> Result<Node, Diagnostic> {
+        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t))?;
+        Ok(Node::Shadowarg(Shadowarg {
             name: value(&name_t),
             expression_l: self.loc(&name_t),
-        })
+        }))
     }
 
-    pub(crate) fn blockarg(&self, amper_t: Token, name_t: Token) -> Node {
-        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t));
+    pub(crate) fn blockarg(&self, amper_t: Token, name_t: Token) -> Result<Node, Diagnostic> {
+        self.check_reserved_for_numparam(&value(&name_t), &self.loc(&name_t))?;
 
         let operator_l = self.loc(&amper_t);
         let name_l = self.loc(&name_t);
         let expression_l = operator_l.join(&name_l);
 
-        Node::Blockarg(Blockarg {
+        Ok(Node::Blockarg(Blockarg {
             name: value(&name_t),
             operator_l,
             name_l,
             expression_l,
-        })
+        }))
     }
 
     pub(crate) fn procarg0(&self, arg: Node) -> Node {
@@ -1592,23 +1677,28 @@ impl Builder {
         block_args: ArgsType,
         body: Option<Node>,
         end_t: Token,
-    ) -> Node {
-        // let block_args = args.map(Box::new);
+    ) -> Result<Node, Diagnostic> {
         let block_body = body.map(Box::new);
 
         match &method_call {
-            Node::Yield { .. } => {
-                panic!("diagnostic :error, :block_given_to_yield, nil, method_call.loc.keyword, [loc(begin_t)]")
+            Node::Yield(Yield { keyword_l, .. }) => {
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::BlockGivenToYield,
+                    keyword_l.clone(),
+                ));
             }
-            Node::Send(Send { args, .. }) | Node::CSend(CSend { args, .. }) => {
-                match args.last() {
-                    Some(Node::Blockarg(Blockarg { .. }))
-                    | Some(Node::ForwardedArgs(ForwardedArgs { .. })) => {
-                        panic!("diagnostic :error, :block_and_blockarg, nil, expression, [loc(begin_t)]")
-                    }
-                    _ => {}
+            Node::Send(Send { args, .. }) | Node::CSend(CSend { args, .. }) => match args.last() {
+                Some(Node::Blockarg(Blockarg { expression_l, .. }))
+                | Some(Node::ForwardedArgs(ForwardedArgs { expression_l, .. })) => {
+                    return Err(Diagnostic::new(
+                        ErrorLevel::Error,
+                        DiagnosticMessage::BlockAndBlockArgGiven,
+                        expression_l.clone(),
+                    ))
                 }
-            }
+                _ => {}
+            },
             _ => {}
         }
 
@@ -1650,7 +1740,7 @@ impl Builder {
                 (args, expr_l)
             };
 
-        match &method_call {
+        let result = match &method_call {
             Node::Send(Send { .. })
             | Node::CSend(CSend { .. })
             | Node::Index(Index { .. })
@@ -1724,7 +1814,9 @@ impl Builder {
                 })
             }
             _ => unreachable!("unsupported method call {:?}", method_call),
-        }
+        };
+
+        return Ok(result);
     }
     pub(crate) fn block_pass(&self, amper_t: Token, value: Node) -> Node {
         let amper_l = self.loc(&amper_t);
@@ -2220,10 +2312,14 @@ impl Builder {
         lparen_t: Option<Token>,
         mut args: Vec<Node>,
         rparen_t: Option<Token>,
-    ) -> Node {
+    ) -> Result<Node, Diagnostic> {
         if type_ == KeywordCmd::Yield && !args.is_empty() {
             if let Some(Node::BlockPass(_)) = args.last() {
-                panic!("diagnostic :error, :block_given_to_yield, nil, self.loc(keyword_t), [last_arg.loc.expression]")
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::BlockGivenToYield,
+                    self.loc(&keyword_t),
+                ));
             }
         }
 
@@ -2238,7 +2334,7 @@ impl Builder {
 
         let expression_l = keyword_l.join(&expr_end_l);
 
-        match type_ {
+        let result = match type_ {
             KeywordCmd::Break => Node::Break(Break {
                 args,
                 keyword_l,
@@ -2280,7 +2376,9 @@ impl Builder {
                 expression_l,
             }),
             KeywordCmd::Zsuper => Node::ZSuper(ZSuper { expression_l }),
-        }
+        };
+
+        Ok(result)
     }
 
     // BEGIN, END
@@ -2669,49 +2767,53 @@ impl Builder {
         })
     }
 
-    pub(crate) fn match_var(&self, name_t: Token) -> Node {
+    pub(crate) fn match_var(&self, name_t: Token) -> Result<Node, Diagnostic> {
         let name = value(&name_t);
         let name_l = self.loc(&name_t);
         let expression_l = name_l.clone();
 
-        self.check_lvar_name(&name, &name_l);
-        self.check_duplicate_pattern_variable(&name, &name_l);
+        self.check_lvar_name(&name, &name_l)?;
+        self.check_duplicate_pattern_variable(&name, &name_l)?;
         self.static_env.declare(&name);
 
-        Node::MatchVar(MatchVar {
+        Ok(Node::MatchVar(MatchVar {
             name,
             name_l,
             expression_l,
-        })
+        }))
     }
 
-    pub(crate) fn match_hash_var(&self, name_t: Token) -> Node {
+    pub(crate) fn match_hash_var(&self, name_t: Token) -> Result<Node, Diagnostic> {
         let name = value(&name_t);
 
         let expression_l = self.loc(&name_t);
         let name_l = expression_l.adjust_end(-1);
 
-        self.check_lvar_name(&name, &name_l);
-        self.check_duplicate_pattern_variable(&name, &name_l);
+        self.check_lvar_name(&name, &name_l)?;
+        self.check_duplicate_pattern_variable(&name, &name_l)?;
         self.static_env.declare(&name);
 
-        Node::MatchVar(MatchVar {
+        Ok(Node::MatchVar(MatchVar {
             name,
             name_l,
             expression_l,
-        })
+        }))
     }
     pub(crate) fn match_hash_var_from_str(
         &self,
         begin_t: Token,
         mut strings: Vec<Node>,
         end_t: Token,
-    ) -> Node {
+    ) -> Result<Node, Diagnostic> {
         if strings.len() != 1 {
-            panic!("diagnostic :error, :pm_interp_in_var_name, nil, self.loc(begin_t).join(self.loc(end_t))")
+            return Err(Diagnostic::new(
+                ErrorLevel::Error,
+                DiagnosticMessage::SymbolLiteralWithInterpolation,
+                self.loc(&begin_t).join(&self.loc(&end_t)),
+            ));
         }
 
-        match strings.remove(0) {
+        let result = match strings.remove(0) {
             Node::Str(Str {
                 value,
                 begin_l,
@@ -2721,8 +2823,8 @@ impl Builder {
                 let name = value.to_string_lossy();
                 let mut name_l = expression_l.clone();
 
-                self.check_lvar_name(&name, &name_l);
-                self.check_duplicate_pattern_variable(&name, &name_l);
+                self.check_lvar_name(&name, &name_l)?;
+                self.check_duplicate_pattern_variable(&name, &name_l)?;
 
                 self.static_env.declare(&name);
 
@@ -2747,25 +2849,38 @@ impl Builder {
                 })
             }
             Node::Begin(Begin { statements, .. }) => {
-                self.match_hash_var_from_str(begin_t, statements, end_t)
+                self.match_hash_var_from_str(begin_t, statements, end_t)?
             }
             _ => {
-                panic!("diagnostic :error, :pm_interp_in_var_name, nil, self.loc(begin_t).join(self.loc(end_t))")
+                return Err(Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::SymbolLiteralWithInterpolation,
+                    self.loc(&begin_t).join(&self.loc(&end_t)),
+                ));
             }
-        }
+        };
+
+        Ok(result)
     }
 
-    pub(crate) fn match_rest(&self, star_t: Token, name_t: Option<Token>) -> Node {
-        let name = name_t.map(|t| self.match_var(t));
+    pub(crate) fn match_rest(
+        &self,
+        star_t: Token,
+        name_t: Option<Token>,
+    ) -> Result<Node, Diagnostic> {
+        let name = match name_t {
+            None => None,
+            Some(t) => Some(self.match_var(t)?),
+        };
 
         let operator_l = self.loc(&star_t);
         let expression_l = operator_l.maybe_join(&maybe_node_expr(&name));
 
-        Node::MatchRest(MatchRest {
+        Ok(Node::MatchRest(MatchRest {
             name: name.map(Box::new),
             operator_l,
             expression_l,
-        })
+        }))
     }
 
     pub(crate) fn hash_pattern(
@@ -2922,26 +3037,37 @@ impl Builder {
         })
     }
 
-    pub(crate) fn match_pair(&self, p_kw_label: PKwLabel, value_node: Node) -> Node {
-        match p_kw_label {
+    pub(crate) fn match_pair(
+        &self,
+        p_kw_label: PKwLabel,
+        value_node: Node,
+    ) -> Result<Node, Diagnostic> {
+        let result = match p_kw_label {
             PKwLabel::PlainLabel(label_t) => {
-                self.check_duplicate_pattern_key(&value(&label_t), &self.loc(&label_t));
+                self.check_duplicate_pattern_key(&value(&label_t), &self.loc(&label_t))?;
                 self.pair_keyword(label_t, value_node)
             }
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
                 let label_loc = self.loc(&begin_t).join(&self.loc(&end_t));
 
                 match self.static_string(&parts) {
-                    Some(var_name) => self.check_duplicate_pattern_key(&var_name, &label_loc),
-                    _ => panic!("diagnostic :error, :pm_interp_in_var_name, nil, label_loc"),
+                    Some(var_name) => self.check_duplicate_pattern_key(&var_name, &label_loc)?,
+                    _ => {
+                        return Err(Diagnostic::new(
+                            ErrorLevel::Error,
+                            DiagnosticMessage::SymbolLiteralWithInterpolation,
+                            self.loc(&begin_t).join(&self.loc(&end_t)),
+                        ));
+                    }
                 }
 
                 self.pair_quoted(begin_t, parts, end_t, value_node)
             }
-        }
+        };
+        Ok(result)
     }
 
-    pub(crate) fn match_label(&self, p_kw_label: PKwLabel) -> Node {
+    pub(crate) fn match_label(&self, p_kw_label: PKwLabel) -> Result<Node, Diagnostic> {
         match p_kw_label {
             PKwLabel::PlainLabel(label_t) => self.match_hash_var(label_t),
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
@@ -3106,7 +3232,11 @@ impl Builder {
         }
     }
 
-    pub(crate) fn check_assignment_to_numparam(&self, name: &str, loc: &Range) {
+    pub(crate) fn check_assignment_to_numparam(
+        &self,
+        name: &str,
+        loc: &Range,
+    ) -> Result<(), Diagnostic> {
         let assigning_to_numparam = self.context.is_in_dynamic_block()
             && match name {
                 "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => true,
@@ -3115,16 +3245,27 @@ impl Builder {
             && self.max_numparam_stack.has_numparams();
 
         if assigning_to_numparam {
-            panic!("diagnostic :error, :cant_assign_to_numparam, { :name => name }, loc")
+            return Err(Diagnostic::new(
+                ErrorLevel::Error,
+                DiagnosticMessage::CantAssignToNumparam(name.to_owned()),
+                loc.clone(),
+            ));
         }
+        Ok(())
     }
 
-    pub(crate) fn check_reserved_for_numparam(&self, name: &str, _loc: &Range) {
+    pub(crate) fn check_reserved_for_numparam(
+        &self,
+        name: &str,
+        loc: &Range,
+    ) -> Result<(), Diagnostic> {
         match name {
-            "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
-                panic!("diagnostic :error, 'reserved_for_numparam'")
-            }
-            _ => {}
+            "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => Err(Diagnostic::new(
+                ErrorLevel::Error,
+                DiagnosticMessage::ReservedForNumparam(name.to_owned()),
+                loc.clone(),
+            )),
+            _ => Ok(()),
         }
     }
 
@@ -3132,37 +3273,59 @@ impl Builder {
         &this_name[0..1] != "_" && this_name == that_name
     }
 
-    pub(crate) fn check_lvar_name(&self, name: &str, loc: &Range) {
+    pub(crate) fn check_lvar_name(&self, name: &str, loc: &Range) -> Result<(), Diagnostic> {
         let first = name.chars().nth(0).unwrap();
         let rest = &name[1..];
 
         if (first.is_lowercase() || first == '_')
             && rest.chars().all(|c| c.is_alphanumeric() || c == '_')
         {
-            // OK
+            Ok(())
         } else {
-            panic!("diagnostic :error, :lvar_name, { name: name }, loc")
+            Err(Diagnostic::new(
+                ErrorLevel::Error,
+                DiagnosticMessage::KeyMustBeValidAsLocalVariable,
+                loc.clone(),
+            ))
         }
     }
 
-    pub(crate) fn check_duplicate_pattern_variable(&self, name: &str, loc: &Range) {
+    pub(crate) fn check_duplicate_pattern_variable(
+        &self,
+        name: &str,
+        loc: &Range,
+    ) -> Result<(), Diagnostic> {
         if name.starts_with("_") {
-            return;
+            return Ok(());
         }
 
         if self.pattern_variables.is_declared(name) {
-            panic!("diagnostic :error, :duplicate_variable_name, { name: name.to_s }, loc")
+            return Err(Diagnostic::new(
+                ErrorLevel::Error,
+                DiagnosticMessage::DuplicateVariableName,
+                loc.clone(),
+            ));
         }
 
-        self.pattern_variables.declare(name)
+        self.pattern_variables.declare(name);
+        Ok(())
     }
 
-    pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: &Range) {
+    pub(crate) fn check_duplicate_pattern_key(
+        &self,
+        name: &str,
+        loc: &Range,
+    ) -> Result<(), Diagnostic> {
         if self.pattern_hash_keys.is_declared(name) {
-            panic!("diagnostic :error, :duplicate_pattern_key, { name: name.to_s }, loc")
+            return Err(Diagnostic::new(
+                ErrorLevel::Error,
+                DiagnosticMessage::DuplicateKeyName,
+                loc.clone(),
+            ));
         }
 
-        self.pattern_hash_keys.declare(name)
+        self.pattern_hash_keys.declare(name);
+        Ok(())
     }
 
     //
@@ -3238,7 +3401,7 @@ impl Builder {
         result
     }
 
-    pub(crate) fn validate_definee(&self, definee: &Node) {
+    pub(crate) fn validate_definee(&self, definee: &Node) -> Result<(), Diagnostic> {
         match definee {
             Node::Int(_)
             | Node::Str(_)
@@ -3248,10 +3411,12 @@ impl Builder {
             | Node::Heredoc(_)
             | Node::Regexp(_)
             | Node::Array(_)
-            | Node::Hash(_) => {
-                panic!("diagnostic :error, :singleton_literal, nil, definee.loc.expression")
-            }
-            _ => {}
+            | Node::Hash(_) => Err(Diagnostic::new(
+                ErrorLevel::Error,
+                DiagnosticMessage::SingletonLiteral,
+                definee.expression().clone(),
+            )),
+            _ => Ok(()),
         }
     }
 

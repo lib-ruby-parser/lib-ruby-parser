@@ -1,5 +1,6 @@
 #[derive(Debug, Clone)]
 pub enum DiagnosticMessage {
+    // Lexer errors
     FractionAfterNumeric,
     NoDigitsAfterDot,
     UnknownTypeOfPercentString,
@@ -53,11 +54,37 @@ pub enum DiagnosticMessage {
     NoSuchLocalVariable(String),
     OrdinaryParamDefined,
     NumparamUsed,
+
+    // Parser warnings
+    EndInMethod,
+    ComparisonAfterComparison(String),
+
+    // Builder errors
+    CircularArgumentReference(String),
+    DynamicConstantAssignment,
+    CantAssignToSelf,
+    CantAssignToNil,
+    CantAssignToTrue,
+    CantAssignToFalse,
+    CantAssignToFile,
+    CantAssignToLine,
+    CantAssignToEncoding,
+    CantAssignToNumparam(String),
+    CantSetVariable(String),
+    BlockGivenToYield,
+    BlockAndBlockArgGiven,
+    SymbolLiteralWithInterpolation,
+    ReservedForNumparam(String),
+    KeyMustBeValidAsLocalVariable,
+    DuplicateVariableName,
+    DuplicateKeyName,
+    SingletonLiteral,
 }
 
 impl DiagnosticMessage {
     pub fn render(&self) -> String {
         match self {
+            // Lexer errors
             Self::FractionAfterNumeric => {
                 "unexpected fraction part after numeric literal".to_owned()
             }
@@ -95,6 +122,7 @@ impl DiagnosticMessage {
             Self::InvalidOctalDigit => format!("Invalid octal digit"),
             Self::TrailingCharInNumber { c } => format!("trailing `{}' in number", c),
 
+            // Parser errors
             Self::ElseWithoutRescue => "else without rescue is useless".to_owned(),
             Self::BeginNotAtTopLevel => "BEGIN is permitted only at toplevel".to_owned(),
             Self::AliasNthRef => "can't make alias for the number variables".to_owned(),
@@ -111,7 +139,32 @@ impl DiagnosticMessage {
             Self::CvarArgument => "formal argument cannot be a class variable".to_owned(),
             Self::NoSuchLocalVariable(name) => format!("{}: no such local variable", name),
             Self::OrdinaryParamDefined => "ordinary parameter is defined".to_owned(),
-            Self::NumparamUsed => "numbered parameter is already used".to_owned()
+            Self::NumparamUsed => "numbered parameter is already used".to_owned(),
+
+            // Parser warnings
+            Self::EndInMethod => "END in method; use at_exit".to_owned(),
+            Self::ComparisonAfterComparison(op) => format!("comparison '{}' after comparison", op),
+
+            // Builder errors
+            Self::CircularArgumentReference(name) => format!("circular argument reference - {}", name),
+            Self::DynamicConstantAssignment => "dynamic constant assignment".to_owned(),
+            Self::CantAssignToSelf => "Can't change the value of self".to_owned(),
+            Self::CantAssignToNil => "Can't assign to nil".to_owned(),
+            Self::CantAssignToTrue => "Can't assign to true".to_owned(),
+            Self::CantAssignToFalse => "Can't assign to false".to_owned(),
+            Self::CantAssignToFile => "Can't assign to __FILE__".to_owned(),
+            Self::CantAssignToLine => "Can't assign to __LINE__".to_owned(),
+            Self::CantAssignToEncoding => "Can't assign to __ENCODING__".to_owned(),
+            Self::CantAssignToNumparam(name) => format!("Can't assign to numbered parameter {}", name),
+            Self::CantSetVariable(name) => format!("Can't set variable {}", name),
+            Self::BlockGivenToYield => "block given to yield".to_owned(),
+            Self::BlockAndBlockArgGiven => "both block arg and actual block given".to_owned(),
+            Self::SymbolLiteralWithInterpolation => "symbol literal with interpolation is not allowed".to_owned(),
+            Self::ReservedForNumparam(name) => format!("{} is reserved for numbered parameter", name),
+            Self::KeyMustBeValidAsLocalVariable => "key must be valid as local variables".to_owned(),
+            Self::DuplicateVariableName => "duplicated variable name".to_owned(),
+            Self::DuplicateKeyName => "duplicated key name".to_owned(),
+            Self::SingletonLiteral => "can't define singleton method for literals".to_owned(),
         }
     }
 }
