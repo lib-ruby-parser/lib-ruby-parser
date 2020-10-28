@@ -16,8 +16,8 @@ pub use static_environment::StaticEnvironment;
 pub(crate) mod parse_value;
 
 mod parser;
-pub use parser::{Parser, Token};
 pub(crate) use parser::Loc;
+pub use parser::{Parser, Token};
 
 mod builder;
 pub use builder::Builder;
@@ -32,7 +32,7 @@ mod variables_stack;
 pub(crate) use variables_stack::VariablesStack;
 
 mod error;
-pub use error::{ErrorLevel, ErrorMessage, ParseError};
+pub use error::{Diagnostic, DiagnosticMessage, ErrorLevel};
 
 pub(crate) mod maybe_byte;
 

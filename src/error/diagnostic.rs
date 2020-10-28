@@ -1,15 +1,15 @@
 use crate::source::Range;
-use crate::{ErrorLevel, ErrorMessage};
+use crate::{DiagnosticMessage, ErrorLevel};
 
 #[derive(Debug, Clone)]
-pub struct ParseError {
+pub struct Diagnostic {
     level: ErrorLevel,
-    message: ErrorMessage,
+    message: DiagnosticMessage,
     range: Range,
 }
 
-impl ParseError {
-    pub fn new(level: ErrorLevel, message: ErrorMessage, range: Range) -> Self {
+impl Diagnostic {
+    pub fn new(level: ErrorLevel, message: DiagnosticMessage, range: Range) -> Self {
         Self {
             level,
             message,

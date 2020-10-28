@@ -189,6 +189,13 @@ impl Buffer {
     pub(crate) fn peek_n(&self, c: u8, n: usize) -> bool {
         !self.is_eol_n(n) && c == self.input.bytes[self.pcur + n]
     }
+    pub(crate) fn peekc_n(&self, n: usize) -> MaybeByte {
+        if self.is_eol_n(n) {
+            MaybeByte::EndOfInput
+        } else {
+            self.byte_at(self.pcur + n)
+        }
+    }
 
     pub(crate) fn nextline(&mut self) -> Result<(), ()> {
         let mut v = self.nextline;

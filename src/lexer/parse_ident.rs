@@ -17,11 +17,7 @@ impl Lexer {
         }
     }
 
-    // This method is called is_local_id in MRI, not sure why
     pub(crate) fn is_var_name(&self, ident: &str) -> bool {
-        // FIXME: unclear what it can be
-        // MRI has some weird logic of comparing given ID with tLAST_OP_ID
-        // and then checking & ID_SCOPE_MASK
         if let Some(first_char) = ident.chars().next() {
             return !first_char.is_uppercase();
         }

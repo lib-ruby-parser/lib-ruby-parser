@@ -1,9 +1,9 @@
-use crate::lex_states::*;
 use crate::lexer::TokAdd;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::Lexer;
 use crate::TokenBuf;
+use crate::{lex_states::*, DiagnosticMessage};
 
 impl Lexer {
     const NUM_SUFFIX_R: i8 = 1 << 0;
@@ -62,8 +62,8 @@ impl Lexer {
                 self.tokfix();
                 if self.toklen() == start {
                     return self.no_digits();
-                } else if nondigit.is_some() {
-                    return self.trailing_uc(&nondigit);
+                } else if let Some(MaybeByte::Some(byte)) = nondigit {
+                    return self.trailing_uc(byte);
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.clone();
@@ -104,8 +104,8 @@ impl Lexer {
                 self.tokfix();
                 if self.toklen() == start {
                     return self.no_digits();
-                } else if nondigit.is_some() {
-                    return self.trailing_uc(&nondigit);
+                } else if let Some(MaybeByte::Some(byte)) = nondigit {
+                    return self.trailing_uc(byte);
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.clone();
@@ -146,8 +146,8 @@ impl Lexer {
                 self.tokfix();
                 if self.toklen() == start {
                     return self.no_digits();
-                } else if nondigit.is_some() {
-                    return self.trailing_uc(&nondigit);
+                } else if let Some(MaybeByte::Some(byte)) = nondigit {
+                    return self.trailing_uc(byte);
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.clone();
@@ -197,8 +197,8 @@ impl Lexer {
                 }
 
                 Some(b'.') => {
-                    if nondigit.is_some() {
-                        return self.trailing_uc(&nondigit);
+                    if let Some(MaybeByte::Some(byte)) = nondigit {
+                        return self.trailing_uc(byte);
                     }
                     if seen_point.is_some() || seen_e {
                         return self.decode_num(c, nondigit, is_float, seen_e);
@@ -293,31 +293,31 @@ impl Lexer {
         if self.toklen() > start {
             self.buffer.pushback(c);
             self.tokfix();
-            if nondigit.is_some() {
-                return Some(self.trailing_uc(&nondigit));
+            if let Some(MaybeByte::Some(byte)) = nondigit {
+                return Some(self.trailing_uc(*byte));
             }
             let suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
             let mut tok = self.tokenbuf.clone();
             tok.prepend("0");
             return Some(self.set_integer_literal(&mut tok, suffix));
         }
-        if nondigit.is_some() {
+        if let Some(MaybeByte::Some(byte)) = nondigit {
             self.buffer.pushback(c);
-            return Some(self.trailing_uc(&nondigit));
+            return Some(self.trailing_uc(*byte));
         }
 
         None
     }
 
-    fn invalid_octal(&self) -> i32 {
-        // FIXME: yyerror0(...)
-        Self::END_OF_INPUT // ("Invalid octal digit".into())
+    fn invalid_octal(&mut self) -> i32 {
+        self.yyerror0(DiagnosticMessage::InvalidOctalDigit);
+        Self::END_OF_INPUT
     }
 
-    fn trailing_uc(&mut self, _nondigit: &Option<MaybeByte>) -> i32 {
+    fn trailing_uc(&mut self, nondigit: u8) -> i32 {
         self.literal_flush(self.buffer.pcur - 1);
-        // FIXME: compile_error(p, "trailing `%c' in number", nondigit);
-        Self::END_OF_INPUT // (format!("trailing `{}' in number", nondigit.clone().unwrap().unwrap()))
+        self.yyerror0(DiagnosticMessage::TrailingCharInNumber { c: nondigit });
+        Self::END_OF_INPUT
     }
 
     fn decode_num(
@@ -328,8 +328,8 @@ impl Lexer {
         seen_e: bool,
     ) -> i32 {
         self.buffer.pushback(&c);
-        if nondigit.is_some() {
-            self.trailing_uc(&nondigit);
+        if let Some(MaybeByte::Some(byte)) = nondigit {
+            self.trailing_uc(byte);
         }
         self.parse_numeric_footer(is_float, seen_e)
     }
@@ -372,7 +372,7 @@ impl Lexer {
     }
 
     pub(crate) fn no_digits(&mut self) -> i32 {
-        self.yyerror0("numeric literal without digits");
+        self.yyerror0(DiagnosticMessage::NumericLiteralWithoutDigits);
         if self.buffer.peek(b'_') {
             self.nextc();
         }

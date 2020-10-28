@@ -6,12 +6,14 @@ use crate::parser::TokenValue;
 use crate::parser::{Loc, Token};
 use crate::source::buffer::*;
 use crate::source::InputError;
+use crate::source::Range;
 use crate::str_term::{str_types, HeredocEnd, StrTerm, StringLiteral};
 use crate::Context;
 use crate::StackState;
 use crate::StaticEnvironment;
 use crate::TokenBuf;
 use crate::{lex_states::*, LexState};
+use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 
 #[derive(Debug, Clone, Default)]
 pub struct Lexer {
@@ -54,6 +56,8 @@ pub struct Lexer {
     do_split: usize,
 
     pub static_env: StaticEnvironment,
+
+    pub(crate) diagnostics: Vec<Diagnostic>,
 }
 
 impl Lexer {
@@ -106,7 +110,6 @@ impl Lexer {
 
     pub(crate) fn yylex(&mut self) -> Token {
         self.lval = None;
-        // println!("before yylex: {:#?}", self);
 
         let token_type = self.parser_yylex();
 
@@ -120,15 +123,6 @@ impl Lexer {
                 // take raw value if nothing was manually captured
                 self.buffer.substr_at(begin, end).map(|s| TokenValue::String(String::from_utf8(s.to_vec()).unwrap())))
             .unwrap_or_else(|| TokenValue::String("".to_owned()));
-
-        // match self.strterm {
-        //     Some(StrTerm::Heredoc(_)) => {
-        //         // RUBY_SET_YYLLOC_FROM_STRTERM_HEREDOC
-        //     },
-        //     _ => {
-        //         // RUBY_SET_YYLLOC
-        //     }
-        // };
 
         if token_type == Self::tNL {
             token_value = TokenValue::String("\n".to_owned());
@@ -224,7 +218,7 @@ impl Lexer {
                 Some(b'\r') => {
                     if !self.buffer.cr_seen {
                         self.buffer.cr_seen = true;
-                        self.warn("encountered \\r in middle of line, treated as a mere space");
+                        self.warn(DiagnosticMessage::SlashRAtMiddleOfLine);
                     }
                 }
 
@@ -315,7 +309,7 @@ impl Lexer {
                         }
                         self.buffer.pushback(&c);
                         if self.is_spacearg(&c, space_seen) {
-                            self.warn("`**' interpreted as argument prefix");
+                            self.warn(DiagnosticMessage::DStarInterpretedAsArgPrefix);
                             result = Self::tDSTAR;
                         } else if self.is_beg() {
                             result = Self::tDSTAR;
@@ -337,7 +331,7 @@ impl Lexer {
                         }
                         self.buffer.pushback(&c);
                         if self.is_spacearg(&c, space_seen) {
-                            self.warn("`*' interpreted as argument prefix");
+                            self.warn(DiagnosticMessage::StarInterpretedAsArgPrefix);
                             result = Self::tSTAR;
                         } else if self.is_beg() {
                             result = Self::tSTAR;
@@ -570,7 +564,17 @@ impl Lexer {
                     }
                     self.buffer.pushback(&c);
                     if self.is_spacearg(&c, space_seen) {
-                        // TODO: check for some warnings here
+                        if c != b':'
+                            || {
+                                c = self.buffer.peekc_n(1);
+                                !c.is_eof()
+                            }
+                            || !(c == b'\''
+                                || c == b'"'
+                                || self.is_identchar(self.buffer.pcur + 1, self.buffer.pend))
+                        {
+                            self.warn(DiagnosticMessage::AmpersandInterpretedAsArgPrefix);
+                        }
                         result = Self::tAMPER;
                     } else if self.is_beg() {
                         result = Self::tAMPER;
@@ -709,7 +713,7 @@ impl Lexer {
                         c = self.nextc();
                         if c == '.' {
                             if self.paren_nest == 0 && self.buffer.is_looking_at_eol() {
-                                self.warn("... at EOL, should be parenthesized?");
+                                self.warn(DiagnosticMessage::TripleDotAtEol);
                             } else if self.lpar_beg >= 0
                                 && self.lpar_beg + 1 == self.paren_nest
                                 && last_state.is_some(EXPR_LABEL)
@@ -728,11 +732,11 @@ impl Lexer {
                         } else {
                             MaybeByte::EndOfInput
                         };
-                        self.parse_numeric(c.unwrap());
+                        self.parse_numeric(b'.');
                         if prev.is_digit() {
-                            self.yyerror0("unexpected fraction part after numeric literal");
+                            self.yyerror0(DiagnosticMessage::FractionAfterNumeric);
                         } else {
-                            self.yyerror0("no .<digit> floating literal anymore; put 0 before dot");
+                            self.yyerror0(DiagnosticMessage::NoDigitsAfterDot);
                         }
                         self.set_lex_state(EXPR_END);
                         self.buffer.set_ptok(self.buffer.pcur);
@@ -906,7 +910,7 @@ impl Lexer {
                     } else if self.is_arg() || self.is_lex_state_all(EXPR_END | EXPR_LABEL) {
                         result = Self::tLPAREN_ARG;
                     } else if self.is_lex_state_some(EXPR_ENDFN) && !self.is_lambda_beginning() {
-                        self.warn("parentheses after method name is interpreted as an argument list, not a decomposed argument");
+                        self.warn(DiagnosticMessage::ParenthesesIterpretedAsArglist);
                     }
 
                     self.paren_nest += 1;
@@ -1049,10 +1053,17 @@ impl Lexer {
         self.state.is_all(states)
     }
 
-    pub(crate) fn warn(&self, message: &str) {
+    pub(crate) fn warn(&mut self, message: DiagnosticMessage) {
         if self.debug {
-            println!("WARNING: {}", message)
+            println!("WARNING: {}", message.render())
         }
+        let range = Range::new(
+            self.buffer.ptok,
+            self.buffer.pcur,
+            self.buffer.input.clone(),
+        );
+        let diagnostic = Diagnostic::new(ErrorLevel::Warning, message, range);
+        self.diagnostics.push(diagnostic);
     }
 
     pub(crate) fn set_yylval_id(&mut self, id: &str) {
@@ -1071,10 +1082,10 @@ impl Lexer {
     }
 
     pub(crate) fn warn_balanced(
-        &self,
+        &mut self,
         token_type: i32,
-        op: &str,
-        syn: &str,
+        op: &'static str,
+        syn: &'static str,
         c: &MaybeByte,
         space_seen: bool,
         last_state: &LexState,
@@ -1082,7 +1093,10 @@ impl Lexer {
         if !last_state.is_some(EXPR_CLASS | EXPR_DOT | EXPR_FNAME | EXPR_ENDFN)
             && space_seen & !c.is_space()
         {
-            self.warn(&format!("`{}' after local variable or literal is interpreted as binary operator even though it seems like {}", op, syn));
+            self.warn(DiagnosticMessage::AmbiguousOperator {
+                operator: op,
+                interpreted_as: syn,
+            });
         }
         token_type
     }
@@ -1153,11 +1167,10 @@ impl Lexer {
         Ok(Self::tEH)
     }
 
-    pub(crate) fn warn_space_char(&mut self, c: u8, prefix: &str) {
-        self.warn(&format!(
-            "invalid character syntax; use \"{}\"\\{}",
-            prefix, c
-        ))
+    pub(crate) fn warn_space_char(&mut self, c: u8, prefix: &'static str) {
+        self.warn(DiagnosticMessage::InvalidCharacterSyntax {
+            suggestion: format!("\"{}\"\\{}", prefix, c),
+        })
     }
 
     pub(crate) fn parse_qmark(&mut self, space_seen: bool) -> Result<i32, ()> {
@@ -1182,7 +1195,6 @@ impl Lexer {
             return self.parse_qmark_ternary(&c);
         }
         self.newtok();
-        // enc = self.enc;
 
         if !self.parser_is_ascii() {
             if self.tokadd_mbchar(&c).is_err() {
@@ -1234,11 +1246,8 @@ impl Lexer {
         Ok(Self::tCHAR)
     }
 
-    pub(crate) fn arg_ambiguous(&self, c: u8) -> bool {
-        self.warn(&format!(
-            "ambiguous first argument; put parentheses or a space even after `{}' operator",
-            c
-        ));
+    pub(crate) fn arg_ambiguous(&mut self, c: u8) -> bool {
+        self.warn(DiagnosticMessage::AmbiguousFirstArgument { operator: c });
         true
     }
 
@@ -1250,11 +1259,17 @@ impl Lexer {
         // nop
     }
 
-    pub(crate) fn yyerror0(&self, message: &str) {
+    pub(crate) fn yyerror0(&mut self, message: DiagnosticMessage) {
         if self.debug {
-            println!("yyerror0: {}", message)
+            println!("yyerror0: {}", message.render())
         }
-        panic!("{}", message)
+        let range = Range::new(
+            self.buffer.ptok,
+            self.buffer.pcur,
+            self.buffer.input.clone(),
+        );
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, range);
+        self.diagnostics.push(diagnostic);
     }
 
     pub(crate) fn is_lambda_beginning(&self) -> bool {
@@ -1290,7 +1305,7 @@ impl Lexer {
         let len = self.parser_precise_mbclen(self.buffer.pcur);
         if let Some(len) = len {
             self.buffer.pcur += len;
-            self.yyerror0("unknown type of %string");
+            self.yyerror0(DiagnosticMessage::UnknownTypeOfPercentString);
         }
         Self::END_OF_INPUT
     }
@@ -1371,7 +1386,7 @@ impl Lexer {
                 Self::tSYMBEG
             }
             _ => {
-                self.yyerror0("unknown type of %string");
+                self.yyerror0(DiagnosticMessage::UnknownTypeOfPercentString);
                 Self::END_OF_INPUT
             }
         }

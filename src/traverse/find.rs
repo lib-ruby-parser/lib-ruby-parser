@@ -188,7 +188,7 @@ impl<'a> Find {
 
 impl<'a> Visitor<Option<Node>> for Find {
     fn visit_all(&mut self, _: &Vec<Node>) -> Option<Node> {
-        panic!("arrays should be handled manually")
+        unreachable!("arrays should be handled manually")
     }
 
     fn on_alias(&mut self, node: &Alias) -> Option<Node> {

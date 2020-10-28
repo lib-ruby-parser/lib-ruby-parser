@@ -1,7 +1,7 @@
-mod error;
+mod diagnostic;
 mod level;
 mod message;
 
-pub use error::ParseError;
+pub use diagnostic::Diagnostic;
 pub use level::ErrorLevel;
-pub use message::ErrorMessage;
+pub use message::DiagnosticMessage;

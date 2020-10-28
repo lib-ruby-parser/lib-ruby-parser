@@ -1,12 +1,12 @@
 use std::convert::TryInto;
 
-use crate::lex_states::*;
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::parser::TokenValue;
 use crate::source::buffer::*;
 use crate::str_term::{str_types::*, HeredocEnd, HeredocLiteral, StrTerm, StringLiteral};
 use crate::TokenBuf;
+use crate::{lex_states::*, DiagnosticMessage};
 
 const ESCAPE_CONTROL: usize = 1;
 const ESCAPE_META: usize = 2;
@@ -94,14 +94,14 @@ impl Lexer {
             self.literal_flush(self.buffer.pcur);
             if (func & STR_FUNC_QWORDS) != 0 {
                 /* no content to add, bailing out here */
-                self.yyerror0("unterminated list meets end of file");
+                self.yyerror0(DiagnosticMessage::UnterminatedList);
                 self.strterm = None;
                 return Self::tSTRING_END;
             }
             if (func & STR_FUNC_REGEXP) != 0 {
-                self.yyerror0("unterminated regexp meets end of file");
+                self.yyerror0(DiagnosticMessage::UnterminatedRegexp);
             } else {
-                self.yyerror0("unterminated string meets end of file");
+                self.yyerror0(DiagnosticMessage::UnterminatedString);
             }
             quote.set_func(quote.func() | STR_FUNC_TERM);
         }
@@ -310,7 +310,6 @@ impl Lexer {
                             if self.tokadd_escape().is_err() {
                                 return None;
                             }
-                            // TODO: compare encodings
                             continue;
                         } else if (func & STR_FUNC_EXPAND) != 0 {
                             self.buffer.pushback(&c);
@@ -451,15 +450,15 @@ impl Lexer {
         } else {
             numlen < 4
         } {
-            self.yyerror0("invalid Unicode escape");
+            self.yyerror0(DiagnosticMessage::InvalidUnicodeEscape);
             return wide && numlen > 0;
         }
         if codepoint > 0x10ffff {
-            self.yyerror0("invalid Unicode codepoint (too large)");
+            self.yyerror0(DiagnosticMessage::TooLargeUnicodeCodepoint);
             return wide;
         }
         if (codepoint & 0xfffff800) == 0xd800 {
-            self.yyerror0("invalid Unicode codepoint");
+            self.yyerror0(DiagnosticMessage::InvalidUnicodeCodepoint);
             return wide;
         }
         if regexp_literal != 0 {
@@ -546,7 +545,7 @@ impl Lexer {
                     self.buffer.pcur = second;
                     self.token_flush();
                     self.buffer.pcur = pcur;
-                    self.yyerror0("Multiple codepoints at single character literal");
+                    self.yyerror0(DiagnosticMessage::MultipleCodepointAtSingleChar);
                     self.token_flush();
                 }
             }
@@ -578,7 +577,7 @@ impl Lexer {
     }
 
     pub(crate) fn tokadd_escape_eof(&mut self) -> Result<(), ()> {
-        self.yyerror0("Invalid escape character syntax");
+        self.yyerror0(DiagnosticMessage::InvalidEscapeCharacter);
         self.token_flush();
         Err(())
     }
@@ -687,7 +686,7 @@ impl Lexer {
     }
 
     pub(crate) fn read_escape_eof(&mut self) -> MaybeByte {
-        self.yyerror0("Invalid escape character syntax");
+        self.yyerror0(DiagnosticMessage::InvalidEscapeCharacter);
         self.token_flush();
         unimplemented!("read_escape_eof")
     }
@@ -697,7 +696,7 @@ impl Lexer {
 
         c = self.scan_hex(self.buffer.pcur, 2, numlen);
         if *numlen == 0 {
-            self.yyerror0("invalid hex escape");
+            self.yyerror0(DiagnosticMessage::InvalidHexEscape);
             self.token_flush();
             return MaybeByte::new(0);
         }
@@ -759,9 +758,13 @@ impl Lexer {
                 } else {
                     if let Some(c2) = self.escaped_control_code(&c) {
                         if c.is_control() || (flags & ESCAPE_CONTROL) == 0 {
-                            self.warn(&format!("invalid character syntax; use \\M-\\{}", c2));
+                            self.warn(DiagnosticMessage::InvalidCharacterSyntax {
+                                suggestion: format!("\\M-\\{}", c2),
+                            });
                         } else {
-                            self.warn(&format!("invalid character syntax; use \\C-\\M-\\{}", c2));
+                            self.warn(DiagnosticMessage::InvalidCharacterSyntax {
+                                suggestion: format!("\\C-\\M-\\{}", c2),
+                            });
                         }
                     } else if c.is_control() {
                         return self.read_escape_eof();
@@ -794,14 +797,22 @@ impl Lexer {
                 } else if let Some(c2) = self.escaped_control_code(&c) {
                     if c.is_control() {
                         if (flags & ESCAPE_META) != 0 {
-                            self.warn(&format!("invalid character syntax; use \\M-\\{}", c2));
+                            self.warn(DiagnosticMessage::InvalidCharacterSyntax {
+                                suggestion: format!("\\M-\\{}", c2),
+                            });
                         } else {
-                            self.warn(&format!("invalid character syntax; use \\{}", c2));
+                            self.warn(DiagnosticMessage::InvalidCharacterSyntax {
+                                suggestion: format!("\\{}", c2),
+                            });
                         }
                     } else if (flags & ESCAPE_META) != 0 {
-                        self.warn(&format!("invalid character syntax; use \\M-\\C-\\{}", c2));
+                        self.warn(DiagnosticMessage::InvalidCharacterSyntax {
+                            suggestion: format!("\\M-\\C-\\{}", c2),
+                        });
                     } else {
-                        self.warn(&format!("invalid character syntax; use \\C-\\{}", c2));
+                        self.warn(DiagnosticMessage::InvalidCharacterSyntax {
+                            suggestion: format!("\\C-\\{}", c2),
+                        });
                     }
                 } else if c.is_control() {
                     return self.read_escape_eof();
@@ -867,7 +878,7 @@ impl Lexer {
                 }
 
                 if c.is_eof() || c == '\r' || c == '\n' {
-                    self.yyerror0("unterminated here document identifier");
+                    self.yyerror0(DiagnosticMessage::UnterminatedHeredocId);
                     return None;
                 }
             }
