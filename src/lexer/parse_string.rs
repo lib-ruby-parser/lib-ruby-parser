@@ -12,7 +12,7 @@ const ESCAPE_CONTROL: usize = 1;
 const ESCAPE_META: usize = 2;
 
 impl Lexer {
-    pub const TAB_WIDTH: i32 = 8;
+    pub(crate) const TAB_WIDTH: i32 = 8;
 
     pub(crate) fn parse_string(&mut self, quote: StringLiteral) -> i32 {
         let func = quote.func();

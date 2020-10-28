@@ -5,7 +5,7 @@ use std::convert::TryFrom;
 use std::rc::Rc;
 
 #[derive(Debug, Default)]
-pub struct Input {
+pub(crate) struct Input {
     pub name: String,
     pub(crate) bytes: Vec<u8>,
     pub(crate) lines: Vec<SourceLine>,
@@ -42,10 +42,10 @@ impl Input {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct Buffer {
-    pub input: Rc<Input>,
-    pub input_s: String,
-    pub encoding: String,
+pub(crate) struct Buffer {
+    pub(crate) input: Rc<Input>,
+    pub(crate) input_s: String,
+    pub(crate) encoding: String,
 
     pub(crate) line_count: usize,
     pub(crate) prevline: Option<usize>, // index
@@ -367,13 +367,9 @@ impl Buffer {
         self.pushback(&MaybeByte::new(1));
         self.set_ptok(self.pcur);
     }
-
-    pub fn line_col_for_pos(&self, pos: usize) -> Option<(usize, usize)> {
-        self.input.line_col_for_pos(pos)
-    }
 }
 
-pub trait Pushback<T> {
+pub(crate) trait Pushback<T> {
     fn pushback(&mut self, c: &T);
 }
 

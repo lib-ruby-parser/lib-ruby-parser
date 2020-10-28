@@ -6,5 +6,6 @@ mod source_line;
 
 pub use range::Range;
 
-pub use decoder::{decode_input, InputError};
-pub use source_line::SourceLine;
+pub(crate) use decoder::decode_input;
+pub use decoder::InputError;
+pub(crate) use source_line::SourceLine;

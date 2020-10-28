@@ -6,7 +6,7 @@ use std::rc::Rc;
 pub struct Range {
     pub begin_pos: usize,
     pub end_pos: usize,
-    pub input: Rc<Input>,
+    pub(crate) input: Rc<Input>,
 }
 
 impl PartialEq for Range {
@@ -16,7 +16,7 @@ impl PartialEq for Range {
 }
 
 impl Range {
-    pub fn new(begin_pos: usize, end_pos: usize, input: Rc<Input>) -> Self {
+    pub(crate) fn new(begin_pos: usize, end_pos: usize, input: Rc<Input>) -> Self {
         debug_assert!(end_pos >= begin_pos);
         Self {
             begin_pos,

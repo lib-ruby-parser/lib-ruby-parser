@@ -15,7 +15,7 @@ use crate::{lex_states::*, LexState};
 
 #[derive(Debug, Clone, Default)]
 pub struct Lexer {
-    pub buffer: Buffer,
+    pub(crate) buffer: Buffer,
     pub debug: bool,
 
     pub(crate) lval: Option<TokenValue>,
@@ -98,6 +98,10 @@ impl Lexer {
         }
 
         tokens
+    }
+
+    pub fn line_col_for_loc(&self, loc: usize) -> Option<(usize, usize)> {
+        self.buffer.input.line_col_for_pos(loc)
     }
 
     pub(crate) fn yylex(&mut self) -> Token {

@@ -10,15 +10,14 @@ pub mod source;
 pub mod lexer;
 pub use lexer::Lexer;
 
-pub mod meta;
-
 mod static_environment;
 pub use static_environment::StaticEnvironment;
 
-pub mod parse_value;
+pub(crate) mod parse_value;
 
 mod parser;
-pub use parser::{Loc, Parser, SymbolKind, Token, TokenValue};
+pub use parser::{Parser, Token};
+pub(crate) use parser::Loc;
 
 mod builder;
 pub use builder::Builder;
@@ -35,7 +34,7 @@ pub(crate) use variables_stack::VariablesStack;
 mod error;
 pub use error::{ErrorLevel, ErrorMessage, ParseError};
 
-pub mod maybe_byte;
+pub(crate) mod maybe_byte;
 
 mod lex_state;
 pub use lex_state::lex_states;
@@ -50,7 +49,7 @@ pub(crate) use reserved_words::reserved_word;
 mod stack_state;
 pub(crate) use stack_state::StackState;
 
-pub mod str_term;
+pub(crate) mod str_term;
 
 mod context;
 pub(crate) use context::{Context, ContextItem};

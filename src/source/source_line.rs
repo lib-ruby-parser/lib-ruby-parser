@@ -5,10 +5,6 @@ pub struct SourceLine {
 }
 
 impl SourceLine {
-    pub fn source(&self, source: &Vec<u8>) -> String {
-        String::from_utf8_lossy(&source[self.start..self.end]).into_owned()
-    }
-
     pub fn len(&self) -> usize {
         self.end - self.start
     }

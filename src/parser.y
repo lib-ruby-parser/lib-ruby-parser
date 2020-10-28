@@ -5688,12 +5688,12 @@ keyword_variable: kNIL
 impl Lexer {
     fn report_syntax_error(&self, ctx: &Context) {
         if self.debug { eprintln!("syntax error: {:?}", ctx) }
-        panic!("syntax error: {:?}", ctx);
+        println!("syntax error: {:?}", ctx);
     }
 
     fn yyerror(&mut self, loc: &Loc, msg: &str) {
         if self.debug { eprintln!("yyerror: {:?} {:?}", loc, msg) }
-        panic!("{:?} {}", loc, msg)
+        println!("{:?} {}", loc, msg)
     }
 }
 
