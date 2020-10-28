@@ -64,7 +64,7 @@ impl Lexer {
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
     pub fn new(
-        bytes: &Vec<u8>,
+        bytes: &[u8],
         name: &str,
         known_encoding: Option<String>,
     ) -> Result<Self, InputError> {
@@ -119,7 +119,7 @@ impl Lexer {
             .or_else(||
                 // take raw value if nothing was manually captured
                 self.buffer.substr_at(begin, end).map(|s| TokenValue::String(String::from_utf8(s.to_vec()).unwrap())))
-            .unwrap_or(TokenValue::String("".to_owned()));
+            .unwrap_or_else(|| TokenValue::String("".to_owned()));
 
         // match self.strterm {
         //     Some(StrTerm::Heredoc(_)) => {
@@ -241,10 +241,9 @@ impl Lexer {
                         if !self.parser_magic_comment(
                             self.buffer.pcur,
                             self.buffer.pend - self.buffer.pcur,
-                        ) {
-                            if self.comment_at_top() {
-                                self.set_file_encoding(self.buffer.pcur, self.buffer.pend)
-                            }
+                        ) && self.comment_at_top()
+                        {
+                            self.set_file_encoding(self.buffer.pcur, self.buffer.pend)
                         }
                         self.buffer.goto_eol();
                     }
@@ -711,10 +710,11 @@ impl Lexer {
                         if c == '.' {
                             if self.paren_nest == 0 && self.buffer.is_looking_at_eol() {
                                 self.warn("... at EOL, should be parenthesized?");
-                            } else if self.lpar_beg >= 0 && self.lpar_beg + 1 == self.paren_nest {
-                                if last_state.is_some(EXPR_LABEL) {
-                                    return Self::tDOT3;
-                                }
+                            } else if self.lpar_beg >= 0
+                                && self.lpar_beg + 1 == self.paren_nest
+                                && last_state.is_some(EXPR_LABEL)
+                            {
+                                return Self::tDOT3;
                             }
                             return if is_beg { Self::tBDOT3 } else { Self::tDOT3 };
                         }
@@ -1034,7 +1034,7 @@ impl Lexer {
             break;
         }
 
-        return self.parse_ident(&c, cmd_state);
+        self.parse_ident(&c, cmd_state)
     }
 
     pub fn set_lex_state(&mut self, states: i32) {
@@ -1231,7 +1231,7 @@ impl Lexer {
         self.tokfix();
         self.set_yylval_str(self.tokenbuf.clone());
         self.set_lex_state(EXPR_END);
-        return Ok(Self::tCHAR);
+        Ok(Self::tCHAR)
     }
 
     pub(crate) fn arg_ambiguous(&self, c: u8) -> bool {
@@ -1241,15 +1241,6 @@ impl Lexer {
         ));
         true
     }
-
-    // pub(crate) fn tokadd(&mut self, c: &LexChar) {
-    //     let c = c.unwrap();
-    //     self.tokenbuf.push(c);
-    // }
-
-    // pub(crate) fn tokadd_byte(&mut self, byte: u8) {
-    //     unimplemented!()
-    // }
 
     pub(crate) fn toklen(&self) -> usize {
         self.tokenbuf.len()
@@ -1301,7 +1292,7 @@ impl Lexer {
             self.buffer.pcur += len;
             self.yyerror0("unknown type of %string");
         }
-        return Self::END_OF_INPUT;
+        Self::END_OF_INPUT
     }
 
     pub(crate) fn percent_quotation(&mut self, c: &MaybeByte, ptok: usize) -> i32 {
@@ -1344,44 +1335,44 @@ impl Lexer {
         match c.to_option() {
             Some(b'Q') => {
                 self.strterm = self.new_strterm(str_types::str_dquote, term.unwrap(), paren, None);
-                return Self::tSTRING_BEG;
+                Self::tSTRING_BEG
             }
             Some(b'q') => {
                 self.strterm = self.new_strterm(str_types::str_squote, term.unwrap(), paren, None);
-                return Self::tSTRING_BEG;
+                Self::tSTRING_BEG
             }
             Some(b'W') => {
                 self.strterm = self.new_strterm(str_types::str_dword, term.unwrap(), paren, None);
-                return Self::tWORDS_BEG;
+                Self::tWORDS_BEG
             }
             Some(b'w') => {
                 self.strterm = self.new_strterm(str_types::str_sword, term.unwrap(), paren, None);
-                return Self::tQWORDS_BEG;
+                Self::tQWORDS_BEG
             }
             Some(b'I') => {
                 self.strterm = self.new_strterm(str_types::str_dword, term.unwrap(), paren, None);
-                return Self::tSYMBOLS_BEG;
+                Self::tSYMBOLS_BEG
             }
             Some(b'i') => {
                 self.strterm = self.new_strterm(str_types::str_sword, term.unwrap(), paren, None);
-                return Self::tQSYMBOLS_BEG;
+                Self::tQSYMBOLS_BEG
             }
             Some(b'x') => {
                 self.strterm = self.new_strterm(str_types::str_xquote, term.unwrap(), paren, None);
-                return Self::tXSTRING_BEG;
+                Self::tXSTRING_BEG
             }
             Some(b'r') => {
                 self.strterm = self.new_strterm(str_types::str_regexp, term.unwrap(), paren, None);
-                return Self::tREGEXP_BEG;
+                Self::tREGEXP_BEG
             }
             Some(b's') => {
                 self.strterm = self.new_strterm(str_types::str_ssym, term.unwrap(), paren, None);
                 self.set_lex_state(EXPR_FNAME | EXPR_FITEM);
-                return Self::tSYMBEG;
+                Self::tSYMBEG
             }
             _ => {
                 self.yyerror0("unknown type of %string");
-                return Self::END_OF_INPUT;
+                Self::END_OF_INPUT
             }
         }
     }
@@ -1410,14 +1401,14 @@ impl Lexer {
             EXPR_BEG
         });
         self.buffer.pushback(&c);
-        return self.warn_balanced(
+        self.warn_balanced(
             Self::tPERCENT,
             "%%",
             "string literal",
             &c,
             space_seen,
             &last_state,
-        );
+        )
     }
 
     pub(crate) fn parse_gvar(&mut self, last_state: LexState) -> i32 {
@@ -1531,7 +1522,7 @@ impl Lexer {
         }
         self.set_lex_state(EXPR_END);
         self.tokenize_ident(&last_state);
-        return Self::tGVAR;
+        Self::tGVAR
     }
 
     pub(crate) fn parse_atmark(&mut self, last_state: LexState) -> i32 {
@@ -1586,7 +1577,7 @@ impl Lexer {
             return Self::END_OF_INPUT;
         }
         self.tokenize_ident(&last_state);
-        return result;
+        result
     }
 
     pub(crate) fn tokadd_ident(&mut self, c: &MaybeByte) -> bool {
@@ -1603,7 +1594,7 @@ impl Lexer {
         }
 
         self.buffer.pushback(&c);
-        return false;
+        false
     }
 
     pub(crate) fn newtok(&mut self) {

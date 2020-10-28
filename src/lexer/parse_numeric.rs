@@ -331,7 +331,7 @@ impl Lexer {
         if nondigit.is_some() {
             self.trailing_uc(&nondigit);
         }
-        return self.parse_numeric_footer(is_float, seen_e);
+        self.parse_numeric_footer(is_float, seen_e)
     }
 
     fn parse_numeric_footer(&mut self, is_float: bool, seen_e: bool) -> i32 {
@@ -357,7 +357,7 @@ impl Lexer {
             return self.set_number_literal(&mut tokenbuf, token_type, suffix);
         }
         let suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-        return self.set_integer_literal(&mut self.tokenbuf.clone(), suffix);
+        self.set_integer_literal(&mut self.tokenbuf.clone(), suffix)
     }
 
     fn set_number_literal(&mut self, value: &mut TokenBuf, token_type: i32, suffix: i8) -> i32 {

@@ -2136,7 +2136,7 @@
                     }
                 | rel_expr relop arg   %prec tGT
                     {
-                        self.warn(&@2, &format!("comparison after comparison"));
+                        self.warn(&@2, "comparison after comparison");
                         $$ = Value::Node(
                             self.builder.binary_op(
                                 $<Node>1,
@@ -2321,14 +2321,14 @@
 
     command_args:   {
                         let lookahead =
-                            match self.last_token.token_type {
+                            matches!(
+                                self.last_token.token_type,
                                 Lexer::tLPAREN2
-                                | Lexer::tLPAREN
-                                | Lexer:: tLPAREN_ARG
-                                | Lexer::tLBRACK2
-                                | Lexer::tLBRACK => true,
-                                _ => false
-                            };
+                                    | Lexer::tLPAREN
+                                    | Lexer:: tLPAREN_ARG
+                                    | Lexer::tLBRACK2
+                                    | Lexer::tLBRACK
+                            );
 
                         if lookahead { self.yylexer.cmdarg_pop() }
                         self.yylexer.cmdarg_push(true);
@@ -2336,11 +2336,7 @@
                     }
                   call_args
                     {
-                        let lookahead =
-                            match self.last_token.token_type {
-                                Lexer::tLBRACE_ARG => true,
-                                _ => false
-                            };
+                        let lookahead = matches!(self.last_token.token_type, Lexer::tLBRACE_ARG);
 
                         if lookahead { self.yylexer.cmdarg_pop() }
                         self.yylexer.cmdarg_pop();
@@ -4987,49 +4983,46 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         let node = Node::from(yystack.owned_value_at(0));
-                        match &node {
-                            Node::Lvar(Lvar { name, expression_l: _expression_l }) => {
-                                match name.chars().collect::<Vec<_>>()[..] {
-                                    ['_', n] if n >= '1' && n <= '9' => {
-                                        if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
-                                            /* definitely an implicit param */
+                        if let Node::Lvar(Lvar { name, expression_l: _expression_l }) = &node {
+                            match name.chars().collect::<Vec<_>>()[..] {
+                                ['_', n] if n >= '1' && n <= '9' => {
+                                    if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
+                                        /* definitely an implicit param */
 
-                                            if self.max_numparam_stack.has_ordinary_params() {
-                                                // diagnostic :error, :ordinary_param_defined, nil, [nil, expression_l]
-                                            }
-
-                                            let mut raw_context = self.context.inner_clone();
-                                            let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
-
-                                            /* ignore current block scope */
-                                            raw_context.pop();
-                                            raw_max_numparam_stack.pop();
-
-                                            for outer_scope in raw_context.iter().rev() {
-                                                if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda {
-                                                    let outer_scope_has_numparams = raw_max_numparam_stack.pop().unwrap() > 0;
-
-                                                    if outer_scope_has_numparams {
-                                                        // diagnostic :error, :numparam_used_in_outer_scope, nil, [nil, location]
-                                                    } else {
-                                                        /* for now it's ok, but an outer scope can also be a block
-                                                           with numparams, so we need to continue */
-                                                    }
-                                                } else {
-                                                    /* found an outer scope that can't have numparams
-                                                       like def/class/etc */
-                                                    break;
-                                                }
-                                            }
-
-                                            self.static_env.declare(name);
-                                            self.max_numparam_stack.register(n.to_digit(10).unwrap() as i32)
+                                        if self.max_numparam_stack.has_ordinary_params() {
+                                            // diagnostic :error, :ordinary_param_defined, nil, [nil, expression_l]
                                         }
-                                    },
-                                    _ => {}
-                                }
-                            },
-                            _ => {},
+
+                                        let mut raw_context = self.context.inner_clone();
+                                        let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
+
+                                        /* ignore current block scope */
+                                        raw_context.pop();
+                                        raw_max_numparam_stack.pop();
+
+                                        for outer_scope in raw_context.iter().rev() {
+                                            if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda {
+                                                let outer_scope_has_numparams = raw_max_numparam_stack.pop().unwrap() > 0;
+
+                                                if outer_scope_has_numparams {
+                                                    // diagnostic :error, :numparam_used_in_outer_scope, nil, [nil, location]
+                                                } else {
+                                                    /* for now it's ok, but an outer scope can also be a block
+                                                        with numparams, so we need to continue */
+                                                }
+                                            } else {
+                                                /* found an outer scope that can't have numparams
+                                                    like def/class/etc */
+                                                break;
+                                            }
+                                        }
+
+                                        self.static_env.declare(name);
+                                        self.max_numparam_stack.register(n.to_digit(10).unwrap() as i32)
+                                    }
+                                },
+                                _ => {}
+                            }
                         }
 
                         $$ = Value::Node(
@@ -5698,7 +5691,7 @@ impl Lexer {
 }
 
 impl Parser {
-    pub fn new(bytes: &Vec<u8>, name: &str) -> Result<Self, InputError> {
+    pub fn new(bytes: &[u8], name: &str) -> Result<Self, InputError> {
         let lexer = Lexer::new(bytes, name, None)?;
         Ok(Self::new_with_lexer(lexer))
     }
@@ -5773,7 +5766,7 @@ impl Parser {
 
     fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), String> {
         let name = value(ident_t);
-        let first_char = name.chars().nth(0).unwrap();
+        let first_char = name.chars().next().unwrap();
         if first_char.is_lowercase() {
             Ok(())
         } else {

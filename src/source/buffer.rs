@@ -5,7 +5,7 @@ use std::convert::TryFrom;
 use std::rc::Rc;
 
 #[derive(Debug, Default)]
-pub(crate) struct Input {
+pub struct Input {
     pub name: String,
     pub(crate) bytes: Vec<u8>,
     pub(crate) lines: Vec<SourceLine>,
@@ -42,8 +42,8 @@ impl Input {
 }
 
 #[derive(Debug, Clone, Default)]
-pub(crate) struct Buffer {
-    pub(crate) input: Rc<Input>,
+pub struct Buffer {
+    pub input: Rc<Input>,
     pub(crate) input_s: String,
     pub(crate) encoding: String,
 
@@ -168,7 +168,7 @@ impl Buffer {
         if self.debug {
             println!("nextc = {:?}", c);
         }
-        return MaybeByte::new(c);
+        MaybeByte::new(c)
     }
 
     pub(crate) fn goto_eol(&mut self) {
@@ -349,9 +349,9 @@ impl Buffer {
             }
 
             let next_len_chars = self.substr_at(ptr, ptr + len);
-            return Some(eos) == next_len_chars;
+            Some(eos) == next_len_chars
         } else {
-            return false;
+            false
         }
     }
 

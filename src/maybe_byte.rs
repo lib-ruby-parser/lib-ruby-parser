@@ -19,7 +19,7 @@ impl MaybeByte {
     pub(crate) fn unwrap(&self) -> u8 {
         match self {
             MaybeByte::Some(byte) => *byte,
-            _ => panic!("MaybeByte::EndOfInput has no bytes"),
+            _ => unreachable!("Can't unwrap MaybeByte::EndOfInput"),
         }
     }
 

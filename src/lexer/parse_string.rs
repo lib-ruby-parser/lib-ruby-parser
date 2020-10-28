@@ -41,13 +41,10 @@ impl Lexer {
             if (func & STR_FUNC_REGEXP) != 0 {
                 return Self::tREGEXP_END;
             } else {
-                match quote.heredoc_end() {
-                    Some(heredoc_end) => {
-                        self.lval_start = Some(heredoc_end.start);
-                        self.lval_end = Some(heredoc_end.end);
-                        self.set_yylval_str(TokenBuf::new(heredoc_end.value.as_bytes()));
-                    }
-                    _ => {}
+                if let Some(heredoc_end) = quote.heredoc_end() {
+                    self.lval_start = Some(heredoc_end.start);
+                    self.lval_end = Some(heredoc_end.end);
+                    self.set_yylval_str(TokenBuf::new(heredoc_end.value.as_bytes()));
                 }
                 return Self::tSTRING_END;
             }
@@ -93,22 +90,20 @@ impl Lexer {
         let added = self.tokadd_string(func, term, paren, &mut nest);
         quote.set_nest(nest);
 
-        if added.is_some() {
-            if self.buffer.eofp {
-                self.literal_flush(self.buffer.pcur);
-                if (func & STR_FUNC_QWORDS) != 0 {
-                    /* no content to add, bailing out here */
-                    self.yyerror0("unterminated list meets end of file");
-                    self.strterm = None;
-                    return Self::tSTRING_END;
-                }
-                if (func & STR_FUNC_REGEXP) != 0 {
-                    self.yyerror0("unterminated regexp meets end of file");
-                } else {
-                    self.yyerror0("unterminated string meets end of file");
-                }
-                quote.set_func(quote.func() | STR_FUNC_TERM);
+        if added.is_some() && self.buffer.eofp {
+            self.literal_flush(self.buffer.pcur);
+            if (func & STR_FUNC_QWORDS) != 0 {
+                /* no content to add, bailing out here */
+                self.yyerror0("unterminated list meets end of file");
+                self.strterm = None;
+                return Self::tSTRING_END;
             }
+            if (func & STR_FUNC_REGEXP) != 0 {
+                self.yyerror0("unterminated regexp meets end of file");
+            } else {
+                self.yyerror0("unterminated string meets end of file");
+            }
+            quote.set_func(quote.func() | STR_FUNC_TERM);
         }
 
         self.tokfix();
@@ -132,7 +127,7 @@ impl Lexer {
             return Self::tLABEL_END;
         }
         self.set_lex_state(EXPR_END);
-        return Self::tSTRING_END;
+        Self::tSTRING_END
     }
 
     pub(crate) fn set_yylval_num(&mut self, flags: String) {
@@ -171,7 +166,7 @@ impl Lexer {
             self.compile_error(&format!("unknown regexp options - {:#?}", self.tokenbuf));
         }
 
-        return result;
+        result
     }
 
     pub(crate) fn parser_peek_variable_name(&mut self) -> Option<i32> {
@@ -302,11 +297,9 @@ impl Lexer {
                         return None;
                     }
                     _ => {
-                        if !c.is_ascii() {
-                            if (func & STR_FUNC_EXPAND) == 0 {
-                                self.tokadd(b'\\');
-                                self.tokadd(&c);
-                            }
+                        if !c.is_ascii() && (func & STR_FUNC_EXPAND) == 0 {
+                            self.tokadd(b'\\');
+                            self.tokadd(&c);
                         }
                         if (func & STR_FUNC_REGEXP) != 0 {
                             if c == term && !self.simple_re_meta(&c) {
@@ -363,20 +356,18 @@ impl Lexer {
             if *c == '\n' {
                 self.buffer.heredoc_line_indent = 0
             }
-        } else {
-            if *c == ' ' {
-                self.buffer.heredoc_line_indent += 1;
-                return true;
-            } else if *c == '\t' {
-                let w = (self.buffer.heredoc_line_indent / Self::TAB_WIDTH) + 1;
-                self.buffer.heredoc_line_indent = w * Self::TAB_WIDTH;
-                return true;
-            } else if *c != '\n' {
-                if self.buffer.heredoc_indent > self.buffer.heredoc_line_indent {
-                    self.buffer.heredoc_indent = self.buffer.heredoc_line_indent
-                }
-                self.buffer.heredoc_line_indent = -1;
+        } else if *c == ' ' {
+            self.buffer.heredoc_line_indent += 1;
+            return true;
+        } else if *c == '\t' {
+            let w = (self.buffer.heredoc_line_indent / Self::TAB_WIDTH) + 1;
+            self.buffer.heredoc_line_indent = w * Self::TAB_WIDTH;
+            return true;
+        } else if *c != '\n' {
+            if self.buffer.heredoc_indent > self.buffer.heredoc_line_indent {
+                self.buffer.heredoc_indent = self.buffer.heredoc_line_indent
             }
+            self.buffer.heredoc_line_indent = -1;
         }
         true
     }
@@ -415,7 +406,7 @@ impl Lexer {
             match self.buffer.byte_at(s).to_option() {
                 Some(c) if (c >= b'0' && c <= b'7') => {
                     result <<= 3;
-                    result |= ((c as u8) - ('0' as u8)) as usize;
+                    result |= ((c as u8) - b'0') as usize;
                 }
                 _ => break,
             }
@@ -513,7 +504,7 @@ impl Lexer {
                     break;
                 }
                 self.buffer.pcur += 1;
-                if !(self.buffer.pcur < self.buffer.pend) {
+                if self.buffer.pcur >= self.buffer.pend {
                     break;
                 }
             }
@@ -564,19 +555,26 @@ impl Lexer {
                 self.tokadd(close_brace)
             }
             self.nextc();
-        } else {
-            if !self.tokadd_codepoint(regexp_literal, false) {
-                self.token_flush();
-            }
+        } else if !self.tokadd_codepoint(regexp_literal, false) {
+            self.token_flush();
         }
     }
 
     pub(crate) fn simple_re_meta(&mut self, c: &MaybeByte) -> bool {
-        match c.to_option() {
-            Some(b'$') | Some(b'*') | Some(b'+') | Some(b'.') | Some(b'?') | Some(b'^')
-            | Some(b'|') | Some(b')') | Some(b']') | Some(b'}') | Some(b'>') => true,
-            _ => false,
-        }
+        matches!(
+            c.to_option(),
+            Some(b'$')
+                | Some(b'*')
+                | Some(b'+')
+                | Some(b'.')
+                | Some(b'?')
+                | Some(b'^')
+                | Some(b'|')
+                | Some(b')')
+                | Some(b']')
+                | Some(b'}')
+                | Some(b'>')
+        )
     }
 
     pub(crate) fn tokadd_escape_eof(&mut self) -> Result<(), ()> {
@@ -713,21 +711,21 @@ impl Lexer {
 
         c = self.nextc();
         match c.to_option() {
-            Some(b'\\') => return c,
-            Some(b'n') => return MaybeByte::new('\n'),
-            Some(b't') => return MaybeByte::new('\t'),
-            Some(b'r') => return MaybeByte::new('\r'),
-            Some(b'f') => return MaybeByte::new(Self::LF_CHAR),
-            Some(b'v') => return MaybeByte::new(Self::VTAB_CHAR),
-            Some(b'a') => return MaybeByte::new(0x07_u8),
-            Some(b'e') => return MaybeByte::new(0x1b_u8),
+            Some(b'\\') => c,
+            Some(b'n') => MaybeByte::new('\n'),
+            Some(b't') => MaybeByte::new('\t'),
+            Some(b'r') => MaybeByte::new('\r'),
+            Some(b'f') => MaybeByte::new(Self::LF_CHAR),
+            Some(b'v') => MaybeByte::new(Self::VTAB_CHAR),
+            Some(b'a') => MaybeByte::new(0x07_u8),
+            Some(b'e') => MaybeByte::new(0x1b_u8),
 
             Some(b'0') | Some(b'1') | Some(b'2') | Some(b'3') | Some(b'4') | Some(b'5')
             | Some(b'6') | Some(b'7') | Some(b'8') | Some(b'9') => {
                 self.buffer.pushback(&c);
                 let c = self.scan_oct(self.buffer.pcur, 3, &mut numlen);
                 self.buffer.pcur += numlen;
-                return MaybeByte::new(c as u8);
+                MaybeByte::new(c as u8)
             }
 
             Some(b'x') => {
@@ -735,11 +733,11 @@ impl Lexer {
                 if numlen == 0 {
                     return MaybeByte::EndOfInput;
                 }
-                return c;
+                c
             }
 
-            Some(b'b') => return MaybeByte::new(0x08_u8),
-            Some(b's') => return MaybeByte::new(' '),
+            Some(b'b') => MaybeByte::new(0x08_u8),
+            Some(b's') => MaybeByte::new(' '),
 
             Some(b'M') => {
                 if (flags & ESCAPE_META) != 0 {
@@ -754,11 +752,10 @@ impl Lexer {
                     if self.buffer.peek(b'u') {
                         return self.read_escape_eof();
                     }
-                    return self
-                        .read_escape(flags | ESCAPE_META)
-                        .map(|byte| MaybeByte::Some(byte | 0x80));
+                    self.read_escape(flags | ESCAPE_META)
+                        .map(|byte| MaybeByte::Some(byte | 0x80))
                 } else if c.is_eof() || !c.is_ascii() {
-                    return self.read_escape_eof();
+                    self.read_escape_eof()
                 } else {
                     if let Some(c2) = self.escaped_control_code(&c) {
                         if c.is_control() || (flags & ESCAPE_CONTROL) == 0 {
@@ -769,7 +766,7 @@ impl Lexer {
                     } else if c.is_control() {
                         return self.read_escape_eof();
                     }
-                    return c.map(|c| MaybeByte::Some((c & 0xff) | 0x80));
+                    c.map(|c| MaybeByte::Some(c | 0x80))
                 }
             }
 
@@ -794,34 +791,27 @@ impl Lexer {
                     return MaybeByte::new(0x7f_u8);
                 } else if c.is_eof() || !c.is_ascii() {
                     return self.read_escape_eof();
-                } else {
-                    if let Some(c2) = self.escaped_control_code(&c) {
-                        if c.is_control() {
-                            if (flags & ESCAPE_META) != 0 {
-                                self.warn(&format!("invalid character syntax; use \\M-\\{}", c2));
-                            } else {
-                                self.warn(&format!("invalid character syntax; use \\{}", c2));
-                            }
+                } else if let Some(c2) = self.escaped_control_code(&c) {
+                    if c.is_control() {
+                        if (flags & ESCAPE_META) != 0 {
+                            self.warn(&format!("invalid character syntax; use \\M-\\{}", c2));
                         } else {
-                            if (flags & ESCAPE_META) != 0 {
-                                self.warn(&format!(
-                                    "invalid character syntax; use \\M-\\C-\\{}",
-                                    c2
-                                ));
-                            } else {
-                                self.warn(&format!("invalid character syntax; use \\C-\\{}", c2));
-                            }
+                            self.warn(&format!("invalid character syntax; use \\{}", c2));
                         }
-                    } else if c.is_control() {
-                        return self.read_escape_eof();
+                    } else if (flags & ESCAPE_META) != 0 {
+                        self.warn(&format!("invalid character syntax; use \\M-\\C-\\{}", c2));
+                    } else {
+                        self.warn(&format!("invalid character syntax; use \\C-\\{}", c2));
                     }
+                } else if c.is_control() {
+                    return self.read_escape_eof();
                 }
-                return c.map(|c| MaybeByte::Some(c & 0x9f));
+                c.map(|c| MaybeByte::Some(c & 0x9f))
             }
 
-            None => return self.read_escape_eof(),
+            None => self.read_escape_eof(),
 
-            _ => return c,
+            _ => c,
         }
     }
 
@@ -929,7 +919,7 @@ impl Lexer {
         self.token_flush();
         self.buffer.heredoc_indent = indent;
         self.buffer.heredoc_line_indent = 0;
-        return Some(token);
+        Some(token)
     }
 
     pub(crate) fn here_document(&mut self, here: HeredocLiteral) -> i32 {
@@ -1098,7 +1088,7 @@ impl Lexer {
             Some(heredoc_end),
         );
         self.set_yylval_str(str_);
-        return Self::tSTRING_CONTENT;
+        Self::tSTRING_CONTENT
     }
 
     pub(crate) fn compute_heredoc_end(&self) -> HeredocEnd {
@@ -1136,7 +1126,7 @@ impl Lexer {
         self.token_flush();
         self.strterm = None;
         self.set_lex_state(EXPR_END);
-        return Self::tSTRING_END;
+        Self::tSTRING_END
     }
 
     pub(crate) fn here_document_restore(&mut self, here: &HeredocLiteral) -> i32 {
@@ -1150,17 +1140,17 @@ impl Lexer {
         self.strterm = None;
         self.set_lex_state(EXPR_END);
 
-        return Self::tSTRING_END;
+        Self::tSTRING_END
     }
 
     pub(crate) fn heredoc_flush_str(&mut self, str_: &TokenBuf) -> i32 {
         self.set_yylval_str(str_.clone());
         self.flush_string_content();
-        return Self::tSTRING_CONTENT;
+        Self::tSTRING_CONTENT
     }
 
     pub(crate) fn heredoc_flush(&mut self) -> i32 {
-        return self.heredoc_flush_str(&self.tokenbuf.clone());
+        self.heredoc_flush_str(&self.tokenbuf.clone())
     }
 
     pub(crate) fn heredoc_restore(&mut self, here: &HeredocLiteral) {

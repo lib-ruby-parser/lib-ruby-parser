@@ -37,12 +37,12 @@ impl fmt::Display for InputError {
 
 impl Error for InputError {}
 
-fn recognize_encoding(source: &Vec<u8>) -> Result<String, InputError> {
+fn recognize_encoding(source: &[u8]) -> Result<String, InputError> {
     if source.is_empty() {
         return Err(InputError::UnableToRecognizeEncoding);
     }
 
-    let mut lines = source.split(|byte| *byte == 10);
+    let mut lines = source.split(|byte| *byte == b'\n');
     let first_line = lines.next().unwrap_or(&[] as &[u8]);
     let second_line = lines.next().unwrap_or(&[] as &[u8]);
 
@@ -68,13 +68,13 @@ fn recognize_encoding(source: &Vec<u8>) -> Result<String, InputError> {
 
     captures
         .name("a")
-        .or(captures.name("b"))
-        .or(captures.name("c"))
+        .or_else(|| captures.name("b"))
+        .or_else(|| captures.name("c"))
         .map(|m| m.as_str().to_owned())
         .ok_or(InputError::UnableToRecognizeEncoding)
 }
 
-fn decode(input: &Vec<u8>, enc: &str) -> Result<String, InputError> {
+fn decode(input: &[u8], enc: &str) -> Result<String, InputError> {
     let enc: encoding::EncodingRef = match &enc.to_uppercase()[..] {
         "ASCII-8BIT" | "BINARY" => {
             return Ok(String::from_utf8_lossy(input).into_owned());
@@ -88,11 +88,11 @@ fn decode(input: &Vec<u8>, enc: &str) -> Result<String, InputError> {
         .map_err(|err| InputError::EncodingError(err.into_owned()))
 }
 
-pub fn decode_input(input: &Vec<u8>, enc: Option<String>) -> Result<(String, String), InputError> {
+pub fn decode_input(input: &[u8], enc: Option<String>) -> Result<(String, String), InputError> {
     if let Some(enc) = enc {
         return Ok((decode(input, &enc)?, enc));
     }
 
-    let enc = recognize_encoding(input).unwrap_or("utf-8".to_owned());
+    let enc = recognize_encoding(input).unwrap_or_else(|_| "utf-8".to_owned());
     Ok((decode(input, &enc)?, enc))
 }

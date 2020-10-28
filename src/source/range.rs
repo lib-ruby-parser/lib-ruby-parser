@@ -16,7 +16,7 @@ impl PartialEq for Range {
 }
 
 impl Range {
-    pub(crate) fn new(begin_pos: usize, end_pos: usize, input: Rc<Input>) -> Self {
+    pub fn new(begin_pos: usize, end_pos: usize, input: Rc<Input>) -> Self {
         debug_assert!(end_pos >= begin_pos);
         Self {
             begin_pos,

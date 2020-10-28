@@ -22,7 +22,7 @@ impl Lexer {
         // FIXME: unclear what it can be
         // MRI has some weird logic of comparing given ID with tLAST_OP_ID
         // and then checking & ID_SCOPE_MASK
-        if let Some(first_char) = ident.chars().nth(0) {
+        if let Some(first_char) = ident.chars().next() {
             return !first_char.is_uppercase();
         }
         false
@@ -63,23 +63,19 @@ impl Lexer {
         }
         self.tokfix();
 
-        if self.is_label_possible(cmd_state) {
-            if self.is_label_suffix(0) {
-                self.set_lex_state(EXPR_ARG | EXPR_LABELED);
-                self.nextc();
-                self.set_yyval_name();
-                return Self::tLABEL;
-            }
+        if self.is_label_possible(cmd_state) && self.is_label_suffix(0) {
+            self.set_lex_state(EXPR_ARG | EXPR_LABELED);
+            self.nextc();
+            self.set_yyval_name();
+            return Self::tLABEL;
         }
-        if
-        /* mb == ENC_CODERANGE_7BIT && */
-        !self.is_lex_state_some(EXPR_DOT) {
+        if !self.is_lex_state_some(EXPR_DOT) {
             if let Some(kw) = reserved_word(&self.tokenbuf) {
                 let state: LexState = self.state.clone();
                 if state.is_some(EXPR_FNAME) {
                     self.set_lex_state(EXPR_ENDFN);
                     self.set_yyval_name();
-                    return kw.id.clone();
+                    return kw.id;
                 }
                 self.set_lex_state(kw.state);
                 if self.is_lex_state_some(EXPR_BEG) {
@@ -99,12 +95,12 @@ impl Lexer {
                     return Self::kDO;
                 }
                 if state.is_some(EXPR_BEG | EXPR_LABELED) {
-                    return kw.id.clone();
+                    return kw.id;
                 } else {
                     if kw.id != kw.modifier_id {
                         self.set_lex_state(EXPR_BEG | EXPR_LABEL)
                     }
-                    return kw.modifier_id.clone();
+                    return kw.modifier_id;
                 }
             }
         }

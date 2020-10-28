@@ -425,7 +425,7 @@ impl Builder {
 
     pub(crate) fn regexp_options(&self, regexp_end_t: &Token) -> Node {
         let mut options = value(&regexp_end_t)[1..].chars().collect::<Vec<_>>();
-        options.sort();
+        options.sort_unstable();
         options.dedup();
 
         Node::RegOpt(RegOpt {
@@ -569,7 +569,7 @@ impl Builder {
     pub(crate) fn pair_keyword(&self, key_t: Token, value_node: Node) -> Node {
         let key_range = self.loc(&key_t);
         let key_l = key_range.adjust_end(-1);
-        let colon_l = key_range.with_begin((key_range.end_pos - 1).try_into().unwrap());
+        let colon_l = key_range.with_begin(key_range.end_pos - 1);
         let expression_l = key_range.join(&value_node.expression());
 
         let key = Node::Sym(Sym {
@@ -604,7 +604,7 @@ impl Builder {
 
         let end_t: Token = Token {
             token_type: end_t.token_type,
-            token_value: end_t.token_value.clone(),
+            token_value: end_t.token_value,
             loc: quote_loc,
         };
         let expression_l = self.loc(&begin_t).join(&value.expression());
@@ -743,8 +743,7 @@ impl Builder {
                 if self.static_env.is_declared(&name) {
                     if let Some(current_arg) = self.current_arg_stack.top() {
                         if current_arg == name {
-                            // diagnostic :error, :circular_argument_reference,
-                            //        { :var_name => name.to_s }, node.loc.expression
+                            panic!("diagnostic :error, :circular_argument_reference, { :var_name => name.to_s }, node.loc.expression")
                         }
                     }
 
@@ -853,7 +852,7 @@ impl Builder {
                 name_l,
             }) => {
                 if !self.context.is_dynamic_const_definition_allowed() {
-                    // diagnostic :error, :dynamic_const, nil, node.loc.expression
+                    panic!("diagnostic :error, :dynamic_const, nil, node.loc.expression")
                 }
                 Node::Casgn(Casgn {
                     name,
@@ -887,14 +886,14 @@ impl Builder {
             | Node::File(File { .. })
             | Node::Line(Line { .. })
             | Node::Encoding(Encoding { .. }) => {
-                // diagnostic :error, :invalid_assignment, nil, node.loc.expression
+                panic!("diagnostic :error, :invalid_assignment, nil, node.loc.expression");
                 node
             }
             Node::BackRef(BackRef { .. }) | Node::NthRef(NthRef { .. }) => {
-                // diagnostic :error, :backref_assignment, nil, node.loc.expression
+                panic!("diagnostic :error, :backref_assignment, nil, node.loc.expression");
                 node
             }
-            _ => panic!("{:?} can't be used in assignment", node),
+            _ => unreachable!("{:?} can't be used in assignment", node),
         }
     }
 
@@ -915,7 +914,7 @@ impl Builder {
                 value: None,
                 operator_l: None,
             }),
-            _ => panic!("unsupported const_op_assignable arument: {:?}", node),
+            _ => unreachable!("unsupported const_op_assignable arument: {:?}", node),
         }
     }
 
@@ -986,7 +985,7 @@ impl Builder {
                 }
                 lhs
             }
-            _ => panic!("{:?} can't be used in assignment", lhs),
+            _ => unreachable!("{:?} can't be used in assignment", lhs),
         }
     }
 
@@ -1022,10 +1021,10 @@ impl Builder {
                 });
             }
             Node::BackRef { .. } | Node::NthRef { .. } => {
-                // diagnostic :error, :backref_assignment, nil, lhs.loc.expression
+                panic!("diagnostic :error, :backref_assignment, nil, lhs.loc.expression");
                 return rhs;
             }
-            _ => panic!("unsupported op_assign lhs {:?}", lhs),
+            _ => unreachable!("unsupported op_assign lhs {:?}", lhs),
         };
 
         let recv = Box::new(lhs);
@@ -1133,7 +1132,7 @@ impl Builder {
 
         Node::SClass(SClass {
             expr: Box::new(expr),
-            body: body.map(|node| Box::new(node)),
+            body: body.map(Box::new),
             keyword_l,
             operator_l,
             end_l,
@@ -1154,7 +1153,7 @@ impl Builder {
 
         Node::Module(Module {
             name: Box::new(name),
-            body: body.map(|node| Box::new(node)),
+            body: body.map(Box::new),
             keyword_l,
             end_l,
             expression_l,
@@ -1182,8 +1181,8 @@ impl Builder {
 
         Node::Def(Def {
             name: value(&name_t),
-            args: args.map(|node| Box::new(node)),
-            body: body.map(|node| Box::new(node)),
+            args: args.map(Box::new),
+            body: body.map(Box::new),
             keyword_l,
             name_l,
             assignment_l: None,
@@ -1212,8 +1211,8 @@ impl Builder {
 
         Node::Def(Def {
             name: value(&name_t),
-            args: args.map(|node| Box::new(node)),
-            body: body.map(|node| Box::new(node)),
+            args: args.map(Box::new),
+            body: body.map(Box::new),
             keyword_l,
             name_l,
             assignment_l: Some(assignment_l),
@@ -1244,8 +1243,8 @@ impl Builder {
         Node::Defs(Defs {
             definee: Box::new(definee),
             name: value(&name_t),
-            args: args.map(|node| Box::new(node)),
-            body: body.map(|node| Box::new(node)),
+            args: args.map(Box::new),
+            body: body.map(Box::new),
             keyword_l,
             operator_l,
             name_l,
@@ -1280,8 +1279,8 @@ impl Builder {
         Node::Defs(Defs {
             definee: Box::new(definee),
             name: value(&name_t),
-            args: args.map(|node| Box::new(node)),
-            body: body.map(|node| Box::new(node)),
+            args: args.map(Box::new),
+            body: body.map(Box::new),
             keyword_l,
             operator_l,
             name_l,
@@ -1594,18 +1593,18 @@ impl Builder {
         body: Option<Node>,
         end_t: Token,
     ) -> Node {
-        // let block_args = args.map(|node| Box::new(node));
-        let block_body = body.map(|node| Box::new(node));
+        // let block_args = args.map(Box::new);
+        let block_body = body.map(Box::new);
 
         match &method_call {
             Node::Yield { .. } => {
-                // diagnostic :error, :block_given_to_yield, nil, method_call.loc.keyword, [loc(begin_t)]
+                panic!("diagnostic :error, :block_given_to_yield, nil, method_call.loc.keyword, [loc(begin_t)]")
             }
             Node::Send(Send { args, .. }) | Node::CSend(CSend { args, .. }) => {
                 match args.last() {
                     Some(Node::Blockarg(Blockarg { .. }))
                     | Some(Node::ForwardedArgs(ForwardedArgs { .. })) => {
-                        // diagnostic :error, :block_and_blockarg, nil, expression, [loc(begin_t)]
+                        panic!("diagnostic :error, :block_and_blockarg, nil, expression, [loc(begin_t)]")
                     }
                     _ => {}
                 }
@@ -1992,8 +1991,8 @@ impl Builder {
 
         Node::If(If {
             cond: Box::new(self.check_condition(cond)),
-            if_true: if_true.map(|node| Box::new(node)),
-            if_false: if_false.map(|node| Box::new(node)),
+            if_true: if_true.map(Box::new),
+            if_false: if_false.map(Box::new),
             keyword_l,
             begin_l,
             else_l,
@@ -2010,10 +2009,10 @@ impl Builder {
         cond: Node,
     ) -> Node {
         let pre = match (&if_true, &if_false) {
-            (None, None) => panic!("at least one of if_true/if_false is required"),
+            (None, None) => unreachable!("at least one of if_true/if_false is required"),
             (None, Some(if_false)) => if_false.clone(),
             (Some(if_true), None) => if_true.clone(),
-            (Some(_), Some(_)) => panic!("only one of if_true/if_false is required"),
+            (Some(_), Some(_)) => unreachable!("only one of if_true/if_false is required"),
         };
 
         let expression_l = pre.expression().join(&cond.expression());
@@ -2021,8 +2020,8 @@ impl Builder {
 
         Node::IfMod(IfMod {
             cond: Box::new(self.check_condition(cond)),
-            if_true: if_true.map(|node| Box::new(node)),
-            if_false: if_false.map(|node| Box::new(node)),
+            if_true: if_true.map(Box::new),
+            if_false: if_false.map(Box::new),
             keyword_l,
             expression_l,
         })
@@ -2223,11 +2222,8 @@ impl Builder {
         rparen_t: Option<Token>,
     ) -> Node {
         if type_ == KeywordCmd::Yield && !args.is_empty() {
-            match args.last() {
-                Some(Node::BlockPass(_)) => {
-                    // diagnostic :error, :block_given_to_yield, nil, self.loc(keyword_t), [last_arg.loc.expression]
-                }
-                _ => {}
+            if let Some(Node::BlockPass(_)) = args.last() {
+                panic!("diagnostic :error, :block_given_to_yield, nil, self.loc(keyword_t), [last_arg.loc.expression]")
             }
         }
 
@@ -2384,7 +2380,7 @@ impl Builder {
                 let else_l = self.loc(&else_t);
 
                 result = Some(Node::Rescue(Rescue {
-                    body: compound_stmt.map(|node| Box::new(node)),
+                    body: compound_stmt.map(Box::new),
                     rescue_bodies,
                     else_: else_.map(Box::new),
                     else_l: Some(else_l),
@@ -2402,7 +2398,7 @@ impl Builder {
                 let else_l = self.maybe_loc(&None);
 
                 result = Some(Node::Rescue(Rescue {
-                    body: compound_stmt.map(|node| Box::new(node)),
+                    body: compound_stmt.map(Box::new),
                     rescue_bodies,
                     else_: None,
                     else_l,
@@ -2460,7 +2456,7 @@ impl Builder {
             let expression_l = begin_l.join(&end_l);
 
             result = Some(Node::Ensure(Ensure {
-                body: result.map(|node| Box::new(node)),
+                body: result.map(Box::new),
                 ensure: ensure_body.pop().map(Box::new),
                 keyword_l,
                 expression_l,
@@ -2712,7 +2708,7 @@ impl Builder {
         end_t: Token,
     ) -> Node {
         if strings.len() != 1 {
-            // diagnostic :error, :pm_interp_in_var_name, nil, self.loc(begin_t).join(self.loc(end_t))
+            panic!("diagnostic :error, :pm_interp_in_var_name, nil, self.loc(begin_t).join(self.loc(end_t))")
         }
 
         match strings.remove(0) {
@@ -2730,20 +2726,14 @@ impl Builder {
 
                 self.static_env.declare(&name);
 
-                match &begin_l {
-                    Some(begin_l) => {
-                        let begin_pos_d: i32 = begin_l.size().try_into().unwrap();
-                        name_l = name_l.adjust_begin(begin_pos_d)
-                    }
-                    _ => {}
+                if let Some(begin_l) = &begin_l {
+                    let begin_pos_d: i32 = begin_l.size().try_into().unwrap();
+                    name_l = name_l.adjust_begin(begin_pos_d)
                 }
 
-                match &end_l {
-                    Some(end_l) => {
-                        let end_pos_d: i32 = end_l.size().try_into().unwrap();
-                        name_l = name_l.adjust_end(-end_pos_d)
-                    }
-                    _ => {}
+                if let Some(end_l) = &end_l {
+                    let end_pos_d: i32 = end_l.size().try_into().unwrap();
+                    name_l = name_l.adjust_end(-end_pos_d)
                 }
 
                 let expression_l = self
@@ -2760,8 +2750,7 @@ impl Builder {
                 self.match_hash_var_from_str(begin_t, statements, end_t)
             }
             _ => {
-                // diagnostic :error, :pm_interp_in_var_name, nil, self.loc(begin_t).join(self.loc(end_t))
-                panic!("missing diagnostic")
+                panic!("diagnostic :error, :pm_interp_in_var_name, nil, self.loc(begin_t).join(self.loc(end_t))")
             }
         }
     }
@@ -2944,7 +2933,7 @@ impl Builder {
 
                 match self.static_string(&parts) {
                     Some(var_name) => self.check_duplicate_pattern_key(&var_name, &label_loc),
-                    _ => {} /* diagnostic :error, :pm_interp_in_var_name, nil, label_loc */
+                    _ => panic!("diagnostic :error, :pm_interp_in_var_name, nil, label_loc"),
                 }
 
                 self.pair_quoted(begin_t, parts, end_t, value_node)
@@ -3126,15 +3115,14 @@ impl Builder {
             && self.max_numparam_stack.has_numparams();
 
         if assigning_to_numparam {
-            loc.begin_pos;
-            // diagnostic :error, :cant_assign_to_numparam, { :name => name }, loc
+            panic!("diagnostic :error, :cant_assign_to_numparam, { :name => name }, loc")
         }
     }
 
     pub(crate) fn check_reserved_for_numparam(&self, name: &str, _loc: &Range) {
         match name {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
-                // diagnostic :error, "reserved_for_numparam"
+                panic!("diagnostic :error, 'reserved_for_numparam'")
             }
             _ => {}
         }
@@ -3153,8 +3141,7 @@ impl Builder {
         {
             // OK
         } else {
-            loc.begin_pos;
-            // diagnostic :error, :lvar_name, { name: name }, loc
+            panic!("diagnostic :error, :lvar_name, { name: name }, loc")
         }
     }
 
@@ -3164,8 +3151,7 @@ impl Builder {
         }
 
         if self.pattern_variables.is_declared(name) {
-            loc.begin_pos;
-            // diagnostic :error, :duplicate_variable_name, { name: name.to_s }, loc
+            panic!("diagnostic :error, :duplicate_variable_name, { name: name.to_s }, loc")
         }
 
         self.pattern_variables.declare(name)
@@ -3173,8 +3159,7 @@ impl Builder {
 
     pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: &Range) {
         if self.pattern_hash_keys.is_declared(name) {
-            loc.begin_pos;
-            // diagnostic :error, :duplicate_pattern_key, { name: name.to_s }, loc
+            panic!("diagnostic :error, :duplicate_pattern_key, { name: name.to_s }, loc")
         }
 
         self.pattern_hash_keys.declare(name)
@@ -3264,7 +3249,7 @@ impl Builder {
             | Node::Regexp(_)
             | Node::Array(_)
             | Node::Hash(_) => {
-                // diagnostic :error, :singleton_literal, nil, definee.loc.expression
+                panic!("diagnostic :error, :singleton_literal, nil, definee.loc.expression")
             }
             _ => {}
         }
@@ -3293,7 +3278,7 @@ impl Builder {
             end_l.clone(),
         ])
         .unwrap_or_else(|| {
-            panic!("empty collection without begin_t/end_t, can't build source map")
+            unreachable!("empty collection without begin_t/end_t, can't build source map")
         });
 
         (begin_l, end_l, expr_l)
@@ -3309,7 +3294,7 @@ impl Builder {
             if value(&begin_t).starts_with("<<") {
                 let end_t = end_t
                     .as_ref()
-                    .unwrap_or_else(|| panic!("heredoc must have end_t"));
+                    .unwrap_or_else(|| unreachable!("heredoc must have end_t"));
                 let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(end_t));
                 let expression_l = self.loc(begin_t);
                 let heredoc_end_l = self.loc(end_t);

@@ -1,7 +1,6 @@
 use crate::Lexer;
 
-const MAGIC_COMMENTS: [&'static str; 4] =
-    ["coding", "encoding", "frozen_string_literal", "warn_indent"];
+const MAGIC_COMMENTS: [&str; 4] = ["coding", "encoding", "frozen_string_literal", "warn_indent"];
 
 impl Lexer {
     pub(crate) fn comment_at_top(&self) -> bool {
@@ -16,7 +15,7 @@ impl Lexer {
             }
             ptr += 1;
         }
-        return true;
+        true
     }
 
     pub(crate) fn set_file_encoding(&mut self, mut str_: usize, send: usize) {
@@ -178,7 +177,7 @@ impl Lexer {
 
             beg = str_;
             loop {
-                if !(len > 0) {
+                if len == 0 {
                     break;
                 }
 
@@ -290,7 +289,7 @@ impl Lexer {
                 String::from_utf8(self.buffer.substr_at(beg, beg + n).unwrap().to_vec()).unwrap();
             let name = name.replace("-", "_");
             for known in MAGIC_COMMENTS.iter() {
-                if &&name == known {
+                if &name == known {
                     // TODO: emit magic comment
                     let _magic_comment = self.buffer.substr_at(vbeg, vend).unwrap();
                 }

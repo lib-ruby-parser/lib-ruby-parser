@@ -6,7 +6,7 @@ struct InnerStaticEnvironment {
     stack: Vec<HashSet<String>>,
 }
 
-const FORWARD_ARGS: &'static str = "FORWARD_ARGS";
+const FORWARD_ARGS: &str = "FORWARD_ARGS";
 
 impl InnerStaticEnvironment {
     pub(crate) fn new() -> Self {
