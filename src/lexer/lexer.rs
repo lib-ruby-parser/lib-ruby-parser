@@ -113,12 +113,12 @@ impl Lexer {
 
         let token_type = self.parser_yylex();
 
-        let begin = std::mem::replace(&mut self.lval_start, None).unwrap_or(self.buffer.ptok);
-        let mut end = std::mem::replace(&mut self.lval_end, None).unwrap_or(self.buffer.pcur);
+        let begin = std::mem::take(&mut self.lval_start).unwrap_or(self.buffer.ptok);
+        let mut end = std::mem::take(&mut self.lval_end).unwrap_or(self.buffer.pcur);
 
         let mut token_value = self
             .lval
-            .clone()
+            .take()
             .or_else(||
                 // take raw value if nothing was manually captured
                 self.buffer.substr_at(begin, end).map(|s| TokenValue::String(String::from_utf8(s.to_vec()).unwrap())))

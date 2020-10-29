@@ -22,8 +22,7 @@ impl InnerStaticEnvironment {
     }
 
     pub(crate) fn extend_static(&mut self) {
-        let mut variables: HashSet<String> = HashSet::new();
-        std::mem::swap(&mut variables, &mut self.variables);
+        let variables = std::mem::take(&mut self.variables);
         self.stack.push(variables);
     }
 
