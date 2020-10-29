@@ -1,0 +1,4 @@
+--INPUT
+true = foo
+--DIAGNOSTIC
+~~~~ (error) Can't assign to true

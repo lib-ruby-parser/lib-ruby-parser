@@ -1,0 +1,4 @@
+--INPUT
+0 in [a, a]
+--DIAGNOSTIC
+         ~ (error) duplicated variable name

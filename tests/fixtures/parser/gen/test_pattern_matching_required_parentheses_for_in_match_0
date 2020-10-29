@@ -1,0 +1,4 @@
+--INPUT
+1 in a, b
+--DIAGNOSTIC
+      ~ (error) unexpected tCOMMA

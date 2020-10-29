@@ -1,0 +1,4 @@
+--INPUT
+%k[foo]
+--DIAGNOSTIC
+~~ (error) TODO

@@ -1,0 +1,4 @@
+--INPUT
+nil = foo
+--DIAGNOSTIC
+~~~ (error) Can't assign to nil

@@ -1,0 +1,4 @@
+--INPUT
+ case 0; in "abc":a1, "a#{"b"}c":a2; end 
+--DIAGNOSTIC
+                      ~~~~~~~~~~~ (error) duplicated key name

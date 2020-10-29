@@ -1,0 +1,4 @@
+--INPUT
+def foo(...) defined?(...); end
+--DIAGNOSTIC
+                         ~ (error) unexpected tRPAREN

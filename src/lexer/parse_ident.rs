@@ -42,10 +42,10 @@ impl Lexer {
             }
         }
 
-        if (c == '!' || c == '?') && !self.buffer.peek(b'=') {
+        if (c == b'!' || c == b'?') && !self.buffer.peek(b'=') {
             result = Self::tFID;
             self.tokadd(&c);
-        } else if c == '='
+        } else if c == b'='
             && self.is_lex_state_some(EXPR_FNAME)
             && (!self.buffer.peek(b'~')
                 && !self.buffer.peek(b'>')

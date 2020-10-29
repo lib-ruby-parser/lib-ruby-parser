@@ -1,0 +1,4 @@
+--INPUT
+ case 0; in "a": 1, "a": 2; end 
+--DIAGNOSTIC
+                    ~~~~ (error) duplicated key name

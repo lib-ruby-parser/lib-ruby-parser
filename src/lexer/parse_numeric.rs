@@ -21,20 +21,20 @@ impl Lexer {
 
         self.set_lex_state(EXPR_END);
         self.newtok();
-        if c == '-' || c == '+' {
+        if c == b'-' || c == b'+' {
             self.tokadd(&c);
             c = self.nextc();
         }
-        if c == '0' {
+        if c == b'0' {
             let start = self.toklen();
             c = self.nextc();
-            if c == 'x' || c == 'X' {
+            if c == b'x' || c == b'X' {
                 // hexadecimal
                 self.tokadd(&c);
                 c = self.nextc();
                 if !c.is_eof() && c.is_hexdigit() {
                     loop {
-                        if c == '_' {
+                        if c == b'_' {
                             if nondigit.is_some() {
                                 break;
                             }
@@ -67,16 +67,16 @@ impl Lexer {
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.clone();
-                tok.prepend("0");
+                tok.prepend(b"0");
                 return self.set_integer_literal(&mut tok, suffix);
             }
-            if c == 'b' || c == 'B' {
+            if c == b'b' || c == b'B' {
                 // binary
                 self.tokadd(&c);
                 c = self.nextc();
-                if c == '0' || c == '1' {
+                if c == b'0' || c == b'1' {
                     loop {
-                        if c == '_' {
+                        if c == b'_' {
                             if nondigit.is_some() {
                                 break;
                             }
@@ -109,16 +109,16 @@ impl Lexer {
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.clone();
-                tok.prepend("0");
+                tok.prepend(b"0");
                 return self.set_integer_literal(&mut tok, suffix);
             }
-            if c == 'd' || c == 'D' {
+            if c == b'd' || c == b'D' {
                 // decimal
                 self.tokadd(&c);
                 c = self.nextc();
                 if !c.is_eof() && c.is_digit() {
                     loop {
-                        if c == '_' {
+                        if c == b'_' {
                             if nondigit.is_some() {
                                 break;
                             }
@@ -151,20 +151,20 @@ impl Lexer {
                 }
                 suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.clone();
-                tok.prepend("0");
+                tok.prepend(b"0");
                 return self.set_integer_literal(&mut tok, suffix);
             }
-            if c == '_' {
+            if c == b'_' {
                 // 0_0
                 if let Some(result) = self.parse_octal(&mut c, &mut nondigit, start) {
                     return result;
                 }
             }
-            if c == 'o' || c == 'O' {
+            if c == b'o' || c == b'O' {
                 self.tokadd(&c);
                 // prefixed octal
                 c = self.nextc();
-                if c.is_eof() || c == '_' || !c.is_digit() {
+                if c.is_eof() || c == b'_' || !c.is_digit() {
                     return self.no_digits();
                 }
             }
@@ -176,7 +176,7 @@ impl Lexer {
             }
             if c > '7' && c <= '9' {
                 self.invalid_octal();
-            } else if c == '.' || c == 'e' || c == 'E' {
+            } else if c == b'.' || c == b'e' || c == b'E' {
                 self.tokadd(b'0');
             } else {
                 self.buffer.pushback(&c);
@@ -237,7 +237,11 @@ impl Lexer {
                     seen_e = true;
                     is_float = true;
                     self.tokadd(&c);
-                    nondigit = if c == '-' || c == '+' { Some(c) } else { None };
+                    nondigit = if c == b'-' || c == b'+' {
+                        Some(c)
+                    } else {
+                        None
+                    };
                 }
 
                 Some(b'_') => {
@@ -262,7 +266,7 @@ impl Lexer {
         start: usize,
     ) -> Option<i32> {
         loop {
-            if *c == '_' {
+            if *c == b'_' {
                 if nondigit.is_some() {
                     break;
                 }
@@ -298,7 +302,7 @@ impl Lexer {
             }
             let suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
             let mut tok = self.tokenbuf.clone();
-            tok.prepend("0");
+            tok.prepend(b"0");
             return Some(self.set_integer_literal(&mut tok, suffix));
         }
         if let Some(MaybeByte::Some(byte)) = nondigit {
@@ -391,19 +395,19 @@ impl Lexer {
                 break;
             }
 
-            if (mask & Self::NUM_SUFFIX_I != 0) && c == 'i' {
+            if (mask & Self::NUM_SUFFIX_I != 0) && c == b'i' {
                 result |= mask & Self::NUM_SUFFIX_I;
                 mask &= !Self::NUM_SUFFIX_I;
                 // r after i, rational of complex is disallowed
                 mask &= !Self::NUM_SUFFIX_R;
                 continue;
             }
-            if (mask & Self::NUM_SUFFIX_R != 0) && c == 'r' {
+            if (mask & Self::NUM_SUFFIX_R != 0) && c == b'r' {
                 result |= mask & Self::NUM_SUFFIX_R;
                 mask &= !Self::NUM_SUFFIX_R;
                 continue;
             }
-            if !c.is_ascii() || c.is_alpha() || c == '_' {
+            if !c.is_ascii() || c.is_alpha() || c == b'_' {
                 self.buffer.pcur = lastp;
                 // self.literal_flush(self.buffer.pcur);
                 return 0;

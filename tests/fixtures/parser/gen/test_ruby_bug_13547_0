@@ -1,15 +1,4 @@
 --INPUT
-meth[] {}
---LOCATIONS
-       ~ begin ()
-        ~ end ()
-~~~~~~~~~ expression ()
-    ~ begin (call)
-     ~ end (call)
-~~~~~~ expression (call)
-~~~~ selector (call/recv)
-~~~~ expression (call/recv)
---AST
-s(:block,
-  s(:index,
-    s(:send, nil, "meth")), nil, nil)
+m "x" {}
+--DIAGNOSTIC
+      ~ (error) unexpected tLCURLY

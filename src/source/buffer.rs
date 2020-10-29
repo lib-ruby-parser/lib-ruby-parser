@@ -301,7 +301,7 @@ impl Buffer {
         if c.is_space() {
             return true;
         }
-        if c == '\0' || c == Self::CTRL_Z_CHAR || c == Self::CTRL_D_CHAR {
+        if c == b'\0' || c == Self::CTRL_Z_CHAR || c == Self::CTRL_D_CHAR {
             return true;
         }
         false

@@ -90,8 +90,8 @@ impl Lexer {
         }
         beg = str_;
 
-        while self.char_at(str_) == '-'
-            || self.char_at(str_) == '_'
+        while self.char_at(str_) == b'-'
+            || self.char_at(str_) == b'_'
             || self.char_at(str_).is_alnum() && str_ + 1 < send
         {
             str_ += 1;
@@ -106,7 +106,7 @@ impl Lexer {
         while i < len {
             match self.char_at(str_ + i).to_option() {
                 Some(b'-') => {
-                    if self.char_at(str_ + i - 1) == '*' && self.char_at(str_ + i - 2) == '-' {
+                    if self.char_at(str_ + i - 1) == b'*' && self.char_at(str_ + i - 2) == b'-' {
                         return str_ + i + 1;
                     }
                     i += 2
@@ -160,7 +160,7 @@ impl Lexer {
                     break;
                 }
 
-                if c == '\'' || c == '"' || c == ':' || c == ';' {
+                if c == b'\'' || c == b'"' || c == b':' || c == b';' {
                     // noop
                 } else {
                     if !c.is_space() {
@@ -182,7 +182,7 @@ impl Lexer {
                 }
 
                 let c = self.char_at(str_);
-                if c == '\'' || c == '"' || c == ':' || c == ';' {
+                if c == b'\'' || c == b'"' || c == b':' || c == b';' {
                     // noop
                 } else {
                     if c.is_space() {
@@ -230,7 +230,7 @@ impl Lexer {
             if len == 0 {
                 break;
             }
-            if self.char_at(str_) == '"' {
+            if self.char_at(str_) == b'"' {
                 str_ += 1;
                 vbeg = str_;
 
@@ -241,7 +241,7 @@ impl Lexer {
                         break;
                     }
 
-                    if c == '\\' {
+                    if c == b'\\' {
                         len -= 1;
                         str_ += 1;
                     }
@@ -270,7 +270,7 @@ impl Lexer {
                 vend = str_;
             }
             if indicator {
-                while len > 0 && (self.char_at(str_) == ';' || self.char_at(str_).is_space()) {
+                while len > 0 && (self.char_at(str_) == b';' || self.char_at(str_).is_space()) {
                     len -= 1;
                     str_ += 1;
                 }

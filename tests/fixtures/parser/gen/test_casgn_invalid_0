@@ -1,0 +1,4 @@
+--INPUT
+def f; Foo = 1; end
+--DIAGNOSTIC
+       ~~~ (error) dynamic constant assignment

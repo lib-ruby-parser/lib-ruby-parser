@@ -77,7 +77,7 @@ impl Lexer {
             return Self::tSPACE;
         }
         self.newtok();
-        if ((func & STR_FUNC_EXPAND) != 0) && c == '#' {
+        if ((func & STR_FUNC_EXPAND) != 0) && c == b'#' {
             if let Some(t) = self.parser_peek_variable_name() {
                 return t;
             }
@@ -163,7 +163,9 @@ impl Lexer {
         self.buffer.pushback(&c);
         if self.toklen() > 0 {
             self.tokfix();
-            self.compile_error(&format!("unknown regexp options - {:#?}", self.tokenbuf));
+            self.compile_error(DiagnosticMessage::UnknownRegexOptions(
+                self.tokenbuf.borrow_string().unwrap().to_owned(),
+            ));
         }
 
         result
@@ -182,7 +184,7 @@ impl Lexer {
         match c.to_option() {
             Some(b'$') => {
                 c = self.char_at(ptr);
-                if c == '-' {
+                if c == b'-' {
                     ptr += 1;
                     if ptr >= self.buffer.pend {
                         return None;
@@ -195,7 +197,7 @@ impl Lexer {
 
             Some(b'@') => {
                 c = self.char_at(ptr);
-                if c == '@' {
+                if c == b'@' {
                     ptr += 1;
                     if ptr >= self.buffer.pend {
                         return None;
@@ -213,7 +215,7 @@ impl Lexer {
             _ => return None,
         }
 
-        if !c.is_ascii() || c == '_' || c.is_alpha() {
+        if !c.is_ascii() || c == b'_' || c.is_alpha() {
             return Some(Self::tSTRING_DVAR);
         }
 
@@ -249,15 +251,15 @@ impl Lexer {
                 }
                 *nest -= 1;
             } else if ((func & STR_FUNC_EXPAND) != 0)
-                && c == '#'
+                && c == b'#'
                 && self.buffer.pcur < self.buffer.pend
             {
                 let c2 = self.char_at(self.buffer.pcur);
-                if c2 == '$' || c2 == '@' || c2 == '{' {
+                if c2 == b'$' || c2 == b'@' || c2 == b'{' {
                     self.buffer.pushback(&c);
                     break;
                 }
-            } else if c == '\\' {
+            } else if c == b'\\' {
                 self.literal_flush(self.buffer.pcur - 1);
                 c = self.nextc();
                 match c.to_option() {
@@ -352,13 +354,13 @@ impl Lexer {
 
     pub(crate) fn parser_update_heredoc_indent(&mut self, c: &MaybeByte) -> bool {
         if self.buffer.heredoc_line_indent == -1 {
-            if *c == '\n' {
+            if *c == b'\n' {
                 self.buffer.heredoc_line_indent = 0
             }
-        } else if *c == ' ' {
+        } else if *c == b' ' {
             self.buffer.heredoc_line_indent += 1;
             return true;
-        } else if *c == '\t' {
+        } else if *c == b'\t' {
             let w = (self.buffer.heredoc_line_indent / Self::TAB_WIDTH) + 1;
             self.buffer.heredoc_line_indent = w * Self::TAB_WIDTH;
             return true;
@@ -624,7 +626,7 @@ impl Lexer {
 
                     // goto escaped
                     c = self.nextc();
-                    if c == '\\' {
+                    if c == b'\\' {
                         continue;
                     } else if c.is_eof() {
                         return self.tokadd_escape_eof();
@@ -646,7 +648,7 @@ impl Lexer {
 
                     // goto escaped
                     c = self.nextc();
-                    if c == '\\' {
+                    if c == b'\\' {
                         continue;
                     } else if c.is_eof() {
                         return self.tokadd_escape_eof();
@@ -664,7 +666,7 @@ impl Lexer {
 
                     // escaped:
                     c = self.nextc();
-                    if c == '\\' {
+                    if c == b'\\' {
                         continue;
                     } else if c.is_eof() {
                         return self.tokadd_escape_eof();
@@ -747,7 +749,7 @@ impl Lexer {
                     return self.read_escape_eof();
                 }
                 c = self.nextc();
-                if c == '\\' {
+                if c == b'\\' {
                     if self.buffer.peek(b'u') {
                         return self.read_escape_eof();
                     }
@@ -774,7 +776,7 @@ impl Lexer {
             }
 
             Some(b'C') | Some(b'c') => {
-                if c == 'C' {
+                if c == b'C' {
                     // C fallthrough
                     c = self.nextc();
                     if c != '-' {
@@ -785,12 +787,12 @@ impl Lexer {
                     return self.read_escape_eof();
                 }
                 c = self.nextc();
-                if c == '\\' {
+                if c == b'\\' {
                     if self.buffer.peek(b'u') {
                         return self.read_escape_eof();
                     }
                     c = self.read_escape(flags | ESCAPE_CONTROL)
-                } else if c == '?' {
+                } else if c == b'?' {
                     return MaybeByte::new(0x7f_u8);
                 } else if c.is_eof() || !c.is_ascii() {
                     return self.read_escape_eof();
@@ -844,25 +846,25 @@ impl Lexer {
         let mut token = Self::tSTRING_BEG;
         let mut indent = 0;
 
-        if c == '-' {
+        if c == b'-' {
             c = self.nextc();
             func = STR_FUNC_INDENT;
             offset += 1;
-        } else if c == '~' {
+        } else if c == b'~' {
             c = self.nextc();
             func = STR_FUNC_INDENT;
             offset += 1;
             indent = std::i32::MAX;
         }
 
-        if c == '\'' || c == '"' || c == '`' {
-            if c == '\'' {
+        if c == b'\'' || c == b'"' || c == b'`' {
+            if c == b'\'' {
                 func |= str_squote
             }
-            if c == '"' {
+            if c == b'"' {
                 func |= str_dquote
             }
-            if c == '`' {
+            if c == b'`' {
                 func |= str_xquote;
                 token = Self::tXSTRING_BEG
             }
@@ -877,7 +879,7 @@ impl Lexer {
                     break;
                 }
 
-                if c.is_eof() || c == '\r' || c == '\n' {
+                if c.is_eof() || c == b'\r' || c == b'\n' {
                     self.yyerror0(DiagnosticMessage::UnterminatedHeredocId);
                     return None;
                 }
@@ -1034,7 +1036,7 @@ impl Lexer {
             }
         } else {
             self.newtok();
-            if c == '#' {
+            if c == b'#' {
                 let t = self.parser_peek_variable_name();
                 if self.buffer.heredoc_line_indent != -1 {
                     if self.buffer.heredoc_indent > self.buffer.heredoc_line_indent {
@@ -1062,7 +1064,7 @@ impl Lexer {
                 }
                 self.lval_end = Some(self.buffer.pcur + 1);
                 if c != '\n' {
-                    if c == '\\' {
+                    if c == b'\\' {
                         self.buffer.heredoc_line_indent = -1
                     }
                     return self.heredoc_flush();
@@ -1111,7 +1113,7 @@ impl Lexer {
         let mut end = end_starts_at;
         loop {
             let c = self.buffer.byte_at(end);
-            if c.is_eof() || c == '\n' {
+            if c.is_eof() || c == b'\n' {
                 break;
             }
             end += 1;
@@ -1130,9 +1132,8 @@ impl Lexer {
         len: usize,
     ) -> i32 {
         self.heredoc_restore(&here);
-        self.compile_error(&format!(
-            "can't find string \"{:#?}\" anywhere before EOF",
-            self.buffer.substr_at(eos, eos + len)
+        self.compile_error(DiagnosticMessage::UnterminatedHeredoc(
+            String::from_utf8_lossy(self.buffer.substr_at(eos, eos + len).unwrap()).into_owned(),
         ));
         self.token_flush();
         self.strterm = None;

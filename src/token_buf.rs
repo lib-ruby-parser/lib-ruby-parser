@@ -22,8 +22,8 @@ impl TokenBuf {
         }
     }
 
-    pub(crate) fn prepend(&mut self, part: &str) {
-        let mut tmp = part.as_bytes().to_vec();
+    pub(crate) fn prepend(&mut self, part: &[u8]) {
+        let mut tmp = part.to_vec();
         tmp.extend(self.bytes.iter());
         self.bytes = tmp;
     }

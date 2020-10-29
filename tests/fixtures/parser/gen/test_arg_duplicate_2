@@ -1,0 +1,4 @@
+--INPUT
+def foo(aa, *aa); end
+--DIAGNOSTIC
+             ~~ (error) duplicate_argument

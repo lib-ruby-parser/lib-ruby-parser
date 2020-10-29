@@ -224,7 +224,7 @@ impl Lexer {
                 }
 
                 Some(b'#') | Some(b'\n') => {
-                    if c == '#' {
+                    if c == b'#' {
                         // it's a comment
                         self.token_seen = token_seen;
                         // no magic_comment in shebang line
@@ -265,7 +265,7 @@ impl Lexer {
                                 continue 'retrying;
                             }
                             Some(b'&') | Some(b'.') => {
-                                if self.buffer.peek(b'.') == (c == '&') {
+                                if self.buffer.peek(b'.') == (c == b'&') {
                                     self.buffer.pushback(&c);
                                     continue 'retrying;
                                 }
@@ -296,9 +296,9 @@ impl Lexer {
 
                     c = self.nextc();
 
-                    if c == '*' {
+                    if c == b'*' {
                         c = self.nextc();
-                        if c == '=' {
+                        if c == b'=' {
                             self.set_yylval_id("**=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
@@ -320,7 +320,7 @@ impl Lexer {
                             );
                         }
                     } else {
-                        if c == '=' {
+                        if c == b'=' {
                             self.set_yylval_id("*=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
@@ -355,16 +355,16 @@ impl Lexer {
                     c = self.nextc();
                     if self.is_after_operator() {
                         self.set_lex_state(EXPR_ARG);
-                        if c == '@' {
+                        if c == b'@' {
                             return Self::tBANG;
                         }
                     } else {
                         self.set_lex_state(EXPR_BEG);
                     }
-                    if c == '=' {
+                    if c == b'=' {
                         return Self::tNEQ;
                     }
-                    if c == '~' {
+                    if c == b'~' {
                         return Self::tNMATCH;
                     }
                     self.buffer.pushback(&c);
@@ -380,10 +380,10 @@ impl Lexer {
                                 self.buffer.goto_eol();
                                 c = self.nextc();
                                 if c.is_eof() {
-                                    self.compile_error("embedded document meets end of file");
+                                    self.compile_error(DiagnosticMessage::EmbeddedDocumentMeetsEof);
                                     return Self::END_OF_INPUT;
                                 }
-                                if c == '=' && self.buffer.is_word_match("end") {
+                                if c == b'=' && self.buffer.is_word_match("end") {
                                     break;
                                 }
                                 self.buffer.pushback(&c);
@@ -399,17 +399,17 @@ impl Lexer {
                         EXPR_BEG
                     });
                     c = self.nextc();
-                    if c == '=' {
+                    if c == b'=' {
                         c = self.nextc();
-                        if c == '=' {
+                        if c == b'=' {
                             return Self::tEQQ;
                         }
                         self.buffer.pushback(&c);
                         return Self::tEQ;
                     }
-                    if c == '~' {
+                    if c == b'~' {
                         return Self::tMATCH;
-                    } else if c == '>' {
+                    } else if c == b'>' {
                         return Self::tASSOC;
                     }
                     self.buffer.pushback(&c);
@@ -418,7 +418,7 @@ impl Lexer {
 
                 Some(b'<') => {
                     c = self.nextc();
-                    if c == '<'
+                    if c == b'<'
                         && !self.is_lex_state_some(EXPR_DOT | EXPR_CLASS)
                         && !self.is_end()
                         && (!self.is_arg() || self.is_lex_state_some(EXPR_LABELED) || space_seen)
@@ -435,17 +435,17 @@ impl Lexer {
                         }
                         self.set_lex_state(EXPR_BEG);
                     }
-                    if c == '=' {
+                    if c == b'=' {
                         c = self.nextc();
-                        if c == '>' {
+                        if c == b'>' {
                             return Self::tCMP;
                         }
                         self.buffer.pushback(&c);
                         return Self::tLEQ;
                     }
-                    if c == '<' {
+                    if c == b'<' {
                         c = self.nextc();
-                        if c == '=' {
+                        if c == b'=' {
                             self.set_yylval_id("<<=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
@@ -472,13 +472,13 @@ impl Lexer {
                     });
 
                     c = self.nextc();
-                    if c == '=' {
+                    if c == b'=' {
                         return Self::tGEQ;
                     }
 
-                    if c == '>' {
+                    if c == b'>' {
                         c = self.nextc();
-                        if c == '=' {
+                        if c == b'=' {
                             self.set_yylval_id(">>=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
@@ -539,21 +539,21 @@ impl Lexer {
                     let result: i32;
 
                     c = self.nextc();
-                    if c == '&' {
+                    if c == b'&' {
                         self.set_lex_state(EXPR_BEG);
                         c = self.nextc();
-                        if c == '=' {
+                        if c == b'=' {
                             self.set_yylval_id("&&=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
                         self.buffer.pushback(&c);
                         return Self::tANDOP;
-                    } else if c == '=' {
+                    } else if c == b'=' {
                         self.set_yylval_id("&=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
-                    } else if c == '.' {
+                    } else if c == b'.' {
                         self.set_yylval_id("&.");
                         self.set_lex_state(EXPR_DOT);
                         return Self::tANDDOT;
@@ -594,10 +594,10 @@ impl Lexer {
 
                 Some(b'|') => {
                     c = self.nextc();
-                    if c == '|' {
+                    if c == b'|' {
                         self.set_lex_state(EXPR_BEG);
                         c = self.nextc();
-                        if c == '=' {
+                        if c == b'=' {
                             self.set_yylval_id("||=");
                             self.set_lex_state(EXPR_BEG);
                             return Self::tOP_ASGN;
@@ -609,7 +609,7 @@ impl Lexer {
                         }
                         return Self::tOROP;
                     }
-                    if c == '=' {
+                    if c == b'=' {
                         self.set_yylval_id("|=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
@@ -627,13 +627,13 @@ impl Lexer {
                     c = self.nextc();
                     if self.is_after_operator() {
                         self.set_lex_state(EXPR_ARG);
-                        if c == '@' {
+                        if c == b'@' {
                             return Self::tUPLUS;
                         }
                         self.buffer.pushback(&c);
                         return Self::tPLUS;
                     }
-                    if c == '=' {
+                    if c == b'=' {
                         self.set_yylval_id("+=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
@@ -664,18 +664,18 @@ impl Lexer {
                     c = self.nextc();
                     if self.is_after_operator() {
                         self.set_lex_state(EXPR_ARG);
-                        if c == '@' {
+                        if c == b'@' {
                             return Self::tUMINUS;
                         }
                         self.buffer.pushback(&c);
                         return Self::tMINUS;
                     }
-                    if c == '=' {
+                    if c == b'=' {
                         self.set_yylval_id("-=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
                     }
-                    if c == '>' {
+                    if c == b'>' {
                         self.set_lex_state(EXPR_ENDFN);
                         return Self::tLAMBDA;
                     }
@@ -705,9 +705,9 @@ impl Lexer {
                     let is_beg = self.is_beg();
                     self.set_lex_state(EXPR_BEG);
                     c = self.nextc();
-                    if c == '.' {
+                    if c == b'.' {
                         c = self.nextc();
-                        if c == '.' {
+                        if c == b'.' {
                             if self.paren_nest == 0 && self.buffer.is_looking_at_eol() {
                                 self.warn(DiagnosticMessage::TripleDotAtEol);
                             } else if self.lpar_beg >= 0
@@ -783,7 +783,7 @@ impl Lexer {
 
                 Some(b':') => {
                     c = self.nextc();
-                    if c == ':' {
+                    if c == b':' {
                         if self.is_beg()
                             || self.is_lex_state_some(EXPR_CLASS)
                             || self.is_spacearg(&MaybeByte::EndOfInput, space_seen)
@@ -829,7 +829,7 @@ impl Lexer {
                         return Self::tREGEXP_BEG;
                     }
                     c = self.nextc();
-                    if c == '=' {
+                    if c == b'=' {
                         self.set_yylval_id("/=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
@@ -857,7 +857,7 @@ impl Lexer {
 
                 Some(b'^') => {
                     c = self.nextc();
-                    if c == '=' {
+                    if c == b'=' {
                         self.set_yylval_id("^=");
                         self.set_lex_state(EXPR_BEG);
                         return Self::tOP_ASGN;
@@ -923,10 +923,10 @@ impl Lexer {
                     self.paren_nest += 1;
                     if self.is_after_operator() {
                         c = self.nextc();
-                        if c == ']' {
+                        if c == b']' {
                             self.set_lex_state(EXPR_ARG);
                             c = self.nextc();
-                            if c == '=' {
+                            if c == b'=' {
                                 return Self::tASET;
                             }
                             self.buffer.pushback(&c);
@@ -979,11 +979,11 @@ impl Lexer {
 
                 Some(b'\\') => {
                     c = self.nextc();
-                    if c == '\n' {
+                    if c == b'\n' {
                         space_seen = true;
                         continue 'retrying; /* skip \\n */
                     }
-                    if c == ' ' {
+                    if c == b' ' {
                         return Self::tSP;
                     }
                     if c.is_space() {
@@ -1020,9 +1020,9 @@ impl Lexer {
                     self.newtok();
                 }
 
-                _ => {
+                Some(c) => {
                     if !self.parser_is_identchar() {
-                        self.compile_error(&format!("Invalid u8 `{}' in expression", c.unwrap()));
+                        self.compile_error(DiagnosticMessage::InvalidChar(c));
                         self.token_flush();
                         continue 'retrying;
                     }
@@ -1101,10 +1101,17 @@ impl Lexer {
         self.is_lex_state_some(EXPR_FNAME | EXPR_DOT)
     }
 
-    pub(crate) fn compile_error(&self, message: &str) {
+    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage) {
         if self.debug {
-            println!("Compile error: {}", message)
+            println!("Compile error: {}", message.render())
         }
+        let range = Range::new(
+            self.buffer.ptok,
+            self.buffer.pcur,
+            self.buffer.input.clone(),
+        );
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, range);
+        self.diagnostics.push(diagnostic);
     }
 
     pub(crate) fn is_end(&self) -> bool {
@@ -1136,19 +1143,19 @@ impl Lexer {
     }
 
     pub(crate) fn escaped_control_code(&self, c: &MaybeByte) -> Option<u8> {
-        if *c == ' ' {
+        if *c == b' ' {
             return Some(b's');
         }
-        if *c == '\n' {
+        if *c == b'\n' {
             return Some(b'n');
         }
-        if *c == '\t' {
+        if *c == b'\t' {
             return Some(b't');
         }
         if *c == 0x0b as u8 {
             return Some(b'v');
         }
-        if *c == '\r' {
+        if *c == b'\r' {
             return Some(b'r');
         }
         if *c == 0x0c as u8 {
@@ -1179,7 +1186,7 @@ impl Lexer {
         }
         c = self.nextc();
         if c.is_eof() {
-            self.compile_error("incomplete character syntax");
+            self.compile_error(DiagnosticMessage::IncompleteCharacterSyntax);
             return Ok(Self::END_OF_INPUT);
         }
         if c.is_space() {
@@ -1196,7 +1203,7 @@ impl Lexer {
             if self.tokadd_mbchar(&c).is_err() {
                 return Ok(Self::END_OF_INPUT);
             }
-        } else if (c.is_alnum() || c == '_')
+        } else if (c.is_alnum() || c == b'_')
             && self.buffer.pcur < self.buffer.pend
             && self.is_identchar(self.buffer.pcur, self.buffer.pend)
         {
@@ -1219,7 +1226,7 @@ impl Lexer {
                 //  WARN_I((int)(ptr - start)), WARN_S_L(start, (ptr - start)));
             }
             return self.parse_qmark_ternary(&c);
-        } else if c == '\\' {
+        } else if c == b'\\' {
             if self.buffer.peek(b'u') {
                 self.nextc();
                 self.tokadd_utf8(None, 0, 0);
@@ -1325,18 +1332,18 @@ impl Lexer {
         }
 
         if term.is_eof() {
-            self.compile_error("unterminated quoted string meets end of file");
+            self.compile_error(DiagnosticMessage::UnterminatedQuotedString);
             return Self::END_OF_INPUT;
         }
 
         paren = term.to_option();
-        if term == '(' {
+        if term == b'(' {
             term = MaybeByte::new(')')
-        } else if term == '[' {
+        } else if term == b'[' {
             term = MaybeByte::new(']')
-        } else if term == '{' {
+        } else if term == b'{' {
             term = MaybeByte::new('}')
-        } else if term == '<' {
+        } else if term == b'<' {
             term = MaybeByte::new('>')
         } else {
             paren = None
@@ -1398,12 +1405,12 @@ impl Lexer {
         }
 
         c = self.nextc();
-        if c == '=' {
+        if c == b'=' {
             self.set_yylval_id("%=");
             self.set_lex_state(EXPR_BEG);
             return Self::tOP_ASGN;
         }
-        if self.is_spacearg(&c, space_seen) || (self.is_lex_state_some(EXPR_FITEM) && c == 's') {
+        if self.is_spacearg(&c, space_seen) || (self.is_lex_state_some(EXPR_FITEM) && c == b's') {
             return self.percent_quotation(&c, ptok);
         }
         self.set_lex_state(if self.is_after_operator() {
@@ -1516,10 +1523,10 @@ impl Lexer {
             _ => {
                 if !self.parser_is_identchar() {
                     if c.is_eof() || c.is_space() {
-                        self.compile_error("`$' without identifiers is not allowed as a global variable name");
+                        self.compile_error(DiagnosticMessage::GvarWithoutId);
                     } else {
                         self.buffer.pushback(&c);
-                        self.compile_error(&format!("`${}' is not allowed as a global variable name", c.unwrap()));
+                        self.compile_error(DiagnosticMessage::InvalidGvarName(c.unwrap()));
                     }
                     return Self::tGVAR
                 }
@@ -1544,7 +1551,7 @@ impl Lexer {
         self.buffer.ptok = ptr - 1; // from '@'
         self.newtok();
         self.tokadd(b'@');
-        if c == '@' {
+        if c == b'@' {
             result = Self::tCVAR;
             self.tokadd(b'@');
             c = self.nextc()
@@ -1557,28 +1564,18 @@ impl Lexer {
         if c.is_eof() || !self.parser_is_identchar() {
             self.buffer.pushback(&c);
             if result == Self::tIVAR {
-                self.compile_error(
-                    "`@' without identifiers is not allowed as an instance variable name",
-                );
+                self.compile_error(DiagnosticMessage::IvarWithoutId);
             } else {
-                self.compile_error(
-                    "`@@' without identifiers is not allowed as a class variable name",
-                );
+                self.compile_error(DiagnosticMessage::CvarWithoutId);
             }
             self.set_lex_state(EXPR_END);
             return result;
         } else if c.is_digit() {
             self.buffer.pushback(&c);
             if result == Self::tIVAR {
-                self.compile_error(&format!(
-                    "`@{}' is not allowed as an instance variable name",
-                    c.unwrap()
-                ));
+                self.compile_error(DiagnosticMessage::InvalidIvarName(c.unwrap()));
             } else {
-                self.compile_error(&format!(
-                    "`@@{}' is not allowed as a class variable name",
-                    c.unwrap()
-                ));
+                self.compile_error(DiagnosticMessage::InvalidCvarName(c.unwrap()));
             }
             self.set_lex_state(EXPR_END);
             return result;

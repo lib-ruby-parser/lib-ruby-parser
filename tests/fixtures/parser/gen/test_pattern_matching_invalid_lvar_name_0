@@ -1,0 +1,4 @@
+--INPUT
+case a; in a?:; end
+--DIAGNOSTIC
+           ~~ (error) lvar_name

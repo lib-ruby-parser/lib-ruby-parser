@@ -1,0 +1,4 @@
+--INPUT
+case a; in "#{a}": 1; end
+--DIAGNOSTIC
+           ~~~~~~~ (error) symbol literal with interpolation is not allowed

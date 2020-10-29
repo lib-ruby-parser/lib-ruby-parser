@@ -1,0 +1,4 @@
+--INPUT
+/#{""}?/
+--DIAGNOSTIC
+~~~~~~~~ (error) invalid_regexp

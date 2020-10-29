@@ -1,0 +1,4 @@
+--INPUT
+$1 = foo
+--DIAGNOSTIC
+~~ (error) Can't set variable $1

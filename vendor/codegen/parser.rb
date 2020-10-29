@@ -106,19 +106,135 @@ module ParseHelperPatch
         end
       end
 
-      TESTS[name] << { input: code, ast: parsed_ast.inspect, locs: locs(parsed_ast) }
+      fixture = [
+        '--INPUT',
+        code,
+        '--LOCATIONS',
+        locs(parsed_ast).join("\n"),
+        '--AST',
+        parsed_ast.inspect
+      ]
+
+      fixture << ''
+
+      TESTS[name] << fixture
     end
   end
 
+  # We want to replicate MRI errors
+  RUBY_MESSAGES = {
+    :argument_const => ->(*) { 'formal argument cannot be a constant' },
+    :argument_cvar => ->(*) { 'formal argument cannot be a class variable' },
+    :argument_gvar => ->(*) { 'formal argument cannot be a global variable' },
+    :argument_ivar => ->(*) { 'formal argument cannot be an instance variable' },
+    :backref_assignment => ->(args, range) { "Can't set variable #{range.source}" },
+    :begin_in_method => ->(*) { 'BEGIN is permitted only at toplevel' },
+    :block_and_blockarg => ->(*) { 'both block arg and actual block given' },
+    :block_given_to_yield => ->(*) { 'block given to yield' },
+    :cant_assign_to_numparam => ->(args, range) { "Can't assign to numbered parameter #{args[:name]}" },
+    :circular_argument_reference => ->(args, range) { "circular argument reference - #{args[:var_name]}" },
+    :class_in_def => ->(*) { 'class definition in method body' },
+    :const_reassignment => ->(*) { raise 'invalid for 3.0' },
+    :csend_in_lhs_of_masgn => ->(*) { '&. inside multiple assignment destination' },
+    :cvar_name => ->(args, range) {
+      case args[:name]
+      when '@@' then "`@@' without identifiers is not allowed as a class variable name"
+      else
+        "`#{args[:name]}' is not allowed as a class variable name"
+      end
+    },
+    :duplicate_argument => ->(args, range) { 'duplicate_argument' },
+    :duplicate_pattern_key => ->(*) { 'duplicated key name' },
+    :duplicate_variable_name => ->(*) { 'duplicated variable name' },
+    :dynamic_const => ->(*) { 'dynamic constant assignment' },
+    :empty_symbol => ->(args, range) { 'empty_symbol' },
+    :endless_setter => ->(args, range) { 'setter method cannot be defined in an endless method definition' },
+    :invalid_assignment => ->(args, range) {
+      case range.source
+      when 'self' then "Can't change the value of self"
+      when 'nil' then "Can't assign to nil"
+      when 'true' then "Can't assign to true"
+      when 'false' then "Can't assign to false"
+      when '__FILE__' then "Can't assign to __FILE__"
+      when '__LINE__' then "Can't assign to __LINE__"
+      when '__ENCODING__' then "Can't assign to __ENCODING__"
+      else
+        raise "unknown invalid_assigment to #{range.source}"
+      end
+    },
+    :invalid_encoding => ->(args, range) { '<<SKIP>>' },
+    :invalid_regexp => ->(args, range) { 'invalid_regexp' },
+    :invalid_return => ->(args, range) { 'Invalid return in class/module body' },
+    :ivar_name => ->(args, range) {
+      case args[:name]
+      when '@' then "`@' without identifiers is not allowed as an instance variable name"
+      else
+        "`#{args[:name]}' is not allowed as an instance variable name"
+      end
+    },
+    :lvar_name => ->(args, range) { 'lvar_name' },
+    :masgn_as_condition => ->(args, range) { 'masgn_as_condition' },
+    :module_in_def => ->(*) { 'module definition in method body' },
+    :module_name_const => ->(args, range) { 'module_name_const' },
+    :nth_ref_alias => ->(args, range) { "can't make alias for the number variables" },
+    :numparam_used_in_outer_scope => ->(args, range) { 'numbered parameter is already used' },
+    :odd_hash => ->(args, range) { 'odd_hash' },
+    :ordinary_param_defined => ->(*) { 'ordinary parameter is defined' },
+    :pm_interp_in_var_name => ->(*) { 'symbol literal with interpolation is not allowed' },
+    :reserved_for_numparam => ->(args, range) { "#{args[:name]} is reserved for numbered parameter" },
+    :singleton_literal => ->(args, range) { "can't define singleton method for literals" },
+    :undefined_lvar => ->(args, range) { "#{args[:name]}: no such local variable" },
+    :unexpected_percent_str => ->(args, range) { 'TODO' },
+    :unexpected_token => ->(args, range) { "unexpected #{args[:token]}" },
+    :unicode_point_too_large => ->(args, range) { 'invalid Unicode codepoint (too large)' },
+    :unterminated_heredoc_id => ->(args, range) { 'unterminated here document identifier' },
+    :useless_else => ->(args, range) { 'else without rescue is useless' },
+
+    :embedded_document => ->(*) { 'embedded document meets end of file' },
+    :triple_dot_at_eol => ->(*) { '... at EOL, should be parenthesized?' },
+    :ambiguous_prefix => ->(args, range) { "ambiguous first argument; put parentheses or a space even after `#{range.source}' operator" },
+    :ambiguous_literal => ->(args, range) {
+      op = range.source
+      interpreted_as =
+        case op
+        when "**" then "argument prefix"
+        when "*" then "argument prefix"
+        when "<<" then "here document"
+        when "&" then "argument prefix"
+        when "+" then "unary operator"
+        when "-" then "unary operator"
+        when ":" then "symbol literal"
+        when "/" then "regexp literal"
+        when "%%" then "string literal"
+        else
+          binding.irb
+          raise "unsupported ambiguous_literal op #{op}"
+        end
+      "`#{op}' after local variable or literal is interpreted as binary operator even though it seems like #{interpreted_as}"
+    }
+  }
+
   def assert_diagnoses(diagnostic, code, source_maps='', versions=ParseHelper::ALL_VERSIONS)
     # Do not record errors for now
-    return
-
     if versions.include?(TARGET_RUBY_VERSION)
       with_versions([TARGET_RUBY_VERSION]) do |version, parser|
-        level, reason, arguments = diagnostic
-        arguments ||= {}
-        message     = Parser::MESSAGES[reason] % arguments
+        source_file = Parser::Source::Buffer.new('(assert_diagnoses)', source: code)
+
+        begin
+          parser = parser.parse(source_file)
+        rescue Parser::SyntaxError
+          # do nothing; the diagnostic was reported
+        end
+
+        assert_equal 1, @diagnostics.count
+        emitted_diagnostic = @diagnostics.first
+
+        level = emitted_diagnostic.level
+        reason = emitted_diagnostic.reason
+        arguments = emitted_diagnostic.arguments
+        location = emitted_diagnostic.location
+
+        message = RUBY_MESSAGES.fetch(reason) { raise "unknown diagnostic #{reason}" }.call(arguments, location)
 
         if code.split("\n").length > 1
           # importing multi-line errors is complicated
@@ -128,11 +244,17 @@ module ParseHelperPatch
           next
         end
 
-        if level == :error
-          input = "#{code} # error: #{message}"
+        diagnostic = (' ' * location.begin_pos) + ('~' * location.size) + ' (' + level.to_s + ') ' + message
 
-          TESTS[name] << { input: input }
-        end
+        fixture = [
+          '--INPUT',
+          code,
+          '--DIAGNOSTIC',
+          diagnostic,
+          ''
+        ]
+
+        TESTS[name] << fixture
       end
     end
   end
@@ -563,18 +685,7 @@ Minitest.after_run do
 
       input_filepath = File.join(TARGET_DIR, full_test_name)
 
-      fixture = [
-        '--INPUT',
-        capture[:input],
-        '--LOCATIONS',
-        capture[:locs].join("\n"),
-        '--AST',
-        capture[:ast]
-      ]
-
-      fixture << ''
-
-      File.write(input_filepath, fixture.join("\n"))
+      File.write(input_filepath, capture.join("\n"))
     end
   end
 end

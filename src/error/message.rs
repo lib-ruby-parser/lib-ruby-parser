@@ -8,12 +8,14 @@ pub enum DiagnosticMessage {
     UnterminatedList,
     UnterminatedRegexp,
     UnterminatedString,
+    UnterminatedQuotedString,
     InvalidUnicodeEscape,
     TooLargeUnicodeCodepoint,
     InvalidUnicodeCodepoint,
     MultipleCodepointAtSingleChar,
     InvalidEscapeCharacter,
     InvalidHexEscape,
+    UnterminatedHeredoc(String),
     UnterminatedHeredocId,
     SlashRAtMiddleOfLine,
     DStarInterpretedAsArgPrefix,
@@ -35,6 +37,16 @@ pub enum DiagnosticMessage {
     TrailingCharInNumber {
         c: u8,
     },
+    EmbeddedDocumentMeetsEof,
+    InvalidChar(u8),
+    IncompleteCharacterSyntax,
+    GvarWithoutId,
+    InvalidGvarName(u8),
+    IvarWithoutId,
+    InvalidIvarName(u8),
+    CvarWithoutId,
+    InvalidCvarName(u8),
+    UnknownRegexOptions(String),
 
     // Parser errors
     ElseWithoutRescue,
@@ -96,6 +108,7 @@ impl DiagnosticMessage {
             Self::UnterminatedList => "unterminated list meets end of file".to_owned(),
             Self::UnterminatedRegexp => "unterminated regexp meets end of file".to_owned(),
             Self::UnterminatedString => "unterminated string meets end of file".to_owned(),
+            Self::UnterminatedQuotedString => "unterminated quoted string meets end of file".to_owned(),
             Self::InvalidUnicodeEscape => "invalid Unicode escape".to_owned(),
             Self::TooLargeUnicodeCodepoint => "invalid Unicode codepoint (too large)".to_owned(),
             Self::InvalidUnicodeCodepoint => "invalid Unicode codepoint".to_owned(),
@@ -104,6 +117,7 @@ impl DiagnosticMessage {
             }
             Self::InvalidEscapeCharacter => "Invalid escape character syntax".to_owned(),
             Self::InvalidHexEscape => "invalid hex escape".to_owned(),
+            Self::UnterminatedHeredoc(id) => format!("can't find string \"{}\" anywhere before EOF", id),
             Self::UnterminatedHeredocId => "unterminated here document identifier".to_owned(),
             Self::SlashRAtMiddleOfLine => {
                 "encountered \\r in middle of line, treated as a mere space".to_owned()
@@ -121,6 +135,16 @@ impl DiagnosticMessage {
             Self::InvalidCharacterSyntax { suggestion } => format!("invalid character syntax; use {}", suggestion),
             Self::InvalidOctalDigit => format!("Invalid octal digit"),
             Self::TrailingCharInNumber { c } => format!("trailing `{}' in number", c),
+            Self::EmbeddedDocumentMeetsEof => "embedded document meets end of file".to_owned(),
+            Self::InvalidChar(byte) => format!("Invalid char `{}' in expression", byte),
+            Self::IncompleteCharacterSyntax => "incomplete character syntax".to_owned(),
+            Self::GvarWithoutId => "`$' without identifiers is not allowed as a global variable name".to_owned(),
+            Self::InvalidGvarName(name) => format!("`${}' is not allowed as a global variable name", name),
+            Self::IvarWithoutId => "`@' without identifiers is not allowed as an instance variable name".to_owned(),
+            Self::InvalidIvarName(name) => format!("`@{}' is not allowed as an instance variable name", name),
+            Self::CvarWithoutId => "`@@' without identifiers is not allowed as a class variable name".to_owned(),
+            Self::InvalidCvarName(name) => format!("`@@{}' is not allowed as a class variable name", name),
+            Self::UnknownRegexOptions(options) => format!("unknown regexp options - {}", options),
 
             // Parser errors
             Self::ElseWithoutRescue => "else without rescue is useless".to_owned(),

@@ -1,0 +1,4 @@
+--INPUT
+m { |x: _1| }
+--DIAGNOSTIC
+        ~~ (error) ordinary parameter is defined

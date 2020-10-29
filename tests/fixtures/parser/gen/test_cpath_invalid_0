@@ -1,0 +1,4 @@
+--INPUT
+module foo; end
+--DIAGNOSTIC
+       ~~~ (error) module_name_const

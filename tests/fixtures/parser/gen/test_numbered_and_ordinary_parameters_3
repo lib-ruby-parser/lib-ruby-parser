@@ -1,0 +1,4 @@
+--INPUT
+m do |a, b| _1 end 
+--DIAGNOSTIC
+            ~~ (error) ordinary parameter is defined

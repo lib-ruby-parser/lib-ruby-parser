@@ -1,0 +1,4 @@
+--INPUT
+"\u{120 120000}"
+--DIAGNOSTIC
+        ~~~~~~ (error) invalid Unicode codepoint (too large)

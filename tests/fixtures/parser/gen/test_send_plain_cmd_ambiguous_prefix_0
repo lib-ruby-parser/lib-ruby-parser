@@ -1,0 +1,4 @@
+--INPUT
+m +foo
+--DIAGNOSTIC
+  ~ (warning) ambiguous first argument; put parentheses or a space even after `+' operator

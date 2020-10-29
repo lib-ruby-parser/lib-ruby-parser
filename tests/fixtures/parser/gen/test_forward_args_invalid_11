@@ -1,0 +1,4 @@
+--INPUT
+def foo(...); [...]; end
+--DIAGNOSTIC
+                  ~ (error) unexpected tRBRACK
