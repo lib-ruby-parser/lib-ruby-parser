@@ -3073,7 +3073,7 @@ impl Builder {
     ) -> Result<Node, Diagnostic> {
         let result = match p_kw_label {
             PKwLabel::PlainLabel(label_t) => {
-                self.check_duplicate_pattern_key(&value(label_t.clone()), &self.loc(&label_t))?;
+                self.check_duplicate_pattern_key(&clone_value(&label_t), &self.loc(&label_t))?;
                 self.pair_keyword(label_t, value_node)
             }
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
@@ -3485,7 +3485,7 @@ impl Builder {
         end_t: &Option<Token>,
     ) -> StringMap {
         if let Some(begin_t) = begin_t {
-            if value(begin_t.clone()).starts_with("<<") {
+            if clone_value(&begin_t).starts_with("<<") {
                 let end_t = end_t
                     .as_ref()
                     .unwrap_or_else(|| unreachable!("heredoc must have end_t"));
@@ -3519,6 +3519,10 @@ pub(crate) fn merge_maybe_locs(locs: Vec<Option<Range>>) -> Option<Range> {
 
 pub(crate) fn value(token: Token) -> String {
     token.into_string_lossy()
+}
+
+pub(crate) fn clone_value(token: &Token) -> String {
+    token.to_string_lossy()
 }
 
 pub(crate) fn maybe_value(token: Option<Token>) -> Option<String> {

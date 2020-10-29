@@ -31,7 +31,7 @@
     use crate::lex_states::*;
     use crate::{Context as ParserContext, ContextItem};
     use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel, ArgsType};
-    use crate::builder::value;
+    use crate::builder::clone_value;
     use crate::nodes::{Lvar, Mlhs};
     use crate::parse_value::ParseValue as Value;
     use crate::parse_value::*;
@@ -1999,7 +1999,7 @@
                     {
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
 
-                        let name = value(name_t.clone());
+                        let name = clone_value(&name_t);
                         if name.ends_with('=') {
                             return self.yyerror(&@1, DiagnosticMessage::EndlessSetterDefinition);
                         }
@@ -2138,7 +2138,7 @@
                 | rel_expr relop arg   %prec tGT
                     {
                         let op_t = $<Token>2;
-                        self.warn(&@2, DiagnosticMessage::ComparisonAfterComparison(value(op_t.clone())));
+                        self.warn(&@2, DiagnosticMessage::ComparisonAfterComparison(clone_value(&op_t)));
                         $$ = Value::Node(
                             self.builder.binary_op(
                                 $<Node>1,
@@ -3363,7 +3363,7 @@ opt_block_args_tail:
             bvar: tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
-                        self.static_env.declare(&value(ident_t.clone()));
+                        self.static_env.declare(&clone_value(&ident_t));
                         $$ = Value::Node(
                             self.builder.shadowarg(ident_t)?
                         );
@@ -4434,7 +4434,7 @@ opt_block_args_tail:
        p_var_ref: tCARET tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        let name = value(ident_t.clone());
+                        let name = clone_value(&ident_t);
 
                         if !self.static_env.is_declared(&name) {
                             return self.yyerror(&@2, DiagnosticMessage::NoSuchLocalVariable(name));
@@ -5273,7 +5273,7 @@ keyword_variable: kNIL
                 | tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
-                        let name = value(ident_t.clone());
+                        let name = clone_value(&ident_t);
                         self.static_env.declare(&name);
                         self.max_numparam_stack.set_has_ordinary_params();
                         $$ = Value::Token(ident_t);
@@ -5283,7 +5283,7 @@ keyword_variable: kNIL
       f_arg_asgn: f_norm_arg
                     {
                         let arg_t = $<Token>1;
-                        let arg_name = value(arg_t.clone());
+                        let arg_name = clone_value(&arg_t);
                         self.current_arg_stack.set(Some(arg_name));
                         $$ = Value::Token(arg_t);
                     }
@@ -5326,7 +5326,7 @@ keyword_variable: kNIL
                         let ident_t = $<Token>1;
                         self.check_kwarg_name(&ident_t)?;
 
-                        let ident = value(ident_t.clone());
+                        let ident = clone_value(&ident_t);
                         self.static_env.declare(&ident);
 
                         self.max_numparam_stack.set_has_ordinary_params();
@@ -5409,7 +5409,7 @@ keyword_variable: kNIL
         f_kwrest: kwrest_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(&value(ident_t.clone()));
+                        self.static_env.declare(&clone_value(&ident_t));
                         $$ = Value::NodeList(
                             vec![
                                 self.builder.kwrestarg($<Token>1, Some(ident_t))?
@@ -5483,7 +5483,7 @@ keyword_variable: kNIL
       f_rest_arg: restarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(&value(ident_t.clone()));
+                        self.static_env.declare(&clone_value(&ident_t));
 
                         $$ = Value::NodeList(
                             vec![
@@ -5508,7 +5508,7 @@ keyword_variable: kNIL
      f_block_arg: blkarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(&value(ident_t.clone()));
+                        self.static_env.declare(&clone_value(&ident_t));
                         $$ = Value::Node(
                             self.builder.blockarg($<Token>1, ident_t)?
                         );
@@ -5772,7 +5772,7 @@ impl Parser {
     }
 
     fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), Diagnostic> {
-        let name = value(ident_t.clone());
+        let name = clone_value(&ident_t);
         let first_char = name.chars().next().unwrap();
         if first_char.is_lowercase() {
             Ok(())

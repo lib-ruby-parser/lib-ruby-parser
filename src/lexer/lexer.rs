@@ -1313,8 +1313,7 @@ impl Lexer {
         Self::END_OF_INPUT
     }
 
-    pub(crate) fn percent_quotation(&mut self, c: &MaybeByte, ptok: usize) -> i32 {
-        let mut c = c.clone();
+    pub(crate) fn percent_quotation(&mut self, c: &mut MaybeByte, ptok: usize) -> i32 {
         let mut term: MaybeByte;
         let mut paren: Option<u8>;
 
@@ -1323,7 +1322,7 @@ impl Lexer {
             if !c.is_ascii() {
                 return self.percent_unknown(&term);
             }
-            c = MaybeByte::new('Q');
+            *c = MaybeByte::new('Q');
         } else {
             term = self.nextc();
             if term.is_alnum() {
@@ -1396,12 +1395,12 @@ impl Lexer {
     }
 
     pub(crate) fn parse_percent(&mut self, space_seen: bool, last_state: LexState) -> i32 {
-        let c: MaybeByte;
+        let mut c: MaybeByte;
         let ptok = self.buffer.pcur;
 
         if self.is_beg() {
             c = self.nextc();
-            return self.percent_quotation(&c, ptok);
+            return self.percent_quotation(&mut c, ptok);
         }
 
         c = self.nextc();
@@ -1411,7 +1410,7 @@ impl Lexer {
             return Self::tOP_ASGN;
         }
         if self.is_spacearg(&c, space_seen) || (self.is_lex_state_some(EXPR_FITEM) && c == b's') {
-            return self.percent_quotation(&c, ptok);
+            return self.percent_quotation(&mut c, ptok);
         }
         self.set_lex_state(if self.is_after_operator() {
             EXPR_ARG
