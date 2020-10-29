@@ -15,6 +15,9 @@ pub use static_environment::StaticEnvironment;
 
 pub(crate) mod parse_value;
 
+mod parser_options;
+pub use parser_options::ParserOptions;
+
 mod parser;
 pub(crate) use parser::Loc;
 pub use parser::{Parser, Token};

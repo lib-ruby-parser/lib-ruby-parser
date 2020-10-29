@@ -26,6 +26,7 @@
 %code use {
     use std::rc::Rc;
 
+    use crate::ParserOptions;
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
     use crate::lex_states::*;
     use crate::{Context as ParserContext, ContextItem};
@@ -5675,54 +5676,60 @@ keyword_variable: kNIL
 %%
 
 impl Parser {
-    pub fn new(bytes: &[u8], name: &str) -> Result<Self, InputError> {
-        let lexer = Lexer::new(bytes, name, None)?;
-        Ok(Self::new_with_lexer(lexer))
-    }
+    pub fn new(input: &[u8], options: ParserOptions) -> Result<Self, InputError> {
+        let ParserOptions {
+            buffer_name,
+            debug,
+            known_encoding,
+        } = options;
 
-    pub fn new_with_lexer(lexer: Lexer) -> Self {
-        let static_env = lexer.static_env.clone();
-        let context = lexer.context.clone();
+        let mut lexer = Lexer::new(input, buffer_name, known_encoding)?;
+        lexer.set_debug(debug);
+
         let current_arg_stack = CurrentArgStack::new();
         let max_numparam_stack = MaxNumparamStack::new();
         let pattern_variables = VariablesStack::new();
         let pattern_hash_keys = VariablesStack::new();
-        let source_buffer = Rc::clone(&lexer.buffer.input);
 
-        Self {
+        let builder = Builder::new(
+            lexer.static_env.clone(),
+            lexer.context.clone(),
+            current_arg_stack.clone(),
+            max_numparam_stack.clone(),
+            pattern_variables.clone(),
+            pattern_hash_keys.clone(),
+            Rc::clone(&lexer.buffer.input),
+        );
+
+        let last_token = Token {
+            token_type: 0,
+            token_value: TokenValue::String("".to_owned()),
+            loc: Loc { begin: 0, end: 0 }
+        };
+
+        let parser = Self {
             yy_error_verbose: true,
             yynerrs: 0,
-            yydebug: 0,
+            yydebug: debug,
             yyerrstatus_: 0,
             result: None,
-            builder: Builder::new(
-                static_env.clone(),
-                context.clone(),
-                current_arg_stack.clone(),
-                max_numparam_stack.clone(),
-                pattern_variables.clone(),
-                pattern_hash_keys.clone(),
-                source_buffer.clone(),
-            ),
-            context,
+            builder,
+            context: lexer.context.clone(),
             current_arg_stack,
             max_numparam_stack,
             pattern_variables,
             pattern_hash_keys,
-            static_env,
-            last_token: Token {
-                token_type: 0,
-                token_value: TokenValue::String("".to_owned()),
-                loc: Loc { begin: 0, end: 0 }
-            },
+            static_env: lexer.static_env.clone(),
+            last_token,
             tokens: vec![],
             diagnostics: vec![],
-            source_buffer: source_buffer,
+            source_buffer: Rc::clone(&lexer.buffer.input),
             yylexer: lexer,
-        }
+        };
+        Ok(parser)
     }
 
-    pub fn do_parse(&mut self) -> Option<Node> {
+    pub fn do_parse(&mut self) -> Option<Node>  {
         self.parse();
 
         for d in self.diagnostics.iter() {
@@ -5745,7 +5752,7 @@ impl Parser {
     }
 
     pub fn set_debug(&mut self, debug: bool) {
-        self.yydebug = if debug { 1 } else { 0 };
+        self.yydebug = debug;
         self.yylexer.set_debug(debug);
     }
 

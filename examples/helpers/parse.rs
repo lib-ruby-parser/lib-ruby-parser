@@ -1,11 +1,14 @@
-use ruby_parser::{Lexer, Node, Parser};
+use ruby_parser::{Node, Parser, ParserOptions};
 
 #[allow(dead_code)]
 pub fn parse(source: &Vec<u8>, filename: &str, debug: bool) -> Result<Node, String> {
     print!("parsing {} ... ", filename);
-    let lexer = Lexer::new(source, filename, None).map_err(|e| e.to_string())?;
-    let mut parser = Parser::new_with_lexer(lexer);
-    parser.set_debug(debug);
+    let options = ParserOptions {
+        buffer_name: filename,
+        debug,
+        ..Default::default()
+    };
+    let mut parser = Parser::new(source, options).map_err(|e| e.to_string())?;
 
     match parser.do_parse() {
         Some(node) => {
