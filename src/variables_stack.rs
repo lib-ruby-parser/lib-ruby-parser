@@ -25,11 +25,17 @@ impl InnerVariablesStack {
     }
 
     pub(crate) fn declare(&mut self, name: &str) {
-        self.stack.last_mut().unwrap().insert(name.to_owned());
+        self.stack
+            .last_mut()
+            .expect("expected variables_stack to have at least 1 layer")
+            .insert(name.to_owned());
     }
 
     pub(crate) fn is_declared(&mut self, name: &str) -> bool {
-        self.stack.last().unwrap().contains(name)
+        self.stack
+            .last()
+            .expect("expected variables_stack to have at least 1 layer")
+            .contains(name)
     }
 }
 

@@ -31,7 +31,7 @@ struct Args {
 
 fn print_diagnostics(diagnostics: &[Diagnostic]) {
     for d in diagnostics {
-        println!("{}", d.render().unwrap())
+        println!("{}", d.render().expect("Failed to render a diagnostic"))
     }
 }
 

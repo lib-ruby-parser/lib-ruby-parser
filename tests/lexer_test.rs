@@ -7,6 +7,9 @@ use std::fs;
 use std::panic;
 use std::process::exit;
 
+mod files_under_dir;
+use files_under_dir::files_under_dir;
+
 enum TestSection {
     None,
     Vars,
@@ -16,7 +19,7 @@ enum TestSection {
 }
 
 #[derive(Debug)]
-struct TestCase {
+struct Fixture {
     cond: bool,
     cmdarg: bool,
     vars: Vec<String>,
@@ -24,9 +27,9 @@ struct TestCase {
     input: String,
     tokens: String,
 }
-impl TestCase {
+impl Fixture {
     fn new(path: &str) -> Self {
-        let content = fs::read_to_string(path).unwrap();
+        let content = fs::read_to_string(path).expect(&format!("failed to read fixture {}", path));
 
         let mut vars: Vec<String> = vec![];
         let mut input: Vec<String> = vec![];
@@ -96,13 +99,13 @@ fn lex_state(state: &str) -> i32 {
 
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
-        let test_case = TestCase::new(fixture_path);
+        let test_case = Fixture::new(fixture_path);
         let mut lexer = Lexer::new(
             &test_case.input.as_bytes().to_vec(),
             &format!("(test {})", fixture_path),
             None,
         )
-        .unwrap();
+        .expect("failed to construct lexer");
         for var in test_case.vars {
             lexer.static_env.declare(&var);
         }
@@ -156,13 +159,7 @@ fn runner(dirs: &[&'static str]) {
     let mut segfaults: usize = 0;
 
     for dir in dirs {
-        let tests = fs::read_dir(dir)
-            .expect(&format!("{} doesn't exist", dir))
-            .map(|res| res.unwrap().path())
-            .map(|path| path.to_str().unwrap().to_owned())
-            .collect::<Vec<_>>();
-
-        for filename in tests {
+        for filename in files_under_dir(dir) {
             eprint!("test {} ... ", filename);
             match test(&filename) {
                 TestResult::Segfault => {

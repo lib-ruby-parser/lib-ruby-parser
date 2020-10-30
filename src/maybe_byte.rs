@@ -16,11 +16,8 @@ impl MaybeByte {
         self == &MaybeByte::EndOfInput
     }
 
-    pub(crate) fn unwrap(&self) -> u8 {
-        match self {
-            MaybeByte::Some(byte) => *byte,
-            _ => unreachable!("Can't unwrap MaybeByte::EndOfInput"),
-        }
+    pub(crate) fn expect(&self, msg: &str) -> u8 {
+        self.to_option().expect(msg)
     }
 
     pub(crate) fn to_option(&self) -> Option<u8> {

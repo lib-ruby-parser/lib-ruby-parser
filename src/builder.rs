@@ -381,7 +381,9 @@ impl Builder {
             return;
         }
 
-        let dedent_level: usize = dedent_level.try_into().unwrap();
+        let dedent_level: usize = dedent_level
+            .try_into()
+            .expect("dedent_level must be positive");
 
         match node {
             Node::Heredoc(Heredoc { parts, .. }) | Node::XHeredoc(XHeredoc { parts, .. }) => {
@@ -491,7 +493,10 @@ impl Builder {
         match &parts[..] {
             [Node::Str(_)] | [Node::Dstr(_)] => {
                 // collapse_string_parts? == true
-                return parts.into_iter().next().unwrap();
+                return parts
+                    .into_iter()
+                    .next()
+                    .expect("parts is supposed to have exactly 1 element");
             }
             _ => {}
         }
@@ -743,7 +748,9 @@ impl Builder {
 
     pub(crate) fn nth_ref(&self, token: Token) -> Node {
         let expression_l = self.loc(&token);
-        let name = value(token)[1..].parse::<usize>().unwrap();
+        let name = value(token)[1..]
+            .parse::<usize>()
+            .expect("nth_ref token must have a numeric value");
         Node::NthRef(NthRef { name, expression_l })
     }
     pub(crate) fn accessible(&self, node: Node) -> Result<Node, Diagnostic> {
@@ -1682,7 +1689,7 @@ impl Builder {
 
             MethodCallType::CSend => Node::CSend(CSend {
                 method_name,
-                recv: Box::new(receiver.unwrap()),
+                recv: Box::new(receiver.expect("csend node must have a receiver")),
                 args,
                 dot_l,
                 selector_l,
@@ -1757,7 +1764,7 @@ impl Builder {
                     ArgsType::Numargs(numargs) => Node::Numblock(Numblock {
                         call: Box::new(actual_send),
                         numargs,
-                        body: block_body.unwrap(),
+                        body: block_body.expect("numblock always has body"),
                         begin_l,
                         end_l,
                         expression_l,
@@ -1793,7 +1800,7 @@ impl Builder {
                     ArgsType::Numargs(numargs) => Node::Numblock(Numblock {
                         numargs,
                         call: Box::new(method_call),
-                        body: block_body.unwrap(),
+                        body: block_body.expect("numblock always has body"),
                         begin_l,
                         end_l,
                         expression_l,
@@ -2373,7 +2380,7 @@ impl Builder {
                 expression_l,
             }),
             KeywordCmd::Defined => Node::Defined(Defined {
-                value: Box::new(args.pop().unwrap()),
+                value: Box::new(args.pop().expect("defined? always has an argument")),
                 keyword_l,
                 begin_l,
                 end_l,
@@ -2858,12 +2865,18 @@ impl Builder {
                 self.static_env.declare(&name);
 
                 if let Some(begin_l) = &begin_l {
-                    let begin_pos_d: i32 = begin_l.size().try_into().unwrap();
+                    let begin_pos_d: i32 = begin_l
+                        .size()
+                        .try_into()
+                        .expect("failed to convert usize loc into i32, is it too big?");
                     name_l = name_l.adjust_begin(begin_pos_d)
                 }
 
                 if let Some(end_l) = &end_l {
-                    let end_pos_d: i32 = end_l.size().try_into().unwrap();
+                    let end_pos_d: i32 = end_l
+                        .size()
+                        .try_into()
+                        .expect("failed to convert usize loc into i32, is it too big?");
                     name_l = name_l.adjust_end(-end_pos_d)
                 }
 
@@ -3303,7 +3316,10 @@ impl Builder {
     }
 
     pub(crate) fn check_lvar_name(&self, name: &str, loc: &Range) -> Result<(), Diagnostic> {
-        let first = name.chars().nth(0).unwrap();
+        let first = name
+            .chars()
+            .next()
+            .expect("local variable name can't be empty");
         let rest = &name[1..];
 
         if (first.is_lowercase() || first == '_')
@@ -3552,5 +3568,5 @@ pub(crate) enum StringMap {
 }
 
 fn first<T>(vec: Vec<T>) -> T {
-    vec.into_iter().next().unwrap()
+    vec.into_iter().next().expect("expected vec to have 1 item")
 }

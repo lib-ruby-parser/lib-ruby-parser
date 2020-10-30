@@ -233,7 +233,7 @@ impl Lexer {
                         nondigit = None;
                         return self.decode_num(c, nondigit, is_float, seen_e);
                     }
-                    self.tokadd(&nondigit.clone().unwrap());
+                    self.tokadd(&nondigit.clone().expect("nondigit must be set"));
                     seen_e = true;
                     is_float = true;
                     self.tokadd(&c);

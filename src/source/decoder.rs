@@ -3,7 +3,6 @@ use std::error::Error;
 use std::fmt;
 
 lazy_static! {
-    static ref FIRST_TWO_LINES_RE: Regex = Regex::new(r"\A(.*)\n?(.*\n)?").unwrap();
     static ref ENCODING_RE: Regex = Regex::new(
         r"(?x)
         [\s\#](en)?coding\s*[:=]\s*
@@ -18,7 +17,7 @@ lazy_static! {
         )
     "
     )
-    .unwrap();
+    .expect("ENCODING_RE regex is invalid");
 }
 
 #[derive(Debug)]

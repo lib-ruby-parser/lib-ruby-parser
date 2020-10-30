@@ -554,7 +554,7 @@
                                 vec![rescue_body],
                                 None,
                                 None,
-                            ).unwrap()
+                            ).expect("expected begin_body to return Some (compound_stmt was given)")
                         );
                     }
                 | klEND tLCURLY compstmt tRCURLY
@@ -612,7 +612,7 @@
                             vec![ rescue_body ],
                             None,
                             None
-                        ).unwrap();
+                        ).expect("expected begin_body to return Some (compound_stmt was given)");
                         $$ = Value::Node(
                             self.builder.multi_assign(
                                 $<Node>1,
@@ -804,7 +804,7 @@
                                 vec![ rescue_body ],
                                 None,
                                 None
-                            ).unwrap()
+                            ).expect("expected begin_body to return Some (compound_stmt was given)")
                         );
                     }
                 | command_asgn
@@ -2193,7 +2193,7 @@
                                 vec![ rescue_body ],
                                 None,
                                 None
-                            ).unwrap()
+                            ).expect("expected begin_body to return Some (compound_stmt was given)")
                         );
                     }
                 ;
@@ -3256,7 +3256,7 @@ opt_block_args_tail:
                         let nodes: Vec<Node>;
 
                         if opt_block_args_tail.is_empty() && f_arg.len() == 1 {
-                            nodes = vec![ self.builder.procarg0(f_arg.pop().unwrap()) ];
+                            nodes = vec![ self.builder.procarg0(f_arg.pop().expect("f_arg is non empty")) ];
                         } else {
                             nodes = [ f_arg, opt_block_args_tail ].concat();
                         }
@@ -4998,7 +4998,9 @@ keyword_variable: kNIL
 
                                         for outer_scope in raw_context.iter().rev() {
                                             if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda {
-                                                let outer_scope_has_numparams = raw_max_numparam_stack.pop().unwrap() > 0;
+                                                let outer_scope_has_numparams = raw_max_numparam_stack
+                                                    .pop()
+                                                    .expect("expected numparam stack to have element") > 0;
 
                                                 if outer_scope_has_numparams {
                                                     return self.yyerror(
@@ -5017,7 +5019,7 @@ keyword_variable: kNIL
                                         }
 
                                         self.static_env.declare(name);
-                                        self.max_numparam_stack.register(n.to_digit(10).unwrap() as i32)
+                                        self.max_numparam_stack.register(n.to_digit(10).expect("numparam must have a digit after _") as i32)
                                     }
                                 },
                                 _ => {}
@@ -5767,7 +5769,7 @@ impl Parser {
 
     fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), Diagnostic> {
         let name = clone_value(&ident_t);
-        let first_char = name.chars().next().unwrap();
+        let first_char = name.chars().next().expect("kwarg name can't be empty");
         if first_char.is_lowercase() {
             Ok(())
         } else {
@@ -5796,7 +5798,7 @@ impl Parser {
     }
 
     fn report_syntax_error(&mut self, ctx: &Context) {
-        let id: usize = ctx.token().code().try_into().unwrap();
+        let id: usize = ctx.token().code().try_into().expect("failed to convert token code into i32, is it too big?");
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,
             DiagnosticMessage::UnexpectedToken(Lexer::TOKEN_NAMES[id].to_owned()),

@@ -144,11 +144,12 @@ impl Lexer {
         self.newtok();
         loop {
             c = self.nextc();
-            if !c.is_alpha() {
-                break;
-            }
 
-            let ch = c.unwrap();
+            let ch = match c.to_option() {
+                Some(_) if !c.is_alpha() => break,
+                None => break,
+                Some(ch) => ch,
+            };
 
             match ch {
                 b'o' | b'n' | b'e' | b's' | b'u' | b'i' | b'x' | b'm' => {
@@ -164,7 +165,10 @@ impl Lexer {
         if self.toklen() > 0 {
             self.tokfix();
             self.compile_error(DiagnosticMessage::UnknownRegexOptions(
-                self.tokenbuf.borrow_string().unwrap().to_owned(),
+                self.tokenbuf
+                    .borrow_string()
+                    .expect("expected buffer to have only utf-8 chars")
+                    .to_owned(),
             ));
         }
 
@@ -427,7 +431,9 @@ impl Lexer {
     }
 
     pub(crate) fn tokaddmbc(&mut self, codepoint: usize) {
-        let utf8_char = std::char::from_u32(codepoint.try_into().unwrap()).unwrap();
+        let utf8_char =
+            std::char::from_u32(codepoint.try_into().expect("expected codepoint to be u32"))
+                .expect("expected codepoint to have digits");
         let utf8_bytes = utf8_char.to_string().into_bytes();
         for byte in utf8_bytes {
             self.tokadd(byte)
@@ -912,7 +918,7 @@ impl Lexer {
         let id = self
             .buffer
             .substr_at(self.buffer.ptok, self.buffer.pcur)
-            .unwrap();
+            .expect("failed to get heredoc id");
         let id = TokenBuf::new(id);
         self.set_yylval_str(id);
         self.lval_start = Some(self.buffer.ptok);
@@ -968,10 +974,13 @@ impl Lexer {
              * - "in a continuing line"
              */
             self.buffer.heredoc_line_indent = 0;
-        } else if self
-            .buffer
-            .is_whole_match(&self.buffer.substr_at(eos, eos + len).unwrap(), indent)
-        {
+        } else if self.buffer.is_whole_match(
+            &self
+                .buffer
+                .substr_at(eos, eos + len)
+                .expect("failed to get heredoc id for comparison"),
+            indent,
+        ) {
             return self.here_document_restore(&here);
         }
 
@@ -1025,10 +1034,13 @@ impl Lexer {
                     return self.here_document_error(&here, eos, len);
                 }
 
-                if self
-                    .buffer
-                    .is_whole_match(&self.buffer.substr_at(eos, eos + len).unwrap(), indent)
-                {
+                if self.buffer.is_whole_match(
+                    &self
+                        .buffer
+                        .substr_at(eos, eos + len)
+                        .expect("failed to get heredoc id for comparison"),
+                    indent,
+                ) {
                     self.lval_end = Some(self.buffer.pend - 1);
                     heredoc_end = self.compute_heredoc_end();
                     break;
@@ -1080,10 +1092,13 @@ impl Lexer {
                     return self.here_document_error(&here, eos, len);
                 }
 
-                if self
-                    .buffer
-                    .is_whole_match(&self.buffer.substr_at(eos, eos + len).unwrap(), indent)
-                {
+                if self.buffer.is_whole_match(
+                    &self
+                        .buffer
+                        .substr_at(eos, eos + len)
+                        .expect("failed to get heredoc id for comparison"),
+                    indent,
+                ) {
                     heredoc_end = self.compute_heredoc_end();
 
                     break;
@@ -1118,9 +1133,13 @@ impl Lexer {
             }
             end += 1;
         }
-        let value = self.buffer.substr_at(end_starts_at, end).unwrap();
+        let value = self
+            .buffer
+            .substr_at(end_starts_at, end)
+            .expect("failed to get heredoc end");
 
-        let value = String::from_utf8(value.to_vec()).unwrap();
+        let value =
+            String::from_utf8(value.to_vec()).expect("expected heredoc id to be valid in utf-8");
 
         HeredocEnd { start, end, value }
     }
@@ -1133,7 +1152,12 @@ impl Lexer {
     ) -> i32 {
         self.heredoc_restore(&here);
         self.compile_error(DiagnosticMessage::UnterminatedHeredoc(
-            String::from_utf8_lossy(self.buffer.substr_at(eos, eos + len).unwrap()).into_owned(),
+            String::from_utf8_lossy(
+                self.buffer
+                    .substr_at(eos, eos + len)
+                    .expect("failed to get heredoc id for comparison"),
+            )
+            .into_owned(),
         ));
         self.token_flush();
         self.strterm = None;

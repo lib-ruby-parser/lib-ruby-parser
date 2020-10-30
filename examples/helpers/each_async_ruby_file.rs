@@ -33,7 +33,11 @@ struct Worker {
 impl Worker {
     pub fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Message>>>) -> Self {
         let thread = thread::spawn(move || loop {
-            let job = receiver.lock().unwrap().recv().unwrap();
+            let job = receiver
+                .lock()
+                .expect("Failed to lock mpsc receiver")
+                .recv()
+                .expect("mspc receiver is empty");
 
             // println!("Worker {} got a job; executing.", id);
             match job {
@@ -69,7 +73,9 @@ impl Pool {
     where
         F: FnOnce() + Send + 'static,
     {
-        self.sender.send(Message::Job(Box::new(f))).unwrap();
+        self.sender
+            .send(Message::Job(Box::new(f)))
+            .expect("Failed to send JOB message to the thread");
     }
 }
 
@@ -77,14 +83,16 @@ impl Drop for Pool {
     fn drop(&mut self) {
         println!("Sending EXIT");
         for _ in &mut self.workers {
-            self.sender.send(Message::Exit).unwrap();
+            self.sender
+                .send(Message::Exit)
+                .expect("Failed to send EXIT message to the thread");
         }
 
         for worker in &mut self.workers {
             println!("Shutting down worker {}", worker.id);
 
             if let Some(thread) = worker.thread.take() {
-                thread.join().unwrap();
+                thread.join().expect("Failed to join a worker thread");
             }
         }
     }
@@ -99,7 +107,7 @@ where
     F: Fn(&str) + Send + Sync,
 {
     let threads_count = env::var("THREADS")
-        .map(|s| s.parse::<usize>().unwrap())
+        .map(|s| s.parse::<usize>().expect("THREADS must be a number"))
         .unwrap_or(5);
 
     let pool = Pool::new(threads_count);

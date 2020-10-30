@@ -151,7 +151,10 @@ impl Field {
                 "{offset}self.{field_name}.print(\"{printable_field_name}\");",
                 offset = offset,
                 field_name = self.field_name,
-                printable_field_name = self.field_name.strip_suffix("_l").unwrap()
+                printable_field_name = self
+                    .field_name
+                    .strip_suffix("_l")
+                    .expect("expected loc field to end with _l")
             )),
             MaybeRange => Some(format!(
                 "{offset}if let Some(range) = &self.{field_name} {{
@@ -159,7 +162,10 @@ impl Field {
 {offset}}}",
                 offset = offset,
                 field_name = self.field_name,
-                printable_field_name = self.field_name.strip_suffix("_l").unwrap(),
+                printable_field_name = self
+                    .field_name
+                    .strip_suffix("_l")
+                    .expect("expected loc field to end with _l"),
             )),
             Str => None,
             MaybeStr => None,
@@ -289,7 +295,8 @@ fn generate_nodes() -> Result<(), Box<dyn std::error::Error>> {
     let nodes: Vec<Struct> = serde_yaml::from_reader(f)?;
 
     for node in nodes {
-        std::fs::write(&format!("src/nodes/{}.rs", node.filename), node.code()).unwrap();
+        std::fs::write(&format!("src/nodes/{}.rs", node.filename), node.code())
+            .expect(&format!("Failed to write into {}", node.filename));
     }
 
     Ok(())
@@ -297,5 +304,5 @@ fn generate_nodes() -> Result<(), Box<dyn std::error::Error>> {
 
 fn main() {
     generate_parse_y();
-    generate_nodes().unwrap();
+    generate_nodes().expect("Failed to generate nodes");
 }

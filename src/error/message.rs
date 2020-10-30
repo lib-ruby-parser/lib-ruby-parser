@@ -129,21 +129,21 @@ impl DiagnosticMessage {
             Self::ParenthesesIterpretedAsArglist => "parentheses after method name is interpreted as an argument list, not a decomposed argument".to_owned(),
             Self::AmbiguousFirstArgument { operator} => format!(
                 "ambiguous first argument; put parentheses or a space even after `{}' operator",
-                operator
+                *operator as char
             ),
             Self::AmbiguousOperator { operator, interpreted_as } => format!("`{}' after local variable or literal is interpreted as binary operator even though it seems like {}", operator, interpreted_as),
             Self::InvalidCharacterSyntax { suggestion } => format!("invalid character syntax; use {}", suggestion),
             Self::InvalidOctalDigit => format!("Invalid octal digit"),
-            Self::TrailingCharInNumber { c } => format!("trailing `{}' in number", c),
+            Self::TrailingCharInNumber { c } => format!("trailing `{}' in number", *c as char),
             Self::EmbeddedDocumentMeetsEof => "embedded document meets end of file".to_owned(),
-            Self::InvalidChar(byte) => format!("Invalid char `{}' in expression", byte),
+            Self::InvalidChar(byte) => format!("Invalid char `{}' in expression", *byte as char),
             Self::IncompleteCharacterSyntax => "incomplete character syntax".to_owned(),
             Self::GvarWithoutId => "`$' without identifiers is not allowed as a global variable name".to_owned(),
-            Self::InvalidGvarName(name) => format!("`${}' is not allowed as a global variable name", name),
+            Self::InvalidGvarName(name) => format!("`${}' is not allowed as a global variable name", *name as char),
             Self::IvarWithoutId => "`@' without identifiers is not allowed as an instance variable name".to_owned(),
-            Self::InvalidIvarName(name) => format!("`@{}' is not allowed as an instance variable name", name),
+            Self::InvalidIvarName(name) => format!("`@{}' is not allowed as an instance variable name", *name as char),
             Self::CvarWithoutId => "`@@' without identifiers is not allowed as a class variable name".to_owned(),
-            Self::InvalidCvarName(name) => format!("`@@{}' is not allowed as a class variable name", name),
+            Self::InvalidCvarName(name) => format!("`@@{}' is not allowed as a class variable name", *name as char),
             Self::UnknownRegexOptions(options) => format!("unknown regexp options - {}", options),
 
             // Parser errors

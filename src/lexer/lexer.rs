@@ -119,9 +119,14 @@ impl Lexer {
         let mut token_value = self
             .lval
             .take()
-            .or_else(||
+            .or_else(|| {
                 // take raw value if nothing was manually captured
-                self.buffer.substr_at(begin, end).map(|s| TokenValue::String(String::from_utf8(s.to_vec()).unwrap())))
+                self.buffer.substr_at(begin, end).map(|s| {
+                    TokenValue::String(
+                        String::from_utf8(s.to_vec()).expect("source must be encoded in utf-8"),
+                    )
+                })
+            })
             .unwrap_or_else(|| TokenValue::String("".to_owned()));
 
         if token_type == Self::tNL {
@@ -158,7 +163,9 @@ impl Lexer {
     pub fn token_name(id: i32) -> String {
         let first_token = Self::YYerror;
         if id > first_token + 1 {
-            let pos: usize = (id - first_token + 1).try_into().unwrap();
+            let pos: usize = (id - first_token + 1)
+                .try_into()
+                .expect("failed to cast token id into usize, is it negative?");
             Self::TOKEN_NAMES[pos].to_owned()
         } else if id == Self::END_OF_INPUT {
             "EOF".to_owned()
@@ -743,9 +750,8 @@ impl Lexer {
                     return Self::tDOT;
                 }
 
-                Some(b'0') | Some(b'1') | Some(b'2') | Some(b'3') | Some(b'4') | Some(b'5')
-                | Some(b'6') | Some(b'7') | Some(b'8') | Some(b'9') => {
-                    return self.parse_numeric(c.unwrap());
+                Some(c) if c >= b'0' && c <= b'9' => {
+                    return self.parse_numeric(c);
                 }
 
                 Some(b')') => {
@@ -809,13 +815,11 @@ impl Lexer {
                         return result;
                     }
                     match c.to_option() {
-                        Some(b'\'') => {
-                            self.strterm =
-                                self.new_strterm(str_types::str_ssym, c.unwrap(), None, None)
+                        Some(c) if c == b'\'' => {
+                            self.strterm = self.new_strterm(str_types::str_ssym, c, None, None)
                         }
-                        Some(b'"') => {
-                            self.strterm =
-                                self.new_strterm(str_types::str_dsym, c.unwrap(), None, None)
+                        Some(c) if c == b'"' => {
+                            self.strterm = self.new_strterm(str_types::str_dsym, c, None, None)
                         }
                         _ => self.buffer.pushback(&c),
                     }
@@ -1314,7 +1318,7 @@ impl Lexer {
     }
 
     pub(crate) fn percent_quotation(&mut self, c: &mut MaybeByte, ptok: usize) -> i32 {
-        let mut term: MaybeByte;
+        let term: MaybeByte;
         let mut paren: Option<u8>;
 
         if c.is_eof() || !c.is_alnum() {
@@ -1330,20 +1334,23 @@ impl Lexer {
             }
         }
 
-        if term.is_eof() {
-            self.compile_error(DiagnosticMessage::UnterminatedQuotedString);
-            return Self::END_OF_INPUT;
-        }
+        let mut term = match term.to_option() {
+            None => {
+                self.compile_error(DiagnosticMessage::UnterminatedQuotedString);
+                return Self::END_OF_INPUT;
+            }
+            Some(term) => term,
+        };
 
-        paren = term.to_option();
+        paren = Some(term);
         if term == b'(' {
-            term = MaybeByte::new(')')
+            term = b')';
         } else if term == b'[' {
-            term = MaybeByte::new(']')
+            term = b']';
         } else if term == b'{' {
-            term = MaybeByte::new('}')
+            term = b'}';
         } else if term == b'<' {
-            term = MaybeByte::new('>')
+            term = b'>';
         } else {
             paren = None
         }
@@ -1351,39 +1358,39 @@ impl Lexer {
         self.buffer.ptok = ptok - 1;
         match c.to_option() {
             Some(b'Q') => {
-                self.strterm = self.new_strterm(str_types::str_dquote, term.unwrap(), paren, None);
+                self.strterm = self.new_strterm(str_types::str_dquote, term, paren, None);
                 Self::tSTRING_BEG
             }
             Some(b'q') => {
-                self.strterm = self.new_strterm(str_types::str_squote, term.unwrap(), paren, None);
+                self.strterm = self.new_strterm(str_types::str_squote, term, paren, None);
                 Self::tSTRING_BEG
             }
             Some(b'W') => {
-                self.strterm = self.new_strterm(str_types::str_dword, term.unwrap(), paren, None);
+                self.strterm = self.new_strterm(str_types::str_dword, term, paren, None);
                 Self::tWORDS_BEG
             }
             Some(b'w') => {
-                self.strterm = self.new_strterm(str_types::str_sword, term.unwrap(), paren, None);
+                self.strterm = self.new_strterm(str_types::str_sword, term, paren, None);
                 Self::tQWORDS_BEG
             }
             Some(b'I') => {
-                self.strterm = self.new_strterm(str_types::str_dword, term.unwrap(), paren, None);
+                self.strterm = self.new_strterm(str_types::str_dword, term, paren, None);
                 Self::tSYMBOLS_BEG
             }
             Some(b'i') => {
-                self.strterm = self.new_strterm(str_types::str_sword, term.unwrap(), paren, None);
+                self.strterm = self.new_strterm(str_types::str_sword, term, paren, None);
                 Self::tQSYMBOLS_BEG
             }
             Some(b'x') => {
-                self.strterm = self.new_strterm(str_types::str_xquote, term.unwrap(), paren, None);
+                self.strterm = self.new_strterm(str_types::str_xquote, term, paren, None);
                 Self::tXSTRING_BEG
             }
             Some(b'r') => {
-                self.strterm = self.new_strterm(str_types::str_regexp, term.unwrap(), paren, None);
+                self.strterm = self.new_strterm(str_types::str_regexp, term, paren, None);
                 Self::tREGEXP_BEG
             }
             Some(b's') => {
-                self.strterm = self.new_strterm(str_types::str_ssym, term.unwrap(), paren, None);
+                self.strterm = self.new_strterm(str_types::str_ssym, term, paren, None);
                 self.set_lex_state(EXPR_FNAME | EXPR_FITEM);
                 Self::tSYMBEG
             }
@@ -1521,11 +1528,12 @@ impl Lexer {
             }
             _ => {
                 if !self.parser_is_identchar() {
-                    if c.is_eof() || c.is_space() {
-                        self.compile_error(DiagnosticMessage::GvarWithoutId);
-                    } else {
-                        self.buffer.pushback(&c);
-                        self.compile_error(DiagnosticMessage::InvalidGvarName(c.unwrap()));
+                    match c.to_option() {
+                        None | Some(b' ') => self.compile_error(DiagnosticMessage::GvarWithoutId),
+                        Some(name) => {
+                            self.buffer.pushback(&c);
+                            self.compile_error(DiagnosticMessage::InvalidGvarName(name));
+                        }
                     }
                     return Self::tGVAR
                 }
@@ -1572,9 +1580,9 @@ impl Lexer {
         } else if c.is_digit() {
             self.buffer.pushback(&c);
             if result == Self::tIVAR {
-                self.compile_error(DiagnosticMessage::InvalidIvarName(c.unwrap()));
+                self.compile_error(DiagnosticMessage::InvalidIvarName(c.expect("c is a digit")));
             } else {
-                self.compile_error(DiagnosticMessage::InvalidCvarName(c.unwrap()));
+                self.compile_error(DiagnosticMessage::InvalidCvarName(c.expect("c is a digit")));
             }
             self.set_lex_state(EXPR_END);
             return result;

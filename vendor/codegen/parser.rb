@@ -172,7 +172,7 @@ module ParseHelperPatch
         "`#{args[:name]}' is not allowed as an instance variable name"
       end
     },
-    :lvar_name => ->(args, range) { 'lvar_name' },
+    :lvar_name => ->(args, range) { 'key must be valid as local variables' },
     :masgn_as_condition => ->(args, range) { 'masgn_as_condition' },
     :module_in_def => ->(*) { 'module definition in method body' },
     :module_name_const => ->(args, range) { 'module_name_const' },

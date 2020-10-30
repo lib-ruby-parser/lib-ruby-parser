@@ -62,7 +62,10 @@ impl PatternItem {
                 .replace("[", "")
                 .replace("]", "")
                 .parse::<usize>()
-                .unwrap()
+                .expect(&format!(
+                    "expected argument of {:?} to be numeric, got {:?}",
+                    prefix, s
+                ))
         };
 
         match s {

@@ -31,7 +31,10 @@ impl InnerStaticEnvironment {
     }
 
     pub(crate) fn unextend(&mut self) {
-        self.variables = self.stack.pop().unwrap();
+        self.variables = self
+            .stack
+            .pop()
+            .expect("expected static_env to have at least one frame");
     }
 
     pub(crate) fn declare(&mut self, name: &str) {

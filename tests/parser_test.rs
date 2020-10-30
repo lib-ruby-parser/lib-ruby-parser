@@ -1,10 +1,13 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(runner)]
 
-use ruby_parser::{Node, Parser, ParserOptions, ParserResult};
+use ruby_parser::{Parser, ParserOptions, ParserResult};
 use std::fs;
 use std::panic;
 use std::process::exit;
+
+mod files_under_dir;
+use files_under_dir::files_under_dir;
 
 mod loc_matcher;
 use loc_matcher::LocMatcher;
@@ -21,7 +24,7 @@ enum TestSection {
 }
 
 #[derive(Debug)]
-struct TestCase {
+struct Fixture {
     input: String,
     ast: Option<String>,
     locs: Option<Vec<String>>,
@@ -36,9 +39,9 @@ fn none_if_empty<T>(v: Vec<T>) -> Option<Vec<T>> {
     }
 }
 
-impl TestCase {
+impl Fixture {
     fn new(path: &str) -> Self {
-        let content = fs::read_to_string(path).unwrap();
+        let content = fs::read_to_string(path).expect(&format!("failed to read file {:?}", path));
 
         let mut input: Vec<String> = vec![];
         let mut ast: Vec<String> = vec![];
@@ -144,14 +147,15 @@ enum TestResult {
 
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
-        let test_case = TestCase::new(fixture_path);
+        let test_case = Fixture::new(fixture_path);
 
         let options = ParserOptions {
             buffer_name: &format!("(test {})", fixture_path),
             debug: false,
             ..Default::default()
         };
-        let mut parser = Parser::new(test_case.input.as_bytes(), options).unwrap();
+        let mut parser =
+            Parser::new(test_case.input.as_bytes(), options).expect("failed to construct parser");
 
         parser.static_env.declare("foo");
         parser.static_env.declare("bar");
@@ -167,14 +171,6 @@ fn test(fixture_path: &str) -> TestResult {
         Ok(Err(output)) => TestResult::Failure(output),
         Ok(Ok(_)) => TestResult::Pass,
     }
-}
-
-fn files_under_dir(dir: &str) -> Vec<String> {
-    fs::read_dir(dir)
-        .expect(&format!("{} doesn't exist", dir))
-        .map(|res| res.unwrap().path())
-        .map(|path| path.to_str().unwrap().to_owned())
-        .collect::<Vec<_>>()
 }
 
 fn runner(dirs: &[&'static str]) {

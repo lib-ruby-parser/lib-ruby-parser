@@ -97,7 +97,10 @@ impl Lexer {
             str_ += 1;
         }
 
-        let _enc_name = self.buffer.substr_at(beg, str_).unwrap();
+        let _enc_name = self
+            .buffer
+            .substr_at(beg, str_)
+            .expect("failed to get encoding comment value");
     }
 
     pub(crate) fn magic_comment_marker(&self, str_: usize, len: usize) -> usize {
@@ -285,13 +288,21 @@ impl Lexer {
             }
 
             n = end - beg;
-            name =
-                String::from_utf8(self.buffer.substr_at(beg, beg + n).unwrap().to_vec()).unwrap();
+            name = String::from_utf8(
+                self.buffer
+                    .substr_at(beg, beg + n)
+                    .expect("failed to get magic comment name")
+                    .to_vec(),
+            )
+            .expect("expected source to be encoded in utf-8");
             let name = name.replace("-", "_");
             for known in MAGIC_COMMENTS.iter() {
                 if &name == known {
                     // TODO: emit magic comment
-                    let _magic_comment = self.buffer.substr_at(vbeg, vend).unwrap();
+                    let _magic_comment = self
+                        .buffer
+                        .substr_at(vbeg, vend)
+                        .expect("failed to get magic comment value");
                 }
             }
         }

@@ -58,14 +58,24 @@ impl Range {
     }
 
     pub fn adjust_begin(&self, d: i32) -> Self {
-        let begin_pos: i32 = self.begin_pos.try_into().unwrap();
-        let begin_pos: usize = (begin_pos + d).try_into().unwrap();
+        let begin_pos: i32 = self
+            .begin_pos
+            .try_into()
+            .expect("failed to convert location to i32 (is it too big?)");
+        let begin_pos: usize = (begin_pos + d)
+            .try_into()
+            .expect("failed to convert location to usize (is it negative?)");
         Self::new(begin_pos, self.end_pos, Rc::clone(&self.input))
     }
 
     pub fn adjust_end(&self, d: i32) -> Self {
-        let end_pos: i32 = self.end_pos.try_into().unwrap();
-        let end_pos: usize = (end_pos + d).try_into().unwrap();
+        let end_pos: i32 = self
+            .end_pos
+            .try_into()
+            .expect("failed to convert location to i32 (is it too big?)");
+        let end_pos: usize = (end_pos + d)
+            .try_into()
+            .expect("failed to convert location to usize (is it negative?)");
         Self::new(self.begin_pos, end_pos, Rc::clone(&self.input))
     }
 
