@@ -1,8 +1,8 @@
-use ruby_parser::{Node, Parser, ParserOptions};
+use ruby_parser::{Parser, ParserOptions, ParserResult};
 
 #[allow(dead_code)]
-pub fn parse(source: &Vec<u8>, filename: &str, debug: bool) -> Result<Node, String> {
-    print!("parsing {} ... ", filename);
+pub fn parse(source: &Vec<u8>, filename: &str, debug: bool) -> Result<ParserResult, String> {
+    println!("parsing {} ... ", filename);
     let options = ParserOptions {
         buffer_name: filename,
         debug,
@@ -10,14 +10,5 @@ pub fn parse(source: &Vec<u8>, filename: &str, debug: bool) -> Result<Node, Stri
     };
     let mut parser = Parser::new(source, options).map_err(|e| e.to_string())?;
 
-    match parser.do_parse() {
-        Some(node) => {
-            println!("OK");
-            Ok(node)
-        }
-        None => {
-            println!("Error");
-            Err("Got no tokens".to_owned())
-        }
-    }
+    Ok(parser.do_parse())
 }

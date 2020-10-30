@@ -18,6 +18,9 @@ pub(crate) mod parse_value;
 mod parser_options;
 pub use parser_options::ParserOptions;
 
+mod parser_result;
+pub use parser_result::ParserResult;
+
 mod parser;
 pub(crate) use parser::Loc;
 pub use parser::{Parser, Token};

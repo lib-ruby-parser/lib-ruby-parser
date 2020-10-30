@@ -26,7 +26,7 @@
 %code use {
     use std::rc::Rc;
 
-    use crate::ParserOptions;
+    use crate::{ParserOptions, ParserResult};
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
     use crate::lex_states::*;
     use crate::{Context as ParserContext, ContextItem};
@@ -5724,26 +5724,20 @@ impl Parser {
         Ok(parser)
     }
 
-    pub fn do_parse(&mut self) -> Option<Node>  {
+    pub fn do_parse(&mut self) -> ParserResult  {
         self.parse();
 
-        for d in self.diagnostics.iter() {
-            if let Some(d) = d.render() {
-                println!("{}", d);
-            } else {
-                println!("failed to render a diagnostic");
-            }
+        ParserResult {
+            ast: self.result.take(),
+            tokens: std::mem::take(&mut self.tokens),
+            diagnostics: std::mem::take(&mut self.diagnostics)
         }
-
-        self.result.take()
     }
 
-    pub fn lex(&mut self) -> Option<Vec<Token>> {
-        self.do_parse()?;
-        let mut tokens = vec![];
-        tokens.append(&mut self.tokens);
+    pub fn lex(&mut self) -> Vec<Token> {
+        self.do_parse();
 
-        Some(tokens)
+        std::mem::take(&mut self.tokens)
     }
 
     pub fn set_debug(&mut self, debug: bool) {
@@ -5789,7 +5783,6 @@ impl Parser {
     }
 
     fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage) -> Result<i32, Diagnostic> {
-        eprintln!("yyerror: {:?} {:?}", loc, message.render());
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,
             message,
@@ -5799,12 +5792,10 @@ impl Parser {
     }
 
     fn on_yyerror0(&mut self, diagnostic: Diagnostic) {
-        eprintln!("yyerror0: {:?}", diagnostic);
         self.diagnostics.push(diagnostic);
     }
 
     fn report_syntax_error(&mut self, ctx: &Context) {
-        eprintln!("report_syntax_error: {:?}", ctx);
         let id: usize = ctx.token().code().try_into().unwrap();
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,

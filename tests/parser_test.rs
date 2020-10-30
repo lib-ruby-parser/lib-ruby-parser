@@ -1,26 +1,39 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(runner)]
 
-use ruby_parser::{Node, Parser, ParserOptions};
+use ruby_parser::{Node, Parser, ParserOptions, ParserResult};
 use std::fs;
 use std::panic;
 use std::process::exit;
 
-mod loc;
-use loc::Loc;
+mod loc_matcher;
+use loc_matcher::LocMatcher;
+
+mod diagnostic_matcher;
+use diagnostic_matcher::DiagnosticMatcher;
 
 enum TestSection {
     None,
     Input,
     AST,
     Locations,
+    Diagnostic,
 }
 
 #[derive(Debug)]
 struct TestCase {
     input: String,
-    ast: String,
-    locs: Vec<String>,
+    ast: Option<String>,
+    locs: Option<Vec<String>>,
+    diagnostic: Option<String>,
+}
+
+fn none_if_empty<T>(v: Vec<T>) -> Option<Vec<T>> {
+    if v.is_empty() {
+        None
+    } else {
+        Some(v)
+    }
 }
 
 impl TestCase {
@@ -30,6 +43,7 @@ impl TestCase {
         let mut input: Vec<String> = vec![];
         let mut ast: Vec<String> = vec![];
         let mut locs: Vec<String> = vec![];
+        let mut diagnostics: Vec<String> = vec![];
         let mut current_section = TestSection::None;
 
         for line in content.lines() {
@@ -37,9 +51,11 @@ impl TestCase {
                 ("--INPUT", _) => current_section = TestSection::Input,
                 ("--AST", _) => current_section = TestSection::AST,
                 ("--LOCATIONS", _) => current_section = TestSection::Locations,
+                ("--DIAGNOSTIC", _) => current_section = TestSection::Diagnostic,
                 (_, &TestSection::Input) => input.push(line.to_owned()),
                 (_, &TestSection::AST) => ast.push(line.to_owned()),
                 (_, &TestSection::Locations) => locs.push(line.to_owned()),
+                (_, &TestSection::Diagnostic) => diagnostics.push(line.to_owned()),
                 (_, &TestSection::None) => {
                     panic!("empty state while parsing fixture on line {:#?}", line)
                 }
@@ -47,9 +63,76 @@ impl TestCase {
         }
 
         let input = input.join("\n");
-        let ast = ast.join("\n");
+        let ast = none_if_empty(ast).map(|lines| lines.join("\n"));
+        let locs = none_if_empty(locs);
+        let diagnostic = match diagnostics.len() {
+            1 => diagnostics.pop(),
+            0 => None,
+            _ => panic!("only one diagnostic per file is supported"),
+        };
 
-        Self { input, ast, locs }
+        Self {
+            input,
+            ast,
+            locs,
+            diagnostic,
+        }
+    }
+
+    fn compare(&self, actual: &ParserResult) -> Result<(), String> {
+        match &self.ast {
+            Some(expected_ast) => {
+                let actual_ast = actual
+                    .ast
+                    .as_ref()
+                    .map(|node| node.inspect(0))
+                    .unwrap_or("nil".to_owned());
+
+                if &actual_ast != expected_ast {
+                    println!("{:?}", self.input);
+                    return Err(format!(
+                        "AST diff:\nactual:\n{}\nexpected:\n{}\n",
+                        actual_ast, expected_ast
+                    ));
+                }
+            }
+            None => {}
+        }
+
+        match &self.locs {
+            Some(locs) => {
+                let ast = actual
+                    .ast
+                    .as_ref()
+                    .ok_or("can't compare locs, ast is empty".to_owned())?;
+
+                for loc in locs {
+                    LocMatcher::new(loc).test(ast)?
+                }
+            }
+            None => {}
+        }
+
+        match &self.diagnostic {
+            Some(diagnostic) => {
+                let actual = match actual.diagnostics.len() {
+                    1 => actual.diagnostics[0].clone(),
+                    0 => {
+                        return Err(format!(
+                            "expected diagnostic {:?} to be emitted",
+                            diagnostic
+                        ))
+                    }
+                    _ => panic!(
+                        "your input returns multiple diagnostics, don't know how to match them"
+                    ),
+                };
+                DiagnosticMatcher::new(diagnostic).test(&actual)?
+            }
+            None => {}
+        }
+
+        Ok(())
     }
 }
 
@@ -57,13 +140,6 @@ enum TestResult {
     Segfault,
     Pass,
     Failure(String),
-}
-
-fn match_locs(locs: Vec<String>, ast: Node) -> Result<(), String> {
-    for loc in locs {
-        Loc::new(&loc).test(&ast)?
-    }
-    Ok(())
 }
 
 fn test(fixture_path: &str) -> TestResult {
@@ -81,26 +157,9 @@ fn test(fixture_path: &str) -> TestResult {
         parser.static_env.declare("bar");
         parser.static_env.declare("baz");
 
-        let ast = parser.do_parse();
+        let result = parser.do_parse();
 
-        let ast_output = ast
-            .as_ref()
-            .map(|node| node.inspect(0))
-            .unwrap_or("nil".to_owned());
-        if ast_output != test_case.ast {
-            println!("{:?}", test_case.input);
-            return Err(format!(
-                "AST diff:\nactual:\n{}\nexpected:\n{}\n",
-                ast_output, test_case.ast
-            ));
-        }
-
-        match ast {
-            Some(ast) => match_locs(test_case.locs, ast)?,
-            None => {}
-        }
-
-        Ok(())
+        test_case.compare(&result)
     });
 
     match result {

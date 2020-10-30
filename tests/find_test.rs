@@ -13,7 +13,7 @@ fn find(src: &str, pattern: Vec<&str>) -> Option<String> {
         .into_iter()
         .map(|e| e.to_owned())
         .collect::<Vec<_>>();
-    let ast = parser.do_parse()?;
+    let ast = parser.do_parse().ast?;
     let node = Find::run(&pattern, &ast)?;
     node.expression().source()
 }

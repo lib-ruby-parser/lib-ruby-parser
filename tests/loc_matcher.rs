@@ -292,14 +292,14 @@ impl LocName {
 }
 
 #[derive(Debug)]
-pub struct Loc {
+pub struct LocMatcher {
     begin: usize,
     end: usize,
     name: LocName,
     pattern: Vec<String>,
 }
 
-impl Loc {
+impl LocMatcher {
     pub fn new(loc: &str) -> Self {
         let mut state = ParseLocState::SkipWs;
         let mut begin: Option<usize> = None;
@@ -351,7 +351,7 @@ impl Loc {
             .collect::<Vec<_>>();
         let name = LocName::new(&name);
 
-        Loc {
+        LocMatcher {
             begin,
             end,
             name,

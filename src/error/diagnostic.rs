@@ -3,9 +3,9 @@ use crate::{DiagnosticMessage, ErrorLevel};
 
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
-    level: ErrorLevel,
+    pub level: ErrorLevel,
     message: DiagnosticMessage,
-    range: Range,
+    pub range: Range,
 }
 
 impl Diagnostic {
@@ -26,9 +26,14 @@ impl Diagnostic {
         let line = line_loc.source()?;
 
         let filename = &self.range.input.name;
-        let (start_col, _) = self.range.begin_line_col()?;
+        let (_, start_col) = self.range.begin_line_col()?;
 
         let prefix = format!("{}:{}", filename, line_no + 1);
+        let highlight = format!(
+            "{indent}^{tildes}",
+            indent = " ".repeat(start_col),
+            tildes = "~".repeat(self.range.size() - 1)
+        );
 
         Some(
             format!(
@@ -38,7 +43,7 @@ impl Diagnostic {
                 level = self.level,
                 message = self.message.render(),
                 line = line,
-                highlight = "^~~"
+                highlight = highlight
             )
             .trim()
             .to_owned(),

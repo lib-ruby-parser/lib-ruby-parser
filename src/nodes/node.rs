@@ -282,4 +282,8 @@ impl Node {
             expression_l: Range::new(loc.begin, loc.end, Rc::new(Input::default())),
         })
     }
+
+    pub fn print_with_locs(&self) {
+        self.inner().print_with_locs()
+    }
 }
