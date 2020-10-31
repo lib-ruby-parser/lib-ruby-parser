@@ -125,6 +125,28 @@ impl MaybeByte {
             _ => MaybeByte::EndOfInput,
         }
     }
+
+    pub(crate) fn escaped_control_code(&self) -> Option<u8> {
+        if *self == b' ' {
+            return Some(b's');
+        }
+        if *self == b'\n' {
+            return Some(b'n');
+        }
+        if *self == b'\t' {
+            return Some(b't');
+        }
+        if *self == 0x0b as u8 {
+            return Some(b'v');
+        }
+        if *self == b'\r' {
+            return Some(b'r');
+        }
+        if *self == 0x0c as u8 {
+            return Some(b'f');
+        }
+        None
+    }
 }
 
 pub(crate) trait MaybeByteNew<T> {

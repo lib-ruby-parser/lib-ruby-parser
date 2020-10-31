@@ -1,16 +1,41 @@
 use crate::lexer::TokAdd;
+use crate::lexer::Yylval;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::Lexer;
 use crate::TokenBuf;
 use crate::{lex_states::*, DiagnosticMessage};
 
-impl Lexer {
-    const NUM_SUFFIX_R: i8 = 1 << 0;
-    const NUM_SUFFIX_I: i8 = 1 << 1;
-    const NUM_SUFFIX_ALL: i8 = 3;
+pub(crate) trait ParseNumeric {
+    fn parse_numeric(&mut self, prefix: u8) -> i32;
+    fn parse_octal(
+        &mut self,
+        c: &mut MaybeByte,
+        nondigit: &mut Option<MaybeByte>,
+        start: usize,
+    ) -> Option<i32>;
+    fn invalid_octal(&mut self) -> i32;
+    fn trailing_uc(&mut self, nondigit: u8) -> i32;
+    fn decode_num(
+        &mut self,
+        c: MaybeByte,
+        nondigit: Option<MaybeByte>,
+        is_float: bool,
+        seen_e: bool,
+    ) -> i32;
+    fn parse_numeric_footer(&mut self, is_float: bool, seen_e: bool) -> i32;
+    fn set_number_literal(&mut self, value: &mut TokenBuf, token_type: i32, suffix: i8) -> i32;
+    fn no_digits(&mut self) -> i32;
+    fn number_literal_suffix(&mut self, mask: i8) -> i8;
+    fn set_integer_literal(&mut self, value: &mut TokenBuf, suffix: i8) -> i32;
+}
 
-    pub(crate) fn parse_numeric(&mut self, prefix: u8) -> i32 {
+const NUM_SUFFIX_R: i8 = 1 << 0;
+const NUM_SUFFIX_I: i8 = 1 << 1;
+const NUM_SUFFIX_ALL: i8 = 3;
+
+impl ParseNumeric for Lexer {
+    fn parse_numeric(&mut self, prefix: u8) -> i32 {
         let mut c = MaybeByte::new(prefix);
 
         let mut is_float: bool = false;
@@ -19,7 +44,7 @@ impl Lexer {
         let mut nondigit: Option<MaybeByte> = None;
         let suffix: i8;
 
-        self.set_lex_state(EXPR_END);
+        self.lex_state.set(EXPR_END);
         self.newtok();
         if c == b'-' || c == b'+' {
             self.tokadd(&c);
@@ -65,8 +90,8 @@ impl Lexer {
                 } else if let Some(MaybeByte::Some(byte)) = nondigit {
                     return self.trailing_uc(byte);
                 }
-                suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                let mut tok = self.tokenbuf.clone();
+                suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
+                let mut tok = self.tokenbuf.take();
                 tok.prepend(b"0");
                 return self.set_integer_literal(&mut tok, suffix);
             }
@@ -107,8 +132,8 @@ impl Lexer {
                 } else if let Some(MaybeByte::Some(byte)) = nondigit {
                     return self.trailing_uc(byte);
                 }
-                suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                let mut tok = self.tokenbuf.clone();
+                suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
+                let mut tok = self.tokenbuf.take();
                 tok.prepend(b"0");
                 return self.set_integer_literal(&mut tok, suffix);
             }
@@ -149,8 +174,8 @@ impl Lexer {
                 } else if let Some(MaybeByte::Some(byte)) = nondigit {
                     return self.trailing_uc(byte);
                 }
-                suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-                let mut tok = self.tokenbuf.clone();
+                suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
+                let mut tok = self.tokenbuf.take();
                 tok.prepend(b"0");
                 return self.set_integer_literal(&mut tok, suffix);
             }
@@ -180,9 +205,9 @@ impl Lexer {
                 self.tokadd(b'0');
             } else {
                 self.buffer.pushback(&c);
-                suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
+                suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
 
-                let mut tok = self.tokenbuf.clone();
+                let mut tok = self.tokenbuf.take();
                 tok.push(b'0');
                 return self.set_integer_literal(&mut tok, suffix);
             }
@@ -259,7 +284,7 @@ impl Lexer {
         }
     }
 
-    pub(crate) fn parse_octal(
+    fn parse_octal(
         &mut self,
         c: &mut MaybeByte,
         nondigit: &mut Option<MaybeByte>,
@@ -300,8 +325,8 @@ impl Lexer {
             if let Some(MaybeByte::Some(byte)) = nondigit {
                 return Some(self.trailing_uc(*byte));
             }
-            let suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-            let mut tok = self.tokenbuf.clone();
+            let suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
+            let mut tok = self.tokenbuf.take();
             tok.prepend(b"0");
             return Some(self.set_integer_literal(&mut tok, suffix));
         }
@@ -344,38 +369,36 @@ impl Lexer {
             let mut token_type: i32 = Self::tFLOAT;
             let mut tokenbuf;
 
-            let suffix = self.number_literal_suffix(if seen_e {
-                Self::NUM_SUFFIX_I
-            } else {
-                Self::NUM_SUFFIX_ALL
-            });
-            if (suffix & Self::NUM_SUFFIX_R) != 0 {
-                let mut value = self.tokenbuf.clone();
+            let suffix =
+                self.number_literal_suffix(if seen_e { NUM_SUFFIX_I } else { NUM_SUFFIX_ALL });
+            if (suffix & NUM_SUFFIX_R) != 0 {
+                let mut value = self.tokenbuf.take();
                 value.push(b'r');
                 token_type = Self::tRATIONAL;
                 tokenbuf = value
             } else {
-                tokenbuf = self.tokenbuf.clone();
+                tokenbuf = self.tokenbuf.take();
             }
             // we don't parse the number
             return self.set_number_literal(&mut tokenbuf, token_type, suffix);
         }
-        let suffix = self.number_literal_suffix(Self::NUM_SUFFIX_ALL);
-        self.set_integer_literal(&mut self.tokenbuf.clone(), suffix)
+        let suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
+        let mut tokenbuf = self.tokenbuf.take();
+        self.set_integer_literal(&mut tokenbuf, suffix)
     }
 
     fn set_number_literal(&mut self, value: &mut TokenBuf, token_type: i32, suffix: i8) -> i32 {
         let mut token_type = token_type;
-        if suffix & Self::NUM_SUFFIX_I != 0 {
+        if suffix & NUM_SUFFIX_I != 0 {
             value.push(b'i');
             token_type = Self::tIMAGINARY;
         }
         self.set_yylval_literal(value);
-        self.set_lex_state(EXPR_END);
+        self.lex_state.set(EXPR_END);
         token_type
     }
 
-    pub(crate) fn no_digits(&mut self) -> i32 {
+    fn no_digits(&mut self) -> i32 {
         self.yyerror0(DiagnosticMessage::NumericLiteralWithoutDigits);
         if self.buffer.peek(b'_') {
             self.nextc();
@@ -383,7 +406,7 @@ impl Lexer {
         self.set_integer_literal(&mut TokenBuf::new(b"0"), 0)
     }
 
-    pub(crate) fn number_literal_suffix(&mut self, mask: i8) -> i8 {
+    fn number_literal_suffix(&mut self, mask: i8) -> i8 {
         let mut c: MaybeByte;
         let mut mask = mask;
         let mut result: i8 = 0;
@@ -395,16 +418,16 @@ impl Lexer {
                 break;
             }
 
-            if (mask & Self::NUM_SUFFIX_I != 0) && c == b'i' {
-                result |= mask & Self::NUM_SUFFIX_I;
-                mask &= !Self::NUM_SUFFIX_I;
+            if (mask & NUM_SUFFIX_I != 0) && c == b'i' {
+                result |= mask & NUM_SUFFIX_I;
+                mask &= !NUM_SUFFIX_I;
                 // r after i, rational of complex is disallowed
-                mask &= !Self::NUM_SUFFIX_R;
+                mask &= !NUM_SUFFIX_R;
                 continue;
             }
-            if (mask & Self::NUM_SUFFIX_R != 0) && c == b'r' {
-                result |= mask & Self::NUM_SUFFIX_R;
-                mask &= !Self::NUM_SUFFIX_R;
+            if (mask & NUM_SUFFIX_R != 0) && c == b'r' {
+                result |= mask & NUM_SUFFIX_R;
+                mask &= !NUM_SUFFIX_R;
                 continue;
             }
             if !c.is_ascii() || c.is_alpha() || c == b'_' {
@@ -419,9 +442,9 @@ impl Lexer {
         result
     }
 
-    pub(crate) fn set_integer_literal(&mut self, value: &mut TokenBuf, suffix: i8) -> i32 {
+    fn set_integer_literal(&mut self, value: &mut TokenBuf, suffix: i8) -> i32 {
         let mut token_type = Self::tINTEGER;
-        if suffix & Self::NUM_SUFFIX_R != 0 {
+        if suffix & NUM_SUFFIX_R != 0 {
             value.push(b'r');
             token_type = Self::tRATIONAL;
         }

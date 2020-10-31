@@ -110,13 +110,13 @@ fn test(fixture_path: &str) -> TestResult {
             lexer.static_env.declare(&var);
         }
         if let Some(state) = test_case.state {
-            lexer.set_lex_state(lex_state(&state));
+            lexer.lex_state.set(lex_state(&state));
         }
         if test_case.cond {
-            lexer.cond_push(true)
+            lexer.cond.push(true)
         }
         if test_case.cmdarg {
-            lexer.cmdarg_push(true)
+            lexer.cmdarg.push(true)
         }
         lexer.debug = false;
         let tokens = lexer.tokenize_until_eof();

@@ -309,7 +309,7 @@
 %%
 
          program:   {
-                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.lex_state.set(EXPR_BEG);
                     }
                   top_compstmt
                     {
@@ -452,7 +452,7 @@
 
             stmt: kALIAS fitem
                     {
-                        self.yylexer.set_lex_state(EXPR_FNAME|EXPR_FITEM);
+                        self.yylexer.lex_state.set(EXPR_FNAME|EXPR_FITEM);
                     }
                   fitem
                     {
@@ -857,7 +857,7 @@
                     }
                 | arg kIN
                     {
-                        self.yylexer.set_lex_state(EXPR_BEG|EXPR_LABEL);
+                        self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.command_start = true;
                         self.pattern_variables.push();
 
@@ -883,8 +883,8 @@
         def_name: fname
                     {
                         self.static_env.extend_static();
-                        self.yylexer.cmdarg_push(false);
-                        self.yylexer.cond_push(false);
+                        self.yylexer.cmdarg.push(false);
+                        self.yylexer.cond.push(false);
                         self.current_arg_stack.push(None);
 
                         $$ = $1;
@@ -906,11 +906,11 @@
 
        defs_head: k_def singleton dot_or_colon
                     {
-                        self.yylexer.set_lex_state(EXPR_FNAME);
+                        self.yylexer.lex_state.set(EXPR_FNAME);
                     }
                   def_name
                     {
-                        self.yylexer.set_lex_state(EXPR_ENDFN|EXPR_LABEL);
+                        self.yylexer.lex_state.set(EXPR_ENDFN|EXPR_LABEL);
                         self.context.push_defs();
 
                         $$ = Value::DefsHead(
@@ -928,11 +928,11 @@
                 ;
 
    expr_value_do:   {
-                        self.yylexer.cond_push(true);
+                        self.yylexer.cond.push(true);
                     }
                   expr_value do
                     {
-                        self.yylexer.cond_pop();
+                        self.yylexer.cond.pop();
 
                         $$ = Value::ExprValueDo(
                             ExprValueDo {
@@ -1528,7 +1528,7 @@
                 | tFID
                 | op
                     {
-                        self.yylexer.set_lex_state(EXPR_ENDFN);
+                        self.yylexer.lex_state.set(EXPR_ENDFN);
                         $$ = $1;
                     }
                 | reswords
@@ -1549,7 +1549,7 @@
                     }
                 | undef_list tCOMMA
                     {
-                        self.yylexer.set_lex_state(EXPR_FNAME|EXPR_FITEM);
+                        self.yylexer.lex_state.set(EXPR_FNAME|EXPR_FITEM);
                     }
                   fitem
                     {
@@ -2014,8 +2014,8 @@
                             )?
                         );
 
-                        self.yylexer.cmdarg_pop();
-                        self.yylexer.cond_pop();
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
                         self.static_env.unextend();
                         self.context.pop();
                         self.current_arg_stack.pop();
@@ -2050,8 +2050,8 @@
                             )?
                         );
 
-                        self.yylexer.cmdarg_pop();
-                        self.yylexer.cond_pop();
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
                         self.static_env.unextend();
                         self.context.pop();
                         self.current_arg_stack.pop();
@@ -2072,8 +2072,8 @@
                             )?
                         );
 
-                        self.yylexer.cmdarg_pop();
-                        self.yylexer.cond_pop();
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
                         self.static_env.unextend();
                         self.context.pop();
                         self.current_arg_stack.pop();
@@ -2110,8 +2110,8 @@
                             )?
                         );
 
-                        self.yylexer.cmdarg_pop();
-                        self.yylexer.cond_pop();
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
                         self.static_env.unextend();
                         self.context.pop();
                         self.current_arg_stack.pop();
@@ -2330,17 +2330,17 @@
                                     | Lexer::tLBRACK
                             );
 
-                        if lookahead { self.yylexer.cmdarg_pop() }
-                        self.yylexer.cmdarg_push(true);
-                        if lookahead { self.yylexer.cmdarg_push(false) }
+                        if lookahead { self.yylexer.cmdarg.pop() }
+                        self.yylexer.cmdarg.push(true);
+                        if lookahead { self.yylexer.cmdarg.push(false) }
                     }
                   call_args
                     {
                         let lookahead = matches!(self.last_token.token_type, Lexer::tLBRACE_ARG);
 
-                        if lookahead { self.yylexer.cmdarg_pop() }
-                        self.yylexer.cmdarg_pop();
-                        if lookahead { self.yylexer.cmdarg_push(false) }
+                        if lookahead { self.yylexer.cmdarg.pop() }
+                        self.yylexer.cmdarg.pop();
+                        if lookahead { self.yylexer.cmdarg.push(false) }
 
                         $$ = $2;
                     }
@@ -2451,18 +2451,18 @@
                     }
                 | k_begin
                     {
-                        self.yylexer.cmdarg_push(false);
+                        self.yylexer.cmdarg.push(false);
                     }
                   bodystmt
                   k_end
                     {
-                        self.yylexer.cmdarg_pop();
+                        self.yylexer.cmdarg.pop();
 
                         $$ = Value::Node(
                             self.builder.begin_keyword($<Token>1, $<MaybeNode>3, $<Token>4)
                         );
                     }
-                | tLPAREN_ARG { self.yylexer.set_lex_state(EXPR_ENDARG); } rparen
+                | tLPAREN_ARG { self.yylexer.lex_state.set(EXPR_ENDARG); } rparen
                     {
                         $$ = Value::Node(
                             self.builder.begin(
@@ -2472,7 +2472,7 @@
                             )
                         );
                     }
-                | tLPAREN_ARG stmt { self.yylexer.set_lex_state(EXPR_ENDARG); } rparen
+                | tLPAREN_ARG stmt { self.yylexer.lex_state.set(EXPR_ENDARG); } rparen
                     {
                         $$ = Value::Node(
                             self.builder.begin(
@@ -2799,8 +2799,8 @@
                 | k_class cpath superclass
                     {
                         self.static_env.extend_static();
-                        self.yylexer.cmdarg_push(false);
-                        self.yylexer.cond_push(false);
+                        self.yylexer.cmdarg.push(false);
+                        self.yylexer.cond.push(false);
                         self.context.push_class();
                     }
                   bodystmt
@@ -2823,16 +2823,16 @@
                             )
                         );
 
-                        self.yylexer.cmdarg_pop();
-                        self.yylexer.cond_pop();
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
                         self.static_env.unextend();
                         self.context.pop();
                     }
                 | k_class tLSHFT expr
                     {
                         self.static_env.extend_static();
-                        self.yylexer.cmdarg_push(false);
-                        self.yylexer.cond_push(false);
+                        self.yylexer.cmdarg.push(false);
+                        self.yylexer.cond.push(false);
                         self.context.push_sclass();
                     }
                   term
@@ -2849,15 +2849,15 @@
                             )
                         );
 
-                        self.yylexer.cmdarg_pop();
-                        self.yylexer.cond_pop();
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
                         self.static_env.unextend();
                         self.context.pop();
                     }
                 | k_module cpath
                     {
                         self.static_env.extend_static();
-                        self.yylexer.cmdarg_push(false);
+                        self.yylexer.cmdarg.push(false);
                         self.context.push_module();
                     }
                   bodystmt
@@ -2876,7 +2876,7 @@
                             )
                         );
 
-                        self.yylexer.cmdarg_pop();
+                        self.yylexer.cmdarg.pop();
                         self.static_env.unextend();
                         self.context.pop();
                     }
@@ -2897,8 +2897,8 @@
                             )?
                         );
 
-                        self.yylexer.cmdarg_pop();
-                        self.yylexer.cond_pop();
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
                         self.static_env.unextend();
                         self.context.pop();
                         self.current_arg_stack.pop();
@@ -2922,8 +2922,8 @@
                             )?
                         );
 
-                        self.yylexer.cmdarg_pop();
-                        self.yylexer.cond_pop();
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
                         self.static_env.unextend();
                         self.context.pop();
                         self.current_arg_stack.pop();
@@ -3385,7 +3385,7 @@ opt_block_args_tail:
                   f_larglist
                     {
                         self.context.pop();
-                        self.yylexer.cmdarg_push(false);
+                        self.yylexer.cmdarg.push(false);
                     }
                   lambda_body
                     {
@@ -3401,7 +3401,7 @@ opt_block_args_tail:
 
                         self.max_numparam_stack.pop();
                         self.static_env.unextend();
-                        self.yylexer.cmdarg_pop();
+                        self.yylexer.cmdarg.pop();
 
                         $$ = Value::Node(
                             self.builder.block(
@@ -3755,7 +3755,7 @@ opt_block_args_tail:
          do_body:   {
                         self.static_env.extend_dynamic();
                         self.max_numparam_stack.push();
-                        self.yylexer.cmdarg_push(false);
+                        self.yylexer.cmdarg.push(false);
                     }
                   opt_block_param bodystmt
                     {
@@ -3767,7 +3767,7 @@ opt_block_args_tail:
 
                         self.max_numparam_stack.pop();
                         self.static_env.unextend();
-                        self.yylexer.cmdarg_pop();
+                        self.yylexer.cmdarg.pop();
 
                         $$ = Value::DoBody(
                             DoBody { args_type, body: $<MaybeNode>3 }
@@ -3825,7 +3825,7 @@ opt_block_args_tail:
 
      p_case_body: kIN
                     {
-                        self.yylexer.set_lex_state(EXPR_BEG|EXPR_LABEL);
+                        self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.command_start = false;
                         self.pattern_variables.push();
                         self.pattern_hash_keys.push();
@@ -4768,7 +4768,7 @@ xstring_contents: /* none */
                 | tSTRING_DVAR
                     {
                         $<MaybeStrTerm>$ = Value::MaybeStrTerm(std::mem::take(&mut self.yylexer.strterm));
-                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.lex_state.set(EXPR_BEG);
                     }
                   string_dvar
                     {
@@ -4777,15 +4777,15 @@ xstring_contents: /* none */
                     }
                 | tSTRING_DBEG
                     {
-                        self.yylexer.cmdarg_push(false);
-                        self.yylexer.cond_push(false);
+                        self.yylexer.cmdarg.push(false);
+                        self.yylexer.cond.push(false);
                     }
                     {
                         $<MaybeStrTerm>$ = Value::MaybeStrTerm(std::mem::take(&mut self.yylexer.strterm));
                     }
                     {
-                        $<Num>$ = Value::Num( self.yylexer.state.get() );
-                        self.yylexer.set_lex_state(EXPR_BEG);
+                        $<Num>$ = Value::Num( self.yylexer.lex_state.get() );
+                        self.yylexer.lex_state.set(EXPR_BEG);
                     }
                     {
                         $<Num>$ = Value::Num( self.yylexer.brace_nest );
@@ -4797,10 +4797,10 @@ xstring_contents: /* none */
                     }
                   compstmt tSTRING_DEND
                     {
-                        self.yylexer.cond_pop();
-                        self.yylexer.cmdarg_pop();
+                        self.yylexer.cond.pop();
+                        self.yylexer.cmdarg.pop();
                         self.yylexer.strterm = $<MaybeStrTerm>3;
-                        self.yylexer.set_lex_state($<Num>4);
+                        self.yylexer.lex_state.set($<Num>4);
                         self.yylexer.brace_nest = $<Num>5;
                         self.yylexer.buffer.heredoc_indent = $<Num>6;
                         self.yylexer.buffer.heredoc_line_indent = -1;
@@ -4837,7 +4837,7 @@ xstring_contents: /* none */
 
             ssym: tSYMBEG sym
                     {
-                        self.yylexer.set_lex_state(EXPR_END);
+                        self.yylexer.lex_state.set(EXPR_END);
                         $$ = Value::Node(
                             self.builder.symbol($<Token>1, $<Token>2)
                         );
@@ -4852,7 +4852,7 @@ xstring_contents: /* none */
 
             dsym: tSYMBEG string_contents tSTRING_END
                     {
-                        self.yylexer.set_lex_state(EXPR_END);
+                        self.yylexer.lex_state.set(EXPR_END);
                         $$ = Value::Node(
                             self.builder.symbol_compose($<Token>1, $<NodeList>2, $<Token>3)
                         );
@@ -5068,7 +5068,7 @@ keyword_variable: kNIL
 
       superclass: tLT
                     {
-                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.lex_state.set(EXPR_BEG);
                         self.yylexer.command_start = true;
                     }
                   expr_value term
@@ -5091,7 +5091,7 @@ keyword_variable: kNIL
                             self.builder.args(Some($<Token>1), $<NodeList>2, Some($<Token>3))
                         );
 
-                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.lex_state.set(EXPR_BEG);
                         self.yylexer.command_start = true;
                     }
                 | tLPAREN2 f_arg tCOMMA args_forward rparen
@@ -5109,7 +5109,7 @@ keyword_variable: kNIL
                         );
 
                         self.static_env.declare_forward_args();
-                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.lex_state.set(EXPR_BEG);
                         self.yylexer.command_start = true;
                     }
                 | tLPAREN2 args_forward rparen
@@ -5121,7 +5121,7 @@ keyword_variable: kNIL
                         );
 
                         self.static_env.declare_forward_args();
-                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.lex_state.set(EXPR_BEG);
                         self.yylexer.command_start = true;
                     }
                 ;
@@ -5130,7 +5130,7 @@ keyword_variable: kNIL
                 |    {
                         $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
                         self.yylexer.in_kwarg = true;
-                        self.yylexer.set_lex_state(self.yylexer.state.get()|EXPR_LABEL);
+                        self.yylexer.lex_state.set(self.yylexer.lex_state.get()|EXPR_LABEL);
                     }
                   f_args term
                     {
@@ -5138,7 +5138,7 @@ keyword_variable: kNIL
                         $$ = Value::MaybeNode(
                             self.builder.args(None, $<NodeList>2, None)
                         );
-                        self.yylexer.set_lex_state(EXPR_BEG);
+                        self.yylexer.lex_state.set(EXPR_BEG);
                         self.yylexer.command_start = true;
                     }
                 ;
@@ -5528,7 +5528,7 @@ keyword_variable: kNIL
                 ;
 
        singleton: var_ref
-                | tLPAREN2 { self.yylexer.set_lex_state(EXPR_BEG); } expr rparen
+                | tLPAREN2 { self.yylexer.lex_state.set(EXPR_BEG); } expr rparen
                     {
                         $$ = $3;
                     }

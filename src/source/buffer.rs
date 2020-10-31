@@ -176,7 +176,7 @@ impl Buffer {
         };
         self.pcur += 1;
         if c == b'\r' {
-            c = self.parser_cr(&mut c);
+            c = self.parser_cr(c);
         }
         if self.debug {
             println!("nextc = {:?}", c);
@@ -278,12 +278,12 @@ impl Buffer {
         self.ptok = ptok;
     }
 
-    pub(crate) fn parser_cr(&mut self, c: &mut u8) -> u8 {
+    pub(crate) fn parser_cr(&mut self, mut c: u8) -> u8 {
         if self.peek(b'\n') {
             self.pcur += 1;
-            *c = b'\n';
+            c = b'\n';
         }
-        *c
+        c
     }
 
     pub(crate) fn byte_at(&self, idx: usize) -> MaybeByte {
@@ -386,6 +386,12 @@ impl Buffer {
         self.pcur = self.pend;
         self.pushback(&MaybeByte::new(1));
         self.set_ptok(self.pcur);
+    }
+
+    pub(crate) fn is_identchar(&self, begin: usize, _end: usize) -> bool {
+        self.input.bytes[begin].is_ascii_alphanumeric()
+            || self.input.bytes[begin] == b'_'
+            || !self.input.bytes[begin].is_ascii()
     }
 }
 

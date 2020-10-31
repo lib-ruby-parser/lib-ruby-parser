@@ -2,8 +2,15 @@ use crate::Lexer;
 
 const MAGIC_COMMENTS: [&str; 4] = ["coding", "encoding", "frozen_string_literal", "warn_indent"];
 
-impl Lexer {
-    pub(crate) fn comment_at_top(&self) -> bool {
+pub(crate) trait ParseMagicComment {
+    fn comment_at_top(&self) -> bool;
+    fn set_file_encoding(&mut self, str_: usize, send: usize);
+    fn magic_comment_marker(&self, str_: usize, len: usize) -> usize;
+    fn magic_comment(&self, str_: usize, len: usize) -> bool;
+}
+
+impl ParseMagicComment for Lexer {
+    fn comment_at_top(&self) -> bool {
         let mut ptr = self.buffer.pbeg;
         let ptr_end = self.buffer.pcur - 1;
         if self.buffer.line_count != (if self.buffer.has_shebang { 2 } else { 1 }) {
@@ -18,7 +25,7 @@ impl Lexer {
         true
     }
 
-    pub(crate) fn set_file_encoding(&mut self, mut str_: usize, send: usize) {
+    fn set_file_encoding(&mut self, mut str_: usize, send: usize) {
         let mut sep = false;
         let beg;
 
@@ -103,7 +110,7 @@ impl Lexer {
             .expect("failed to get encoding comment value");
     }
 
-    pub(crate) fn magic_comment_marker(&self, str_: usize, len: usize) -> usize {
+    fn magic_comment_marker(&self, str_: usize, len: usize) -> usize {
         let mut i = 2;
 
         while i < len {
@@ -132,7 +139,7 @@ impl Lexer {
         0
     }
 
-    pub(crate) fn parser_magic_comment(&self, mut str_: usize, mut len: usize) -> bool {
+    fn magic_comment(&self, mut str_: usize, mut len: usize) -> bool {
         let mut indicator = false;
         let mut name;
         let mut beg;

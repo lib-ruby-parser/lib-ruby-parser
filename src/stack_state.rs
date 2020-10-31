@@ -1,5 +1,5 @@
 #[derive(Clone, Default)]
-pub(crate) struct StackState {
+pub struct StackState {
     name: &'static str,
     stack: usize,
 }
@@ -9,12 +9,12 @@ impl StackState {
         Self { name, stack: 0 }
     }
 
-    pub(crate) fn push(&mut self, bit: bool) {
+    pub fn push(&mut self, bit: bool) {
         let bit_value = if bit { 1 } else { 0 };
         self.stack = (self.stack << 1) | bit_value
     }
 
-    pub(crate) fn pop(&mut self) {
+    pub fn pop(&mut self) {
         self.stack >>= 1;
     }
 

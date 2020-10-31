@@ -144,7 +144,7 @@ impl HeredocLiteral {
     }
 
     pub(crate) fn lastline(&self) -> usize {
-        self.inner.borrow().lastline.clone()
+        self.inner.borrow().lastline
     }
     pub(crate) fn offset(&self) -> usize {
         self.inner.borrow().offset

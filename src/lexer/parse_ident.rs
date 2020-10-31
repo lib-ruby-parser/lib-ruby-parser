@@ -4,30 +4,39 @@ use crate::reserved_word;
 use crate::source::buffer::*;
 use crate::{lex_states::*, LexState};
 
-impl Lexer {
-    pub(crate) fn parser_is_identchar(&self) -> bool {
-        !self.buffer.eofp && self.is_identchar(self.buffer.pcur - 1, self.buffer.pend)
+pub(crate) trait ParseIdent {
+    fn is_identchar(&self) -> bool;
+    fn tokenize_ident(&mut self) -> String;
+    fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32;
+}
+
+fn is_var_name(ident: &str) -> bool {
+    if let Some(first_char) = ident.chars().next() {
+        return !first_char.is_uppercase();
+    }
+    false
+}
+
+impl ParseIdent for Lexer {
+    fn is_identchar(&self) -> bool {
+        !self.buffer.eofp
+            && self
+                .buffer
+                .is_identchar(self.buffer.pcur - 1, self.buffer.pend)
     }
 
-    pub(crate) fn tokenize_ident(&mut self, _last_state: &LexState) -> String {
-        self.set_yyval_name();
+    fn tokenize_ident(&mut self) -> String {
+        self.set_yylval_name();
         match self.tokenbuf.borrow_string() {
             Ok(s) => s.to_owned(),
             Err(bytes) => unreachable!("locals can't have non-utf chars: {:?}", bytes),
         }
     }
 
-    pub(crate) fn is_var_name(&self, ident: &str) -> bool {
-        if let Some(first_char) = ident.chars().next() {
-            return !first_char.is_uppercase();
-        }
-        false
-    }
-
-    pub(crate) fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32 {
+    fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32 {
         let mut c = c.clone();
         let mut result: i32;
-        let last_state: LexState = self.state.clone();
+        let last_state: LexState = self.lex_state.clone();
         let ident: String;
 
         loop {
@@ -37,7 +46,7 @@ impl Lexer {
             }
             c = self.nextc();
 
-            if !self.parser_is_identchar() {
+            if !self.is_identchar() {
                 break;
             }
         }
@@ -46,7 +55,7 @@ impl Lexer {
             result = Self::tFID;
             self.tokadd(&c);
         } else if c == b'='
-            && self.is_lex_state_some(EXPR_FNAME)
+            && self.lex_state.is_some(EXPR_FNAME)
             && (!self.buffer.peek(b'~')
                 && !self.buffer.peek(b'>')
                 && (!self.buffer.peek(b'=') || (self.buffer.peek_n(b'>', 1))))
@@ -59,22 +68,22 @@ impl Lexer {
         }
         self.tokfix();
 
-        if self.is_label_possible(cmd_state) && self.is_label_suffix(0) {
-            self.set_lex_state(EXPR_ARG | EXPR_LABELED);
+        if self.lex_state.is_label_possible(cmd_state) && self.is_label_suffix(0) {
+            self.lex_state.set(EXPR_ARG | EXPR_LABELED);
             self.nextc();
-            self.set_yyval_name();
+            self.set_yylval_name();
             return Self::tLABEL;
         }
-        if !self.is_lex_state_some(EXPR_DOT) {
+        if !self.lex_state.is_some(EXPR_DOT) {
             if let Some(kw) = reserved_word(&self.tokenbuf) {
-                let state: LexState = self.state.clone();
+                let state: LexState = self.lex_state.clone();
                 if state.is_some(EXPR_FNAME) {
-                    self.set_lex_state(EXPR_ENDFN);
-                    self.set_yyval_name();
+                    self.lex_state.set(EXPR_ENDFN);
+                    self.set_yylval_name();
                     return kw.id;
                 }
-                self.set_lex_state(kw.state);
-                if self.is_lex_state_some(EXPR_BEG) {
+                self.lex_state.set(kw.state);
+                if self.lex_state.is_some(EXPR_BEG) {
                     self.command_start = true
                 }
                 if kw.id == Self::kDO {
@@ -82,10 +91,10 @@ impl Lexer {
                         self.lpar_beg = -1; /* make lambda_beginning_p() == FALSE in the body of "-> do ... end" */
                         return Self::kDO_LAMBDA;
                     }
-                    if self.is_cond_active() {
+                    if self.cond.is_active() {
                         return Self::kDO_COND;
                     }
-                    if self.is_cmdarg_active() && !state.is_some(EXPR_CMDARG) {
+                    if self.cmdarg.is_active() && !state.is_some(EXPR_CMDARG) {
                         return Self::kDO_BLOCK;
                     }
                     return Self::kDO;
@@ -94,34 +103,37 @@ impl Lexer {
                     return kw.id;
                 } else {
                     if kw.id != kw.modifier_id {
-                        self.set_lex_state(EXPR_BEG | EXPR_LABEL)
+                        self.lex_state.set(EXPR_BEG | EXPR_LABEL)
                     }
                     return kw.modifier_id;
                 }
             }
         }
 
-        if self.is_lex_state_some(EXPR_BEG_ANY | EXPR_ARG_ANY | EXPR_DOT) {
+        if self
+            .lex_state
+            .is_some(EXPR_BEG_ANY | EXPR_ARG_ANY | EXPR_DOT)
+        {
             if cmd_state {
-                self.set_lex_state(EXPR_CMDARG);
+                self.lex_state.set(EXPR_CMDARG);
             } else {
-                self.set_lex_state(EXPR_ARG);
+                self.lex_state.set(EXPR_ARG);
             }
-        } else if self.state.is(EXPR_FNAME) {
-            self.set_lex_state(EXPR_ENDFN)
+        } else if self.lex_state.is(EXPR_FNAME) {
+            self.lex_state.set(EXPR_ENDFN)
         } else {
-            self.set_lex_state(EXPR_END)
+            self.lex_state.set(EXPR_END)
         }
 
-        ident = self.tokenize_ident(&last_state);
-        if result == Self::tCONSTANT && self.is_var_name(&ident) {
+        ident = self.tokenize_ident();
+        if result == Self::tCONSTANT && is_var_name(&ident) {
             result = Self::tIDENTIFIER
         }
         if !last_state.is_some(EXPR_DOT|EXPR_FNAME) &&
             result == Self::tIDENTIFIER && /* not EXPR_FNAME, not attrasgn */
             self.is_lvar_defined(&ident)
         {
-            self.set_lex_state(EXPR_END | EXPR_LABEL);
+            self.lex_state.set(EXPR_END | EXPR_LABEL);
         }
 
         result

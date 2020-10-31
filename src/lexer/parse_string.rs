@@ -2,19 +2,50 @@ use std::convert::TryInto;
 
 use crate::lexer::*;
 use crate::maybe_byte::*;
-use crate::parser::TokenValue;
 use crate::source::buffer::*;
-use crate::str_term::{str_types::*, HeredocEnd, HeredocLiteral, StrTerm, StringLiteral};
+use crate::str_term::{str_types::*, StrTerm};
 use crate::TokenBuf;
 use crate::{lex_states::*, DiagnosticMessage};
+
+pub(crate) trait ParseString {
+    fn parse_string(&mut self) -> i32;
+    fn string_term(&mut self, term: u8, func: usize) -> i32;
+    fn regx_options(&mut self) -> String;
+    fn peek_variable_name(&mut self) -> Option<i32>;
+    fn tokadd_string(
+        &mut self,
+        func: usize,
+        term: u8,
+        paren: Option<u8>,
+        nest: &mut usize,
+    ) -> Option<MaybeByte>;
+    fn flush_string_content(&mut self);
+    fn tokadd_utf8_unterminated(&mut self);
+    fn scan_hex(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize;
+    fn scan_oct(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize;
+    fn tokcopy(&mut self, n: usize);
+    fn tokaddmbc(&mut self, codepoint: usize);
+    fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool;
+    fn tokadd_utf8(&mut self, term: Option<u8>, _symbol_literal: usize, regexp_literal: usize);
+    fn simple_re_meta(&mut self, c: &MaybeByte) -> bool;
+    fn tokadd_escape_eof(&mut self) -> Result<(), ()>;
+    fn tokadd_escape(&mut self) -> Result<(), ()>;
+    fn read_escape_eof(&mut self) -> MaybeByte;
+    fn tok_hex(&mut self, numlen: &mut usize) -> MaybeByte;
+    fn read_escape(&mut self, flags: usize) -> MaybeByte;
+    fn is_ascii(&self) -> bool;
+}
 
 const ESCAPE_CONTROL: usize = 1;
 const ESCAPE_META: usize = 2;
 
-impl Lexer {
-    pub(crate) const TAB_WIDTH: i32 = 8;
+impl ParseString for Lexer {
+    fn parse_string(&mut self) -> i32 {
+        let quote = match self.strterm.as_ref().unwrap() {
+            StrTerm::StringLiteral(s) => s.clone(),
+            StrTerm::HeredocLiteral(_) => unreachable!("strterm must be string"),
+        };
 
-    pub(crate) fn parse_string(&mut self, quote: StringLiteral) -> i32 {
         let func = quote.func();
         let term = quote.term();
         let paren = quote.paren();
@@ -36,7 +67,7 @@ impl Lexer {
             if (func & STR_FUNC_QWORDS) != 0 {
                 self.nextc();
             } /* delayed term */
-            self.set_lex_state(EXPR_END);
+            self.lex_state.set(EXPR_END);
             self.strterm = None;
             if (func & STR_FUNC_REGEXP) != 0 {
                 return Self::tREGEXP_END;
@@ -44,7 +75,7 @@ impl Lexer {
                 if let Some(heredoc_end) = quote.heredoc_end() {
                     self.lval_start = Some(heredoc_end.start);
                     self.lval_end = Some(heredoc_end.end);
-                    self.set_yylval_str(TokenBuf::new(heredoc_end.value.as_bytes()));
+                    self.set_yylval_str(&TokenBuf::new(heredoc_end.value.as_bytes()));
                 }
                 return Self::tSTRING_END;
             }
@@ -70,7 +101,7 @@ impl Lexer {
                 self.buffer.pushback(&c); /* dispatch the term at tSTRING_END */
                 return Self::tSPACE;
             }
-            return self.parser_string_term(term, func);
+            return self.string_term(term, func);
         }
         if space {
             self.buffer.pushback(&c);
@@ -78,7 +109,7 @@ impl Lexer {
         }
         self.newtok();
         if ((func & STR_FUNC_EXPAND) != 0) && c == b'#' {
-            if let Some(t) = self.parser_peek_variable_name() {
+            if let Some(t) = self.peek_variable_name() {
                 return t;
             }
             self.tokadd(b'#');
@@ -107,37 +138,30 @@ impl Lexer {
         }
 
         self.tokfix();
-        self.set_yylval_str(self.tokenbuf.clone());
+        self.set_yylval_str(&self.tokenbuf.clone());
         self.flush_string_content();
 
         Self::tSTRING_CONTENT
     }
 
-    pub(crate) fn parser_string_term(&mut self, term: u8, func: usize) -> i32 {
+    fn string_term(&mut self, term: u8, func: usize) -> i32 {
         self.strterm = None;
         if (func & STR_FUNC_REGEXP) != 0 {
             let flags = self.regx_options();
             self.set_yylval_num(format!("{}{}", term as char, flags));
-            self.set_lex_state(EXPR_END);
+            self.lex_state.set(EXPR_END);
             return Self::tREGEXP_END;
         }
         if (func & STR_FUNC_LABEL) != 0 && self.is_label_suffix(0) {
             self.nextc();
-            self.set_lex_state(EXPR_BEG | EXPR_LABEL);
+            self.lex_state.set(EXPR_BEG | EXPR_LABEL);
             return Self::tLABEL_END;
         }
-        self.set_lex_state(EXPR_END);
+        self.lex_state.set(EXPR_END);
         Self::tSTRING_END
     }
 
-    pub(crate) fn set_yylval_num(&mut self, flags: String) {
-        if self.debug {
-            println!("set_yylval_num {:#?}", flags);
-        }
-        self.lval = Some(TokenValue::String(flags));
-    }
-
-    pub(crate) fn regx_options(&mut self) -> String {
+    fn regx_options(&mut self) -> String {
         let mut c: MaybeByte;
         let mut result = String::from("");
 
@@ -175,7 +199,7 @@ impl Lexer {
         result
     }
 
-    pub(crate) fn parser_peek_variable_name(&mut self) -> Option<i32> {
+    fn peek_variable_name(&mut self) -> Option<i32> {
         let mut c: MaybeByte;
         let mut ptr: usize = self.buffer.pcur;
 
@@ -193,7 +217,7 @@ impl Lexer {
                     if ptr >= self.buffer.pend {
                         return None;
                     }
-                // c = self.char_at(ptr);
+                    c = self.char_at(ptr);
                 } else if c.is_global_name_punct() || c.is_digit() {
                     return Some(Self::tSTRING_DVAR);
                 }
@@ -226,7 +250,7 @@ impl Lexer {
         None
     }
 
-    pub(crate) fn tokadd_string(
+    fn tokadd_string(
         &mut self,
         func: usize,
         term: u8,
@@ -243,7 +267,7 @@ impl Lexer {
             }
 
             if self.buffer.heredoc_indent > 0 {
-                self.parser_update_heredoc_indent(&c);
+                self.update_heredoc_indent(&c);
             }
 
             if c == paren {
@@ -332,7 +356,7 @@ impl Lexer {
                         }
                     }
                 }
-            } else if !self.parser_is_ascii() {
+            } else if !self.is_ascii() {
                 self.tokadd(&c);
                 continue;
             } else if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
@@ -345,43 +369,15 @@ impl Lexer {
         Some(c)
     }
 
-    pub(crate) fn set_yylval_str(&mut self, value: TokenBuf) {
-        if self.debug {
-            println!("set_yylval_str {:#?}", value);
-        }
-        self.lval = Some(value.to_token_value());
-    }
-
-    pub(crate) fn flush_string_content(&mut self) {
+    fn flush_string_content(&mut self) {
         // noop
     }
 
-    pub(crate) fn parser_update_heredoc_indent(&mut self, c: &MaybeByte) -> bool {
-        if self.buffer.heredoc_line_indent == -1 {
-            if *c == b'\n' {
-                self.buffer.heredoc_line_indent = 0
-            }
-        } else if *c == b' ' {
-            self.buffer.heredoc_line_indent += 1;
-            return true;
-        } else if *c == b'\t' {
-            let w = (self.buffer.heredoc_line_indent / Self::TAB_WIDTH) + 1;
-            self.buffer.heredoc_line_indent = w * Self::TAB_WIDTH;
-            return true;
-        } else if *c != '\n' {
-            if self.buffer.heredoc_indent > self.buffer.heredoc_line_indent {
-                self.buffer.heredoc_indent = self.buffer.heredoc_line_indent
-            }
-            self.buffer.heredoc_line_indent = -1;
-        }
-        true
-    }
-
-    pub(crate) fn tokadd_utf8_unterminated(&mut self) {
+    fn tokadd_utf8_unterminated(&mut self) {
         unimplemented!("tokadd_utf8_unterminated")
     }
 
-    pub(crate) fn scan_hex(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
+    fn scan_hex(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
         let mut s = start;
         let mut result = 0;
 
@@ -403,7 +399,7 @@ impl Lexer {
         result
     }
 
-    pub(crate) fn scan_oct(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
+    fn scan_oct(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
         let mut s = start;
         let mut result: usize = 0;
 
@@ -422,7 +418,7 @@ impl Lexer {
         result
     }
 
-    pub(crate) fn tokcopy(&mut self, n: usize) {
+    fn tokcopy(&mut self, n: usize) {
         let substr = self
             .buffer
             .substr_at(self.buffer.pcur - n, self.buffer.pcur)
@@ -430,7 +426,7 @@ impl Lexer {
         self.tokenbuf.append(&substr);
     }
 
-    pub(crate) fn tokaddmbc(&mut self, codepoint: usize) {
+    fn tokaddmbc(&mut self, codepoint: usize) {
         let utf8_char =
             std::char::from_u32(codepoint.try_into().expect("expected codepoint to be u32"))
                 .expect("expected codepoint to have digits");
@@ -440,7 +436,7 @@ impl Lexer {
         }
     }
 
-    pub(crate) fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool {
+    fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool {
         let mut numlen = 0;
         let codepoint = self.scan_hex(
             self.buffer.pcur,
@@ -483,12 +479,7 @@ impl Lexer {
         true
     }
 
-    pub(crate) fn tokadd_utf8(
-        &mut self,
-        term: Option<u8>,
-        _symbol_literal: usize,
-        regexp_literal: usize,
-    ) {
+    fn tokadd_utf8(&mut self, term: Option<u8>, _symbol_literal: usize, regexp_literal: usize) {
         let open_brace = b'{';
         let close_brace = b'}';
         let mut got_multiple_codepoints = false;
@@ -567,7 +558,7 @@ impl Lexer {
         }
     }
 
-    pub(crate) fn simple_re_meta(&mut self, c: &MaybeByte) -> bool {
+    fn simple_re_meta(&mut self, c: &MaybeByte) -> bool {
         matches!(
             c.to_option(),
             Some(b'$')
@@ -584,13 +575,13 @@ impl Lexer {
         )
     }
 
-    pub(crate) fn tokadd_escape_eof(&mut self) -> Result<(), ()> {
+    fn tokadd_escape_eof(&mut self) -> Result<(), ()> {
         self.yyerror0(DiagnosticMessage::InvalidEscapeCharacter);
         self.token_flush();
         Err(())
     }
 
-    pub(crate) fn tokadd_escape(&mut self) -> Result<(), ()> {
+    fn tokadd_escape(&mut self) -> Result<(), ()> {
         let mut c;
         let mut flags = 0;
         let mut numlen = 0;
@@ -693,13 +684,13 @@ impl Lexer {
         }
     }
 
-    pub(crate) fn read_escape_eof(&mut self) -> MaybeByte {
+    fn read_escape_eof(&mut self) -> MaybeByte {
         self.yyerror0(DiagnosticMessage::InvalidEscapeCharacter);
         self.token_flush();
         unimplemented!("read_escape_eof")
     }
 
-    pub(crate) fn tok_hex(&mut self, numlen: &mut usize) -> MaybeByte {
+    fn tok_hex(&mut self, numlen: &mut usize) -> MaybeByte {
         let c;
 
         c = self.scan_hex(self.buffer.pcur, 2, numlen);
@@ -712,7 +703,7 @@ impl Lexer {
         MaybeByte::new(c as u8)
     }
 
-    pub(crate) fn read_escape(&mut self, flags: usize) -> MaybeByte {
+    fn read_escape(&mut self, flags: usize) -> MaybeByte {
         let mut c;
         let mut numlen: usize = 0;
 
@@ -764,7 +755,7 @@ impl Lexer {
                 } else if c.is_eof() || !c.is_ascii() {
                     self.read_escape_eof()
                 } else {
-                    if let Some(c2) = self.escaped_control_code(&c) {
+                    if let Some(c2) = c.escaped_control_code() {
                         if c.is_control() || (flags & ESCAPE_CONTROL) == 0 {
                             self.warn(
                                 DiagnosticMessage::InvalidCharacterSyntax {
@@ -808,7 +799,7 @@ impl Lexer {
                     return MaybeByte::new(0x7f_u8);
                 } else if c.is_eof() || !c.is_ascii() {
                     return self.read_escape_eof();
-                } else if let Some(c2) = self.escaped_control_code(&c) {
+                } else if let Some(c2) = c.escaped_control_code() {
                     if c.is_control() {
                         if (flags & ESCAPE_META) != 0 {
                             self.warn(
@@ -852,374 +843,7 @@ impl Lexer {
         }
     }
 
-    pub(crate) fn parser_is_ascii(&self) -> bool {
+    fn is_ascii(&self) -> bool {
         self.char_at(self.buffer.pcur - 1).is_ascii()
-    }
-
-    pub(crate) fn heredoc_identifier(&mut self) -> Option<i32> {
-        /*
-         * term_len is length of `<<"END"` except `END`,
-         * in this case term_len is 4 (<, <, " and ").
-         */
-        let len;
-        let mut offset = self.buffer.pcur - self.buffer.pbeg;
-        let mut c = self.nextc();
-        let term;
-        let mut func = 0;
-        let mut quote = 0;
-        let mut token = Self::tSTRING_BEG;
-        let mut indent = 0;
-
-        if c == b'-' {
-            c = self.nextc();
-            func = STR_FUNC_INDENT;
-            offset += 1;
-        } else if c == b'~' {
-            c = self.nextc();
-            func = STR_FUNC_INDENT;
-            offset += 1;
-            indent = std::i32::MAX;
-        }
-
-        if c == b'\'' || c == b'"' || c == b'`' {
-            if c == b'\'' {
-                func |= str_squote
-            }
-            if c == b'"' {
-                func |= str_dquote
-            }
-            if c == b'`' {
-                func |= str_xquote;
-                token = Self::tXSTRING_BEG
-            }
-
-            quote += 1;
-            offset += 1;
-            term = c;
-
-            loop {
-                c = self.nextc();
-                if c == term {
-                    break;
-                }
-
-                if c.is_eof() || c == b'\r' || c == b'\n' {
-                    self.yyerror0(DiagnosticMessage::UnterminatedHeredocId);
-                    return None;
-                }
-            }
-        } else {
-            if !self.parser_is_identchar() {
-                self.buffer.pushback(&c);
-                if (func & STR_FUNC_INDENT) != 0 {
-                    self.buffer.pushback(&if indent > 0 { '~' } else { '-' });
-                }
-                return None;
-            }
-            func |= str_dquote;
-            loop {
-                if let Some(n) = self.parser_precise_mbclen(self.buffer.pcur - 1) {
-                    self.buffer.pcur += n - 1;
-                } else {
-                    return None;
-                }
-                c = self.nextc();
-                if c.is_eof() || !self.parser_is_identchar() {
-                    break;
-                }
-            }
-            self.buffer.pushback(&c);
-        }
-
-        len = self.buffer.pcur - (self.buffer.pbeg + offset) - quote;
-
-        let id = self
-            .buffer
-            .substr_at(self.buffer.ptok, self.buffer.pcur)
-            .expect("failed to get heredoc id");
-        let id = TokenBuf::new(id);
-        self.set_yylval_str(id);
-        self.lval_start = Some(self.buffer.ptok);
-        self.lval_end = Some(self.buffer.pcur);
-
-        self.buffer.goto_eol();
-
-        self.strterm = Some(StrTerm::new_heredoc(HeredocLiteral::new(
-            self.buffer.lastline,
-            offset,
-            self.buffer.ruby_sourceline,
-            len,
-            quote,
-            func,
-        )));
-
-        self.token_flush();
-        self.buffer.heredoc_indent = indent;
-        self.buffer.heredoc_line_indent = 0;
-        Some(token)
-    }
-
-    pub(crate) fn here_document(&mut self, here: HeredocLiteral) -> i32 {
-        self.lval_start = Some(self.buffer.pcur);
-
-        let mut c;
-        let func;
-        let indent;
-        let eos;
-        let mut ptr;
-        let mut ptr_end;
-        let len;
-        let mut str_ = TokenBuf::new(b"");
-        let bol;
-
-        let heredoc_end: HeredocEnd;
-
-        eos = self.buffer.input.lines[here.lastline()].start + here.offset();
-        len = here.length();
-        func = here.func();
-        indent = here.func() & STR_FUNC_INDENT;
-
-        c = self.nextc();
-        if c.is_eof() {
-            return self.here_document_error(&here, eos, len);
-        }
-        bol = self.buffer.was_bol();
-        if !bol {
-            /* not beginning of line, cannot be the terminator */
-        } else if self.buffer.heredoc_line_indent == -1 {
-            /* `heredoc_line_indent == -1` means
-             * - "after an interpolation in the same line", or
-             * - "in a continuing line"
-             */
-            self.buffer.heredoc_line_indent = 0;
-        } else if self.buffer.is_whole_match(
-            &self
-                .buffer
-                .substr_at(eos, eos + len)
-                .expect("failed to get heredoc id for comparison"),
-            indent,
-        ) {
-            return self.here_document_restore(&here);
-        }
-
-        if (func & STR_FUNC_EXPAND) == 0 {
-            loop {
-                ptr = self.buffer.input.lines[self.buffer.lastline].start;
-                ptr_end = self.buffer.pend;
-                if ptr_end > ptr {
-                    match self.buffer.input.bytes[ptr_end - 1] {
-                        b'\n' => {
-                            ptr_end -= 1;
-                            if ptr_end == ptr || self.buffer.input.bytes[ptr_end - 1] != b'\r' {
-                                ptr_end += 1;
-                            }
-                        }
-                        b'\r' => {
-                            ptr_end -= 1;
-                        }
-                        _ => {}
-                    }
-                }
-
-                if self.buffer.heredoc_indent > 0 {
-                    let mut i = 0;
-                    while (ptr + i < ptr_end)
-                        && self.parser_update_heredoc_indent(&self.char_at(ptr + i))
-                    {
-                        i += 1;
-                    }
-                    self.buffer.heredoc_line_indent = 0;
-                }
-
-                match self.buffer.substr_at(ptr, ptr_end) {
-                    Some(s) => str_.append(&s),
-                    _ => panic!(
-                        "no substr {}..{} (len = {})",
-                        ptr,
-                        ptr_end,
-                        self.buffer.input.bytes.len()
-                    ),
-                };
-                if ptr_end < self.buffer.pend {
-                    str_.push(b'\n')
-                }
-                self.buffer.goto_eol();
-                if self.buffer.heredoc_indent > 0 {
-                    return self.heredoc_flush_str(&str_);
-                }
-                if self.nextc().is_eof() {
-                    str_.clear();
-                    return self.here_document_error(&here, eos, len);
-                }
-
-                if self.buffer.is_whole_match(
-                    &self
-                        .buffer
-                        .substr_at(eos, eos + len)
-                        .expect("failed to get heredoc id for comparison"),
-                    indent,
-                ) {
-                    self.lval_end = Some(self.buffer.pend - 1);
-                    heredoc_end = self.compute_heredoc_end();
-                    break;
-                }
-            }
-        } else {
-            self.newtok();
-            if c == b'#' {
-                let t = self.parser_peek_variable_name();
-                if self.buffer.heredoc_line_indent != -1 {
-                    if self.buffer.heredoc_indent > self.buffer.heredoc_line_indent {
-                        self.buffer.heredoc_indent = self.buffer.heredoc_line_indent;
-                    }
-                    self.buffer.heredoc_line_indent = -1;
-                }
-                if let Some(t) = t {
-                    return t;
-                }
-                self.tokadd(b'#');
-                c = self.nextc();
-            }
-            loop {
-                self.buffer.pushback(&c);
-                // enc = self.p.enc;
-                match self.tokadd_string(func, b'\n', None, &mut 0) {
-                    Some(cc) => c = cc,
-                    None => {
-                        if self.buffer.eofp {
-                            return self.here_document_error(&here, eos, len);
-                        }
-                        return self.here_document_restore(&here);
-                    }
-                }
-                self.lval_end = Some(self.buffer.pcur + 1);
-                if c != '\n' {
-                    if c == b'\\' {
-                        self.buffer.heredoc_line_indent = -1
-                    }
-                    return self.heredoc_flush();
-                }
-                let cc = self.nextc();
-                self.tokadd(&cc);
-                if self.buffer.heredoc_indent > 0 {
-                    self.buffer.goto_eol();
-                    return self.heredoc_flush();
-                }
-                c = self.nextc();
-                if c.is_eof() {
-                    return self.here_document_error(&here, eos, len);
-                }
-
-                if self.buffer.is_whole_match(
-                    &self
-                        .buffer
-                        .substr_at(eos, eos + len)
-                        .expect("failed to get heredoc id for comparison"),
-                    indent,
-                ) {
-                    heredoc_end = self.compute_heredoc_end();
-
-                    break;
-                }
-            }
-            str_ = self.tokenbuf.clone();
-        }
-
-        self.heredoc_restore(&here);
-        self.token_flush();
-        self.strterm = self.new_strterm(
-            func | STR_FUNC_TERM,
-            0 as u8,
-            Some(0 as u8),
-            Some(heredoc_end),
-        );
-        self.set_yylval_str(str_);
-        Self::tSTRING_CONTENT
-    }
-
-    pub(crate) fn compute_heredoc_end(&self) -> HeredocEnd {
-        let start = self.buffer.pbeg;
-        let mut end_starts_at = start;
-        while self.buffer.byte_at(end_starts_at) == b' ' {
-            end_starts_at += 1;
-        }
-        let mut end = end_starts_at;
-        loop {
-            let c = self.buffer.byte_at(end);
-            if c.is_eof() || c == b'\n' {
-                break;
-            }
-            end += 1;
-        }
-        let value = self
-            .buffer
-            .substr_at(end_starts_at, end)
-            .expect("failed to get heredoc end");
-
-        let value =
-            String::from_utf8(value.to_vec()).expect("expected heredoc id to be valid in utf-8");
-
-        HeredocEnd { start, end, value }
-    }
-
-    pub(crate) fn here_document_error(
-        &mut self,
-        here: &HeredocLiteral,
-        eos: usize,
-        len: usize,
-    ) -> i32 {
-        self.heredoc_restore(&here);
-        self.compile_error(DiagnosticMessage::UnterminatedHeredoc(
-            String::from_utf8_lossy(
-                self.buffer
-                    .substr_at(eos, eos + len)
-                    .expect("failed to get heredoc id for comparison"),
-            )
-            .into_owned(),
-        ));
-        self.token_flush();
-        self.strterm = None;
-        self.set_lex_state(EXPR_END);
-        Self::tSTRING_END
-    }
-
-    pub(crate) fn here_document_restore(&mut self, here: &HeredocLiteral) -> i32 {
-        let heredoc_end = self.compute_heredoc_end();
-        self.lval_start = Some(heredoc_end.start);
-        self.lval_end = Some(heredoc_end.end);
-        self.set_yylval_str(TokenBuf::new(heredoc_end.value.as_bytes()));
-
-        self.heredoc_restore(&here);
-        self.token_flush();
-        self.strterm = None;
-        self.set_lex_state(EXPR_END);
-
-        Self::tSTRING_END
-    }
-
-    pub(crate) fn heredoc_flush_str(&mut self, str_: &TokenBuf) -> i32 {
-        self.set_yylval_str(str_.clone());
-        self.flush_string_content();
-        Self::tSTRING_CONTENT
-    }
-
-    pub(crate) fn heredoc_flush(&mut self) -> i32 {
-        self.heredoc_flush_str(&self.tokenbuf.clone())
-    }
-
-    pub(crate) fn heredoc_restore(&mut self, here: &HeredocLiteral) {
-        self.strterm = None;
-        let line = here.lastline();
-        self.buffer.lastline = line;
-        self.buffer.pbeg = self.buffer.input.lines[line].start;
-        self.buffer.pend = self.buffer.pbeg + self.buffer.input.lines[line].len();
-        self.buffer.pcur = self.buffer.pbeg + here.offset() + here.length() + here.quote();
-        self.buffer.ptok = self.buffer.pbeg + here.offset() - here.quote();
-        self.buffer.heredoc_end = self.buffer.ruby_sourceline;
-        self.buffer.ruby_sourceline = here.sourceline();
-        if self.buffer.eofp {
-            self.buffer.nextline = 0
-        }
-        self.buffer.eofp = false;
     }
 }

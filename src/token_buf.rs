@@ -12,6 +12,10 @@ impl TokenBuf {
         }
     }
 
+    pub fn take(&mut self) -> Self {
+        std::mem::take(self)
+    }
+
     pub(crate) fn push(&mut self, byte: u8) {
         self.bytes.push(byte);
     }
@@ -35,14 +39,14 @@ impl TokenBuf {
         }
     }
 
-    pub(crate) fn to_string(self) -> Result<String, Vec<u8>> {
+    pub(crate) fn to_string(&self) -> Result<String, Vec<u8>> {
         match std::str::from_utf8(&self.bytes) {
             Ok(s) => Ok(s.to_owned()),
-            Err(_) => Err(self.bytes),
+            Err(_) => Err(self.bytes.clone()),
         }
     }
 
-    pub(crate) fn to_token_value(self) -> TokenValue {
+    pub(crate) fn to_token_value(&self) -> TokenValue {
         match self.to_string() {
             Ok(s) => TokenValue::String(s),
             Err(bytes) => TokenValue::InvalidString(bytes),

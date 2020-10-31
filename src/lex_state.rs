@@ -1,5 +1,7 @@
+use crate::maybe_byte::MaybeByte;
+
 #[derive(Clone)]
-pub(crate) struct LexState {
+pub struct LexState {
     value: i32,
 }
 
@@ -16,12 +18,31 @@ impl LexState {
         (self.value & states) == states
     }
 
-    pub(crate) fn set(&mut self, value: i32) {
+    pub fn set(&mut self, value: i32) {
         self.value = value
     }
 
     pub(crate) fn get(&self) -> i32 {
         self.value
+    }
+
+    pub(crate) fn is_after_operator(&self) -> bool {
+        self.is_some(EXPR_FNAME | EXPR_DOT)
+    }
+    pub(crate) fn is_end(&self) -> bool {
+        self.is_some(EXPR_END_ANY)
+    }
+    pub(crate) fn is_arg(&self) -> bool {
+        self.is_some(EXPR_ARG_ANY)
+    }
+    pub(crate) fn is_label_possible(&self, cmd_state: bool) -> bool {
+        (self.is_some(EXPR_LABEL | EXPR_ENDFN) && !cmd_state) || self.is_arg()
+    }
+    pub(crate) fn is_spacearg(&self, c: &MaybeByte, space_seen: bool) -> bool {
+        self.is_arg() && space_seen && !c.is_space()
+    }
+    pub(crate) fn is_beg(&self) -> bool {
+        self.is_some(EXPR_BEG_ANY) || self.is_all(EXPR_ARG | EXPR_LABELED)
     }
 }
 
@@ -53,6 +74,7 @@ pub mod lex_states {
     pub const EXPR_END_ANY: i32 = EXPR_END | EXPR_ENDARG | EXPR_ENDFN;
     pub const EXPR_NONE: i32 = 0;
 }
+use lex_states::*;
 
 impl std::fmt::Debug for LexState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
