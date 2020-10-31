@@ -294,9 +294,14 @@ fn generate_nodes() -> Result<(), Box<dyn std::error::Error>> {
     let f = std::fs::File::open("nodes.yaml")?;
     let nodes: Vec<Struct> = serde_yaml::from_reader(f)?;
 
+    std::fs::create_dir_all("src/nodes/types")?;
+
     for node in nodes {
-        std::fs::write(&format!("src/nodes/{}.rs", node.filename), node.code())
-            .expect(&format!("Failed to write into {}", node.filename));
+        std::fs::write(
+            &format!("src/nodes/types/{}.rs", node.filename),
+            node.code(),
+        )
+        .expect(&format!("Failed to write into {}", node.filename));
     }
 
     Ok(())
