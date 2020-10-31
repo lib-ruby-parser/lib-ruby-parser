@@ -1,6 +1,7 @@
 use std::convert::TryInto;
 use std::rc::Rc;
 
+use crate::error::Diagnostics;
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::parser::TokenValue;
@@ -47,7 +48,7 @@ pub struct Lexer {
 
     pub static_env: StaticEnvironment,
 
-    pub(crate) diagnostics: Vec<Diagnostic>,
+    pub(crate) diagnostics: Diagnostics,
 }
 
 impl Lexer {
@@ -1060,7 +1061,7 @@ impl Lexer {
             println!("WARNING: {}", message.render())
         }
         let diagnostic = Diagnostic::new(ErrorLevel::Warning, message, range);
-        self.diagnostics.push(diagnostic);
+        self.diagnostics.emit(diagnostic);
     }
 
     pub(crate) fn warn_balanced(
@@ -1096,7 +1097,7 @@ impl Lexer {
             Rc::clone(&self.buffer.input),
         );
         let diagnostic = Diagnostic::new(ErrorLevel::Error, message, range);
-        self.diagnostics.push(diagnostic);
+        self.diagnostics.emit(diagnostic);
     }
 
     pub(crate) fn new_strterm(
@@ -1158,7 +1159,7 @@ impl Lexer {
             self.buffer.input.clone(),
         );
         let diagnostic = Diagnostic::new(ErrorLevel::Error, message, range);
-        self.diagnostics.push(diagnostic);
+        self.diagnostics.emit(diagnostic);
     }
 
     pub(crate) fn is_lambda_beginning(&self) -> bool {

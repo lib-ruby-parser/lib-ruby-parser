@@ -62,3 +62,36 @@ impl Diagnostic {
         matches!(self.level, ErrorLevel::Error)
     }
 }
+
+#[derive(Debug, Default)]
+struct InnerDiagnostics {
+    list: Vec<Diagnostic>,
+}
+
+impl InnerDiagnostics {
+    pub fn emit(&mut self, diagnostic: Diagnostic) {
+        self.list.push(diagnostic)
+    }
+
+    pub fn take(&mut self) -> Vec<Diagnostic> {
+        std::mem::take(&mut self.list)
+    }
+}
+
+use std::cell::RefCell;
+use std::rc::Rc;
+
+#[derive(Debug, Default, Clone)]
+pub(crate) struct Diagnostics {
+    inner: Rc<RefCell<InnerDiagnostics>>,
+}
+
+impl Diagnostics {
+    pub(crate) fn emit(&self, diagnostic: Diagnostic) {
+        self.inner.borrow_mut().emit(diagnostic)
+    }
+
+    pub(crate) fn take(&self) -> Vec<Diagnostic> {
+        self.inner.borrow_mut().take()
+    }
+}

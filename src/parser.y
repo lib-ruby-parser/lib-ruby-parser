@@ -3,7 +3,7 @@
 %define api.parser.struct { Parser }
 %define api.location.type { Loc }
 %define api.value.type { Value }
-%define api.parse_error.type { Diagnostic }
+%define api.parse_error.type { () }
 
 %define parse.error custom
 %define parse.trace
@@ -19,7 +19,7 @@
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
     tokens: Vec<Token>,
-    diagnostics: Vec<Diagnostic>,
+    diagnostics: Diagnostics,
     source_buffer: Rc<Input>,
 }
 
@@ -40,6 +40,7 @@
     use crate::source::buffer::Input;
     use crate::source::Range;
     use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
+    use crate::error::Diagnostics;
 }
 
 %code {
@@ -5696,6 +5697,7 @@ impl Parser {
             pattern_variables.clone(),
             pattern_hash_keys.clone(),
             Rc::clone(&lexer.buffer.input),
+            lexer.diagnostics.clone(),
         );
 
         let last_token = Token {
@@ -5719,7 +5721,7 @@ impl Parser {
             static_env: lexer.static_env.clone(),
             last_token,
             tokens: vec![],
-            diagnostics: vec![],
+            diagnostics: lexer.diagnostics.clone(),
             source_buffer: Rc::clone(&lexer.buffer.input),
             yylexer: lexer,
         };
@@ -5732,7 +5734,7 @@ impl Parser {
         ParserResult {
             ast: self.result.take(),
             tokens: std::mem::take(&mut self.tokens),
-            diagnostics: std::mem::take(&mut self.diagnostics)
+            diagnostics: self.diagnostics.take()
         }
     }
 
@@ -5747,7 +5749,7 @@ impl Parser {
             message,
             Range::new(loc.begin, loc.end, Rc::clone(&self.source_buffer))
         );
-        self.diagnostics.push(diagnostic);
+        self.diagnostics.emit(diagnostic);
     }
 
     fn next_token(&mut self) -> Token {
@@ -5755,39 +5757,35 @@ impl Parser {
         self.last_token = token.clone();
         self.tokens.push(token.clone());
 
-        self.diagnostics.append(&mut self.yylexer.diagnostics);
-
         token
     }
 
-    fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), Diagnostic> {
+    fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), ()> {
         let name = clone_value(&ident_t);
         let first_char = name.chars().next().expect("kwarg name can't be empty");
         if first_char.is_lowercase() {
             Ok(())
         } else {
             let range = Range::new(ident_t.loc.begin, ident_t.loc.end, Rc::clone(&self.source_buffer));
-            Err(
+            self.diagnostics.emit(
                 Diagnostic::new(
                     ErrorLevel::Error,
                     DiagnosticMessage::ConstArgument,
                     range
                 )
-            )
+            );
+            Err(())
         }
     }
 
-    fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage) -> Result<i32, Diagnostic> {
+    fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage) -> Result<i32, ()> {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,
             message,
             Range::new(loc.begin, loc.end, Rc::clone(&self.source_buffer))
         );
-        Err(diagnostic)
-    }
-
-    fn on_yyerror0(&mut self, diagnostic: Diagnostic) {
-        self.diagnostics.push(diagnostic);
+        self.diagnostics.emit(diagnostic);
+        Err(())
     }
 
     fn report_syntax_error(&mut self, ctx: &Context) {
@@ -5797,7 +5795,7 @@ impl Parser {
             DiagnosticMessage::UnexpectedToken(Lexer::TOKEN_NAMES[id].to_owned()),
             Range::new(ctx.location().begin, ctx.location().end, Rc::clone(&self.source_buffer))
         );
-        self.diagnostics.push(diagnostic);
+        self.diagnostics.emit(diagnostic);
     }
 }
 
