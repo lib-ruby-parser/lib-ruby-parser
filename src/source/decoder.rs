@@ -1,3 +1,4 @@
+use crate::source::RecognizedEncoding;
 use regex::Regex;
 use std::error::Error;
 use std::fmt;
@@ -20,12 +21,13 @@ lazy_static! {
     .expect("ENCODING_RE regex is invalid");
 }
 
+pub type CustomDecoder = Box<dyn FnOnce(RecognizedEncoding, &[u8]) -> Result<Vec<u8>, InputError>>;
+
 #[derive(Debug)]
 pub enum InputError {
     UnableToRecognizeEncoding,
     UnsupportdEncoding(String),
-    UnknownEncoding,
-    EncodingError(String),
+    NoDecoder(RecognizedEncoding),
 }
 
 impl fmt::Display for InputError {
@@ -73,25 +75,18 @@ fn recognize_encoding(source: &[u8]) -> Result<String, InputError> {
         .ok_or(InputError::UnableToRecognizeEncoding)
 }
 
-fn decode(input: &[u8], enc: &str) -> Result<String, InputError> {
-    let enc: encoding::EncodingRef = match &enc.to_uppercase()[..] {
-        "ASCII-8BIT" | "BINARY" => {
-            return Ok(String::from_utf8_lossy(input).into_owned());
-        }
-        "UTF-8" => encoding::all::UTF_8,
-        "KOI8-R" => encoding::all::KOI8_R,
-        _ => return Err(InputError::UnsupportdEncoding(enc.to_owned())),
-    };
-
-    enc.decode(input, encoding::DecoderTrap::Ignore)
-        .map_err(|err| InputError::EncodingError(err.into_owned()))
-}
-
-pub fn decode_input(input: &[u8], enc: Option<String>) -> Result<(String, String), InputError> {
-    if let Some(enc) = enc {
-        return Ok((decode(input, &enc)?, enc));
-    }
-
+pub fn decode_input(input: &[u8], decoder: Option<CustomDecoder>) -> Result<Vec<u8>, InputError> {
     let enc = recognize_encoding(input).unwrap_or_else(|_| "utf-8".to_owned());
-    Ok((decode(input, &enc)?, enc))
+
+    match &enc.to_uppercase()[..] {
+        "UTF-8" | "ASCII-8BIT" | "BINARY" => Ok(input.to_vec()),
+        _ => {
+            let enc = RecognizedEncoding::parse(&enc).ok_or(InputError::UnsupportdEncoding(enc))?;
+            if let Some(decoder) = decoder {
+                decoder(enc, input)
+            } else {
+                Err(InputError::NoDecoder(enc))
+            }
+        }
+    }
 }

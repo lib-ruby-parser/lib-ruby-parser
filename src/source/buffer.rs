@@ -1,6 +1,6 @@
 use crate::maybe_byte::*;
 use crate::source::SourceLine;
-use crate::source::{decode_input, InputError};
+use crate::source::{decode_input, CustomDecoder, InputError};
 use std::convert::TryFrom;
 use std::rc::Rc;
 
@@ -44,8 +44,6 @@ impl Input {
 #[derive(Debug, Clone, Default)]
 pub struct Buffer {
     pub input: Rc<Input>,
-    pub(crate) input_s: String,
-    pub(crate) encoding: String,
 
     pub(crate) line_count: usize,
     pub(crate) prevline: Option<usize>, // index
@@ -83,10 +81,9 @@ impl Buffer {
     pub fn new(
         name: &str,
         bytes: Vec<u8>,
-        known_encoding: Option<String>,
+        decoder: Option<CustomDecoder>,
     ) -> Result<Self, InputError> {
-        let (input_s, encoding) = decode_input(&bytes, known_encoding)?;
-        let bytes = input_s.bytes().collect::<Vec<_>>();
+        let bytes = decode_input(&bytes, decoder)?;
 
         let mut line = SourceLine { start: 0, end: 0 };
         let mut lines: Vec<SourceLine> = vec![];
@@ -113,9 +110,7 @@ impl Buffer {
         };
 
         let mut this = Self {
-            encoding,
             input: Rc::new(input),
-            input_s,
             ..Self::default()
         };
 

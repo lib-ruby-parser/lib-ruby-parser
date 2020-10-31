@@ -8,6 +8,6 @@ pub fn lex(source: &Vec<u8>, filename: &str, debug: bool) -> Result<(Parser, Vec
         ..Default::default()
     };
     let mut parser = Parser::new(source, options).map_err(|e| e.to_string())?;
-    let tokens = parser.lex();
+    let tokens = parser.do_parse().tokens;
     Ok((parser, tokens))
 }

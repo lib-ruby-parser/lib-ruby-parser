@@ -86,7 +86,6 @@ mapping = {
     on_embdoc_end: :tCOMMENT,
     on_embdoc: :tCOMMENT,
     on_words_beg: :tWORDS_BEG,
-    on___end__: :t__END__,
     on_embvar: :tSTRING_DVAR,
     on_symbols_beg: :tSYMBOLS_BEG,
 }
@@ -202,6 +201,7 @@ lines = src.lines
 Ripper.lex(src).each do |(start, tok_name, tok_value, state)|
     tok_name =
         case tok_name
+        when :on___end__ then next
         when :on_nl then next
         when :on_kw then keyword.fetch(tok_value) { raise 'unsupported keyword ' + tok_value  }
         when :on_sp, :on_ignored_sp, :on_ignored_nl, :on_comment, :on_words_sep then next

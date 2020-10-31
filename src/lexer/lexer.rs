@@ -5,6 +5,7 @@ use crate::maybe_byte::*;
 use crate::parser::TokenValue;
 use crate::parser::{Loc, Token};
 use crate::source::buffer::*;
+use crate::source::CustomDecoder;
 use crate::source::InputError;
 use crate::source::Range;
 use crate::str_term::{str_types, HeredocEnd, StrTerm, StringLiteral};
@@ -70,13 +71,13 @@ impl Lexer {
     pub fn new(
         bytes: &[u8],
         name: &str,
-        known_encoding: Option<String>,
+        decoder: Option<CustomDecoder>,
     ) -> Result<Self, InputError> {
         Ok(Self {
             cond_stack: StackState::new("cond"),
             cmdarg_stack: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
-            buffer: Buffer::new(name, bytes.to_owned(), known_encoding)?,
+            buffer: Buffer::new(name, bytes.to_owned(), decoder)?,
             context: Context::new(),
             ..Self::default()
         })

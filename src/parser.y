@@ -5677,10 +5677,10 @@ impl Parser {
         let ParserOptions {
             buffer_name,
             debug,
-            known_encoding,
+            decoder,
         } = options;
 
-        let mut lexer = Lexer::new(input, buffer_name, known_encoding)?;
+        let mut lexer = Lexer::new(input, buffer_name, decoder)?;
         lexer.set_debug(debug);
 
         let current_arg_stack = CurrentArgStack::new();
@@ -5736,19 +5736,12 @@ impl Parser {
         }
     }
 
-    pub fn lex(&mut self) -> Vec<Token> {
-        self.do_parse();
-
-        std::mem::take(&mut self.tokens)
-    }
-
     pub fn set_debug(&mut self, debug: bool) {
         self.yydebug = debug;
         self.yylexer.set_debug(debug);
     }
 
     pub fn warn(&mut self, loc: &Loc, message: DiagnosticMessage) {
-        eprintln!("warn: {:?} {:?}", loc, message);
         let diagnostic = Diagnostic::new(
             ErrorLevel::Warning,
             message,

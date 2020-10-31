@@ -1,6 +1,5 @@
 #![feature(label_break_value)]
 
-extern crate encoding;
 extern crate regex;
 #[macro_use]
 extern crate lazy_static;
