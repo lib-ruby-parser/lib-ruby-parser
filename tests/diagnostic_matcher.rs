@@ -19,7 +19,7 @@ pub struct DiagnosticMatcher {
 }
 
 impl DiagnosticMatcher {
-    pub fn new(s: &str) -> Self {
+    pub fn new(s: &str) -> Result<Self, String> {
         let mut state = State::None;
 
         let mut begin: usize = std::usize::MAX;
@@ -51,15 +51,15 @@ impl DiagnosticMatcher {
         let level = match &level[..] {
             "error" => ErrorLevel::Error,
             "warning" => ErrorLevel::Warning,
-            other => panic!("unknown error level {:?}", other),
+            other => return Err(format!("unknown error level {:?}", other)),
         };
 
-        Self {
+        Ok(Self {
             begin,
             end,
             level,
             message,
-        }
+        })
     }
 
     pub fn test(&self, actual: &Diagnostic) -> Result<(), String> {

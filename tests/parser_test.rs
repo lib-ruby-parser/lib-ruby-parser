@@ -126,11 +126,13 @@ impl Fixture {
                             diagnostic
                         ))
                     }
-                    _ => panic!(
-                        "your input returns multiple diagnostics, don't know how to match them"
-                    ),
+                    _ => {
+                        return Err(format!(
+                            "your input returns multiple diagnostics, don't know how to match them"
+                        ))
+                    }
                 };
-                DiagnosticMatcher::new(diagnostic).test(&actual)?
+                DiagnosticMatcher::new(diagnostic)?.test(&actual)?
             }
             None => {}
         }

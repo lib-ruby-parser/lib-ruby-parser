@@ -274,12 +274,12 @@ impl Node {
         self.inner().str_type()
     }
 
-    pub fn dummy_node(loc: &Loc) -> Self {
+    pub fn dummy_node(loc: &Loc, input: &Rc<Input>) -> Self {
         Node::Begin(Begin {
             statements: vec![],
             begin_l: None,
             end_l: None,
-            expression_l: Range::new(loc.begin, loc.end, Rc::new(Input::default())),
+            expression_l: Range::new(loc.begin, loc.end, Rc::clone(input)),
         })
     }
 

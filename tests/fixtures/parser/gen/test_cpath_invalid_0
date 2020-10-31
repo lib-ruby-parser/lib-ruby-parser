@@ -1,4 +1,4 @@
 --INPUT
 module foo; end
 --DIAGNOSTIC
-       ~~~ (error) module_name_const
+       ~~~ (error) class/module name must be CONSTANT

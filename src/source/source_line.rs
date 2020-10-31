@@ -2,6 +2,7 @@
 pub struct SourceLine {
     pub start: usize,
     pub end: usize,
+    pub ends_with_eof: bool,
 }
 
 impl SourceLine {
@@ -9,7 +10,11 @@ impl SourceLine {
         self.end - self.start
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.start == self.end
+    pub fn line_end(&self) -> usize {
+        let mut result = self.end;
+        if !self.ends_with_eof {
+            result -= 1 // exclude trailing \n
+        }
+        result
     }
 }

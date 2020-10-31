@@ -175,7 +175,7 @@ module ParseHelperPatch
     :lvar_name => ->(args, range) { 'key must be valid as local variables' },
     :masgn_as_condition => ->(args, range) { 'masgn_as_condition' },
     :module_in_def => ->(*) { 'module definition in method body' },
-    :module_name_const => ->(args, range) { 'module_name_const' },
+    :module_name_const => ->(args, range) { 'class/module name must be CONSTANT' },
     :nth_ref_alias => ->(args, range) { "can't make alias for the number variables" },
     :numparam_used_in_outer_scope => ->(args, range) { 'numbered parameter is already used' },
     :odd_hash => ->(args, range) { 'odd_hash' },
@@ -230,6 +230,7 @@ module ParseHelperPatch
         emitted_diagnostic = @diagnostics.first
 
         level = emitted_diagnostic.level
+        level = :error if level == :fatal
         reason = emitted_diagnostic.reason
         arguments = emitted_diagnostic.arguments
         location = emitted_diagnostic.location

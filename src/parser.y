@@ -783,7 +783,7 @@
                 | backref tOP_ASGN command_rhs
                     {
                         // TODO: backref_error
-                        $$ = Value::Node( Node::dummy_node(&@$) );
+                        $$ = Value::Node( Node::dummy_node(&@$, &self.source_buffer) );
                     }
                 ;
 

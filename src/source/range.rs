@@ -17,7 +17,18 @@ impl PartialEq for Range {
 
 impl Range {
     pub fn new(begin_pos: usize, end_pos: usize, input: Rc<Input>) -> Self {
-        debug_assert!(end_pos >= begin_pos);
+        debug_assert!(
+            begin_pos <= end_pos,
+            "begin_pos = {}, end_pos = {}",
+            begin_pos,
+            end_pos
+        );
+        debug_assert!(
+            end_pos <= input.len(),
+            "end_pos = {}, len = {}",
+            end_pos,
+            input.len()
+        );
         Self {
             begin_pos,
             end_pos,
@@ -142,7 +153,7 @@ impl Range {
         }
         let line_no = begin_line;
         let line = &self.input.lines[line_no];
-        Some((line_no, self.with(line.start, line.end - 1)))
+        Some((line_no, self.with(line.start, line.line_end())))
     }
 
     pub fn source(&self) -> Option<String> {

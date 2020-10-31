@@ -32,7 +32,11 @@ impl Diagnostic {
         let highlight = format!(
             "{indent}^{tildes}",
             indent = " ".repeat(start_col),
-            tildes = "~".repeat(self.range.size() - 1)
+            tildes = if self.range.size() > 0 {
+                "~".repeat(self.range.size() - 1)
+            } else {
+                "".to_owned()
+            }
         );
 
         Some(

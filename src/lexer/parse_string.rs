@@ -766,13 +766,19 @@ impl Lexer {
                 } else {
                     if let Some(c2) = self.escaped_control_code(&c) {
                         if c.is_control() || (flags & ESCAPE_CONTROL) == 0 {
-                            self.warn(DiagnosticMessage::InvalidCharacterSyntax {
-                                suggestion: format!("\\M-\\{}", c2),
-                            });
+                            self.warn(
+                                DiagnosticMessage::InvalidCharacterSyntax {
+                                    suggestion: format!("\\M-\\{}", c2),
+                                },
+                                self.current_range(),
+                            );
                         } else {
-                            self.warn(DiagnosticMessage::InvalidCharacterSyntax {
-                                suggestion: format!("\\C-\\M-\\{}", c2),
-                            });
+                            self.warn(
+                                DiagnosticMessage::InvalidCharacterSyntax {
+                                    suggestion: format!("\\C-\\M-\\{}", c2),
+                                },
+                                self.current_range(),
+                            );
                         }
                     } else if c.is_control() {
                         return self.read_escape_eof();
@@ -805,22 +811,34 @@ impl Lexer {
                 } else if let Some(c2) = self.escaped_control_code(&c) {
                     if c.is_control() {
                         if (flags & ESCAPE_META) != 0 {
-                            self.warn(DiagnosticMessage::InvalidCharacterSyntax {
-                                suggestion: format!("\\M-\\{}", c2),
-                            });
+                            self.warn(
+                                DiagnosticMessage::InvalidCharacterSyntax {
+                                    suggestion: format!("\\M-\\{}", c2),
+                                },
+                                self.current_range(),
+                            );
                         } else {
-                            self.warn(DiagnosticMessage::InvalidCharacterSyntax {
-                                suggestion: format!("\\{}", c2),
-                            });
+                            self.warn(
+                                DiagnosticMessage::InvalidCharacterSyntax {
+                                    suggestion: format!("\\{}", c2),
+                                },
+                                self.current_range(),
+                            );
                         }
                     } else if (flags & ESCAPE_META) != 0 {
-                        self.warn(DiagnosticMessage::InvalidCharacterSyntax {
-                            suggestion: format!("\\M-\\C-\\{}", c2),
-                        });
+                        self.warn(
+                            DiagnosticMessage::InvalidCharacterSyntax {
+                                suggestion: format!("\\M-\\C-\\{}", c2),
+                            },
+                            self.current_range(),
+                        );
                     } else {
-                        self.warn(DiagnosticMessage::InvalidCharacterSyntax {
-                            suggestion: format!("\\C-\\{}", c2),
-                        });
+                        self.warn(
+                            DiagnosticMessage::InvalidCharacterSyntax {
+                                suggestion: format!("\\C-\\{}", c2),
+                            },
+                            self.current_range(),
+                        );
                     }
                 } else if c.is_control() {
                     return self.read_escape_eof();

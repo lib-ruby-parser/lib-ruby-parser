@@ -29,15 +29,25 @@ impl Input {
     }
 
     pub fn line_col_for_pos(&self, mut pos: usize) -> Option<(usize, usize)> {
+        if pos == self.len() {
+            // EOF loc
+            let last_line = self.lines.last()?;
+            return Some((self.lines.len() - 1, last_line.len()));
+        }
+
         for (lineno, line) in self.lines.iter().enumerate() {
-            if pos >= line.len() {
-                pos -= line.len()
-            } else {
+            if line.len() > pos {
                 return Some((lineno, pos));
+            } else {
+                pos -= line.len()
             }
         }
 
         None
+    }
+
+    pub fn len(&self) -> usize {
+        self.bytes.len()
     }
 }
 
@@ -85,23 +95,28 @@ impl Buffer {
     ) -> Result<Self, InputError> {
         let bytes = decode_input(&bytes, decoder)?;
 
-        let mut line = SourceLine { start: 0, end: 0 };
+        let mut line = SourceLine {
+            start: 0,
+            end: 0,
+            ends_with_eof: true,
+        };
         let mut lines: Vec<SourceLine> = vec![];
 
         for (idx, c) in bytes.iter().enumerate() {
             line.end = idx + 1;
             if *c == b'\n' {
+                line.ends_with_eof = false;
                 lines.push(line);
                 line = SourceLine {
                     start: idx + 1,
                     end: 0,
+                    ends_with_eof: true,
                 }
             }
         }
         line.end = bytes.len();
-        if !line.is_empty() {
-            lines.push(line);
-        }
+        line.ends_with_eof = true;
+        lines.push(line);
 
         let input = Input {
             name: name.to_owned(),
@@ -155,7 +170,10 @@ impl Buffer {
                 return MaybeByte::EndOfInput;
             }
         }
-        let mut c = self.input.bytes[self.pcur];
+        let mut c = match self.input.bytes.get(self.pcur) {
+            Some(c) => *c,
+            None => return MaybeByte::EndOfInput,
+        };
         self.pcur += 1;
         if c == b'\r' {
             c = self.parser_cr(&mut c);

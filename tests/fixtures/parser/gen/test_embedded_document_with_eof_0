@@ -2,4 +2,4 @@
 =begin
 
 --DIAGNOSTIC
-~~~~~~ (fatal) embedded document meets end of file
+~~~~~~ (error) embedded document meets end of file
