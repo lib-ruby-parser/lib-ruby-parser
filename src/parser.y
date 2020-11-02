@@ -2987,7 +2987,7 @@
 
             k_if: kIF
                     {
-                        // TODO: check for WARN_EOL("if")
+                        self.warn_eol(&@1, "if");
                         $$ = $1;
                     }
                 ;
@@ -3036,7 +3036,7 @@
 
          k_elsif: kELSIF
                     {
-                        // TODO: check for WARN_EOL("elsif")
+                        self.warn_eol(&@1, "elsif");
                         $$ = $1;
                     }
                 ;
@@ -5796,6 +5796,12 @@ impl Parser {
             Range::new(ctx.location().begin, ctx.location().end, Rc::clone(&self.source_buffer))
         );
         self.diagnostics.emit(diagnostic);
+    }
+
+    fn warn_eol(&mut self, loc: &Loc, tok: &str) {
+        if self.yylexer.buffer.is_looking_at_eol() {
+            self.warn(loc, DiagnosticMessage::TokAtEolWithoutExpression(tok.to_owned()));
+        }
     }
 }
 

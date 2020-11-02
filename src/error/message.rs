@@ -69,6 +69,7 @@ pub enum DiagnosticMessage {
     NoSuchLocalVariable(String),
     OrdinaryParamDefined,
     NumparamUsed,
+    TokAtEolWithoutExpression(String),
 
     // Parser warnings
     EndInMethod,
@@ -170,6 +171,7 @@ impl DiagnosticMessage {
             Self::NoSuchLocalVariable(name) => format!("{}: no such local variable", name),
             Self::OrdinaryParamDefined => "ordinary parameter is defined".to_owned(),
             Self::NumparamUsed => "numbered parameter is already used".to_owned(),
+            Self::TokAtEolWithoutExpression(tok) => format!("`{}' at the end of line without an expression", tok),
 
             // Parser warnings
             Self::EndInMethod => "END in method; use at_exit".to_owned(),
