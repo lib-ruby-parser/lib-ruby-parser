@@ -1,0 +1,4 @@
+--INPUT
+a ?AA : 2
+--DIAGNOSTIC
+  ~ (warning) `?' just followed by `AA' is interpreted as a conditional operator, put a space after `?'

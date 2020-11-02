@@ -62,9 +62,13 @@ impl ParseQmark for Lexer {
                         break;
                     }
                 }
-                // rb_warn2("`?' just followed by `%.*s' is interpreted as" \
-                //  " a conditional operator, put a space after `?'",
-                //  WARN_I((int)(ptr - start)), WARN_S_L(start, (ptr - start)));
+                self.warn(
+                    DiagnosticMessage::AmbiguousTernaryOperator(
+                        String::from_utf8_lossy(self.buffer.substr_at(start, ptr).unwrap())
+                            .into_owned(),
+                    ),
+                    self.range(start - 1, start),
+                )
             }
             return self.parse_qmark_ternary(&c);
         } else if c == b'\\' {

@@ -215,3 +215,6 @@ fn runner(dirs: &[&'static str]) {
 
 #[test_case]
 const GENERATED_TESTS_DIR: &'static str = "tests/fixtures/parser/gen";
+
+#[test_case]
+const MANUAL_TESTS_DIR: &'static str = "tests/fixtures/parser/manual";
