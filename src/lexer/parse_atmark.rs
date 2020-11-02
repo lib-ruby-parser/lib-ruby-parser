@@ -29,18 +29,25 @@ impl ParseAtMark for Lexer {
         if c.is_eof() || !self.is_identchar() {
             self.buffer.pushback(&c);
             if result == Self::tIVAR {
-                self.compile_error(DiagnosticMessage::IvarWithoutId);
+                self.compile_error(DiagnosticMessage::IvarWithoutId, self.current_range());
             } else {
-                self.compile_error(DiagnosticMessage::CvarWithoutId);
+                self.compile_error(DiagnosticMessage::CvarWithoutId, self.current_range());
             }
             self.lex_state.set(EXPR_END);
             return result;
         } else if c.is_digit() {
-            self.buffer.pushback(&c);
+            // The following line comes from MRI, but it seems to be a bug
+            // self.buffer.pushback(&c);
             if result == Self::tIVAR {
-                self.compile_error(DiagnosticMessage::InvalidIvarName(c.expect("c is a digit")));
+                self.compile_error(
+                    DiagnosticMessage::InvalidIvarName(c.expect("c is a digit")),
+                    self.current_range(),
+                );
             } else {
-                self.compile_error(DiagnosticMessage::InvalidCvarName(c.expect("c is a digit")));
+                self.compile_error(
+                    DiagnosticMessage::InvalidCvarName(c.expect("c is a digit")),
+                    self.current_range(),
+                );
             }
             self.lex_state.set(EXPR_END);
             return result;

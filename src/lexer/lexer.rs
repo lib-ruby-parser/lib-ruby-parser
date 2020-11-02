@@ -387,7 +387,10 @@ impl Lexer {
                                 self.buffer.goto_eol();
                                 c = self.nextc();
                                 if c.is_eof() {
-                                    self.compile_error(DiagnosticMessage::EmbeddedDocumentMeetsEof);
+                                    self.compile_error(
+                                        DiagnosticMessage::EmbeddedDocumentMeetsEof,
+                                        self.current_range(),
+                                    );
                                     return Self::END_OF_INPUT;
                                 }
                                 if c == b'=' && self.buffer.is_word_match("end") {
@@ -851,7 +854,7 @@ impl Lexer {
                     if self.lex_state.is_spacearg(&c, space_seen) {
                         self.arg_ambiguous(b'/', self.current_range());
                         self.strterm = self.new_strterm(str_regexp, b'/', None, None);
-                        return Self::tREGEXP_END;
+                        return Self::tREGEXP_BEG;
                     }
                     self.lex_state.set(if self.lex_state.is_after_operator() {
                         EXPR_ARG
@@ -1041,7 +1044,7 @@ impl Lexer {
 
                 Some(c) => {
                     if !self.is_identchar() {
-                        self.compile_error(DiagnosticMessage::InvalidChar(c));
+                        self.compile_error(DiagnosticMessage::InvalidChar(c), self.current_range());
                         self.token_flush();
                         continue 'retrying;
                     }
@@ -1087,15 +1090,10 @@ impl Lexer {
         token_type
     }
 
-    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage) {
+    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage, range: Range) {
         if self.debug {
             println!("Compile error: {}", message.render())
         }
-        let range = Range::new(
-            self.buffer.ptok,
-            self.buffer.pcur,
-            Rc::clone(&self.buffer.input),
-        );
         let diagnostic = Diagnostic::new(ErrorLevel::Error, message, range);
         self.diagnostics.emit(diagnostic);
     }

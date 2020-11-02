@@ -26,7 +26,10 @@ impl ParseQmark for Lexer {
         }
         c = self.nextc();
         if c.is_eof() {
-            self.compile_error(DiagnosticMessage::IncompleteCharacterSyntax);
+            self.compile_error(
+                DiagnosticMessage::IncompleteCharacterSyntax,
+                self.current_range(),
+            );
             return Ok(Self::END_OF_INPUT);
         }
         if c.is_space() {

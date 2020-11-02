@@ -41,7 +41,10 @@ impl ParsePercent for Lexer {
 
         let mut term = match term.to_option() {
             None => {
-                self.compile_error(DiagnosticMessage::UnterminatedQuotedString);
+                self.compile_error(
+                    DiagnosticMessage::UnterminatedQuotedString,
+                    self.current_range(),
+                );
                 return Self::END_OF_INPUT;
             }
             Some(term) => term,

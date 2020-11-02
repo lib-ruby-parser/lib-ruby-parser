@@ -189,12 +189,15 @@ impl ParseString for Lexer {
         self.buffer.pushback(&c);
         if self.toklen() > 0 {
             self.tokfix();
-            self.compile_error(DiagnosticMessage::UnknownRegexOptions(
-                self.tokenbuf
-                    .borrow_string()
-                    .expect("expected buffer to have only utf-8 chars")
-                    .to_owned(),
-            ));
+            self.compile_error(
+                DiagnosticMessage::UnknownRegexOptions(
+                    self.tokenbuf
+                        .borrow_string()
+                        .expect("expected buffer to have only utf-8 chars")
+                        .to_owned(),
+                ),
+                self.current_range(),
+            );
         }
 
         result

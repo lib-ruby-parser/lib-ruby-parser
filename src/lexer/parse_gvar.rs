@@ -103,10 +103,11 @@ impl ParseGvar for Lexer {
             _ => {
                 if !self.is_identchar() {
                     match c.to_option() {
-                        None | Some(b' ') => self.compile_error(DiagnosticMessage::GvarWithoutId),
+                        None | Some(b' ') => self.compile_error(DiagnosticMessage::GvarWithoutId, self.current_range()),
                         Some(name) => {
-                            self.buffer.pushback(&c);
-                            self.compile_error(DiagnosticMessage::InvalidGvarName(name));
+                            // The following line comes from MRI, but it seems to be a bug
+                            // self.buffer.pushback(&c);
+                            self.compile_error(DiagnosticMessage::InvalidGvarName(name), self.current_range());
                         }
                     }
                     return Self::tGVAR
