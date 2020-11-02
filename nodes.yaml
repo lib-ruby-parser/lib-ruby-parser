@@ -1733,7 +1733,7 @@
     fields:
         -
             field_name: name
-            field_type: Usize
+            field_type: RawString
             always_print: false
         -
             field_name: expression_l

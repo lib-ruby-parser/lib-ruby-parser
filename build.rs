@@ -27,6 +27,7 @@ enum FieldType {
     StringValue,
     U8,
     Usize,
+    RawString,
 }
 impl FieldType {
     pub fn some_node_ref(&self) -> bool {
@@ -42,6 +43,7 @@ impl FieldType {
             StringValue => false,
             U8 => false,
             Usize => false,
+            RawString => false,
         }
     }
 }
@@ -68,6 +70,7 @@ impl Field {
             StringValue => "StringValue",
             U8 => "u8",
             Usize => "usize",
+            RawString => "String",
         };
         format!("    pub {}: {},", self.field_name, field_type)
     }
@@ -119,6 +122,10 @@ impl Field {
             )),
             Usize => Some(format!(
                 "        result.push_usize(&self.{});",
+                self.field_name
+            )),
+            RawString => Some(format!(
+                "        result.push_raw_str(&self.{});",
                 self.field_name
             )),
         }
@@ -173,6 +180,7 @@ impl Field {
             StringValue => None,
             U8 => None,
             Usize => None,
+            RawString => None,
         }
     }
 }
