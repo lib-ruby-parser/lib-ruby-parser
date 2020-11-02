@@ -163,7 +163,7 @@ module ParseHelperPatch
       end
     },
     :invalid_encoding => ->(args, range) { '<<SKIP>>' },
-    :invalid_regexp => ->(args, range) { 'invalid_regexp' },
+    :invalid_regexp => ->(args, range) { args[:message].split(':').first },
     :invalid_return => ->(args, range) { 'Invalid return in class/module body' },
     :ivar_name => ->(args, range) {
       case args[:name]

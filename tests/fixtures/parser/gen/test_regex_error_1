@@ -1,4 +1,4 @@
 --INPUT
 /#{""}?/
 --DIAGNOSTIC
-~~~~~~~~ (error) invalid_regexp
+~~~~~~~~ (error) target of repeat operator is not specified

@@ -1701,7 +1701,7 @@ impl Builder {
                 return Err(());
             }
             Node::Send(Send { args, .. }) | Node::CSend(CSend { args, .. }) => match args.last() {
-                Some(Node::Blockarg(Blockarg { expression_l, .. }))
+                Some(Node::BlockPass(BlockPass { expression_l, .. }))
                 | Some(Node::ForwardedArgs(ForwardedArgs { expression_l, .. })) => {
                     self.error(
                         DiagnosticMessage::BlockAndBlockArgGiven,
