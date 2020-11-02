@@ -34,6 +34,7 @@ pub(crate) trait ParseString {
     fn tok_hex(&mut self, numlen: &mut usize) -> MaybeByte;
     fn read_escape(&mut self, flags: usize) -> MaybeByte;
     fn is_ascii(&self) -> bool;
+    fn warn_space_char(&mut self, c: u8, prefix: &'static str);
 }
 
 const ESCAPE_CONTROL: usize = 1;
@@ -757,19 +758,9 @@ impl ParseString for Lexer {
                 } else {
                     if let Some(c2) = c.escaped_control_code() {
                         if c.is_control() || (flags & ESCAPE_CONTROL) == 0 {
-                            self.warn(
-                                DiagnosticMessage::InvalidCharacterSyntax {
-                                    suggestion: format!("\\M-\\{}", c2),
-                                },
-                                self.current_range(),
-                            );
+                            self.warn_space_char(c2, "\\M-");
                         } else {
-                            self.warn(
-                                DiagnosticMessage::InvalidCharacterSyntax {
-                                    suggestion: format!("\\C-\\M-\\{}", c2),
-                                },
-                                self.current_range(),
-                            );
+                            self.warn_space_char(c2, "\\C-\\M-");
                         }
                     } else if c.is_control() {
                         return self.read_escape_eof();
@@ -802,34 +793,14 @@ impl ParseString for Lexer {
                 } else if let Some(c2) = c.escaped_control_code() {
                     if c.is_control() {
                         if (flags & ESCAPE_META) != 0 {
-                            self.warn(
-                                DiagnosticMessage::InvalidCharacterSyntax {
-                                    suggestion: format!("\\M-\\{}", c2),
-                                },
-                                self.current_range(),
-                            );
+                            self.warn_space_char(c2, "\\M-");
                         } else {
-                            self.warn(
-                                DiagnosticMessage::InvalidCharacterSyntax {
-                                    suggestion: format!("\\{}", c2),
-                                },
-                                self.current_range(),
-                            );
+                            self.warn_space_char(c2, "");
                         }
                     } else if (flags & ESCAPE_META) != 0 {
-                        self.warn(
-                            DiagnosticMessage::InvalidCharacterSyntax {
-                                suggestion: format!("\\M-\\C-\\{}", c2),
-                            },
-                            self.current_range(),
-                        );
+                        self.warn_space_char(c2, "\\M-\\C-");
                     } else {
-                        self.warn(
-                            DiagnosticMessage::InvalidCharacterSyntax {
-                                suggestion: format!("\\C-\\{}", c2),
-                            },
-                            self.current_range(),
-                        );
+                        self.warn_space_char(c2, "\\C-");
                     }
                 } else if c.is_control() {
                     return self.read_escape_eof();
@@ -845,5 +816,14 @@ impl ParseString for Lexer {
 
     fn is_ascii(&self) -> bool {
         self.char_at(self.buffer.pcur - 1).is_ascii()
+    }
+
+    fn warn_space_char(&mut self, c: u8, prefix: &'static str) {
+        self.warn(
+            DiagnosticMessage::InvalidCharacterSyntax {
+                suggestion: format!("{}\\{}", prefix, c),
+            },
+            self.current_range(),
+        )
     }
 }

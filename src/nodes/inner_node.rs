@@ -40,6 +40,10 @@ impl InspectVec {
         self.strings.push(format!(", {:?}", string));
     }
 
+    pub(crate) fn push_raw_str(&mut self, string: &str) {
+        self.strings.push(format!(", {}", string));
+    }
+
     pub(crate) fn push_maybe_str(&mut self, string: &Option<String>) {
         if let Some(string) = string {
             self.strings.push(format!(", {:?}", string));
@@ -51,10 +55,6 @@ impl InspectVec {
     }
 
     pub(crate) fn push_u8(&mut self, n: &u8) {
-        self.strings.push(format!(", {}", n))
-    }
-
-    pub(crate) fn push_usize(&mut self, n: &usize) {
         self.strings.push(format!(", {}", n))
     }
 

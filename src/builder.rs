@@ -754,11 +754,20 @@ impl Builder {
         })
     }
 
+    const MAX_NTH_REF: usize = 0b111111111111111111111111111111;
+
     pub(crate) fn nth_ref(&self, token: Token) -> Node {
         let expression_l = self.loc(&token);
-        let name = value(token)[1..]
-            .parse::<usize>()
-            .expect("nth_ref token must have a numeric value");
+        let name = value(token)[1..].to_owned();
+        let parsed = name.parse::<usize>();
+
+        if parsed.is_err() || parsed.map(|n| n > Self::MAX_NTH_REF) == Ok(true) {
+            self.warn(
+                DiagnosticMessage::NthRefIsTooBig(name.clone()),
+                expression_l.clone(),
+            )
+        }
+
         Node::NthRef(NthRef { name, expression_l })
     }
     pub(crate) fn accessible(&self, node: Node) -> Result<Node, ()> {

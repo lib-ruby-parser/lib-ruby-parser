@@ -1116,15 +1116,6 @@ impl Lexer {
         )))
     }
 
-    pub(crate) fn warn_space_char(&mut self, c: u8, prefix: &'static str) {
-        self.warn(
-            DiagnosticMessage::InvalidCharacterSyntax {
-                suggestion: format!("\"{}\"\\{}", prefix, c),
-            },
-            self.current_range(),
-        )
-    }
-
     pub(crate) fn range(&self, begin_pos: usize, end_pos: usize) -> Range {
         Range::new(begin_pos, end_pos, self.buffer.input.clone())
     }
