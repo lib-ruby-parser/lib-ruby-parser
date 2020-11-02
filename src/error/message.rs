@@ -97,6 +97,7 @@ pub enum DiagnosticMessage {
     SingletonLiteral,
     NthRefIsTooBig(String),
     DuplicatedArgumentName,
+    RegexError(String),
 }
 
 impl DiagnosticMessage {
@@ -200,6 +201,7 @@ impl DiagnosticMessage {
             Self::SingletonLiteral => "can't define singleton method for literals".to_owned(),
             Self::NthRefIsTooBig(n) => format!("`{}' is too big for a number variable, always nil", n),
             Self::DuplicatedArgumentName => "duplicated argument name".to_owned(),
+            Self::RegexError(message) => message.to_owned(),
         }
     }
 }

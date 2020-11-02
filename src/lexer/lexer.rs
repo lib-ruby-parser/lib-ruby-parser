@@ -1,5 +1,4 @@
 use std::convert::TryInto;
-use std::rc::Rc;
 
 use crate::error::Diagnostics;
 use crate::lexer::*;

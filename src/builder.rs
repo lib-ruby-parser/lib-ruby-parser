@@ -456,6 +456,12 @@ impl Builder {
         let begin_l = self.loc(&begin_t);
         let end_l = self.loc(&end_t).resize(1);
         let expression_l = begin_l.join(options.expression());
+        match &options {
+            Node::RegOpt(RegOpt { options, .. }) => {
+                self.static_regexp(&parts, options, &expression_l)
+            }
+            _ => unreachable!("must be regopt"),
+        };
         Node::Regexp(Regexp {
             parts,
             options: Box::new(options),
@@ -1932,7 +1938,7 @@ impl Builder {
         let selector_l = self.loc(&match_t);
         let expression_l = join_exprs(&receiver, &arg);
 
-        match self.static_regexp(&receiver) {
+        match self.static_regexp_node(&receiver) {
             Some(regex) => {
                 let captures = self.static_regexp_captures(&regex);
                 for capture in captures {
@@ -3367,38 +3373,44 @@ impl Builder {
         Some(result)
     }
 
-    pub(crate) fn static_regexp(&self, node: &Node) -> Option<Regex> {
-        match node {
-            Node::Regexp(Regexp { parts, options, .. }) => match &**options {
-                Node::RegOpt(RegOpt { options, .. }) => {
-                    if let Some(source) = self.static_string(&parts) {
-                        let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
-                        reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
-                        if options.contains(&'x') {
-                            reg_options |= RegexOptions::REGEX_OPTION_EXTEND;
-                        }
+    pub(crate) fn static_regexp(
+        &self,
+        parts: &Vec<Node>,
+        options: &Vec<char>,
+        range: &Range,
+    ) -> Option<Regex> {
+        let source = self.static_string(&parts)?;
+        let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
+        reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
+        if options.contains(&'x') {
+            reg_options |= RegexOptions::REGEX_OPTION_EXTEND;
+        }
 
-                        let bytes = onig::EncodedBytes::ascii(source.as_bytes());
-                        let regex = Regex::with_options_and_encoding(
-                            bytes,
-                            reg_options,
-                            onig::Syntax::ruby(),
-                        );
+        let bytes = onig::EncodedBytes::ascii(source.as_bytes());
+        match Regex::with_options_and_encoding(bytes, reg_options, onig::Syntax::ruby()) {
+            Ok(regex) => Some(regex),
+            Err(err) => {
+                self.error(
+                    DiagnosticMessage::RegexError(err.description().to_owned()),
+                    range.clone(),
+                );
+                None
+            }
+        }
+    }
 
-                        match regex {
-                            Ok(regex) => return Some(regex),
-                            Err(err) => println!(
-                                "Failed to process static regex source, got error {:?}",
-                                err,
-                            ),
-                        }
-                    }
-                }
-                _ => {}
-            },
-            _ => {}
-        };
-
+    pub(crate) fn static_regexp_node(&self, node: &Node) -> Option<Regex> {
+        if let Node::Regexp(Regexp {
+            parts,
+            options,
+            expression_l,
+            ..
+        }) = node
+        {
+            if let Node::RegOpt(RegOpt { options, .. }) = &**options {
+                return self.static_regexp(parts, options, expression_l);
+            }
+        }
         None
     }
 
