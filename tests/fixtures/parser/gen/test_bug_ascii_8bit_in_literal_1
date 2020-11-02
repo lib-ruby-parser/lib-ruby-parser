@@ -1,4 +1,0 @@
---INPUT
-%W"x .\xc3."
---DIAGNOSTIC
-     ~~~~~~ (error) <<SKIP>>

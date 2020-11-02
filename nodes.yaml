@@ -2300,7 +2300,7 @@
     fields:
         -
             field_name: name
-            field_type: Str
+            field_type: StringValue
             always_print: false
         -
             field_name: begin_l

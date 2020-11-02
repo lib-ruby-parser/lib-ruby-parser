@@ -162,7 +162,7 @@ module ParseHelperPatch
         raise "unknown invalid_assigment to #{range.source}"
       end
     },
-    :invalid_encoding => ->(args, range) { '<<SKIP>>' },
+    :invalid_encoding => ->(args, range) { "invalid symbol in encoding #{range.source.encoding.name}" },
     :invalid_regexp => ->(args, range) { args[:message].split(':').first },
     :invalid_return => ->(args, range) { 'Invalid return in class/module body' },
     :ivar_name => ->(args, range) {
@@ -184,7 +184,7 @@ module ParseHelperPatch
     :reserved_for_numparam => ->(args, range) { "#{args[:name]} is reserved for numbered parameter" },
     :singleton_literal => ->(args, range) { "can't define singleton method for literals" },
     :undefined_lvar => ->(args, range) { "#{args[:name]}: no such local variable" },
-    :unexpected_percent_str => ->(args, range) { 'TODO' },
+    :unexpected_percent_str => ->(args, range) { 'unknown type of %string' },
     :unexpected_token => ->(args, range) { "unexpected #{args[:token]}" },
     :unicode_point_too_large => ->(args, range) { 'invalid Unicode codepoint (too large)' },
     :unterminated_heredoc_id => ->(args, range) { 'unterminated here document identifier' },
@@ -673,6 +673,18 @@ IGNORE = [
   'test_interp_digit_var_8',
   'test_interp_digit_var_9',
   'test_parser_bug_640',
+
+  # parser/MRI difference
+  'test_pattern_matching_required_parentheses_for_in_match_1',
+  # MRI accepts invalid chars in strings, but not symbols.
+  # parser rejects them even in strings
+  'test_bug_ascii_8bit_in_literal_1',
+  'test_bug_ascii_8bit_in_literal_0',
+  'test_bug_ascii_8bit_in_literal_4',
+
+  # we emit all diagnostics, these examples produce multiple syntax errors during error recovery
+  'test_ambiuous_quoted_label_in_ternary_operator_2',
+  'test_ambiuous_quoted_label_in_ternary_operator_3',
 ]
 
 Minitest.after_run do

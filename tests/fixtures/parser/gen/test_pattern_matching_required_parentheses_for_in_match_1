@@ -1,4 +1,0 @@
---INPUT
-1 in a:
---DIAGNOSTIC
-     ~~ (error) unexpected tLABEL

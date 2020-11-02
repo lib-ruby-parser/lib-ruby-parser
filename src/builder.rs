@@ -6,7 +6,6 @@ use std::rc::Rc;
 use crate::error::Diagnostics;
 use crate::nodes::StringValue;
 use crate::nodes::*;
-use crate::parser::TokenValue;
 use crate::source::Range;
 use crate::{
     source::buffer::Input, Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node,
@@ -222,12 +221,7 @@ impl Builder {
 
     pub(crate) fn string_internal(&self, string_t: Token) -> Node {
         let expression_l = self.loc(&string_t);
-        let value = match string_t.token_value {
-            TokenValue::String(s) => StringValue {
-                bytes: s.as_bytes().to_owned(),
-            },
-            TokenValue::InvalidString(bytes) => StringValue { bytes },
-        };
+        let value = StringValue::new(string_t);
         Node::Str(Str {
             value,
             begin_l: None,
@@ -243,7 +237,7 @@ impl Builder {
         end_t: Option<Token>,
     ) -> Node {
         match &parts[..] {
-            [] => return self.str_node(begin_t, StringValue { bytes: vec![] }, parts, end_t),
+            [] => return self.str_node(begin_t, StringValue::empty(), parts, end_t),
             [Node::Str(_)] | [Node::Dstr(_)] | [Node::Heredoc(_)]
                 if begin_t.is_none() && end_t.is_none() =>
             {
@@ -281,12 +275,7 @@ impl Builder {
         let end_l = None;
         let expression_l = str_range;
 
-        let value = match char_t.token_value {
-            TokenValue::String(s) => StringValue {
-                bytes: s.as_bytes().to_owned(),
-            },
-            TokenValue::InvalidString(bytes) => StringValue { bytes },
-        };
+        let value = StringValue::new(char_t);
         Node::Str(Str {
             value,
             begin_l,
@@ -303,11 +292,22 @@ impl Builder {
 
     // Symbols
 
+    fn validate_sym_value(&self, value: &StringValue, loc: &Range) {
+        if !value.valid {
+            self.error(
+                DiagnosticMessage::InvalidSymbol("UTF-8".to_owned()),
+                loc.clone(),
+            )
+        }
+    }
+
     pub(crate) fn symbol(&self, start_t: Token, value_t: Token) -> Node {
         let expression_l = self.loc(&start_t).join(&self.loc(&value_t));
         let begin_l = Some(self.loc(&start_t));
+        let value = StringValue::new(value_t);
+        self.validate_sym_value(&value, &expression_l);
         Node::Sym(Sym {
-            name: value(value_t),
+            name: value,
             begin_l,
             end_l: None,
             expression_l,
@@ -316,8 +316,10 @@ impl Builder {
 
     pub(crate) fn symbol_internal(&self, symbol_t: Token) -> Node {
         let expression_l = self.loc(&symbol_t);
+        let value = StringValue::new(symbol_t);
+        self.validate_sym_value(&value, &expression_l);
         Node::Sym(Sym {
-            name: value(symbol_t),
+            name: value,
             begin_l: None,
             end_l: None,
             expression_l,
@@ -330,8 +332,10 @@ impl Builder {
                 let (begin_l, end_l, expression_l) =
                     self.collection_map(&Some(begin_t), &vec![], &Some(end_t));
 
+                self.validate_sym_value(&value, &expression_l);
+
                 return Node::Sym(Sym {
-                    name: value.to_string_lossy(),
+                    name: value.clone(),
                     begin_l,
                     end_l,
                     expression_l,
@@ -543,12 +547,15 @@ impl Builder {
                     begin_l,
                     end_l,
                     expression_l,
-                }) => Node::Sym(Sym {
-                    name: value.to_string_lossy(),
-                    begin_l,
-                    end_l,
-                    expression_l,
-                }),
+                }) => {
+                    self.validate_sym_value(&value, &expression_l);
+                    Node::Sym(Sym {
+                        name: value.clone(),
+                        begin_l,
+                        end_l,
+                        expression_l,
+                    })
+                }
                 Node::Dstr(Dstr {
                     parts,
                     begin_l,
@@ -595,8 +602,11 @@ impl Builder {
         let colon_l = key_range.with_begin(key_range.end_pos - 1);
         let expression_l = key_range.join(&value_node.expression());
 
+        let key = StringValue::new(key_t);
+        self.validate_sym_value(&key, &key_l);
+
         let key = Node::Sym(Sym {
-            name: value(key_t),
+            name: key,
             begin_l: None,
             end_l: None,
             expression_l: key_l,

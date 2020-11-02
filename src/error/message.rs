@@ -98,6 +98,7 @@ pub enum DiagnosticMessage {
     NthRefIsTooBig(String),
     DuplicatedArgumentName,
     RegexError(String),
+    InvalidSymbol(String),
 }
 
 impl DiagnosticMessage {
@@ -202,6 +203,7 @@ impl DiagnosticMessage {
             Self::NthRefIsTooBig(n) => format!("`{}' is too big for a number variable, always nil", n),
             Self::DuplicatedArgumentName => "duplicated argument name".to_owned(),
             Self::RegexError(message) => message.to_owned(),
+            Self::InvalidSymbol(encoding) => format!("invalid symbol in encoding {}", encoding),
         }
     }
 }

@@ -1,4 +1,4 @@
 --INPUT
 %k[foo]
 --DIAGNOSTIC
-~~ (error) TODO
+~~ (error) unknown type of %string

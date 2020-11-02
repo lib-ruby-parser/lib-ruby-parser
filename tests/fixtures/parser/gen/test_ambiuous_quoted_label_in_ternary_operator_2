@@ -1,4 +1,0 @@
---INPUT
-a ? b ~ '': nil
---DIAGNOSTIC
-      ~ (error) unexpected tTILDE
