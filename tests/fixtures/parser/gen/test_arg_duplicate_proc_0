@@ -1,4 +1,4 @@
 --INPUT
 proc{|a,a|}
 --DIAGNOSTIC
-        ~ (error) duplicate_argument
+        ~ (error) duplicated argument name

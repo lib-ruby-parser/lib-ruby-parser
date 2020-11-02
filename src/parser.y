@@ -2212,7 +2212,7 @@
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(&@4, DiagnosticMessage::UnexpectedToken("...".to_owned()));
+                            return self.yyerror(&@4, DiagnosticMessage::UnexpectedToken("tBDOT3".to_owned()));
                         }
 
                         let args = [
@@ -2230,7 +2230,7 @@
                 | tLPAREN2 args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(&@2, DiagnosticMessage::UnexpectedToken("...".to_owned()));
+                            return self.yyerror(&@2, DiagnosticMessage::UnexpectedToken("tBDOT3".to_owned()));
                         }
 
                         $$ = Value::ParenArgs(
@@ -4418,7 +4418,7 @@ opt_block_args_tail:
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.accessible($<Node>1)?
+                            self.builder.accessible($<Node>1)
                         );
                     }
                 | lambda
@@ -4441,7 +4441,7 @@ opt_block_args_tail:
                             return self.yyerror(&@2, DiagnosticMessage::NoSuchLocalVariable(name));
                         }
 
-                        let lvar = self.builder.accessible(self.builder.lvar(ident_t))?;
+                        let lvar = self.builder.accessible(self.builder.lvar(ident_t));
                         $$ = Value::Node(
                             self.builder.pin($<Token>1, lvar)
                         );
@@ -5028,13 +5028,13 @@ keyword_variable: kNIL
                         }
 
                         $$ = Value::Node(
-                            self.builder.accessible(node)?
+                            self.builder.accessible(node)
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.accessible($<Node>1)?
+                            self.builder.accessible($<Node>1)
                         );
                     }
                 ;
@@ -5763,7 +5763,7 @@ impl Parser {
     fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), ()> {
         let name = clone_value(&ident_t);
         let first_char = name.chars().next().expect("kwarg name can't be empty");
-        if first_char.is_lowercase() {
+        if first_char.is_lowercase() || first_char == '_' {
             Ok(())
         } else {
             let range = Range::new(ident_t.loc.begin, ident_t.loc.end, Rc::clone(&self.source_buffer));

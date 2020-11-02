@@ -143,7 +143,7 @@ module ParseHelperPatch
         "`#{args[:name]}' is not allowed as a class variable name"
       end
     },
-    :duplicate_argument => ->(args, range) { 'duplicate_argument' },
+    :duplicate_argument => ->(args, range) { 'duplicated argument name' },
     :duplicate_pattern_key => ->(*) { 'duplicated key name' },
     :duplicate_variable_name => ->(*) { 'duplicated variable name' },
     :dynamic_const => ->(*) { 'dynamic constant assignment' },

@@ -770,23 +770,22 @@ impl Builder {
 
         Node::NthRef(NthRef { name, expression_l })
     }
-    pub(crate) fn accessible(&self, node: Node) -> Result<Node, ()> {
+    pub(crate) fn accessible(&self, node: Node) -> Node {
         match node {
             Node::Lvar(Lvar { name, expression_l }) => {
                 if self.static_env.is_declared(&name) {
                     if let Some(current_arg) = self.current_arg_stack.top() {
                         if current_arg == name {
                             self.error(
-                                DiagnosticMessage::CircularArgumentReference(name),
-                                expression_l,
+                                DiagnosticMessage::CircularArgumentReference(name.clone()),
+                                expression_l.clone(),
                             );
-                            return Err(());
                         }
                     }
 
-                    Ok(Node::Lvar(Lvar { name, expression_l }))
+                    Node::Lvar(Lvar { name, expression_l })
                 } else {
-                    Ok(Node::Send(Send {
+                    Node::Send(Send {
                         recv: None,
                         method_name: name,
                         args: vec![],
@@ -796,10 +795,10 @@ impl Builder {
                         end_l: None,
                         operator_l: None,
                         expression_l,
-                    }))
+                    })
                 }
             }
-            _ => Ok(node),
+            _ => node,
         }
     }
 
@@ -3205,6 +3204,28 @@ impl Builder {
         }
     }
 
+    fn arg_name_loc(&self, node: &Node) -> Range {
+        match node {
+            Node::Arg(Arg { expression_l, .. }) => expression_l.clone(),
+            Node::Optarg(Optarg { name_l, .. }) => name_l.clone(),
+            Node::Restarg(Restarg {
+                name_l,
+                expression_l,
+                ..
+            }) => name_l.clone().unwrap_or_else(|| expression_l.clone()),
+            Node::Kwarg(Kwarg { name_l, .. }) => name_l.clone(),
+            Node::Kwoptarg(Kwoptarg { name_l, .. }) => name_l.clone(),
+            Node::Kwrestarg(Kwrestarg {
+                name_l,
+                expression_l,
+                ..
+            }) => name_l.clone().unwrap_or_else(|| expression_l.clone()),
+            Node::Blockarg(Blockarg { name_l, .. }) => name_l.clone(),
+
+            _ => unreachable!("unsupported arg {:?}", node),
+        }
+    }
+
     pub(crate) fn check_duplicate_arg<'a>(
         &self,
         this_arg: &'a Node,
@@ -3227,7 +3248,10 @@ impl Builder {
                     None => return,
                 };
                 if self.arg_name_collides(this_name, that_name) {
-                    // duplicate_argument
+                    self.error(
+                        DiagnosticMessage::DuplicatedArgumentName,
+                        self.arg_name_loc(this_arg),
+                    )
                 }
             }
         }

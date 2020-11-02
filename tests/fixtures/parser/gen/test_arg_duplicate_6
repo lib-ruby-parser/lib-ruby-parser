@@ -1,4 +1,4 @@
 --INPUT
 lambda do |aa; aa| end
 --DIAGNOSTIC
-               ~~ (error) duplicate_argument
+               ~~ (error) duplicated argument name
