@@ -2912,7 +2912,6 @@ impl Builder {
         kwargs: Vec<Node>,
         rbrace_t: Option<Token>,
     ) -> Node {
-        self.check_duplicate_args(&kwargs, &mut HashMap::new());
         let (begin_l, end_l, expression_l) = self.collection_map(&lbrace_t, &kwargs, &rbrace_t);
         Node::HashPattern(HashPattern {
             elements: kwargs,
@@ -3186,17 +3185,19 @@ impl Builder {
             match arg {
                 Node::Arg(_)
                 | Node::Optarg(_)
-                | Node::Blockarg(_)
+                | Node::Restarg(_)
                 | Node::Kwarg(_)
                 | Node::Kwoptarg(_)
-                | Node::Restarg(_)
-                | Node::Kwrestarg(_) => {
+                | Node::Kwrestarg(_)
+                | Node::Shadowarg(_)
+                | Node::Blockarg(_) => {
                     self.check_duplicate_arg(arg, map);
                 }
                 Node::Mlhs(Mlhs { items, .. }) | Node::Procarg0(Procarg0 { args: items, .. }) => {
                     self.check_duplicate_args(items, map);
                 }
-                _ => {}
+                Node::ForwardArg(_) | Node::Kwnilarg(_) => {}
+                _ => unreachable!("unsupported arg type {:?}", arg),
             }
         }
     }
@@ -3213,6 +3214,7 @@ impl Builder {
             | Node::Kwrestarg(Kwrestarg {
                 name: Some(name), ..
             })
+            | Node::Shadowarg(Shadowarg { name, .. })
             | Node::Blockarg(Blockarg { name, .. }) => Some(name),
 
             Node::Restarg(_) | Node::Kwrestarg(_) => None,
@@ -3220,23 +3222,24 @@ impl Builder {
         }
     }
 
-    fn arg_name_loc(&self, node: &Node) -> Range {
+    fn arg_name_loc<'a>(&self, node: &'a Node) -> &'a Range {
         match node {
-            Node::Arg(Arg { expression_l, .. }) => expression_l.clone(),
-            Node::Optarg(Optarg { name_l, .. }) => name_l.clone(),
+            Node::Arg(Arg { expression_l, .. }) => expression_l,
+            Node::Optarg(Optarg { name_l, .. }) => name_l,
             Node::Restarg(Restarg {
                 name_l,
                 expression_l,
                 ..
-            }) => name_l.clone().unwrap_or_else(|| expression_l.clone()),
-            Node::Kwarg(Kwarg { name_l, .. }) => name_l.clone(),
-            Node::Kwoptarg(Kwoptarg { name_l, .. }) => name_l.clone(),
+            }) => name_l.as_ref().unwrap_or_else(|| expression_l),
+            Node::Kwarg(Kwarg { name_l, .. }) => name_l,
+            Node::Kwoptarg(Kwoptarg { name_l, .. }) => name_l,
             Node::Kwrestarg(Kwrestarg {
                 name_l,
                 expression_l,
                 ..
-            }) => name_l.clone().unwrap_or_else(|| expression_l.clone()),
-            Node::Blockarg(Blockarg { name_l, .. }) => name_l.clone(),
+            }) => name_l.as_ref().unwrap_or_else(|| expression_l),
+            Node::Shadowarg(Shadowarg { expression_l, .. }) => expression_l,
+            Node::Blockarg(Blockarg { name_l, .. }) => name_l,
 
             _ => unreachable!("unsupported arg {:?}", node),
         }
@@ -3266,7 +3269,7 @@ impl Builder {
                 if self.arg_name_collides(this_name, that_name) {
                     self.error(
                         DiagnosticMessage::DuplicatedArgumentName,
-                        self.arg_name_loc(this_arg),
+                        self.arg_name_loc(this_arg).clone(),
                     )
                 }
             }
