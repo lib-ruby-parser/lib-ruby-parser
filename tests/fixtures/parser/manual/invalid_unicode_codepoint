@@ -1,0 +1,4 @@
+--INPUT
+"\ud800"
+--DIAGNOSTIC
+   ~~~~ (error) invalid Unicode codepoint

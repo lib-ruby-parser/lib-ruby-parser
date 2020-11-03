@@ -1,0 +1,4 @@
+--INPUT
+"\uZZZZ"
+--DIAGNOSTIC
+   ~ (error) invalid Unicode escape

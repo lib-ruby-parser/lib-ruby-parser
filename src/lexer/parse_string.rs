@@ -351,6 +351,9 @@ impl ParseString for Lexer {
                                 self.tokadd(b'\\')
                             }
                             c = self.read_escape(0);
+                            if c.is_eof() {
+                                return None;
+                            }
                         } else if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
                             // ignore backslashed spaces in %w
                         } else if c != term && c != paren {
@@ -458,7 +461,10 @@ impl ParseString for Lexer {
         } else {
             numlen < 4
         } {
-            self.yyerror0(DiagnosticMessage::InvalidUnicodeEscape);
+            self.yyerror1(
+                DiagnosticMessage::InvalidUnicodeEscape,
+                self.range(self.buffer.pcur, self.buffer.pcur + 1),
+            );
             return wide && numlen > 0;
         }
         if codepoint > 0x10ffff {
@@ -486,7 +492,7 @@ impl ParseString for Lexer {
     fn tokadd_utf8(&mut self, term: Option<u8>, _symbol_literal: usize, regexp_literal: usize) {
         let open_brace = b'{';
         let close_brace = b'}';
-        let mut got_multiple_codepoints = false;
+        let mut err_multiple_codepoints = false;
 
         if regexp_literal != 0 {
             self.tokadd(b'\\');
@@ -514,7 +520,7 @@ impl ParseString for Lexer {
                 if c == term {
                     return self.tokadd_utf8_unterminated();
                 }
-                if got_multiple_codepoints {
+                if err_multiple_codepoints {
                     second = Some(self.buffer.pcur);
                 }
                 if regexp_literal != 0 {
@@ -534,8 +540,8 @@ impl ParseString for Lexer {
                     }
                     last = c;
                 }
-                if term.is_none() && second.is_some() {
-                    got_multiple_codepoints = true;
+                if term.is_none() && second.is_none() {
+                    err_multiple_codepoints = true;
                 }
             }
 
@@ -543,7 +549,7 @@ impl ParseString for Lexer {
                 return self.tokadd_utf8_unterminated();
             }
             if let Some(second) = second {
-                if !got_multiple_codepoints {
+                if err_multiple_codepoints {
                     let pcur = self.buffer.pcur;
                     self.buffer.pcur = second;
                     self.token_flush();
@@ -699,7 +705,10 @@ impl ParseString for Lexer {
 
         c = self.scan_hex(self.buffer.pcur, 2, numlen);
         if *numlen == 0 {
-            self.yyerror0(DiagnosticMessage::InvalidHexEscape);
+            self.yyerror1(
+                DiagnosticMessage::InvalidHexEscape,
+                self.current_range().adjust_end(1),
+            );
             self.token_flush();
             return MaybeByte::new(0);
         }

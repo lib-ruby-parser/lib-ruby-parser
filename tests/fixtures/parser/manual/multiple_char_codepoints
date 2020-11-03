@@ -1,0 +1,4 @@
+--INPUT
+?\u{41 42}
+--DIAGNOSTIC
+       ~~ (error) Multiple codepoints at single character literal

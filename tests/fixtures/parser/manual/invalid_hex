@@ -1,0 +1,4 @@
+--INPUT
+"\xZZ"
+--DIAGNOSTIC
+ ~~~ (error) invalid hex escape
