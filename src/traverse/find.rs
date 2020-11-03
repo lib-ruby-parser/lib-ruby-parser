@@ -56,7 +56,7 @@ pub enum PatternItem {
 }
 
 impl PatternItem {
-    pub fn new(s: &str) -> Self {
+    pub fn new(s: &str) -> Result<Self, PatternError> {
         let try_value = |prefix: &str| {
             s.replace(prefix, "")
                 .replace("[", "")
@@ -68,7 +68,7 @@ impl PatternItem {
                 ))
         };
 
-        match s {
+        let this = match s {
             "recv" => Self::Recv,
             "lhs" => Self::Lhs,
             "rhs" => Self::Rhs,
@@ -119,27 +119,48 @@ impl PatternItem {
                 Self::RescueBody(try_value("rescue_body"))
             }
 
-            _ => unimplemented!("unsupported pattern {}", s),
-        }
+            unsupported => {
+                return Err(PatternError {
+                    pattern: unsupported.to_owned(),
+                })
+            }
+        };
+
+        Ok(this)
     }
 }
 
 #[derive(Debug)]
-pub struct Pattern {
+pub struct PatternError {
+    pub pattern: String,
+}
+
+impl std::fmt::Display for PatternError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!(
+            "PatternError: unsupported pattern {}",
+            self.pattern
+        ))
+    }
+}
+
+#[derive(Debug)]
+struct Pattern {
     parts: Vec<PatternItem>,
 }
 
 impl Pattern {
-    fn new(parts: &Vec<String>) -> Self {
-        let mut parts = parts
-            .iter()
-            .map(|e| PatternItem::new(e))
-            .collect::<Vec<_>>();
+    fn new(str_parts: &Vec<String>) -> Result<Self, PatternError> {
+        let mut parts: Vec<PatternItem> = vec![];
+        for str_part in str_parts {
+            let part = PatternItem::new(str_part)?;
+            parts.push(part)
+        }
 
         parts.reverse();
         parts.push(PatternItem::Root);
 
-        Self { parts }
+        Ok(Self { parts })
     }
 
     fn current(&self) -> PatternItem {
@@ -160,10 +181,10 @@ pub struct Find {
 }
 
 impl<'a> Find {
-    pub fn run(pattern: &Vec<String>, root: &Node) -> Option<Node> {
-        let pattern = Pattern::new(pattern);
+    pub fn run(pattern: &Vec<String>, root: &Node) -> Result<Option<Node>, PatternError> {
+        let pattern = Pattern::new(pattern)?;
         let mut this = Self { pattern };
-        this.find(&root)
+        Ok(this.find(&root))
     }
 
     fn current_pattern(&self) -> PatternItem {

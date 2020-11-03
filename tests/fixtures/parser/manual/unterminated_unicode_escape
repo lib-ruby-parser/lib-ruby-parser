@@ -1,0 +1,4 @@
+--INPUT
+"\u{1234"
+--DIAGNOSTIC
+        ~ (error) unterminated Unicode escape

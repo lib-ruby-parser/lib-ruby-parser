@@ -360,7 +360,7 @@ impl LocMatcher {
     }
 
     pub fn test(&self, root: &Node) -> Result<(), String> {
-        match Find::run(&self.pattern, root) {
+        match Find::run(&self.pattern, root).unwrap() {
             Some(node) => match self.name.get(&node) {
                 Some(range) => {
                     if range.begin_pos != self.begin {

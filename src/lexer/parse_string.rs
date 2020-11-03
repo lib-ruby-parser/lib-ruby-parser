@@ -381,7 +381,11 @@ impl ParseString for Lexer {
     }
 
     fn tokadd_utf8_unterminated(&mut self) {
-        unimplemented!("tokadd_utf8_unterminated")
+        self.token_flush();
+        self.yyerror1(
+            DiagnosticMessage::UnterminatedUnicodeEscape,
+            self.current_range().adjust_end(1),
+        );
     }
 
     fn scan_hex(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {

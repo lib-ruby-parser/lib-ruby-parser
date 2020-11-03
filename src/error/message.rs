@@ -47,6 +47,7 @@ pub enum DiagnosticMessage {
     CvarWithoutId,
     InvalidCvarName(u8),
     UnknownRegexOptions(String),
+    UnterminatedUnicodeEscape,
 
     // Lexer warnings
     AmbiguousTernaryOperator(String),
@@ -153,8 +154,8 @@ impl DiagnosticMessage {
             Self::CvarWithoutId => "`@@' without identifiers is not allowed as a class variable name".to_owned(),
             Self::InvalidCvarName(name) => format!("`@@{}' is not allowed as a class variable name", *name as char),
             Self::UnknownRegexOptions(options) => format!("unknown regexp options - {}", options),
-
             Self::AmbiguousTernaryOperator(pre) => format!("`?' just followed by `{}' is interpreted as a conditional operator, put a space after `?'", pre),
+            Self::UnterminatedUnicodeEscape => "unterminated Unicode escape".to_owned(),
 
             // Parser errors
             Self::ElseWithoutRescue => "else without rescue is useless".to_owned(),

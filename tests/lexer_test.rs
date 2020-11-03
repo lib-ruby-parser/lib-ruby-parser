@@ -81,8 +81,8 @@ fn token_name(token: &Token) -> String {
     Lexer::token_name(token.token_type)
 }
 
-fn lex_state(state: &str) -> i32 {
-    match state {
+fn lex_state(state: &str) -> Result<i32, &'static str> {
+    let result = match state {
         "expr_arg" => EXPR_ARG,
         "expr_beg" => EXPR_BEG,
         "expr_mid" => EXPR_MID,
@@ -93,8 +93,9 @@ fn lex_state(state: &str) -> i32 {
         "expr_endfn" => EXPR_ENDFN,
         "expr_endarg" => EXPR_ENDARG,
         "expr_cmdarg" => EXPR_CMDARG,
-        _ => unimplemented!("Unknown lex state {}", state),
-    }
+        _ => return Err("Unknown lex state {}"),
+    };
+    Ok(result)
 }
 
 fn test(fixture_path: &str) -> TestResult {
@@ -110,7 +111,7 @@ fn test(fixture_path: &str) -> TestResult {
             lexer.static_env.declare(&var);
         }
         if let Some(state) = test_case.state {
-            lexer.lex_state.set(lex_state(&state));
+            lexer.lex_state.set(lex_state(&state).unwrap());
         }
         if test_case.cond {
             lexer.cond.push(true)
