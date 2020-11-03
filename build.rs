@@ -325,7 +325,7 @@ fn generate_nodes() -> Result<(), Box<dyn std::error::Error>> {
             &format!("src/nodes/types/{}.rs", node.filename),
             node.code(),
         )
-        .expect(&format!("Failed to write into {}", node.filename));
+        .unwrap_or_else(|e| panic!("Failed to write into {}: {}", node.filename, e));
     }
 
     Ok(())

@@ -9,6 +9,7 @@ use crate::source::buffer::*;
 use crate::source::Comment;
 use crate::source::CustomDecoder;
 use crate::source::InputError;
+use crate::source::MagicComment;
 use crate::source::Range;
 use crate::str_term::{str_types::*, HeredocEnd, StrTerm, StringLiteral};
 use crate::Context;
@@ -50,6 +51,7 @@ pub struct Lexer {
 
     pub(crate) diagnostics: Diagnostics,
     pub(crate) comments: Vec<Comment>,
+    pub(crate) magic_comments: Vec<MagicComment>,
 }
 
 impl Lexer {
@@ -962,10 +964,9 @@ impl Lexer {
                         self.buffer.pushback(&c);
                         self.lex_state.set(EXPR_ARG | EXPR_LABEL);
                         return Self::tLBRACK2;
-                    } else if self.lex_state.is_beg() {
-                        result = Self::tLBRACK;
-                    } else if self.lex_state.is_arg()
-                        && (space_seen || self.lex_state.is_some(EXPR_LABELED))
+                    } else if self.lex_state.is_beg()
+                        || (self.lex_state.is_arg()
+                            && (space_seen || self.lex_state.is_some(EXPR_LABELED)))
                     {
                         result = Self::tLBRACK;
                     }

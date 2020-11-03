@@ -62,10 +62,9 @@ impl PatternItem {
                 .replace("[", "")
                 .replace("]", "")
                 .parse::<usize>()
-                .expect(&format!(
-                    "expected argument of {:?} to be numeric, got {:?}",
-                    prefix, s
-                ))
+                .map_err(|_| PatternError {
+                    pattern: s.to_owned(),
+                })
         };
 
         let this = match s {
@@ -106,17 +105,17 @@ impl PatternItem {
             "to" => Self::To,
             "from" => Self::From,
 
-            other if other.starts_with("item[") => Self::Item(try_value("item")),
-            other if other.starts_with("arg[") => Self::Arg(try_value("arg")),
-            other if other.starts_with("element[") => Self::Element(try_value("element")),
-            other if other.starts_with("stmt[") => Self::Stmt(try_value("stmt")),
-            other if other.starts_with("when_body[") => Self::WhenBody(try_value("when_body")),
-            other if other.starts_with("in_body[") => Self::InBody(try_value("in_body")),
-            other if other.starts_with("part[") => Self::Part(try_value("part")),
-            other if other.starts_with("index[") => Self::Index(try_value("index")),
-            other if other.starts_with("pair[") => Self::Pair(try_value("pair")),
+            other if other.starts_with("item[") => Self::Item(try_value("item")?),
+            other if other.starts_with("arg[") => Self::Arg(try_value("arg")?),
+            other if other.starts_with("element[") => Self::Element(try_value("element")?),
+            other if other.starts_with("stmt[") => Self::Stmt(try_value("stmt")?),
+            other if other.starts_with("when_body[") => Self::WhenBody(try_value("when_body")?),
+            other if other.starts_with("in_body[") => Self::InBody(try_value("in_body")?),
+            other if other.starts_with("part[") => Self::Part(try_value("part")?),
+            other if other.starts_with("index[") => Self::Index(try_value("index")?),
+            other if other.starts_with("pair[") => Self::Pair(try_value("pair")?),
             other if other.starts_with("rescue_body[") => {
-                Self::RescueBody(try_value("rescue_body"))
+                Self::RescueBody(try_value("rescue_body")?)
             }
 
             unsupported => {
@@ -150,7 +149,7 @@ struct Pattern {
 }
 
 impl Pattern {
-    fn new(str_parts: &Vec<String>) -> Result<Self, PatternError> {
+    fn new(str_parts: &[String]) -> Result<Self, PatternError> {
         let mut parts: Vec<PatternItem> = vec![];
         for str_part in str_parts {
             let part = PatternItem::new(str_part)?;
@@ -181,7 +180,7 @@ pub struct Find {
 }
 
 impl<'a> Find {
-    pub fn run(pattern: &Vec<String>, root: &Node) -> Result<Option<Node>, PatternError> {
+    pub fn run(pattern: &[String], root: &Node) -> Result<Option<Node>, PatternError> {
         let pattern = Pattern::new(pattern)?;
         let mut this = Self { pattern };
         Ok(this.find(&root))
@@ -211,7 +210,7 @@ impl<'a> Find {
 }
 
 impl<'a> Visitor<Option<Node>> for Find {
-    fn visit_all(&mut self, _: &Vec<Node>) -> Option<Node> {
+    fn visit_all(&mut self, _: &[Node]) -> Option<Node> {
         unreachable!("arrays should be handled manually")
     }
 

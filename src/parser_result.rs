@@ -1,4 +1,5 @@
 use crate::source::Comment;
+use crate::source::MagicComment;
 use crate::Diagnostic;
 use crate::Node;
 use crate::Token;
@@ -9,4 +10,5 @@ pub struct ParserResult {
     pub tokens: Vec<Token>,
     pub diagnostics: Vec<Diagnostic>,
     pub comments: Vec<Comment>,
+    pub magic_comments: Vec<MagicComment>,
 }

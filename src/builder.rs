@@ -327,22 +327,19 @@ impl Builder {
     }
 
     pub(crate) fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
-        match &parts[..] {
-            [Node::Str(Str { value, .. })] => {
-                let (begin_l, end_l, expression_l) =
-                    self.collection_map(&Some(begin_t), &vec![], &Some(end_t));
+        if let [Node::Str(Str { value, .. })] = &parts[..] {
+            let (begin_l, end_l, expression_l) =
+                self.collection_map(&Some(begin_t), &[], &Some(end_t));
 
-                self.validate_sym_value(&value, &expression_l);
+            self.validate_sym_value(&value, &expression_l);
 
-                return Node::Sym(Sym {
-                    name: value.clone(),
-                    begin_l,
-                    end_l,
-                    expression_l,
-                });
-            }
-            _ => {}
-        };
+            return Node::Sym(Sym {
+                name: value.clone(),
+                begin_l,
+                end_l,
+                expression_l,
+            });
+        }
 
         let (begin_l, end_l, expression_l) =
             self.collection_map(&Some(begin_t), &parts, &Some(end_t));
@@ -556,7 +553,7 @@ impl Builder {
                 }) => {
                     self.validate_sym_value(&value, &expression_l);
                     Node::Sym(Sym {
-                        name: value.clone(),
+                        name: value,
                         begin_l,
                         end_l,
                         expression_l,
@@ -1727,7 +1724,7 @@ impl Builder {
         }
 
         let rewrite_args_and_loc =
-            |method_args: &Vec<Node>,
+            |method_args: &[Node],
              keyword_expression_l: &Range,
              block_args: ArgsType,
              block_body: Option<Box<Node>>| {
@@ -1840,7 +1837,7 @@ impl Builder {
             _ => unreachable!("unsupported method call {:?}", method_call),
         };
 
-        return Ok(result);
+        Ok(result)
     }
     pub(crate) fn block_pass(&self, amper_t: Token, value: Node) -> Node {
         let amper_l = self.loc(&amper_t);
@@ -2045,7 +2042,7 @@ impl Builder {
                 expression_l,
             }))
         } else {
-            let (begin_l, end_l, expression_l) = self.collection_map(&begin_t, &vec![], &end_t);
+            let (begin_l, end_l, expression_l) = self.collection_map(&begin_t, &[], &end_t);
             let nil_node = Node::Begin(Begin {
                 statements: vec![],
                 begin_l,
@@ -3206,7 +3203,7 @@ impl Builder {
 
     pub(crate) fn check_duplicate_args<'a>(
         &self,
-        args: &'a Vec<Node>,
+        args: &'a [Node],
         map: &mut HashMap<String, &'a Node>,
     ) {
         for arg in args {
@@ -3258,14 +3255,14 @@ impl Builder {
                 name_l,
                 expression_l,
                 ..
-            }) => name_l.as_ref().unwrap_or_else(|| expression_l),
+            }) => name_l.as_ref().unwrap_or(expression_l),
             Node::Kwarg(Kwarg { name_l, .. }) => name_l,
             Node::Kwoptarg(Kwoptarg { name_l, .. }) => name_l,
             Node::Kwrestarg(Kwrestarg {
                 name_l,
                 expression_l,
                 ..
-            }) => name_l.as_ref().unwrap_or_else(|| expression_l),
+            }) => name_l.as_ref().unwrap_or(expression_l),
             Node::Shadowarg(Shadowarg { expression_l, .. }) => expression_l,
             Node::Blockarg(Blockarg { name_l, .. }) => name_l,
 
@@ -3306,10 +3303,10 @@ impl Builder {
 
     pub(crate) fn check_assignment_to_numparam(&self, name: &str, loc: &Range) -> Result<(), ()> {
         let assigning_to_numparam = self.context.is_in_dynamic_block()
-            && match name {
-                "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => true,
-                _ => false,
-            }
+            && matches!(
+                name,
+                "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9"
+            )
             && self.max_numparam_stack.has_numparams();
 
         if assigning_to_numparam {
@@ -3355,7 +3352,7 @@ impl Builder {
                 DiagnosticMessage::KeyMustBeValidAsLocalVariable,
                 loc.clone(),
             );
-            return Err(());
+            Err(())
         }
     }
 
@@ -3364,7 +3361,7 @@ impl Builder {
         name: &str,
         loc: &Range,
     ) -> Result<(), ()> {
-        if name.starts_with("_") {
+        if name.starts_with('_') {
             return Ok(());
         }
 
@@ -3391,7 +3388,7 @@ impl Builder {
     // Helpers
     //
 
-    pub(crate) fn static_string(&self, nodes: &Vec<Node>) -> Option<String> {
+    pub(crate) fn static_string(&self, nodes: &[Node]) -> Option<String> {
         let mut result = String::from("");
 
         for node in nodes {
@@ -3416,7 +3413,7 @@ impl Builder {
 
     pub(crate) fn static_regexp(
         &self,
-        parts: &Vec<Node>,
+        parts: &[Node],
         options: &[char],
         range: &Range,
     ) -> Option<Regex> {
@@ -3448,10 +3445,10 @@ impl Builder {
             ..
         }) = node
         {
-            let mut re_options = &vec![];
+            let mut re_options: &[char] = &[];
             if let Some(options) = options {
                 if let Node::RegOpt(RegOpt { options, .. }) = &**options {
-                    re_options = options
+                    re_options = options;
                 }
             };
             return self.static_regexp(parts, re_options, expression_l);
@@ -3481,7 +3478,7 @@ impl Builder {
     pub(crate) fn collection_map(
         &self,
         begin_t: &Option<Token>,
-        parts: &Vec<Node>,
+        parts: &[Node],
         end_t: &Option<Token>,
     ) -> (Option<Range>, Option<Range>, Range) {
         let begin_l = self.maybe_loc(begin_t);
@@ -3502,7 +3499,7 @@ impl Builder {
     pub(crate) fn string_map(
         &self,
         begin_t: &Option<Token>,
-        parts: &Vec<Node>,
+        parts: &[Node],
         end_t: &Option<Token>,
     ) -> StringMap {
         if let Some(begin_t) = begin_t {
@@ -3585,7 +3582,7 @@ pub(crate) fn maybe_node_expr(node: &Option<&Node>) -> Option<Range> {
     node.map(|node| node.expression().clone())
 }
 
-pub(crate) fn collection_expr(nodes: &Vec<Node>) -> Option<Range> {
+pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Range> {
     join_maybe_exprs(&nodes.first(), &nodes.last())
 }
 

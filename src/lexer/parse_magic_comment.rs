@@ -1,12 +1,21 @@
+use crate::source::{MagicComment, MagicCommentKind};
 use crate::Lexer;
 
-const MAGIC_COMMENTS: [&str; 4] = ["coding", "encoding", "frozen_string_literal", "warn_indent"];
+const MAGIC_COMMENTS: [(&str, MagicCommentKind); 4] = [
+    ("coding", MagicCommentKind::Encoding),
+    ("encoding", MagicCommentKind::Encoding),
+    (
+        "frozen_string_literal",
+        MagicCommentKind::FrozenStringLiteral,
+    ),
+    ("warn_indent", MagicCommentKind::WarnIndent),
+];
 
 pub(crate) trait ParseMagicComment {
     fn comment_at_top(&self) -> bool;
     fn set_file_encoding(&mut self, str_: usize, send: usize);
     fn magic_comment_marker(&self, str_: usize, len: usize) -> usize;
-    fn magic_comment(&self, str_: usize, len: usize) -> bool;
+    fn magic_comment(&mut self, str_: usize, len: usize) -> bool;
 }
 
 impl ParseMagicComment for Lexer {
@@ -139,7 +148,7 @@ impl ParseMagicComment for Lexer {
         0
     }
 
-    fn magic_comment(&self, mut str_: usize, mut len: usize) -> bool {
+    fn magic_comment(&mut self, mut str_: usize, mut len: usize) -> bool {
         let mut indicator = false;
         let mut name;
         let mut beg;
@@ -166,7 +175,7 @@ impl ParseMagicComment for Lexer {
 
             loop {
                 let c = self.char_at(str_);
-                if !(len > 0 && !c.is_eof()) {
+                if len == 0 || c.is_eof() {
                     break;
                 }
 
@@ -302,18 +311,17 @@ impl ParseMagicComment for Lexer {
                     .to_vec(),
             )
             .expect("expected source to be encoded in utf-8");
-            let name = name.replace("-", "_");
-            for known in MAGIC_COMMENTS.iter() {
-                if &name == known {
-                    // TODO: emit magic comment
-                    let _magic_comment = self
-                        .buffer
-                        .substr_at(vbeg, vend)
-                        .expect("failed to get magic comment value");
+            let name_to_compare = name.replace("-", "_");
+            for (name, kind) in MAGIC_COMMENTS.iter() {
+                if &name_to_compare == name {
+                    let key_l = self.range(beg, beg + n);
+                    let value_l = self.range(vbeg, vend);
+                    let magic_comment = MagicComment::new(kind.clone(), key_l, value_l);
+                    self.magic_comments.push(magic_comment);
                 }
             }
         }
 
-        false
+        true
     }
 }

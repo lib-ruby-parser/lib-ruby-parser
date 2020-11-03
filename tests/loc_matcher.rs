@@ -345,7 +345,7 @@ impl LocMatcher {
         let end = end.unwrap_or_else(|| panic!("no begin captured"));
 
         let pattern = pattern
-            .split("/")
+            .split('/')
             .filter(|e| !e.is_empty())
             .map(|e| e.to_owned())
             .collect::<Vec<_>>();
@@ -379,12 +379,10 @@ impl LocMatcher {
 
                     Ok(())
                 }
-                None => {
-                    return Err(format!(
-                        "failed to get {:?} of {:?} on {:?}",
-                        self.name, self.pattern, root
-                    ))
-                }
+                None => Err(format!(
+                    "failed to get {:?} of {:?} on {:?}",
+                    self.name, self.pattern, root
+                )),
             },
             None => panic!("failed to find {:?} in {:?}", self.pattern, root.inspect(0)),
         }

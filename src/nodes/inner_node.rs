@@ -15,7 +15,7 @@ pub trait InnerNode {
             sexp.push_str(&child);
         }
 
-        sexp.push_str(")");
+        sexp.push(')');
 
         sexp
     }
@@ -89,13 +89,13 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_nodes(&mut self, nodes: &Vec<Node>) {
+    pub(crate) fn push_nodes(&mut self, nodes: &[Node]) {
         for node in nodes {
             self.push_node(node)
         }
     }
 
-    pub(crate) fn push_chars(&mut self, chars: &Vec<char>) {
+    pub(crate) fn push_chars(&mut self, chars: &[char]) {
         for c in chars {
             self.push_str(&format!("{}", c));
         }

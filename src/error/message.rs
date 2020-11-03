@@ -143,7 +143,7 @@ impl DiagnosticMessage {
             ),
             Self::AmbiguousOperator { operator, interpreted_as } => format!("`{}' after local variable or literal is interpreted as binary operator even though it seems like {}", operator, interpreted_as),
             Self::InvalidCharacterSyntax { suggestion } => format!("invalid character syntax; use {}", suggestion),
-            Self::InvalidOctalDigit => format!("Invalid octal digit"),
+            Self::InvalidOctalDigit => "Invalid octal digit".to_owned(),
             Self::TrailingCharInNumber { c } => format!("trailing `{}' in number", *c as char),
             Self::EmbeddedDocumentMeetsEof => "embedded document meets end of file".to_owned(),
             Self::InvalidChar(byte) => format!("Invalid char `{}' in expression", *byte as char),

@@ -41,7 +41,8 @@ fn none_if_empty<T: PartialEq<&'static str>>(v: Vec<T>) -> Option<Vec<T>> {
 
 impl Fixture {
     fn new(path: &str) -> Self {
-        let content = fs::read_to_string(path).expect(&format!("failed to read file {:?}", path));
+        let content =
+            fs::read_to_string(path).unwrap_or_else(|_| panic!("failed to read file {:?}", path));
 
         let mut input: Vec<String> = vec![];
         let mut ast: Vec<String> = vec![];
@@ -90,7 +91,7 @@ impl Fixture {
                     .ast
                     .as_ref()
                     .map(|node| node.inspect(0))
-                    .unwrap_or("nil".to_owned());
+                    .unwrap_or_else(|| "nil".to_owned());
 
                 if &actual_ast != expected_ast {
                     println!("{:?}", self.input);
@@ -108,7 +109,7 @@ impl Fixture {
                 let ast = actual
                     .ast
                     .as_ref()
-                    .ok_or("can't compare locs, ast is empty".to_owned())?;
+                    .ok_or_else(|| "can't compare locs, ast is empty".to_owned())?;
 
                 for loc in locs {
                     LocMatcher::new(loc).test(ast)?
@@ -119,20 +120,20 @@ impl Fixture {
 
         match &self.diagnostic {
             Some(diagnostic) => {
-                let actual = match actual.diagnostics.len() {
-                    1 => actual.diagnostics[0].clone(),
-                    0 => {
-                        return Err(format!(
-                            "expected diagnostic {:?} to be emitted",
-                            diagnostic
-                        ))
-                    }
-                    _ => {
-                        return Err(format!(
+                let actual =
+                    match actual.diagnostics.len() {
+                        1 => actual.diagnostics[0].clone(),
+                        0 => {
+                            return Err(format!(
+                                "expected diagnostic {:?} to be emitted",
+                                diagnostic
+                            ))
+                        }
+                        _ => return Err(
                             "your input returns multiple diagnostics, don't know how to match them"
-                        ))
-                    }
-                };
+                                .to_owned(),
+                        ),
+                    };
                 DiagnosticMatcher::new(diagnostic)?.test(&actual)?
             }
             None => {}
@@ -215,7 +216,7 @@ fn runner(dirs: &[&'static str]) {
 }
 
 #[test_case]
-const GENERATED_TESTS_DIR: &'static str = "tests/fixtures/parser/gen";
+const GENERATED_TESTS_DIR: &str = "tests/fixtures/parser/gen";
 
 #[test_case]
-const MANUAL_TESTS_DIR: &'static str = "tests/fixtures/parser/manual";
+const MANUAL_TESTS_DIR: &str = "tests/fixtures/parser/manual";

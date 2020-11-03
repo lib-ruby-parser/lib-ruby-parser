@@ -20,7 +20,7 @@ impl Comment {
     pub fn kind(&self) -> CommentType {
         match self.location.source() {
             Some(source) => {
-                if source.starts_with("#") {
+                if source.starts_with('#') {
                     CommentType::Inline
                 } else if source.starts_with("=begin") {
                     CommentType::Document

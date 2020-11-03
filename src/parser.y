@@ -5872,6 +5872,7 @@ impl Parser {
             tokens: std::mem::take(&mut self.tokens),
             diagnostics: self.diagnostics.take(),
             comments: std::mem::take(&mut self.yylexer.comments),
+            magic_comments: std::mem::take(&mut self.yylexer.magic_comments),
         }
     }
 

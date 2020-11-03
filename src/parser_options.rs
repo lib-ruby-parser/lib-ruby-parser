@@ -6,7 +6,7 @@ pub struct ParserOptions<'a> {
     pub decoder: Option<CustomDecoder>,
 }
 
-const DEFAULT_BUFFER_NAME: &'static str = "(eval)";
+const DEFAULT_BUFFER_NAME: &str = "(eval)";
 
 impl<'a> Default for ParserOptions<'a> {
     fn default() -> Self {

@@ -2,7 +2,7 @@ use crate::nodes::*;
 use crate::Node;
 
 pub trait Visitor<T: Default = ()> {
-    fn visit_all(&mut self, nodes: &Vec<Node>) -> T {
+    fn visit_all(&mut self, nodes: &[Node]) -> T {
         for node in nodes {
             self.visit(node);
         }

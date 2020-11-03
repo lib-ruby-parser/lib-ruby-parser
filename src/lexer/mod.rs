@@ -1,5 +1,5 @@
-mod lexer;
-pub use lexer::Lexer;
+mod main;
+pub use main::Lexer;
 
 mod parse_ident;
 pub(crate) use parse_ident::ParseIdent;

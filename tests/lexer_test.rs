@@ -29,7 +29,8 @@ struct Fixture {
 }
 impl Fixture {
     fn new(path: &str) -> Self {
-        let content = fs::read_to_string(path).expect(&format!("failed to read fixture {}", path));
+        let content =
+            fs::read_to_string(path).unwrap_or_else(|_| panic!("failed to read fixture {}", path));
 
         let mut vars: Vec<String> = vec![];
         let mut input: Vec<String> = vec![];
@@ -47,7 +48,7 @@ impl Fixture {
                 ("--STATE", _) => current_section = TestSection::State,
                 ("--INPUT", _) => current_section = TestSection::Input,
                 ("--TOKENS", _) => current_section = TestSection::Tokens,
-                (_, &TestSection::Vars) => vars = line.split(" ").map(|s| s.to_owned()).collect(),
+                (_, &TestSection::Vars) => vars = line.split(' ').map(|s| s.to_owned()).collect(),
                 (_, &TestSection::State) => state = Some(line.to_owned()),
                 (_, &TestSection::Input) => input.push(line.to_owned()),
                 (_, &TestSection::Tokens) => tokens.push(line.to_owned()),
@@ -191,4 +192,4 @@ fn runner(dirs: &[&'static str]) {
 }
 
 #[test_case]
-const GENERATED_TESTS_DIR: &'static str = "tests/fixtures/lexer/gen";
+const GENERATED_TESTS_DIR: &str = "tests/fixtures/lexer/gen";
