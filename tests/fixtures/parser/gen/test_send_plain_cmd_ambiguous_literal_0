@@ -1,4 +1,0 @@
---INPUT
-m /foo/
---DIAGNOSTIC
-  ~ (warning) `/' after local variable or literal is interpreted as binary operator even though it seems like regexp literal

@@ -662,8 +662,14 @@ IGNORE = [
   'test_parser_slash_slash_n_escaping_in_literals',
   'test_bug_heredoc_do_0',
 
-  # parser bug
+  # parser bug, '+1' is [:tINTEGER, '+1'], not a unary plus
   'test_unary_num_pow_precedence_0',
+
+  # parser bug, wrong warning is emitted
+  'test_send_plain_cmd_ambiguous_prefix_2',
+  'test_send_plain_cmd_ambiguous_prefix_4',
+  'test_send_plain_cmd_ambiguous_prefix_3',
+  'test_send_plain_cmd_ambiguous_literal_0',
 
   # heredocs difference
   'test_ruby_bug_11989',
@@ -678,8 +684,9 @@ IGNORE = [
   'test_pattern_matching_required_parentheses_for_in_match_1',
   # MRI accepts invalid chars in strings, but not symbols.
   # parser rejects them even in strings
-  'test_bug_ascii_8bit_in_literal_1',
   'test_bug_ascii_8bit_in_literal_0',
+  'test_bug_ascii_8bit_in_literal_1',
+  'test_bug_ascii_8bit_in_literal_2',
   'test_bug_ascii_8bit_in_literal_4',
 
   # we emit all diagnostics, these examples produce multiple syntax errors during error recovery

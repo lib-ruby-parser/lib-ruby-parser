@@ -381,6 +381,8 @@ impl Lexer {
                     if self.buffer.was_bol() {
                         // skip embedded rd document
                         if self.buffer.is_word_match("begin") {
+                            let begin_range =
+                                self.range(self.buffer.pcur - 1, self.buffer.pcur + 5);
                             self.buffer.goto_eol();
                             loop {
                                 self.buffer.goto_eol();
@@ -388,7 +390,7 @@ impl Lexer {
                                 if c.is_eof() {
                                     self.compile_error(
                                         DiagnosticMessage::EmbeddedDocumentMeetsEof,
-                                        self.current_range(),
+                                        begin_range,
                                     );
                                     return Self::END_OF_INPUT;
                                 }

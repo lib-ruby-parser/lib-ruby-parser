@@ -2007,7 +2007,7 @@
 
                         let name = clone_value(&name_t);
                         if name.ends_with('=') {
-                            return self.yyerror(&@1, DiagnosticMessage::EndlessSetterDefinition);
+                            return self.yyerror(&name_t.loc, DiagnosticMessage::EndlessSetterDefinition);
                         }
 
                         $$ = Value::Node(

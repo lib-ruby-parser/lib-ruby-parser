@@ -31,8 +31,8 @@ struct Fixture {
     diagnostic: Option<String>,
 }
 
-fn none_if_empty<T>(v: Vec<T>) -> Option<Vec<T>> {
-    if v.is_empty() {
+fn none_if_empty<T: PartialEq<&'static str>>(v: Vec<T>) -> Option<Vec<T>> {
+    if v.is_empty() || (v.len() == 1 && v[0] == "") {
         None
     } else {
         Some(v)
