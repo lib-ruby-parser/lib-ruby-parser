@@ -399,11 +399,11 @@ impl Builder {
                     match part {
                         Node::Str(Str { value, .. }) => Self::dedent_string(value, dedent_level),
                         Node::Begin(_) => {}
-                        _ => unimplemented!("unsupported heredoc child {}", part.str_type()),
+                        _ => unreachable!("unsupported heredoc child {}", part.str_type()),
                     }
                 }
             }
-            other => unimplemented!("unsupported heredoc_dedent argument {}", other.str_type()),
+            other => unreachable!("unsupported heredoc_dedent argument {}", other.str_type()),
         }
     }
 

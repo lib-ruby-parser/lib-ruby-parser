@@ -7,7 +7,7 @@ impl From<ParseValue> for Node {
     fn from(value: ParseValue) -> Node {
         match value {
             ParseValue::Node(value) => value,
-            other => unimplemented!("expected Node, got {:?}", other),
+            other => unreachable!("expected Node, got {:?}", other),
         }
     }
 }
@@ -16,7 +16,7 @@ impl From<ParseValue> for Token {
     fn from(value: ParseValue) -> Token {
         match value {
             ParseValue::Token(value) => value,
-            other => unimplemented!("expected Token, got {:?}", other),
+            other => unreachable!("expected Token, got {:?}", other),
         }
     }
 }
@@ -26,7 +26,7 @@ impl From<ParseValue> for TokenList {
     fn from(value: ParseValue) -> TokenList {
         match value {
             ParseValue::TokenList(value) => value,
-            other => unimplemented!("expected TokenList, got {:?}", other),
+            other => unreachable!("expected TokenList, got {:?}", other),
         }
     }
 }
@@ -36,7 +36,7 @@ impl From<ParseValue> for NodeList {
     fn from(value: ParseValue) -> NodeList {
         match value {
             ParseValue::NodeList(value) => value,
-            other => unimplemented!("expected NodeList, got {:?}", other),
+            other => unreachable!("expected NodeList, got {:?}", other),
         }
     }
 }
@@ -46,7 +46,7 @@ impl From<ParseValue> for Bool {
     fn from(value: ParseValue) -> Bool {
         match value {
             ParseValue::Bool(value) => value,
-            other => unimplemented!("expected Bool, got {:?}", other),
+            other => unreachable!("expected Bool, got {:?}", other),
         }
     }
 }
@@ -56,7 +56,7 @@ impl From<ParseValue> for MaybeStrTerm {
     fn from(value: ParseValue) -> MaybeStrTerm {
         match value {
             ParseValue::MaybeStrTerm(value) => value,
-            other => unimplemented!("expected MaybeStrTerm, got {:?}", other),
+            other => unreachable!("expected MaybeStrTerm, got {:?}", other),
         }
     }
 }
@@ -66,7 +66,7 @@ impl From<ParseValue> for Num {
     fn from(value: ParseValue) -> Num {
         match value {
             ParseValue::Num(value) => value,
-            other => unimplemented!("expected Num, got {:?}", other),
+            other => unreachable!("expected Num, got {:?}", other),
         }
     }
 }
@@ -80,7 +80,7 @@ impl From<ParseValue> for Superclass {
     fn from(value: ParseValue) -> Superclass {
         match value {
             ParseValue::Superclass(value) => value,
-            other => unimplemented!("expected Superclass, got {:?}", other),
+            other => unreachable!("expected Superclass, got {:?}", other),
         }
     }
 }
@@ -95,7 +95,7 @@ impl From<ParseValue> for OptEnsure {
     fn from(value: ParseValue) -> OptEnsure {
         match value {
             ParseValue::OptEnsure(value) => value,
-            other => unimplemented!("expected OptEnsure, got {:?}", other),
+            other => unreachable!("expected OptEnsure, got {:?}", other),
         }
     }
 }
@@ -110,7 +110,7 @@ impl From<ParseValue> for OptElse {
     fn from(value: ParseValue) -> OptElse {
         match value {
             ParseValue::OptElse(value) => value,
-            other => unimplemented!("expected OptElse, got {:?}", other),
+            other => unreachable!("expected OptElse, got {:?}", other),
         }
     }
 }
@@ -124,7 +124,7 @@ impl From<ParseValue> for ExcVar {
     fn from(value: ParseValue) -> ExcVar {
         match value {
             ParseValue::ExcVar(value) => value,
-            other => unimplemented!("expected ExcVar, got {:?}", other),
+            other => unreachable!("expected ExcVar, got {:?}", other),
         }
     }
 }
@@ -138,7 +138,7 @@ impl From<ParseValue> for IfTail {
     fn from(value: ParseValue) -> IfTail {
         match value {
             ParseValue::IfTail(value) => value,
-            other => unimplemented!("expected IfTail, got {:?}", other),
+            other => unreachable!("expected IfTail, got {:?}", other),
         }
     }
 }
@@ -152,7 +152,7 @@ impl From<ParseValue> for ExprValueDo {
     fn from(value: ParseValue) -> ExprValueDo {
         match value {
             ParseValue::ExprValueDo(value) => value,
-            other => unimplemented!("expected ExprValueDo, got {:?}", other),
+            other => unreachable!("expected ExprValueDo, got {:?}", other),
         }
     }
 }
@@ -161,7 +161,7 @@ impl From<ParseValue> for PKwLabel {
     fn from(value: ParseValue) -> PKwLabel {
         match value {
             ParseValue::PKwLabel(value) => value,
-            other => unimplemented!("expected PKwLabel, got {:?}", other),
+            other => unreachable!("expected PKwLabel, got {:?}", other),
         }
     }
 }
@@ -175,7 +175,7 @@ impl From<ParseValue> for BraceBody {
     fn from(value: ParseValue) -> BraceBody {
         match value {
             ParseValue::BraceBody(value) => value,
-            other => unimplemented!("expected BraceBody, got {:?}", other),
+            other => unreachable!("expected BraceBody, got {:?}", other),
         }
     }
 }
@@ -191,7 +191,7 @@ impl From<ParseValue> for CmdBraceBlock {
     fn from(value: ParseValue) -> CmdBraceBlock {
         match value {
             ParseValue::CmdBraceBlock(value) => value,
-            other => unimplemented!("expected CmdBraceBlock, got {:?}", other),
+            other => unreachable!("expected CmdBraceBlock, got {:?}", other),
         }
     }
 }
@@ -206,7 +206,7 @@ impl From<ParseValue> for ParenArgs {
     fn from(value: ParseValue) -> ParenArgs {
         match value {
             ParseValue::ParenArgs(value) => value,
-            other => unimplemented!("expected ParenArgs, got {:?}", other),
+            other => unreachable!("expected ParenArgs, got {:?}", other),
         }
     }
 }
@@ -221,7 +221,7 @@ impl From<ParseValue> for OptParenArgs {
     fn from(value: ParseValue) -> OptParenArgs {
         match value {
             ParseValue::OptParenArgs(value) => value,
-            other => unimplemented!("expected OptParenArgs, got {:?}", other),
+            other => unreachable!("expected OptParenArgs, got {:?}", other),
         }
     }
 }
@@ -236,7 +236,7 @@ impl From<ParseValue> for BeginBlock {
     fn from(value: ParseValue) -> BeginBlock {
         match value {
             ParseValue::BeginBlock(value) => value,
-            other => unimplemented!("expected BeginBlock, got {:?}", other),
+            other => unreachable!("expected BeginBlock, got {:?}", other),
         }
     }
 }
@@ -251,7 +251,7 @@ impl From<ParseValue> for LambdaBody {
     fn from(value: ParseValue) -> LambdaBody {
         match value {
             ParseValue::LambdaBody(value) => value,
-            other => unimplemented!("expected LambdaBody, got {:?}", other),
+            other => unreachable!("expected LambdaBody, got {:?}", other),
         }
     }
 }
@@ -267,7 +267,7 @@ impl From<ParseValue> for DoBlock {
     fn from(value: ParseValue) -> DoBlock {
         match value {
             ParseValue::DoBlock(value) => value,
-            other => unimplemented!("expected DoBlock, got {:?}", other),
+            other => unreachable!("expected DoBlock, got {:?}", other),
         }
     }
 }
@@ -283,7 +283,7 @@ impl From<ParseValue> for BraceBlock {
     fn from(value: ParseValue) -> BraceBlock {
         match value {
             ParseValue::BraceBlock(value) => value,
-            other => unimplemented!("expected BraceBlock, got {:?}", other),
+            other => unreachable!("expected BraceBlock, got {:?}", other),
         }
     }
 }
@@ -299,7 +299,7 @@ impl From<ParseValue> for DefsHead {
     fn from(value: ParseValue) -> DefsHead {
         match value {
             ParseValue::DefsHead(value) => value,
-            other => unimplemented!("expected DefsHead, got {:?}", other),
+            other => unreachable!("expected DefsHead, got {:?}", other),
         }
     }
 }
@@ -313,7 +313,7 @@ impl From<ParseValue> for DefnHead {
     fn from(value: ParseValue) -> DefnHead {
         match value {
             ParseValue::DefnHead(value) => value,
-            other => unimplemented!("expected DefnHead, got {:?}", other),
+            other => unreachable!("expected DefnHead, got {:?}", other),
         }
     }
 }
@@ -327,7 +327,7 @@ impl From<ParseValue> for Cases {
     fn from(value: ParseValue) -> Cases {
         match value {
             ParseValue::Cases(value) => value,
-            other => unimplemented!("expected Cases, got {:?}", other),
+            other => unreachable!("expected Cases, got {:?}", other),
         }
     }
 }
@@ -341,7 +341,7 @@ impl From<ParseValue> for CaseBody {
     fn from(value: ParseValue) -> CaseBody {
         match value {
             ParseValue::CaseBody(value) => value,
-            other => unimplemented!("expected CaseBody, got {:?}", other),
+            other => unreachable!("expected CaseBody, got {:?}", other),
         }
     }
 }
@@ -355,7 +355,7 @@ impl From<ParseValue> for PCases {
     fn from(value: ParseValue) -> PCases {
         match value {
             ParseValue::PCases(value) => value,
-            other => unimplemented!("expected PCases, got {:?}", other),
+            other => unreachable!("expected PCases, got {:?}", other),
         }
     }
 }
@@ -369,7 +369,7 @@ impl From<ParseValue> for PCaseBody {
     fn from(value: ParseValue) -> PCaseBody {
         match value {
             ParseValue::PCaseBody(value) => value,
-            other => unimplemented!("expected PCaseBody, got {:?}", other),
+            other => unreachable!("expected PCaseBody, got {:?}", other),
         }
     }
 }
@@ -379,7 +379,7 @@ impl From<ParseValue> for MaybeNode {
     fn from(value: ParseValue) -> MaybeNode {
         match value {
             ParseValue::MaybeNode(value) => value,
-            other => unimplemented!("expected MaybeNode, got {:?}", other),
+            other => unreachable!("expected MaybeNode, got {:?}", other),
         }
     }
 }
@@ -393,7 +393,7 @@ impl From<ParseValue> for DoBody {
     fn from(value: ParseValue) -> DoBody {
         match value {
             ParseValue::DoBody(value) => value,
-            other => unimplemented!("expected DoBody, got {:?}", other),
+            other => unreachable!("expected DoBody, got {:?}", other),
         }
     }
 }
@@ -407,7 +407,7 @@ impl From<ParseValue> for PTopExpr {
     fn from(value: ParseValue) -> PTopExpr {
         match value {
             ParseValue::PTopExpr(value) => value,
-            other => unimplemented!("expected PTopExpr, got {:?}", other),
+            other => unreachable!("expected PTopExpr, got {:?}", other),
         }
     }
 }

@@ -50,11 +50,12 @@ impl Fixture {
         let mut current_section = TestSection::None;
 
         for line in content.lines() {
-            match (line, &current_section) {
-                ("--INPUT", _) => current_section = TestSection::Input,
-                ("--AST", _) => current_section = TestSection::AST,
-                ("--LOCATIONS", _) => current_section = TestSection::Locations,
-                ("--DIAGNOSTIC", _) => current_section = TestSection::Diagnostic,
+            match (line.as_bytes(), &current_section) {
+                (&[b'/', b'/', b' ', ..], _) => { /* skip comment */ }
+                (b"--INPUT", _) => current_section = TestSection::Input,
+                (b"--AST", _) => current_section = TestSection::AST,
+                (b"--LOCATIONS", _) => current_section = TestSection::Locations,
+                (b"--DIAGNOSTIC", _) => current_section = TestSection::Diagnostic,
                 (_, &TestSection::Input) => input.push(line.to_owned()),
                 (_, &TestSection::AST) => ast.push(line.to_owned()),
                 (_, &TestSection::Locations) => locs.push(line.to_owned()),

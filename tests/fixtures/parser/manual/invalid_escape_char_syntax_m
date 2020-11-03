@@ -1,0 +1,5 @@
+--INPUT
+"\M-"
+--DIAGNOSTIC
+// there's a "\x01" char after "-", so the range includes "\", "M", "-" and "\x01"
+ ~~~~ (error) Invalid escape character syntax

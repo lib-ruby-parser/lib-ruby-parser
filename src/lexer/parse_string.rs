@@ -697,7 +697,7 @@ impl ParseString for Lexer {
     fn read_escape_eof(&mut self) -> MaybeByte {
         self.yyerror0(DiagnosticMessage::InvalidEscapeCharacter);
         self.token_flush();
-        unimplemented!("read_escape_eof")
+        MaybeByte::new(0)
     }
 
     fn tok_hex(&mut self, numlen: &mut usize) -> MaybeByte {

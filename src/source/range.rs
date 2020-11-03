@@ -48,10 +48,6 @@ impl Range {
         self.end_pos - self.begin_pos
     }
 
-    pub fn to_a(&self) -> &[usize] {
-        unimplemented!()
-    }
-
     pub fn to_range(&self) -> std::ops::Range<usize> {
         self.begin_pos..self.end_pos
     }
@@ -109,32 +105,8 @@ impl Range {
         }
     }
 
-    pub fn intersect(&self, _other: &Self) -> Self {
-        unimplemented!()
-    }
-
-    pub fn overlaps(&self, _other: &Self) -> bool {
-        unimplemented!()
-    }
-
-    pub fn contains(&self, _other: &Self) -> bool {
-        unimplemented!()
-    }
-
-    pub fn contained(&self, _other: &Self) -> bool {
-        unimplemented!()
-    }
-
-    pub fn crossing(&self, _other: &Self) -> bool {
-        unimplemented!()
-    }
-
     pub fn is_empty(&self) -> bool {
         self.begin_pos == self.end_pos
-    }
-
-    pub fn cmp(&self, _other: &Self) -> i8 {
-        unimplemented!()
     }
 
     pub fn begin_line_col(&self) -> Option<(usize, usize)> {
