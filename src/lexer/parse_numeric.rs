@@ -85,7 +85,7 @@ impl ParseNumeric for Lexer {
                 }
                 self.buffer.pushback(&c);
                 self.tokfix();
-                if self.toklen() == start {
+                if self.toklen() == start + 1 {
                     return self.no_digits();
                 } else if let Some(MaybeByte::Some(byte)) = nondigit {
                     return self.trailing_uc(byte);
@@ -127,7 +127,7 @@ impl ParseNumeric for Lexer {
                 }
                 self.buffer.pushback(&c);
                 self.tokfix();
-                if self.toklen() == start {
+                if self.toklen() == start + 1 {
                     return self.no_digits();
                 } else if let Some(MaybeByte::Some(byte)) = nondigit {
                     return self.trailing_uc(byte);
@@ -169,7 +169,7 @@ impl ParseNumeric for Lexer {
                 }
                 self.buffer.pushback(&c);
                 self.tokfix();
-                if self.toklen() == start {
+                if self.toklen() == start + 1 {
                     return self.no_digits();
                 } else if let Some(MaybeByte::Some(byte)) = nondigit {
                     return self.trailing_uc(byte);

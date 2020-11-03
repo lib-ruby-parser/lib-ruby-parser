@@ -1,0 +1,4 @@
+--INPUT
+0x
+--DIAGNOSTIC
+~~ (error) numeric literal without digits

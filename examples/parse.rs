@@ -70,7 +70,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let debug = args.debug;
 
     if let Some(code) = args.code {
-        let result = parse(&code.to_owned().into_bytes(), "(eval)", debug)?;
+        let result = parse(code.as_bytes(), "(eval)", debug)?;
         callback(&code, &result)
     } else if let Some(path) = args.path {
         let path = Path::new(&path);

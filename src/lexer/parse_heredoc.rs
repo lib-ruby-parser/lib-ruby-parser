@@ -70,7 +70,7 @@ impl ParseHeredoc for Lexer {
 
                 if c.is_eof() || c == b'\r' || c == b'\n' {
                     self.yyerror0(DiagnosticMessage::UnterminatedHeredocId);
-                    return None;
+                    return Some(Self::END_OF_INPUT);
                 }
             }
         } else {

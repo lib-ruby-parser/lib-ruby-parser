@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let debug = args.debug;
 
     if let Some(code) = args.code {
-        let tokens = tokenize(&code.to_owned().into_bytes(), "(eval)", debug)?;
+        let tokens = tokenize(code.as_bytes(), "(eval)", debug)?;
         callback(&tokens)
     } else if let Some(path) = args.path {
         let path = Path::new(&path);

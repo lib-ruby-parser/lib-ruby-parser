@@ -1,7 +1,7 @@
 use ruby_parser::{Parser, ParserOptions, ParserResult};
 
 #[allow(dead_code)]
-pub fn parse(source: &Vec<u8>, filename: &str, debug: bool) -> Result<ParserResult, String> {
+pub fn parse(source: &[u8], filename: &str, debug: bool) -> Result<ParserResult, String> {
     println!("parsing {} ... ", filename);
     let options = ParserOptions {
         buffer_name: filename,
