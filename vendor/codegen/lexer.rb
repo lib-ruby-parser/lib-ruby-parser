@@ -326,6 +326,7 @@ IGNORE = [
   'test_whitespace_end_4',
   'test_whitespace_endfn_2',
   'test_whitespace_endfn_5',
+  'test_whitespace_arg',
 ]
 
 Minitest.after_run do

@@ -1328,8 +1328,6 @@ impl Builder {
         body: Option<Node>,
         end_t: Token,
     ) -> Result<Node, ()> {
-        self.validate_definee(&definee)?;
-
         let keyword_l = self.loc(&def_t);
         let operator_l = self.loc(&dot_t);
         let name_l = self.loc(&name_t);
@@ -1363,8 +1361,6 @@ impl Builder {
         assignment_t: Token,
         body: Option<Node>,
     ) -> Result<Node, ()> {
-        self.validate_definee(&definee)?;
-
         let body_l = maybe_node_expr(&body.as_ref())
             .unwrap_or_else(|| unreachable!("endless method always has body"));
 
@@ -1933,11 +1929,19 @@ impl Builder {
         })
     }
 
-    pub(crate) fn binary_op(&self, receiver: Node, operator_t: Token, arg: Node) -> Node {
+    pub(crate) fn binary_op(
+        &self,
+        receiver: Node,
+        operator_t: Token,
+        arg: Node,
+    ) -> Result<Node, ()> {
+        self.value_expr(&receiver)?;
+        self.value_expr(&arg)?;
+
         let selector_l = self.loc(&operator_t);
         let expression_l = join_exprs(&receiver, &arg);
 
-        Node::Send(Send {
+        Ok(Node::Send(Send {
             recv: Some(Box::new(receiver)),
             method_name: value(operator_t),
             args: vec![arg],
@@ -1947,14 +1951,17 @@ impl Builder {
             end_l: None,
             operator_l: None,
             expression_l,
-        })
+        }))
     }
 
-    pub(crate) fn match_op(&self, receiver: Node, match_t: Token, arg: Node) -> Node {
+    pub(crate) fn match_op(&self, receiver: Node, match_t: Token, arg: Node) -> Result<Node, ()> {
+        self.value_expr(&receiver)?;
+        self.value_expr(&arg)?;
+
         let selector_l = self.loc(&match_t);
         let expression_l = join_exprs(&receiver, &arg);
 
-        match self.static_regexp_node(&receiver) {
+        let result = match self.static_regexp_node(&receiver) {
             Some(regex) => {
                 let captures = self.static_regexp_captures(&regex);
                 for capture in captures {
@@ -1979,16 +1986,20 @@ impl Builder {
                 operator_l: None,
                 expression_l,
             }),
-        }
+        };
+
+        Ok(result)
     }
 
-    pub(crate) fn unary_op(&self, op_t: Token, receiver: Node) -> Node {
+    pub(crate) fn unary_op(&self, op_t: Token, receiver: Node) -> Result<Node, ()> {
+        self.value_expr(&receiver)?;
+
         let selector_l = self.loc(&op_t);
         let expression_l = receiver.expression().join(&selector_l);
 
         let op = value(op_t);
         let method = if op == "+" || op == "-" { op + "@" } else { op };
-        Node::Send(Send {
+        Ok(Node::Send(Send {
             recv: Some(Box::new(receiver)),
             method_name: method,
             args: vec![],
@@ -1998,7 +2009,7 @@ impl Builder {
             end_l: None,
             operator_l: None,
             expression_l,
-        })
+        }))
     }
 
     pub(crate) fn not_op(
@@ -2007,8 +2018,10 @@ impl Builder {
         begin_t: Option<Token>,
         receiver: Option<Node>,
         end_t: Option<Token>,
-    ) -> Node {
+    ) -> Result<Node, ()> {
         if let Some(receiver) = receiver {
+            self.value_expr(&receiver)?;
+
             let begin_l = self.loc(&not_t);
             let end_l = self
                 .maybe_loc(&end_t)
@@ -2020,7 +2033,7 @@ impl Builder {
             let begin_l = self.maybe_loc(&begin_t);
             let end_l = self.maybe_loc(&end_t);
 
-            Node::Send(Send {
+            Ok(Node::Send(Send {
                 recv: Some(Box::new(self.check_condition(receiver))),
                 method_name: "!".to_owned(),
                 args: vec![],
@@ -2030,7 +2043,7 @@ impl Builder {
                 end_l,
                 operator_l: None,
                 expression_l,
-            })
+            }))
         } else {
             let (begin_l, end_l, expression_l) = self.collection_map(&begin_t, &vec![], &end_t);
             let nil_node = Node::Begin(Begin {
@@ -2042,7 +2055,7 @@ impl Builder {
 
             let selector_l = self.loc(&not_t);
             let expression_l = nil_node.expression().join(&selector_l);
-            Node::Send(Send {
+            Ok(Node::Send(Send {
                 recv: Some(Box::new(nil_node)),
                 method_name: "!".to_owned(),
                 args: vec![],
@@ -2052,7 +2065,7 @@ impl Builder {
                 end_l: None,
                 operator_l: None,
                 expression_l,
-            })
+            }))
         }
     }
 
@@ -2062,13 +2075,21 @@ impl Builder {
 
     // Logical operations: and, or
 
-    pub(crate) fn logical_op(&self, type_: LogicalOp, lhs: Node, op_t: Token, rhs: Node) -> Node {
+    pub(crate) fn logical_op(
+        &self,
+        type_: LogicalOp,
+        lhs: Node,
+        op_t: Token,
+        rhs: Node,
+    ) -> Result<Node, ()> {
+        self.value_expr(&lhs)?;
+
         let operator_l = self.loc(&op_t);
         let expression_l = join_exprs(&lhs, &rhs);
 
         let lhs = Box::new(lhs);
         let rhs = Box::new(rhs);
-        match type_ {
+        let result = match type_ {
             LogicalOp::And => Node::And(And {
                 lhs,
                 rhs,
@@ -2081,7 +2102,8 @@ impl Builder {
                 operator_l,
                 expression_l,
             }),
-        }
+        };
+        Ok(result)
     }
 
     // Conditionals
@@ -3448,27 +3470,6 @@ impl Builder {
         result
     }
 
-    pub(crate) fn validate_definee(&self, definee: &Node) -> Result<(), ()> {
-        match definee {
-            Node::Int(_)
-            | Node::Str(_)
-            | Node::Dstr(_)
-            | Node::Sym(_)
-            | Node::Dsym(_)
-            | Node::Heredoc(_)
-            | Node::Regexp(_)
-            | Node::Array(_)
-            | Node::Hash(_) => {
-                self.error(
-                    DiagnosticMessage::SingletonLiteral,
-                    definee.expression().clone(),
-                );
-                return Err(());
-            }
-            _ => Ok(()),
-        }
-    }
-
     pub(crate) fn loc(&self, token: &Token) -> Range {
         Range::new(token.loc.begin, token.loc.end, Rc::clone(&self.source))
     }
@@ -3528,6 +3529,55 @@ impl Builder {
     pub(crate) fn warn(&self, message: DiagnosticMessage, range: Range) {
         self.diagnostics
             .emit(Diagnostic::new(ErrorLevel::Warning, message, range))
+    }
+
+    pub(crate) fn value_expr(&self, node: &Node) -> Result<(), ()> {
+        if let Some(void_node) = self.void_value(node) {
+            self.error(
+                DiagnosticMessage::VoidValueExpression,
+                void_node.expression().clone(),
+            );
+            Err(())
+        } else {
+            Ok(())
+        }
+    }
+
+    fn void_value<'a>(&self, node: &'a Node) -> Option<&'a Node> {
+        match node {
+            Node::Return(_) | Node::Break(_) | Node::Next(_) | Node::Redo(_) | Node::Retry(_) => {
+                Some(node)
+            }
+            Node::InMatch(InMatch { value, .. }) => self.void_value(value),
+            Node::Begin(Begin { statements, .. }) | Node::KwBegin(KwBegin { statements, .. }) => {
+                if let Some(last_stmt) = statements.last() {
+                    self.void_value(last_stmt)
+                } else {
+                    None
+                }
+            }
+            Node::If(If {
+                if_true: Some(if_true),
+                if_false: Some(if_false),
+                ..
+            })
+            | Node::IfMod(IfMod {
+                if_true: Some(if_true),
+                if_false: Some(if_false),
+                ..
+            })
+            | Node::IfTernary(IfTernary {
+                if_true, if_false, ..
+            }) => {
+                if self.void_value(if_true).is_some() && self.void_value(if_false).is_some() {
+                    Some(if_true)
+                } else {
+                    None
+                }
+            }
+            Node::And(And { lhs, .. }) | Node::Or(Or { lhs, .. }) => self.void_value(&lhs),
+            _ => None,
+        }
     }
 }
 

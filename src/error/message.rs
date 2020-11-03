@@ -100,6 +100,7 @@ pub enum DiagnosticMessage {
     DuplicatedArgumentName,
     RegexError(String),
     InvalidSymbol(String),
+    VoidValueExpression,
 }
 
 impl DiagnosticMessage {
@@ -205,6 +206,7 @@ impl DiagnosticMessage {
             Self::DuplicatedArgumentName => "duplicated argument name".to_owned(),
             Self::RegexError(message) => message.to_owned(),
             Self::InvalidSymbol(encoding) => format!("invalid symbol in encoding {}", encoding),
+            Self::VoidValueExpression => "void value expression".to_owned(),
         }
     }
 }
