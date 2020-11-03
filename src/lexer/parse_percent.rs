@@ -17,7 +17,10 @@ impl ParsePercent for Lexer {
         let len = self.multibyte_char_len(self.buffer.pcur);
         if let Some(len) = len {
             self.buffer.pcur += len;
-            self.yyerror0(DiagnosticMessage::UnknownTypeOfPercentString);
+            self.yyerror1(
+                DiagnosticMessage::UnknownTypeOfPercentString,
+                self.current_range().adjust_end(-1),
+            );
         }
         Self::END_OF_INPUT
     }
@@ -103,7 +106,10 @@ impl ParsePercent for Lexer {
                 Self::tSYMBEG
             }
             _ => {
-                self.yyerror0(DiagnosticMessage::UnknownTypeOfPercentString);
+                self.yyerror1(
+                    DiagnosticMessage::UnknownTypeOfPercentString,
+                    self.current_range().adjust_end(-1),
+                );
                 Self::END_OF_INPUT
             }
         }

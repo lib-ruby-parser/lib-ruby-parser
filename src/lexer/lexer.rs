@@ -1138,14 +1138,13 @@ impl Lexer {
     }
 
     pub(crate) fn yyerror0(&mut self, message: DiagnosticMessage) {
+        self.yyerror1(message, self.current_range());
+    }
+
+    pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage, range: Range) {
         if self.debug {
             println!("yyerror0: {}", message.render())
         }
-        let range = Range::new(
-            self.buffer.ptok,
-            self.buffer.pcur,
-            self.buffer.input.clone(),
-        );
         let diagnostic = Diagnostic::new(ErrorLevel::Error, message, range);
         self.diagnostics.emit(diagnostic);
     }
