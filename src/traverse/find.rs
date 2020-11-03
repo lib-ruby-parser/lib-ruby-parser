@@ -852,7 +852,7 @@ impl<'a> Visitor<Option<Node>> for Find {
     fn on_regexp(&mut self, node: &Regexp) -> Option<Node> {
         match self.current_pattern() {
             PatternItem::Part(n) => self.find(&node.parts[n]),
-            PatternItem::Options => self.find(&node.options),
+            PatternItem::Options => self.maybe_find(&node.options),
             _ => None,
         }
     }

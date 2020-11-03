@@ -69,6 +69,18 @@ impl InspectVec {
         }
     }
 
+    pub(crate) fn push_regex_options(&mut self, node: &Option<Box<Node>>) {
+        if let Some(node) = node {
+            self.push_node(node)
+        } else {
+            self.strings.push(format!(
+                ",\n{}{}",
+                "  ".repeat(self.indent + 1),
+                "s(:regopt)"
+            ))
+        }
+    }
+
     pub(crate) fn push_maybe_node_or_nil(&mut self, node: &Option<Box<Node>>) {
         if let Some(node) = node {
             self.push_node(node)

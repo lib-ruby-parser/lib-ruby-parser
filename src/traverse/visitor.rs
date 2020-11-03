@@ -475,7 +475,7 @@ pub trait Visitor<T: Default = ()> {
 
     fn on_regexp(&mut self, node: &Regexp) -> T {
         self.visit_all(&node.parts);
-        self.visit(&node.options)
+        self.maybe_visit(&node.options)
     }
 
     #[allow(unused_variables)]

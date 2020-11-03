@@ -28,6 +28,7 @@ enum FieldType {
     U8,
     Usize,
     RawString,
+    RegexOptions,
 }
 impl FieldType {
     pub fn some_node_ref(&self) -> bool {
@@ -44,6 +45,7 @@ impl FieldType {
             U8 => false,
             Usize => false,
             RawString => false,
+            RegexOptions => true,
         }
     }
 }
@@ -71,6 +73,7 @@ impl Field {
             U8 => "u8",
             Usize => "usize",
             RawString => "String",
+            RegexOptions => "Option<Box<Node>>",
         };
         format!("    pub {}: {},", self.field_name, field_type)
     }
@@ -128,6 +131,10 @@ impl Field {
                 "        result.push_raw_str(&self.{});",
                 self.field_name
             )),
+            RegexOptions => Some(format!(
+                "        result.push_regex_options(&self.{});",
+                self.field_name
+            )),
         }
     }
 
@@ -181,6 +188,13 @@ impl Field {
             U8 => None,
             Usize => None,
             RawString => None,
+            RegexOptions => Some(format!(
+                "{offset}if let Some(node) = &self.{field_name} {{
+{offset}    node.inner().print_with_locs();
+{offset}}}",
+                offset = offset,
+                field_name = self.field_name
+            )),
         }
     }
 }

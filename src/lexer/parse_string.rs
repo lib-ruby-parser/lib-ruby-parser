@@ -384,7 +384,7 @@ impl ParseString for Lexer {
         self.token_flush();
         self.yyerror1(
             DiagnosticMessage::UnterminatedUnicodeEscape,
-            self.current_range().adjust_end(1),
+            self.range(self.buffer.ptok, self.buffer.pcur + 1),
         );
     }
 

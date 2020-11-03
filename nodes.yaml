@@ -2019,7 +2019,7 @@
             always_print: false
         -
             field_name: options
-            field_type: Node
+            field_type: RegexOptions
             always_print: false
         -
             field_name: begin_l

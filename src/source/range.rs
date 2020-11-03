@@ -18,10 +18,11 @@ impl PartialEq for Range {
 impl Range {
     pub fn new(begin_pos: usize, end_pos: usize, input: Rc<Input>) -> Self {
         debug_assert!(
-            begin_pos <= end_pos,
-            "begin_pos = {}, end_pos = {}",
+            (begin_pos < end_pos) || (begin_pos == end_pos && end_pos == input.len()),
+            "begin_pos = {}, end_pos = {}, input.len() = {}",
             begin_pos,
-            end_pos
+            end_pos,
+            input.len()
         );
         debug_assert!(
             end_pos <= input.len(),

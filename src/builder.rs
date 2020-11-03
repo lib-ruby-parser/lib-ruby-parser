@@ -438,16 +438,20 @@ impl Builder {
 
     // Regular expressions
 
-    pub(crate) fn regexp_options(&self, regexp_end_t: Token) -> Node {
+    pub(crate) fn regexp_options(&self, regexp_end_t: Token) -> Option<Node> {
+        if regexp_end_t.loc.end - regexp_end_t.loc.begin == 1 {
+            // no regexp options, only trailing "/"
+            return None;
+        }
         let expression_l = self.loc(&regexp_end_t).adjust_begin(1);
         let mut options = value(regexp_end_t)[1..].chars().collect::<Vec<_>>();
         options.sort_unstable();
         options.dedup();
 
-        Node::RegOpt(RegOpt {
+        Some(Node::RegOpt(RegOpt {
             options,
             expression_l,
-        })
+        }))
     }
 
     pub(crate) fn regexp_compose(
@@ -455,20 +459,22 @@ impl Builder {
         begin_t: Token,
         parts: Vec<Node>,
         end_t: Token,
-        options: Node,
+        options: Option<Node>,
     ) -> Node {
         let begin_l = self.loc(&begin_t);
         let end_l = self.loc(&end_t).resize(1);
-        let expression_l = begin_l.join(options.expression());
+        let expression_l =
+            begin_l.join(&maybe_node_expr(&options.as_ref()).unwrap_or_else(|| self.loc(&end_t)));
         match &options {
-            Node::RegOpt(RegOpt { options, .. }) => {
+            Some(Node::RegOpt(RegOpt { options, .. })) => {
                 self.static_regexp(&parts, options, &expression_l)
             }
-            _ => unreachable!("must be regopt"),
+            None => self.static_regexp(&parts, &[], &expression_l),
+            _ => unreachable!("must be Option<RegOpt>"),
         };
         Node::Regexp(Regexp {
             parts,
-            options: Box::new(options),
+            options: options.map(Box::new),
             begin_l,
             end_l,
             expression_l,
@@ -3389,7 +3395,7 @@ impl Builder {
     pub(crate) fn static_regexp(
         &self,
         parts: &Vec<Node>,
-        options: &Vec<char>,
+        options: &[char],
         range: &Range,
     ) -> Option<Regex> {
         let source = self.static_string(&parts)?;
@@ -3420,9 +3426,13 @@ impl Builder {
             ..
         }) = node
         {
-            if let Node::RegOpt(RegOpt { options, .. }) = &**options {
-                return self.static_regexp(parts, options, expression_l);
-            }
+            let mut re_options = &vec![];
+            if let Some(options) = options {
+                if let Node::RegOpt(RegOpt { options, .. }) = &**options {
+                    re_options = options
+                }
+            };
+            return self.static_regexp(parts, re_options, expression_l);
         }
         None
     }
