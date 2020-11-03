@@ -5870,7 +5870,8 @@ impl Parser {
         ParserResult {
             ast: self.result.take(),
             tokens: std::mem::take(&mut self.tokens),
-            diagnostics: self.diagnostics.take()
+            diagnostics: self.diagnostics.take(),
+            comments: std::mem::take(&mut self.yylexer.comments),
         }
     }
 

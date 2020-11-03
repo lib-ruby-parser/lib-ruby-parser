@@ -146,6 +146,6 @@ impl Range {
 
 impl std::fmt::Debug for Range {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!("{}..{}", self.begin_pos, self.end_pos))
+        f.write_str(&format!("{}...{}", self.begin_pos, self.end_pos))
     }
 }

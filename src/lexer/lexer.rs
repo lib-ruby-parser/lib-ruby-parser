@@ -6,6 +6,7 @@ use crate::maybe_byte::*;
 use crate::parser::TokenValue;
 use crate::parser::{Loc, Token};
 use crate::source::buffer::*;
+use crate::source::Comment;
 use crate::source::CustomDecoder;
 use crate::source::InputError;
 use crate::source::Range;
@@ -48,6 +49,7 @@ pub struct Lexer {
     pub static_env: StaticEnvironment,
 
     pub(crate) diagnostics: Diagnostics,
+    pub(crate) comments: Vec<Comment>,
 }
 
 impl Lexer {
@@ -234,6 +236,7 @@ impl Lexer {
                             self.set_file_encoding(self.buffer.pcur, self.buffer.pend)
                         }
                         self.buffer.goto_eol();
+                        self.comments.push(Comment::new(self.current_range()))
                     }
                     self.token_seen = token_seen;
                     let cc = self
@@ -400,6 +403,8 @@ impl Lexer {
                                 self.buffer.pushback(&c);
                             }
                             self.buffer.goto_eol();
+                            self.comments
+                                .push(Comment::new(begin_range.with_end(self.buffer.pcur)));
                             continue 'retrying;
                         }
                     }

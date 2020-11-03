@@ -7,6 +7,7 @@ mod source_line;
 
 pub use range::Range;
 
+pub use comment::Comment;
 pub use decoder::InputError;
 pub(crate) use decoder::{decode_input, CustomDecoder};
 pub use recognized_encoding::RecognizedEncoding;
