@@ -1,6 +1,5 @@
 use crate::lex_states::*;
 use crate::Lexer;
-use aho_corasick::{AhoCorasick, AhoCorasickBuilder};
 
 pub struct ReservedWord {
     pub(crate) name: &'static str,
@@ -12,24 +11,6 @@ pub struct ReservedWord {
 // must be in sync with defs/keywords
 const RESERVED_WORDS: &[ReservedWord] = &[
     ReservedWord {
-        name: "__ENCODING__",
-        id: Lexer::k__ENCODING__,
-        modifier_id: Lexer::k__ENCODING__,
-        state: EXPR_END,
-    },
-    ReservedWord {
-        name: "__LINE__",
-        id: Lexer::k__LINE__,
-        modifier_id: Lexer::k__LINE__,
-        state: EXPR_END,
-    },
-    ReservedWord {
-        name: "__FILE__",
-        id: Lexer::k__FILE__,
-        modifier_id: Lexer::k__FILE__,
-        state: EXPR_END,
-    },
-    ReservedWord {
         name: "BEGIN",
         id: Lexer::klBEGIN,
         modifier_id: Lexer::klBEGIN,
@@ -39,6 +20,24 @@ const RESERVED_WORDS: &[ReservedWord] = &[
         name: "END",
         id: Lexer::klEND,
         modifier_id: Lexer::klEND,
+        state: EXPR_END,
+    },
+    ReservedWord {
+        name: "__ENCODING__",
+        id: Lexer::k__ENCODING__,
+        modifier_id: Lexer::k__ENCODING__,
+        state: EXPR_END,
+    },
+    ReservedWord {
+        name: "__FILE__",
+        id: Lexer::k__FILE__,
+        modifier_id: Lexer::k__FILE__,
+        state: EXPR_END,
+    },
+    ReservedWord {
+        name: "__LINE__",
+        id: Lexer::k__LINE__,
+        modifier_id: Lexer::k__LINE__,
         state: EXPR_END,
     },
     ReservedWord {
@@ -259,15 +258,18 @@ const RESERVED_WORDS: &[ReservedWord] = &[
     },
 ];
 
-lazy_static! {
-    static ref RESERVED_WORDS_PATTERNS: AhoCorasick = AhoCorasickBuilder::new()
-        .ascii_case_insensitive(false)
-        .build(&RESERVED_WORDS.iter().map(|r| r.name).collect::<Vec<_>>());
-}
-
 pub(crate) fn reserved_word(tok: &str) -> Option<&'static ReservedWord> {
-    RESERVED_WORDS_PATTERNS
-        .find_iter(tok)
-        .next()
-        .map(|mat| &RESERVED_WORDS[mat.pattern()])
+    debug_assert!(
+        RESERVED_WORDS.is_sorted_by(|one, two| Some(one.name.cmp(two.name))),
+        "\nRESERVED_WORDS must be sorted. Expected:\n{:?}\nGot:\n{:?}\n",
+        {
+            let mut words = RESERVED_WORDS.iter().map(|w| w.name).collect::<Vec<_>>();
+            words.sort();
+            words
+        },
+        RESERVED_WORDS.iter().map(|w| w.name).collect::<Vec<_>>()
+    );
+
+    let idx = RESERVED_WORDS.binary_search_by(|e| e.name.cmp(tok)).ok()?;
+    Some(&RESERVED_WORDS[idx])
 }
