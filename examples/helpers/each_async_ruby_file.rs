@@ -4,7 +4,6 @@ use std::sync::Mutex;
 use std::thread;
 
 use std::env;
-use std::path::Path;
 
 use super::each_ruby_file;
 
@@ -99,10 +98,7 @@ impl Drop for Pool {
 }
 
 #[allow(dead_code)]
-pub fn each_async_ruby_file<F>(
-    path: &Path,
-    cb: &'static F,
-) -> Result<(), Box<dyn std::error::Error>>
+pub fn each_async_ruby_file<F>(path: &str, cb: &'static F) -> Result<(), Box<dyn std::error::Error>>
 where
     F: Fn(&str) + Send + Sync,
 {

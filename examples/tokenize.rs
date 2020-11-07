@@ -72,8 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let tokens = tokenize(code.as_bytes(), "(eval)", debug)?;
         callback(&tokens)
     } else if let Some(path) = args.path {
-        let path = Path::new(&path);
-        each_ruby_file(path, &|entry| {
+        each_ruby_file(&path, &|entry| {
             let code = fs::read(Path::new(entry))?;
             let node = tokenize(&code, entry, debug)?;
             callback(&node);

@@ -1,5 +1,4 @@
 use std::env;
-use std::path::Path;
 
 mod helpers;
 use helpers::*;
@@ -62,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => print_usage(),
     };
 
-    each_async_ruby_file(Path::new(path), &|path| match compare(&path) {
+    each_async_ruby_file(&path, &|path| match compare(&path) {
         Ok(_) => {}
         Err(_) => {}
     })?;

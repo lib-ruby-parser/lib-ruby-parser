@@ -25,8 +25,11 @@ struct Args {
     #[clap(short = 'L', long, about = "print locations")]
     locations: bool,
 
-    #[clap(long, about = "print full AST using debug formatter")]
+    #[clap(short = 'F', long, about = "print full AST using debug formatter")]
     print_full: bool,
+
+    #[clap(short, long, about = "Run profiles")]
+    profile: bool,
 }
 
 fn print_diagnostics(diagnostics: &[Diagnostic]) {
@@ -58,6 +61,7 @@ fn print_full(_str: &str, result: &ParserResult) {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Args = Args::parse();
+
     let callback: &dyn Fn(&str, &ParserResult) = if args.quiet {
         &print_quite
     } else if args.locations {
@@ -67,22 +71,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         &print_ast
     };
+
+    let profile = start_profiling(args.profile);
     let debug = args.debug;
 
     if let Some(code) = args.code {
         let result = parse(code.as_bytes(), "(eval)", debug)?;
-        callback(&code, &result)
+        callback(&code, &result);
     } else if let Some(path) = args.path {
-        let path = Path::new(&path);
-        each_ruby_file(path, &|entry| {
+        each_ruby_file(&path, &|entry| {
             let code = fs::read(Path::new(entry))?;
-            let result = parse(&code, entry, debug)?;
-            callback(&String::from_utf8_lossy(&code), &result);
+            if let Ok(result) = parse(&code, entry, debug) {
+                callback(&String::from_utf8_lossy(&code), &result);
+            }
             Ok(())
         })?;
     } else {
         println!("Nothing to parse");
     }
+
+    stop_profiling(args.profile, profile)?;
 
     println!("Done");
 
