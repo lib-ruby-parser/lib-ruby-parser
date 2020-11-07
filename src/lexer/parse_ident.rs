@@ -75,7 +75,7 @@ impl ParseIdent for Lexer {
             return Self::tLABEL;
         }
         if !self.lex_state.is_some(EXPR_DOT) {
-            if let Some(kw) = reserved_word(&self.tokenbuf) {
+            if let Some(kw) = reserved_word(&self.tokenbuf.borrow_string().unwrap_or_else(|_| "")) {
                 let state: LexState = self.lex_state.clone();
                 if state.is_some(EXPR_FNAME) {
                     self.lex_state.set(EXPR_ENDFN);
