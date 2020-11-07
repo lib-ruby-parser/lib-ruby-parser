@@ -181,16 +181,18 @@
 
 %type <maybe_node> compstmt bodystmt f_arglist f_paren_args opt_block_param block_param_def f_larglist
 
-%type <token>   sym operation operation2 operation3
+%type <token>   sym operation operation2 operation3 kwrest_mark restarg_mark blkarg_mark
 %type <token>   cname fname op f_norm_arg f_bad_arg
 %type <token>   f_label f_arg_asgn call_op call_op2 reswords relop dot_or_colon
 %type <token>   p_rest p_kw_label
 %type <token>   args_forward excessed_comma def_name k_if k_elsif
 %type <token>   rbrace rparen rbracket p_lparen p_lbracket k_return then term fcall
+%type <token>   k_begin k_unless k_while k_until k_case k_for k_class k_module k_def k_do k_do_block
+%type <token>   k_rescue k_ensure k_when k_else k_end do
 
 %type <token_list> terms
 
-%type <none> none
+%type <none> none opt_terms trailer opt_nl
 
 %token END_OF_INPUT 0   "end-of-input"
 %token <token> tDOT
@@ -311,11 +313,13 @@
 
          program:   {
                         self.yylexer.lex_state.set(EXPR_BEG);
+                        $<None>$ = Value::None;
                     }
                   top_compstmt
                     {
                         let _trigger_locs = @2;
                         self.result = $<MaybeNode>2;
+                        $$ = Value::None;
                     }
                 ;
 
@@ -349,6 +353,9 @@
                 ;
 
         top_stmt: stmt
+                    {
+                        $$ = $1;
+                    }
                 | klBEGIN begin_block
                     {
                         let BeginBlock { begin_t, body, end_t } = $<BeginBlock>2;
@@ -442,18 +449,23 @@
                 ;
 
    stmt_or_begin: stmt
+                    {
+                        $$ = $1;
+                    }
                 | klBEGIN
                     {
                         return self.yyerror(&@1, DiagnosticMessage::BeginNotAtTopLevel);
                     }
                   begin_block
                     {
+                        $$ = Value::None;
                     }
                 ;
 
             stmt: kALIAS fitem
                     {
                         self.yylexer.lex_state.set(EXPR_FNAME|EXPR_FITEM);
+                        $<None>$ = Value::None;
                     }
                   fitem
                     {
@@ -574,6 +586,9 @@
                         );
                     }
                 | command_asgn
+                    {
+                        $$ = $1;
+                    }
                 | mlhs tEQL command_call
                     {
                         let command_call = $<Node>3;
@@ -644,7 +659,13 @@
                         );
                     }
                 | rassign
+                    {
+                        $$ = $1;
+                    }
                 | expr
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          rassign: arg_value tASSOC lhs
@@ -834,9 +855,15 @@
                         );
                     }
                 | command_asgn
+                    {
+                        $$ = $1;
+                    }
                 ;
 
             expr: command_call
+                    {
+                        $$ = $1;
+                    }
                 | expr kAND expr
                     {
                         $$ = Value::Node(
@@ -910,6 +937,9 @@
                         );
                     }
                 | arg %prec tLBRACE_ARG
+                    {
+                        $$ = $1;
+                    }
                 ;
 
         def_name: fname
@@ -939,6 +969,7 @@
        defs_head: k_def singleton dot_or_colon
                     {
                         self.yylexer.lex_state.set(EXPR_FNAME);
+                        $<None>$ = Value::None;
                     }
                   def_name
                     {
@@ -966,6 +997,7 @@
 
    expr_value_do:   {
                         self.yylexer.cond.push(true);
+                        $<None>$ = Value::None;
                     }
                   expr_value do
                     {
@@ -982,10 +1014,19 @@
 
 
     command_call: command
+                    {
+                        $$ = $1;
+                    }
                 | block_command
+                    {
+                        $$ = $1;
+                    }
                 ;
 
    block_command: block_call
+                    {
+                        $$ = $1;
+                    }
                 | block_call call_op2 operation2 command_args
                     {
                         $$ = Value::Node(
@@ -1004,6 +1045,7 @@
  cmd_brace_block: tLBRACE_ARG
                     {
                         self.context.push_block();
+                        $<None>$ = Value::None;
                     }
                   brace_body tRCURLY
                     {
@@ -1021,6 +1063,9 @@
                 ;
 
            fcall: operation
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          command: fcall command_args       %prec tLOWEST
@@ -1240,6 +1285,9 @@
                 ;
 
       mlhs_basic: mlhs_head
+                    {
+                        $$ = $1;
+                    }
                 | mlhs_head mlhs_item
                     {
                         let mut nodes = $<NodeList>1;
@@ -1311,6 +1359,9 @@
                 ;
 
        mlhs_item: mlhs_node
+                    {
+                        $$ = $1;
+                    }
                 | tLPAREN mlhs_inner rparen
                     {
                         $$ = Value::Node(
@@ -1534,6 +1585,9 @@
                         return self.yyerror(&@1, DiagnosticMessage::ClassOrModuleNameMustBeConstant);
                     }
                 | tCONSTANT
+                    {
+                        $$ = $1;
+                    }
                 ;
 
            cpath: tCOLON3 cname
@@ -1561,14 +1615,26 @@
                 ;
 
            fname: tIDENTIFIER
+                    {
+                        $$ = $1;
+                    }
                 | tCONSTANT
+                    {
+                        $$ = $1;
+                    }
                 | tFID
+                    {
+                        $$ = $1;
+                    }
                 | op
                     {
                         self.yylexer.lex_state.set(EXPR_ENDFN);
                         $$ = $1;
                     }
                 | reswords
+                    {
+                        $$ = $1;
+                    }
                 ;
 
            fitem: fname
@@ -1578,6 +1644,9 @@
                         );
                     }
                 | symbol
+                    {
+                        $$ = $1;
+                    }
                 ;
 
       undef_list: fitem
@@ -1587,6 +1656,7 @@
                 | undef_list tCOMMA
                     {
                         self.yylexer.lex_state.set(EXPR_FNAME|EXPR_FITEM);
+                        $<None>$ = Value::None;
                     }
                   fitem
                     {
@@ -1596,47 +1666,79 @@
                     }
                 ;
 
-              op: tPIPE
-                | tCARET
-                | tAMPER2
-                | tCMP
-                | tEQ
-                | tEQQ
-                | tMATCH
-                | tNMATCH
-                | tGT
-                | tGEQ
-                | tLT
-                | tLEQ
-                | tNEQ
-                | tLSHFT
-                | tRSHFT
-                | tPLUS
-                | tMINUS
-                | tSTAR2
-                | tSTAR
-                | tDIVIDE
-                | tPERCENT
-                | tPOW
-                | tDSTAR
-                | tBANG
-                | tTILDE
-                | tUPLUS
-                | tUMINUS
-                | tAREF
-                | tASET
-                | tBACK_REF2
+              op: tPIPE      { $$ = $1; }
+                | tCARET     { $$ = $1; }
+                | tAMPER2    { $$ = $1; }
+                | tCMP       { $$ = $1; }
+                | tEQ        { $$ = $1; }
+                | tEQQ       { $$ = $1; }
+                | tMATCH     { $$ = $1; }
+                | tNMATCH    { $$ = $1; }
+                | tGT        { $$ = $1; }
+                | tGEQ       { $$ = $1; }
+                | tLT        { $$ = $1; }
+                | tLEQ       { $$ = $1; }
+                | tNEQ       { $$ = $1; }
+                | tLSHFT     { $$ = $1; }
+                | tRSHFT     { $$ = $1; }
+                | tPLUS      { $$ = $1; }
+                | tMINUS     { $$ = $1; }
+                | tSTAR2     { $$ = $1; }
+                | tSTAR      { $$ = $1; }
+                | tDIVIDE    { $$ = $1; }
+                | tPERCENT   { $$ = $1; }
+                | tPOW       { $$ = $1; }
+                | tDSTAR     { $$ = $1; }
+                | tBANG      { $$ = $1; }
+                | tTILDE     { $$ = $1; }
+                | tUPLUS     { $$ = $1; }
+                | tUMINUS    { $$ = $1; }
+                | tAREF      { $$ = $1; }
+                | tASET      { $$ = $1; }
+                | tBACK_REF2 { $$ = $1; }
                 ;
 
-        reswords: k__LINE__ | k__FILE__ | k__ENCODING__ | klBEGIN | klEND
-                | kALIAS    | kAND      | kBEGIN        | kBREAK  | kCASE
-                | kCLASS    | kDEF      | kDEFINED      | kDO     | kELSE
-                | kELSIF    | kEND      | kENSURE       | kFALSE  | kFOR
-                | kIN       | kMODULE   | kNEXT         | kNIL    | kNOT
-                | kOR       | kREDO     | kRESCUE       | kRETRY  | kRETURN
-                | kSELF     | kSUPER    | kTHEN         | kTRUE   | kUNDEF
-                | kWHEN     | kYIELD    | kIF           | kUNLESS | kWHILE
-                | kUNTIL
+        reswords: k__LINE__     { $$ = $1; }
+                | k__FILE__     { $$ = $1; }
+                | k__ENCODING__ { $$ = $1; }
+                | klBEGIN       { $$ = $1; }
+                | klEND         { $$ = $1; }
+                | kALIAS        { $$ = $1; }
+                | kAND          { $$ = $1; }
+                | kBEGIN        { $$ = $1; }
+                | kBREAK        { $$ = $1; }
+                | kCASE         { $$ = $1; }
+                | kCLASS        { $$ = $1; }
+                | kDEF          { $$ = $1; }
+                | kDEFINED      { $$ = $1; }
+                | kDO           { $$ = $1; }
+                | kELSE         { $$ = $1; }
+                | kELSIF        { $$ = $1; }
+                | kEND          { $$ = $1; }
+                | kENSURE       { $$ = $1; }
+                | kFALSE        { $$ = $1; }
+                | kFOR          { $$ = $1; }
+                | kIN           { $$ = $1; }
+                | kMODULE       { $$ = $1; }
+                | kNEXT         { $$ = $1; }
+                | kNIL          { $$ = $1; }
+                | kNOT          { $$ = $1; }
+                | kOR           { $$ = $1; }
+                | kREDO         { $$ = $1; }
+                | kRESCUE       { $$ = $1; }
+                | kRETRY        { $$ = $1; }
+                | kRETURN       { $$ = $1; }
+                | kSELF         { $$ = $1; }
+                | kSUPER        { $$ = $1; }
+                | kTHEN         { $$ = $1; }
+                | kTRUE         { $$ = $1; }
+                | kUNDEF        { $$ = $1; }
+                | kWHEN         { $$ = $1; }
+                | kYIELD        { $$ = $1; }
+                | kIF           { $$ = $1; }
+                | kUNLESS       { $$ = $1; }
+                | kWHILE        { $$ = $1; }
+                | kUNTIL        { $$ = $1; }
                 ;
 
              arg: lhs tEQL arg_rhs
@@ -1944,6 +2046,9 @@
                         );
                     }
                 | rel_expr   %prec tCMP
+                    {
+                        $$ = $1;
+                    }
                 | arg tEQ arg
                     {
                         $$ = Value::Node(
@@ -2181,12 +2286,27 @@
                         self.current_arg_stack.pop();
                     }
                 | primary
+                    {
+                        $$ = $1;
+                    }
                 ;
 
            relop: tGT
+                    {
+                        $$ = $1;
+                    }
                 | tLT
+                    {
+                        $$ = $1;
+                    }
                 | tGEQ
+                    {
+                        $$ = $1;
+                    }
                 | tLEQ
+                    {
+                        $$ = $1;
+                    }
                 ;
 
         rel_expr: arg relop arg   %prec tGT
@@ -2226,6 +2346,9 @@
                         $$ = Value::NodeList( vec![] );
                     }
                 | args trailer
+                    {
+                        $$ = $1;
+                    }
                 | args tCOMMA assocs trailer
                     {
                         let mut nodes = $<NodeList>1;
@@ -2347,7 +2470,13 @@
                         $$ = Value::NodeList( vec![] );
                     }
                 | call_args
+                    {
+                        $$ = $1;
+                    }
                 | args tCOMMA
+                    {
+                        $$ = $1;
+                    }
                 | args tCOMMA assocs tCOMMA
                     {
                         let mut nodes = $<NodeList>1;
@@ -2412,6 +2541,7 @@
                         if lookahead { self.yylexer.cmdarg.pop() }
                         self.yylexer.cmdarg.push(true);
                         if lookahead { self.yylexer.cmdarg.push(false) }
+                        $<None>$ = Value::None;
                     }
                   call_args
                     {
@@ -2479,6 +2609,9 @@
                         );
                     }
                 | arg_value
+                    {
+                        $$ = $1;
+                    }
                 ;
 
             mrhs: args tCOMMA arg_value
@@ -2506,15 +2639,45 @@
                 ;
 
          primary: literal
+                    {
+                        $$ = $1;
+                    }
                 | strings
+                    {
+                        $$ = $1;
+                    }
                 | xstring
+                    {
+                        $$ = $1;
+                    }
                 | regexp
+                    {
+                        $$ = $1;
+                    }
                 | words
+                    {
+                        $$ = $1;
+                    }
                 | qwords
+                    {
+                        $$ = $1;
+                    }
                 | symbols
+                    {
+                        $$ = $1;
+                    }
                 | qsymbols
+                    {
+                        $$ = $1;
+                    }
                 | var_ref
+                    {
+                        $$ = $1;
+                    }
                 | backref
+                    {
+                        $$ = $1;
+                    }
                 | tFID
                     {
                         $$ = Value::Node(
@@ -2531,6 +2694,7 @@
                 | k_begin
                     {
                         self.yylexer.cmdarg.push(false);
+                        $<None>$ = Value::None;
                     }
                   bodystmt
                   k_end
@@ -2541,7 +2705,7 @@
                             self.builder.begin_keyword($<Token>1, $<MaybeNode>3, $<Token>4)
                         );
                     }
-                | tLPAREN_ARG { self.yylexer.lex_state.set(EXPR_ENDARG); } rparen
+                | tLPAREN_ARG { self.yylexer.lex_state.set(EXPR_ENDARG); $<None>$ = Value::None; } rparen
                     {
                         $$ = Value::Node(
                             self.builder.begin(
@@ -2551,7 +2715,7 @@
                             )
                         );
                     }
-                | tLPAREN_ARG stmt { self.yylexer.lex_state.set(EXPR_ENDARG); } rparen
+                | tLPAREN_ARG stmt { self.yylexer.lex_state.set(EXPR_ENDARG); $<None>$ = Value::None; } rparen
                     {
                         $$ = Value::Node(
                             self.builder.begin(
@@ -2712,6 +2876,9 @@
                         );
                     }
                 | method_call
+                    {
+                        $$ = $1;
+                    }
                 | method_call brace_block
                     {
                         let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>2;
@@ -2726,6 +2893,9 @@
                         );
                     }
                 | lambda
+                    {
+                        $$ = $1;
+                    }
                 | k_if expr_value then
                   compstmt
                   if_tail
@@ -2800,6 +2970,7 @@
                     {
                         // TODO: there's a warning that wq/parser doesn't trigger,
                         // search for `p->case_labels`
+                        $<None>$ = Value::None;
                     }
                   case_body
                   k_end
@@ -2822,6 +2993,7 @@
                     {
                         // TODO: there's a warning that wq/parser doesn't trigger,
                         // search for `p->case_labels`
+                        $<None>$ = Value::None;
                     }
                   case_body
                   k_end
@@ -2881,6 +3053,7 @@
                         self.yylexer.cmdarg.push(false);
                         self.yylexer.cond.push(false);
                         self.context.push_class();
+                        $<None>$ = Value::None;
                     }
                   bodystmt
                   k_end
@@ -2913,6 +3086,7 @@
                         self.yylexer.cmdarg.push(false);
                         self.yylexer.cond.push(false);
                         self.context.push_sclass();
+                        $<None>$ = Value::None;
                     }
                   term
                   bodystmt
@@ -2938,6 +3112,7 @@
                         self.static_env.extend_static();
                         self.yylexer.cmdarg.push(false);
                         self.context.push_module();
+                        $<None>$ = Value::None;
                     }
                   bodystmt
                   k_end
@@ -3066,6 +3241,9 @@
                 ;
 
          k_begin: kBEGIN
+                    {
+                        $$ = $1;
+                    }
                 ;
 
             k_if: kIF
@@ -3076,45 +3254,87 @@
                 ;
 
         k_unless: kUNLESS
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          k_while: kWHILE
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          k_until: kUNTIL
+                    {
+                        $$ = $1;
+                    }
                 ;
 
           k_case: kCASE
+                    {
+                        $$ = $1;
+                    }
                 ;
 
            k_for: kFOR
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          k_class: kCLASS
+                    {
+                        $$ = $1;
+                    }
                 ;
 
         k_module: kMODULE
+                    {
+                        $$ = $1;
+                    }
                 ;
 
            k_def: kDEF
+                    {
+                        $$ = $1;
+                    }
                 ;
 
             k_do: kDO
+                    {
+                        $$ = $1;
+                    }
                 ;
 
       k_do_block: kDO_BLOCK
+                    {
+                        $$ = $1;
+                    }
                 ;
 
         k_rescue: kRESCUE
+                    {
+                        $$ = $1;
+                    }
                 ;
 
         k_ensure: kENSURE
+                    {
+                        $$ = $1;
+                    }
                 ;
 
           k_when: kWHEN
+                    {
+                        $$ = $1;
+                    }
                 ;
 
           k_else: kELSE
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          k_elsif: kELSIF
@@ -3125,6 +3345,9 @@
                 ;
 
            k_end: kEND
+                    {
+                        $$ = $1;
+                    }
                 ;
 
         k_return: kRETURN
@@ -3137,7 +3360,13 @@
                 ;
 
             then: term
+                    {
+                        $$ = $1;
+                    }
                 | kTHEN
+                    {
+                        $$ = $1;
+                    }
                 | term kTHEN
                     {
                         $$ = $2;
@@ -3145,7 +3374,13 @@
                 ;
 
               do: term
+                    {
+                        $$ = $1;
+                    }
                 | kDO_COND
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          if_tail: opt_else
@@ -3193,7 +3428,13 @@
                 ;
 
          for_var: lhs
+                    {
+                        $$ = $1;
+                    }
                 | mlhs
+                    {
+                        $$ = $1;
+                    }
                 ;
 
           f_marg: f_norm_arg
@@ -3227,6 +3468,9 @@
                 ;
 
          f_margs: f_marg_list
+                    {
+                        $$ = $1;
+                    }
                 | f_marg_list tCOMMA f_rest_marg
                     {
                         let mut nodes = $<NodeList>1;
@@ -3264,7 +3508,13 @@
                 ;
 
     f_any_kwrest: f_kwrest
+                    {
+                        $$ = $1;
+                    }
                 | f_no_kwarg
+                    {
+                        $$ = $1;
+                    }
                 ;
 
  block_args_tail: f_block_kwarg tCOMMA f_kwrest opt_f_block_arg
@@ -3300,6 +3550,9 @@ opt_block_args_tail:
                 ;
 
   excessed_comma: tCOMMA
+                    {
+                        $$ = $1;
+                    }
                 ;
 
      block_param: f_arg tCOMMA f_block_optarg tCOMMA f_rest_arg opt_block_args_tail
@@ -3328,6 +3581,9 @@ opt_block_args_tail:
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg excessed_comma
+                    {
+                        $$ = $1;
+                    }
                 | f_arg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
@@ -3378,6 +3634,9 @@ opt_block_args_tail:
                         $$ = Value::NodeList(nodes);
                     }
                 | block_args_tail
+                    {
+                        $$ = $1;
+                    }
                 ;
 
  opt_block_param: none
@@ -3470,6 +3729,7 @@ opt_block_args_tail:
                     {
                         self.context.pop();
                         self.yylexer.cmdarg.push(false);
+                        $<None>$ = Value::None;
                     }
                   lambda_body
                     {
@@ -3525,6 +3785,7 @@ opt_block_args_tail:
      lambda_body: tLAMBEG
                     {
                         self.context.push_lambda();
+                        $<None>$ = Value::None;
                     }
                   compstmt tRCURLY
                     {
@@ -3540,6 +3801,7 @@ opt_block_args_tail:
                 | kDO_LAMBDA
                     {
                         self.context.push_lambda();
+                        $<None>$ = Value::None;
                     }
                   bodystmt k_end
                     {
@@ -3557,6 +3819,7 @@ opt_block_args_tail:
         do_block: k_do_block
                     {
                         self.context.push_block();
+                        $<None>$ = Value::None;
                     }
                   do_body k_end
                     {
@@ -3777,6 +4040,7 @@ opt_block_args_tail:
      brace_block: tLCURLY
                     {
                         self.context.push_block();
+                        $<None>$ = Value::None;
                     }
                   brace_body tRCURLY
                     {
@@ -3795,6 +4059,7 @@ opt_block_args_tail:
                 | k_do
                     {
                         self.context.push_block();
+                        $<None>$ = Value::None;
                     }
                   do_body k_end
                     {
@@ -3815,6 +4080,7 @@ opt_block_args_tail:
       brace_body:   {
                         self.static_env.extend_dynamic();
                         self.max_numparam_stack.push();
+                        $<None>$ = Value::None;
                     }
                   opt_block_param compstmt
                     {
@@ -3840,6 +4106,7 @@ opt_block_args_tail:
                         self.static_env.extend_dynamic();
                         self.max_numparam_stack.push();
                         self.yylexer.cmdarg.push(false);
+                        $<None>$ = Value::None;
                     }
                   opt_block_param bodystmt
                     {
@@ -3920,6 +4187,7 @@ opt_block_args_tail:
                   p_top_expr then
                     {
                         self.yylexer.in_kwarg = $<Bool>2;
+                        $<None>$ = Value::None;
                     }
                   compstmt
                   p_cases
@@ -3971,6 +4239,9 @@ opt_block_args_tail:
                 ;
 
  p_top_expr_body: p_expr
+                    {
+                        $$ = $1;
+                    }
                 | p_expr tCOMMA
                     {
                         // array patterns that end with comma
@@ -4009,6 +4280,9 @@ opt_block_args_tail:
                 ;
 
           p_expr: p_as
+                    {
+                        $$ = $1;
+                    }
                 ;
 
             p_as: p_expr tASSOC p_variable
@@ -4022,6 +4296,9 @@ opt_block_args_tail:
                         );
                     }
                 | p_alt
+                    {
+                        $$ = $1;
+                    }
                 ;
 
            p_alt: p_alt tPIPE p_expr_basic
@@ -4035,6 +4312,9 @@ opt_block_args_tail:
                         );
                     }
                 | p_expr_basic
+                    {
+                        $$ = $1;
+                    }
                 ;
 
         p_lparen: tLPAREN2
@@ -4052,6 +4332,9 @@ opt_block_args_tail:
                 ;
 
     p_expr_basic: p_value
+                    {
+                        $$ = $1;
+                    }
                 | p_const p_lparen p_args rparen
                     {
                         self.pattern_hash_keys.pop();
@@ -4219,6 +4502,7 @@ opt_block_args_tail:
                 | tLPAREN
                     {
                         self.pattern_hash_keys.push();
+                        $<None>$ = Value::None;
                     }
                   p_expr rparen
                     {
@@ -4238,6 +4522,9 @@ opt_block_args_tail:
                         $$ = Value::NodeList( vec![ $<Node>1 ] );
                     }
                 | p_args_head
+                    {
+                        $$ = $1;
+                    }
                 | p_args_head p_arg
                     {
                         let nodes = [ $<NodeList>1, vec![ $<Node>2 ] ].concat();
@@ -4268,6 +4555,9 @@ opt_block_args_tail:
                         $$ = Value::NodeList(nodes);
                     }
                 | p_args_tail
+                    {
+                        $$ = $1;
+                    }
                 ;
 
      p_args_head: p_arg tCOMMA
@@ -4335,6 +4625,9 @@ opt_block_args_tail:
                 ;
 
            p_arg: p_expr
+                    {
+                        $$ = $1;
+                    }
                 ;
 
         p_kwargs: p_kwarg tCOMMA p_any_kwrest
@@ -4343,8 +4636,17 @@ opt_block_args_tail:
                         $$ = Value::NodeList(nodes);
                     }
                 | p_kwarg
+                    {
+                        $$ = $1;
+                    }
                 | p_kwarg tCOMMA
+                    {
+                        $$ = $1;
+                    }
                 | p_any_kwrest
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          p_kwarg: p_kw
@@ -4421,10 +4723,19 @@ opt_block_args_tail:
                 ;
 
     p_any_kwrest: p_kwrest
+                    {
+                        $$ = $1;
+                    }
                 | p_kwnorest
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          p_value: p_primitive
+                    {
+                        $$ = $1;
+                    }
                 | p_primitive tDOT2 p_primitive
                     {
                         let left = $<Node>1;
@@ -4484,8 +4795,17 @@ opt_block_args_tail:
                         );
                     }
                 | p_variable
+                    {
+                        $$ = $1;
+                    }
                 | p_var_ref
+                    {
+                        $$ = $1;
+                    }
                 | p_const
+                    {
+                        $$ = $1;
+                    }
                 | tBDOT2 p_primitive
                     {
                         let right = $<Node>2;
@@ -4515,13 +4835,37 @@ opt_block_args_tail:
                 ;
 
      p_primitive: literal
+                    {
+                        $$ = $1;
+                    }
                 | strings
+                    {
+                        $$ = $1;
+                    }
                 | xstring
+                    {
+                        $$ = $1;
+                    }
                 | regexp
+                    {
+                        $$ = $1;
+                    }
                 | words
+                    {
+                        $$ = $1;
+                    }
                 | qwords
+                    {
+                        $$ = $1;
+                    }
                 | symbols
+                    {
+                        $$ = $1;
+                    }
                 | qsymbols
+                    {
+                        $$ = $1;
+                    }
                 | keyword_variable
                     {
                         $$ = Value::Node(
@@ -4529,6 +4873,9 @@ opt_block_args_tail:
                         );
                     }
                 | lambda
+                    {
+                        $$ = $1;
+                    }
                 ;
 
       p_variable: tIDENTIFIER
@@ -4613,6 +4960,9 @@ opt_block_args_tail:
                         $$ = Value::NodeList(vec![ $<Node>1 ]);
                     }
                 | mrhs
+                    {
+                        $$ = $1;
+                    }
                 | none
                     {
                         $$ = Value::NodeList( vec![] );
@@ -4644,7 +4994,13 @@ opt_block_args_tail:
                 ;
 
          literal: numeric
+                    {
+                        $$ = $1;
+                    }
                 | symbol
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          strings: string
@@ -4887,6 +5243,7 @@ xstring_contents: /* none */
                     {
                         self.yylexer.cmdarg.push(false);
                         self.yylexer.cond.push(false);
+                        $<None>$ = Value::None;
                     }
                     {
                         $<MaybeStrTerm>$ = Value::MaybeStrTerm(std::mem::take(&mut self.yylexer.strterm));
@@ -4939,8 +5296,8 @@ xstring_contents: /* none */
                 | backref
                 ;
 
-          symbol: ssym
-                | dsym
+          symbol: ssym { $$ = $1; }
+                | dsym { $$ = $1; }
                 ;
 
             ssym: tSYMBEG sym
@@ -4952,10 +5309,10 @@ xstring_contents: /* none */
                     }
                 ;
 
-             sym: fname
-                | tIVAR
-                | tGVAR
-                | tCVAR
+             sym: fname { $$ = $1; }
+                | tIVAR { $$ = $1; }
+                | tGVAR { $$ = $1; }
+                | tCVAR { $$ = $1; }
                 ;
 
             dsym: tSYMBEG string_contents tSTRING_END
@@ -4968,6 +5325,9 @@ xstring_contents: /* none */
                 ;
 
          numeric: simple_numeric
+                    {
+                        $$ = $1;
+                    }
                 | tUMINUS_NUM simple_numeric   %prec tLOWEST
                     {
                         $$ = Value::Node(
@@ -5178,6 +5538,7 @@ keyword_variable: kNIL
                     {
                         self.yylexer.lex_state.set(EXPR_BEG);
                         self.yylexer.command_start = true;
+                        $<None>$ = Value::None;
                     }
                   expr_value term
                     {
@@ -5235,7 +5596,10 @@ keyword_variable: kNIL
                 ;
 
        f_arglist: f_paren_args
-                |    {
+                    {
+                        $$ = $1;
+                    }
+                |   {
                         $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
                         self.yylexer.in_kwarg = true;
                         self.yylexer.lex_state.set(self.yylexer.lex_state.get()|EXPR_LABEL);
@@ -5359,6 +5723,9 @@ keyword_variable: kNIL
                 ;
 
     args_forward: tBDOT3
+                    {
+                        $$ = $1;
+                    }
                 ;
 
        f_bad_arg: tCONSTANT
@@ -5380,6 +5747,9 @@ keyword_variable: kNIL
                 ;
 
       f_norm_arg: f_bad_arg
+                    {
+                        $$ = $1;
+                    }
                 | tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
@@ -5503,7 +5873,13 @@ keyword_variable: kNIL
                 ;
 
      kwrest_mark: tPOW
+                    {
+                        $$ = $1;
+                    }
                 | tDSTAR
+                    {
+                        $$ = $1;
+                    }
                 ;
 
       f_no_kwarg: kwrest_mark kNIL
@@ -5587,7 +5963,13 @@ keyword_variable: kNIL
                 ;
 
     restarg_mark: tSTAR2
+                    {
+                        $$ = $1;
+                    }
                 | tSTAR
+                    {
+                        $$ = $1;
+                    }
                 ;
 
       f_rest_arg: restarg_mark tIDENTIFIER
@@ -5612,7 +5994,13 @@ keyword_variable: kNIL
                 ;
 
      blkarg_mark: tAMPER2
+                    {
+                        $$ = $1;
+                    }
                 | tAMPER
+                    {
+                        $$ = $1;
+                    }
                 ;
 
      f_block_arg: blkarg_mark tIDENTIFIER
@@ -5641,7 +6029,7 @@ keyword_variable: kNIL
                         self.value_expr(&var_ref)?;
                         $$ = Value::Node(var_ref);
                     }
-                | tLPAREN2 { self.yylexer.lex_state.set(EXPR_BEG); } expr rparen
+                | tLPAREN2 { self.yylexer.lex_state.set(EXPR_BEG); $<None>$ = Value::None; } expr rparen
                     {
                         let expr = $<Node>3;
                         match &expr {
@@ -5676,6 +6064,9 @@ keyword_variable: kNIL
                         $$ = Value::NodeList(vec![]);
                     }
                 | assocs trailer
+                    {
+                        $$ = $1;
+                    }
                 ;
 
           assocs: assoc
@@ -5729,39 +6120,99 @@ keyword_variable: kNIL
                 ;
 
        operation: tIDENTIFIER
+                    {
+                        $$ = $1;
+                    }
                 | tCONSTANT
+                    {
+                        $$ = $1;
+                    }
                 | tFID
+                    {
+                        $$ = $1;
+                    }
                 ;
 
       operation2: tIDENTIFIER
+                    {
+                        $$ = $1;
+                    }
                 | tCONSTANT
+                    {
+                        $$ = $1;
+                    }
                 | tFID
+                    {
+                        $$ = $1;
+                    }
                 | op
+                    {
+                        $$ = $1;
+                    }
                 ;
 
       operation3: tIDENTIFIER
+                    {
+                        $$ = $1;
+                    }
                 | tFID
+                    {
+                        $$ = $1;
+                    }
                 | op
+                    {
+                        $$ = $1;
+                    }
                 ;
 
     dot_or_colon: tDOT
+                    {
+                        $$ = $1;
+                    }
                 | tCOLON2
+                    {
+                        $$ = $1;
+                    }
                 ;
 
          call_op: tDOT
+                    {
+                        $$ = $1;
+                    }
                 | tANDDOT
+                    {
+                        $$ = $1;
+                    }
                 ;
 
         call_op2: call_op
+                    {
+                        $$ = $1;
+                    }
                 | tCOLON2
+                    {
+                        $$ = $1;
+                    }
                 ;
 
        opt_terms: /* none */
+                    {
+                        $$ = Value::None;
+                    }
                 | terms
+                    {
+                        $$ = Value::None;
+                    }
                 ;
 
           opt_nl: /* none */
+                    {
+                        $$ = Value::None;
+                    }
                 | tNL
+                    {
+                        $$ = Value::None;
+                    }
                 ;
 
           rparen: opt_nl tRPAREN
@@ -5783,12 +6234,27 @@ keyword_variable: kNIL
                 ;
 
          trailer: /* none */
+                    {
+                        $$ = Value::None;
+                    }
                 | tNL
+                    {
+                        $$ = Value::None;
+                    }
                 | tCOMMA
+                    {
+                        $$ = Value::None;
+                    }
                 ;
 
             term: tSEMI
+                    {
+                        $$ = $1;
+                    }
                 | tNL
+                    {
+                        $$ = $1;
+                    }
                 ;
 
            terms: term

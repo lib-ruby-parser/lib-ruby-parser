@@ -415,6 +415,7 @@ impl From<ParseValue> for PTopExpr {
 #[derive(Clone, Debug)]
 pub(crate) enum ParseValue {
     Stolen,
+    Uninitialized,
     None,
     Token(Token),
     TokenList(TokenList),
