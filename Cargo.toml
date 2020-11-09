@@ -12,7 +12,7 @@ onig = "6"
 regex = "1.3.9"
 
 [build-dependencies]
-rust-bison-skeleton = {path = "../rust-bison-skeleton/rust-bison-skeleton/"}
+rust-bison-skeleton = "0.5.0"
 serde = {version = "1.0", features = ["derive"]}
 serde_yaml = {version = "0.8.13"}
 

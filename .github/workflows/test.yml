@@ -14,6 +14,7 @@ jobs:
     name: run tests
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
         rust: [stable, beta, nightly]
