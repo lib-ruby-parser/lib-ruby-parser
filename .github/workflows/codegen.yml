@@ -1,0 +1,43 @@
+name: codegen
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  codegen:
+    name: check codegen
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: install ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7.2
+
+      - name: install ragel
+        run: |
+          sudo apt-get update
+          sudo apt-get install ragel
+
+      - name: run codegen
+        run: |
+          cd vendor/parser
+          bundle install
+          bundle exec rake generate
+          ruby ../codegen/lexer.rb
+          ruby ../codegen/parser.rb
+
+      - name: assert no diff
+        run: |
+          git add .
+          git diff --staged --exit-code

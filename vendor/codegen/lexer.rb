@@ -327,6 +327,10 @@ IGNORE = [
   'test_whitespace_endfn_2',
   'test_whitespace_endfn_5',
   'test_whitespace_arg',
+  'test_float_dot_E_0',
+  'test_float_dot_E_neg_0',
+  'test_float_dot_e_neg_0',
+  'test_string_pct_Q_backslash_0',
 ]
 
 Minitest.after_run do
