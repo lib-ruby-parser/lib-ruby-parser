@@ -97,7 +97,7 @@ impl Buffer {
         bytes: Vec<u8>,
         decoder: Option<CustomDecoder>,
     ) -> Result<Self, InputError> {
-        let bytes = decode_input(&bytes, decoder)?;
+        let bytes = decode_input(bytes, decoder)?;
 
         let mut line = SourceLine {
             start: 0,

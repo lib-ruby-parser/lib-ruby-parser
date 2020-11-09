@@ -13,28 +13,16 @@ end
 def each_gem_name
     return to_enum(__method__) unless block_given?
 
-    # Top 50 gems from rubygems.org
-    get_json('https://rubygems.org/api/v1/downloads/all.json')['gems'].each do |(gem_data, _downloads)|
-        full_name = gem_data['full_name']
-        version = gem_data['number']
-        name = full_name.delete_suffix("-#{version}")
-        yield name
-    end
+    1.upto(15) do |page|
+        url = "https://bestgems.org/total?page=#{page}"
+        html = URI.open(url).read
+        names = html.scan(/<a href="\/gems\/([\w\-]+)/).flatten
+        if names.length != 20
+            raise "failed to get gems from #{url} (got #{names.length} instead of 20)"
+        end
 
-    # Rails parts
-    yield 'rails'
-    yield 'activesupport'
-    yield 'actionpack'
-    yield 'actionview'
-    yield 'activemodel'
-    yield 'activerecord'
-    yield 'actionmailer'
-    yield 'activejob'
-    yield 'actioncable'
-    yield 'activestorage'
-    yield 'actionmailbox'
-    yield 'actiontext'
-    yield 'railties'
+        names.each { |name| yield name }
+    end
 end
 
 def download_gem(gem_name)
@@ -56,7 +44,7 @@ def unpack_gem(gem_name)
     end
 end
 
-each_gem_name.sort.uniq.each do |gem_name|
+each_gem_name do |gem_name|
     download_gem(gem_name)
     unpack_gem(gem_name)
 end

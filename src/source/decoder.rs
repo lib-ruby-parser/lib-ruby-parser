@@ -21,7 +21,8 @@ lazy_static! {
     .expect("ENCODING_RE regex is invalid");
 }
 
-pub type CustomDecoder = Box<dyn FnOnce(RecognizedEncoding, &[u8]) -> Result<Vec<u8>, InputError>>;
+pub type CustomDecoder =
+    Box<dyn FnOnce(RecognizedEncoding, Vec<u8>) -> Result<Vec<u8>, InputError>>;
 
 #[derive(Debug)]
 pub enum InputError {
@@ -75,11 +76,11 @@ fn recognize_encoding(source: &[u8]) -> Result<String, InputError> {
         .ok_or(InputError::UnableToRecognizeEncoding)
 }
 
-pub fn decode_input(input: &[u8], decoder: Option<CustomDecoder>) -> Result<Vec<u8>, InputError> {
-    let enc = recognize_encoding(input).unwrap_or_else(|_| "utf-8".to_owned());
+pub fn decode_input(input: Vec<u8>, decoder: Option<CustomDecoder>) -> Result<Vec<u8>, InputError> {
+    let enc = recognize_encoding(&input).unwrap_or_else(|_| "utf-8".to_owned());
 
     match &enc.to_uppercase()[..] {
-        "UTF-8" | "ASCII-8BIT" | "BINARY" => Ok(input.to_vec()),
+        "UTF-8" | "ASCII-8BIT" | "BINARY" => Ok(input),
         _ => {
             let enc = RecognizedEncoding::parse(&enc).ok_or(InputError::UnsupportdEncoding(enc))?;
             if let Some(decoder) = decoder {
