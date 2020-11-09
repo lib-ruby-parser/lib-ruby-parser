@@ -2,7 +2,7 @@
 #![test_runner(runner)]
 
 use ruby_parser::lex_states::*;
-use ruby_parser::{Lexer, Token};
+use ruby_parser::{token_name, Lexer};
 use std::fs;
 use std::panic;
 use std::process::exit;
@@ -78,10 +78,6 @@ enum TestResult {
     Failure(String),
 }
 
-fn token_name(token: &Token) -> String {
-    Lexer::token_name(token.token_type)
-}
-
 fn lex_state(state: &str) -> Result<i32, &'static str> {
     let result = match state {
         "expr_arg" => EXPR_ARG,
@@ -127,7 +123,7 @@ fn test(fixture_path: &str) -> TestResult {
             .map(|token| {
                 format!(
                     "{} {:?} [{}, {}]",
-                    token_name(&token),
+                    token_name(token.token_type),
                     token.to_string_lossy(),
                     token.loc.begin,
                     token.loc.end

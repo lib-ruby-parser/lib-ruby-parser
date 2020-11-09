@@ -3,7 +3,7 @@ use ruby_parser::{Parser, ParserOptions};
 
 fn find(src: &str, pattern: Vec<&str>) -> Option<String> {
     let options = ParserOptions {
-        buffer_name: "(find_test)",
+        buffer_name: "(find_test)".to_owned(),
         debug: false,
         ..Default::default()
     };

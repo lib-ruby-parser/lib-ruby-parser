@@ -88,6 +88,7 @@ mapping = {
     on_words_beg: :tWORDS_BEG,
     on_embvar: :tSTRING_DVAR,
     on_symbols_beg: :tSYMBOLS_BEG,
+    on_label_end: :tLABEL_END,
 }
 
 ops = {
@@ -122,7 +123,7 @@ def eval_as(start_t, tok_value, end_t, kind)
     begin
         eval(start_t + tok_value.encode('utf-8') + end_t)
     rescue SyntaxError, EncodingError
-        $stderr.puts("Can't dump #{kind} part #{tok_value.inspect}")
+        # $stderr.puts("Can't dump #{kind} part #{tok_value.inspect}")
         nil
     end
 end
@@ -153,9 +154,9 @@ end
 
 def str_for_str_beg(str_beg)
     case str_beg
-    when /\A<<-?'\w+'\z/, /\A<<~'\w+'\z/
+    when /\A<<-?'[\.\w\s\/,]+'\z/, /\A<<~'[\.\w\s\/,]+'\z/
         ["<<'HERE'\n", "HERE", 'non-interp heredoc', TAKE_SELF]
-    when /\A<<-?\w+\z/, /\A<<-?"\w+"\z/, /\A<<~\w+\z/, /\A<<~"\w+"\z/
+    when /\A<<-?[\.\w\s\/,]+\z/, /\A<<-?"[\.\w\s\/,]+"\z/, /\A<<~[\.\w\s\/,]+\z/, /\A<<~"[\.\w\s\/,]+"\z/
         ["<<HERE\n", 'HERE', 'interp heredoc', TAKE_SELF]
     when '"'
         ['"', '"', '" str', TAKE_SELF]
@@ -198,7 +199,8 @@ filename = ARGV.first
 src = File.read(filename)
 lines = src.lines
 
-Ripper.lex(src).each do |(start, tok_name, tok_value, state)|
+tokens = Ripper.lex(src)
+tokens.each_with_index do |(start, tok_name, tok_value, state), idx|
     tok_name =
         case tok_name
         when :on___end__ then next
@@ -214,7 +216,7 @@ Ripper.lex(src).each do |(start, tok_name, tok_value, state)|
         end
 
     case tok_name
-    when :tIDENTIFIER
+    when :tIDENTIFIER, :tCONSTANT, :tIVAR, :tCVAR, :tGVAR
         if state.to_int == Ripper::EXPR_ENDFN
             # :sym case, we need to pop :tSYMBEG
             strs.pop
@@ -240,17 +242,11 @@ Ripper.lex(src).each do |(start, tok_name, tok_value, state)|
         if strs.last.include?('~') # squiggly heredoc
             # We emit strings WITH leading chars and do ltrim in the AST builder.
             # Tokens don't match, and so we un-dedent string by adding back more spaces from the original src
-            (line, col) = start
-            loop do
-                c = lines[line - 1][col - 1]
-                if c != ' ' && c != "\t"
-                    break
-                end
-                col -= 1
-                tok_value = c + tok_value
+            prev_loc, prev_type, prev_value, _ = tokens[idx - 1]
+            if prev_type == :on_ignored_sp
+                start = prev_loc
+                tok_value = prev_value + tok_value
             end
-
-            start = [line, col]
         end
         begin
             enc = tok_value.encoding
@@ -261,14 +257,19 @@ Ripper.lex(src).each do |(start, tok_name, tok_value, state)|
                 tok_value = tok_value[0..-2]
             end
         rescue SyntaxError, EncodingError => e
-            $stderr.puts(<<~MSG)
-                Can't dump #{kind}:
-                tok_value = #{tok_value.inspect}
-                wrapped = #{(str_beg.encode(enc) + tok_value + str_end.encode(enc)).inspect}
-                got error #{e.class}: #{e.message.inspect}
-            MSG
+            # $stderr.puts(<<~MSG)
+            #     Can't dump #{kind}:
+            #     tok_value = #{tok_value.inspect}
+            #     wrapped = #{(str_beg.encode(enc) + tok_value + str_end.encode(enc)).inspect}
+            #     got error #{e.class}: #{e.message.inspect}
+            # MSG
             puts "<<UNKNOWN>>"
             next
+        end
+    when :tSTRING_DBEG
+        prev_loc, prev_type, prev_value, _ = tokens[idx - 1]
+        if prev_type == :on_ignored_sp
+            puts 'tSTRING_CONTENT' + ' ' + prev_value.bytes.inspect + ' ' + prev_loc.join(':')
         end
     when :tLABEL
         tok_value = tok_value.delete_suffix(':')
@@ -276,7 +277,7 @@ Ripper.lex(src).each do |(start, tok_name, tok_value, state)|
         begin
             tok_value = eval('"' + tok_value.delete_prefix('?') + '"')
         rescue SyntaxError, EncodingError
-            $stderr.puts("Can't dump char #{tok_value.inspect}")
+            # $stderr.puts("Can't dump char #{tok_value.inspect}")
             puts "<<UNKNOWN>>"
             next
         end

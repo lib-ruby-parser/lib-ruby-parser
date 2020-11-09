@@ -3,7 +3,6 @@
 %define api.parser.struct { Parser }
 %define api.location.type { Loc }
 %define api.value.type { Value }
-%define api.parse_error.type { () }
 
 %define parse.error custom
 %define parse.trace
@@ -5294,6 +5293,9 @@ xstring_contents: /* none */
                         $$ = Value::Node(self.builder.cvar($<Token>1));
                     }
                 | backref
+                    {
+                        $$ = $1;
+                    }
                 ;
 
           symbol: ssym { $$ = $1; }
@@ -6283,7 +6285,7 @@ impl Parser {
             decoder,
         } = options;
 
-        let mut lexer = Lexer::new(input, buffer_name, decoder)?;
+        let mut lexer = Lexer::new(input, &buffer_name, decoder)?;
         lexer.set_debug(debug);
 
         let current_arg_stack = CurrentArgStack::new();

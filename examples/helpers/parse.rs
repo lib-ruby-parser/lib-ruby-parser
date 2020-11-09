@@ -4,7 +4,7 @@ use ruby_parser::{Parser, ParserOptions, ParserResult};
 pub fn parse(source: &[u8], filename: &str, debug: bool) -> Result<ParserResult, String> {
     println!("parsing {} ... ", filename);
     let options = ParserOptions {
-        buffer_name: filename,
+        buffer_name: filename.to_owned(),
         debug,
         ..Default::default()
     };

@@ -154,7 +154,7 @@ fn test(fixture_path: &str) -> TestResult {
         let test_case = Fixture::new(fixture_path);
 
         let options = ParserOptions {
-            buffer_name: &format!("(test {})", fixture_path),
+            buffer_name: format!("(test {})", fixture_path),
             debug: false,
             ..Default::default()
         };

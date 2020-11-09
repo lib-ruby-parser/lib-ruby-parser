@@ -1,7 +1,7 @@
 extern crate clap;
 use clap::Clap;
 
-use ruby_parser::{Lexer, Token};
+use ruby_parser::{token_name, Token};
 use std::fs;
 use std::path::Path;
 
@@ -23,10 +23,6 @@ struct Args {
     debug: bool,
 }
 
-fn token_name(token: &Token) -> String {
-    Lexer::token_name(token.token_type)
-}
-
 fn token_value(token: &Token) -> String {
     token.to_string_lossy()
 }
@@ -43,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &|tokens: &Vec<Token>| {
             let tok_name_length = tokens
                 .iter()
-                .map(|tok| format!("{:?}", token_name(tok)).len())
+                .map(|tok| format!("{:?}", token_name(tok.token_type)).len())
                 .max()
                 .unwrap_or(0)
                 + 2;
@@ -56,7 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             println!("[");
             for token in tokens {
-                let name = rpad(&token_name(&token), tok_name_length);
+                let name = rpad(&token_name(token.token_type), tok_name_length);
                 let value = rpad(&token_value(&token), tok_value_length);
                 println!(
                     "    :{}{}[{}, {}]",

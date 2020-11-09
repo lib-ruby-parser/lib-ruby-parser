@@ -1,5 +1,3 @@
-use std::convert::TryInto;
-
 use crate::error::Diagnostics;
 use crate::lexer::*;
 use crate::maybe_byte::*;
@@ -12,6 +10,7 @@ use crate::source::InputError;
 use crate::source::MagicComment;
 use crate::source::Range;
 use crate::str_term::{str_types::*, HeredocEnd, StrTerm, StringLiteral};
+use crate::token_name;
 use crate::Context;
 use crate::StackState;
 use crate::StaticEnvironment;
@@ -136,7 +135,7 @@ impl Lexer {
         if self.debug {
             println!(
                 "yylex ({:?}, {:?}, {:?})",
-                Self::token_name(token.token_type),
+                token_name(token.token_type),
                 token.token_value,
                 token.loc
             );
@@ -152,20 +151,6 @@ impl Lexer {
     }
     pub(crate) fn token_flush(&mut self) {
         self.buffer.token_flush()
-    }
-
-    pub fn token_name(id: i32) -> String {
-        let first_token = Self::YYerror;
-        if id > first_token + 1 {
-            let pos: usize = (id - first_token + 1)
-                .try_into()
-                .expect("failed to cast token id into usize, is it negative?");
-            Self::TOKEN_NAMES[pos].to_owned()
-        } else if id == Self::END_OF_INPUT {
-            "EOF".to_owned()
-        } else {
-            panic!("token_name fails, {} (first token = {})", id, first_token)
-        }
     }
 
     pub(crate) fn parser_yylex(&mut self) -> i32 {
