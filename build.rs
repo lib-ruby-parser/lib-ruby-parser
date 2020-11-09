@@ -320,13 +320,28 @@ fn generate_nodes() -> Result<(), Box<dyn std::error::Error>> {
 
     std::fs::create_dir_all("src/nodes/types")?;
 
-    for node in nodes {
+    for node in nodes.iter() {
         std::fs::write(
             &format!("src/nodes/types/{}.rs", node.filename),
             node.code(),
         )
         .unwrap_or_else(|e| panic!("Failed to write into {}: {}", node.filename, e));
     }
+
+    let mod_content = nodes
+        .iter()
+        .map(|node| {
+            format!(
+                "mod {mod_name};\npub use {mod_name}::{struct_name};\n",
+                mod_name = node.filename,
+                struct_name = node.struct_name
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    std::fs::write("src/nodes/types/mod.rs", &mod_content)
+        .unwrap_or_else(|e| panic!("Failed to write nodes/types/mod.rs {}", e));
 
     Ok(())
 }

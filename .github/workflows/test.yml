@@ -33,7 +33,7 @@ jobs:
       - name: install bison
         run: |
           brew install bison
-          echo "::add-path::/usr/local/opt/bison/bin"
+          echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
           bison --version
 
       - name: build
