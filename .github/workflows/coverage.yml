@@ -1,0 +1,39 @@
+name: coverage
+
+on:
+  push:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+
+      - name: install bison
+        run: |
+          brew install bison
+          echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
+          bison --version
+
+      - name: cargo-tarpaulin
+        run: |
+          cargo install cargo-tarpaulin
+          cargo tarpaulin -v --out Xml
+
+      - name: upload to codecov.io
+        uses: codecov/codecov-action@v1.0.2
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
