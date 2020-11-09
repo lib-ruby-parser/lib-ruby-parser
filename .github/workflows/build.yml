@@ -1,4 +1,4 @@
-name: test
+name: bulid
 
 on:
   push:
@@ -10,13 +10,14 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    name: run tests
+  build:
+    name: build
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        rust: [stable, beta, nightly]
 
     steps:
       - name: checkout
@@ -26,7 +27,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: ${{ matrix.rust }}
           override: true
 
       - name: install bison
@@ -38,5 +39,5 @@ jobs:
       - name: build
         run: cargo build
 
-      - name: Run tests
-        run: cargo test
+      - name: smoke test
+        run: cargo run --example parse -- -e '2 + 2'
