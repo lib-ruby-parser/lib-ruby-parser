@@ -258,17 +258,23 @@ const RESERVED_WORDS: &[ReservedWord] = &[
     },
 ];
 
-pub(crate) fn reserved_word(tok: &str) -> Option<&'static ReservedWord> {
-    debug_assert!(
-        RESERVED_WORDS.is_sorted_by(|one, two| Some(one.name.cmp(two.name))),
+fn assert_sorted() {
+    let words = RESERVED_WORDS.iter().map(|w| w.name).collect::<Vec<_>>();
+    let mut words_sorted = words.clone();
+    words_sorted.sort();
+
+    assert!(
+        words_sorted == words,
         "\nRESERVED_WORDS must be sorted. Expected:\n{:?}\nGot:\n{:?}\n",
-        {
-            let mut words = RESERVED_WORDS.iter().map(|w| w.name).collect::<Vec<_>>();
-            words.sort_unstable();
-            words
-        },
-        RESERVED_WORDS.iter().map(|w| w.name).collect::<Vec<_>>()
+        words_sorted,
+        words
     );
+}
+
+pub(crate) fn reserved_word(tok: &str) -> Option<&'static ReservedWord> {
+    if cfg!(debug_assertions) {
+        assert_sorted();
+    }
 
     let idx = RESERVED_WORDS.binary_search_by(|e| e.name.cmp(tok)).ok()?;
     Some(&RESERVED_WORDS[idx])

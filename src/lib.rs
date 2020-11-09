@@ -1,6 +1,3 @@
-#![feature(label_break_value)]
-#![feature(is_sorted)]
-
 extern crate regex;
 #[macro_use]
 extern crate lazy_static;
