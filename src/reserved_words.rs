@@ -264,7 +264,7 @@ pub(crate) fn reserved_word(tok: &str) -> Option<&'static ReservedWord> {
         "\nRESERVED_WORDS must be sorted. Expected:\n{:?}\nGot:\n{:?}\n",
         {
             let mut words = RESERVED_WORDS.iter().map(|w| w.name).collect::<Vec<_>>();
-            words.sort();
+            words.sort_unstable();
             words
         },
         RESERVED_WORDS.iter().map(|w| w.name).collect::<Vec<_>>()
