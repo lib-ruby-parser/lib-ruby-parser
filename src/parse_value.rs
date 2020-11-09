@@ -412,6 +412,20 @@ impl From<ParseValue> for PTopExpr {
     }
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct MatchPatternWithTrailingComma {
+    pub(crate) elements: Vec<Node>,
+    pub(crate) trailing_comma: Option<Token>,
+}
+impl From<ParseValue> for MatchPatternWithTrailingComma {
+    fn from(value: ParseValue) -> MatchPatternWithTrailingComma {
+        match value {
+            ParseValue::MatchPatternWithTrailingComma(value) => value,
+            other => unreachable!("expected MatchPatternWithTrailingComma, got {:?}", other),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub(crate) enum ParseValue {
     Stolen,
@@ -496,6 +510,9 @@ pub(crate) enum ParseValue {
 
     /* For custom p_top_expr rule */
     PTopExpr(PTopExpr),
+
+    /* For pattern matching patterns with trailing comma */
+    MatchPatternWithTrailingComma(MatchPatternWithTrailingComma),
 }
 
 impl ParseValue {

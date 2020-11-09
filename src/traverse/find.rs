@@ -728,13 +728,6 @@ impl<'a> Visitor<Option<Node>> for Find {
         }
     }
 
-    fn on_match_with_trailing_comma(&mut self, node: &MatchWithTrailingComma) -> Option<Node> {
-        match self.current_pattern() {
-            PatternItem::Match => self.find(&node.match_),
-            _ => None,
-        }
-    }
-
     fn on_mlhs(&mut self, node: &Mlhs) -> Option<Node> {
         match self.current_pattern() {
             PatternItem::Item(n) => self.find(&node.items[n]),

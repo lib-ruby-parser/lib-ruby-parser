@@ -392,10 +392,6 @@ pub trait Visitor<T: Default = ()> {
         self.visit(&node.value)
     }
 
-    fn on_match_with_trailing_comma(&mut self, node: &MatchWithTrailingComma) -> T {
-        self.visit(&node.match_)
-    }
-
     fn on_mlhs(&mut self, node: &Mlhs) -> T {
         self.visit_all(&node.items)
     }
@@ -682,7 +678,6 @@ pub trait Visitor<T: Default = ()> {
             Node::MatchRest(inner) => self.on_match_rest(inner),
             Node::MatchVar(inner) => self.on_match_var(inner),
             Node::MatchWithLvasgn(inner) => self.on_match_with_lvasgn(inner),
-            Node::MatchWithTrailingComma(inner) => self.on_match_with_trailing_comma(inner),
             Node::Mlhs(inner) => self.on_mlhs(inner),
             Node::Module(inner) => self.on_module(inner),
             Node::Next(inner) => self.on_next(inner),

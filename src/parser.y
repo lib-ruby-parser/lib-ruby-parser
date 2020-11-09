@@ -148,7 +148,7 @@
 %type <node_list> qsym_list qword_list symbol_list word word_list
 %type <node_list> string exc_list opt_rescue
 %type <node_list> p_kwnorest p_kwrest p_any_kwrest p_kwarg p_kwargs p_args_post
-%type <node_list> p_find p_args_tail p_args_head p_args
+%type <node_list> p_find p_args_tail
 %type <node_list> case_args bv_decls opt_bv_decl
 %type <node_list> block_param opt_block_args_tail block_args_tail f_any_kwrest f_margs f_marg_list mrhs
 %type <node_list> args opt_block_arg command_args call_args opt_call_args aref_args
@@ -190,6 +190,8 @@
 %type <token>   k_rescue k_ensure k_when k_else k_end do
 
 %type <token_list> terms
+
+%type <match_pattern_with_trailing_comma> p_args_head p_args
 
 %type <none> none opt_terms trailer opt_nl
 
@@ -4243,19 +4245,21 @@ opt_block_args_tail:
                     }
                 | p_expr tCOMMA
                     {
-                        // array patterns that end with comma
-                        // like 1, 2,
-                        // must be emitted as `array_pattern_with_tail`
-                        let item = self.builder.match_with_trailing_comma($<Node>1, $<Token>2);
                         $$ = Value::Node(
-                            self.builder.array_pattern(None, vec![ item ], None)
+                            self.builder.array_pattern(
+                                None,
+                                vec![ $<Node>1 ],
+                                Some($<Token>2),
+                                None
+                            )
                         );
                     }
                 | p_expr tCOMMA p_args
                     {
-                        let items = [ vec![$<Node>1], $<NodeList>3 ].concat();
+                        let MatchPatternWithTrailingComma { elements, trailing_comma } = $<MatchPatternWithTrailingComma>3;
+                        let elements = [ vec![$<Node>1], elements ].concat();
                         $$ = Value::Node(
-                            self.builder.array_pattern(None, items, None)
+                            self.builder.array_pattern(None, elements, trailing_comma, None)
                         );
                     }
                 | p_find
@@ -4267,7 +4271,7 @@ opt_block_args_tail:
                 | p_args_tail
                     {
                         $$ = Value::Node(
-                            self.builder.array_pattern(None, $<NodeList>1, None)
+                            self.builder.array_pattern(None, $<NodeList>1, None, None)
                         );
                     }
                 | p_kwargs
@@ -4337,7 +4341,8 @@ opt_block_args_tail:
                 | p_const p_lparen p_args rparen
                     {
                         self.pattern_hash_keys.pop();
-                        let pattern = self.builder.array_pattern(None, $<NodeList>3, None);
+                        let MatchPatternWithTrailingComma { elements, trailing_comma } = $<MatchPatternWithTrailingComma>3;
+                        let pattern = self.builder.array_pattern(None, elements, trailing_comma, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
                                 $<Node>1,
@@ -4377,7 +4382,7 @@ opt_block_args_tail:
                     {
                         let lparen = $<Token>2;
                         let rparen = $<Token>3;
-                        let pattern = self.builder.array_pattern(Some(lparen.clone()), vec![], Some(rparen.clone()));
+                        let pattern = self.builder.array_pattern(Some(lparen.clone()), vec![], None, Some(rparen.clone()));
                         $$ = Value::Node(
                             self.builder.const_pattern(
                                 $<Node>1,
@@ -4390,7 +4395,8 @@ opt_block_args_tail:
                 | p_const p_lbracket p_args rbracket
                     {
                         self.pattern_hash_keys.pop();
-                        let pattern = self.builder.array_pattern(None, $<NodeList>3, None);
+                        let MatchPatternWithTrailingComma { elements, trailing_comma } = $<MatchPatternWithTrailingComma>3;
+                        let pattern = self.builder.array_pattern(None, elements, trailing_comma, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
                                 $<Node>1,
@@ -4430,7 +4436,7 @@ opt_block_args_tail:
                     {
                         let lparen = $<Token>2;
                         let rparen = $<Token>3;
-                        let pattern = self.builder.array_pattern(Some(lparen.clone()), vec![], Some(rparen.clone()));
+                        let pattern = self.builder.array_pattern(Some(lparen.clone()), vec![], None, Some(rparen.clone()));
                         $$ = Value::Node(
                             self.builder.const_pattern(
                                 $<Node>1,
@@ -4442,10 +4448,12 @@ opt_block_args_tail:
                     }
                 | tLBRACK p_args rbracket
                     {
+                        let MatchPatternWithTrailingComma { elements, trailing_comma } = $<MatchPatternWithTrailingComma>2;
                         $$ = Value::Node(
                             self.builder.array_pattern(
                                 Some($<Token>1),
-                                $<NodeList>2,
+                                elements,
+                                trailing_comma,
                                 Some($<Token>3)
                             )
                         );
@@ -4466,6 +4474,7 @@ opt_block_args_tail:
                             self.builder.array_pattern(
                                 Some($<Token>1),
                                 vec![],
+                                None,
                                 Some($<Token>2)
                             )
                         );
@@ -4518,7 +4527,12 @@ opt_block_args_tail:
 
           p_args: p_expr
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::MatchPatternWithTrailingComma(
+                            MatchPatternWithTrailingComma {
+                                elements: vec![ $<Node>1 ],
+                                trailing_comma: None
+                            }
+                        );
                     }
                 | p_args_head
                     {
@@ -4526,55 +4540,87 @@ opt_block_args_tail:
                     }
                 | p_args_head p_arg
                     {
-                        let nodes = [ $<NodeList>1, vec![ $<Node>2 ] ].concat();
-                        $$ = Value::NodeList(nodes);
+                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ $<Node>2 ] ].concat();
+                        $$ = Value::MatchPatternWithTrailingComma(
+                            MatchPatternWithTrailingComma {
+                                elements,
+                                trailing_comma: None
+                            }
+                        );
                     }
                 | p_args_head tSTAR tIDENTIFIER
                     {
                         let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3))?;
-                        let nodes = [ $<NodeList>1, vec![ match_rest ] ].concat();
-                        $$ = Value::NodeList(nodes);
+                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ] ].concat();
+                        $$ = Value::MatchPatternWithTrailingComma(
+                            MatchPatternWithTrailingComma {
+                                elements,
+                                trailing_comma: None
+                            }
+                        );
                     }
                 | p_args_head tSTAR tIDENTIFIER tCOMMA p_args_post
                     {
                         let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3))?;
-                        let nodes = [ $<NodeList>1, vec![ match_rest ], $<NodeList>5 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ], $<NodeList>5 ].concat();
+                        $$ = Value::MatchPatternWithTrailingComma(
+                            MatchPatternWithTrailingComma {
+                                elements,
+                                trailing_comma: None
+                            }
+                        );
                     }
                 | p_args_head tSTAR
                     {
                         let match_rest = self.builder.match_rest($<Token>2, None)?;
-                        let nodes = [ $<NodeList>1, vec![ match_rest ] ].concat();
-                        $$ = Value::NodeList(nodes);
+                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ] ].concat();
+                        $$ = Value::MatchPatternWithTrailingComma(
+                            MatchPatternWithTrailingComma {
+                                elements,
+                                trailing_comma: None
+                            }
+                        );
                     }
                 | p_args_head tSTAR tCOMMA p_args_post
                     {
                         let match_rest = self.builder.match_rest($<Token>2, None)?;
-                        let nodes = [ $<NodeList>1, vec![ match_rest ], $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ], $<NodeList>4 ].concat();
+                        $$ = Value::MatchPatternWithTrailingComma(
+                            MatchPatternWithTrailingComma {
+                                elements,
+                                trailing_comma: None
+                            }
+                        );
                     }
                 | p_args_tail
                     {
-                        $$ = $1;
+                        $$ = Value::MatchPatternWithTrailingComma(
+                            MatchPatternWithTrailingComma {
+                                elements: $<NodeList>1,
+                                trailing_comma: None
+                            }
+                        );
                     }
                 ;
 
      p_args_head: p_arg tCOMMA
                     {
-                        // array patterns that end with comma
-                        // like [1, 2,]
-                        // must be emitted as `array_pattern_with_tail`
-                        let item = self.builder.match_with_trailing_comma($<Node>1, $<Token>2);
-                        $$ = Value::NodeList( vec![ item ] );
+                        $$ = Value::MatchPatternWithTrailingComma(
+                            MatchPatternWithTrailingComma {
+                                elements: vec![$<Node>1],
+                                trailing_comma: Some($<Token>2),
+                            }
+                        );
                     }
                 | p_args_head p_arg tCOMMA
                     {
-                        // array patterns that end with comma
-                        // like [1, 2,]
-                        // must be emitted as `array_pattern_with_tail`
-                        let last_item = self.builder.match_with_trailing_comma($<Node>2, $<Token>3);
-                        let nodes = [ $<NodeList>1, vec![ last_item ] ].concat();
-                        $$ = Value::NodeList(nodes);
+                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ $<Node>2 ] ].concat();
+                        $$ = Value::MatchPatternWithTrailingComma(
+                            MatchPatternWithTrailingComma {
+                                elements,
+                                trailing_comma: Some($<Token>3),
+                            }
+                        );
                     }
                 ;
 

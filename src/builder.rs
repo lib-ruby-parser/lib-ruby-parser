@@ -2950,9 +2950,11 @@ impl Builder {
         &self,
         lbrack_t: Option<Token>,
         elements: Vec<Node>,
+        trailing_comma: Option<Token>,
         rbrack_t: Option<Token>,
     ) -> Node {
         let (begin_l, end_l, expression_l) = self.collection_map(&lbrack_t, &elements, &rbrack_t);
+        let expression_l = expression_l.maybe_join(&self.maybe_loc(&trailing_comma));
 
         if elements.is_empty() {
             return Node::ArrayPattern(ArrayPattern {
@@ -2963,31 +2965,16 @@ impl Builder {
             });
         }
 
-        let mut trailing_comma = false;
-        let nodes_elements = elements
-            .into_iter()
-            .map(|element| match element {
-                Node::MatchWithTrailingComma(MatchWithTrailingComma { match_, .. }) => {
-                    trailing_comma = true;
-                    *match_
-                }
-                e => {
-                    trailing_comma = false;
-                    e
-                }
-            })
-            .collect::<Vec<_>>();
-
-        if trailing_comma {
+        if trailing_comma.is_some() {
             Node::ArrayPatternWithTail(ArrayPatternWithTail {
-                elements: nodes_elements,
+                elements,
                 begin_l,
                 end_l,
                 expression_l,
             })
         } else {
             Node::ArrayPattern(ArrayPattern {
-                elements: nodes_elements,
+                elements,
                 begin_l,
                 end_l,
                 expression_l,
@@ -3007,13 +2994,6 @@ impl Builder {
             begin_l,
             end_l,
             expression_l,
-        })
-    }
-
-    pub(crate) fn match_with_trailing_comma(&self, match_: Node, comma_t: Token) -> Node {
-        Node::MatchWithTrailingComma(MatchWithTrailingComma {
-            expression_l: match_.expression().join(&self.loc(&comma_t)),
-            match_: Box::new(match_),
         })
     }
 

@@ -1640,20 +1640,6 @@
             field_name: expression_l
             field_type: Range
             always_print: false
-# TODO: remove
--
-    struct_name: MatchWithTrailingComma
-    str_type: match_with_trailing_comma
-    filename: match_with_trailing_comma
-    fields:
-        -
-            field_name: match_
-            field_type: Node
-            always_print: false
-        -
-            field_name: expression_l
-            field_type: Range
-            always_print: false
 -
     struct_name: Mlhs
     str_type: mlhs
