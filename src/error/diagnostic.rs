@@ -1,6 +1,7 @@
 use crate::source::Range;
 use crate::{DiagnosticMessage, ErrorLevel};
 
+/// Diagnostic message that comes from the parser when there's an error or warning
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
     pub level: ErrorLevel,
@@ -63,35 +64,20 @@ impl Diagnostic {
     }
 }
 
-#[derive(Debug, Default)]
-struct InnerDiagnostics {
-    list: Vec<Diagnostic>,
-}
-
-impl InnerDiagnostics {
-    pub fn emit(&mut self, diagnostic: Diagnostic) {
-        self.list.push(diagnostic)
-    }
-
-    pub fn take(&mut self) -> Vec<Diagnostic> {
-        std::mem::take(&mut self.list)
-    }
-}
-
 use std::cell::RefCell;
 use std::rc::Rc;
 
 #[derive(Debug, Default, Clone)]
 pub(crate) struct Diagnostics {
-    inner: Rc<RefCell<InnerDiagnostics>>,
+    list: Rc<RefCell<Vec<Diagnostic>>>,
 }
 
 impl Diagnostics {
     pub(crate) fn emit(&self, diagnostic: Diagnostic) {
-        self.inner.borrow_mut().emit(diagnostic)
+        self.list.borrow_mut().push(diagnostic)
     }
 
     pub(crate) fn take(&self) -> Vec<Diagnostic> {
-        self.inner.borrow_mut().take()
+        std::mem::take(&mut *self.list.borrow_mut())
     }
 }

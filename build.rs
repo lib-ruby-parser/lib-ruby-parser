@@ -56,6 +56,7 @@ struct Field {
     field_name: String,
     field_type: FieldType,
     always_print: bool,
+    comment: Option<String>,
 }
 
 impl Field {
@@ -205,6 +206,7 @@ struct Struct {
     str_type: String,
     filename: String,
     fields: Vec<Field>,
+    comment: Option<String>,
 }
 
 impl Struct {

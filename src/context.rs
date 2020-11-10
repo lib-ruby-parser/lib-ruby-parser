@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub(crate) enum ContextItem {
     Class,
@@ -10,63 +13,67 @@ pub(crate) enum ContextItem {
 }
 
 #[derive(Debug, Clone, Default)]
-pub(crate) struct InnerContext {
-    pub(crate) stack: Vec<ContextItem>,
+pub(crate) struct Context {
+    pub(crate) stack: Rc<RefCell<Vec<ContextItem>>>,
 }
 
-impl InnerContext {
+impl Context {
     pub(crate) fn new() -> Self {
-        Self { stack: vec![] }
+        Self {
+            stack: Rc::new(RefCell::new(vec![])),
+        }
     }
 
-    fn push(&mut self, item: ContextItem) {
-        self.stack.push(item);
+    fn push(&self, item: ContextItem) {
+        self.stack.borrow_mut().push(item);
     }
 
-    pub(crate) fn push_class(&mut self) {
+    pub(crate) fn push_class(&self) {
         self.push(ContextItem::Class)
     }
 
-    pub(crate) fn push_module(&mut self) {
+    pub(crate) fn push_module(&self) {
         self.push(ContextItem::Module)
     }
 
-    pub(crate) fn push_sclass(&mut self) {
+    pub(crate) fn push_sclass(&self) {
         self.push(ContextItem::Sclass)
     }
 
-    pub(crate) fn push_def(&mut self) {
+    pub(crate) fn push_def(&self) {
         self.push(ContextItem::Def)
     }
 
-    pub(crate) fn push_defs(&mut self) {
+    pub(crate) fn push_defs(&self) {
         self.push(ContextItem::Defs)
     }
 
-    pub(crate) fn push_block(&mut self) {
+    pub(crate) fn push_block(&self) {
         self.push(ContextItem::Block)
     }
 
-    pub(crate) fn push_lambda(&mut self) {
+    pub(crate) fn push_lambda(&self) {
         self.push(ContextItem::Lambda)
     }
 
-    pub(crate) fn pop(&mut self) {
-        self.stack.pop();
+    pub(crate) fn pop(&self) {
+        self.stack.borrow_mut().pop();
     }
 
     fn is_in(&self, item: ContextItem) -> bool {
-        self.stack.last() == Some(&item)
+        self.stack.borrow().last() == Some(&item)
     }
 
     pub(crate) fn is_in_class(&self) -> bool {
         self.is_in(ContextItem::Class)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_in_module(&self) -> bool {
         self.is_in(ContextItem::Module)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_in_sclass(&self) -> bool {
         self.is_in(ContextItem::Sclass)
     }
@@ -75,37 +82,40 @@ impl InnerContext {
         self.is_in(ContextItem::Def)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_in_defs(&self) -> bool {
         self.is_in(ContextItem::Defs)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_in_block(&self) -> bool {
         self.is_in(ContextItem::Block)
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_in_lambda(&self) -> bool {
         self.is_in(ContextItem::Lambda)
     }
 
-    pub(crate) fn reset(&mut self) {
-        self.stack.clear()
+    #[allow(dead_code)]
+    pub(crate) fn reset(&self) {
+        self.stack.borrow_mut().clear()
     }
 
+    #[allow(dead_code)]
     pub(crate) fn is_indirectly_in_def(&self) -> bool {
-        self.stack.contains(&ContextItem::Def) || self.stack.contains(&ContextItem::Defs)
+        let stack = self.stack.borrow();
+        stack.contains(&ContextItem::Def) || stack.contains(&ContextItem::Defs)
     }
 
     pub(crate) fn is_class_definition_allowed(&self) -> bool {
-        let def_index: Option<usize> = self
-            .stack
+        let stack = self.stack.borrow();
+        let def_index: Option<usize> = stack
             .iter()
             .rev()
             .position(|i| *i == ContextItem::Def || *i == ContextItem::Defs);
-        let sclass_index: Option<usize> = self
-            .stack
-            .iter()
-            .rev()
-            .position(|i| *i == ContextItem::Sclass);
+        let sclass_index: Option<usize> =
+            stack.iter().rev().position(|i| *i == ContextItem::Sclass);
 
         match (def_index, sclass_index) {
             (None, _) => true,
@@ -127,118 +137,6 @@ impl InnerContext {
     }
 
     pub(crate) fn inner_clone(&self) -> Vec<ContextItem> {
-        self.stack.clone()
-    }
-}
-
-use std::cell::RefCell;
-use std::rc::Rc;
-
-#[derive(Debug, Clone, Default)]
-pub(crate) struct Context {
-    inner: Rc<RefCell<InnerContext>>,
-}
-
-impl Context {
-    pub(crate) fn new() -> Self {
-        Self {
-            inner: Rc::new(RefCell::new(InnerContext::new())),
-        }
-    }
-
-    pub(crate) fn push_class(&self) {
-        self.inner.borrow_mut().push_class()
-    }
-
-    pub(crate) fn push_module(&self) {
-        self.inner.borrow_mut().push_module()
-    }
-
-    pub(crate) fn push_sclass(&self) {
-        self.inner.borrow_mut().push_sclass()
-    }
-
-    pub(crate) fn push_def(&self) {
-        self.inner.borrow_mut().push_def()
-    }
-
-    pub(crate) fn push_defs(&self) {
-        self.inner.borrow_mut().push_defs()
-    }
-
-    pub(crate) fn push_block(&self) {
-        self.inner.borrow_mut().push_block()
-    }
-
-    pub(crate) fn push_lambda(&self) {
-        self.inner.borrow_mut().push_lambda()
-    }
-
-    pub(crate) fn pop(&self) {
-        self.inner.borrow_mut().pop();
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn reset(&self) {
-        self.inner.borrow_mut().reset();
-    }
-
-    pub(crate) fn is_in_class(&self) -> bool {
-        self.inner.borrow().is_in_class()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn is_in_module(&self) -> bool {
-        self.inner.borrow().is_in_module()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn is_in_sclass(&self) -> bool {
-        self.inner.borrow().is_in_sclass()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn is_in_def(&self) -> bool {
-        self.inner.borrow().is_in_def()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn is_in_defs(&self) -> bool {
-        self.inner.borrow().is_in_defs()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn is_in_block(&self) -> bool {
-        self.inner.borrow().is_in_block()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn is_in_lambda(&self) -> bool {
-        self.inner.borrow().is_in_lambda()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn is_indirectly_in_def(&self) -> bool {
-        self.inner.borrow().is_indirectly_in_def()
-    }
-
-    pub(crate) fn is_class_definition_allowed(&self) -> bool {
-        self.inner.borrow().is_class_definition_allowed()
-    }
-
-    pub(crate) fn is_module_definition_allowed(&self) -> bool {
-        self.inner.borrow().is_module_definition_allowed()
-    }
-
-    pub(crate) fn is_dynamic_const_definition_allowed(&self) -> bool {
-        self.inner.borrow().is_dynamic_const_definition_allowed()
-    }
-
-    pub(crate) fn is_in_dynamic_block(&self) -> bool {
-        self.inner.borrow().is_in_dynamic_block()
-    }
-
-    pub(crate) fn inner_clone(&self) -> Vec<ContextItem> {
-        self.inner.borrow().inner_clone()
+        self.stack.borrow().clone()
     }
 }
