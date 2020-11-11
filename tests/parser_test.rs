@@ -1,10 +1,6 @@
-#![feature(custom_test_frameworks)]
-#![test_runner(runner)]
-
 use ruby_parser::{Parser, ParserOptions, ParserResult};
 use std::fs;
 use std::panic;
-use std::process::exit;
 
 mod files_under_dir;
 use files_under_dir::files_under_dir;
@@ -149,7 +145,7 @@ enum TestResult {
     Failure(String),
 }
 
-fn test(fixture_path: &str) -> TestResult {
+fn test_file(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = Fixture::new(fixture_path);
 
@@ -177,29 +173,27 @@ fn test(fixture_path: &str) -> TestResult {
     }
 }
 
-fn runner(dirs: &[&'static str]) {
-    eprintln!("Running parser tests\n");
+fn test_dir(dir: &str) {
+    eprintln!("Running parser tests {}\n", dir);
 
     let mut passed: usize = 0;
     let mut failed: usize = 0;
     let mut segfaults: usize = 0;
 
-    for dir in dirs {
-        for filename in files_under_dir(*dir) {
-            eprint!("test {} ... ", filename);
-            match test(&filename) {
-                TestResult::Segfault => {
-                    eprintln!("SEG");
-                    segfaults += 1;
-                }
-                TestResult::Pass => {
-                    eprintln!("OK");
-                    passed += 1;
-                }
-                TestResult::Failure(output) => {
-                    eprintln!("Err:\n{}\n", output);
-                    failed += 1;
-                }
+    for filename in files_under_dir(dir) {
+        eprint!("test {} ... ", filename);
+        match test_file(&filename) {
+            TestResult::Segfault => {
+                eprintln!("SEG");
+                segfaults += 1;
+            }
+            TestResult::Pass => {
+                eprintln!("OK");
+                passed += 1;
+            }
+            TestResult::Failure(output) => {
+                eprintln!("Err:\n{}\n", output);
+                failed += 1;
             }
         }
     }
@@ -209,14 +203,21 @@ fn runner(dirs: &[&'static str]) {
         passed, failed, segfaults
     );
 
-    match failed + segfaults {
-        0 => exit(0),
-        _ => exit(1),
-    }
+    assert_eq!(
+        failed + segfaults,
+        0,
+        "expected tests to pass, got {} failures and {} segfaults",
+        failed,
+        segfaults
+    );
 }
 
-#[test_case]
-const GENERATED_TESTS_DIR: &str = "tests/fixtures/parser/gen";
+#[test]
+fn test_gen() {
+    test_dir("tests/fixtures/parser/gen")
+}
 
-#[test_case]
-const MANUAL_TESTS_DIR: &str = "tests/fixtures/parser/manual";
+#[test]
+fn test_manual() {
+    test_dir("tests/fixtures/parser/manual")
+}

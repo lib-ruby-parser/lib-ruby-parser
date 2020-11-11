@@ -1,11 +1,7 @@
-#![feature(custom_test_frameworks)]
-#![test_runner(runner)]
-
 use ruby_parser::lex_states::*;
 use ruby_parser::{token_name, Lexer};
 use std::fs;
 use std::panic;
-use std::process::exit;
 
 mod files_under_dir;
 use files_under_dir::files_under_dir;
@@ -149,29 +145,27 @@ fn test(fixture_path: &str) -> TestResult {
     }
 }
 
-fn runner(dirs: &[&'static str]) {
+fn test_dir(dir: &str) {
     eprintln!("Running parser tests\n");
 
     let mut passed: usize = 0;
     let mut failed: usize = 0;
     let mut segfaults: usize = 0;
 
-    for dir in dirs {
-        for filename in files_under_dir(dir) {
-            eprint!("test {} ... ", filename);
-            match test(&filename) {
-                TestResult::Segfault => {
-                    eprintln!("SEG");
-                    segfaults += 1;
-                }
-                TestResult::Pass => {
-                    eprintln!("OK");
-                    passed += 1;
-                }
-                TestResult::Failure(output) => {
-                    eprintln!("Err:\n{}\n", output);
-                    failed += 1;
-                }
+    for filename in files_under_dir(dir) {
+        eprint!("test {} ... ", filename);
+        match test(&filename) {
+            TestResult::Segfault => {
+                eprintln!("SEG");
+                segfaults += 1;
+            }
+            TestResult::Pass => {
+                eprintln!("OK");
+                passed += 1;
+            }
+            TestResult::Failure(output) => {
+                eprintln!("Err:\n{}\n", output);
+                failed += 1;
             }
         }
     }
@@ -181,11 +175,16 @@ fn runner(dirs: &[&'static str]) {
         passed, failed, segfaults
     );
 
-    match failed + segfaults {
-        0 => exit(0),
-        _ => exit(1),
-    }
+    assert_eq!(
+        failed + segfaults,
+        0,
+        "expected tests to pass, got {} failures and {} segfaults",
+        failed,
+        segfaults
+    );
 }
 
-#[test_case]
-const GENERATED_TESTS_DIR: &str = "tests/fixtures/lexer/gen";
+#[test]
+fn test_gen() {
+    test_dir("tests/fixtures/lexer/gen")
+}
