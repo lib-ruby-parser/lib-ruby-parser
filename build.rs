@@ -338,9 +338,9 @@ impl InnerNode for {struct_name} {{
 }
 
 fn generate_nodes() -> Result<(), Box<dyn std::error::Error>> {
-    println!("cargo:rerun-if-changed=nodes.yaml");
+    println!("cargo:rerun-if-changed=nodes/nodes.yaml");
 
-    let f = std::fs::File::open("nodes.yaml")?;
+    let f = std::fs::File::open("nodes/nodes.yaml")?;
     let nodes: Vec<Struct> = serde_yaml::from_reader(f)?;
 
     std::fs::create_dir_all("src/nodes/types")?;
