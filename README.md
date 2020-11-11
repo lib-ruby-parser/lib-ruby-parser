@@ -26,6 +26,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+[Full documentation](https://docs.rs/lib-ruby-parser)
+
 ## Features
 
 TLDR; it's fast, it's precise, and it has a beautiful interface.
