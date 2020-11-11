@@ -1,7 +1,7 @@
 extern crate clap;
 use clap::Clap;
 
-use ruby_parser::{token_name, Token};
+use lib_ruby_parser::{token_name, Token};
 use std::fs;
 use std::path::Path;
 

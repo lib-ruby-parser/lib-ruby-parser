@@ -1,4 +1,4 @@
-use ruby_parser::{Diagnostic, ErrorLevel};
+use lib_ruby_parser::{Diagnostic, ErrorLevel};
 
 #[derive(Debug)]
 enum State {

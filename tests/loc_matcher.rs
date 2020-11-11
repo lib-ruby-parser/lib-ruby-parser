@@ -1,7 +1,7 @@
-use ruby_parser::nodes::*;
-use ruby_parser::source::Range;
-use ruby_parser::traverse::Find;
-use ruby_parser::Node;
+use lib_ruby_parser::nodes::*;
+use lib_ruby_parser::source::Range;
+use lib_ruby_parser::traverse::Find;
+use lib_ruby_parser::Node;
 
 #[derive(Debug, PartialEq)]
 enum ParseLocState {

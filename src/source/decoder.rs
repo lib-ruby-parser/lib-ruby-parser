@@ -29,6 +29,7 @@ pub enum InputError {
     UnableToRecognizeEncoding,
     UnsupportdEncoding(String),
     NoDecoder(RecognizedEncoding),
+    DecodingError(String),
 }
 
 impl fmt::Display for InputError {

@@ -1,4 +1,4 @@
-use ruby_parser::{Parser, ParserOptions, ParserResult};
+use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
 use std::fs;
 use std::panic;
 

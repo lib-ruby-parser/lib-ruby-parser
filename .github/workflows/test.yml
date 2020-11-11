@@ -17,6 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        rust: [stable, beta, nightly]
 
     steps:
       - name: checkout
@@ -26,7 +27,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: ${{ matrix.rust }}
           override: true
 
       - name: install bison
@@ -39,4 +40,4 @@ jobs:
         run: cargo build
 
       - name: Run tests
-        run: cargo test
+        run: cargo test -- --nocapture

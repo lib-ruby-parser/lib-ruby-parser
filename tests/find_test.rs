@@ -1,5 +1,5 @@
-use ruby_parser::traverse::Find;
-use ruby_parser::{Parser, ParserOptions};
+use lib_ruby_parser::traverse::Find;
+use lib_ruby_parser::{Parser, ParserOptions};
 
 fn find(src: &str, pattern: Vec<&str>) -> Option<String> {
     let options = ParserOptions {

@@ -1,4 +1,4 @@
-use ruby_parser::{Lexer, Token};
+use lib_ruby_parser::{Lexer, Token};
 
 #[allow(dead_code)]
 pub fn tokenize(source: &[u8], filename: &str, debug: bool) -> Result<Vec<Token>, String> {

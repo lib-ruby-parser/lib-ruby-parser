@@ -1,4 +1,4 @@
-use ruby_parser::{Parser, ParserOptions, ParserResult};
+use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
 
 #[allow(dead_code)]
 pub fn parse(source: &[u8], filename: &str, debug: bool) -> Result<ParserResult, String> {

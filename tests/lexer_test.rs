@@ -1,5 +1,5 @@
-use ruby_parser::lex_states::*;
-use ruby_parser::{token_name, Lexer};
+use lib_ruby_parser::lex_states::*;
+use lib_ruby_parser::{token_name, Lexer};
 use std::fs;
 use std::panic;
 

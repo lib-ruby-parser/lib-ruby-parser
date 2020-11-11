@@ -1,4 +1,6 @@
-use ruby_parser::{source::buffer::*, source::Range, Diagnostic, DiagnosticMessage, ErrorLevel};
+use lib_ruby_parser::{
+    source::buffer::*, source::Range, Diagnostic, DiagnosticMessage, ErrorLevel,
+};
 use std::rc::Rc;
 
 #[test]

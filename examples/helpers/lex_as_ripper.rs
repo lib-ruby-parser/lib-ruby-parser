@@ -1,4 +1,4 @@
-use ruby_parser::token_name;
+use lib_ruby_parser::token_name;
 use std::fs;
 
 use super::*;

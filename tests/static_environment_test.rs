@@ -1,4 +1,4 @@
-use ruby_parser::StaticEnvironment;
+use lib_ruby_parser::StaticEnvironment;
 
 #[test]
 fn test_declare() {

@@ -1,7 +1,7 @@
 extern crate clap;
 use clap::Clap;
 
-use ruby_parser::{Diagnostic, ParserResult};
+use lib_ruby_parser::{Diagnostic, ParserResult};
 use std::fs;
 use std::path::Path;
 
