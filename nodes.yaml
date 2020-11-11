@@ -28,7 +28,7 @@
             comment: |
                 Location of the `alias` keyword
 
-                ```
+                ```text
                 alias foo bar
                 ~~~~~
                 ```
@@ -39,7 +39,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 alias foo bar
                 ~~~~~~~~~~~~~
                 ```
@@ -73,7 +73,7 @@
             comment: |
                 Location of the `&&=` operator
 
-                ```
+                ```text
                 a &&= 1
                   ~~~
                 ```
@@ -84,7 +84,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 a &&= 1
                 ~~~~~~~
                 ```
@@ -118,7 +118,7 @@
             comment: |
                 Location of the `&&` (or `and`) operator
 
-                ```
+                ```text
                 a && b
                   ~~
                 ```
@@ -129,7 +129,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 a && b
                 ~~~~~~
                 ```
@@ -155,7 +155,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 def m(argument); end
                       ~~~~~~~~
                 ```
@@ -181,7 +181,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 def m(a, b = 1, c:, &blk); end
                      ~~~~~~~~~~~~~~~~~~~~
                 ```
@@ -192,7 +192,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 def m(a, b = 1, c:, &blk); end
                      ~
                 ```
@@ -205,7 +205,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 def m(a, b = 1, c:, &blk); end
                                         ~
                 ```
@@ -231,7 +231,7 @@
             comment: |
                 Location of the open bracket
 
-                ```
+                ```text
                 [1, 2, 3]
                 ~
                 ```
@@ -242,7 +242,7 @@
             comment: |
                 Location of the closing bracket
 
-                ```
+                ```text
                 [1, 2, 3]
                         ~
                 ```
@@ -253,7 +253,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 [1, 2, 3]
                 ~~~~~~~~~
                 ```
@@ -277,7 +277,7 @@
             comment: |
                 Location of the open bracket
 
-                ```
+                ```text
                 [1, ^a, 3 => foo]
                 ~
                 ```
@@ -290,7 +290,7 @@
             comment: |
                 Location of the closing bracket
 
-                ```
+                ```text
                 [1, ^a, 3 => foo]
                                 ~
                 ```
@@ -303,7 +303,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 [1, ^a, 3 => foo]
                 ~~~~~~~~~~~~~~~~~
                 ```
@@ -329,7 +329,7 @@
             comment: |
                 Location of the open bracket
 
-                ```
+                ```text
                 [1, ^a, 3 => foo,]
                 ~
                 ```
@@ -342,7 +342,7 @@
             comment: |
                 Location of the closing bracket
 
-                ```
+                ```text
                 [1, ^a, 3 => foo,]
                                  ~
                 ```
@@ -355,7 +355,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 [1, ^a, 3 => foo,]
                 ~~~~~~~~~~~~~~~~~~
                 ```
@@ -383,7 +383,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 $+
                 ~~
                 ```
@@ -409,14 +409,14 @@
             comment: |
                 Begin of the block
 
-                ```
+                ```text
                 (1; 2)
                 ~
                 ```
 
                 `None` if the block of code is "implicit", like
 
-                ```
+                ```text
                 if true; 1; 2; end
                 ```
         -
@@ -426,14 +426,14 @@
             comment: |
                 End of the block
 
-                ```
+                ```text
                 (1; 2)
                      ~
                 ```
 
                 `None` if the block of code is "implicit", like
 
-                ```
+                ```text
                 if true; 1; 2; end
                 ```
         -
@@ -443,7 +443,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 (1; 2)
                 ~~~~~~
                 ```
@@ -485,7 +485,7 @@
             comment: |
                 Location of the open brace
 
-                ```
+                ```text
                 proc { }
                      ~
                 ```
@@ -496,7 +496,7 @@
             comment: |
                 Location of the closing brace
 
-                ```
+                ```text
                 proc { }
                        ~
                 ```
@@ -507,7 +507,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 proc { }
                 ~~~~~~~~
                 ```
@@ -533,7 +533,7 @@
             comment: |
                 Location of the `&` operator
 
-                ```
+                ```text
                 foo(&blk)
                     ~
                 ```
@@ -544,7 +544,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo(&bar)
                     ~~~~
                 ```
@@ -568,7 +568,7 @@
             comment: |
                 Location of the `&` operator
 
-                ```
+                ```text
                 def m(&foo); end
                       ~
                 ```
@@ -579,7 +579,7 @@
             comment: |
                 Location of the name
 
-                ```
+                ```text
                 def m(&foo); end
                        ~~~
                 ```
@@ -590,7 +590,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 def m(&foo); end
                       ~~~~
                 ```
@@ -614,7 +614,7 @@
             comment: |
                 Location of the `break` keyword
 
-                ```
+                ```text
                 break :foo
                 ~~~~~
                 ```
@@ -625,7 +625,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 break(:foo)
                      ~
                 ```
@@ -638,7 +638,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 break(:foo)
                           ~
                 ```
@@ -651,7 +651,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 break(:foo)
                 ~~~~~~~~~~~
                 ```
@@ -670,7 +670,7 @@
                 Expression given to `case`, `Int("1")` for `case 1; end`
                 `None` for code like
 
-                ```
+                ```text
                 case
                 when pattern
                 end
@@ -694,7 +694,7 @@
             comment: |
                 Location of the `case` keyword
 
-                ```
+                ```text
                 case 1; end
                 ~~~~
                 ```
@@ -705,7 +705,7 @@
             comment: |
                 Location of the `else` keyword
 
-                ```
+                ```text
                 case 1; else; end
                         ~~~~
                 ```
@@ -718,7 +718,7 @@
             comment: |
                 Location of the `end` keyword
 
-                ```
+                ```text
                 case 1; end
                         ~~~
                 ```
@@ -729,7 +729,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 case 1; end
                 ~~~~~~~~~~~
                 ```
@@ -748,7 +748,7 @@
                 Expression given to `case`, `Int("1")` for `case 1; in 1; end`
                 `None` for code like
 
-                ```
+                ```text
                 case
                 in pattern
                 end
@@ -772,7 +772,7 @@
             comment: |
                 Location of the `case` keyword
 
-                ```
+                ```text
                 case 1; in 2; end
                 ~~~~
                 ```
@@ -783,7 +783,7 @@
             comment: |
                 Location of the `else` keyword
 
-                ```
+                ```text
                 case 1; in 2; else; end
                               ~~~~
                 ```
@@ -796,7 +796,7 @@
             comment: |
                 Location of the `end` keyword
 
-                ```
+                ```text
                 case 1; in 2; end
                               ~~~
                 ```
@@ -807,7 +807,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 case 1; in 2; end
                 ~~~~~~~~~~~~~~~~~
                 ```
@@ -849,7 +849,7 @@
             comment: |
                 Location of the `::` operator
 
-                ```
+                ```text
                 A::B = 1
                  ~~
 
@@ -865,7 +865,7 @@
             comment: |
                 Location of the constant name
 
-                ```
+                ```text
                 A::CONST = 1
                    ~~~~~
                 ```
@@ -876,7 +876,7 @@
             comment: |
                 Location of the `=` operator
 
-                ```
+                ```text
                 A = 1
                   ~
                 ```
@@ -890,7 +890,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 A = 1
                 ~~~~~
                 ```
@@ -908,7 +908,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 ::A
                 ~~
                 ```
@@ -946,7 +946,7 @@
             comment: |
                 Location of the `class` keyword.
 
-                ```
+                ```text
                 class Foo; end
                 ~~~~~
                 ```
@@ -957,7 +957,7 @@
             comment: |
                 Location of the `<` operator
 
-                ```
+                ```text
                 class A < B; end
                         ~
                 ```
@@ -970,7 +970,7 @@
             comment: |
                 Location of the `end` keyword.
 
-                ```
+                ```text
                 class Foo; end
                            ~~~
                 ```
@@ -981,7 +981,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 class Foo; end
                 ~~~~~~~~~~~~~~
                 ```
@@ -1007,7 +1007,7 @@
                     1. `+1i` is `String("+1i")` with `operator = None`
                     2. `-1i` is `String("1i")` with `operator = String("-")`
 
-                ```
+                ```text
                 -1i
                 ~
                 ```
@@ -1018,7 +1018,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 -1i
                 ~~~
                 ```
@@ -1051,7 +1051,7 @@
             comment: |
                 Location of the `::` operator. `None` if constant is taken from the current scope.
 
-                ```
+                ```text
                 A::B
                  ~~
                 ```
@@ -1062,7 +1062,7 @@
             comment: |
                 Location of the constant name
 
-                ```
+                ```text
                 Foo::Bar
                      ~~~
                 ```
@@ -1074,7 +1074,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 Foo::Bar
                 ~~~~~~~~
                 ```
@@ -1106,7 +1106,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 case 1; in Foo(42); end
                               ~
                 ```
@@ -1117,7 +1117,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 case 1; in Foo(42); end
                                  ~
                 ```
@@ -1128,7 +1128,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 case 1; in Foo(42); end
                            ~~~~~~~
                 ```
@@ -1158,7 +1158,7 @@
             comment: |
                 List of arguments
 
-                ```
+                ```text
                 foo&.bar(42)
                 # and also setters like
                 foo&.bar = 42
@@ -1170,7 +1170,7 @@
             comment: |
                 Location of the `&.` operator
 
-                ```
+                ```text
                 foo&.bar
                    ~~
                 ```
@@ -1181,7 +1181,7 @@
             comment: |
                 Location of the method name
 
-                ```
+                ```text
                 foo&.bar(42)
                      ~~~
                 ```
@@ -1192,7 +1192,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 foo&.bar(42)
                         ~
                 ```
@@ -1205,7 +1205,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 foo&.bar(42)
                            ~
                 ```
@@ -1218,7 +1218,7 @@
             comment: |
                 Location of the operator if `CSend` is a part of assignment like
 
-                ```
+                ```text
                 foo&.bar = 1
                          ~
                 ```
@@ -1231,7 +1231,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo&.bar(42)
                 ~~~~~~~~~~~~
                 ```
@@ -1256,7 +1256,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 @@foo
                 ~~~~~
                 ```
@@ -1286,7 +1286,7 @@
             comment: |
                 Location of the class variable name
 
-                ```
+                ```text
                 @@foo = 1
                 ~~~~~
                 ```
@@ -1297,7 +1297,7 @@
             comment: |
                 Location of the `=` operator
 
-                ```
+                ```text
                 @@foo = 1
                       ~
                 ```
@@ -1308,7 +1308,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 @@foo = 1
                 ~~~~~~~~~
                 ```
@@ -1346,7 +1346,7 @@
             comment: |
                 Location of the `def` keyword.
 
-                ```
+                ```text
                 def foo; end
                 ~~~
                 ```
@@ -1357,7 +1357,7 @@
             comment: |
                 Location of the method name.
 
-                ```
+                ```text
                 def foo; end
                     ~~~
                 ```
@@ -1368,7 +1368,7 @@
             comment: |
                 Location of the `end` keyword.
 
-                ```
+                ```text
                 def foo; end
                          ~~~
                 ```
@@ -1381,7 +1381,7 @@
             comment: |
                 Location of the `=` operator for endless method definition
 
-                ```
+                ```text
                 def m() = 1
                         ~
                 ```
@@ -1394,7 +1394,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 def m(a); foo; end
                 ~~~~~~~~~~~~~~~~~~
                 ```
@@ -1418,7 +1418,7 @@
             comment: |
                 Location of the `defined?` keyword
 
-                ```
+                ```text
                 defined?(foo)
                 ~~~~~~~~
                 ```
@@ -1429,7 +1429,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 defined?(foo)
                         ~
                 ```
@@ -1442,7 +1442,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 defined?(foo)
                             ~
                 ```
@@ -1455,7 +1455,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 defined?(foo)
                 ~~~~~~~~~~~~~
                 ```
@@ -1499,7 +1499,7 @@
             comment: |
                 Location of the `def` keyword
 
-                ```
+                ```text
                 def self.foo; end
                 ~~~
                 ```
@@ -1510,7 +1510,7 @@
             comment: |
                 Location of the `.`
 
-                ```
+                ```text
                 def self.foo; end
                         ~
                 ```
@@ -1521,7 +1521,7 @@
             comment: |
                 Location of the method name
 
-                ```
+                ```text
                 def self.foo; end
                          ~~~
                 ```
@@ -1532,7 +1532,7 @@
             comment: |
                 Location of the `=` operator for endless method definition
 
-                ```
+                ```text
                 def self.foo() = 42
                                ~
                 ```
@@ -1545,7 +1545,7 @@
             comment: |
                 Location of the `end` keyword
 
-                ```
+                ```text
                 def self.foo; end
                               ~~~
                 ```
@@ -1558,7 +1558,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 def self.foo; end
                 ~~~~~~~~~~~~~~~~~
                 ```
@@ -1582,7 +1582,7 @@
             comment: |
                 Location of the string begin
 
-                ```
+                ```text
                 "#{foo}"
                 ~
 
@@ -1596,7 +1596,7 @@
             comment: |
                 Location of the string end
 
-                ```
+                ```text
                 "#{foo}"
                        ~
 
@@ -1610,7 +1610,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 "#{foo}"
                 ~~~~~~~~
 
@@ -1637,14 +1637,14 @@
             comment: |
                 Location of the symbol begin
 
-                ```
+                ```text
                 :"#{foo}"
                 ~~
                 ```
 
                 `None` if `Dsym` is a part of the interpolated symbol array:
 
-                ```
+                ```text
                 %I[#{bar}]
                 ```
         -
@@ -1654,14 +1654,14 @@
             comment: |
                 Location of the symbol begin
 
-                ```
+                ```text
                 :"#{foo}"
                         ~
                 ```
 
                 `None` if `Dsym` is a part of the interpolated symbol array:
 
-                ```
+                ```text
                 %I[#{bar}]
                 ```
         -
@@ -1671,7 +1671,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 :"#{foo}"
                 ~~~~~~~~~
                 ```
@@ -1701,7 +1701,7 @@
             comment: |
                 Location of the `...` operator
 
-                ```
+                ```text
                 if foo...bar; end
                       ~~~
                 ```
@@ -1712,7 +1712,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 if foo...bar; end
                    ~~~~~~~~~
                 ```
@@ -1735,7 +1735,7 @@
             comment: |
                 Location of the `else` keyword
 
-                ```
+                ```text
                 case foo; in 1; else; end
                                 ~~~~
                 ```
@@ -1753,7 +1753,7 @@
             comment: |
                 Location of the `__ENCODING__` keyword
 
-                ```
+                ```text
                 __ENCODING__
                 ~~~~~~~~~~~~
                 ```
@@ -1788,7 +1788,7 @@
             comment: |
                 Location of the `ensure` keyword
 
-                ```
+                ```text
                 begin; ensure; end
                        ~~~~~~
                 ```
@@ -1799,7 +1799,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 begin; 1; rescue; 2; else; 3; ensure; 4; end
                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 ```
@@ -1831,7 +1831,7 @@
             comment: |
                 Location of the `...` operator
 
-                ```
+                ```text
                 1...3
                  ~~~
                 ```
@@ -1842,7 +1842,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 1...3
                 ~~~~~
                 ```
@@ -1860,7 +1860,7 @@
             comment: |
                 Location of the `false` literal
 
-                ```
+                ```text
                 false
                 ~~~~~
                 ```
@@ -1878,7 +1878,7 @@
             comment: |
                 Location of the `__FILE__` literal
 
-                ```
+                ```text
                 __FILE__
                 ~~~~~~~~
                 ```
@@ -1904,7 +1904,7 @@
             comment: |
                 Location of the begin
 
-                ```
+                ```text
                 case foo; in [*x, 1 => a, *y]; end
                              ~
                 ```
@@ -1917,7 +1917,7 @@
             comment: |
                 Location of the end
 
-                ```
+                ```text
                 case foo; in [*x, 1 => a, *y]; end
                                             ~
                 ```
@@ -1930,7 +1930,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 case foo; in [*x, 1 => a, *y]; end
                              ~~~~~~~~~~~~~~~~
                 ```
@@ -1954,7 +1954,7 @@
             comment: |
                 Location of unary `-` (but not `+`)
 
-                ```
+                ```text
                 -42.5
                 ~
                 ```
@@ -1965,7 +1965,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 -42.5
                 ~~~~~
                 ```
@@ -2001,7 +2001,7 @@
             comment: |
                 Location of the `for` keyword
 
-                ```
+                ```text
                 for a in b; end
                 ~~~
                 ```
@@ -2012,7 +2012,7 @@
             comment: |
                 Location of the `in` keyword
 
-                ```
+                ```text
                 for a in b; end
                       ~~
                 ```
@@ -2023,7 +2023,7 @@
             comment: |
                 Location of the `do` keyword
 
-                ```
+                ```text
                 for a in b do; end
                            ~~
                 ```
@@ -2036,7 +2036,7 @@
             comment: |
                 Location of the `end` keyword
 
-                ```
+                ```text
                 for a in b; end
                             ~~~
                 ```
@@ -2047,7 +2047,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 for a in b; end
                 ~~~~~~~~~~~~~~~
                 ```
@@ -2065,7 +2065,7 @@
             comment: |
                 Location of the `...`
 
-                ```
+                ```text
                 def m(...); end
                       ~~~
                 ```
@@ -2083,7 +2083,7 @@
             comment: |
                 Location of the `...`
 
-                ```
+                ```text
                 def m(...); foo(...); end
                                 ~~~
                 ```
@@ -2107,7 +2107,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 $foo
                 ~~~~
                 ```
@@ -2140,7 +2140,7 @@
             comment: |
                 Location of the global variable name
 
-                ```
+                ```text
                 $foo = 42
                 ~~~~
                 ```
@@ -2151,7 +2151,7 @@
             comment: |
                 Location of the `=` operator
 
-                ```
+                ```text
                 $foo = 42
                      ~
                 ```
@@ -2165,7 +2165,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 $foo = 42
                 ~~~~~~~~~
                 ```
@@ -2189,7 +2189,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 { a: 1 }
                 ~
                 ```
@@ -2202,7 +2202,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 { a: 1 }
                        ~
                 ```
@@ -2215,7 +2215,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 { a: 1 }
                 ~~~~~~~~
                 ```
@@ -2239,7 +2239,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 case foo; in { a: 1 }; end
                              ~
                 ```
@@ -2252,7 +2252,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 case foo; in { a: 1 }; end
                                     ~
                 ```
@@ -2265,7 +2265,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 case foo; in { a: 1 }; end
                              ~~~~~~~~
                 ```
@@ -2358,7 +2358,7 @@
             comment: |
                 Location of the `if` keyword
 
-                ```
+                ```text
                 if foo; end
                 ~~
                 ```
@@ -2369,7 +2369,7 @@
             comment: |
                 Location of the `then` keyword
 
-                ```
+                ```text
                 if foo then; end
                        ~~~~
                 ```
@@ -2382,7 +2382,7 @@
             comment: |
                 Location of the `else` keyword
 
-                ```
+                ```text
                 if foo; else; end
                         ~~~~
                 ```
@@ -2395,7 +2395,7 @@
             comment: |
                 Location of the `end` keyword
 
-                ```
+                ```text
                 if foo; end
                         ~~~
                 ```
@@ -2406,7 +2406,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 if a then; b; else; c end
                 ~~~~~~~~~~~~~~~~~~~~~~~~~
                 ```
@@ -2430,7 +2430,7 @@
             comment: |
                 Location of the `if` keyword
 
-                ```
+                ```text
                 case foo; in pattern if cond; end
                                      ~~
                 ```
@@ -2441,7 +2441,7 @@
             commend: |
                 Location of the full expression
 
-                ```
+                ```text
                 case foo; in pattern if cond; end
                                      ~~~~~~~
                 ```
@@ -2483,7 +2483,7 @@
             comment: |
                 Location of the `if`/`unless` keyword
 
-                ```
+                ```text
                 stmt if cond
                      ~~
 
@@ -2497,7 +2497,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 stmt if cond
                 ~~~~~~~~~~~~
 
@@ -2536,7 +2536,7 @@
             comment: |
                 Location of the `?` operator
 
-                ```
+                ```text
                 cond ? if_true : if_false
                      ~
                 ```
@@ -2547,7 +2547,7 @@
             comment: |
                 Location of the `:` operator
 
-                ```
+                ```text
                 cond ? if_true : if_false
                                ~
                 ```
@@ -2558,7 +2558,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 cond ? if_true : if_false
                 ~~~~~~~~~~~~~~~~~~~~~~~~~
                 ```
@@ -2588,7 +2588,7 @@
             comment: |
                 Location of the `..` operator
 
-                ```
+                ```text
                 if foo..bar; end
                       ~~
                 ```
@@ -2599,7 +2599,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 if foo..bar; end
                    ~~~~~~~~
                 ```
@@ -2629,7 +2629,7 @@
             comment: |
                 Location of the `in` keyword
 
-                ```
+                ```text
                 foo in pattern
                     ~~
                 ```
@@ -2640,7 +2640,7 @@
             comment: |
                 Location of the `in` keyword
 
-                ```
+                ```text
                 foo in pattern
                 ~~~~~~~~~~~~~~
                 ```
@@ -2678,7 +2678,7 @@
             comment: |
                 Location of the `in` keyword
 
-                ```
+                ```text
                 case value; in pattern; end
                             ~~
                 ```
@@ -2689,7 +2689,7 @@
             comment: |
                 Location of the `then` keyword
 
-                ```
+                ```text
                 case value; in pattern then; end
                                        ~~~~
                 ```
@@ -2700,7 +2700,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 case value; in pattern then; 42; end
                             ~~~~~~~~~~~~~~~~~~~
                 ```
@@ -2730,7 +2730,7 @@
             comment: |
                 Location of open bracket
 
-                ```
+                ```text
                 foo[1, 2, 3]
                    ~
                 ```
@@ -2741,7 +2741,7 @@
             comment: |
                 Location of closing bracket
 
-                ```
+                ```text
                 foo[1, 2, 3]
                            ~
                 ```
@@ -2752,7 +2752,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo[1, 2, 3]
                 ~~~~~~~~~~~~
                 ```
@@ -2791,7 +2791,7 @@
             comment: |
                 Location of open bracket
 
-                ```
+                ```text
                 foo[1, 2, 3] = bar
                    ~
                 ```
@@ -2802,7 +2802,7 @@
             comment: |
                 Location of closing bracket
 
-                ```
+                ```text
                 foo[1, 2, 3] = bar
                            ~
                 ```
@@ -2813,7 +2813,7 @@
             comment: |
                 Location of the `=` operator
 
-                ```
+                ```text
                 foo[1, 2, 3] = bar
                              ~
                 ```
@@ -2827,7 +2827,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo[1, 2, 3] = bar
                 ~~~~~~~~~~~~~~~~~~
                 ```
@@ -2851,7 +2851,7 @@
             comment: |
                 Location of unary `-` (but not `+`)
 
-                ```
+                ```text
                 -42
                 ~
                 ```
@@ -2862,7 +2862,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 -42
                 ~~~
                 ```
@@ -2892,7 +2892,7 @@
             comment: |
                 Location of the `..` operator
 
-                ```
+                ```text
                 2..4
                  ~~
                 ```
@@ -2903,7 +2903,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 2..4
                 ~~~~
                 ```
@@ -2927,7 +2927,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 @foo
                 ~~~~
                 ```
@@ -2960,7 +2960,7 @@
             comment: |
                 Location of the instance variable name.
 
-                ```
+                ```text
                 @foo = 1
                 ~~~~
                 ```
@@ -2971,7 +2971,7 @@
             comment: |
                 Location of the `=` operator.
 
-                ```
+                ```text
                 @foo = 1
                      ~
                 ```
@@ -2985,7 +2985,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 @foo = 42
                 ~~~~~~~~~
                 ```
@@ -3009,7 +3009,7 @@
             comment: |
                 Location of the name
 
-                ```
+                ```text
                 def foo(bar:); end
                         ~~~
                 ```
@@ -3020,7 +3020,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 def foo(bar:); end
                         ~~~~
                 ```
@@ -3032,7 +3032,7 @@
         Represents an explicit `begin; end` block.
 
         The reason why it's different is that only
-        ```
+        ```text
         begin; foo; end while cond
         ```
         is a post-while loop (same with post-until loop)
@@ -3050,7 +3050,7 @@
             comment: |
                 Location of the `begin` keyword
 
-                ```
+                ```text
                 begin; foo; end
                 ~~~~~
                 ```
@@ -3061,7 +3061,7 @@
             comment: |
                 Location of the `begin` keyword
 
-                ```
+                ```text
                 begin; foo; end
                             ~~~
                 ```
@@ -3072,7 +3072,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 begin; foo; bar
                 ~~~~~~~~~~~~~~~
                 ```
@@ -3090,7 +3090,7 @@
             comment: |
                 Location of the `nil`
 
-                ```
+                ```text
                 def m(**nil); end
                         ~~~
                 ```
@@ -3101,7 +3101,7 @@
             comment: |
                 Location of the `nil`
 
-                ```
+                ```text
                 def m(**nil); end
                       ~~~~~
                 ```
@@ -3131,7 +3131,7 @@
             comment: |
                 Location of the argument name
 
-                ```
+                ```text
                 def m(foo: 1); end
                       ~~~
                 ```
@@ -3142,7 +3142,7 @@
             comment: |
                 Location of the argument name
 
-                ```
+                ```text
                 def m(foo: 1); end
                       ~~~~~~
                 ```
@@ -3168,7 +3168,7 @@
             comment: |
                 Location of the `**` operator
 
-                ```
+                ```text
                 def m(**foo); end
                       ~~
                 ```
@@ -3179,7 +3179,7 @@
             comment: |
                 Location of the argument name
 
-                ```
+                ```text
                 def m(**foo); end
                         ~~~
                 ```
@@ -3192,7 +3192,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 def m(**foo); end
                       ~~~~~
                 ```
@@ -3216,7 +3216,7 @@
             comment: |
                 Location of the `**` operator
 
-                ```
+                ```text
                 foo(**bar)
                     ~~
                 ```
@@ -3227,7 +3227,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo(**bar)
                     ~~~~~
                 ```
@@ -3247,7 +3247,7 @@
             comment: |
                 Location of the `->`
 
-                ```
+                ```text
                 -> {}
                 ~~
                 ```
@@ -3265,7 +3265,7 @@
             comment: |
                 Location of the `__LINE__` literal
 
-                ```
+                ```text
                 __LINE__
                 ~~~~~~~~
                 ```
@@ -3296,7 +3296,7 @@
             comment: |
                 Location of the local variable
 
-                ```
+                ```text
                 foo
                 ~~~
                 ```
@@ -3326,7 +3326,7 @@
             comment: |
                 Location of the local variable name
 
-                ```
+                ```text
                 foo = 42
                 ~~~
                 ```
@@ -3337,7 +3337,7 @@
             comment: |
                 Location of the `=` operator
 
-                ```
+                ```text
                 foo = 42
                     ~
                 ```
@@ -3351,7 +3351,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo = 42
                 ~~~~~~~~
                 ```
@@ -3381,7 +3381,7 @@
             comment: |
                 Location of the `=` operator
 
-                ```
+                ```text
                 foo, bar = 1, 2
                          ~
                 ```
@@ -3392,7 +3392,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo, bar = 1, 2
                 ~~~~~~~~~~~~~~~
                 ```
@@ -3422,7 +3422,7 @@
             comment: |
                 Location of the `|` operator
 
-                ```
+                ```text
                 foo in 1 | 2
                          ~
                 ```
@@ -3433,7 +3433,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo in 1 | 2
                        ~~~~~
                 ```
@@ -3463,7 +3463,7 @@
             comment: |
                 Location of the `=>` operator
 
-                ```
+                ```text
                 case 1; in Integer => a; end
                                    ~~
                 ```
@@ -3474,7 +3474,7 @@
             comment: |
                 Location of the `=>` operator
 
-                ```
+                ```text
                 case 1; in Integer => a; end
                            ~~~~~~~~~~~~
                 ```
@@ -3539,7 +3539,7 @@
             comment: |
                 Location of the `**` operator
 
-                ```
+                ```text
                 in **nil
                    ~~
                 ```
@@ -3550,7 +3550,7 @@
             comment: |
                 Location of the name
 
-                ```
+                ```text
                 in **nil
                      ~~~
                 ```
@@ -3561,7 +3561,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 in **nil
                    ~~~~~
                 ```
@@ -3587,7 +3587,7 @@
             comment: |
                 Location of the `*` operator
 
-                ```
+                ```text
                 case foo; in *bar; end
                              ~
                 ```
@@ -3598,7 +3598,7 @@
             comment: |
                 Location of the `*` operator
 
-                ```
+                ```text
                 case foo; in *bar; end
                              ~~~~
                 ```
@@ -3622,14 +3622,14 @@
             comment: |
                 Location of the name
 
-                ```
+                ```text
                 case foo; in pattern => bar; end
                                         ~~~
                 ```
 
                 **Note** it can also be produced by a hash pattern
 
-                ```
+                ```text
                 case foo; in { a: }; end
                                ~
                 ```
@@ -3640,14 +3640,14 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 case foo; in pattern => bar; end
                                         ~~~
                 ```
 
                 **Note** it can also be produced by a hash pattern
 
-                ```
+                ```text
                 case foo; in { a: }; end
                                ~~
                 ```
@@ -3714,7 +3714,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 (a, b) = 1, 2
                 ~
                 ```
@@ -3727,7 +3727,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 (a, b) = 1, 2
                      ~
                 ```
@@ -3740,7 +3740,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 (a, b) = 1, 2
                 ~~~~~~
                 ```
@@ -3772,7 +3772,7 @@
             comment: |
                 Location of the `module` keyword
 
-                ```
+                ```text
                 module M; end
                 ~~~~~~
                 ```
@@ -3783,7 +3783,7 @@
             comment: |
                 Location of the `end` keyword
 
-                ```
+                ```text
                 module M; end
                           ~~~
                 ```
@@ -3794,7 +3794,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 module M; end
                 ~~~~~~~~~~~~~
                 ```
@@ -3818,7 +3818,7 @@
             comment: |
                 Location of the `next` keyword
 
-                ```
+                ```text
                 next 42
                 ```
         -
@@ -3828,7 +3828,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 next(42)
                     ~
                 ```
@@ -3841,7 +3841,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 next(42)
                        ~
                 ```
@@ -3854,7 +3854,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 next(42)
                 ~~~~~~~~
                 ```
@@ -3872,7 +3872,7 @@
             comment: |
                 Location of the `nil` keyword
 
-                ```
+                ```text
                 nil
                 ~~~
                 ```
@@ -3896,7 +3896,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 $1
                 ~~
                 ```
@@ -3932,7 +3932,7 @@
             comment: |
                 Location of the open brace
 
-                ```
+                ```text
                 proc { _1 }
                      ~
                 ```
@@ -3943,7 +3943,7 @@
             comment: |
                 Location of the closing brace
 
-                ```
+                ```text
                 proc { _1 }
                           ~
                 ```
@@ -3954,7 +3954,7 @@
             comment: |
                 Location of the open brace
 
-                ```
+                ```text
                 proc { _1 }
                 ~~~~~~~~~~~
                 ```
@@ -4001,7 +4001,7 @@
             comment: |
                 Location of the operator
 
-                ```
+                ```text
                 a.b <<= c
                     ~~~
                 ```
@@ -4012,7 +4012,7 @@
             comment: |
                 Location of the operator
 
-                ```
+                ```text
                 a.b <<= c
                 ~~~~~~~~~
                 ```
@@ -4042,7 +4042,7 @@
             comment: |
                 Location of the argument name
 
-                ```
+                ```text
                 def m(foo = 1); end
                       ~~~
                 ```
@@ -4053,7 +4053,7 @@
             comment: |
                 Location of the `=` operator
 
-                ```
+                ```text
                 def m(foo = 1); end
                           ~
                 ```
@@ -4064,7 +4064,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 def m(foo = 1); end
                       ~~~~~~~
                 ```
@@ -4094,7 +4094,7 @@
             comment: |
                 Location of the `||`/`or` operator
 
-                ```
+                ```text
                 foo || bar
                     ~~
                 ```
@@ -4105,7 +4105,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo || bar
                 ~~~~~~~~~~
                 ```
@@ -4135,7 +4135,7 @@
             comment: |
                 Location of the `||=` operator
 
-                ```
+                ```text
                 foo ||= bar
                     ~~~
                 ```
@@ -4146,7 +4146,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo ||= bar
                 ~~~~~~~~~~~
                 ```
@@ -4176,7 +4176,7 @@
             comment: |
                 Location of the `:` or `=>` operator
 
-                ```
+                ```text
                 { foo: bar }
                      ~
 
@@ -4190,7 +4190,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 { foo: bar }
                   ~~~~~~~~
 
@@ -4217,7 +4217,7 @@
             comment: |
                 Location of the `^` operator
 
-                ```
+                ```text
                 case foo; in ^bar; end
                              ~
                 ```
@@ -4228,7 +4228,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 case foo; in ^bar; end
                              ~~~~
                 ```
@@ -4252,7 +4252,7 @@
             comment: |
                 Location of the `END` keyword
 
-                ```
+                ```text
                 END { 42 }
                 ~~~
                 ```
@@ -4263,7 +4263,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 END { 42 }
                     ~
                 ```
@@ -4274,7 +4274,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 END { 42 }
                          ~
                 ```
@@ -4285,7 +4285,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 END { 42 }
                 ~~~~~~~~~~
                 ```
@@ -4309,7 +4309,7 @@
             comment: |
                 Location of the `BEGIN` keyword
 
-                ```
+                ```text
                 BEGIN { 42 }
                 ~~~~~
                 ```
@@ -4320,7 +4320,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 BEGIN { 42 }
                       ~
                 ```
@@ -4331,7 +4331,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 BEGIN { 42 }
                            ~
                 ```
@@ -4342,7 +4342,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 BEGIN { 42 }
                 ~~~~~~~~~~~~
                 ```
@@ -4373,7 +4373,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 proc { |(foo, bar)| }
                         ~
                 ```
@@ -4386,7 +4386,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 proc { |(foo, bar)| }
                                  ~
                 ```
@@ -4399,7 +4399,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 proc { |(foo, bar)| }
                         ~~~~~~~~~~
                 ```
@@ -4423,7 +4423,7 @@
             comment: |
                 Location of the unary `-` (but not `+`)
 
-                ```
+                ```text
                 -1r
                 ~
                 ```
@@ -4434,7 +4434,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 -1r
                 ~~~
                 ```
@@ -4452,7 +4452,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 redo
                 ~~~~
                 ```
@@ -4476,7 +4476,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 /foo/mix
                      ~~~
                 ```
@@ -4508,7 +4508,7 @@
             comment: |
                 Location of the regex begin
 
-                ```
+                ```text
                 /foo/
                 ~
 
@@ -4522,7 +4522,7 @@
             comment: |
                 Location of the regex end
 
-                ```
+                ```text
                 /foo/
                     ~
 
@@ -4536,7 +4536,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 /foo/mix
                 ~~~~~~~~
                 ```
@@ -4574,7 +4574,7 @@
             comment: |
                 Location of the `else` keyword
 
-                ```
+                ```text
                 begin; 1; rescue StandardError => e; 2; else; 3; end
                                                         ~~~~
                 ```
@@ -4587,7 +4587,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 begin; 1; rescue StandardError => e; 2; else; 3; end
                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 ```
@@ -4629,7 +4629,7 @@
             comment: |
                 Location of the `rescue` keyword
 
-                ```
+                ```text
                 begin; 1; rescue E => e; 2; end
                           ~~~~~~
                 ```
@@ -4640,7 +4640,7 @@
             comment: |
                 Location of the `=>` operator
 
-                ```
+                ```text
                 begin; 1; rescue E => e; 2; end
                                    ~~
                 ```
@@ -4653,7 +4653,7 @@
             comment: |
                 Location of the `then` keyword
 
-                ```
+                ```text
                 begin; 1; rescue E => e then; 2; end
                                         ~~~~
                 ```
@@ -4666,7 +4666,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 begin; 1; rescue E => e then; 2; end
                           ~~~~~~~~~~~~~~~~~~~~~
                 ```
@@ -4692,7 +4692,7 @@
             comment: |
                 Location of the `*` operator
 
-                ```
+                ```text
                 def m(*foo); end
                       ~
                 ```
@@ -4703,7 +4703,7 @@
             comment: |
                 Location of the argument name
 
-                ```
+                ```text
                 def m(*foo); end
                        ~~~
                 ```
@@ -4714,7 +4714,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 def m(*foo); end
                       ~~~~
                 ```
@@ -4732,7 +4732,7 @@
             comment: |
                 Location of the `retry` keyword
 
-                ```
+                ```text
                 retry
                 ~~~~~
                 ```
@@ -4756,7 +4756,7 @@
             comment: |
                 Location of the `return` keyword
 
-                ```
+                ```text
                 return 1, 2
                 ~~~~~~
                 ```
@@ -4767,7 +4767,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 return 1, 2
                 ~~~~~~~~~~~
                 ```
@@ -4799,7 +4799,7 @@
             comment: |
                 Location of the `class` keyword
 
-                ```
+                ```text
                 class << foo; end
                 ~~~~~
                 ```
@@ -4810,7 +4810,7 @@
             comment: |
                 Location of the `<<` operator
 
-                ```
+                ```text
                 class << foo; end
                       ~~
                 ```
@@ -4821,7 +4821,7 @@
             comment: |
                 Location of the `end` keyword
 
-                ```
+                ```text
                 class << foo; end
                               ~~~
                 ```
@@ -4832,7 +4832,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 class << foo; end
                 ~~~~~~~~~~~~~~~~~
                 ```
@@ -4850,7 +4850,7 @@
             comment: |
                 Location of the `self` keyword
 
-                ```
+                ```text
                 self
                 ~~~~
                 ```
@@ -4888,7 +4888,7 @@
             comment: |
                 Location of the `.` operator
 
-                ```
+                ```text
                 foo.bar(42)
                    ~
                 ```
@@ -4901,7 +4901,7 @@
             comment: |
                 Location of the method name
 
-                ```
+                ```text
                 foo.bar(42)
                     ~~~
                 ```
@@ -4914,7 +4914,7 @@
             comment: |
                 Location of open parenthesis
 
-                ```
+                ```text
                 foo(42)
                    ~
                 ```
@@ -4927,7 +4927,7 @@
             comment: |
                 Location of closing parenthesis
 
-                ```
+                ```text
                 foo(42)
                       ~
                 ```
@@ -4940,7 +4940,7 @@
             comment: |
                 Location of the operator if method is a setter
 
-                ```
+                ```text
                 foo.bar = 42
                         ~
                 ```
@@ -4953,7 +4953,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo.bar(42)
                 ~~~~~~~~~~~
                 ```
@@ -4977,7 +4977,7 @@
             comment: |
                 Location of the argument
 
-                ```
+                ```text
                 proc { |;foo|}
                          ~~~
                 ```
@@ -5001,7 +5001,7 @@
             comment: |
                 Location of the `*` operator
 
-                ```
+                ```text
                 foo(*bar)
                     ~
                 ```
@@ -5012,7 +5012,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 foo(*bar)
                     ~~~~
                 ```
@@ -5045,7 +5045,7 @@
             comment: |
                 Location of the string begin
 
-                ```
+                ```text
                 "foo"
                 ~
                 ```
@@ -5058,7 +5058,7 @@
             comment: |
                 Location of the string begin
 
-                ```
+                ```text
                 "foo"
                     ~
                 ```
@@ -5071,7 +5071,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 "foo"
                 ~~~~~
                 ```
@@ -5095,7 +5095,7 @@
             comment: |
                 Location of the `super` keyword
 
-                ```
+                ```text
                 super(1, 2)
                 ~~~~~
                 ```
@@ -5106,7 +5106,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 super(1, 2)
                      ~
                 ```
@@ -5119,7 +5119,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 super(1, 2)
                           ~
                 ```
@@ -5132,7 +5132,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 super(1, 2)
                 ~~~~~~~~~~~
                 ```
@@ -5165,7 +5165,7 @@
             comment: |
                 Location of the symbol begin
 
-                ```
+                ```text
                 :foo
                 ~
                 ```
@@ -5178,7 +5178,7 @@
             comment: |
                 Location of the symbol end
 
-                ```
+                ```text
                 { foo: 1 }
                      ~
                 ```
@@ -5191,7 +5191,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 :foo
                 ~~~~
 
@@ -5215,7 +5215,7 @@
             comment: |
                 Location of the `true` keyword
 
-                ```
+                ```text
                 true
                 ~~~~
                 ```
@@ -5239,7 +5239,7 @@
             comment: |
                 Location the `undef` keyword
 
-                ```
+                ```text
                 undef foo, :bar
                 ~~~~~
                 ```
@@ -5250,7 +5250,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 undef :foo, bar
                 ~~~~~~~~~~~~~~
                 ```
@@ -5274,7 +5274,7 @@
             comment: |
                 Location of the `unless` keyword
 
-                ```
+                ```text
                 case foo; in pattern unless cond; end
                                      ~~~~~~
                 ```
@@ -5285,7 +5285,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 case foo; in pattern unless cond; end
                                      ~~~~~~~~~~~
                 ```
@@ -5317,7 +5317,7 @@
             comment: |
                 Location of the `until` keyword
 
-                ```
+                ```text
                 until cond do; foo; end
                 ~~~~~
                 ```
@@ -5328,7 +5328,7 @@
             comment: |
                 Location of the `do` keyword
 
-                ```
+                ```text
                 until cond do; foo; end
                            ~~
                 ```
@@ -5341,7 +5341,7 @@
             comment: |
                 Location of the `end` keyword
 
-                ```
+                ```text
                 until cond do; foo; end
                                     ~~~
                 ```
@@ -5354,7 +5354,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 until cond do; foo; end
                 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -5368,7 +5368,7 @@
     comment: |
         Represents a post-until loop
 
-        ```
+        ```text
         begin
           foo
         end until bar
@@ -5393,7 +5393,7 @@
             comment: |
                 Location of the `until` keyword
 
-                ```
+                ```text
                 begin; foo; end until bar
                                 ~~~~~
                 ```
@@ -5404,7 +5404,7 @@
             comment: |
                 Location of the `until` keyword
 
-                ```
+                ```text
                 begin; foo; end until bar
                 ~~~~~~~~~~~~~~~~~~~~~~~~~
                 ```
@@ -5434,7 +5434,7 @@
             comment: |
                 Location of the `when` keyword
 
-                ```
+                ```text
                 case foo; when bar; end
                           ~~~~
                 ```
@@ -5445,7 +5445,7 @@
             comment: |
                 Location of the `then` keyword
 
-                ```
+                ```text
                 case foo; when bar then baz; end
                                    ~~~~
                 ```
@@ -5458,7 +5458,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 case foo; when bar then baz; end
                           ~~~~~~~~~~~~~~~~~
                 ```
@@ -5490,7 +5490,7 @@
             comment: |
                 Location of the `while` keyword
 
-                ```
+                ```text
                 while cond do; foo; end
                 ~~~~~
                 ```
@@ -5501,7 +5501,7 @@
             comment: |
                 Location of the `do` keyword
 
-                ```
+                ```text
                 while cond do; foo; end
                            ~~
                 ```
@@ -5514,7 +5514,7 @@
             comment: |
                 Location of the `end` keyword
 
-                ```
+                ```text
                 while cond do; foo; end
                                     ~~~
                 ```
@@ -5527,7 +5527,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 while cond do; foo; end
                 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -5541,7 +5541,7 @@
     comment: |
         Represents a post-while loop
 
-        ```
+        ```text
         begin
           foo
         end while bar
@@ -5566,7 +5566,7 @@
             comment: |
                 Location of the `while` keyword
 
-                ```
+                ```text
                 begin; foo; end while bar
                                 ~~~~~
                 ```
@@ -5577,7 +5577,7 @@
             comment: |
                 Location of the `while` keyword
 
-                ```
+                ```text
                 begin; foo; end while bar
                 ~~~~~~~~~~~~~~~~~~~~~~~~~
                 ```
@@ -5713,7 +5713,7 @@
             comment: |
                 Location of the `yield` keyword
 
-                ```
+                ```text
                 yield 1, 2
                 ~~~~~
                 ```
@@ -5724,7 +5724,7 @@
             comment: |
                 Location of the open parenthesis
 
-                ```
+                ```text
                 yield(1, 2)
                      ~
                 ```
@@ -5737,7 +5737,7 @@
             comment: |
                 Location of the closing parenthesis
 
-                ```
+                ```text
                 yield(1, 2)
                           ~
                 ```
@@ -5750,7 +5750,7 @@
             comment: |
                 Location of the full expression
 
-                ```
+                ```text
                 yield(1, 2)
                 ~~~~~~~~~~~
                 ```
@@ -5770,7 +5770,7 @@
             comment: |
                 Location of the `super` keyword
 
-                ```
+                ```text
                 super
                 ~~~~~
                 ```
