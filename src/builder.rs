@@ -1,3 +1,4 @@
+#[cfg(feature = "onig")]
 use onig::{Regex, RegexOptions};
 use std::collections::HashMap;
 use std::convert::TryInto;
@@ -464,9 +465,9 @@ impl Builder {
             begin_l.join(&maybe_node_expr(&options.as_ref()).unwrap_or_else(|| self.loc(&end_t)));
         match &options {
             Some(Node::RegOpt(RegOpt { options, .. })) => {
-                self.static_regexp(&parts, options, &expression_l)
+                self.validate_static_regexp(&parts, options, &expression_l)
             }
-            None => self.static_regexp(&parts, &[], &expression_l),
+            None => self.validate_static_regexp(&parts, &[], &expression_l),
             _ => unreachable!("must be Option<RegOpt>"),
         };
         Node::Regexp(Regexp {
@@ -1962,9 +1963,8 @@ impl Builder {
         let selector_l = self.loc(&match_t);
         let expression_l = join_exprs(&receiver, &arg);
 
-        let result = match self.static_regexp_node(&receiver) {
-            Some(regex) => {
-                let captures = self.static_regexp_captures(&regex);
+        let result = match self.static_regexp_captures(&receiver) {
+            Some(captures) => {
                 for capture in captures {
                     self.static_env.declare(&capture);
                 }
@@ -3397,7 +3397,8 @@ impl Builder {
         Some(result)
     }
 
-    pub(crate) fn static_regexp(
+    #[cfg(feature = "onig")]
+    pub(crate) fn build_static_regexp(
         &self,
         parts: &[Node],
         options: &[char],
@@ -3423,7 +3424,23 @@ impl Builder {
         }
     }
 
-    pub(crate) fn static_regexp_node(&self, node: &Node) -> Option<Regex> {
+    #[cfg(feature = "onig")]
+    pub(crate) fn validate_static_regexp(&self, parts: &[Node], options: &[char], range: &Range) {
+        self.build_static_regexp(parts, options, range);
+    }
+
+    #[cfg(not(feature = "onig"))]
+    pub(crate) fn validate_static_regexp(
+        &self,
+        _parts: &[Node],
+        _options: &[char],
+        _range: &Range,
+    ) {
+    }
+
+    #[cfg(feature = "onig")]
+    pub(crate) fn static_regexp_captures(&self, node: &Node) -> Option<Vec<String>> {
+        eprintln!("using real static_regexp_captures");
         if let Node::Regexp(Regexp {
             parts,
             options,
@@ -3437,20 +3454,23 @@ impl Builder {
                     re_options = options;
                 }
             };
-            return self.static_regexp(parts, re_options, expression_l);
+            let regex = self.build_static_regexp(parts, re_options, expression_l)?;
+
+            let mut result: Vec<String> = vec![];
+
+            regex.foreach_name(|name, _| {
+                result.push(name.to_owned());
+                true
+            });
+
+            return Some(result);
         }
         None
     }
 
-    pub(crate) fn static_regexp_captures(&self, regex: &Regex) -> Vec<String> {
-        let mut result: Vec<String> = vec![];
-
-        regex.foreach_name(|name, _| {
-            result.push(name.to_owned());
-            true
-        });
-
-        result
+    #[cfg(not(feature = "onig"))]
+    pub(crate) fn static_regexp_captures(&self, _node: &Node) -> Option<Vec<String>> {
+        None
     }
 
     pub(crate) fn loc(&self, token: &Token) -> Range {

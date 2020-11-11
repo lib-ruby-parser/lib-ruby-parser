@@ -104,7 +104,7 @@ Ruby constructs regexes from literals during parsing to:
 
 To mirror this behavior `lib-ruby-parser` uses Onigurama to compile, validate and parse regex literals.
 
-Maybe this functionality will be extracted into a custom feature soon.
+This feature is disabled by default, but you can enable it by enabling `"onig"` feature.
 
 ## Bison
 
