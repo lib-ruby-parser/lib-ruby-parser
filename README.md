@@ -1,11 +1,11 @@
-# lib-rubyparser
+# lib-ruby-parser
 
-![test](https://github.com/lib-rubyparser/lib-rubyparser/workflows/test/badge.svg?branch=master)
-[![codecov](https://codecov.io/gh/lib-rubyparser/lib-rubyparser/branch/master/graph/badge.svg)](https://codecov.io/gh/lib-rubyparser/lib-rubyparser)
+[![test](https://github.com/lib-ruby-parser/lib-ruby-parser/workflows/test/badge.svg?branch=master)](https://github.com/lib-ruby-parser/lib-ruby-parser/actions?query=workflow%3Atest)
+[![codecov](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser/branch/master/graph/badge.svg)](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 
 
-`lib-rubyparser` is a Ruby parser written in Rust.
+`lib-ruby-parser` is a Ruby parser written in Rust.
 
 Basic usage:
 
@@ -45,11 +45,11 @@ Comparison with [whitequark/parser](https://github.com/whitequark/parser):
 
 ## Versioning
 
-`lib-rubyparser` follows MRI/master. There are no plans to support multiple versions like it's done in `whitequark/parser`.
+`lib-ruby-parser` follows MRI/master. There are no plans to support multiple versions like it's done in `whitequark/parser`.
 
 ## Encodings
 
-By default `lib-rubyparser` can only parse source files encoded in `UTF-8` or `ASCII-8BIT/BINARY`.
+By default `lib-ruby-parser` can only parse source files encoded in `UTF-8` or `ASCII-8BIT/BINARY`.
 
 It's possible to pass a `decoder` function in `ParserOptions` that takes a recognized (by the library) encoding and a byte array. It must return a UTF-8 encoded byte array or an error:
 
@@ -102,13 +102,13 @@ Ruby constructs regexes from literals during parsing to:
 1. validate them
 2. declare local variables if regex is used for matching AND it contains named captures
 
-To mirror this behavior `lib-rubyparser` uses Onigurama to compile, validate and parse regex literals.
+To mirror this behavior `lib-ruby-parser` uses Onigurama to compile, validate and parse regex literals.
 
 Maybe this functionality will be extracted into a custom feature soon.
 
 ## Bison
 
-The grammar of `lib-rubyparser` is built using a [custom bison skeleton](https://github.com/iliabylich/rust-bison-skeleton) that was written for this project.
+The grammar of `lib-ruby-parser` is built using a [custom bison skeleton](https://github.com/iliabylich/rust-bison-skeleton) that was written for this project.
 
 For development you need the latest version Bison installed locally. Of course, it's not necessary for release builds from crates.io (because compiled `parser.rs` is included into release build).
 
