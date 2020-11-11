@@ -1,7 +1,11 @@
 [package]
 authors = ["Ilya Bylich <ibylich@gmail.com>"]
+description = "Ruby parser"
 edition = "2018"
+include = ["src/**/*.rs", "Cargo.toml"]
+license = "MIT"
 name = "lib-ruby-parser"
+repository = "https://github.com/lib-rubyparser/lib-rubyparser"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
