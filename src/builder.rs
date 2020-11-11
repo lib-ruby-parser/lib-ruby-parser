@@ -56,7 +56,7 @@ pub(crate) enum ArgsType {
 }
 
 #[derive(Debug)]
-pub struct Builder {
+pub(crate) struct Builder {
     static_env: StaticEnvironment,
     context: Context,
     current_arg_stack: CurrentArgStack,
@@ -406,7 +406,7 @@ impl Builder {
 
     const TAB_WIDTH: usize = 8;
 
-    pub fn dedent_string(s: &mut StringValue, width: usize) {
+    pub(crate) fn dedent_string(s: &mut StringValue, width: usize) {
         let mut col: usize = 0;
         let mut i: usize = 0;
 

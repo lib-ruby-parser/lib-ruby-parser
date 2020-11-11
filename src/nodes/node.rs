@@ -1,11 +1,8 @@
-use std::rc::Rc;
-
 use crate::nodes::InnerNode;
 use crate::nodes::*;
-use crate::source::buffer::Input;
 use crate::source::Range;
-use crate::Loc;
 
+/// Generic combination of all known nodes.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {
     Alias(Alias),
@@ -133,7 +130,7 @@ pub enum Node {
 }
 
 impl Node {
-    pub fn inner(&self) -> &dyn InnerNode {
+    pub(crate) fn inner(&self) -> &dyn InnerNode {
         match self {
             Node::Alias(inner) => inner,
             Node::And(inner) => inner,
@@ -260,27 +257,26 @@ impl Node {
         }
     }
 
+    /// Returs a whitequark/parser -like representation of `self`.
+    ///
+    /// Used in tests and example scripts
     pub fn inspect(&self, indent: usize) -> String {
         self.inner().inspect(indent)
     }
 
+    /// Returns location of the full node expression
     pub fn expression(&self) -> &Range {
         self.inner().expression()
     }
 
+    /// Returns a whitequark/parser -like node name.
+    ///
+    /// Used in tests and example scripts
     pub fn str_type(&self) -> &'static str {
         self.inner().str_type()
     }
 
-    pub fn dummy_node(loc: &Loc, input: &Rc<Input>) -> Self {
-        Node::Begin(Begin {
-            statements: vec![],
-            begin_l: None,
-            end_l: None,
-            expression_l: Range::new(loc.begin, loc.end, Rc::clone(input)),
-        })
-    }
-
+    /// Prints itself + location information
     pub fn print_with_locs(&self) {
         self.inner().print_with_locs()
     }

@@ -90,7 +90,7 @@ Ruby doesn't require string literals to be valid in their encodings. This is why
 
 Byte sequence `255` is invalid in UTF-8, but MRI ignores it.
 
-But not all languages support it, and this is why string and symbol nodes contain a custom `StringValue` instead of a plain `String` inside.
+But not all languages support it, and this is why string and symbol nodes encapsulate a custom `StringValue` instead of a plain `String`.
 
 If your langauge supports invalid strings you can use raw `.bytes` of this `StringValue`. For example, a Ruby wrapper for this library could do that.
 

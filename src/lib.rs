@@ -23,7 +23,7 @@ pub(crate) use parser::Loc;
 pub use parser::{token_name, Parser, Token};
 
 mod builder;
-pub use builder::Builder;
+pub(crate) use builder::Builder;
 
 mod current_arg_stack;
 pub(crate) use current_arg_stack::CurrentArgStack;

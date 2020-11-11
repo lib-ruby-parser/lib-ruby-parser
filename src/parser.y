@@ -6324,6 +6324,9 @@ keyword_variable: kNIL
 %%
 
 impl Parser {
+    /// Constructs a parser with given `input` and `options`.
+    ///
+    /// Returns an error if given `input` is invalid.
     pub fn new(input: &[u8], options: ParserOptions) -> Result<Self, InputError> {
         let ParserOptions {
             buffer_name,
@@ -6378,6 +6381,12 @@ impl Parser {
         Ok(parser)
     }
 
+    /// Parses given input and returns:
+    ///     1. AST
+    ///     2. tokens
+    ///     3. diagnostics
+    ///     4. coments
+    ///     5. magic comments
     pub fn do_parse(&mut self) -> ParserResult  {
         self.parse();
 
@@ -6390,12 +6399,15 @@ impl Parser {
         }
     }
 
+    /// Turns `self` and `yylexer` into debug mode
+    ///
+    /// Use it only for debugging to see bison/lexer debug info
     pub fn set_debug(&mut self, debug: bool) {
         self.yydebug = debug;
         self.yylexer.set_debug(debug);
     }
 
-    pub fn warn(&mut self, loc: &Loc, message: DiagnosticMessage) {
+    fn warn(&mut self, loc: &Loc, message: DiagnosticMessage) {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Warning,
             message,
