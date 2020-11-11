@@ -118,4 +118,4 @@ If you use it from GitHub directly you also need Bison (because `parser.rs` is u
 
 ## Bindings for other languages
 
-WIP
++ [WASM](https://github.com/lib-ruby-parser/wasm-bindings) (with live demo)
