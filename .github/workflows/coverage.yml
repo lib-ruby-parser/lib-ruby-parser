@@ -31,7 +31,7 @@ jobs:
       - name: cargo-tarpaulin
         run: |
           cargo install cargo-tarpaulin
-          cargo tarpaulin -v --out Xml
+          cargo tarpaulin --all-features -v --out Xml
 
       - name: upload to codecov.io
         uses: codecov/codecov-action@v1.0.2
