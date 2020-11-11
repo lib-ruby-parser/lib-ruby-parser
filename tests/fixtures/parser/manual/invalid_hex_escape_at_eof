@@ -1,4 +1,5 @@
 --INPUT
-"\xZZ"
+"\x
+"
 --DIAGNOSTIC
  ~~ (error) invalid hex escape

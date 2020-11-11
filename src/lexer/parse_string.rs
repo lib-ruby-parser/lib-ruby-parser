@@ -709,10 +709,7 @@ impl ParseString for Lexer {
 
         c = self.scan_hex(self.buffer.pcur, 2, numlen);
         if *numlen == 0 {
-            self.yyerror1(
-                DiagnosticMessage::InvalidHexEscape,
-                self.current_range().adjust_end(1),
-            );
+            self.yyerror1(DiagnosticMessage::InvalidHexEscape, self.current_range());
             self.token_flush();
             return MaybeByte::new(0);
         }

@@ -120,10 +120,6 @@ impl Range {
 
     pub fn expand_to_line(&self) -> Option<(usize, Self)> {
         let (begin_line, _) = self.begin_line_col()?;
-        let (end_line, _) = self.end_line_col()?;
-        if begin_line != end_line {
-            return None;
-        }
         let line_no = begin_line;
         let line = &self.input.lines[line_no];
         Some((line_no, self.with(line.start, line.line_end())))
