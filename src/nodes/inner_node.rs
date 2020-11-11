@@ -1,6 +1,6 @@
-use crate::nodes::StringValue;
 use crate::source::Range;
 use crate::Node;
+use crate::StringValue;
 
 pub trait InnerNode {
     fn expression(&self) -> &Range;

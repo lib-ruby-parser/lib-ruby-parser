@@ -268,10 +268,10 @@ impl LocName {
                 other => panic!("node {} doesn't support operator loc", other.str_type()),
             },
             LocName::Selector => match node {
-                Node::Send(Send { selector_l, .. }) | Node::CSend(CSend { selector_l, .. }) => {
-                    selector_l.clone()
+                Node::Send(Send { selector_l, .. }) => selector_l.clone(),
+                Node::CSend(CSend { selector_l, .. }) | Node::Pin(Pin { selector_l, .. }) => {
+                    Some(selector_l.clone())
                 }
-                Node::Pin(Pin { selector_l, .. }) => Some(selector_l.clone()),
                 other => panic!("node {} doesn't support selector loc", other.str_type()),
             },
             LocName::Assoc => match node {

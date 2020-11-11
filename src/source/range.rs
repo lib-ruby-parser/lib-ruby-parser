@@ -134,7 +134,7 @@ impl Range {
         Some(String::from_utf8_lossy(bytes).into_owned())
     }
 
-    pub fn print(&self, name: &str) {
+    pub(crate) fn print(&self, name: &str) {
         println!(
             "{}{} {}",
             " ".repeat(self.begin_pos),

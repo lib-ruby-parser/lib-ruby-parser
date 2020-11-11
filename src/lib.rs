@@ -4,7 +4,7 @@ extern crate lazy_static;
 
 pub mod source;
 
-pub mod lexer;
+mod lexer;
 pub use lexer::Lexer;
 
 mod static_environment;
@@ -61,3 +61,6 @@ pub mod nodes;
 pub use nodes::Node;
 
 pub mod traverse;
+
+mod string_value;
+pub use string_value::StringValue;

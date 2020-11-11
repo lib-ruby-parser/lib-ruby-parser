@@ -4,9 +4,9 @@ use std::convert::TryInto;
 use std::rc::Rc;
 
 use crate::error::Diagnostics;
-use crate::nodes::StringValue;
 use crate::nodes::*;
 use crate::source::Range;
+use crate::StringValue;
 use crate::{
     source::buffer::Input, Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node,
     StaticEnvironment, Token, VariablesStack,
@@ -1678,8 +1678,8 @@ impl Builder {
                 method_name,
                 recv: Box::new(receiver.expect("csend node must have a receiver")),
                 args,
-                dot_l,
-                selector_l,
+                dot_l: dot_l.expect("csend node must have &."),
+                selector_l: selector_l.expect("csend node must have a method name"),
                 begin_l,
                 end_l,
                 operator_l: None,
@@ -1807,6 +1807,8 @@ impl Builder {
             Node::Next(Next {
                 args,
                 keyword_l,
+                begin_l,
+                end_l,
                 expression_l,
             }) => {
                 let (args, expression_l) =
@@ -1814,6 +1816,8 @@ impl Builder {
                 Node::Next(Next {
                     args,
                     keyword_l: keyword_l.clone(),
+                    begin_l: begin_l.clone(),
+                    end_l: end_l.clone(),
                     expression_l,
                 })
             }
@@ -1874,8 +1878,8 @@ impl Builder {
                 method_name,
                 recv: Box::new(receiver),
                 args: vec![],
-                dot_l: Some(dot_l),
-                selector_l: Some(selector_l),
+                dot_l,
+                selector_l,
                 begin_l: None,
                 end_l: None,
                 operator_l: None,
@@ -2397,6 +2401,8 @@ impl Builder {
             KeywordCmd::Next => Node::Next(Next {
                 args,
                 keyword_l,
+                begin_l,
+                end_l,
                 expression_l,
             }),
             KeywordCmd::Redo => Node::Redo(Redo { expression_l }),

@@ -76,7 +76,21 @@ impl Field {
             RawString => "String",
             RegexOptions => "Option<Box<Node>>",
         };
-        format!("    pub {}: {},", self.field_name, field_type)
+        let offset = "    ";
+        format!(
+            "{comments}\n{offset}pub {field_name}: {field_type},",
+            offset = offset,
+            comments = self
+                .comment
+                .clone()
+                .unwrap_or_else(|| String::from(""))
+                .lines()
+                .map(|s| format!("{}/// {}", offset, s).trim_end().to_owned())
+                .collect::<Vec<_>>()
+                .join("\n"),
+            field_name = self.field_name,
+            field_type = field_type
+        )
     }
 
     pub fn print(&self) -> Option<String> {
@@ -229,7 +243,7 @@ impl Struct {
             .iter()
             .any(|f| f.field_type == FieldType::StringValue)
         {
-            uses.push("use crate::nodes::StringValue;");
+            uses.push("use crate::StringValue;");
         }
         uses.join("\n")
     }
@@ -282,6 +296,7 @@ impl Struct {
         format!(
             "{uses}
 
+{comment}
 #[derive(Debug, Clone, PartialEq)]
 pub struct {struct_name} {{
 {declare_fields}
@@ -305,6 +320,14 @@ impl InnerNode for {struct_name} {{
 }}
 ",
             uses = self.uses(),
+            comment = self
+                .comment
+                .clone()
+                .unwrap_or_else(|| String::from(""))
+                .lines()
+                .map(|s| format!("/// {}", s).trim().to_owned())
+                .collect::<Vec<_>>()
+                .join("\n"),
             struct_name = self.struct_name,
             declare_fields = self.fields_declaration(),
             print_children = self.print_children(),
