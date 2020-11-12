@@ -12,11 +12,10 @@ env:
 jobs:
   test:
     name: run tests
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
         rust: [stable, beta, nightly]
 
     steps:
