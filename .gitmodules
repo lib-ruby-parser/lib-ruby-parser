@@ -1,6 +1,3 @@
 [submodule "vendor/parser"]
 	path = vendor/parser
 	url = git@github.com:whitequark/parser.git
-[submodule "nodes"]
-	path = nodes
-	url = git@github.com:lib-ruby-parser/nodes.git
