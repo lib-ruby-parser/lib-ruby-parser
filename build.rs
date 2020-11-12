@@ -1,7 +1,6 @@
+extern crate lib_ruby_parser_nodes;
 extern crate rust_bison_skeleton;
-extern crate serde;
-extern crate serde_yaml;
-use serde::Deserialize;
+use lib_ruby_parser_nodes::{Error, Field, FieldType, Node};
 use std::path::Path;
 
 fn generate_parse_y() {
@@ -14,364 +13,256 @@ fn generate_parse_y() {
     }
 }
 
-#[derive(PartialEq, Clone, Deserialize)]
-enum FieldType {
-    Node,
-    Nodes,
-    MaybeNode,
-    Range,
-    MaybeRange,
-    Str,
-    MaybeStr,
-    Chars,
-    StringValue,
-    U8,
-    Usize,
-    RawString,
-    RegexOptions,
-}
-impl FieldType {
-    pub fn some_node_ref(&self) -> bool {
-        match self {
-            Node => true,
-            Nodes => true,
-            MaybeNode => true,
-            Range => false,
-            MaybeRange => false,
-            Str => false,
-            MaybeStr => false,
-            Chars => false,
-            StringValue => false,
-            U8 => false,
-            Usize => false,
-            RawString => false,
-            RegexOptions => true,
-        }
+fn map_field(field_type: &FieldType) -> String {
+    match field_type {
+        FieldType::Node => "Box<Node>",
+        FieldType::Nodes => "Vec<Node>",
+        FieldType::MaybeNode => "Option<Box<Node>>",
+        FieldType::Range => "Range",
+        FieldType::MaybeRange => "Option<Range>",
+        FieldType::Str => "String",
+        FieldType::MaybeStr => "Option<String>",
+        FieldType::Chars => "Vec<char>",
+        FieldType::StringValue => "StringValue",
+        FieldType::U8 => "u8",
+        FieldType::Usize => "usize",
+        FieldType::RawString => "String",
+        FieldType::RegexOptions => "Option<Box<Node>>",
     }
-}
-use FieldType::*;
-
-#[derive(Clone, Deserialize)]
-struct Field {
-    field_name: String,
-    field_type: FieldType,
-    always_print: bool,
-    comment: Option<String>,
+    .to_owned()
 }
 
-impl Field {
-    pub fn declaration(&self) -> String {
-        let field_type = match self.field_type {
-            Node => "Box<Node>",
-            Nodes => "Vec<Node>",
-            MaybeNode => "Option<Box<Node>>",
-            Range => "Range",
-            MaybeRange => "Option<Range>",
-            Str => "String",
-            MaybeStr => "Option<String>",
-            Chars => "Vec<char>",
-            StringValue => "StringValue",
-            U8 => "u8",
-            Usize => "usize",
-            RawString => "String",
-            RegexOptions => "Option<Box<Node>>",
-        };
-        let offset = "    ";
-        format!(
-            "{comments}\n{offset}pub {field_name}: {field_type},",
-            offset = offset,
-            comments = self
-                .comment
-                .clone()
-                .unwrap_or_else(|| String::from(""))
-                .lines()
-                .map(|s| format!("{}/// {}", offset, s).trim_end().to_owned())
-                .collect::<Vec<_>>()
-                .join("\n"),
-            field_name = self.field_name,
-            field_type = field_type
-        )
-    }
+const FIELD_PREFIX: &str = "        ";
 
-    pub fn print(&self) -> Option<String> {
-        match self.field_type {
-            Node => Some(format!(
-                "        result.push_node(&self.{});",
-                self.field_name
-            )),
-            Nodes => Some(format!(
-                "        result.push_nodes(&self.{});",
-                self.field_name
-            )),
-            MaybeNode => {
-                if self.always_print {
-                    Some(format!(
-                        "        result.push_maybe_node_or_nil(&self.{});",
-                        self.field_name
-                    ))
-                } else {
-                    Some(format!(
-                        "        result.push_maybe_node(&self.{});",
-                        self.field_name
-                    ))
-                }
+fn print_field_code(field: &Field) -> Option<String> {
+    match &field.field_type {
+        FieldType::Node => Some(format!(
+            "{}result.push_node(&self.{});",
+            FIELD_PREFIX, field.field_name
+        )),
+        FieldType::Nodes => Some(format!(
+            "{}result.push_nodes(&self.{});",
+            FIELD_PREFIX, field.field_name
+        )),
+        FieldType::MaybeNode => {
+            if field.always_print {
+                Some(format!(
+                    "{}result.push_maybe_node_or_nil(&self.{});",
+                    FIELD_PREFIX, field.field_name
+                ))
+            } else {
+                Some(format!(
+                    "{}result.push_maybe_node(&self.{});",
+                    FIELD_PREFIX, field.field_name
+                ))
             }
-            Range => None,
-            MaybeRange => None,
-            Str => Some(format!(
-                "        result.push_str(&self.{});",
-                self.field_name
-            )),
-            MaybeStr => Some(format!(
-                "        result.push_maybe_str(&self.{});",
-                self.field_name
-            )),
-            Chars => Some(format!(
-                "        result.push_chars(&self.{});",
-                self.field_name
-            )),
-            StringValue => Some(format!(
-                "        result.push_string_value(&self.{});",
-                self.field_name
-            )),
-            U8 => Some(format!(
-                "        result.push_u8(&self.{});",
-                self.field_name
-            )),
-            Usize => Some(format!(
-                "        result.push_usize(&self.{});",
-                self.field_name
-            )),
-            RawString => Some(format!(
-                "        result.push_raw_str(&self.{});",
-                self.field_name
-            )),
-            RegexOptions => Some(format!(
-                "        result.push_regex_options(&self.{});",
-                self.field_name
-            )),
         }
+        FieldType::Range => None,
+        FieldType::MaybeRange => None,
+        FieldType::Str => Some(format!(
+            "{}result.push_str(&self.{});",
+            FIELD_PREFIX, field.field_name
+        )),
+        FieldType::MaybeStr => Some(format!(
+            "{}result.push_maybe_str(&self.{});",
+            FIELD_PREFIX, field.field_name
+        )),
+        FieldType::Chars => Some(format!(
+            "{}result.push_chars(&self.{});",
+            FIELD_PREFIX, field.field_name
+        )),
+        FieldType::StringValue => Some(format!(
+            "{}result.push_string_value(&self.{});",
+            FIELD_PREFIX, field.field_name
+        )),
+        FieldType::U8 => Some(format!(
+            "{}result.push_u8(&self.{});",
+            FIELD_PREFIX, field.field_name
+        )),
+        FieldType::Usize => Some(format!(
+            "{}result.push_usize(&self.{});",
+            FIELD_PREFIX, field.field_name
+        )),
+        FieldType::RawString => Some(format!(
+            "{}result.push_raw_str(&self.{});",
+            FIELD_PREFIX, field.field_name
+        )),
+        FieldType::RegexOptions => Some(format!(
+            "{}result.push_regex_options(&self.{});",
+            FIELD_PREFIX, field.field_name
+        )),
     }
+}
 
-    pub fn print_with_locs(&self) -> Option<String> {
-        let offset = "        ";
+fn print_field_with_locs(field: &Field) -> Option<String> {
+    let offset = "        ";
 
-        match self.field_type {
-            Node => Some(format!(
-                "{offset}self.{field_name}.inner().print_with_locs();",
-                offset = offset,
-                field_name = self.field_name
-            )),
-            Nodes => Some(format!(
-                "{offset}for node in self.{field_name}.iter() {{
+    match &field.field_type {
+        FieldType::Node => Some(format!(
+            "{offset}self.{field_name}.inner().print_with_locs();",
+            offset = offset,
+            field_name = field.field_name
+        )),
+        FieldType::Nodes => Some(format!(
+            "{offset}for node in self.{field_name}.iter() {{
 {offset}    node.inner().print_with_locs();
 {offset}}}",
-                offset = offset,
-                field_name = self.field_name
-            )),
-            MaybeNode => Some(format!(
-                "{offset}if let Some(node) = &self.{field_name} {{
+            offset = offset,
+            field_name = field.field_name
+        )),
+        FieldType::MaybeNode => Some(format!(
+            "{offset}if let Some(node) = &self.{field_name} {{
 {offset}    node.inner().print_with_locs();
 {offset}}}",
-                offset = offset,
-                field_name = self.field_name
-            )),
-            Range => Some(format!(
-                "{offset}self.{field_name}.print(\"{printable_field_name}\");",
-                offset = offset,
-                field_name = self.field_name,
-                printable_field_name = self
-                    .field_name
-                    .strip_suffix("_l")
-                    .expect("expected loc field to end with _l")
-            )),
-            MaybeRange => Some(format!(
-                "{offset}if let Some(range) = &self.{field_name} {{
+            offset = offset,
+            field_name = field.field_name
+        )),
+        FieldType::Range => Some(format!(
+            "{offset}self.{field_name}.print(\"{printable_field_name}\");",
+            offset = offset,
+            field_name = field.field_name,
+            printable_field_name = field
+                .field_name
+                .strip_suffix("_l")
+                .expect("expected loc field to end with _l")
+        )),
+        FieldType::MaybeRange => Some(format!(
+            "{offset}if let Some(range) = &self.{field_name} {{
 {offset}    range.print(\"{printable_field_name}\");
 {offset}}}",
-                offset = offset,
-                field_name = self.field_name,
-                printable_field_name = self
-                    .field_name
-                    .strip_suffix("_l")
-                    .expect("expected loc field to end with _l"),
-            )),
-            Str => None,
-            MaybeStr => None,
-            Chars => None,
-            StringValue => None,
-            U8 => None,
-            Usize => None,
-            RawString => None,
-            RegexOptions => Some(format!(
-                "{offset}if let Some(node) = &self.{field_name} {{
+            offset = offset,
+            field_name = field.field_name,
+            printable_field_name = field
+                .field_name
+                .strip_suffix("_l")
+                .expect("expected loc field to end with _l"),
+        )),
+        FieldType::Str => None,
+        FieldType::MaybeStr => None,
+        FieldType::Chars => None,
+        FieldType::StringValue => None,
+        FieldType::U8 => None,
+        FieldType::Usize => None,
+        FieldType::RawString => None,
+        FieldType::RegexOptions => Some(format!(
+            "{offset}if let Some(node) = &self.{field_name} {{
 {offset}    node.inner().print_with_locs();
 {offset}}}",
-                offset = offset,
-                field_name = self.field_name
-            )),
-        }
+            offset = offset,
+            field_name = field.field_name
+        )),
     }
 }
 
-#[derive(Deserialize)]
-struct Struct {
-    struct_name: String,
-    str_type: String,
-    filename: String,
-    fields: Vec<Field>,
-    comment: Option<String>,
+fn uses(node: &Node) -> Vec<String> {
+    let mut uses = vec![];
+    uses.push("use crate::nodes::InnerNode;".to_owned());
+    if node
+        .fields
+        .iter()
+        .any(|f| !f.field_type.has_reference_to_range())
+    {
+        uses.push("use crate::nodes::InspectVec;".to_owned());
+    }
+    uses.push("use crate::source::Range;".to_owned());
+    if node
+        .fields
+        .iter()
+        .any(|f| f.field_type.has_reference_to_node())
+    {
+        uses.push("use crate::Node;".to_owned());
+    }
+    if node
+        .fields
+        .iter()
+        .any(|f| f.field_type == FieldType::StringValue)
+    {
+        uses.push("use crate::StringValue;".to_owned());
+    }
+    uses
 }
 
-impl Struct {
-    fn uses(&self) -> String {
-        let mut uses = vec![];
-        uses.push("use crate::nodes::InnerNode;");
-        if self
-            .fields
-            .iter()
-            .any(|f| f.field_type != Range && f.field_type != MaybeRange)
-        {
-            uses.push("use crate::nodes::InspectVec;");
+fn inspected_children_fn_declaration(node: &Node) -> String {
+    let mut result = vec![];
+    for field in node.fields.iter() {
+        if let Some(code) = print_field_code(field) {
+            result.push(code)
         }
-        uses.push("use crate::source::Range;");
-        if self.fields.iter().any(|f| f.field_type.some_node_ref()) {
-            uses.push("use crate::Node;");
-        }
-        if self
-            .fields
-            .iter()
-            .any(|f| f.field_type == FieldType::StringValue)
-        {
-            uses.push("use crate::StringValue;");
-        }
-        uses.join("\n")
     }
-
-    fn fields_declaration(&self) -> String {
-        self.fields
-            .iter()
-            .map(|f| f.declaration())
-            .collect::<Vec<_>>()
-            .join("\n")
-    }
-
-    fn print_children(&self) -> String {
-        let mut result = vec![];
-        for field in self.fields.iter() {
-            if let Some(code) = field.print() {
-                result.push(code)
-            }
-        }
-        if result.is_empty() {
-            "
-    fn inspected_children(&self, _indent: usize) -> Vec<String> {
+    if result.is_empty() {
+        "fn inspected_children(&self, _indent: usize) -> Vec<String> {
         vec![]
     }"
-            .to_owned()
-        } else {
-            format!(
-                "
-    fn inspected_children(&self, indent: usize) -> Vec<String> {{
+        .to_owned()
+    } else {
+        format!(
+            "fn inspected_children(&self, indent: usize) -> Vec<String> {{
         let mut result = InspectVec::new(indent);
 {}
         result.strings()
     }}",
-                result.join("\n")
-            )
+            result.join("\n")
+        )
+    }
+}
+
+fn print_with_locs_fn_declaration(node: &Node) -> String {
+    let mut stmts = vec![];
+    for field in node.fields.iter().rev() {
+        if let Some(code) = print_field_with_locs(field) {
+            stmts.push(code)
         }
     }
+    let stmts = stmts.join("\n");
 
-    pub fn print_with_locs(&self) -> String {
-        let mut result = vec![];
-        for field in self.fields.iter().rev() {
-            if let Some(code) = field.print_with_locs() {
-                result.push(code)
-            }
-        }
-        result.join("\n")
-    }
+    format!(
+        "fn print_with_locs(&self) {{
+        println!(\"{{}}\", self.inspect(0));
+{}
+    }}",
+        stmts
+    )
+}
 
-    pub fn code(&self) -> String {
-        format!(
-            "{uses}
-
-{comment}
-#[derive(Debug, Clone, PartialEq)]
-pub struct {struct_name} {{
-{declare_fields}
-}}
-
+fn epilogue(node: &Node) -> String {
+    format!(
+        "
 impl InnerNode for {struct_name} {{
     fn expression(&self) -> &Range {{
         &self.expression_l
     }}
 
-{print_children}
+    {inspected_children}
 
     fn str_type(&self) -> &'static str {{
         \"{str_type}\"
     }}
 
-    fn print_with_locs(&self) {{
-        println!(\"{{}}\", self.inspect(0));
-{print_with_locs}
-    }}
+    {print_with_locs}
 }}
 ",
-            uses = self.uses(),
-            comment = self
-                .comment
-                .clone()
-                .unwrap_or_else(|| String::from(""))
-                .lines()
-                .map(|s| format!("/// {}", s).trim().to_owned())
-                .collect::<Vec<_>>()
-                .join("\n"),
-            struct_name = self.struct_name,
-            declare_fields = self.fields_declaration(),
-            print_children = self.print_children(),
-            str_type = self.str_type,
-            print_with_locs = self.print_with_locs(),
-        )
-    }
+        struct_name = node.struct_name,
+        inspected_children = inspected_children_fn_declaration(node),
+        str_type = node.str_type,
+        print_with_locs = print_with_locs_fn_declaration(node)
+    )
 }
 
-fn generate_nodes() -> Result<(), Box<dyn std::error::Error>> {
-    println!("cargo:rerun-if-changed=nodes/nodes.yaml");
+fn generate_nodes() -> Result<(), Error> {
+    let options = lib_ruby_parser_nodes::Options {
+        target_dir: "src/nodes/types".to_owned(),
+        map_field: Box::new(map_field),
+        uses: Box::new(uses),
+        epilogue: Box::new(epilogue),
+    };
 
-    let f = std::fs::File::open("nodes/nodes.yaml")?;
-    let nodes: Vec<Struct> = serde_yaml::from_reader(f)?;
-
-    std::fs::create_dir_all("src/nodes/types")?;
-
-    for node in nodes.iter() {
-        std::fs::write(
-            &format!("src/nodes/types/{}.rs", node.filename),
-            node.code(),
-        )
-        .unwrap_or_else(|e| panic!("Failed to write into {}: {}", node.filename, e));
-    }
-
-    let mod_content = nodes
-        .iter()
-        .map(|node| {
-            format!(
-                "mod {mod_name};\npub use {mod_name}::{struct_name};\n",
-                mod_name = node.filename,
-                struct_name = node.struct_name
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
-
-    std::fs::write("src/nodes/types/mod.rs", &mod_content)
-        .unwrap_or_else(|e| panic!("Failed to write nodes/types/mod.rs {}", e));
+    lib_ruby_parser_nodes::generate_nodes(&options)?;
+    lib_ruby_parser_nodes::generate_mod(&options)?;
 
     Ok(())
 }
 
 fn main() {
     generate_parse_y();
-    generate_nodes().expect("Failed to generate nodes");
+    generate_nodes().unwrap();
 }
