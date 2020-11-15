@@ -9,7 +9,7 @@ pub enum CommentType {
 
 #[derive(Debug, Clone)]
 pub struct Comment {
-    location: Range,
+    pub location: Range,
 }
 
 impl Comment {

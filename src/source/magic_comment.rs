@@ -9,9 +9,9 @@ pub enum MagicCommentKind {
 
 #[derive(Debug, Clone)]
 pub struct MagicComment {
-    kind: MagicCommentKind,
-    key_l: Range,
-    value_l: Range,
+    pub kind: MagicCommentKind,
+    pub key_l: Range,
+    pub value_l: Range,
 }
 
 impl MagicComment {
