@@ -17,7 +17,7 @@ default = []
 onig = {version = "6", optional = true}
 
 [build-dependencies]
-lib-ruby-parser-nodes = "0.1.0"
+lib-ruby-parser-nodes = "0.5.0"
 rust-bison-skeleton = "0.7.0"
 
 [dev-dependencies]

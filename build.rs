@@ -224,6 +224,10 @@ fn print_with_locs_fn_declaration(node: &Node) -> String {
     )
 }
 
+fn prologue(_: &Node) -> String {
+    "".to_owned()
+}
+
 fn epilogue(node: &Node) -> String {
     format!(
         "
@@ -253,6 +257,7 @@ fn generate_nodes() -> Result<(), Error> {
         target_dir: "src/nodes/types".to_owned(),
         map_field: Box::new(map_field),
         uses: Box::new(uses),
+        prologue: Box::new(prologue),
         epilogue: Box::new(epilogue),
     };
 

@@ -1804,8 +1804,6 @@ impl Builder {
             Node::Next(Next {
                 args,
                 keyword_l,
-                begin_l,
-                end_l,
                 expression_l,
             }) => {
                 let (args, expression_l) =
@@ -1813,16 +1811,12 @@ impl Builder {
                 Node::Next(Next {
                     args,
                     keyword_l: keyword_l.clone(),
-                    begin_l: begin_l.clone(),
-                    end_l: end_l.clone(),
                     expression_l,
                 })
             }
             Node::Break(Break {
                 args,
                 keyword_l,
-                begin_l,
-                end_l,
                 expression_l,
             }) => {
                 let (args, expression_l) =
@@ -1830,8 +1824,6 @@ impl Builder {
                 Node::Break(Break {
                     args,
                     keyword_l: keyword_l.clone(),
-                    begin_l: begin_l.clone(),
-                    end_l: end_l.clone(),
                     expression_l,
                 })
             }
@@ -2383,8 +2375,6 @@ impl Builder {
             KeywordCmd::Break => Node::Break(Break {
                 args,
                 keyword_l,
-                begin_l,
-                end_l,
                 expression_l,
             }),
             KeywordCmd::Defined => Node::Defined(Defined {
@@ -2397,8 +2387,6 @@ impl Builder {
             KeywordCmd::Next => Node::Next(Next {
                 args,
                 keyword_l,
-                begin_l,
-                end_l,
                 expression_l,
             }),
             KeywordCmd::Redo => Node::Redo(Redo { expression_l }),
