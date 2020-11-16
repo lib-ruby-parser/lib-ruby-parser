@@ -1,4 +1,5 @@
 use crate::source::{MagicComment, MagicCommentKind};
+use crate::DiagnosticMessage;
 use crate::Lexer;
 
 const MAGIC_COMMENTS: [(&str, MagicCommentKind); 4] = [
@@ -15,7 +16,7 @@ pub(crate) trait ParseMagicComment {
     fn comment_at_top(&self) -> bool;
     fn set_file_encoding(&mut self, str_: usize, send: usize);
     fn magic_comment_marker(&self, str_: usize, len: usize) -> usize;
-    fn magic_comment(&mut self, str_: usize, len: usize) -> bool;
+    fn magic_comment(&mut self, str_: usize, len: usize) -> Result<bool, ()>;
 }
 
 impl ParseMagicComment for Lexer {
@@ -148,7 +149,7 @@ impl ParseMagicComment for Lexer {
         0
     }
 
-    fn magic_comment(&mut self, mut str_: usize, mut len: usize) -> bool {
+    fn magic_comment(&mut self, mut str_: usize, mut len: usize) -> Result<bool, ()> {
         let mut indicator = false;
         let mut name;
         let mut beg;
@@ -157,13 +158,13 @@ impl ParseMagicComment for Lexer {
         let mut vend;
 
         if len <= 7 {
-            return false;
+            return Ok(false);
         }
         beg = self.magic_comment_marker(str_, len);
         if beg != 0 {
             end = self.magic_comment_marker(beg, str_ + len - beg);
             if end == 0 {
-                return false;
+                return Ok(false);
             }
             indicator = true;
             str_ = beg;
@@ -233,7 +234,7 @@ impl ParseMagicComment for Lexer {
             }
             if self.char_at(str_) != ':' {
                 if !indicator {
-                    return false;
+                    return Ok(false);
                 }
                 continue;
             }
@@ -299,7 +300,7 @@ impl ParseMagicComment for Lexer {
                     str_ += 1;
                 }
                 if len != 0 {
-                    return false;
+                    return Ok(false);
                 }
             }
 
@@ -314,14 +315,35 @@ impl ParseMagicComment for Lexer {
             let name_to_compare = name.replace("-", "_");
             for (name, kind) in MAGIC_COMMENTS.iter() {
                 if &name_to_compare == name {
+                    if kind == &MagicCommentKind::Encoding {
+                        let encoding = String::from_utf8(
+                            self.buffer
+                                .substr_at(vbeg, vend)
+                                .expect("bug: Can't be None")
+                                .to_vec(),
+                        )
+                        .unwrap();
+                        match self.buffer.set_encoding(&encoding) {
+                            Ok(_) => {}
+                            Err(err) => {
+                                self.yyerror1(
+                                    DiagnosticMessage::EncodingError(err.to_string()),
+                                    self.range(vbeg, vend),
+                                );
+                                return Err(());
+                            }
+                        }
+                    }
+
                     let key_l = self.range(beg, beg + n);
                     let value_l = self.range(vbeg, vend);
+
                     let magic_comment = MagicComment::new(kind.clone(), key_l, value_l);
                     self.magic_comments.push(magic_comment);
                 }
             }
         }
 
-        true
+        Ok(true)
     }
 }

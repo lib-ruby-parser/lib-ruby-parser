@@ -17,26 +17,29 @@ pub struct ParserOptions {
     ///
     /// # Example
     /// ```rust
-    /// use lib_ruby_parser::source::{InputError, RecognizedEncoding};
-    /// use lib_ruby_parser::{Parser, ParserOptions};
+    /// use lib_ruby_parser::source::{InputError, RecognizedEncoding, CustomDecoder};
+    /// use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
     ///
-    /// fn decoder(encoding: RecognizedEncoding, input: Vec<u8>) -> Result<Vec<u8>, InputError> {
+    /// fn decode(encoding: RecognizedEncoding, input: &[u8]) -> Result<Vec<u8>, InputError> {
     ///     if let RecognizedEncoding::US_ASCII = encoding {
     ///         // reencode and return Ok(result)
-    ///         return Ok(b"decoded".to_vec());
+    ///         println!("{:?}", input);
+    ///         println!("{:?}", b"# encoding: us-ascii\ndecoded".to_vec());
+    ///         return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     ///     }
     ///     Err(InputError::DecodingError(
     ///         "only us-ascii is supported".to_owned(),
     ///     ))
     /// }
     ///
-    /// let options = ParserOptions { decoder: Some(Box::new(decoder)), ..Default::default() };
-    /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options).unwrap();
-    /// let ast = parser.do_parse().ast.unwrap();
+    /// let decoder = CustomDecoder { f: Some(Box::new(decode)) };
+    /// let options = ParserOptions { decoder, debug: true, ..Default::default() };
+    /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options);
+    /// let ParserResult { ast, input, .. } = parser.do_parse();
     ///
-    /// assert_eq!(ast.expression().source().unwrap(), "decoded".to_owned())
+    /// assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_owned())
     /// ```
-    pub decoder: Option<CustomDecoder>,
+    pub decoder: CustomDecoder,
 }
 
 const DEFAULT_BUFFER_NAME: &str = "(eval)";
@@ -46,7 +49,7 @@ impl Default for ParserOptions {
         Self {
             buffer_name: DEFAULT_BUFFER_NAME.to_owned(),
             debug: false,
-            decoder: None,
+            decoder: CustomDecoder { f: None },
         }
     }
 }

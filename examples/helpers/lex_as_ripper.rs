@@ -1,4 +1,4 @@
-use lib_ruby_parser::token_name;
+use lib_ruby_parser::{token_name, DiagnosticMessage, ParserResult};
 use std::fs;
 
 use super::*;
@@ -6,7 +6,23 @@ use super::*;
 #[allow(dead_code)]
 pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
     let source = fs::read(filepath).map_err(|_| "failed to read a file".to_owned())?;
-    let (parser, mut tokens) = lex(&source, filepath, false)?;
+    let ParserResult {
+        mut tokens,
+        input,
+        diagnostics,
+        ..
+    } = parse(&source, filepath, false);
+
+    let mut encoding_error: Option<String> = None;
+    for diagnostic in diagnostics.iter() {
+        if let DiagnosticMessage::EncodingError(e) = &diagnostic.message {
+            encoding_error = Some(e.to_owned())
+        }
+    }
+    if let Some(encoding_error) = encoding_error {
+        return Err(encoding_error);
+    }
+
     tokens.sort_by(|a, b| a.loc.begin.cmp(&b.loc.begin));
 
     let mut output = String::from("");
@@ -47,9 +63,8 @@ pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
         }
         .to_owned();
 
-        let (line, col) = parser
-            .yylexer
-            .line_col_for_loc(token.loc.begin)
+        let (line, col) = input
+            .line_col_for_pos(token.loc.begin)
             .ok_or_else(|| format!("token {:#?} has invalid range", token))?;
 
         output.push_str(&format!(

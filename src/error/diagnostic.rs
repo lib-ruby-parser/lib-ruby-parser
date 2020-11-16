@@ -1,11 +1,11 @@
-use crate::source::Range;
+use crate::source::{buffer::Input, Range};
 use crate::{DiagnosticMessage, ErrorLevel};
 
 /// Diagnostic message that comes from the parser when there's an error or warning
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
     pub level: ErrorLevel,
-    message: DiagnosticMessage,
+    pub message: DiagnosticMessage,
     pub range: Range,
 }
 
@@ -22,12 +22,12 @@ impl Diagnostic {
         self.message.render()
     }
 
-    pub fn render(&self) -> Option<String> {
-        let (line_no, line_loc) = self.range.expand_to_line()?;
-        let line = line_loc.source()?;
+    pub fn render(&self, input: &Input) -> Option<String> {
+        let (line_no, line_loc) = self.range.expand_to_line(input)?;
+        let line = line_loc.source(input)?;
 
-        let filename = &self.range.input.name;
-        let (_, start_col) = self.range.begin_line_col()?;
+        let filename = &input.name;
+        let (_, start_col) = self.range.begin_line_col(input)?;
 
         let prefix = format!("{}:{}", filename, line_no + 1);
         let highlight = format!(

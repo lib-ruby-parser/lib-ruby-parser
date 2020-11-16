@@ -1,5 +1,5 @@
 use lib_ruby_parser::lex_states::*;
-use lib_ruby_parser::{token_name, Lexer};
+use lib_ruby_parser::{source::CustomDecoder, token_name, Lexer};
 use std::fs;
 use std::panic;
 
@@ -97,9 +97,8 @@ fn test(fixture_path: &str) -> TestResult {
         let mut lexer = Lexer::new(
             &test_case.input.as_bytes().to_vec(),
             &format!("(test {})", fixture_path),
-            None,
-        )
-        .expect("failed to construct lexer");
+            CustomDecoder::default(),
+        );
         for var in test_case.vars {
             lexer.static_env.declare(&var);
         }

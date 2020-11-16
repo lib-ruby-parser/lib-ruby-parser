@@ -154,8 +154,7 @@ fn test_file(fixture_path: &str) -> TestResult {
             debug: false,
             ..Default::default()
         };
-        let mut parser =
-            Parser::new(test_case.input.as_bytes(), options).expect("failed to construct parser");
+        let parser = Parser::new(test_case.input.as_bytes(), options);
 
         parser.static_env.declare("foo");
         parser.static_env.declare("bar");

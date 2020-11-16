@@ -1,7 +1,7 @@
 extern crate clap;
 use clap::Clap;
 
-use lib_ruby_parser::{Diagnostic, ParserResult};
+use lib_ruby_parser::ParserResult;
 use std::fs;
 use std::path::Path;
 
@@ -32,25 +32,29 @@ struct Args {
     profile: bool,
 }
 
-fn print_diagnostics(diagnostics: &[Diagnostic]) {
-    for d in diagnostics {
-        println!("{}", d.render().expect("Failed to render a diagnostic"))
+fn print_diagnostics(result: &ParserResult) {
+    for d in result.diagnostics.iter() {
+        println!(
+            "{}",
+            d.render(&result.input)
+                .expect("Failed to render a diagnostic")
+        )
     }
 }
 
 fn print_quite(_src: &str, result: &ParserResult) {
-    print_diagnostics(&result.diagnostics);
+    print_diagnostics(&result);
 }
 
 fn print_locations(src: &str, result: &ParserResult) {
     println!("{}", src);
-    print_diagnostics(&result.diagnostics);
+    print_diagnostics(&result);
     if let Some(ast) = &result.ast {
         ast.print_with_locs()
     }
 }
 fn print_ast(_src: &str, result: &ParserResult) {
-    print_diagnostics(&result.diagnostics);
+    print_diagnostics(&result);
     if let Some(ast) = &result.ast {
         println!("{}", ast.inspect(0));
     }
@@ -76,14 +80,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let debug = args.debug;
 
     if let Some(code) = args.code {
-        let result = parse(code.as_bytes(), "(eval)", debug)?;
+        let result = parse(code.as_bytes(), "(eval)", debug);
         callback(&code, &result);
     } else if let Some(path) = args.path {
         each_ruby_file(&path, &|entry| {
             let code = fs::read(Path::new(entry))?;
-            if let Ok(result) = parse(&code, entry, debug) {
-                callback(&String::from_utf8_lossy(&code), &result);
-            }
+            let result = parse(&code, entry, debug);
+            callback(&String::from_utf8_lossy(&code), &result);
             Ok(())
         })?;
     } else {

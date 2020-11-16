@@ -6,7 +6,6 @@ use crate::parser::{Loc, Token};
 use crate::source::buffer::*;
 use crate::source::Comment;
 use crate::source::CustomDecoder;
-use crate::source::InputError;
 use crate::source::MagicComment;
 use crate::source::Range;
 use crate::str_term::{str_types::*, HeredocEnd, StrTerm, StringLiteral};
@@ -60,19 +59,15 @@ impl Lexer {
     pub(crate) const LF_CHAR: u8 = 0x0c;
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
-    pub fn new(
-        bytes: &[u8],
-        name: &str,
-        decoder: Option<CustomDecoder>,
-    ) -> Result<Self, InputError> {
-        Ok(Self {
+    pub fn new(bytes: &[u8], name: &str, decoder: CustomDecoder) -> Self {
+        Self {
             cond: StackState::new("cond"),
             cmdarg: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
-            buffer: Buffer::new(name, bytes.to_owned(), decoder)?,
+            buffer: Buffer::new(name, bytes.to_owned(), decoder),
             context: Context::new(),
             ..Self::default()
-        })
+        }
     }
 
     pub fn set_debug(&mut self, debug: bool) {
@@ -216,14 +211,19 @@ impl Lexer {
                         // it's a comment
                         self.token_seen = token_seen;
                         // no magic_comment in shebang line
-                        if !self
-                            .magic_comment(self.buffer.pcur, self.buffer.pend - self.buffer.pcur)
-                            && self.comment_at_top()
-                        {
-                            self.set_file_encoding(self.buffer.pcur, self.buffer.pend)
+                        let magic_comment = self
+                            .magic_comment(self.buffer.pcur, self.buffer.pend - self.buffer.pcur);
+                        match magic_comment {
+                            Ok(magic_comment) => {
+                                if !magic_comment && self.comment_at_top() {
+                                    self.set_file_encoding(self.buffer.pcur, self.buffer.pend)
+                                }
+                            }
+                            Err(_) => return Self::END_OF_INPUT,
                         }
                         self.buffer.goto_eol();
-                        self.comments.push(Comment::new(self.current_range()))
+                        self.comments
+                            .push(Comment::new(self.current_range(), &self.buffer.input))
                     }
                     self.token_seen = token_seen;
                     let cc = self
@@ -390,8 +390,10 @@ impl Lexer {
                                 self.buffer.pushback(&c);
                             }
                             self.buffer.goto_eol();
-                            self.comments
-                                .push(Comment::new(begin_range.with_end(self.buffer.pcur)));
+                            self.comments.push(Comment::new(
+                                begin_range.with_end(self.buffer.pcur),
+                                &self.buffer.input,
+                            ));
                             continue 'retrying;
                         }
                     }
@@ -1107,7 +1109,7 @@ impl Lexer {
     }
 
     pub(crate) fn range(&self, begin_pos: usize, end_pos: usize) -> Range {
-        Range::new(begin_pos, end_pos, self.buffer.input.clone())
+        Range::new(begin_pos, end_pos)
     }
 
     pub(crate) fn current_range(&self) -> Range {

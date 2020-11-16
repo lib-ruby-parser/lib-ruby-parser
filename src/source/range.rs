@@ -1,12 +1,10 @@
 use crate::source::buffer::Input;
 use std::convert::TryInto;
-use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Range {
     pub begin_pos: usize,
     pub end_pos: usize,
-    pub(crate) input: Rc<Input>,
 }
 
 impl PartialEq for Range {
@@ -16,24 +14,29 @@ impl PartialEq for Range {
 }
 
 impl Range {
-    pub fn new(begin_pos: usize, end_pos: usize, input: Rc<Input>) -> Self {
-        debug_assert!(
-            (begin_pos < end_pos) || (begin_pos == end_pos && end_pos == input.len()),
-            "begin_pos = {}, end_pos = {}, input.len() = {}",
-            begin_pos,
-            end_pos,
-            input.len()
-        );
-        debug_assert!(
-            end_pos <= input.len(),
-            "end_pos = {}, len = {}",
-            end_pos,
-            input.len()
-        );
-        Self {
-            begin_pos,
-            end_pos,
-            input,
+    pub fn new(begin_pos: usize, end_pos: usize) -> Self {
+        Self { begin_pos, end_pos }
+    }
+
+    pub fn validate(&self, input: &Input) {
+        if cfg!(debug_assertions) {
+            if input.bytes.last().unwrap() != &100 {
+                panic!("creating a wrong range")
+            }
+            debug_assert!(
+                (self.begin_pos < self.end_pos)
+                    || (self.begin_pos == self.end_pos && self.end_pos == input.len()),
+                "begin_pos = {}, end_pos = {}, input.len() = {}",
+                self.begin_pos,
+                self.end_pos,
+                input.len()
+            );
+            debug_assert!(
+                self.end_pos <= input.len(),
+                "end_pos = {}, len = {}",
+                self.end_pos,
+                input.len()
+            );
         }
     }
 
@@ -54,15 +57,15 @@ impl Range {
     }
 
     pub fn with_begin(&self, begin_pos: usize) -> Self {
-        Self::new(begin_pos, self.end_pos, Rc::clone(&self.input))
+        Self::new(begin_pos, self.end_pos)
     }
 
     pub fn with_end(&self, end_pos: usize) -> Self {
-        Self::new(self.begin_pos, end_pos, Rc::clone(&self.input))
+        Self::new(self.begin_pos, end_pos)
     }
 
     pub fn with(&self, begin_pos: usize, end_pos: usize) -> Self {
-        Self::new(begin_pos, end_pos, Rc::clone(&self.input))
+        Self::new(begin_pos, end_pos)
     }
 
     pub fn adjust_begin(&self, d: i32) -> Self {
@@ -73,7 +76,7 @@ impl Range {
         let begin_pos: usize = (begin_pos + d)
             .try_into()
             .expect("failed to convert location to usize (is it negative?)");
-        Self::new(begin_pos, self.end_pos, Rc::clone(&self.input))
+        Self::new(begin_pos, self.end_pos)
     }
 
     pub fn adjust_end(&self, d: i32) -> Self {
@@ -84,7 +87,7 @@ impl Range {
         let end_pos: usize = (end_pos + d)
             .try_into()
             .expect("failed to convert location to usize (is it negative?)");
-        Self::new(self.begin_pos, end_pos, Rc::clone(&self.input))
+        Self::new(self.begin_pos, end_pos)
     }
 
     pub fn resize(&self, new_size: usize) -> Self {
@@ -95,7 +98,6 @@ impl Range {
         Self::new(
             std::cmp::min(self.begin_pos, other.begin_pos),
             std::cmp::max(self.end_pos, other.end_pos),
-            Rc::clone(&self.input),
         )
     }
 
@@ -110,23 +112,23 @@ impl Range {
         self.begin_pos == self.end_pos
     }
 
-    pub fn begin_line_col(&self) -> Option<(usize, usize)> {
-        self.input.line_col_for_pos(self.begin_pos)
+    pub fn begin_line_col(&self, input: &Input) -> Option<(usize, usize)> {
+        input.line_col_for_pos(self.begin_pos)
     }
 
-    pub fn end_line_col(&self) -> Option<(usize, usize)> {
-        self.input.line_col_for_pos(self.end_pos)
+    pub fn end_line_col(&self, input: &Input) -> Option<(usize, usize)> {
+        input.line_col_for_pos(self.end_pos)
     }
 
-    pub fn expand_to_line(&self) -> Option<(usize, Self)> {
-        let (begin_line, _) = self.begin_line_col()?;
+    pub fn expand_to_line(&self, input: &Input) -> Option<(usize, Self)> {
+        let (begin_line, _) = self.begin_line_col(input)?;
         let line_no = begin_line;
-        let line = &self.input.lines[line_no];
+        let line = &input.lines[line_no];
         Some((line_no, self.with(line.start, line.line_end())))
     }
 
-    pub fn source(&self) -> Option<String> {
-        let bytes = self.input.substr_at(self.begin_pos, self.end_pos)?;
+    pub fn source(&self, input: &Input) -> Option<String> {
+        let bytes = input.substr_at(self.begin_pos, self.end_pos)?;
         Some(String::from_utf8_lossy(bytes).into_owned())
     }
 

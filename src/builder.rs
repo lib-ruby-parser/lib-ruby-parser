@@ -2,15 +2,14 @@
 use onig::{Regex, RegexOptions};
 use std::collections::HashMap;
 use std::convert::TryInto;
-use std::rc::Rc;
 
 use crate::error::Diagnostics;
 use crate::nodes::*;
 use crate::source::Range;
 use crate::StringValue;
 use crate::{
-    source::buffer::Input, Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node,
-    StaticEnvironment, Token, VariablesStack,
+    Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node, StaticEnvironment, Token,
+    VariablesStack,
 };
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 
@@ -64,7 +63,6 @@ pub(crate) struct Builder {
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
-    source: Rc<Input>,
     diagnostics: Diagnostics,
 }
 
@@ -76,7 +74,6 @@ impl Builder {
         max_numparam_stack: MaxNumparamStack,
         pattern_variables: VariablesStack,
         pattern_hash_keys: VariablesStack,
-        source: Rc<Input>,
         diagnostics: Diagnostics,
     ) -> Self {
         Self {
@@ -86,7 +83,6 @@ impl Builder {
             max_numparam_stack,
             pattern_variables,
             pattern_hash_keys,
-            source,
             diagnostics,
         }
     }
@@ -3440,7 +3436,6 @@ impl Builder {
 
     #[cfg(feature = "onig")]
     pub(crate) fn static_regexp_captures(&self, node: &Node) -> Option<Vec<String>> {
-        eprintln!("using real static_regexp_captures");
         if let Node::Regexp(Regexp {
             parts,
             options,
@@ -3474,7 +3469,7 @@ impl Builder {
     }
 
     pub(crate) fn loc(&self, token: &Token) -> Range {
-        Range::new(token.loc.begin, token.loc.end, Rc::clone(&self.source))
+        Range::new(token.loc.begin, token.loc.end)
     }
 
     pub(crate) fn maybe_loc(&self, token: &Option<Token>) -> Option<Range> {

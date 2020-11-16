@@ -2,7 +2,6 @@ use crate::maybe_byte::*;
 use crate::source::SourceLine;
 use crate::source::{decode_input, CustomDecoder, InputError};
 use std::convert::TryFrom;
-use std::rc::Rc;
 
 #[derive(Debug, Default)]
 pub struct Input {
@@ -12,6 +11,34 @@ pub struct Input {
 }
 
 impl Input {
+    pub(crate) fn set_bytes(&mut self, bytes: Vec<u8>) {
+        let mut line = SourceLine {
+            start: 0,
+            end: 0,
+            ends_with_eof: true,
+        };
+        let mut lines: Vec<SourceLine> = vec![];
+
+        for (idx, c) in bytes.iter().enumerate() {
+            line.end = idx + 1;
+            if *c == b'\n' {
+                line.ends_with_eof = false;
+                lines.push(line);
+                line = SourceLine {
+                    start: idx + 1,
+                    end: 0,
+                    ends_with_eof: true,
+                }
+            }
+        }
+        line.end = bytes.len();
+        line.ends_with_eof = true;
+        lines.push(line);
+
+        self.bytes = bytes;
+        self.lines = lines;
+    }
+
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
         if let Some(c) = self.bytes.get(idx) {
             Some(*c)
@@ -53,11 +80,24 @@ impl Input {
     pub fn is_empty(&self) -> bool {
         self.bytes.is_empty()
     }
+
+    // pub fn take_bytes
+}
+
+impl Clone for Input {
+    fn clone(&self) -> Self {
+        println!("Cloning input");
+        Self {
+            name: self.name.clone(),
+            bytes: self.bytes.clone(),
+            lines: self.lines.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct Buffer {
-    pub input: Rc<Input>,
+    pub input: Input,
 
     pub(crate) line_count: usize,
     pub(crate) prevline: Option<usize>, // index
@@ -86,56 +126,30 @@ pub struct Buffer {
     pub(crate) ruby_sourcefile_string: Vec<char>,
 
     pub(crate) debug: bool,
+    pub(crate) decoder: CustomDecoder,
 }
 
 impl Buffer {
     const CTRL_Z_CHAR: char = 0x1a as char;
     const CTRL_D_CHAR: char = 0x04 as char;
 
-    pub fn new(
-        name: &str,
-        bytes: Vec<u8>,
-        decoder: Option<CustomDecoder>,
-    ) -> Result<Self, InputError> {
-        let bytes = decode_input(bytes, decoder)?;
-
-        let mut line = SourceLine {
-            start: 0,
-            end: 0,
-            ends_with_eof: true,
-        };
-        let mut lines: Vec<SourceLine> = vec![];
-
-        for (idx, c) in bytes.iter().enumerate() {
-            line.end = idx + 1;
-            if *c == b'\n' {
-                line.ends_with_eof = false;
-                lines.push(line);
-                line = SourceLine {
-                    start: idx + 1,
-                    end: 0,
-                    ends_with_eof: true,
-                }
-            }
-        }
-        line.end = bytes.len();
-        line.ends_with_eof = true;
-        lines.push(line);
-
-        let input = Input {
+    pub fn new(name: &str, bytes: Vec<u8>, decoder: CustomDecoder) -> Self {
+        let mut input = Input {
             name: name.to_owned(),
-            bytes,
-            lines,
+            ..Default::default()
         };
+
+        input.set_bytes(bytes);
 
         let mut this = Self {
-            input: Rc::new(input),
+            input,
+            decoder,
             ..Self::default()
         };
 
         this.prepare();
 
-        Ok(this)
+        this
     }
 
     fn prepare(&mut self) {
@@ -396,6 +410,12 @@ impl Buffer {
         self.input.bytes[begin].is_ascii_alphanumeric()
             || self.input.bytes[begin] == b'_'
             || !self.input.bytes[begin].is_ascii()
+    }
+
+    pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
+        let new_input = decode_input(&self.input.bytes, encoding, &self.decoder)?;
+        self.input.set_bytes(new_input);
+        Ok(())
     }
 }
 

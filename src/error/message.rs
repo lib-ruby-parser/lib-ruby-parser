@@ -48,6 +48,7 @@ pub enum DiagnosticMessage {
     InvalidCvarName(u8),
     UnknownRegexOptions(String),
     UnterminatedUnicodeEscape,
+    EncodingError(String),
 
     // Lexer warnings
     AmbiguousTernaryOperator(String),
@@ -157,6 +158,7 @@ impl DiagnosticMessage {
             Self::UnknownRegexOptions(options) => format!("unknown regexp options - {}", options),
             Self::AmbiguousTernaryOperator(pre) => format!("`?' just followed by `{}' is interpreted as a conditional operator, put a space after `?'", pre),
             Self::UnterminatedUnicodeEscape => "unterminated Unicode escape".to_owned(),
+            Self::EncodingError(err) => format!("encoding error: {}", err),
 
             // Parser errors
             Self::ElseWithoutRescue => "else without rescue is useless".to_owned(),

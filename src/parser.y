@@ -19,12 +19,9 @@
     pattern_hash_keys: VariablesStack,
     tokens: Vec<Token>,
     diagnostics: Diagnostics,
-    source_buffer: Rc<Input>,
 }
 
 %code use {
-    use std::rc::Rc;
-
     use crate::{ParserOptions, ParserResult};
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
     use crate::lex_states::*;
@@ -35,8 +32,6 @@
     use crate::parse_value::ParseValue as Value;
     use crate::parse_value::*;
     use crate::Node;
-    use crate::source::InputError;
-    use crate::source::buffer::Input;
     use crate::source::Range;
     use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
     use crate::error::Diagnostics;
@@ -6327,14 +6322,14 @@ impl Parser {
     /// Constructs a parser with given `input` and `options`.
     ///
     /// Returns an error if given `input` is invalid.
-    pub fn new(input: &[u8], options: ParserOptions) -> Result<Self, InputError> {
+    pub fn new(input: &[u8], options: ParserOptions) -> Self {
         let ParserOptions {
             buffer_name,
             debug,
             decoder,
         } = options;
 
-        let mut lexer = Lexer::new(input, &buffer_name, decoder)?;
+        let mut lexer = Lexer::new(input, &buffer_name, decoder);
         lexer.set_debug(debug);
 
         let current_arg_stack = CurrentArgStack::new();
@@ -6349,7 +6344,6 @@ impl Parser {
             max_numparam_stack.clone(),
             pattern_variables.clone(),
             pattern_hash_keys.clone(),
-            Rc::clone(&lexer.buffer.input),
             lexer.diagnostics.clone(),
         );
 
@@ -6359,7 +6353,7 @@ impl Parser {
             loc: Loc { begin: 0, end: 0 }
         };
 
-        let parser = Self {
+        Self {
             yy_error_verbose: true,
             yynerrs: 0,
             yydebug: debug,
@@ -6375,10 +6369,8 @@ impl Parser {
             last_token,
             tokens: vec![],
             diagnostics: lexer.diagnostics.clone(),
-            source_buffer: Rc::clone(&lexer.buffer.input),
             yylexer: lexer,
-        };
-        Ok(parser)
+        }
     }
 
     /// Parses given input and returns:
@@ -6387,15 +6379,16 @@ impl Parser {
     ///     3. diagnostics
     ///     4. coments
     ///     5. magic comments
-    pub fn do_parse(&mut self) -> ParserResult  {
+    pub fn do_parse(mut self) -> ParserResult  {
         self.parse();
 
         ParserResult {
-            ast: self.result.take(),
+            ast: self.result,
             tokens: std::mem::take(&mut self.tokens),
             diagnostics: self.diagnostics.take(),
-            comments: std::mem::take(&mut self.yylexer.comments),
-            magic_comments: std::mem::take(&mut self.yylexer.magic_comments),
+            comments: self.yylexer.comments,
+            magic_comments: self.yylexer.magic_comments,
+            input: self.yylexer.buffer.input,
         }
     }
 
@@ -6411,7 +6404,7 @@ impl Parser {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Warning,
             message,
-            Range::new(loc.begin, loc.end, Rc::clone(&self.source_buffer))
+            Range::new(loc.begin, loc.end)
         );
         self.diagnostics.emit(diagnostic);
     }
@@ -6430,7 +6423,7 @@ impl Parser {
         if first_char.is_lowercase() || first_char == '_' {
             Ok(())
         } else {
-            let range = Range::new(ident_t.loc.begin, ident_t.loc.end, Rc::clone(&self.source_buffer));
+            let range = Range::new(ident_t.loc.begin, ident_t.loc.end);
             self.diagnostics.emit(
                 Diagnostic::new(
                     ErrorLevel::Error,
@@ -6445,7 +6438,7 @@ impl Parser {
     fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage) -> Result<i32, ()> {
         self.yyerror1(
             message,
-            Range::new(loc.begin, loc.end, Rc::clone(&self.source_buffer))
+            Range::new(loc.begin, loc.end)
         )
     }
 
@@ -6460,7 +6453,7 @@ impl Parser {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,
             DiagnosticMessage::UnexpectedToken(Lexer::TOKEN_NAMES[id].to_owned()),
-            Range::new(ctx.location().begin, ctx.location().end, Rc::clone(&self.source_buffer))
+            Range::new(ctx.location().begin, ctx.location().end)
         );
         self.diagnostics.emit(diagnostic);
     }

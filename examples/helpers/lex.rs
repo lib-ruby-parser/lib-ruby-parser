@@ -1,13 +1,13 @@
-use lib_ruby_parser::{Parser, ParserOptions, Token};
+use lib_ruby_parser::{source::buffer::Input, Parser, ParserOptions, ParserResult, Token};
 
 #[allow(dead_code)]
-pub fn lex(source: &[u8], filename: &str, debug: bool) -> Result<(Parser, Vec<Token>), String> {
+pub fn lex(source: &[u8], filename: &str, debug: bool) -> (Vec<Token>, Input) {
     let options = ParserOptions {
         buffer_name: filename.to_owned(),
         debug,
         ..Default::default()
     };
-    let mut parser = Parser::new(source, options).map_err(|e| e.to_string())?;
-    let tokens = parser.do_parse().tokens;
-    Ok((parser, tokens))
+    let parser = Parser::new(source, options);
+    let ParserResult { tokens, input, .. } = parser.do_parse();
+    (tokens, input)
 }

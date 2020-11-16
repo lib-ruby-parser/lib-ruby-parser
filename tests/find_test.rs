@@ -1,5 +1,5 @@
 use lib_ruby_parser::traverse::Find;
-use lib_ruby_parser::{Parser, ParserOptions};
+use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
 
 fn find(src: &str, pattern: Vec<&str>) -> Option<String> {
     let options = ParserOptions {
@@ -7,15 +7,15 @@ fn find(src: &str, pattern: Vec<&str>) -> Option<String> {
         debug: false,
         ..Default::default()
     };
-    let mut parser = Parser::new(src.as_bytes(), options).ok()?;
+    let parser = Parser::new(src.as_bytes(), options);
 
     let pattern = pattern
         .into_iter()
         .map(|e| e.to_owned())
         .collect::<Vec<_>>();
-    let ast = parser.do_parse().ast?;
-    let node = Find::run(&pattern, &ast).unwrap()?;
-    node.expression().source()
+    let ParserResult { ast, input, .. } = parser.do_parse();
+    let node = Find::run(&pattern, &ast?).unwrap()?;
+    node.expression().source(&input)
 }
 
 #[test]
