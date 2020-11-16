@@ -6,8 +6,8 @@ use std::convert::TryFrom;
 #[derive(Debug, Default)]
 pub struct Input {
     pub name: String,
-    pub(crate) bytes: Vec<u8>,
-    pub(crate) lines: Vec<SourceLine>,
+    pub bytes: Vec<u8>,
+    pub lines: Vec<SourceLine>,
 }
 
 impl Input {

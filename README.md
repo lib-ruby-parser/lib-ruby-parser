@@ -58,7 +58,7 @@ It's possible to pass a `decoder` function in `ParserOptions` that takes a recog
 ```rust
 use lib_ruby_parser::source::{InputError, RecognizedEncoding};
 
-fn decoder(encoding: RecognizedEncoding, input: Vec<u8>) -> Result<Vec<u8>, InputError> {
+fn decoder(encoding: RecognizedEncoding, input: &[u8]) -> Result<Vec<u8>, InputError> {
     if let RecognizedEncoding::US_ASCII = encoding {
         // reencode and return Ok(result)
         return Ok(b"2 + 2".to_vec());
