@@ -36,6 +36,7 @@ Comparison with `Ripper`/`RubyVM::AST`:
 1. It's based on MRI's `parse.y`, and so it returns **exactly** the same sequence of tokens.
 2. It's been tested on top 300 gems (by total downlads, that's about 3M LOC), `rubyspec` and `ruby/ruby` repos and there's no difference with `Ripper.lex`.
 3. It's twice slower than `Ripper`, it takes ~30s to parse 3M LOC, MRI does it in 15s. Still, that's 100K LOC/s.
+    Note: with jemalloc it's 16-17 seconds (~170-175K LOC/s)
 4. It has a much, much better interface. AST is strongly types and well documented.
 5. It doesn't throw away information about tokens. All nodes have information about their source locations.
 
