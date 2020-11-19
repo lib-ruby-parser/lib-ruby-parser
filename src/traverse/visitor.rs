@@ -9,7 +9,7 @@ pub trait Visitor<T: Default = ()> {
         T::default()
     }
 
-    fn maybe_visit(&mut self, node: &Option<Box<Node>>) -> T {
+    fn maybe_visit(&mut self, node: &Option<Node>) -> T {
         if let Some(node) = node {
             self.visit(node);
         }

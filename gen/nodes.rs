@@ -4,9 +4,9 @@ use lib_ruby_parser_nodes::{Field, FieldType, Node};
 
 fn map_field(field_type: &FieldType) -> String {
     match field_type {
-        FieldType::Node => "Box<Node>",
+        FieldType::Node => "Node",
         FieldType::Nodes => "Vec<Node>",
-        FieldType::MaybeNode => "Option<Box<Node>>",
+        FieldType::MaybeNode => "Option<Node>",
         FieldType::Range => "Range",
         FieldType::MaybeRange => "Option<Range>",
         FieldType::Str => "String",
@@ -16,7 +16,7 @@ fn map_field(field_type: &FieldType) -> String {
         FieldType::U8 => "u8",
         FieldType::Usize => "usize",
         FieldType::RawString => "String",
-        FieldType::RegexOptions => "Option<Box<Node>>",
+        FieldType::RegexOptions => "Option<Node>",
     }
     .to_owned()
 }
@@ -88,20 +88,20 @@ fn print_field_with_locs(field: &Field) -> Option<String> {
 
     match &field.field_type {
         FieldType::Node => Some(format!(
-            "{offset}self.{field_name}.inner().print_with_locs();",
+            "{offset}self.{field_name}.inner_ref().print_with_locs();",
             offset = offset,
             field_name = field.field_name
         )),
         FieldType::Nodes => Some(format!(
             "{offset}for node in self.{field_name}.iter() {{
-{offset}    node.inner().print_with_locs();
+{offset}    node.inner_ref().print_with_locs();
 {offset}}}",
             offset = offset,
             field_name = field.field_name
         )),
         FieldType::MaybeNode => Some(format!(
             "{offset}if let Some(node) = &self.{field_name} {{
-{offset}    node.inner().print_with_locs();
+{offset}    node.inner_ref().print_with_locs();
 {offset}}}",
             offset = offset,
             field_name = field.field_name
@@ -135,7 +135,7 @@ fn print_field_with_locs(field: &Field) -> Option<String> {
         FieldType::RawString => None,
         FieldType::RegexOptions => Some(format!(
             "{offset}if let Some(node) = &self.{field_name} {{
-{offset}    node.inner().print_with_locs();
+{offset}    node.inner_ref().print_with_locs();
 {offset}}}",
             offset = offset,
             field_name = field.field_name

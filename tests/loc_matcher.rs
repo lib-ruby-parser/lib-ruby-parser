@@ -1,4 +1,3 @@
-use lib_ruby_parser::nodes::*;
 use lib_ruby_parser::source::Range;
 use lib_ruby_parser::traverse::Find;
 use lib_ruby_parser::Node;
@@ -57,234 +56,232 @@ impl LocName {
     pub fn get(&self, node: &Node) -> Option<Range> {
         match self {
             LocName::Begin => match node {
-                Node::Args(Args { begin_l, .. })
-                | Node::Array(Array { begin_l, .. })
-                | Node::ArrayPattern(ArrayPattern { begin_l, .. })
-                | Node::ArrayPatternWithTail(ArrayPatternWithTail { begin_l, .. })
-                | Node::Begin(Begin { begin_l, .. })
-                | Node::CSend(CSend { begin_l, .. })
-                | Node::Defined(Defined { begin_l, .. })
-                | Node::Dstr(Dstr { begin_l, .. })
-                | Node::Dsym(Dsym { begin_l, .. })
-                | Node::FindPattern(FindPattern { begin_l, .. })
-                | Node::Hash(Hash { begin_l, .. })
-                | Node::HashPattern(HashPattern { begin_l, .. })
-                | Node::KwBegin(KwBegin { begin_l, .. })
-                | Node::Mlhs(Mlhs { begin_l, .. })
-                | Node::Procarg0(Procarg0 { begin_l, .. })
-                | Node::RescueBody(RescueBody { begin_l, .. })
-                | Node::Send(Send { begin_l, .. })
-                | Node::Str(Str { begin_l, .. })
-                | Node::Super(Super { begin_l, .. })
-                | Node::Sym(Sym { begin_l, .. })
-                | Node::Until(Until { begin_l, .. })
-                | Node::While(While { begin_l, .. })
-                | Node::Yield(Yield { begin_l, .. }) => begin_l.clone(),
+                Node::Args(inner) => inner.begin_l.clone(),
+                Node::Array(inner) => inner.begin_l.clone(),
+                Node::ArrayPattern(inner) => inner.begin_l.clone(),
+                Node::ArrayPatternWithTail(inner) => inner.begin_l.clone(),
+                Node::Begin(inner) => inner.begin_l.clone(),
+                Node::CSend(inner) => inner.begin_l.clone(),
+                Node::Defined(inner) => inner.begin_l.clone(),
+                Node::Dstr(inner) => inner.begin_l.clone(),
+                Node::Dsym(inner) => inner.begin_l.clone(),
+                Node::FindPattern(inner) => inner.begin_l.clone(),
+                Node::Hash(inner) => inner.begin_l.clone(),
+                Node::HashPattern(inner) => inner.begin_l.clone(),
+                Node::KwBegin(inner) => inner.begin_l.clone(),
+                Node::Mlhs(inner) => inner.begin_l.clone(),
+                Node::Procarg0(inner) => inner.begin_l.clone(),
+                Node::RescueBody(inner) => inner.begin_l.clone(),
+                Node::Send(inner) => inner.begin_l.clone(),
+                Node::Str(inner) => inner.begin_l.clone(),
+                Node::Super(inner) => inner.begin_l.clone(),
+                Node::Sym(inner) => inner.begin_l.clone(),
+                Node::Until(inner) => inner.begin_l.clone(),
+                Node::While(inner) => inner.begin_l.clone(),
+                Node::Yield(inner) => inner.begin_l.clone(),
 
-                Node::Block(Block { begin_l, .. })
-                | Node::ConstPattern(ConstPattern { begin_l, .. })
-                | Node::For(For { begin_l, .. })
-                | Node::If(If { begin_l, .. })
-                | Node::InPattern(InPattern { begin_l, .. })
-                | Node::Index(Index { begin_l, .. })
-                | Node::IndexAsgn(IndexAsgn { begin_l, .. })
-                | Node::Numblock(Numblock { begin_l, .. })
-                | Node::Postexe(Postexe { begin_l, .. })
-                | Node::Preexe(Preexe { begin_l, .. })
-                | Node::Regexp(Regexp { begin_l, .. })
-                | Node::When(When { begin_l, .. })
-                | Node::Xstr(Xstr { begin_l, .. }) => Some(begin_l.clone()),
+                Node::Block(inner) => Some(inner.begin_l.clone()),
+                Node::ConstPattern(inner) => Some(inner.begin_l.clone()),
+                Node::For(inner) => Some(inner.begin_l.clone()),
+                Node::If(inner) => Some(inner.begin_l.clone()),
+                Node::InPattern(inner) => Some(inner.begin_l.clone()),
+                Node::Index(inner) => Some(inner.begin_l.clone()),
+                Node::IndexAsgn(inner) => Some(inner.begin_l.clone()),
+                Node::Numblock(inner) => Some(inner.begin_l.clone()),
+                Node::Postexe(inner) => Some(inner.begin_l.clone()),
+                Node::Preexe(inner) => Some(inner.begin_l.clone()),
+                Node::Regexp(inner) => Some(inner.begin_l.clone()),
+                Node::When(inner) => Some(inner.begin_l.clone()),
+                Node::Xstr(inner) => Some(inner.begin_l.clone()),
 
                 other => panic!("node {} doesn't support begin loc", other.str_type()),
             },
             LocName::End => match node {
-                Node::Args(Args { end_l, .. })
-                | Node::Array(Array { end_l, .. })
-                | Node::ArrayPattern(ArrayPattern { end_l, .. })
-                | Node::ArrayPatternWithTail(ArrayPatternWithTail { end_l, .. })
-                | Node::Begin(Begin { end_l, .. })
-                | Node::CSend(CSend { end_l, .. })
-                | Node::Def(Def { end_l, .. })
-                | Node::Defined(Defined { end_l, .. })
-                | Node::Defs(Defs { end_l, .. })
-                | Node::Dstr(Dstr { end_l, .. })
-                | Node::Dsym(Dsym { end_l, .. })
-                | Node::FindPattern(FindPattern { end_l, .. })
-                | Node::Hash(Hash { end_l, .. })
-                | Node::HashPattern(HashPattern { end_l, .. })
-                | Node::If(If { end_l, .. })
-                | Node::KwBegin(KwBegin { end_l, .. })
-                | Node::Mlhs(Mlhs { end_l, .. })
-                | Node::Procarg0(Procarg0 { end_l, .. })
-                | Node::Send(Send { end_l, .. })
-                | Node::Str(Str { end_l, .. })
-                | Node::Super(Super { end_l, .. })
-                | Node::Sym(Sym { end_l, .. })
-                | Node::Until(Until { end_l, .. })
-                | Node::While(While { end_l, .. })
-                | Node::Yield(Yield { end_l, .. }) => end_l.clone(),
+                Node::Args(inner) => inner.end_l.clone(),
+                Node::Array(inner) => inner.end_l.clone(),
+                Node::ArrayPattern(inner) => inner.end_l.clone(),
+                Node::ArrayPatternWithTail(inner) => inner.end_l.clone(),
+                Node::Begin(inner) => inner.end_l.clone(),
+                Node::CSend(inner) => inner.end_l.clone(),
+                Node::Def(inner) => inner.end_l.clone(),
+                Node::Defined(inner) => inner.end_l.clone(),
+                Node::Defs(inner) => inner.end_l.clone(),
+                Node::Dstr(inner) => inner.end_l.clone(),
+                Node::Dsym(inner) => inner.end_l.clone(),
+                Node::FindPattern(inner) => inner.end_l.clone(),
+                Node::Hash(inner) => inner.end_l.clone(),
+                Node::HashPattern(inner) => inner.end_l.clone(),
+                Node::If(inner) => inner.end_l.clone(),
+                Node::KwBegin(inner) => inner.end_l.clone(),
+                Node::Mlhs(inner) => inner.end_l.clone(),
+                Node::Procarg0(inner) => inner.end_l.clone(),
+                Node::Send(inner) => inner.end_l.clone(),
+                Node::Str(inner) => inner.end_l.clone(),
+                Node::Super(inner) => inner.end_l.clone(),
+                Node::Sym(inner) => inner.end_l.clone(),
+                Node::Until(inner) => inner.end_l.clone(),
+                Node::While(inner) => inner.end_l.clone(),
+                Node::Yield(inner) => inner.end_l.clone(),
 
-                Node::Block(Block { end_l, .. })
-                | Node::Case(Case { end_l, .. })
-                | Node::CaseMatch(CaseMatch { end_l, .. })
-                | Node::Class(Class { end_l, .. })
-                | Node::ConstPattern(ConstPattern { end_l, .. })
-                | Node::For(For { end_l, .. })
-                | Node::Index(Index { end_l, .. })
-                | Node::IndexAsgn(IndexAsgn { end_l, .. })
-                | Node::Module(Module { end_l, .. })
-                | Node::Numblock(Numblock { end_l, .. })
-                | Node::Postexe(Postexe { end_l, .. })
-                | Node::Preexe(Preexe { end_l, .. })
-                | Node::Regexp(Regexp { end_l, .. })
-                | Node::SClass(SClass { end_l, .. })
-                | Node::Xstr(Xstr { end_l, .. }) => Some(end_l.clone()),
+                Node::Block(inner) => Some(inner.end_l.clone()),
+                Node::Case(inner) => Some(inner.end_l.clone()),
+                Node::CaseMatch(inner) => Some(inner.end_l.clone()),
+                Node::Class(inner) => Some(inner.end_l.clone()),
+                Node::ConstPattern(inner) => Some(inner.end_l.clone()),
+                Node::For(inner) => Some(inner.end_l.clone()),
+                Node::Index(inner) => Some(inner.end_l.clone()),
+                Node::IndexAsgn(inner) => Some(inner.end_l.clone()),
+                Node::Module(inner) => Some(inner.end_l.clone()),
+                Node::Numblock(inner) => Some(inner.end_l.clone()),
+                Node::Postexe(inner) => Some(inner.end_l.clone()),
+                Node::Preexe(inner) => Some(inner.end_l.clone()),
+                Node::Regexp(inner) => Some(inner.end_l.clone()),
+                Node::SClass(inner) => Some(inner.end_l.clone()),
+                Node::Xstr(inner) => Some(inner.end_l.clone()),
 
                 other => panic!("node {} doesn't support end loc", other.str_type()),
             },
             LocName::Expression => Some(node.expression().clone()),
             LocName::Keyword => match node {
-                Node::Alias(Alias { keyword_l, .. })
-                | Node::Break(Break { keyword_l, .. })
-                | Node::Case(Case { keyword_l, .. })
-                | Node::CaseMatch(CaseMatch { keyword_l, .. })
-                | Node::Class(Class { keyword_l, .. })
-                | Node::Def(Def { keyword_l, .. })
-                | Node::Defined(Defined { keyword_l, .. })
-                | Node::Defs(Defs { keyword_l, .. })
-                | Node::Ensure(Ensure { keyword_l, .. })
-                | Node::For(For { keyword_l, .. })
-                | Node::If(If { keyword_l, .. })
-                | Node::IfGuard(IfGuard { keyword_l, .. })
-                | Node::IfMod(IfMod { keyword_l, .. })
-                | Node::InPattern(InPattern { keyword_l, .. })
-                | Node::Module(Module { keyword_l, .. })
-                | Node::Next(Next { keyword_l, .. })
-                | Node::Postexe(Postexe { keyword_l, .. })
-                | Node::Preexe(Preexe { keyword_l, .. })
-                | Node::RescueBody(RescueBody { keyword_l, .. })
-                | Node::Return(Return { keyword_l, .. })
-                | Node::SClass(SClass { keyword_l, .. })
-                | Node::Super(Super { keyword_l, .. })
-                | Node::Undef(Undef { keyword_l, .. })
-                | Node::UnlessGuard(UnlessGuard { keyword_l, .. })
-                | Node::Until(Until { keyword_l, .. })
-                | Node::UntilPost(UntilPost { keyword_l, .. })
-                | Node::When(When { keyword_l, .. })
-                | Node::While(While { keyword_l, .. })
-                | Node::WhilePost(WhilePost { keyword_l, .. })
-                | Node::Yield(Yield { keyword_l, .. }) => Some(keyword_l.clone()),
+                Node::Alias(inner) => Some(inner.keyword_l.clone()),
+                Node::Break(inner) => Some(inner.keyword_l.clone()),
+                Node::Case(inner) => Some(inner.keyword_l.clone()),
+                Node::CaseMatch(inner) => Some(inner.keyword_l.clone()),
+                Node::Class(inner) => Some(inner.keyword_l.clone()),
+                Node::Def(inner) => Some(inner.keyword_l.clone()),
+                Node::Defined(inner) => Some(inner.keyword_l.clone()),
+                Node::Defs(inner) => Some(inner.keyword_l.clone()),
+                Node::Ensure(inner) => Some(inner.keyword_l.clone()),
+                Node::For(inner) => Some(inner.keyword_l.clone()),
+                Node::If(inner) => Some(inner.keyword_l.clone()),
+                Node::IfGuard(inner) => Some(inner.keyword_l.clone()),
+                Node::IfMod(inner) => Some(inner.keyword_l.clone()),
+                Node::InPattern(inner) => Some(inner.keyword_l.clone()),
+                Node::Module(inner) => Some(inner.keyword_l.clone()),
+                Node::Next(inner) => Some(inner.keyword_l.clone()),
+                Node::Postexe(inner) => Some(inner.keyword_l.clone()),
+                Node::Preexe(inner) => Some(inner.keyword_l.clone()),
+                Node::RescueBody(inner) => Some(inner.keyword_l.clone()),
+                Node::Return(inner) => Some(inner.keyword_l.clone()),
+                Node::SClass(inner) => Some(inner.keyword_l.clone()),
+                Node::Super(inner) => Some(inner.keyword_l.clone()),
+                Node::Undef(inner) => Some(inner.keyword_l.clone()),
+                Node::UnlessGuard(inner) => Some(inner.keyword_l.clone()),
+                Node::Until(inner) => Some(inner.keyword_l.clone()),
+                Node::UntilPost(inner) => Some(inner.keyword_l.clone()),
+                Node::When(inner) => Some(inner.keyword_l.clone()),
+                Node::While(inner) => Some(inner.keyword_l.clone()),
+                Node::WhilePost(inner) => Some(inner.keyword_l.clone()),
+                Node::Yield(inner) => Some(inner.keyword_l.clone()),
 
                 other => panic!("node {} doesn't support keyword loc", other.str_type()),
             },
             LocName::Name => match node {
-                Node::Blockarg(Blockarg { name_l, .. })
-                | Node::Casgn(Casgn { name_l, .. })
-                | Node::Const(Const { name_l, .. })
-                | Node::Cvasgn(Cvasgn { name_l, .. })
-                | Node::Def(Def { name_l, .. })
-                | Node::Defs(Defs { name_l, .. })
-                | Node::Gvasgn(Gvasgn { name_l, .. })
-                | Node::Ivasgn(Ivasgn { name_l, .. })
-                | Node::Kwarg(Kwarg { name_l, .. })
-                | Node::Kwoptarg(Kwoptarg { name_l, .. })
-                | Node::Lvasgn(Lvasgn { name_l, .. })
-                | Node::MatchNilPattern(MatchNilPattern { name_l, .. })
-                | Node::Kwnilarg(Kwnilarg { name_l, .. })
-                | Node::MatchVar(MatchVar { name_l, .. })
-                | Node::Optarg(Optarg { name_l, .. }) => Some(name_l.clone()),
+                Node::Blockarg(inner) => Some(inner.name_l.clone()),
+                Node::Casgn(inner) => Some(inner.name_l.clone()),
+                Node::Const(inner) => Some(inner.name_l.clone()),
+                Node::Cvasgn(inner) => Some(inner.name_l.clone()),
+                Node::Def(inner) => Some(inner.name_l.clone()),
+                Node::Defs(inner) => Some(inner.name_l.clone()),
+                Node::Gvasgn(inner) => Some(inner.name_l.clone()),
+                Node::Ivasgn(inner) => Some(inner.name_l.clone()),
+                Node::Kwarg(inner) => Some(inner.name_l.clone()),
+                Node::Kwoptarg(inner) => Some(inner.name_l.clone()),
+                Node::Lvasgn(inner) => Some(inner.name_l.clone()),
+                Node::MatchNilPattern(inner) => Some(inner.name_l.clone()),
+                Node::Kwnilarg(inner) => Some(inner.name_l.clone()),
+                Node::MatchVar(inner) => Some(inner.name_l.clone()),
+                Node::Optarg(inner) => Some(inner.name_l.clone()),
 
-                Node::Kwrestarg(Kwrestarg { name_l, .. })
-                | Node::Restarg(Restarg { name_l, .. }) => name_l.clone(),
+                Node::Kwrestarg(inner) => inner.name_l.clone(),
+                Node::Restarg(inner) => inner.name_l.clone(),
 
                 other => panic!("node {} doesn't support name loc", other.str_type()),
             },
             LocName::Assignment => match node {
-                Node::Def(Def { assignment_l, .. }) | Node::Defs(Defs { assignment_l, .. }) => {
-                    assignment_l.clone()
-                }
+                Node::Def(inner) => inner.assignment_l.clone(),
+                Node::Defs(inner) => inner.assignment_l.clone(),
                 other => panic!("node {} doesn't support assignment loc", other.str_type()),
             },
             LocName::Colon => match node {
-                Node::IfTernary(IfTernary { colon_l, .. }) => Some(colon_l.clone()),
+                Node::IfTernary(inner) => Some(inner.colon_l.clone()),
                 other => panic!("node {} doesn't support colon loc", other.str_type()),
             },
             LocName::DoubleColon => match node {
-                Node::Casgn(Casgn { double_colon_l, .. })
-                | Node::Const(Const { double_colon_l, .. }) => double_colon_l.clone(),
+                Node::Casgn(inner) => inner.double_colon_l.clone(),
+                Node::Const(inner) => inner.double_colon_l.clone(),
                 other => panic!("node {} doesn't support double_colon loc", other.str_type()),
             },
             LocName::Else => match node {
-                Node::Case(Case { else_l, .. })
-                | Node::CaseMatch(CaseMatch { else_l, .. })
-                | Node::If(If { else_l, .. })
-                | Node::Rescue(Rescue { else_l, .. }) => else_l.clone(),
+                Node::Case(inner) => inner.else_l.clone(),
+                Node::CaseMatch(inner) => inner.else_l.clone(),
+                Node::If(inner) => inner.else_l.clone(),
+                Node::Rescue(inner) => inner.else_l.clone(),
                 other => panic!("node {} doesn't support else loc", other.str_type()),
             },
             LocName::HeredocBody => match node {
-                Node::Heredoc(Heredoc { heredoc_body_l, .. })
-                | Node::XHeredoc(XHeredoc { heredoc_body_l, .. }) => Some(heredoc_body_l.clone()),
+                Node::Heredoc(inner) => Some(inner.heredoc_body_l.clone()),
+                Node::XHeredoc(inner) => Some(inner.heredoc_body_l.clone()),
                 other => panic!("node {} doesn't support heredoc_body loc", other.str_type()),
             },
             LocName::Operator => match node {
-                Node::And(And { operator_l, .. })
-                | Node::AndAsgn(AndAsgn { operator_l, .. })
-                | Node::BlockPass(BlockPass { operator_l, .. })
-                | Node::Defs(Defs { operator_l, .. })
-                | Node::EFlipFlop(EFlipFlop { operator_l, .. })
-                | Node::Erange(Erange { operator_l, .. })
-                | Node::IFlipFlop(IFlipFlop { operator_l, .. })
-                | Node::InMatch(InMatch { operator_l, .. })
-                | Node::Irange(Irange { operator_l, .. })
-                | Node::Kwsplat(Kwsplat { operator_l, .. })
-                | Node::Masgn(Masgn { operator_l, .. })
-                | Node::MatchAlt(MatchAlt { operator_l, .. })
-                | Node::MatchAs(MatchAs { operator_l, .. })
-                | Node::MatchNilPattern(MatchNilPattern { operator_l, .. })
-                | Node::MatchRest(MatchRest { operator_l, .. })
-                | Node::MatchWithLvasgn(MatchWithLvasgn { operator_l, .. })
-                | Node::OpAsgn(OpAsgn { operator_l, .. })
-                | Node::Optarg(Optarg { operator_l, .. })
-                | Node::Or(Or { operator_l, .. })
-                | Node::OrAsgn(OrAsgn { operator_l, .. })
-                | Node::Pair(Pair { operator_l, .. })
-                | Node::SClass(SClass { operator_l, .. })
-                | Node::Splat(Splat { operator_l, .. }) => Some(operator_l.clone()),
+                Node::And(inner) => Some(inner.operator_l.clone()),
+                Node::AndAsgn(inner) => Some(inner.operator_l.clone()),
+                Node::BlockPass(inner) => Some(inner.operator_l.clone()),
+                Node::Defs(inner) => Some(inner.operator_l.clone()),
+                Node::EFlipFlop(inner) => Some(inner.operator_l.clone()),
+                Node::Erange(inner) => Some(inner.operator_l.clone()),
+                Node::IFlipFlop(inner) => Some(inner.operator_l.clone()),
+                Node::InMatch(inner) => Some(inner.operator_l.clone()),
+                Node::Irange(inner) => Some(inner.operator_l.clone()),
+                Node::Kwsplat(inner) => Some(inner.operator_l.clone()),
+                Node::Masgn(inner) => Some(inner.operator_l.clone()),
+                Node::MatchAlt(inner) => Some(inner.operator_l.clone()),
+                Node::MatchAs(inner) => Some(inner.operator_l.clone()),
+                Node::MatchNilPattern(inner) => Some(inner.operator_l.clone()),
+                Node::MatchRest(inner) => Some(inner.operator_l.clone()),
+                Node::MatchWithLvasgn(inner) => Some(inner.operator_l.clone()),
+                Node::OpAsgn(inner) => Some(inner.operator_l.clone()),
+                Node::Optarg(inner) => Some(inner.operator_l.clone()),
+                Node::Or(inner) => Some(inner.operator_l.clone()),
+                Node::OrAsgn(inner) => Some(inner.operator_l.clone()),
+                Node::Pair(inner) => Some(inner.operator_l.clone()),
+                Node::SClass(inner) => Some(inner.operator_l.clone()),
+                Node::Splat(inner) => Some(inner.operator_l.clone()),
 
-                Node::Casgn(Casgn { operator_l, .. })
-                | Node::Class(Class { operator_l, .. })
-                | Node::Complex(Complex { operator_l, .. })
-                | Node::CSend(CSend { operator_l, .. })
-                | Node::Cvasgn(Cvasgn { operator_l, .. })
-                | Node::Float(Float { operator_l, .. })
-                | Node::Gvasgn(Gvasgn { operator_l, .. })
-                | Node::IndexAsgn(IndexAsgn { operator_l, .. })
-                | Node::Int(Int { operator_l, .. })
-                | Node::Ivasgn(Ivasgn { operator_l, .. })
-                | Node::Lvasgn(Lvasgn { operator_l, .. })
-                | Node::Rational(Rational { operator_l, .. })
-                | Node::Send(Send { operator_l, .. }) => operator_l.clone(),
+                Node::Casgn(inner) => inner.operator_l.clone(),
+                Node::Class(inner) => inner.operator_l.clone(),
+                Node::Complex(inner) => inner.operator_l.clone(),
+                Node::CSend(inner) => inner.operator_l.clone(),
+                Node::Cvasgn(inner) => inner.operator_l.clone(),
+                Node::Float(inner) => inner.operator_l.clone(),
+                Node::Gvasgn(inner) => inner.operator_l.clone(),
+                Node::IndexAsgn(inner) => inner.operator_l.clone(),
+                Node::Int(inner) => inner.operator_l.clone(),
+                Node::Ivasgn(inner) => inner.operator_l.clone(),
+                Node::Lvasgn(inner) => inner.operator_l.clone(),
+                Node::Rational(inner) => inner.operator_l.clone(),
+                Node::Send(inner) => inner.operator_l.clone(),
 
                 other => panic!("node {} doesn't support operator loc", other.str_type()),
             },
             LocName::Selector => match node {
-                Node::Send(Send { selector_l, .. }) => selector_l.clone(),
-                Node::CSend(CSend { selector_l, .. }) | Node::Pin(Pin { selector_l, .. }) => {
-                    Some(selector_l.clone())
-                }
+                Node::Send(inner) => inner.selector_l.clone(),
+                Node::CSend(inner) => Some(inner.selector_l.clone()),
+                Node::Pin(inner) => Some(inner.selector_l.clone()),
                 other => panic!("node {} doesn't support selector loc", other.str_type()),
             },
             LocName::Assoc => match node {
-                Node::RescueBody(RescueBody { assoc_l, .. }) => assoc_l.clone(),
+                Node::RescueBody(inner) => inner.assoc_l.clone(),
                 other => panic!("node {} doesn't support assoc loc", other.str_type()),
             },
             LocName::Question => match node {
-                Node::IfTernary(IfTernary { question_l, .. }) => Some(question_l.clone()),
+                Node::IfTernary(inner) => Some(inner.question_l.clone()),
                 other => panic!("node {} doesn't support question loc", other.str_type()),
             },
             LocName::HeredocEnd => match node {
-                Node::Heredoc(Heredoc { heredoc_end_l, .. })
-                | Node::XHeredoc(XHeredoc { heredoc_end_l, .. }) => Some(heredoc_end_l.clone()),
+                Node::Heredoc(inner) => Some(inner.heredoc_end_l.clone()),
+                Node::XHeredoc(inner) => Some(inner.heredoc_end_l.clone()),
                 other => panic!("node {} doesn't support heredoc_end loc", other.str_type()),
             },
         }

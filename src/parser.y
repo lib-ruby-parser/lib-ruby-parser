@@ -28,7 +28,6 @@
     use crate::{Context as ParserContext, ContextItem};
     use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel, ArgsType};
     use crate::builder::clone_value;
-    use crate::nodes::{Lvar, Mlhs};
     use crate::parse_value::ParseValue as Value;
     use crate::parse_value::*;
     use crate::Node;
@@ -1266,7 +1265,7 @@
                 | tLPAREN mlhs_inner rparen
                     {
                         let mlhs_items: Vec<Node> = match $<Node>2 {
-                            Node::Mlhs(Mlhs { items, .. }) => items,
+                            Node::Mlhs(mlhs) => (*mlhs).items,
                             other => unreachable!("unsupported mlhs item {:?}", other)
                         };
 
@@ -5487,10 +5486,11 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         let node = Node::from(yystack.owned_value_at(0));
-                        if let Node::Lvar(Lvar { name, .. }) = &node {
+                        if let Node::Lvar(node) = &node {
+                            let name = &node.name;
                             match name.chars().collect::<Vec<_>>()[..] {
                                 ['_', n] if n >= '1' && n <= '9' => {
-                                    if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
+                                    if !self.static_env.is_declared(&name) && self.context.is_in_dynamic_block() {
                                         /* definitely an implicit param */
 
                                         if self.max_numparam_stack.has_ordinary_params() {
@@ -5529,7 +5529,7 @@ keyword_variable: kNIL
                                             }
                                         }
 
-                                        self.static_env.declare(name);
+                                        self.static_env.declare(&name);
                                         self.max_numparam_stack.register(n.to_digit(10).expect("numparam must have a digit after _") as i32)
                                     }
                                 },
