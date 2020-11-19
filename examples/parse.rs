@@ -1,6 +1,10 @@
 extern crate clap;
 use clap::Clap;
 
+extern crate jemallocator;
+#[global_allocator]
+static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
 use lib_ruby_parser::ParserResult;
 use std::fs;
 use std::path::Path;
@@ -16,8 +20,11 @@ struct Args {
     #[clap(short = 'e', about = "code to evaluate")]
     code: Option<String>,
 
-    #[clap(short, long, about = "don't print anything except OK/Error per file")]
+    #[clap(short, long, about = "don't print anything except diagnostics")]
     quiet: bool,
+
+    #[clap(long, about = "don't print anything")]
+    no_output: bool,
 
     #[clap(short, long, about = "print debug information")]
     debug: bool,
@@ -46,6 +53,8 @@ fn print_quite(_src: &str, result: &ParserResult) {
     print_diagnostics(&result);
 }
 
+fn no_output(_: &str, _: &ParserResult) {}
+
 fn print_locations(src: &str, result: &ParserResult) {
     println!("{}", src);
     print_diagnostics(&result);
@@ -66,7 +75,9 @@ fn print_full(_str: &str, result: &ParserResult) {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Args = Args::parse();
 
-    let callback: &dyn Fn(&str, &ParserResult) = if args.quiet {
+    let callback: &dyn Fn(&str, &ParserResult) = if args.no_output {
+        &no_output
+    } else if args.quiet {
         &print_quite
     } else if args.locations {
         &print_locations

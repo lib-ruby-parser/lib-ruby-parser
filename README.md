@@ -120,3 +120,20 @@ If you use it from GitHub directly you also need Bison (because `parser.rs` is u
 ## Bindings for other languages
 
 + [WASM](https://github.com/lib-ruby-parser/wasm-bindings) (with live demo)
+
+## Profiling
+
+You can use `parser` example:
+
+```sh
+$ RUSTFLAGS="-C debug-assertions=n" cargo run --all-features --example parse -- -qq --profile "<pattern>"
+```
+
+## Benchmarking
+
+A pretty big codebase could be generated using a `download.rb` script:
+
+```sh
+$ ruby gems/download.rb
+$ cargo run --release --example parse -- -qq "gems/repos/**/*.rb"
+```

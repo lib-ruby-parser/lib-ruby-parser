@@ -37,8 +37,5 @@ jobs:
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
           bison --version
 
-      - name: build
-        run: cargo build
-
       - name: Run tests
         run: cargo test --all-features -- --nocapture
