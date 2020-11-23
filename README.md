@@ -121,6 +121,9 @@ If you use it from GitHub directly you also need Bison (because `parser.rs` is u
 
 ## Bindings for other languages
 
++ [C](https://github.com/lib-ruby-parser/c-bindings)
++ [C++](https://github.com/lib-ruby-parser/cpp-bindings)
++ [Node.js](https://github.com/lib-ruby-parser/node-bindings)
 + [WASM](https://github.com/lib-ruby-parser/wasm-bindings) (with live demo)
 
 ## Profiling
