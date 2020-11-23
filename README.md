@@ -1,8 +1,11 @@
 # lib-ruby-parser
 
 [![test](https://github.com/lib-ruby-parser/lib-ruby-parser/workflows/test/badge.svg?branch=master)](https://github.com/lib-ruby-parser/lib-ruby-parser/actions?query=workflow%3Atest)
+[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
+![Crates.io](https://img.shields.io/crates/v/lib-ruby-parser)
 [![codecov](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser/branch/master/graph/badge.svg)](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
+[![dependency status](https://deps.rs/repo/github/lib-ruby-parser/lib-ruby-parser/status.svg)](https://deps.rs/repo/github/lib-ruby-parser/lib-ruby-parser)
 
 
 `lib-ruby-parser` is a Ruby parser written in Rust.
@@ -36,7 +39,7 @@ Comparison with `Ripper`/`RubyVM::AST`:
 1. It's based on MRI's `parse.y`, and so it returns **exactly** the same sequence of tokens.
 2. It's been tested on top 300 gems (by total downlads, that's about 3M LOC), `rubyspec` and `ruby/ruby` repos and there's no difference with `Ripper.lex`.
 3. It's as fast as `Ripper` (with `jemalloc`), both parse 3M LOC in 15s. That's ~200K LOC/s.
-4. It has a much, much better interface. AST is strongly types and well documented.
+4. It has a much, much better interface. AST is strongly typed and well documented.
 5. It doesn't throw away information about tokens. All nodes have information about their source locations.
 
 Comparison with [whitequark/parser](https://github.com/whitequark/parser):
@@ -106,13 +109,13 @@ Ruby constructs regexes from literals during parsing to:
 
 To mirror this behavior `lib-ruby-parser` uses Onigurama to compile, validate and parse regex literals.
 
-This feature is disabled by default, but you can enable it by enabling `"onig"` feature.
+This feature is disabled by default, but you can add it by enabling `"onig"` feature.
 
 ## Bison
 
 The grammar of `lib-ruby-parser` is built using a [custom bison skeleton](https://github.com/iliabylich/rust-bison-skeleton) that was written for this project.
 
-For development you need the latest version Bison installed locally. Of course, it's not necessary for release builds from crates.io (because compiled `parser.rs` is included into release build).
+For development you need the latest version of Bison installed locally. Of course, it's not necessary for release builds from crates.io (because compiled `parser.rs` is included into release build AND `build.rs` that converts it is excluded).
 
 If you use it from GitHub directly you also need Bison (because `parser.rs` is under gitignore)
 
@@ -122,7 +125,7 @@ If you use it from GitHub directly you also need Bison (because `parser.rs` is u
 
 ## Profiling
 
-You can use `parser` example:
+You can use `parse` example:
 
 ```sh
 $ RUSTFLAGS="-C debug-assertions=n" cargo run --all-features --example parse -- -qq --profile "<pattern>"
@@ -134,5 +137,5 @@ A pretty big codebase could be generated using a `download.rb` script:
 
 ```sh
 $ ruby gems/download.rb
-$ cargo run --release --example parse -- --no-output "gems/repos/**/*.rb"
+$ cargo run --release --all-features --example parse -- --no-output "gems/repos/**/*.rb"
 ```
