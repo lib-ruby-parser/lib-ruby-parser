@@ -97,7 +97,7 @@ Byte sequence `255` is invalid in UTF-8, but MRI ignores it.
 
 But not all languages support it, and this is why string and symbol nodes encapsulate a custom `StringValue` instead of a plain `String`.
 
-If your langauge supports invalid strings you can use raw `.bytes` of this `StringValue`. For example, a Ruby wrapper for this library could do that.
+If your language supports invalid strings you can use raw `.bytes` of this `StringValue`. For example, a Ruby wrapper for this library could do that.
 
 If your language doesn't support it, better call `.to_string_lossy()` that replaces all unsupported chars with a special `U+FFFD REPLACEMENT CHARACTER (�)`.
 
