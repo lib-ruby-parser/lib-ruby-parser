@@ -1,5 +1,5 @@
 --INPUT
-1 in [a]; a
+1 => [a]; a
 --LOCATIONS
 ~~~~~~~~~~~ expression ()
   ~~ operator (stmt[0])

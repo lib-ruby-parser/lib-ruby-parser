@@ -113,7 +113,7 @@
 %type <node> string_content
 %type <node> words symbols qwords qsymbols
 %type <node> literal numeric simple_numeric ssym dsym symbol cpath
-%type <node> top_compstmt top_stmt rassign
+%type <node> top_compstmt top_stmt
 %type <node> stmt_or_begin stmt expr arg primary command command_call method_call
 %type <node> expr_value arg_value primary_value rel_expr
 %type <node> block_arg var_ref
@@ -653,55 +653,9 @@
                             )
                         );
                     }
-                | rassign
-                    {
-                        $$ = $1;
-                    }
                 | expr
                     {
                         $$ = $1;
-                    }
-                ;
-
-         rassign: arg_value tASSOC lhs
-                    {
-                        $$ = Value::Node(
-                            self.builder.rassign(
-                                $<Node>1,
-                                $<Token>2,
-                                $<Node>3
-                            )
-                        );
-                    }
-                | arg_value tASSOC mlhs
-                    {
-                        $$ = Value::Node(
-                            self.builder.multi_rassign(
-                                $<Node>1,
-                                $<Token>2,
-                                $<Node>3
-                            )
-                        );
-                    }
-                | rassign tASSOC lhs
-                    {
-                        $$ = Value::Node(
-                            self.builder.rassign(
-                                $<Node>1,
-                                $<Token>2,
-                                $<Node>3
-                            )
-                        );
-                    }
-                | rassign tASSOC mlhs
-                    {
-                        $$ = Value::Node(
-                            self.builder.multi_rassign(
-                                $<Node>1,
-                                $<Token>2,
-                                $<Node>3
-                            )
-                        );
                     }
                 ;
 
@@ -903,7 +857,7 @@
                             )?
                         );
                     }
-                | arg kIN
+                | arg tASSOC
                     {
                         let arg = match yystack.borrow_value_at(1) {
                             Value::Node(node) => node,

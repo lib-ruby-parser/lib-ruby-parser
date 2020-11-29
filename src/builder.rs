@@ -1198,14 +1198,6 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn rassign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
-        self.assign(rhs, eql_t, lhs)
-    }
-
-    pub(crate) fn multi_rassign(&self, lhs: Node, eql_t: Token, rhs: Node) -> Node {
-        self.multi_assign(rhs, eql_t, lhs)
-    }
-
     //
     // Class and module definition
     //

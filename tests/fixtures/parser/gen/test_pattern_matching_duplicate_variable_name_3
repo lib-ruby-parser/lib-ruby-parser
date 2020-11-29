@@ -1,4 +1,4 @@
 --INPUT
-0 in [a, a]
+0 => [a, a]
 --DIAGNOSTIC
          ~ (error) duplicated variable name
