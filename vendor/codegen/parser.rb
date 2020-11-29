@@ -193,6 +193,7 @@ module ParseHelperPatch
     :embedded_document => ->(*) { 'embedded document meets end of file' },
     :triple_dot_at_eol => ->(*) { '... at EOL, should be parenthesized?' },
     :ambiguous_prefix => ->(args, range) { "ambiguous first argument; put parentheses or a space even after `#{range.source}' operator" },
+    :ambiguous_regexp => ->(*) { "ambiguity between regexp and two divisions: wrap regexp in parentheses or add a space after `/' operator" },
     :ambiguous_literal => ->(args, range) {
       op = range.source
       interpreted_as =

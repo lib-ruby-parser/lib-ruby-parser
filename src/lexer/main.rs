@@ -1117,10 +1117,14 @@ impl Lexer {
     }
 
     pub(crate) fn arg_ambiguous(&mut self, c: u8, range: Range) -> bool {
-        self.warn(
-            DiagnosticMessage::AmbiguousFirstArgument { operator: c },
-            range,
-        );
+        if c == b'/' {
+            self.warn(DiagnosticMessage::AmbiguousRegexp, range);
+        } else {
+            self.warn(
+                DiagnosticMessage::AmbiguousFirstArgument { operator: c },
+                range,
+            );
+        }
         true
     }
 

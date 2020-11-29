@@ -52,6 +52,7 @@ pub enum DiagnosticMessage {
 
     // Lexer warnings
     AmbiguousTernaryOperator(String),
+    AmbiguousRegexp,
 
     // Parser errors
     ElseWithoutRescue,
@@ -157,6 +158,7 @@ impl DiagnosticMessage {
             Self::InvalidCvarName(name) => format!("`@@{}' is not allowed as a class variable name", *name as char),
             Self::UnknownRegexOptions(options) => format!("unknown regexp options - {}", options),
             Self::AmbiguousTernaryOperator(pre) => format!("`?' just followed by `{}' is interpreted as a conditional operator, put a space after `?'", pre),
+            Self::AmbiguousRegexp => "ambiguity between regexp and two divisions: wrap regexp in parentheses or add a space after `/' operator".to_owned(),
             Self::UnterminatedUnicodeEscape => "unterminated Unicode escape".to_owned(),
             Self::EncodingError(err) => format!("encoding error: {}", err),
 
