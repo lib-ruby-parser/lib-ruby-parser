@@ -1,0 +1,11 @@
+--INPUT
+def foo = 42
+--LOCATIONS
+~~~ keyword ()
+    ~~~ name ()
+        ~ assignment ()
+~~~~~~~~~~~~ expression ()
+          ~~ expression (body)
+--AST
+s(:def, "foo", nil,
+  s(:int, "42"))

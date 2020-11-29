@@ -1,4 +1,0 @@
---INPUT
-def obj.foo = 42
---DIAGNOSTIC
-            ~ (error) unexpected tEQL
