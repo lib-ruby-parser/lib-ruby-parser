@@ -2162,11 +2162,7 @@
                 | defn_head f_paren_args tEQL arg
                     {
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
-
-                        let name = clone_value(&name_t);
-                        if name.ends_with('=') {
-                            return self.yyerror(&name_t.loc, DiagnosticMessage::EndlessSetterDefinition);
-                        }
+                        self.validate_endless_method_name(&name_t)?;
 
                         $$ = Value::Node(
                             self.builder.def_endless_method(
@@ -2187,6 +2183,7 @@
                 | defn_head f_paren_args tEQL arg kRESCUE_MOD arg
                     {
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
+                        self.validate_endless_method_name(&name_t)?;
 
                         let rescue_body = self.builder.rescue_body(
                             $<Token>5,
@@ -2223,6 +2220,7 @@
                 | defs_head f_paren_args tEQL arg
                     {
                         let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
+                        self.validate_endless_method_name(&name_t)?;
 
                         $$ = Value::Node(
                             self.builder.def_endless_singleton(
@@ -2245,6 +2243,7 @@
                 | defs_head f_paren_args tEQL arg kRESCUE_MOD arg
                     {
                         let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
+                        self.validate_endless_method_name(&name_t)?;
 
                         let rescue_body = self.builder.rescue_body(
                             $<Token>5,
@@ -6432,6 +6431,15 @@ impl Parser {
                 )
             );
             Err(())
+        }
+    }
+
+    fn validate_endless_method_name(&mut self, name_t: &Token) -> Result<(), ()> {
+        let name = clone_value(&name_t);
+        if name.ends_with('=') {
+            self.yyerror(&name_t.loc, DiagnosticMessage::EndlessSetterDefinition).map(|_| ())
+        } else {
+            Ok(())
         }
     }
 
