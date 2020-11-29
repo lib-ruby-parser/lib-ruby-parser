@@ -13,7 +13,7 @@ fun(:foo => 1)
             ~ expression (arg[0]/pair[0]/value)
 --AST
 s(:send, nil, "fun",
-  s(:hash,
+  s(:kwargs,
     s(:pair,
       s(:sym, "foo"),
       s(:int, "1"))))

@@ -626,6 +626,13 @@ impl<'a> Visitor<Option<Node>> for Find {
         None
     }
 
+    fn on_kwargs(&mut self, node: &Kwargs) -> Option<Node> {
+        match self.current_pattern() {
+            PatternItem::Pair(n) => self.find(&node.pairs[n]),
+            _ => None,
+        }
+    }
+
     fn on_kwbegin(&mut self, node: &KwBegin) -> Option<Node> {
         match self.current_pattern() {
             PatternItem::Stmt(n) => self.find(&node.statements[n]),

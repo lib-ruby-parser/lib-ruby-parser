@@ -14,7 +14,7 @@ foo[:baz => 1,]
 --AST
 s(:index,
   s(:lvar, "foo"),
-  s(:hash,
+  s(:kwargs,
     s(:pair,
       s(:sym, "baz"),
       s(:int, "1"))))

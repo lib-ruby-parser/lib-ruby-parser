@@ -10,7 +10,7 @@ assert do: true
            ~~~~ expression (arg[0]/pair[0]/value)
 --AST
 s(:send, nil, "assert",
-  s(:hash,
+  s(:kwargs,
     s(:pair,
       s(:sym, "do"),
       s(:true))))
