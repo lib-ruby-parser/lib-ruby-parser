@@ -1,0 +1,4 @@
+--INPUT
+m /foo/
+--DIAGNOSTIC
+  ~ (warning) ambiguity between regexp and two divisions: wrap regexp in parentheses or add a space after `/' operator
