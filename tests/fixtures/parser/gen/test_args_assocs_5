@@ -1,0 +1,19 @@
+--INPUT
+super(:foo => 42)
+--LOCATIONS
+     ~ begin ()
+                ~ end ()
+~~~~~ keyword ()
+~~~~~~~~~~~~~~~~~ expression ()
+      ~~~~~~~~~~ expression (arg[0])
+           ~~ operator (arg[0]/pair[0])
+      ~~~~~~~~~~ expression (arg[0]/pair[0])
+      ~ begin (arg[0]/pair[0]/key)
+      ~~~~ expression (arg[0]/pair[0]/key)
+              ~~ expression (arg[0]/pair[0]/value)
+--AST
+s(:super,
+  s(:kwargs,
+    s(:pair,
+      s(:sym, "foo"),
+      s(:int, "42"))))

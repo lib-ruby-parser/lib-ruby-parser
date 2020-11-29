@@ -1661,7 +1661,7 @@ impl Builder {
         dot_t: Option<Token>,
         selector_t: Option<Token>,
         lparen_t: Option<Token>,
-        args: Vec<Node>,
+        mut args: Vec<Node>,
         rparen_t: Option<Token>,
     ) -> Node {
         let begin_l = maybe_node_expr(&receiver.as_ref())
@@ -1681,6 +1681,8 @@ impl Builder {
         let end_l = self.maybe_loc(&rparen_t);
 
         let method_name = maybe_value(selector_t).unwrap_or_else(|| "call".to_owned());
+
+        self.rewrite_hash_args_to_kwargs(&mut args);
 
         match self.call_type_for_dot(&dot_t) {
             MethodCallType::Send => Node::Send(Box::new(Send {
@@ -1927,12 +1929,14 @@ impl Builder {
         &self,
         recv: Node,
         lbrack_t: Token,
-        indexes: Vec<Node>,
+        mut indexes: Vec<Node>,
         rbrack_t: Token,
     ) -> Node {
         let begin_l = self.loc(&lbrack_t);
         let end_l = self.loc(&rbrack_t);
         let expression_l = recv.expression().join(&end_l);
+
+        self.rewrite_hash_args_to_kwargs(&mut indexes);
 
         Node::Index(Box::new(Index {
             recv,
@@ -2402,6 +2406,13 @@ impl Builder {
                 self.error(DiagnosticMessage::BlockGivenToYield, keyword_l);
                 return Err(());
             }
+        }
+
+        match type_ {
+            KeywordCmd::Yield | KeywordCmd::Super => {
+                self.rewrite_hash_args_to_kwargs(&mut args);
+            }
+            _ => {}
         }
 
         let begin_l = self.maybe_loc(&lparen_t);
@@ -3575,6 +3586,24 @@ impl Builder {
             Node::Or(inner) => self.void_value(&inner.lhs),
             _ => None,
         }
+    }
+
+    fn rewrite_hash_args_to_kwargs(&self, args: &mut Vec<Node>) {
+        match &mut args[..] {
+            [.., last, Node::BlockPass(_)] | [.., last] => {
+                match &mut *last {
+                    Node::Hash(hash) if hash.begin_l.is_none() && hash.end_l.is_none() => {
+                        *last = Node::Kwargs(Box::new(Kwargs {
+                            pairs: std::mem::take(&mut hash.pairs),
+                            expression_l: hash.expression().clone(),
+                        }));
+                    }
+                    _ => return,
+                };
+            }
+
+            _ => {}
+        };
     }
 }
 

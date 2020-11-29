@@ -18,7 +18,7 @@ fun(foo, :foo => 1, &baz)
 --AST
 s(:send, nil, "fun",
   s(:lvar, "foo"),
-  s(:hash,
+  s(:kwargs,
     s(:pair,
       s(:sym, "foo"),
       s(:int, "1"))),

@@ -485,7 +485,7 @@ module ParseHelperPatch
         locs(expr, path + ['expr']),
         locs(body, path + ['body']),
       ]
-    when :hash
+    when :hash, :kwargs
       pairs = *ast
       [ *pairs.map.with_index { |pair, idx| locs(pair, path + ["pair[#{idx}]"]) } ]
     when :module
@@ -656,6 +656,7 @@ IGNORE = [
   'test_send_lambda_legacy',
   'test_endless_method_forwarded_args_legacy',
   'test_procarg0_legacy',
+  'test_args_assocs_legacy',
 
   'test_dedenting_heredoc',
   'test_heredoc',

@@ -16,7 +16,7 @@ foo[bar, :baz => 1,]
 s(:index,
   s(:lvar, "foo"),
   s(:lvar, "bar"),
-  s(:hash,
+  s(:kwargs,
     s(:pair,
       s(:sym, "baz"),
       s(:int, "1"))))

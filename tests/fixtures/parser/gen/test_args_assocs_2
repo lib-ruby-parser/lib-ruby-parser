@@ -1,0 +1,20 @@
+--INPUT
+self[:bar => 1]
+--LOCATIONS
+    ~ begin ()
+              ~ end ()
+~~~~~~~~~~~~~~~ expression ()
+~~~~ expression (recv)
+     ~~~~~~~~~ expression (index[0])
+          ~~ operator (index[0]/pair[0])
+     ~~~~~~~~~ expression (index[0]/pair[0])
+     ~ begin (index[0]/pair[0]/key)
+     ~~~~ expression (index[0]/pair[0]/key)
+             ~ expression (index[0]/pair[0]/value)
+--AST
+s(:index,
+  s(:self),
+  s(:kwargs,
+    s(:pair,
+      s(:sym, "bar"),
+      s(:int, "1"))))

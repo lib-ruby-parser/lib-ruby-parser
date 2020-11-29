@@ -313,6 +313,10 @@ pub trait Visitor<T: Default = ()> {
         T::default()
     }
 
+    fn on_kwargs(&mut self, node: &Kwargs) -> T {
+        self.visit_all(&node.pairs)
+    }
+
     fn on_kwbegin(&mut self, node: &KwBegin) -> T {
         self.visit_all(&node.statements)
     }
@@ -661,6 +665,7 @@ pub trait Visitor<T: Default = ()> {
             Node::Ivar(inner) => self.on_ivar(inner),
             Node::Ivasgn(inner) => self.on_ivasgn(inner),
             Node::Kwarg(inner) => self.on_kwarg(inner),
+            Node::Kwargs(inner) => self.on_kwargs(inner),
             Node::KwBegin(inner) => self.on_kwbegin(inner),
             Node::Kwnilarg(inner) => self.on_kwnilarg(inner),
             Node::Kwoptarg(inner) => self.on_kwoptarg(inner),
