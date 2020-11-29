@@ -1,0 +1,18 @@
+--INPUT
+def foo = 42 rescue nil
+--LOCATIONS
+~~~ keyword ()
+    ~~~ name ()
+        ~ assignment ()
+~~~~~~~~~~~~~~~~~~~~~~~ expression ()
+          ~~~~~~~~~~~~~ expression (body)
+          ~~ expression (body/body)
+             ~~~~~~ keyword (body/rescue_body[0])
+             ~~~~~~~~~~ expression (body/rescue_body[0])
+                    ~~~ expression (body/rescue_body[0]/body)
+--AST
+s(:def, "foo", nil,
+  s(:rescue,
+    s(:int, "42"),
+    s(:resbody, nil, nil,
+      s(:nil)), nil))

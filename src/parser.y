@@ -172,7 +172,8 @@
 %type <do_body> do_body
 %type <p_top_expr> p_top_expr
 
-%type <maybe_node> compstmt bodystmt f_arglist f_paren_args opt_block_param block_param_def f_larglist
+%type <maybe_node> compstmt bodystmt f_arglist f_paren_args opt_block_param
+%type <maybe_node> block_param_def f_larglist f_opt_paren_args
 
 %type <token>   sym operation operation2 operation3 kwrest_mark restarg_mark blkarg_mark
 %type <token>   cname fname op f_norm_arg f_bad_arg
@@ -2113,7 +2114,7 @@
                             )
                         );
                     }
-                | defn_head f_paren_args tEQL arg
+                | defn_head f_opt_paren_args tEQL arg
                     {
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
                         self.validate_endless_method_name(&name_t)?;
@@ -2134,7 +2135,7 @@
                         self.context.pop();
                         self.current_arg_stack.pop();
                     }
-                | defn_head f_paren_args tEQL arg kRESCUE_MOD arg
+                | defn_head f_opt_paren_args tEQL arg kRESCUE_MOD arg
                     {
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
                         self.validate_endless_method_name(&name_t)?;
@@ -2171,7 +2172,7 @@
                         self.context.pop();
                         self.current_arg_stack.pop();
                     }
-                | defs_head f_paren_args tEQL arg
+                | defs_head f_opt_paren_args tEQL arg
                     {
                         let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
                         self.validate_endless_method_name(&name_t)?;
@@ -2194,7 +2195,7 @@
                         self.context.pop();
                         self.current_arg_stack.pop();
                     }
-                | defs_head f_paren_args tEQL arg kRESCUE_MOD arg
+                | defs_head f_opt_paren_args tEQL arg kRESCUE_MOD arg
                     {
                         let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
                         self.validate_endless_method_name(&name_t)?;
@@ -5547,6 +5548,16 @@ keyword_variable: kNIL
                 | /* none */
                     {
                         $$ = Value::Superclass(Superclass { lt_t: None, value: None });
+                    }
+                ;
+
+f_opt_paren_args: f_paren_args
+                    {
+                        $$ = $1;
+                    }
+                | none
+                    {
+                        $$ = Value::MaybeNode(None);
                     }
                 ;
 
