@@ -1,4 +1,4 @@
-use crate::{parser::TokenValue, Token};
+use crate::{Token, TokenValue};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StringValue {

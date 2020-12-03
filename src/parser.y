@@ -23,6 +23,7 @@
 
 %code use {
     use crate::{ParserOptions, ParserResult};
+    use crate::{Token, TokenValue};
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
     use crate::lex_states::*;
     use crate::{Context as ParserContext, ContextItem};
@@ -309,20 +310,20 @@
 
          program:   {
                         self.yylexer.lex_state.set(EXPR_BEG);
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   top_compstmt
                     {
                         let _trigger_locs = @2;
                         self.result = $<MaybeNode>2;
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                     }
                 ;
 
     top_compstmt: top_stmts opt_terms
                     {
                         // TODO: run void_stmts
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.compstmt($<NodeList>1)
                         );
                     }
@@ -330,21 +331,21 @@
 
        top_stmts: none
                     {
-                      $$ = Value::NodeList( vec![] );
+                      $$ = Value::new_node_list( vec![] );
                     }
                 | top_stmt
                     {
-                      $$ = Value::NodeList( vec![ $<Node>1 ] );
+                      $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | top_stmts terms top_stmt
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | error top_stmt
                     {
-                      $$ = Value::NodeList( vec![ $<Node>2 ] );
+                      $$ = Value::new_node_list( vec![ $<Node>2 ] );
                     }
                 ;
 
@@ -355,7 +356,7 @@
                 | klBEGIN begin_block
                     {
                         let BeginBlock { begin_t, body, end_t } = $<BeginBlock>2;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.preexe($<Token>1, begin_t, body, end_t)
                         );
                     }
@@ -363,7 +364,7 @@
 
      begin_block: tLCURLY top_compstmt tRCURLY
                     {
-                        $$ = Value::BeginBlock(
+                        $$ = Value::new_begin_block(
                             BeginBlock {
                                 begin_t: $<Token>1,
                                 body: $<MaybeNode>2,
@@ -387,7 +388,7 @@
                         let else_ = Some(( $<Token>3, $<MaybeNode>4 ));
                         let ensure = $<OptEnsure>5.map(|ensure| (ensure.ensure_t, ensure.body));
 
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.begin_body(
                                 compound_stmt,
                                 rescue_bodies,
@@ -404,7 +405,7 @@
                         let rescue_bodies = $<NodeList>2;
                         let ensure = $<OptEnsure>3.map(|ensure| (ensure.ensure_t, ensure.body));
 
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.begin_body(
                                 compound_stmt,
                                 rescue_bodies,
@@ -418,7 +419,7 @@
         compstmt: stmts opt_terms
                     {
                         // TODO: run void_stmts
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.compstmt($<NodeList>1)
                         );
                     }
@@ -426,21 +427,21 @@
 
            stmts: none
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 | stmt_or_begin
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | stmts terms stmt_or_begin
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | error stmt
                     {
-                        $$ = Value::NodeList( vec![ $<Node>2 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>2 ] );
                     }
                 ;
 
@@ -454,24 +455,24 @@
                     }
                   begin_block
                     {
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                     }
                 ;
 
             stmt: kALIAS fitem
                     {
                         self.yylexer.lex_state.set(EXPR_FNAME|EXPR_FITEM);
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   fitem
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.alias($<Token>1, $<Node>2, $<Node>4)
                         );
                     }
                 | kALIAS tGVAR tGVAR
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.alias(
                                 $<Token>1,
                                 self.builder.gvar($<Token>2),
@@ -481,7 +482,7 @@
                     }
                 | kALIAS tGVAR tBACK_REF
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.alias(
                                 $<Token>1,
                                 self.builder.gvar($<Token>2),
@@ -495,7 +496,7 @@
                     }
                 | kUNDEF undef_list
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.undef_method(
                                 $<Token>1,
                                 $<NodeList>2
@@ -504,7 +505,7 @@
                     }
                 | stmt kIF_MOD expr_value
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.condition_mod(
                                 Some($<Node>1),
                                 None,
@@ -515,7 +516,7 @@
                     }
                 | stmt kUNLESS_MOD expr_value
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.condition_mod(
                                 None,
                                 Some($<Node>1),
@@ -526,7 +527,7 @@
                     }
                 | stmt kWHILE_MOD expr_value
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.loop_mod(
                                 LoopType::While,
                                 $<Node>1,
@@ -537,7 +538,7 @@
                     }
                 | stmt kUNTIL_MOD expr_value
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.loop_mod(
                                 LoopType::Until,
                                 $<Node>1,
@@ -557,7 +558,7 @@
                             Some($<Node>3)
                         );
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin_body(
                                 Some($<Node>1),
                                 vec![rescue_body],
@@ -572,7 +573,7 @@
                             self.warn(&@1, DiagnosticMessage::EndInMethod);
                         }
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.postexe(
                                 $<Token>1,
                                 $<Token>2,
@@ -590,7 +591,7 @@
                         let command_call = $<Node>3;
                         self.value_expr(&command_call)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.multi_assign(
                                 $<Node>1,
                                 $<Token>2,
@@ -607,7 +608,7 @@
                         );
                         self.value_expr(&mrhs)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assign(
                                 $<Node>1,
                                 $<Token>2,
@@ -636,7 +637,7 @@
                             None
                         ).expect("expected begin_body to return Some (compound_stmt was given)");
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.multi_assign(
                                 $<Node>1,
                                 $<Token>2,
@@ -646,7 +647,7 @@
                     }
                 | mlhs tEQL mrhs_arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.multi_assign(
                                 $<Node>1,
                                 $<Token>2,
@@ -662,7 +663,7 @@
 
     command_asgn: lhs tEQL command_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assign(
                                 $<Node>1,
                                 $<Token>2,
@@ -672,7 +673,7 @@
                     }
                 | var_lhs tOP_ASGN command_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 $<Node>1,
                                 $<Token>2,
@@ -682,7 +683,7 @@
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket tOP_ASGN command_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.index(
                                     $<Node>1,
@@ -697,7 +698,7 @@
                     }
                 | primary_value call_op tIDENTIFIER tOP_ASGN command_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
                                     Some($<Node>1),
@@ -714,7 +715,7 @@
                     }
                 | primary_value call_op tCONSTANT tOP_ASGN command_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
                                     Some($<Node>1),
@@ -738,7 +739,7 @@
                                 $<Token>3
                             )
                         );
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 const_,
                                 $<Token>4,
@@ -748,7 +749,7 @@
                     }
                 | primary_value tCOLON2 tIDENTIFIER tOP_ASGN command_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
                                     Some($<Node>1),
@@ -765,7 +766,7 @@
                     }
                 | backref tOP_ASGN command_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 $<Node>1,
                                 $<Token>2,
@@ -779,7 +780,7 @@
                     {
                         let command_call = $<Node>1;
                         self.value_expr(&command_call)?;
-                        $$ = Value::Node(command_call);
+                        $$ = Value::new_node(command_call);
                     }
                 | command_call kRESCUE_MOD stmt
                     {
@@ -795,7 +796,7 @@
                             Some($<Node>3)
                         );
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin_body(
                                 Some(command_call),
                                 vec![ rescue_body ],
@@ -816,7 +817,7 @@
                     }
                 | expr kAND expr
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.logical_op(
                                 LogicalOp::And,
                                 $<Node>1,
@@ -827,7 +828,7 @@
                     }
                 | expr kOR expr
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.logical_op(
                                 LogicalOp::Or,
                                 $<Node>1,
@@ -838,7 +839,7 @@
                     }
                 | kNOT opt_nl expr
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.not_op(
                                 $<Token>1,
                                 None,
@@ -849,7 +850,7 @@
                     }
                 | tBANG command_call
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.not_op(
                                 $<Token>1,
                                 None,
@@ -870,7 +871,7 @@
                         self.yylexer.command_start = true;
                         self.pattern_variables.push();
 
-                        $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
+                        $<Bool>$ = Value::new_bool(self.yylexer.in_kwarg);
                         self.yylexer.in_kwarg = true;
                     }
                   p_expr
@@ -878,7 +879,7 @@
                         self.pattern_variables.pop();
                         self.yylexer.in_kwarg = $<Bool>3;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.in_match(
                                 $<Node>1,
                                 $<Token>2,
@@ -907,7 +908,7 @@
                     {
                         self.context.push_def();
 
-                        $$ = Value::DefnHead(
+                        $$ = Value::new_defn_head(
                             DefnHead {
                                 def_t: $<Token>1,
                                 name_t: $<Token>2
@@ -919,14 +920,14 @@
        defs_head: k_def singleton dot_or_colon
                     {
                         self.yylexer.lex_state.set(EXPR_FNAME);
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   def_name
                     {
                         self.yylexer.lex_state.set(EXPR_ENDFN|EXPR_LABEL);
                         self.context.push_defs();
 
-                        $$ = Value::DefsHead(
+                        $$ = Value::new_defs_head(
                             DefsHead {
                                 def_t: $<Token>1,
                                 definee: $<Node>2,
@@ -941,19 +942,19 @@
                     {
                         let expr = $<Node>1;
                         self.value_expr(&expr)?;
-                        $$ = Value::Node(expr);
+                        $$ = Value::new_node(expr);
                     }
                 ;
 
    expr_value_do:   {
                         self.yylexer.cond.push(true);
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   expr_value do
                     {
                         self.yylexer.cond.pop();
 
-                        $$ = Value::ExprValueDo(
+                        $$ = Value::new_expr_value_do(
                             ExprValueDo {
                                 value: $<Node>2,
                                 do_t: $<Token>3
@@ -979,7 +980,7 @@
                     }
                 | block_call call_op2 operation2 command_args
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
@@ -995,13 +996,13 @@
  cmd_brace_block: tLBRACE_ARG
                     {
                         self.context.push_block();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   brace_body tRCURLY
                     {
                         self.context.pop();
                         let BraceBody { args_type, body } = $<BraceBody>3;
-                        $$ = Value::CmdBraceBlock(
+                        $$ = Value::new_cmd_brace_block(
                             CmdBraceBlock {
                                 begin_t: $<Token>1,
                                 args_type,
@@ -1020,7 +1021,7 @@
 
          command: fcall command_args       %prec tLOWEST
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 None,
                                 None,
@@ -1043,7 +1044,7 @@
                         );
                         let CmdBraceBlock { begin_t, args_type, body, end_t } = $<CmdBraceBlock>3;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
@@ -1055,7 +1056,7 @@
                     }
                 | primary_value call_op operation2 command_args %prec tLOWEST
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
@@ -1078,7 +1079,7 @@
                         );
                         let CmdBraceBlock { begin_t, args_type, body, end_t } = $<CmdBraceBlock>5;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
@@ -1090,7 +1091,7 @@
                     }
                 | primary_value tCOLON2 operation2 command_args %prec tLOWEST
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
@@ -1113,7 +1114,7 @@
                         );
                         let CmdBraceBlock { begin_t, args_type, body, end_t } = $<CmdBraceBlock>5;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
@@ -1125,7 +1126,7 @@
                     }
                 | kSUPER command_args
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Super,
                                 $<Token>1,
@@ -1137,7 +1138,7 @@
                     }
                 | kYIELD command_args
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Yield,
                                 $<Token>1,
@@ -1149,7 +1150,7 @@
                     }
                 | k_return call_args
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Return,
                                 $<Token>1,
@@ -1161,7 +1162,7 @@
                     }
                 | kBREAK call_args
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Break,
                                 $<Token>1,
@@ -1173,7 +1174,7 @@
                     }
                 | kNEXT call_args
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Next,
                                 $<Token>1,
@@ -1187,7 +1188,7 @@
 
             mlhs: mlhs_basic
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.multi_lhs(
                                 None,
                                 $<NodeList>1,
@@ -1197,7 +1198,7 @@
                     }
                 | tLPAREN mlhs_inner rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
                                 Some($<Node>2),
@@ -1209,7 +1210,7 @@
 
       mlhs_inner: mlhs_basic
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.multi_lhs(
                                 None,
                                 $<NodeList>1,
@@ -1220,11 +1221,11 @@
                 | tLPAREN mlhs_inner rparen
                     {
                         let mlhs_items: Vec<Node> = match $<Node>2 {
-                            Node::Mlhs(mlhs) => (*mlhs).items,
+                            Node::Mlhs(mlhs) => mlhs.items,
                             other => unreachable!("unsupported mlhs item {:?}", other)
                         };
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.multi_lhs(
                                 Some($<Token>1),
                                 mlhs_items,
@@ -1242,13 +1243,13 @@
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>2 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | mlhs_head tSTAR mlhs_node
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( self.builder.splat($<Token>2, Some($<Node>3)) );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | mlhs_head tSTAR mlhs_node tCOMMA mlhs_post
                     {
@@ -1257,13 +1258,13 @@
                             vec![ self.builder.splat($<Token>2, Some($<Node>3)) ],
                             $<NodeList>5
                         ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | mlhs_head tSTAR
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( self.builder.splat($<Token>2, None) );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | mlhs_head tSTAR tCOMMA mlhs_post
                     {
@@ -1272,11 +1273,11 @@
                             vec![ self.builder.splat($<Token>2, None) ],
                             $<NodeList>4
                         ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | tSTAR mlhs_node
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.splat($<Token>1, Some($<Node>2))
                             ]
@@ -1288,11 +1289,11 @@
                             vec![ self.builder.splat($<Token>1, Some($<Node>2)) ],
                             $<NodeList>4
                         ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | tSTAR
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.splat($<Token>1, None)
                             ]
@@ -1304,7 +1305,7 @@
                             vec![ self.builder.splat($<Token>1, None) ],
                             $<NodeList>3
                         ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
@@ -1314,7 +1315,7 @@
                     }
                 | tLPAREN mlhs_inner rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
                                 Some($<Node>2),
@@ -1326,43 +1327,43 @@
 
        mlhs_head: mlhs_item tCOMMA
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ]);
+                        $$ = Value::new_node_list( vec![ $<Node>1 ]);
                     }
                 | mlhs_head mlhs_item tCOMMA
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>2 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
        mlhs_post: mlhs_item
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | mlhs_post tCOMMA mlhs_item
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
        mlhs_node: user_variable
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable($<Node>1)?
                         );
                     }
                 | keyword_variable
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable($<Node>1)?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.index_asgn(
                                 $<Node>1,
                                 $<Token>2,
@@ -1378,7 +1379,7 @@
                             return self.yyerror(&@2, DiagnosticMessage::CsendInsideMasgn);
                         }
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.attr_asgn(
                                 $<Node>1,
                                 op_t,
@@ -1388,7 +1389,7 @@
                     }
                 | primary_value tCOLON2 tIDENTIFIER
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.attr_asgn(
                                 $<Node>1,
                                 $<Token>2,
@@ -1403,7 +1404,7 @@
                             return self.yyerror(&@2, DiagnosticMessage::CsendInsideMasgn);
                         }
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.attr_asgn(
                                 $<Node>1,
                                 op_t,
@@ -1413,7 +1414,7 @@
                     }
                 | primary_value tCOLON2 tCONSTANT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable(
                                 self.builder.const_fetch(
                                     $<Node>1,
@@ -1425,7 +1426,7 @@
                     }
                 | tCOLON3 tCONSTANT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable(
                                 self.builder.const_global(
                                     $<Token>1,
@@ -1436,7 +1437,7 @@
                     }
                 | backref
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable(
                                 $<Node>1
                             )?
@@ -1446,19 +1447,19 @@
 
              lhs: user_variable
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable($<Node>1)?
                         );
                     }
                 | keyword_variable
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable($<Node>1)?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.index_asgn(
                                 $<Node>1,
                                 $<Token>2,
@@ -1469,7 +1470,7 @@
                     }
                 | primary_value call_op tIDENTIFIER
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.attr_asgn(
                                 $<Node>1,
                                 $<Token>2,
@@ -1479,7 +1480,7 @@
                     }
                 | primary_value tCOLON2 tIDENTIFIER
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.attr_asgn(
                                 $<Node>1,
                                 $<Token>2,
@@ -1489,7 +1490,7 @@
                     }
                 | primary_value call_op tCONSTANT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.attr_asgn(
                                 $<Node>1,
                                 $<Token>2,
@@ -1499,7 +1500,7 @@
                     }
                 | primary_value tCOLON2 tCONSTANT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable(
                                 self.builder.const_fetch(
                                     $<Node>1,
@@ -1511,7 +1512,7 @@
                     }
                 | tCOLON3 tCONSTANT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable(
                                 self.builder.const_global(
                                     $<Token>1,
@@ -1522,7 +1523,7 @@
                     }
                 | backref
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable(
                                 $<Node>1
                             )?
@@ -1542,19 +1543,19 @@
 
            cpath: tCOLON3 cname
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_global($<Token>1, $<Token>2)
                         );
                     }
                 | cname
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_($<Token>1)
                         );
                     }
                 | primary_value tCOLON2 cname
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_fetch(
                                 $<Node>1,
                                 $<Token>2,
@@ -1589,7 +1590,7 @@
 
            fitem: fname
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.symbol_internal($<Token>1)
                         );
                     }
@@ -1601,18 +1602,18 @@
 
       undef_list: fitem
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | undef_list tCOMMA
                     {
                         self.yylexer.lex_state.set(EXPR_FNAME|EXPR_FITEM);
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   fitem
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>4 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
@@ -1693,7 +1694,7 @@
 
              arg: lhs tEQL arg_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assign(
                                 $<Node>1,
                                 $<Token>2,
@@ -1703,7 +1704,7 @@
                     }
                 | var_lhs tOP_ASGN arg_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 $<Node>1,
                                 $<Token>2,
@@ -1713,7 +1714,7 @@
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket tOP_ASGN arg_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.index(
                                     $<Node>1,
@@ -1728,7 +1729,7 @@
                     }
                 | primary_value call_op tIDENTIFIER tOP_ASGN arg_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
                                     Some($<Node>1),
@@ -1745,7 +1746,7 @@
                     }
                 | primary_value call_op tCONSTANT tOP_ASGN arg_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
                                     Some($<Node>1),
@@ -1762,7 +1763,7 @@
                     }
                 | primary_value tCOLON2 tIDENTIFIER tOP_ASGN arg_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
                                     Some($<Node>1),
@@ -1786,7 +1787,7 @@
                                 $<Token>3
                             )
                         );
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 const_,
                                 $<Token>4,
@@ -1802,7 +1803,7 @@
                                 $<Token>2
                             )
                         );
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 const_,
                                 $<Token>3,
@@ -1812,7 +1813,7 @@
                     }
                 | backref tOP_ASGN arg_rhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.op_assign(
                                 $<Node>1,
                                 $<Token>2,
@@ -1828,7 +1829,7 @@
                         let right = $<Node>3;
                         self.value_expr(&right)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_inclusive(
                                 Some(left),
                                 $<Token>2,
@@ -1844,7 +1845,7 @@
                         let right = $<Node>3;
                         self.value_expr(&right)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_exclusive(
                                 Some(left),
                                 $<Token>2,
@@ -1857,7 +1858,7 @@
                         let left = $<Node>1;
                         self.value_expr(&left)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_inclusive(
                                 Some(left),
                                 $<Token>2,
@@ -1870,7 +1871,7 @@
                         let left = $<Node>1;
                         self.value_expr(&left)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_exclusive(
                                 Some(left),
                                 $<Token>2,
@@ -1883,7 +1884,7 @@
                         let right = $<Node>2;
                         self.value_expr(&right)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_inclusive(
                                 None,
                                 $<Token>1,
@@ -1896,7 +1897,7 @@
                         let right = $<Node>2;
                         self.value_expr(&right)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_exclusive(
                                 None,
                                 $<Token>1,
@@ -1906,43 +1907,43 @@
                     }
                 | arg tPLUS arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tMINUS arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tSTAR2 arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tDIVIDE arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tPERCENT arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tPOW arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | tUMINUS_NUM simple_numeric tPOW arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.unary_op(
                                 $<Token>1,
                                 self.builder.binary_op(
@@ -1955,7 +1956,7 @@
                     }
                 | tUPLUS arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.unary_op(
                                 $<Token>1,
                                 $<Node>2
@@ -1964,7 +1965,7 @@
                     }
                 | tUMINUS arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.unary_op(
                                 $<Token>1,
                                 $<Node>2
@@ -1973,25 +1974,25 @@
                     }
                 | arg tPIPE arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tCARET arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tAMPER2 arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tCMP arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
@@ -2001,31 +2002,31 @@
                     }
                 | arg tEQ arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tEQQ arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tNEQ arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tMATCH arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.match_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tNMATCH arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op(
                                 $<Node>1,
                                 $<Token>2,
@@ -2035,7 +2036,7 @@
                     }
                 | tBANG arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.not_op(
                                 $<Token>1,
                                 None,
@@ -2046,7 +2047,7 @@
                     }
                 | tTILDE arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.unary_op(
                                 $<Token>1,
                                 $<Node>2
@@ -2055,19 +2056,19 @@
                     }
                 | arg tLSHFT arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tRSHFT arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tANDOP arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.logical_op(
                                 LogicalOp::And,
                                 $<Node>1,
@@ -2078,7 +2079,7 @@
                     }
                 | arg tOROP arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.logical_op(
                                 LogicalOp::Or,
                                 $<Node>1,
@@ -2089,7 +2090,7 @@
                     }
                 | kDEFINED opt_nl arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Defined,
                                 $<Token>1,
@@ -2104,7 +2105,7 @@
                         let expr = $<Node>1;
                         self.value_expr(&expr)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.ternary(
                                 expr,
                                 $<Token>2,
@@ -2119,7 +2120,7 @@
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
                         self.validate_endless_method_name(&name_t)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.def_endless_method(
                                 def_t,
                                 name_t,
@@ -2156,7 +2157,7 @@
                             None
                         );
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.def_endless_method(
                                 def_t,
                                 name_t,
@@ -2177,7 +2178,7 @@
                         let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
                         self.validate_endless_method_name(&name_t)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.def_endless_singleton(
                                 def_t,
                                 definee,
@@ -2216,7 +2217,7 @@
                             None
                         );
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.def_endless_singleton(
                                 def_t,
                                 definee,
@@ -2260,7 +2261,7 @@
 
         rel_expr: arg relop arg   %prec tGT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op(
                                 $<Node>1,
                                 $<Token>2,
@@ -2272,7 +2273,7 @@
                     {
                         let op_t = $<Token>2;
                         self.warn(&@2, DiagnosticMessage::ComparisonAfterComparison(clone_value(&op_t)));
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.binary_op(
                                 $<Node>1,
                                 op_t,
@@ -2286,13 +2287,13 @@
                     {
                         let arg = $<Node>1;
                         self.value_expr(&arg)?;
-                        $$ = Value::Node(arg);
+                        $$ = Value::new_node(arg);
                     }
                 ;
 
        aref_args: none
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 | args trailer
                     {
@@ -2304,11 +2305,11 @@
                         nodes.push(
                             self.builder.associate(None, $<NodeList>3, None)
                         );
-                        $$ = Value::NodeList( nodes );
+                        $$ = Value::new_node_list( nodes );
                     }
                 | assocs trailer
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.associate(None, $<NodeList>1, None)
                             ]
@@ -2320,7 +2321,7 @@
                     {
                         let arg = $<Node>1;
                         self.value_expr(&arg)?;
-                        $$ = Value::Node(arg);
+                        $$ = Value::new_node(arg);
                     }
                 | arg kRESCUE_MOD arg
                     {
@@ -2336,7 +2337,7 @@
                             Some($<Node>3)
                         );
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin_body(
                                 Some(arg),
                                 vec![ rescue_body ],
@@ -2349,7 +2350,7 @@
 
       paren_args: tLPAREN2 opt_call_args rparen
                     {
-                        $$ = Value::ParenArgs(
+                        $$ = Value::new_paren_args(
                             ParenArgs {
                                 begin_t: $<Token>1,
                                 args: $<NodeList>2,
@@ -2367,7 +2368,7 @@
                             $<NodeList>2,
                             vec![ self.builder.forwarded_args($<Token>4) ]
                         ].concat();
-                        $$ = Value::ParenArgs(
+                        $$ = Value::new_paren_args(
                             ParenArgs {
                                 begin_t: $<Token>1,
                                 args,
@@ -2381,7 +2382,7 @@
                             return self.yyerror(&@2, DiagnosticMessage::UnexpectedToken("tBDOT3".to_owned()));
                         }
 
-                        $$ = Value::ParenArgs(
+                        $$ = Value::new_paren_args(
                             ParenArgs {
                                 begin_t: $<Token>1,
                                 args: vec![ self.builder.forwarded_args($<Token>2) ],
@@ -2393,7 +2394,7 @@
 
   opt_paren_args: none
                     {
-                        $$ = Value::OptParenArgs(
+                        $$ = Value::new_opt_paren_args(
                             OptParenArgs {
                                 begin_t: None,
                                 args: vec![],
@@ -2404,7 +2405,7 @@
                 | paren_args
                     {
                         let ParenArgs { begin_t, args, end_t } = $<ParenArgs>1;
-                        $$ = Value::OptParenArgs(
+                        $$ = Value::new_opt_paren_args(
                             OptParenArgs {
                                 begin_t: Some(begin_t),
                                 args,
@@ -2416,7 +2417,7 @@
 
    opt_call_args: none
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 | call_args
                     {
@@ -2430,11 +2431,11 @@
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( self.builder.associate(None, $<NodeList>3, None) );
-                        $$ = Value::NodeList( nodes );
+                        $$ = Value::new_node_list( nodes );
                     }
                 | assocs tCOMMA
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.associate(None, $<NodeList>1, None)
                             ]
@@ -2446,12 +2447,12 @@
                     {
                         let command = $<Node>1;
                         self.value_expr(&command)?;
-                        $$ = Value::NodeList( vec![ command ] );
+                        $$ = Value::new_node_list( vec![ command ] );
                     }
                 | args opt_block_arg
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | assocs opt_block_arg
                     {
@@ -2459,7 +2460,7 @@
                             vec![ self.builder.associate(None, $<NodeList>1, None) ],
                             $<NodeList>2
                         ].concat();
-                        $$ = Value::NodeList( nodes );
+                        $$ = Value::new_node_list( nodes );
                     }
                 | args tCOMMA assocs opt_block_arg
                     {
@@ -2468,11 +2469,11 @@
                             vec![ self.builder.associate(None, $<NodeList>3, None) ],
                             $<NodeList>4
                         ].concat();
-                        $$ = Value::NodeList( nodes );
+                        $$ = Value::new_node_list( nodes );
                     }
                 | block_arg
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 ;
 
@@ -2490,7 +2491,7 @@
                         if lookahead { self.yylexer.cmdarg.pop() }
                         self.yylexer.cmdarg.push(true);
                         if lookahead { self.yylexer.cmdarg.push(false) }
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   call_args
                     {
@@ -2506,7 +2507,7 @@
 
        block_arg: tAMPER arg_value
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.block_pass(
                                 $<Token>1,
                                 $<Node>2
@@ -2517,21 +2518,21 @@
 
    opt_block_arg: tCOMMA block_arg
                     {
-                        $$ = Value::NodeList( vec![ $<Node>2 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>2 ] );
                     }
                 | none
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 ;
 
             args: arg_value
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | tSTAR arg_value
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.splat($<Token>1, Some($<Node>2))
                             ]
@@ -2541,19 +2542,19 @@
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | args tCOMMA tSTAR arg_value
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( self.builder.splat($<Token>3, Some($<Node>4)) );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
         mrhs_arg: mrhs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.array(None, $<NodeList>1, None)
                         );
                     }
@@ -2567,7 +2568,7 @@
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | args tCOMMA tSTAR arg_value
                     {
@@ -2575,11 +2576,11 @@
                         nodes.push(
                             self.builder.splat($<Token>3, Some($<Node>4))
                         );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | tSTAR arg_value
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.splat($<Token>1, Some($<Node>2))
                             ]
@@ -2629,7 +2630,7 @@
                     }
                 | tFID
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 None,
                                 None,
@@ -2643,20 +2644,20 @@
                 | k_begin
                     {
                         self.yylexer.cmdarg.push(false);
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   bodystmt
                   k_end
                     {
                         self.yylexer.cmdarg.pop();
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin_keyword($<Token>1, $<MaybeNode>3, $<Token>4)
                         );
                     }
-                | tLPAREN_ARG { self.yylexer.lex_state.set(EXPR_ENDARG); $<None>$ = Value::None; } rparen
+                | tLPAREN_ARG { self.yylexer.lex_state.set(EXPR_ENDARG); $<None>$ = Value::new_none(); } rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
                                 None,
@@ -2664,9 +2665,9 @@
                             )
                         );
                     }
-                | tLPAREN_ARG stmt { self.yylexer.lex_state.set(EXPR_ENDARG); $<None>$ = Value::None; } rparen
+                | tLPAREN_ARG stmt { self.yylexer.lex_state.set(EXPR_ENDARG); $<None>$ = Value::new_none(); } rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
                                 Some($<Node>2),
@@ -2676,7 +2677,7 @@
                     }
                 | tLPAREN compstmt tRPAREN
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
                                 $<MaybeNode>2,
@@ -2686,7 +2687,7 @@
                     }
                 | primary_value tCOLON2 tCONSTANT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_fetch(
                                 $<Node>1,
                                 $<Token>2,
@@ -2696,13 +2697,13 @@
                     }
                 | tCOLON3 tCONSTANT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_global($<Token>1, $<Token>2)
                         );
                     }
                 | tLBRACK aref_args tRBRACK
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.array(
                                 Some($<Token>1),
                                 $<NodeList>2,
@@ -2712,7 +2713,7 @@
                     }
                 | tLBRACE assoc_list tRCURLY
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.associate(
                                 Some($<Token>1),
                                 $<NodeList>2,
@@ -2722,7 +2723,7 @@
                     }
                 | k_return
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Return,
                                 $<Token>1,
@@ -2734,7 +2735,7 @@
                     }
                 | kYIELD tLPAREN2 call_args rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Yield,
                                 $<Token>1,
@@ -2746,7 +2747,7 @@
                     }
                 | kYIELD tLPAREN2 rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Yield,
                                 $<Token>1,
@@ -2758,7 +2759,7 @@
                     }
                 | kYIELD
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Yield,
                                 $<Token>1,
@@ -2770,7 +2771,7 @@
                     }
                 | kDEFINED opt_nl tLPAREN2 expr rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Defined,
                                 $<Token>1,
@@ -2782,7 +2783,7 @@
                     }
                 | kNOT tLPAREN2 expr rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.not_op(
                                 $<Token>1,
                                 Some($<Token>2),
@@ -2793,7 +2794,7 @@
                     }
                 | kNOT tLPAREN2 rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.not_op(
                                 $<Token>1,
                                 Some($<Token>2),
@@ -2814,7 +2815,7 @@
                         );
                         let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>2;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
@@ -2831,7 +2832,7 @@
                 | method_call brace_block
                     {
                         let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>2;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.block(
                                 $<Node>1,
                                 begin_t,
@@ -2852,7 +2853,7 @@
                     {
                         let IfTail { keyword_t, body: else_body } = $<IfTail>5;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.condition(
                                 $<Token>1,
                                 $<Node>2,
@@ -2871,7 +2872,7 @@
                     {
                         let (else_t, body) = $<OptElse>5.map(|else_| (Some(else_.else_t), else_.body)).unwrap_or_else(|| (None, None));
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.condition(
                                 $<Token>1,
                                 $<Node>2,
@@ -2888,7 +2889,7 @@
                   k_end
                     {
                         let ExprValueDo { value, do_t } = $<ExprValueDo>2;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.loop_(
                                 LoopType::While,
                                 $<Token>1,
@@ -2904,7 +2905,7 @@
                   k_end
                     {
                         let ExprValueDo { value, do_t } = $<ExprValueDo>2;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.loop_(
                                 LoopType::Until,
                                 $<Token>1,
@@ -2919,7 +2920,7 @@
                     {
                         // TODO: there's a warning that wq/parser doesn't trigger,
                         // search for `p->case_labels`
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   case_body
                   k_end
@@ -2927,7 +2928,7 @@
                         let CaseBody { when_bodies, opt_else } = $<CaseBody>5;
                         let (else_t, else_body) = opt_else.map(|else_| (Some(else_.else_t), else_.body)).unwrap_or_else(|| (None, None));
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.case(
                                 $<Token>1,
                                 Some($<Node>2),
@@ -2942,7 +2943,7 @@
                     {
                         // TODO: there's a warning that wq/parser doesn't trigger,
                         // search for `p->case_labels`
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   case_body
                   k_end
@@ -2950,7 +2951,7 @@
                         let CaseBody { when_bodies, opt_else } = $<CaseBody>4;
                         let (else_t, else_body) = opt_else.map(|else_| (Some(else_.else_t), else_.body)).unwrap_or_else(|| (None, None));
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.case(
                                 $<Token>1,
                                 None,
@@ -2968,7 +2969,7 @@
                         let PCaseBody { in_bodies, opt_else } = $<PCaseBody>4;
                         let (else_t, else_body) = opt_else.map(|else_| (Some(else_.else_t), else_.body)).unwrap_or_else(|| (None, None));
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.case_match(
                                 $<Token>1,
                                 $<Node>2,
@@ -2984,7 +2985,7 @@
                   k_end
                     {
                         let ExprValueDo { value, do_t } = $<ExprValueDo>4;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.for_(
                                 $<Token>1,
                                 $<Node>2,
@@ -3002,7 +3003,7 @@
                         self.yylexer.cmdarg.push(false);
                         self.yylexer.cond.push(false);
                         self.context.push_class();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   bodystmt
                   k_end
@@ -3013,7 +3014,7 @@
 
                         let Superclass { lt_t, value } = $<Superclass>3;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.def_class(
                                 $<Token>1,
                                 $<Node>2,
@@ -3035,13 +3036,13 @@
                         self.yylexer.cmdarg.push(false);
                         self.yylexer.cond.push(false);
                         self.context.push_sclass();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   term
                   bodystmt
                   k_end
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.def_sclass(
                                 $<Token>1,
                                 $<Token>2,
@@ -3061,7 +3062,7 @@
                         self.static_env.extend_static();
                         self.yylexer.cmdarg.push(false);
                         self.context.push_module();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   bodystmt
                   k_end
@@ -3070,7 +3071,7 @@
                             return self.yyerror(&@1, DiagnosticMessage::ModuleDefinitionInMethodBody);
                         }
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.def_module(
                                 $<Token>1,
                                 $<Node>2,
@@ -3090,7 +3091,7 @@
                     {
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.def_method(
                                 def_t,
                                 name_t,
@@ -3113,7 +3114,7 @@
                     {
                         let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.def_singleton(
                                 def_t,
                                 definee,
@@ -3133,7 +3134,7 @@
                     }
                 | kBREAK
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Break,
                                 $<Token>1,
@@ -3145,7 +3146,7 @@
                     }
                 | kNEXT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Next,
                                 $<Token>1,
@@ -3157,7 +3158,7 @@
                     }
                 | kREDO
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Redo,
                                 $<Token>1,
@@ -3169,7 +3170,7 @@
                     }
                 | kRETRY
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Retry,
                                 $<Token>1,
@@ -3185,7 +3186,7 @@
                     {
                         let primary = $<Node>1;
                         self.value_expr(&primary)?;
-                        $$ = Value::Node(primary);
+                        $$ = Value::new_node(primary);
                     }
                 ;
 
@@ -3335,7 +3336,7 @@
          if_tail: opt_else
                     {
                         let (keyword_t, body) = $<OptElse>1.map(|else_| (Some(else_.else_t), else_.body)).unwrap_or_else(|| (None, None));
-                        $$ = Value::IfTail(IfTail { keyword_t, body });
+                        $$ = Value::new_if_tail(IfTail { keyword_t, body });
                     }
                 | k_elsif expr_value then
                   compstmt
@@ -3345,7 +3346,7 @@
 
                         let elsif_t = $<Token>1;
 
-                        $$ = Value::IfTail(
+                        $$ = Value::new_if_tail(
                             IfTail {
                                 keyword_t: Some(elsif_t.clone()),
                                 body: Some(
@@ -3366,13 +3367,13 @@
 
         opt_else: none
                     {
-                        $$ = Value::OptElse(None);
+                        $$ = Value::new_opt_else(None);
                     }
                 | k_else compstmt
                     {
                         let else_t = $<Token>1;
                         let body   = $<MaybeNode>2;
-                        $$ = Value::OptElse(Some(Else { else_t, body }));
+                        $$ = Value::new_opt_else(Some(Else { else_t, body }));
                     }
                 ;
 
@@ -3388,13 +3389,13 @@
 
           f_marg: f_norm_arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.arg($<Token>1)?
                         );
                     }
                 | tLPAREN f_margs rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.multi_lhs(
                                 Some($<Token>1),
                                 $<NodeList>2,
@@ -3406,13 +3407,13 @@
 
      f_marg_list: f_marg
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | f_marg_list tCOMMA f_marg
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
@@ -3424,33 +3425,33 @@
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_marg_list tCOMMA f_rest_marg tCOMMA f_marg_list
                     {
                         let nodes = [ $<NodeList>1, vec![ $<Node>3 ], $<NodeList>5 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_rest_marg
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | f_rest_marg tCOMMA f_marg_list
                     {
                         let nodes = [ vec![ $<Node>1 ], $<NodeList>3 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
      f_rest_marg: tSTAR f_norm_arg
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.restarg($<Token>1, Some($<Token>2))?
                         );
                     }
                 | tSTAR
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.restarg($<Token>1, None)?
                         );
                     }
@@ -3469,21 +3470,21 @@
  block_args_tail: f_block_kwarg tCOMMA f_kwrest opt_f_block_arg
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_block_kwarg opt_f_block_arg
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_any_kwrest opt_f_block_arg
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_block_arg
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 ;
 
@@ -3494,7 +3495,7 @@ opt_block_args_tail:
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 ;
 
@@ -3507,27 +3508,27 @@ opt_block_args_tail:
      block_param: f_arg tCOMMA f_block_optarg tCOMMA f_rest_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg tCOMMA f_block_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>7, $<NodeList>8 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg tCOMMA f_block_optarg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg tCOMMA f_block_optarg tCOMMA f_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg tCOMMA f_rest_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg excessed_comma
                     {
@@ -3536,7 +3537,7 @@ opt_block_args_tail:
                 | f_arg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg opt_block_args_tail
                     {
@@ -3550,37 +3551,37 @@ opt_block_args_tail:
                             nodes = [ f_arg, opt_block_args_tail ].concat();
                         }
 
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_block_optarg tCOMMA f_rest_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_block_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_block_optarg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_block_optarg tCOMMA f_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_rest_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | block_args_tail
                     {
@@ -3590,7 +3591,7 @@ opt_block_args_tail:
 
  opt_block_param: none
                     {
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.args(None, vec![], None)
                         );
                     }
@@ -3606,7 +3607,7 @@ opt_block_args_tail:
                         self.max_numparam_stack.set_has_ordinary_params();
                         self.current_arg_stack.set(None);
 
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.args(
                                 Some($<Token>1),
                                 $<NodeList>2,
@@ -3619,7 +3620,7 @@ opt_block_args_tail:
                         self.max_numparam_stack.set_has_ordinary_params();
                         self.current_arg_stack.set(None);
 
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.args(
                                 Some($<Token>1),
                                 [ $<NodeList>2, $<NodeList>3 ].concat(),
@@ -3632,7 +3633,7 @@ opt_block_args_tail:
 
      opt_bv_decl: opt_nl
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 | opt_nl tSEMI bv_decls opt_nl
                     {
@@ -3642,13 +3643,13 @@ opt_block_args_tail:
 
         bv_decls: bvar
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | bv_decls tCOMMA bvar
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
@@ -3656,13 +3657,13 @@ opt_block_args_tail:
                     {
                         let ident_t = $<Token>1;
                         self.static_env.declare(&clone_value(&ident_t));
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.shadowarg(ident_t)?
                         );
                     }
                 | f_bad_arg
                     {
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                     }
                 ;
 
@@ -3671,14 +3672,14 @@ opt_block_args_tail:
                         self.static_env.extend_dynamic();
                         self.max_numparam_stack.push();
                         self.context.push_lambda();
-                        $<Num>$ = Value::Num(self.yylexer.lpar_beg);
+                        $<Num>$ = Value::new_num(self.yylexer.lpar_beg);
                         self.yylexer.lpar_beg = self.yylexer.paren_nest;
                     }
                   f_larglist
                     {
                         self.context.pop();
                         self.yylexer.cmdarg.push(false);
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   lambda_body
                     {
@@ -3696,7 +3697,7 @@ opt_block_args_tail:
                         self.static_env.unextend();
                         self.yylexer.cmdarg.pop();
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.block(
                                 lambda_call,
                                 begin_t,
@@ -3711,7 +3712,7 @@ opt_block_args_tail:
       f_larglist: tLPAREN2 f_args opt_bv_decl tRPAREN
                     {
                         self.max_numparam_stack.set_has_ordinary_params();
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.args(
                                 Some($<Token>1),
                                 vec![ $<NodeList>2, $<NodeList>3 ].concat(),
@@ -3725,7 +3726,7 @@ opt_block_args_tail:
                         if !args.is_empty() {
                             self.max_numparam_stack.set_has_ordinary_params();
                         }
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.args(None, args, None)
                         );
                     }
@@ -3734,12 +3735,12 @@ opt_block_args_tail:
      lambda_body: tLAMBEG
                     {
                         self.context.push_lambda();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   compstmt tRCURLY
                     {
                         self.context.pop();
-                        $$ = Value::LambdaBody(
+                        $$ = Value::new_lambda_body(
                             LambdaBody {
                                 begin_t: $<Token>1,
                                 body: $<MaybeNode>3,
@@ -3750,12 +3751,12 @@ opt_block_args_tail:
                 | kDO_LAMBDA
                     {
                         self.context.push_lambda();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   bodystmt k_end
                     {
                         self.context.pop();
-                        $$ = Value::LambdaBody(
+                        $$ = Value::new_lambda_body(
                             LambdaBody {
                                 begin_t: $<Token>1,
                                 body: $<MaybeNode>3,
@@ -3768,13 +3769,13 @@ opt_block_args_tail:
         do_block: k_do_block
                     {
                         self.context.push_block();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   do_body k_end
                     {
                         let DoBody { args_type, body } = $<DoBody>3;
                         self.context.pop();
-                        $$ = Value::DoBlock(
+                        $$ = Value::new_do_block(
                             DoBlock {
                                 begin_t: $<Token>1,
                                 args_type,
@@ -3788,7 +3789,7 @@ opt_block_args_tail:
       block_call: command do_block
                     {
                         let DoBlock { begin_t, args_type, body, end_t } = $<DoBlock>2;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.block(
                                 $<Node>1,
                                 begin_t,
@@ -3801,7 +3802,7 @@ opt_block_args_tail:
                 | block_call call_op2 operation2 opt_paren_args
                     {
                         let OptParenArgs { begin_t, args, end_t } = $<OptParenArgs>4;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
@@ -3825,7 +3826,7 @@ opt_block_args_tail:
                         );
 
                         let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>5;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
@@ -3847,7 +3848,7 @@ opt_block_args_tail:
                         );
 
                         let DoBlock { begin_t, args_type, body, end_t } = $<DoBlock>5;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.block(
                                 method_call,
                                 begin_t,
@@ -3863,7 +3864,7 @@ opt_block_args_tail:
                     {
                         let ParenArgs { begin_t, args, end_t } = $<ParenArgs>2;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 None,
                                 None,
@@ -3878,7 +3879,7 @@ opt_block_args_tail:
                     {
                         let OptParenArgs { begin_t, args, end_t } = $<OptParenArgs>4;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
@@ -3893,7 +3894,7 @@ opt_block_args_tail:
                     {
                         let ParenArgs { begin_t, args, end_t } = $<ParenArgs>4;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
@@ -3906,7 +3907,7 @@ opt_block_args_tail:
                     }
                 | primary_value tCOLON2 operation3
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
@@ -3921,7 +3922,7 @@ opt_block_args_tail:
                     {
                         let ParenArgs { begin_t, args, end_t } = $<ParenArgs>3;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
@@ -3936,7 +3937,7 @@ opt_block_args_tail:
                     {
                         let ParenArgs { begin_t, args, end_t } = $<ParenArgs>3;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.call_method(
                                 Some($<Node>1),
                                 Some($<Token>2),
@@ -3951,7 +3952,7 @@ opt_block_args_tail:
                     {
                         let ParenArgs { begin_t, args, end_t } = $<ParenArgs>2;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Super,
                                 $<Token>1,
@@ -3963,7 +3964,7 @@ opt_block_args_tail:
                     }
                 | kSUPER
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.keyword_cmd(
                                 KeywordCmd::Zsuper,
                                 $<Token>1,
@@ -3975,7 +3976,7 @@ opt_block_args_tail:
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.index(
                                 $<Node>1,
                                 $<Token>2,
@@ -3989,14 +3990,14 @@ opt_block_args_tail:
      brace_block: tLCURLY
                     {
                         self.context.push_block();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   brace_body tRCURLY
                     {
                         let BraceBody { args_type, body } = $<BraceBody>3;
                         self.context.pop();
 
-                        $$ = Value::BraceBlock(
+                        $$ = Value::new_brace_block(
                             BraceBlock {
                                 begin_t: $<Token>1,
                                 args_type,
@@ -4008,14 +4009,14 @@ opt_block_args_tail:
                 | k_do
                     {
                         self.context.push_block();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   do_body k_end
                     {
                         let DoBody { args_type, body } = $<DoBody>3;
                         self.context.pop();
 
-                        $$ = Value::BraceBlock(
+                        $$ = Value::new_brace_block(
                             BraceBlock {
                                 begin_t: $<Token>1,
                                 args_type,
@@ -4029,7 +4030,7 @@ opt_block_args_tail:
       brace_body:   {
                         self.static_env.extend_dynamic();
                         self.max_numparam_stack.push();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   opt_block_param compstmt
                     {
@@ -4042,7 +4043,7 @@ opt_block_args_tail:
                         self.max_numparam_stack.pop();
                         self.static_env.unextend();
 
-                        $$ = Value::BraceBody(
+                        $$ = Value::new_brace_body(
                             BraceBody {
                                 args_type,
                                 body: $<MaybeNode>3
@@ -4055,7 +4056,7 @@ opt_block_args_tail:
                         self.static_env.extend_dynamic();
                         self.max_numparam_stack.push();
                         self.yylexer.cmdarg.push(false);
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   opt_block_param bodystmt
                     {
@@ -4069,7 +4070,7 @@ opt_block_args_tail:
                         self.static_env.unextend();
                         self.yylexer.cmdarg.pop();
 
-                        $$ = Value::DoBody(
+                        $$ = Value::new_do_body(
                             DoBody { args_type, body: $<MaybeNode>3 }
                         );
                     }
@@ -4077,11 +4078,11 @@ opt_block_args_tail:
 
        case_args: arg_value
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | tSTAR arg_value
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.splat($<Token>1, Some($<Node>2))
                             ]
@@ -4091,13 +4092,13 @@ opt_block_args_tail:
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | case_args tCOMMA tSTAR arg_value
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( self.builder.splat($<Token>3, Some($<Node>4)) );
-                        $$ = Value::NodeList( nodes );
+                        $$ = Value::new_node_list( nodes );
                     }
                 ;
 
@@ -4108,18 +4109,18 @@ opt_block_args_tail:
                         let when = self.builder.when($<Token>1, $<NodeList>2, $<Token>3, $<MaybeNode>4);
                         let Cases { when_bodies, opt_else } = $<Cases>5;
                         let when_bodies = [ vec![when], when_bodies ].concat();
-                        $$ = Value::CaseBody(CaseBody { when_bodies, opt_else });
+                        $$ = Value::new_case_body(CaseBody { when_bodies, opt_else });
                     }
                 ;
 
            cases: opt_else
                     {
-                        $$ = Value::Cases(Cases { when_bodies: vec![], opt_else: $<OptElse>1 });
+                        $$ = Value::new_cases(Cases { when_bodies: vec![], opt_else: $<OptElse>1 });
                     }
                 | case_body
                     {
                         let CaseBody { when_bodies, .. } = $<CaseBody>1;
-                        $$ = Value::Cases(Cases { when_bodies, opt_else: None });
+                        $$ = Value::new_cases(Cases { when_bodies, opt_else: None });
                     }
                 ;
 
@@ -4130,13 +4131,13 @@ opt_block_args_tail:
                         self.pattern_variables.push();
                         self.pattern_hash_keys.push();
 
-                        $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
+                        $<Bool>$ = Value::new_bool(self.yylexer.in_kwarg);
                         self.yylexer.in_kwarg = true;
                     }
                   p_top_expr then
                     {
                         self.yylexer.in_kwarg = $<Bool>2;
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   compstmt
                   p_cases
@@ -4156,34 +4157,34 @@ opt_block_args_tail:
                             ],
                             in_bodies
                         ].concat();
-                        $$ = Value::PCaseBody(PCaseBody { in_bodies, opt_else  });
+                        $$ = Value::new_p_case_body(PCaseBody { in_bodies, opt_else  });
                     }
                 ;
 
          p_cases: opt_else
                     {
-                        $$ = Value::PCases(PCases { in_bodies: vec![], opt_else: $<OptElse>1 });
+                        $$ = Value::new_p_cases(PCases { in_bodies: vec![], opt_else: $<OptElse>1 });
                     }
                 | p_case_body
                     {
                         let PCaseBody { in_bodies, .. } = $<PCaseBody>1;
-                        $$ = Value::PCases(PCases { in_bodies, opt_else: None });
+                        $$ = Value::new_p_cases(PCases { in_bodies, opt_else: None });
                     }
                 ;
 
       p_top_expr: p_top_expr_body
                     {
-                        $$ = Value::PTopExpr(PTopExpr { pattern: $<Node>1, guard: None });
+                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<Node>1, guard: None });
                     }
                 | p_top_expr_body kIF_MOD expr_value
                     {
                         let guard = self.builder.if_guard($<Token>2, $<Node>3);
-                        $$ = Value::PTopExpr(PTopExpr { pattern: $<Node>1, guard: Some(guard) });
+                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<Node>1, guard: Some(guard) });
                     }
                 | p_top_expr_body kUNLESS_MOD expr_value
                     {
                         let guard = self.builder.unless_guard($<Token>2, $<Node>3);
-                        $$ = Value::PTopExpr(PTopExpr { pattern: $<Node>1, guard: Some(guard) });
+                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<Node>1, guard: Some(guard) });
                     }
                 ;
 
@@ -4193,7 +4194,7 @@ opt_block_args_tail:
                     }
                 | p_expr tCOMMA
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.array_pattern(
                                 None,
                                 vec![ $<Node>1 ],
@@ -4206,25 +4207,25 @@ opt_block_args_tail:
                     {
                         let MatchPatternWithTrailingComma { elements, trailing_comma } = $<MatchPatternWithTrailingComma>3;
                         let elements = [ vec![$<Node>1], elements ].concat();
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.array_pattern(None, elements, trailing_comma, None)
                         );
                     }
                 | p_find
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.find_pattern(None, $<NodeList>1, None)
                         );
                     }
                 | p_args_tail
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.array_pattern(None, $<NodeList>1, None, None)
                         );
                     }
                 | p_kwargs
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.hash_pattern(None, $<NodeList>1, None)
                         );
                     }
@@ -4238,7 +4239,7 @@ opt_block_args_tail:
 
             p_as: p_expr tASSOC p_variable
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.match_as(
                                 $<Node>1,
                                 $<Token>2,
@@ -4254,7 +4255,7 @@ opt_block_args_tail:
 
            p_alt: p_alt tPIPE p_expr_basic
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.match_alt(
                                 $<Node>1,
                                 $<Token>2,
@@ -4291,7 +4292,7 @@ opt_block_args_tail:
                         self.pattern_hash_keys.pop();
                         let MatchPatternWithTrailingComma { elements, trailing_comma } = $<MatchPatternWithTrailingComma>3;
                         let pattern = self.builder.array_pattern(None, elements, trailing_comma, None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_pattern(
                                 $<Node>1,
                                 $<Token>2,
@@ -4304,7 +4305,7 @@ opt_block_args_tail:
                     {
                         self.pattern_hash_keys.pop();
                         let pattern = self.builder.find_pattern(None, $<NodeList>3, None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_pattern(
                                 $<Node>1,
                                 $<Token>2,
@@ -4317,7 +4318,7 @@ opt_block_args_tail:
                     {
                         self.pattern_hash_keys.pop();
                         let pattern = self.builder.hash_pattern(None, $<NodeList>3, None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_pattern(
                                 $<Node>1,
                                 $<Token>2,
@@ -4331,7 +4332,7 @@ opt_block_args_tail:
                         let lparen = $<Token>2;
                         let rparen = $<Token>3;
                         let pattern = self.builder.array_pattern(Some(lparen.clone()), vec![], None, Some(rparen.clone()));
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_pattern(
                                 $<Node>1,
                                 lparen,
@@ -4345,7 +4346,7 @@ opt_block_args_tail:
                         self.pattern_hash_keys.pop();
                         let MatchPatternWithTrailingComma { elements, trailing_comma } = $<MatchPatternWithTrailingComma>3;
                         let pattern = self.builder.array_pattern(None, elements, trailing_comma, None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_pattern(
                                 $<Node>1,
                                 $<Token>2,
@@ -4358,7 +4359,7 @@ opt_block_args_tail:
                     {
                         self.pattern_hash_keys.pop();
                         let pattern = self.builder.find_pattern(None, $<NodeList>3, None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_pattern(
                                 $<Node>1,
                                 $<Token>2,
@@ -4371,7 +4372,7 @@ opt_block_args_tail:
                     {
                         self.pattern_hash_keys.pop();
                         let pattern = self.builder.hash_pattern(None, $<NodeList>3, None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_pattern(
                                 $<Node>1,
                                 $<Token>2,
@@ -4385,7 +4386,7 @@ opt_block_args_tail:
                         let lparen = $<Token>2;
                         let rparen = $<Token>3;
                         let pattern = self.builder.array_pattern(Some(lparen.clone()), vec![], None, Some(rparen.clone()));
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_pattern(
                                 $<Node>1,
                                 lparen,
@@ -4397,7 +4398,7 @@ opt_block_args_tail:
                 | tLBRACK p_args rbracket
                     {
                         let MatchPatternWithTrailingComma { elements, trailing_comma } = $<MatchPatternWithTrailingComma>2;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.array_pattern(
                                 Some($<Token>1),
                                 elements,
@@ -4408,7 +4409,7 @@ opt_block_args_tail:
                     }
                 | tLBRACK p_find rbracket
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.find_pattern(
                                 Some($<Token>1),
                                 $<NodeList>2,
@@ -4418,7 +4419,7 @@ opt_block_args_tail:
                     }
                 | tLBRACK rbracket
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.array_pattern(
                                 Some($<Token>1),
                                 vec![],
@@ -4430,14 +4431,14 @@ opt_block_args_tail:
                 | tLBRACE
                     {
                         self.pattern_hash_keys.push();
-                        $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
+                        $<Bool>$ = Value::new_bool(self.yylexer.in_kwarg);
                         self.yylexer.in_kwarg = false;
                     }
                   p_kwargs rbrace
                     {
                         self.pattern_hash_keys.pop();
                         self.yylexer.in_kwarg = $<Bool>2;
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.hash_pattern(
                                 Some($<Token>1),
                                 $<NodeList>3,
@@ -4447,7 +4448,7 @@ opt_block_args_tail:
                     }
                 | tLBRACE rbrace
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.hash_pattern(
                                 Some($<Token>1),
                                 vec![],
@@ -4458,12 +4459,12 @@ opt_block_args_tail:
                 | tLPAREN
                     {
                         self.pattern_hash_keys.push();
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   p_expr rparen
                     {
                         self.pattern_hash_keys.pop();
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
                                 Some($<Node>3),
@@ -4475,7 +4476,7 @@ opt_block_args_tail:
 
           p_args: p_expr
                     {
-                        $$ = Value::MatchPatternWithTrailingComma(
+                        $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements: vec![ $<Node>1 ],
                                 trailing_comma: None
@@ -4489,7 +4490,7 @@ opt_block_args_tail:
                 | p_args_head p_arg
                     {
                         let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ $<Node>2 ] ].concat();
-                        $$ = Value::MatchPatternWithTrailingComma(
+                        $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements,
                                 trailing_comma: None
@@ -4500,7 +4501,7 @@ opt_block_args_tail:
                     {
                         let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3))?;
                         let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ] ].concat();
-                        $$ = Value::MatchPatternWithTrailingComma(
+                        $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements,
                                 trailing_comma: None
@@ -4511,7 +4512,7 @@ opt_block_args_tail:
                     {
                         let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3))?;
                         let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ], $<NodeList>5 ].concat();
-                        $$ = Value::MatchPatternWithTrailingComma(
+                        $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements,
                                 trailing_comma: None
@@ -4522,7 +4523,7 @@ opt_block_args_tail:
                     {
                         let match_rest = self.builder.match_rest($<Token>2, None)?;
                         let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ] ].concat();
-                        $$ = Value::MatchPatternWithTrailingComma(
+                        $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements,
                                 trailing_comma: None
@@ -4533,7 +4534,7 @@ opt_block_args_tail:
                     {
                         let match_rest = self.builder.match_rest($<Token>2, None)?;
                         let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ], $<NodeList>4 ].concat();
-                        $$ = Value::MatchPatternWithTrailingComma(
+                        $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements,
                                 trailing_comma: None
@@ -4542,7 +4543,7 @@ opt_block_args_tail:
                     }
                 | p_args_tail
                     {
-                        $$ = Value::MatchPatternWithTrailingComma(
+                        $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements: $<NodeList>1,
                                 trailing_comma: None
@@ -4553,7 +4554,7 @@ opt_block_args_tail:
 
      p_args_head: p_arg tCOMMA
                     {
-                        $$ = Value::MatchPatternWithTrailingComma(
+                        $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements: vec![$<Node>1],
                                 trailing_comma: Some($<Token>2),
@@ -4563,7 +4564,7 @@ opt_block_args_tail:
                 | p_args_head p_arg tCOMMA
                     {
                         let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ $<Node>2 ] ].concat();
-                        $$ = Value::MatchPatternWithTrailingComma(
+                        $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements,
                                 trailing_comma: Some($<Token>3),
@@ -4574,32 +4575,32 @@ opt_block_args_tail:
 
      p_args_tail: p_rest
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | p_rest tCOMMA p_args_post
                     {
                         let nodes = [ vec![ $<Node>1 ], $<NodeList>3 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
           p_find: p_rest tCOMMA p_args_post tCOMMA p_rest
                     {
                         let nodes = [ vec![ $<Node>1 ], $<NodeList>3, vec![ $<Node>5 ] ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
 
           p_rest: tSTAR tIDENTIFIER
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.match_rest($<Token>1, Some($<Token>2))?
                         );
                     }
                 | tSTAR
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.match_rest($<Token>1, None)?
                         );
                     }
@@ -4607,13 +4608,13 @@ opt_block_args_tail:
 
      p_args_post: p_arg
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | p_args_post tCOMMA p_arg
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
@@ -4626,7 +4627,7 @@ opt_block_args_tail:
         p_kwargs: p_kwarg tCOMMA p_any_kwrest
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | p_kwarg
                     {
@@ -4644,19 +4645,19 @@ opt_block_args_tail:
 
          p_kwarg: p_kw
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | p_kwarg tCOMMA p_kw
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
             p_kw: p_kw_label p_expr
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.match_pair(
                                 $<PKwLabel>1,
                                 $<Node>2
@@ -4665,7 +4666,7 @@ opt_block_args_tail:
                     }
                 | p_kw_label
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.match_label(
                                 $<PKwLabel>1,
                             )?
@@ -4675,13 +4676,13 @@ opt_block_args_tail:
 
       p_kw_label: tLABEL
                     {
-                        $$ = Value::PKwLabel(
+                        $$ = Value::new_p_kw_label(
                             PKwLabel::PlainLabel($<Token>1)
                         );
                     }
                 | tSTRING_BEG string_contents tLABEL_END
                     {
-                        $$ = Value::PKwLabel(
+                        $$ = Value::new_p_kw_label(
                             PKwLabel::QuotedLabel( ($<Token>1, $<NodeList>2, $<Token>3) )
                         );
                     }
@@ -4689,7 +4690,7 @@ opt_block_args_tail:
 
         p_kwrest: kwrest_mark tIDENTIFIER
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.match_rest($<Token>1, Some($<Token>2))?
                             ]
@@ -4697,7 +4698,7 @@ opt_block_args_tail:
                     }
                 | kwrest_mark
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.match_rest($<Token>1, None)?
                             ]
@@ -4707,7 +4708,7 @@ opt_block_args_tail:
 
       p_kwnorest: kwrest_mark kNIL
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.match_nil_pattern($<Token>1, $<Token>2)
                             ]
@@ -4737,7 +4738,7 @@ opt_block_args_tail:
                         let right = $<Node>3;
                         self.value_expr(&right)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_inclusive(
                                 Some(left),
                                 $<Token>2,
@@ -4753,7 +4754,7 @@ opt_block_args_tail:
                         let right = $<Node>3;
                         self.value_expr(&right)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_exclusive(
                                 Some(left),
                                 $<Token>2,
@@ -4766,7 +4767,7 @@ opt_block_args_tail:
                         let left = $<Node>1;
                         self.value_expr(&left)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_inclusive(
                                 Some(left),
                                 $<Token>2,
@@ -4779,7 +4780,7 @@ opt_block_args_tail:
                         let left = $<Node>1;
                         self.value_expr(&left)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_exclusive(
                                 Some(left),
                                 $<Token>2,
@@ -4804,7 +4805,7 @@ opt_block_args_tail:
                         let right = $<Node>2;
                         self.value_expr(&right)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_inclusive(
                                 None,
                                 $<Token>1,
@@ -4817,7 +4818,7 @@ opt_block_args_tail:
                         let right = $<Node>2;
                         self.value_expr(&right)?;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.range_exclusive(
                                 None,
                                 $<Token>1,
@@ -4861,7 +4862,7 @@ opt_block_args_tail:
                     }
                 | keyword_variable
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.accessible($<Node>1)
                         );
                     }
@@ -4873,7 +4874,7 @@ opt_block_args_tail:
 
       p_variable: tIDENTIFIER
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.match_var($<Token>1)?
                         );
                     }
@@ -4889,7 +4890,7 @@ opt_block_args_tail:
                         }
 
                         let lvar = self.builder.accessible(self.builder.lvar(ident_t));
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.pin($<Token>1, lvar)
                         );
                     }
@@ -4897,13 +4898,13 @@ opt_block_args_tail:
 
          p_const: tCOLON3 cname
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_global($<Token>1, $<Token>2)
                         );
                     }
                 | p_const tCOLON2 cname
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_fetch(
                                 $<Node>1,
                                 $<Token>2,
@@ -4913,7 +4914,7 @@ opt_block_args_tail:
                     }
                 | tCONSTANT
                     {
-                        $$ = Value::Node(self.builder.const_($<Token>1));
+                        $$ = Value::new_node(self.builder.const_($<Token>1));
                     }
                 ;
 
@@ -4940,17 +4941,17 @@ opt_block_args_tail:
                         );
                         let nodes = [ vec![rescue_body], $<NodeList>6 ].concat();
 
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | none
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 ;
 
         exc_list: arg_value
                     {
-                        $$ = Value::NodeList(vec![ $<Node>1 ]);
+                        $$ = Value::new_node_list(vec![ $<Node>1 ]);
                     }
                 | mrhs
                     {
@@ -4958,7 +4959,7 @@ opt_block_args_tail:
                     }
                 | none
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 ;
 
@@ -4966,11 +4967,11 @@ opt_block_args_tail:
                     {
                         let assoc_t = Some($<Token>1);
                         let exc_var = Some($<Node>2);
-                        $$ = Value::ExcVar(ExcVar { assoc_t, exc_var });
+                        $$ = Value::new_exc_var(ExcVar { assoc_t, exc_var });
                     }
                 | none
                     {
-                        $$ = Value::ExcVar(ExcVar { assoc_t: None, exc_var: None });
+                        $$ = Value::new_exc_var(ExcVar { assoc_t: None, exc_var: None });
                     }
                 ;
 
@@ -4978,11 +4979,11 @@ opt_block_args_tail:
                     {
                         let ensure_t = $<Token>1;
                         let body = $<MaybeNode>2;
-                        $$ = Value::OptEnsure(Some(Ensure { ensure_t, body }));
+                        $$ = Value::new_opt_ensure(Some(Ensure { ensure_t, body }));
                     }
                 | none
                     {
-                        $$ = Value::OptEnsure(None);
+                        $$ = Value::new_opt_ensure(None);
                     }
                 ;
 
@@ -4998,7 +4999,7 @@ opt_block_args_tail:
 
          strings: string
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.string_compose(
                                 None,
                                 $<NodeList>1,
@@ -5010,7 +5011,7 @@ opt_block_args_tail:
 
           string: tCHAR
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.character($<Token>1)
                             ]
@@ -5018,13 +5019,13 @@ opt_block_args_tail:
                     }
                 | string1
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | string string1
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>2 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
@@ -5034,7 +5035,7 @@ opt_block_args_tail:
                         let indent = self.yylexer.buffer.heredoc_indent;
                         self.yylexer.buffer.heredoc_indent = 0;
                         self.builder.heredoc_dedent(&mut string, indent);
-                        $$ = Value::Node(string);
+                        $$ = Value::new_node(string);
                     }
                 ;
 
@@ -5044,7 +5045,7 @@ opt_block_args_tail:
                         let indent = self.yylexer.buffer.heredoc_indent;
                         self.yylexer.buffer.heredoc_indent = 0;
                         self.builder.heredoc_dedent(&mut string, indent);
-                        $$ = Value::Node(string);
+                        $$ = Value::new_node(string);
                     }
                 ;
 
@@ -5052,7 +5053,7 @@ opt_block_args_tail:
                     {
                         let regexp_end = $<Token>3;
                         let opts = self.builder.regexp_options(regexp_end.clone());
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.regexp_compose(
                                 $<Token>1,
                                 $<NodeList>2,
@@ -5065,7 +5066,7 @@ opt_block_args_tail:
 
            words: tWORDS_BEG tSPACE word_list tSTRING_END
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.words_compose(
                                 $<Token>1,
                                 $<NodeList>3,
@@ -5077,7 +5078,7 @@ opt_block_args_tail:
 
        word_list: /* none */
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
 
                     }
                 | word_list word tSPACE
@@ -5086,25 +5087,25 @@ opt_block_args_tail:
                         nodes.push(
                             self.builder.word( $<NodeList>2 )
                         );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
             word: string_content
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | word string_content
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>2 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
          symbols: tSYMBOLS_BEG tSPACE symbol_list tSTRING_END
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.symbols_compose(
                                 $<Token>1,
                                 $<NodeList>3,
@@ -5116,7 +5117,7 @@ opt_block_args_tail:
 
      symbol_list: /* none */
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 | symbol_list word tSPACE
                     {
@@ -5124,13 +5125,13 @@ opt_block_args_tail:
                         nodes.push(
                             self.builder.word( $<NodeList>2 )
                         );
-                        $$ = Value::NodeList( nodes );
+                        $$ = Value::new_node_list( nodes );
                     }
                 ;
 
           qwords: tQWORDS_BEG tSPACE qword_list tSTRING_END
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.words_compose(
                                 $<Token>1,
                                 $<NodeList>3,
@@ -5142,7 +5143,7 @@ opt_block_args_tail:
 
         qsymbols: tQSYMBOLS_BEG tSPACE qsym_list tSTRING_END
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.symbols_compose(
                                 $<Token>1,
                                 $<NodeList>3,
@@ -5154,7 +5155,7 @@ opt_block_args_tail:
 
       qword_list: /* none */
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 | qword_list tSTRING_CONTENT tSPACE
                     {
@@ -5162,13 +5163,13 @@ opt_block_args_tail:
                         nodes.push(
                             self.builder.string_internal( $<Token>2 )
                         );
-                        $$ = Value::NodeList( nodes );
+                        $$ = Value::new_node_list( nodes );
                     }
                 ;
 
        qsym_list: /* none */
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 | qsym_list tSTRING_CONTENT tSPACE
                     {
@@ -5176,55 +5177,55 @@ opt_block_args_tail:
                         nodes.push(
                             self.builder.symbol_internal( $<Token>2 )
                         );
-                        $$ = Value::NodeList( nodes );
+                        $$ = Value::new_node_list( nodes );
                     }
                 ;
 
  string_contents: /* none */
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 | string_contents string_content
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push($<Node>2);
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
 xstring_contents: /* none */
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 | xstring_contents string_content
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push($<Node>2);
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
  regexp_contents: /* none */
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 | regexp_contents string_content
                     {
                         let mut  nodes = $<NodeList>1;
                         nodes.push( $<Node>2 );
-                        $$ = Value::NodeList( nodes );
+                        $$ = Value::new_node_list( nodes );
                     }
                 ;
 
   string_content: tSTRING_CONTENT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.string_internal($<Token>1)
                         );
                     }
                 | tSTRING_DVAR
                     {
-                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(std::mem::take(&mut self.yylexer.strterm));
+                        $<MaybeStrTerm>$ = Value::new_maybe_str_term(std::mem::take(&mut self.yylexer.strterm));
                         self.yylexer.lex_state.set(EXPR_BEG);
                     }
                   string_dvar
@@ -5236,21 +5237,21 @@ xstring_contents: /* none */
                     {
                         self.yylexer.cmdarg.push(false);
                         self.yylexer.cond.push(false);
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                     {
-                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(std::mem::take(&mut self.yylexer.strterm));
+                        $<MaybeStrTerm>$ = Value::new_maybe_str_term(std::mem::take(&mut self.yylexer.strterm));
                     }
                     {
-                        $<Num>$ = Value::Num( self.yylexer.lex_state.get() );
+                        $<Num>$ = Value::new_num( self.yylexer.lex_state.get() );
                         self.yylexer.lex_state.set(EXPR_BEG);
                     }
                     {
-                        $<Num>$ = Value::Num( self.yylexer.brace_nest );
+                        $<Num>$ = Value::new_num( self.yylexer.brace_nest );
                         self.yylexer.brace_nest = 0;
                     }
                     {
-                        $<Num>$ = Value::Num( self.yylexer.buffer.heredoc_indent );
+                        $<Num>$ = Value::new_num( self.yylexer.buffer.heredoc_indent );
                         self.yylexer.buffer.heredoc_indent = 0;
                     }
                   compstmt tSTRING_DEND
@@ -5263,7 +5264,7 @@ xstring_contents: /* none */
                         self.yylexer.buffer.heredoc_indent = $<Num>6;
                         self.yylexer.buffer.heredoc_line_indent = -1;
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
                                 $<MaybeNode>7,
@@ -5275,16 +5276,16 @@ xstring_contents: /* none */
 
      string_dvar: tGVAR
                     {
-                        $$ = Value::Node(self.builder.gvar($<Token>1));
+                        $$ = Value::new_node(self.builder.gvar($<Token>1));
                     }
                 | tIVAR
                     {
-                        $$ = Value::Node(self.builder.ivar($<Token>1));
+                        $$ = Value::new_node(self.builder.ivar($<Token>1));
 
                     }
                 | tCVAR
                     {
-                        $$ = Value::Node(self.builder.cvar($<Token>1));
+                        $$ = Value::new_node(self.builder.cvar($<Token>1));
                     }
                 | backref
                     {
@@ -5299,7 +5300,7 @@ xstring_contents: /* none */
             ssym: tSYMBEG sym
                     {
                         self.yylexer.lex_state.set(EXPR_END);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.symbol($<Token>1, $<Token>2)
                         );
                     }
@@ -5314,7 +5315,7 @@ xstring_contents: /* none */
             dsym: tSYMBEG string_contents tSTRING_END
                     {
                         self.yylexer.lex_state.set(EXPR_END);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.symbol_compose($<Token>1, $<NodeList>2, $<Token>3)
                         );
                     }
@@ -5326,7 +5327,7 @@ xstring_contents: /* none */
                     }
                 | tUMINUS_NUM simple_numeric   %prec tLOWEST
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.unary_num(
                                 $<Token>1,
                                 $<Node>2
@@ -5337,25 +5338,25 @@ xstring_contents: /* none */
 
   simple_numeric: tINTEGER
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.integer($<Token>1)
                         );
                     }
                 | tFLOAT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.float($<Token>1)
                         );
                     }
                 | tRATIONAL
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.rational($<Token>1)
                         );
                     }
                 | tIMAGINARY
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.complex($<Token>1)
                         );
                     }
@@ -5363,31 +5364,31 @@ xstring_contents: /* none */
 
    user_variable: tIDENTIFIER
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.lvar($<Token>1)
                         );
                     }
                 | tIVAR
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.ivar($<Token>1)
                         );
                     }
                 | tGVAR
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.gvar($<Token>1)
                         );
                     }
                 | tCONSTANT
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.const_($<Token>1)
                         );
                     }
                 | tCVAR
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.cvar($<Token>1)
                         );
                     }
@@ -5395,43 +5396,43 @@ xstring_contents: /* none */
 
 keyword_variable: kNIL
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.nil($<Token>1)
                         );
                     }
                 | kSELF
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.self_($<Token>1)
                         );
                     }
                 | kTRUE
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.true_($<Token>1)
                         );
                     }
                 | kFALSE
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.false_($<Token>1)
                         );
                     }
                 | k__FILE__
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.__file__($<Token>1)
                         );
                     }
                 | k__LINE__
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.__line__($<Token>1)
                         );
                     }
                 | k__ENCODING__
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.__encoding__($<Token>1)
                         );
                     }
@@ -5439,7 +5440,7 @@ keyword_variable: kNIL
 
          var_ref: user_variable
                     {
-                        let node = Node::from(yystack.owned_value_at(0));
+                        let node = Node::boxed_from(yystack.owned_value_at(0));
                         if let Node::Lvar(node) = &node {
                             let name = &node.name;
                             match name.chars().collect::<Vec<_>>()[..] {
@@ -5491,13 +5492,13 @@ keyword_variable: kNIL
                             }
                         }
 
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.accessible(node)
                         );
                     }
                 | keyword_variable
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.accessible($<Node>1)
                         );
                     }
@@ -5505,13 +5506,13 @@ keyword_variable: kNIL
 
          var_lhs: user_variable
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable($<Node>1)?
                         );
                     }
                 | keyword_variable
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.assignable($<Node>1)?
                         );
                     }
@@ -5519,13 +5520,13 @@ keyword_variable: kNIL
 
          backref: tNTH_REF
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.nth_ref($<Token>1)
                         );
                     }
                 | tBACK_REF
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.back_ref($<Token>1)
                         );
                     }
@@ -5535,19 +5536,19 @@ keyword_variable: kNIL
                     {
                         self.yylexer.lex_state.set(EXPR_BEG);
                         self.yylexer.command_start = true;
-                        $<None>$ = Value::None;
+                        $<None>$ = Value::new_none();
                     }
                   expr_value term
                     {
                         let lt_t  = Some($<Token>1);
                         let value = Some($<Node>3);
-                        $$ = Value::Superclass(
+                        $$ = Value::new_superclass(
                             Superclass { lt_t, value }
                         );
                     }
                 | /* none */
                     {
-                        $$ = Value::Superclass(Superclass { lt_t: None, value: None });
+                        $$ = Value::new_superclass(Superclass { lt_t: None, value: None });
                     }
                 ;
 
@@ -5557,13 +5558,13 @@ f_opt_paren_args: f_paren_args
                     }
                 | none
                     {
-                        $$ = Value::MaybeNode(None);
+                        $$ = Value::new_maybe_node(None);
                     }
                 ;
 
     f_paren_args: tLPAREN2 f_args rparen
                     {
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.args(Some($<Token>1), $<NodeList>2, Some($<Token>3))
                         );
 
@@ -5576,7 +5577,7 @@ f_opt_paren_args: f_paren_args
                             $<NodeList>2,
                             vec![ self.builder.forward_arg($<Token>4) ]
                         ].concat();
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.args(
                                 Some($<Token>1),
                                 args,
@@ -5590,7 +5591,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | tLPAREN2 args_forward rparen
                     {
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             Some(
                                 self.builder.forward_only_args($<Token>1, $<Token>2, $<Token>3)
                             )
@@ -5607,14 +5608,14 @@ f_opt_paren_args: f_paren_args
                         $$ = $1;
                     }
                 |   {
-                        $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
+                        $<Bool>$ = Value::new_bool(self.yylexer.in_kwarg);
                         self.yylexer.in_kwarg = true;
                         self.yylexer.lex_state.set(self.yylexer.lex_state.get()|EXPR_LABEL);
                     }
                   f_args term
                     {
                         self.yylexer.in_kwarg = $<Bool>1;
-                        $$ = Value::MaybeNode(
+                        $$ = Value::new_maybe_node(
                             self.builder.args(None, $<NodeList>2, None)
                         );
                         self.yylexer.lex_state.set(EXPR_BEG);
@@ -5625,21 +5626,21 @@ f_opt_paren_args: f_paren_args
        args_tail: f_kwarg tCOMMA f_kwrest opt_f_block_arg
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_kwarg opt_f_block_arg
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_any_kwrest opt_f_block_arg
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_block_arg
                     {
-                        $$ = Value::NodeList(vec![ $<Node>1 ]);
+                        $$ = Value::new_node_list(vec![ $<Node>1 ]);
                     }
                 ;
 
@@ -5649,83 +5650,83 @@ f_opt_paren_args: f_paren_args
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 ;
 
           f_args: f_arg tCOMMA f_optarg tCOMMA f_rest_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg tCOMMA f_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>7, $<NodeList>8 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg tCOMMA f_optarg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg tCOMMA f_optarg tCOMMA f_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg tCOMMA f_rest_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_optarg tCOMMA f_rest_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>5, $<NodeList>6 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_optarg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_optarg tCOMMA f_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_rest_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>2 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | f_rest_arg tCOMMA f_arg opt_args_tail
                     {
                         let nodes = [ $<NodeList>1, $<NodeList>3, $<NodeList>4 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | args_tail
                     {
                         let nodes = [ $<NodeList>1 ].concat();
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 ;
 
@@ -5763,7 +5764,7 @@ f_opt_paren_args: f_paren_args
                         let name = clone_value(&ident_t);
                         self.static_env.declare(&name);
                         self.max_numparam_stack.set_has_ordinary_params();
-                        $$ = Value::Token(ident_t);
+                        $$ = Value::new_token(ident_t);
                     }
                 ;
 
@@ -5772,20 +5773,20 @@ f_opt_paren_args: f_paren_args
                         let arg_t = $<Token>1;
                         let arg_name = clone_value(&arg_t);
                         self.current_arg_stack.set(Some(arg_name));
-                        $$ = Value::Token(arg_t);
+                        $$ = Value::new_token(arg_t);
                     }
                 ;
 
       f_arg_item: f_arg_asgn
                     {
                         self.current_arg_stack.set(None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.arg($<Token>1)?
                         );
                     }
                 | tLPAREN f_margs rparen
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.multi_lhs(
                                 Some($<Token>1),
                                 $<NodeList>2,
@@ -5797,13 +5798,13 @@ f_opt_paren_args: f_paren_args
 
            f_arg: f_arg_item
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | f_arg tCOMMA f_arg_item
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
@@ -5820,21 +5821,21 @@ f_opt_paren_args: f_paren_args
 
                         self.current_arg_stack.set(Some(ident));
 
-                        $$ = Value::Token(ident_t);
+                        $$ = Value::new_token(ident_t);
                     }
                 ;
 
             f_kw: f_label arg_value
                     {
                         self.current_arg_stack.set(None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.kwoptarg($<Token>1, $<Node>2)?
                         );
                     }
                 | f_label
                     {
                         self.current_arg_stack.set(None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.kwarg($<Token>1)?
                         );
                     }
@@ -5842,13 +5843,13 @@ f_opt_paren_args: f_paren_args
 
       f_block_kw: f_label primary_value
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.kwoptarg($<Token>1, $<Node>2)?
                         );
                     }
                 | f_label
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.kwarg($<Token>1)?
                         );
                     }
@@ -5856,26 +5857,26 @@ f_opt_paren_args: f_paren_args
 
    f_block_kwarg: f_block_kw
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | f_block_kwarg tCOMMA f_block_kw
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
 
          f_kwarg: f_kw
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | f_kwarg tCOMMA f_kw
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
@@ -5891,7 +5892,7 @@ f_opt_paren_args: f_paren_args
 
       f_no_kwarg: kwrest_mark kNIL
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.kwnilarg($<Token>1, $<Token>2)
                             ]
@@ -5903,7 +5904,7 @@ f_opt_paren_args: f_paren_args
                     {
                         let ident_t = $<Token>2;
                         self.static_env.declare(&clone_value(&ident_t));
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.kwrestarg($<Token>1, Some(ident_t))?
                             ]
@@ -5911,7 +5912,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | kwrest_mark
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.kwrestarg($<Token>1, None)?
                             ]
@@ -5922,7 +5923,7 @@ f_opt_paren_args: f_paren_args
            f_opt: f_arg_asgn tEQL arg_value
                     {
                         self.current_arg_stack.set(None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.optarg(
                                 $<Token>1,
                                 $<Token>2,
@@ -5935,7 +5936,7 @@ f_opt_paren_args: f_paren_args
      f_block_opt: f_arg_asgn tEQL primary_value
                     {
                         self.current_arg_stack.set(None);
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.optarg(
                                 $<Token>1,
                                 $<Token>2,
@@ -5947,25 +5948,25 @@ f_opt_paren_args: f_paren_args
 
   f_block_optarg: f_block_opt
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | f_block_optarg tCOMMA f_block_opt
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
         f_optarg: f_opt
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | f_optarg tCOMMA f_opt
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::new_node_list(nodes);
                     }
                 ;
 
@@ -5984,7 +5985,7 @@ f_opt_paren_args: f_paren_args
                         let ident_t = $<Token>2;
                         self.static_env.declare(&clone_value(&ident_t));
 
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.restarg($<Token>1, Some(ident_t))?
                             ]
@@ -5992,7 +5993,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | restarg_mark
                     {
-                        $$ = Value::NodeList(
+                        $$ = Value::new_node_list(
                             vec![
                                 self.builder.restarg($<Token>1, None)?
                             ]
@@ -6014,7 +6015,7 @@ f_opt_paren_args: f_paren_args
                     {
                         let ident_t = $<Token>2;
                         self.static_env.declare(&clone_value(&ident_t));
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.blockarg($<Token>1, ident_t)?
                         );
                     }
@@ -6022,11 +6023,11 @@ f_opt_paren_args: f_paren_args
 
  opt_f_block_arg: tCOMMA f_block_arg
                     {
-                        $$ = Value::NodeList( vec![ $<Node>2 ] )
+                        $$ = Value::new_node_list( vec![ $<Node>2 ] )
                     }
                 | none
                     {
-                        $$ = Value::NodeList( vec![] );
+                        $$ = Value::new_node_list( vec![] );
                     }
                 ;
 
@@ -6034,9 +6035,9 @@ f_opt_paren_args: f_paren_args
                     {
                         let var_ref = $<Node>1;
                         self.value_expr(&var_ref)?;
-                        $$ = Value::Node(var_ref);
+                        $$ = Value::new_node(var_ref);
                     }
-                | tLPAREN2 { self.yylexer.lex_state.set(EXPR_BEG); $<None>$ = Value::None; } expr rparen
+                | tLPAREN2 { self.yylexer.lex_state.set(EXPR_BEG); $<None>$ = Value::new_none(); } expr rparen
                     {
                         let expr = $<Node>3;
                         match &expr {
@@ -6062,13 +6063,13 @@ f_opt_paren_args: f_paren_args
                                 self.value_expr(other)?
                             },
                         }
-                        $$ = Value::Node(expr);
+                        $$ = Value::new_node(expr);
                     }
                 ;
 
       assoc_list: none
                     {
-                        $$ = Value::NodeList(vec![]);
+                        $$ = Value::new_node_list(vec![]);
                     }
                 | assocs trailer
                     {
@@ -6078,19 +6079,19 @@ f_opt_paren_args: f_paren_args
 
           assocs: assoc
                     {
-                        $$ = Value::NodeList( vec![ $<Node>1 ] );
+                        $$ = Value::new_node_list( vec![ $<Node>1 ] );
                     }
                 | assocs tCOMMA assoc
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push($<Node>3);
-                        $$ = Value::NodeList( nodes );
+                        $$ = Value::new_node_list( nodes );
                     }
                 ;
 
            assoc: arg_value tASSOC arg_value
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.pair(
                                 $<Node>1,
                                 $<Token>2,
@@ -6100,7 +6101,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | tLABEL arg_value
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.pair_keyword(
                                 $<Token>1,
                                 $<Node>2
@@ -6109,7 +6110,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | tSTRING_BEG string_contents tLABEL_END arg_value
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.pair_quoted(
                                 $<Token>1,
                                 $<NodeList>2,
@@ -6120,7 +6121,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | tDSTAR arg_value
                     {
-                        $$ = Value::Node(
+                        $$ = Value::new_node(
                             self.builder.kwsplat($<Token>1, $<Node>2)
                         );
                     }
@@ -6204,21 +6205,21 @@ f_opt_paren_args: f_paren_args
 
        opt_terms: /* none */
                     {
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                     }
                 | terms
                     {
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                     }
                 ;
 
           opt_nl: /* none */
                     {
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                     }
                 | tNL
                     {
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                     }
                 ;
 
@@ -6242,15 +6243,15 @@ f_opt_paren_args: f_paren_args
 
          trailer: /* none */
                     {
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                     }
                 | tNL
                     {
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                     }
                 | tCOMMA
                     {
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                     }
                 ;
 
@@ -6266,17 +6267,17 @@ f_opt_paren_args: f_paren_args
 
            terms: term
                     {
-                        $$ = Value::TokenList(vec![]);
+                        $$ = Value::new_token_list(vec![]);
                     }
                 | terms tSEMI
                     {
-                        $$ = Value::TokenList(vec![]);
+                        $$ = Value::new_token_list(vec![]);
                     }
                 ;
 
             none: /* empty */
                   {
-                        $$ = Value::None;
+                        $$ = Value::new_none();
                   }
                 ;
 
@@ -6439,31 +6440,5 @@ impl Parser {
 
     fn value_expr(&self, node: &Node) -> Result<(), ()> {
         self.builder.value_expr(node)
-    }
-}
-
-impl TokenValue {
-    pub fn into_string_lossy(self) -> String {
-        match self {
-            Self::String(s) => s,
-            Self::InvalidString(bytes) => String::from_utf8_lossy(&bytes).into_owned(),
-        }
-    }
-
-    pub fn into_bytes(self) -> Vec<u8> {
-        match self {
-            Self::String(s) => s.into_bytes(),
-            Self::InvalidString(bytes) => bytes,
-        }
-    }
-}
-
-impl Token {
-    pub fn into_string_lossy(self) -> String {
-        self.token_value.into_string_lossy()
-    }
-
-    pub fn into_bytes(self) -> Vec<u8> {
-        self.token_value.into_bytes()
     }
 }

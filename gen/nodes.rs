@@ -4,9 +4,9 @@ use lib_ruby_parser_nodes::{Field, FieldType, Node};
 
 fn map_field(field_type: &FieldType) -> String {
     match field_type {
-        FieldType::Node => "Node",
+        FieldType::Node => "Box<Node>",
         FieldType::Nodes => "Vec<Node>",
-        FieldType::MaybeNode => "Option<Node>",
+        FieldType::MaybeNode => "Option<Box<Node>>",
         FieldType::Range => "Range",
         FieldType::MaybeRange => "Option<Range>",
         FieldType::Str => "String",
@@ -16,7 +16,7 @@ fn map_field(field_type: &FieldType) -> String {
         FieldType::U8 => "u8",
         FieldType::Usize => "usize",
         FieldType::RawString => "String",
-        FieldType::RegexOptions => "Option<Node>",
+        FieldType::RegexOptions => "Option<Box<Node>>",
     }
     .to_owned()
 }

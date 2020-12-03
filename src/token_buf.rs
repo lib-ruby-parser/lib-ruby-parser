@@ -1,4 +1,4 @@
-use crate::parser::TokenValue;
+use crate::TokenValue;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct TokenBuf {
