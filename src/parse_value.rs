@@ -21,17 +21,7 @@ impl Token {
     }
 }
 
-pub(crate) mod TokenList {
-    use super::{ParseValue, Token};
-
-    pub(crate) fn boxed_from(value: ParseValue) -> Vec<Token> {
-        match value {
-            ParseValue::TokenList(value) => value,
-            other => unreachable!("expected TokenList, got {:?}", other),
-        }
-    }
-}
-
+#[allow(non_snake_case)]
 pub(crate) mod NodeList {
     use super::{Node, ParseValue};
 
@@ -43,6 +33,7 @@ pub(crate) mod NodeList {
     }
 }
 
+#[allow(non_snake_case)]
 pub(crate) mod Bool {
     use super::ParseValue;
 
@@ -54,6 +45,7 @@ pub(crate) mod Bool {
     }
 }
 
+#[allow(non_snake_case)]
 pub(crate) mod MaybeStrTerm {
     use super::{ParseValue, StrTerm};
 
@@ -65,6 +57,7 @@ pub(crate) mod MaybeStrTerm {
     }
 }
 
+#[allow(non_snake_case)]
 pub(crate) mod Num {
     use super::ParseValue;
 
@@ -95,6 +88,7 @@ pub(crate) struct Ensure {
     pub(crate) ensure_t: Token,
     pub(crate) body: Option<Node>,
 }
+#[allow(non_snake_case)]
 pub(crate) mod OptEnsure {
     use super::{Ensure, ParseValue};
 
@@ -111,6 +105,7 @@ pub(crate) struct Else {
     pub(crate) else_t: Token,
     pub(crate) body: Option<Node>,
 }
+#[allow(non_snake_case)]
 pub(crate) mod OptElse {
     use super::{Else, ParseValue};
 
@@ -381,6 +376,7 @@ impl PCaseBody {
     }
 }
 
+#[allow(non_snake_case)]
 pub(crate) mod MaybeNode {
     use super::{Node, ParseValue};
 

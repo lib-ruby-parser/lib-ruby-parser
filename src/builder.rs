@@ -154,25 +154,29 @@ impl Builder {
         let sign = value(unary_t);
 
         match &mut numeric {
-            Node::Int(inner) => {
-                inner.value = sign + &inner.value;
-                inner.expression_l = new_operator_l.join(&inner.expression_l);
-                inner.operator_l = Some(new_operator_l);
-            }
-            Node::Float(inner) => {
-                inner.value = sign + &inner.value;
-                inner.expression_l = new_operator_l.join(&inner.expression_l);
-                inner.operator_l = Some(new_operator_l);
-            }
-            Node::Rational(inner) => {
-                inner.value = sign + &inner.value;
-                inner.expression_l = new_operator_l.join(&inner.expression_l);
-                inner.operator_l = Some(new_operator_l);
-            }
-            Node::Complex(inner) => {
-                inner.value = sign + &inner.value;
-                inner.expression_l = new_operator_l.join(&inner.expression_l);
-                inner.operator_l = Some(new_operator_l);
+            Node::Int(Int {
+                value,
+                expression_l,
+                operator_l,
+            })
+            | Node::Float(Float {
+                value,
+                expression_l,
+                operator_l,
+            })
+            | Node::Rational(Rational {
+                value,
+                expression_l,
+                operator_l,
+            })
+            | Node::Complex(Complex {
+                value,
+                expression_l,
+                operator_l,
+            }) => {
+                *value = sign + value;
+                *expression_l = new_operator_l.join(expression_l);
+                *operator_l = Some(new_operator_l);
             }
             _ => unreachable!(),
         }
@@ -237,8 +241,8 @@ impl Builder {
             {
                 return first(parts);
             }
-            [Node::Str(inner)] => {
-                let value = inner.value.clone();
+            [Node::Str(Str { value, .. })] => {
+                let value = value.clone();
                 return self.str_node(begin_t, value, parts, end_t);
             }
             [Node::Dstr(_)] | [Node::Heredoc(_)] => unreachable!(),
@@ -322,8 +326,7 @@ impl Builder {
     }
 
     pub(crate) fn symbol_compose(&self, begin_t: Token, parts: Vec<Node>, end_t: Token) -> Node {
-        if let [Node::Str(inner)] = &parts[..] {
-            let value = &inner.value;
+        if let [Node::Str(Str { value, .. })] = &parts[..] {
             let (begin_l, end_l, expression_l) =
                 self.collection_map(&Some(begin_t), &[], &Some(end_t));
 
@@ -389,7 +392,7 @@ impl Builder {
         let dedent_heredoc_parts = |parts: &mut Vec<Node>| {
             for part in parts.iter_mut() {
                 match part {
-                    Node::Str(inner) => Self::dedent_string(&mut inner.value, dedent_level),
+                    Node::Str(Str { value, .. }) => Self::dedent_string(value, dedent_level),
                     Node::Begin(_) => {}
                     _ => unreachable!("unsupported heredoc child {}", part.str_type()),
                 }
@@ -466,8 +469,8 @@ impl Builder {
         let expression_l =
             begin_l.join(&maybe_node_expr(&options.as_ref()).unwrap_or_else(|| self.loc(&end_t)));
         match &options {
-            Some(Node::RegOpt(inner)) => {
-                self.validate_static_regexp(&parts, &inner.options, &expression_l)
+            Some(Node::RegOpt(RegOpt { options, .. })) => {
+                self.validate_static_regexp(&parts, options, &expression_l)
             }
             None => self.validate_static_regexp(&parts, &[], &expression_l),
             _ => unreachable!("must be Option<RegOpt>"),
@@ -548,13 +551,12 @@ impl Builder {
         let parts = parts
             .into_iter()
             .map(|part| match part {
-                Node::Str(inner) => {
-                    let Str {
-                        value,
-                        begin_l,
-                        end_l,
-                        expression_l,
-                    } = inner;
+                Node::Str(Str {
+                    value,
+                    begin_l,
+                    end_l,
+                    expression_l,
+                }) => {
                     self.validate_sym_value(&value, &expression_l);
                     Node::Sym(Sym {
                         name: value,
@@ -563,20 +565,17 @@ impl Builder {
                         expression_l,
                     })
                 }
-                Node::Dstr(inner) => {
-                    let Dstr {
-                        parts,
-                        begin_l,
-                        end_l,
-                        expression_l,
-                    } = inner;
-                    Node::Dsym(Dsym {
-                        parts,
-                        begin_l,
-                        end_l,
-                        expression_l,
-                    })
-                }
+                Node::Dstr(Dstr {
+                    parts,
+                    begin_l,
+                    end_l,
+                    expression_l,
+                }) => Node::Dsym(Dsym {
+                    parts,
+                    begin_l,
+                    end_l,
+                    expression_l,
+                }),
                 _ => part,
             })
             .collect::<Vec<_>>();
@@ -798,8 +797,7 @@ impl Builder {
     }
     pub(crate) fn accessible(&self, node: Node) -> Node {
         match node {
-            Node::Lvar(inner) => {
-                let Lvar { name, expression_l } = inner;
+            Node::Lvar(Lvar { name, expression_l }) => {
                 if self.static_env.is_declared(&name) {
                     if let Some(current_arg) = self.current_arg_stack.top() {
                         if current_arg == name {
@@ -886,44 +884,34 @@ impl Builder {
 
     pub(crate) fn assignable(&self, node: Node) -> Result<Node, ()> {
         let node = match node {
-            Node::Cvar(inner) => {
-                let Cvar { name, expression_l } = inner;
-                Node::Cvasgn(Cvasgn {
-                    name,
-                    value: None,
-                    name_l: expression_l.clone(),
-                    expression_l,
-                    operator_l: None,
-                })
-            }
-            Node::Ivar(inner) => {
-                let Ivar { name, expression_l } = inner;
-                Node::Ivasgn(Ivasgn {
-                    name,
-                    value: None,
-                    name_l: expression_l.clone(),
-                    expression_l,
-                    operator_l: None,
-                })
-            }
-            Node::Gvar(inner) => {
-                let Gvar { name, expression_l } = inner;
-                Node::Gvasgn(Gvasgn {
-                    name,
-                    value: None,
-                    name_l: expression_l.clone(),
-                    expression_l,
-                    operator_l: None,
-                })
-            }
-            Node::Const(inner) => {
-                let Const {
-                    name,
-                    scope,
-                    expression_l,
-                    double_colon_l,
-                    name_l,
-                } = inner;
+            Node::Cvar(Cvar { name, expression_l }) => Node::Cvasgn(Cvasgn {
+                name,
+                value: None,
+                name_l: expression_l.clone(),
+                expression_l,
+                operator_l: None,
+            }),
+            Node::Ivar(Ivar { name, expression_l }) => Node::Ivasgn(Ivasgn {
+                name,
+                value: None,
+                name_l: expression_l.clone(),
+                expression_l,
+                operator_l: None,
+            }),
+            Node::Gvar(Gvar { name, expression_l }) => Node::Gvasgn(Gvasgn {
+                name,
+                value: None,
+                name_l: expression_l.clone(),
+                expression_l,
+                operator_l: None,
+            }),
+            Node::Const(Const {
+                name,
+                scope,
+                expression_l,
+                double_colon_l,
+                name_l,
+            }) => {
                 if !self.context.is_dynamic_const_definition_allowed() {
                     self.error(DiagnosticMessage::DynamicConstantAssignment, expression_l);
                     return Err(());
@@ -938,8 +926,7 @@ impl Builder {
                     operator_l: None,
                 })
             }
-            Node::Lvar(inner) => {
-                let Lvar { name, expression_l } = inner;
+            Node::Lvar(Lvar { name, expression_l }) => {
                 self.check_assignment_to_numparam(&name, &expression_l)?;
                 self.check_reserved_for_numparam(&name, &expression_l)?;
 
@@ -954,48 +941,39 @@ impl Builder {
                 })
             }
 
-            Node::Self_(inner) => {
-                let Self_ { expression_l } = inner;
+            Node::Self_(Self_ { expression_l }) => {
                 self.error(DiagnosticMessage::CantAssignToSelf, expression_l);
                 return Err(());
             }
-            Node::Nil(inner) => {
-                let Nil { expression_l } = inner;
+            Node::Nil(Nil { expression_l }) => {
                 self.error(DiagnosticMessage::CantAssignToNil, expression_l);
                 return Err(());
             }
-            Node::True(inner) => {
-                let True { expression_l } = inner;
+            Node::True(True { expression_l }) => {
                 self.error(DiagnosticMessage::CantAssignToTrue, expression_l);
                 return Err(());
             }
-            Node::False(inner) => {
-                let False { expression_l } = inner;
+            Node::False(False { expression_l }) => {
                 self.error(DiagnosticMessage::CantAssignToFalse, expression_l);
                 return Err(());
             }
-            Node::File(inner) => {
-                let File { expression_l } = inner;
+            Node::File(File { expression_l }) => {
                 self.error(DiagnosticMessage::CantAssignToFile, expression_l);
                 return Err(());
             }
-            Node::Line(inner) => {
-                let Line { expression_l } = inner;
+            Node::Line(Line { expression_l }) => {
                 self.error(DiagnosticMessage::CantAssignToLine, expression_l);
                 return Err(());
             }
-            Node::Encoding(inner) => {
-                let Encoding { expression_l } = inner;
+            Node::Encoding(Encoding { expression_l }) => {
                 self.error(DiagnosticMessage::CantAssignToEncoding, expression_l);
                 return Err(());
             }
-            Node::BackRef(inner) => {
-                let BackRef { expression_l, name } = inner;
+            Node::BackRef(BackRef { expression_l, name }) => {
                 self.error(DiagnosticMessage::CantSetVariable(name), expression_l);
                 return Err(());
             }
-            Node::NthRef(inner) => {
-                let NthRef { expression_l, name } = inner;
+            Node::NthRef(NthRef { expression_l, name }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable(format!("${}", name)),
                     expression_l,
@@ -1010,24 +988,21 @@ impl Builder {
 
     pub(crate) fn const_op_assignable(&self, node: Node) -> Node {
         match node {
-            Node::Const(inner) => {
-                let Const {
-                    scope,
-                    name,
-                    name_l,
-                    double_colon_l,
-                    expression_l,
-                } = inner;
-                Node::Casgn(Casgn {
-                    scope,
-                    name,
-                    name_l,
-                    double_colon_l,
-                    expression_l,
-                    value: None,
-                    operator_l: None,
-                })
-            }
+            Node::Const(Const {
+                scope,
+                name,
+                name_l,
+                double_colon_l,
+                expression_l,
+            }) => Node::Casgn(Casgn {
+                scope,
+                name,
+                name_l,
+                double_colon_l,
+                expression_l,
+                value: None,
+                operator_l: None,
+            }),
             _ => unreachable!("unsupported const_op_assignable arument: {:?}", node),
         }
     }
@@ -1037,50 +1012,62 @@ impl Builder {
         let expr_l = join_exprs(&lhs, &new_rhs);
 
         match &mut lhs {
-            Node::Cvasgn(inner) => {
-                inner.expression_l = expr_l;
-                inner.operator_l = op_l;
-                inner.value = Some(Box::new(new_rhs));
+            Node::Cvasgn(Cvasgn {
+                value,
+                operator_l,
+                expression_l,
+                ..
+            })
+            | Node::Ivasgn(Ivasgn {
+                value,
+                operator_l,
+                expression_l,
+                ..
+            })
+            | Node::Gvasgn(Gvasgn {
+                value,
+                operator_l,
+                expression_l,
+                ..
+            })
+            | Node::Lvasgn(Lvasgn {
+                value,
+                operator_l,
+                expression_l,
+                ..
+            })
+            | Node::Casgn(Casgn {
+                value,
+                operator_l,
+                expression_l,
+                ..
+            })
+            | Node::IndexAsgn(IndexAsgn {
+                value,
+                operator_l,
+                expression_l,
+                ..
+            }) => {
+                *expression_l = expr_l;
+                *operator_l = op_l;
+                *value = Some(Box::new(new_rhs));
             }
-            Node::Ivasgn(inner) => {
-                inner.expression_l = expr_l;
-                inner.operator_l = op_l;
-                inner.value = Some(Box::new(new_rhs));
-            }
-            Node::Gvasgn(inner) => {
-                inner.expression_l = expr_l;
-                inner.operator_l = op_l;
-                inner.value = Some(Box::new(new_rhs));
-            }
-            Node::Lvasgn(inner) => {
-                inner.expression_l = expr_l;
-                inner.operator_l = op_l;
-                inner.value = Some(Box::new(new_rhs));
-            }
-            Node::Casgn(inner) => {
-                inner.expression_l = expr_l;
-                inner.operator_l = op_l;
-                inner.value = Some(Box::new(new_rhs));
-            }
-            Node::IndexAsgn(inner) => {
-                inner.expression_l = expr_l;
-                inner.operator_l = op_l;
-                inner.value = Some(Box::new(new_rhs));
-            }
-            Node::Send(inner) => {
-                inner.expression_l = expr_l;
-                inner.operator_l = op_l;
-                if inner.args.is_empty() {
-                    inner.args = vec![new_rhs];
-                } else {
-                    unreachable!("can't assign to method call with args")
-                }
-            }
-            Node::CSend(inner) => {
-                inner.expression_l = expr_l;
-                inner.operator_l = op_l;
-                if inner.args.is_empty() {
-                    inner.args = vec![new_rhs];
+            Node::Send(Send {
+                args,
+                operator_l,
+                expression_l,
+                ..
+            })
+            | Node::CSend(CSend {
+                args,
+                operator_l,
+                expression_l,
+                ..
+            }) => {
+                *expression_l = expr_l;
+                *operator_l = op_l;
+                if args.is_empty() {
+                    *args = vec![new_rhs];
                 } else {
                     unreachable!("can't assign to method call with args")
                 }
@@ -1105,14 +1092,13 @@ impl Builder {
             | Node::Casgn { .. }
             | Node::Send { .. }
             | Node::CSend { .. } => {}
-            Node::Index(inner) => {
-                let Index {
-                    recv,
-                    indexes,
-                    begin_l,
-                    end_l,
-                    expression_l,
-                } = inner;
+            Node::Index(Index {
+                recv,
+                indexes,
+                begin_l,
+                end_l,
+                expression_l,
+            }) => {
                 lhs = Node::IndexAsgn(IndexAsgn {
                     recv,
                     indexes,
@@ -1123,13 +1109,11 @@ impl Builder {
                     operator_l: None,
                 });
             }
-            Node::BackRef(inner) => {
-                let BackRef { expression_l, name } = inner;
+            Node::BackRef(BackRef { expression_l, name }) => {
                 self.error(DiagnosticMessage::CantSetVariable(name), expression_l);
                 return Err(());
             }
-            Node::NthRef(inner) => {
-                let NthRef { expression_l, name } = inner;
+            Node::NthRef(NthRef { expression_l, name }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable(format!("${}", name)),
                     expression_l,
@@ -1607,20 +1591,17 @@ impl Builder {
 
     pub(crate) fn procarg0(&self, arg: Node) -> Node {
         match arg {
-            Node::Mlhs(inner) => {
-                let Mlhs {
-                    items,
-                    begin_l,
-                    end_l,
-                    expression_l,
-                } = inner;
-                Node::Procarg0(Procarg0 {
-                    args: items,
-                    begin_l,
-                    end_l,
-                    expression_l,
-                })
-            }
+            Node::Mlhs(Mlhs {
+                items,
+                begin_l,
+                end_l,
+                expression_l,
+            }) => Node::Procarg0(Procarg0 {
+                args: items,
+                begin_l,
+                end_l,
+                expression_l,
+            }),
             Node::Arg(arg) => Node::Procarg0(Procarg0 {
                 expression_l: arg.expression_l.clone(),
                 args: vec![Node::Arg(arg)],
@@ -1726,10 +1707,11 @@ impl Builder {
         let validate_block_and_block_arg = |args: &Vec<Node>| {
             if let Some(last_arg) = args.last() {
                 match last_arg {
-                    Node::BlockPass(_) | Node::ForwardedArgs(_) => {
+                    Node::BlockPass(BlockPass { expression_l, .. })
+                    | Node::ForwardedArgs(ForwardedArgs { expression_l, .. }) => {
                         self.error(
                             DiagnosticMessage::BlockAndBlockArgGiven,
-                            last_arg.inner_ref().expression().clone(),
+                            expression_l.clone(),
                         );
                         Err(())
                     }
@@ -1741,18 +1723,12 @@ impl Builder {
         };
 
         match &method_call {
-            Node::Yield(inner) => {
-                self.error(
-                    DiagnosticMessage::BlockGivenToYield,
-                    inner.keyword_l.clone(),
-                );
+            Node::Yield(Yield { keyword_l, .. }) => {
+                self.error(DiagnosticMessage::BlockGivenToYield, keyword_l.clone());
                 return Err(());
             }
-            Node::Send(inner) => {
-                validate_block_and_block_arg(&inner.args)?;
-            }
-            Node::CSend(inner) => {
-                validate_block_and_block_arg(&inner.args)?;
+            Node::Send(Send { args, .. }) | Node::CSend(CSend { args, .. }) => {
+                validate_block_and_block_arg(args)?;
             }
             _ => {}
         }
@@ -1829,12 +1805,11 @@ impl Builder {
         };
 
         let result = match method_call {
-            Node::Return(inner) => {
-                let Return {
-                    args,
-                    keyword_l,
-                    expression_l,
-                } = inner;
+            Node::Return(Return {
+                args,
+                keyword_l,
+                expression_l,
+            }) => {
                 let (args, expression_l) =
                     rewrite_args_and_loc(&args, &expression_l, block_args, block_body);
                 Node::Return(Return {
@@ -1843,12 +1818,11 @@ impl Builder {
                     expression_l,
                 })
             }
-            Node::Next(inner) => {
-                let Next {
-                    args,
-                    keyword_l,
-                    expression_l,
-                } = inner;
+            Node::Next(Next {
+                args,
+                keyword_l,
+                expression_l,
+            }) => {
                 let (args, expression_l) =
                     rewrite_args_and_loc(&args, &expression_l, block_args, block_body);
                 Node::Next(Next {
@@ -1857,12 +1831,11 @@ impl Builder {
                     expression_l,
                 })
             }
-            Node::Break(inner) => {
-                let Break {
-                    args,
-                    keyword_l,
-                    expression_l,
-                } = inner;
+            Node::Break(Break {
+                args,
+                keyword_l,
+                expression_l,
+            }) => {
                 let (args, expression_l) =
                     rewrite_args_and_loc(&args, &expression_l, block_args, block_body);
                 Node::Break(Break {
@@ -2592,7 +2565,9 @@ impl Builder {
             let mut statements: Vec<Node> = vec![];
 
             match compound_stmt {
-                Some(Node::Begin(inner)) => statements = (inner).statements,
+                Some(Node::Begin(Begin {
+                    statements: stmts, ..
+                })) => statements = stmts,
                 Some(compound_stmt) => statements.push(compound_stmt),
                 _ => {}
             }
@@ -2666,33 +2641,43 @@ impl Builder {
     }
 
     pub(crate) fn begin(&self, begin_t: Token, body: Option<Node>, end_t: Token) -> Node {
-        let begin_l = self.loc(&begin_t);
-        let end_l = self.loc(&end_t);
-        let expression_l = begin_l.join(&end_l);
+        let new_begin_l = self.loc(&begin_t);
+        let new_end_l = self.loc(&end_t);
+        let new_expression_l = new_begin_l.join(&new_end_l);
 
         if let Some(mut body) = body {
             match &mut body {
                 // Synthesized (begin) from compstmt "a; b" or (mlhs)
                 // from multi_lhs "(a, b) = *foo".
-                Node::Mlhs(inner) => {
-                    inner.begin_l = Some(begin_l);
-                    inner.end_l = Some(end_l);
-                    inner.expression_l = expression_l;
+                Node::Mlhs(Mlhs {
+                    begin_l,
+                    end_l,
+                    expression_l,
+                    ..
+                }) => {
+                    *begin_l = Some(new_begin_l);
+                    *end_l = Some(new_end_l);
+                    *expression_l = new_expression_l;
                     body
                 }
-                Node::Begin(inner) if inner.begin_l.is_none() && inner.end_l.is_none() => {
-                    inner.begin_l = Some(begin_l);
-                    inner.end_l = Some(end_l);
-                    inner.expression_l = expression_l;
+                Node::Begin(Begin {
+                    begin_l,
+                    end_l,
+                    expression_l,
+                    ..
+                }) if begin_l.is_none() && end_l.is_none() => {
+                    *begin_l = Some(new_begin_l);
+                    *end_l = Some(new_end_l);
+                    *expression_l = new_expression_l;
                     body
                 }
                 _ => {
                     let statements = vec![body];
                     Node::Begin(Begin {
                         statements,
-                        begin_l: Some(begin_l),
-                        end_l: Some(end_l),
-                        expression_l,
+                        begin_l: Some(new_begin_l),
+                        end_l: Some(new_end_l),
+                        expression_l: new_expression_l,
                     })
                 }
             }
@@ -2700,9 +2685,9 @@ impl Builder {
             // A nil expression: `()'.
             Node::Begin(Begin {
                 statements: vec![],
-                begin_l: Some(begin_l),
-                end_l: Some(end_l),
-                expression_l,
+                begin_l: Some(new_begin_l),
+                end_l: Some(new_end_l),
+                expression_l: new_expression_l,
             })
         }
     }
@@ -2722,8 +2707,7 @@ impl Builder {
                     expression_l,
                 })
             }
-            Some(Node::Begin(inner)) => {
-                let Begin { statements, .. } = inner;
+            Some(Node::Begin(Begin { statements, .. })) => {
                 // Synthesized (begin) from compstmt "a; b".
                 Node::KwBegin(KwBegin {
                     statements,
@@ -2886,14 +2870,12 @@ impl Builder {
         }
 
         let result = match strings.remove(0) {
-            Node::Str(inner) => {
-                let Str {
-                    value,
-                    begin_l,
-                    end_l,
-                    expression_l,
-                } = inner;
-
+            Node::Str(Str {
+                value,
+                begin_l,
+                end_l,
+                expression_l,
+            }) => {
                 let name = value.to_string_lossy();
                 let mut name_l = expression_l.clone();
 
@@ -2928,7 +2910,9 @@ impl Builder {
                     expression_l,
                 })
             }
-            Node::Begin(inner) => self.match_hash_var_from_str(begin_t, inner.statements, end_t)?,
+            Node::Begin(Begin { statements, .. }) => {
+                self.match_hash_var_from_str(begin_t, statements, end_t)?
+            }
             _ => {
                 self.error(
                     DiagnosticMessage::SymbolLiteralWithInterpolation,
@@ -3130,15 +3114,14 @@ impl Builder {
 
     pub(crate) fn check_condition(&self, cond: Node) -> Node {
         match cond {
-            Node::Begin(inner) => {
-                if inner.statements.len() == 1 {
-                    let Begin {
-                        statements,
-                        begin_l,
-                        end_l,
-                        expression_l,
-                    } = inner;
-
+            Node::Begin(Begin {
+                statements,
+                begin_l,
+                end_l,
+                expression_l,
+                ..
+            }) => {
+                if statements.len() == 1 {
                     let stmt = first(statements);
                     let stmt = self.check_condition(stmt);
                     Node::Begin(Begin {
@@ -3148,47 +3131,66 @@ impl Builder {
                         expression_l,
                     })
                 } else {
-                    Node::Begin(inner)
+                    Node::Begin(Begin {
+                        statements,
+                        begin_l,
+                        end_l,
+                        expression_l,
+                    })
                 }
             }
-            Node::And(mut inner) => {
-                inner.lhs = Box::new(self.check_condition(*inner.lhs));
-                inner.rhs = Box::new(self.check_condition(*inner.rhs));
-                Node::And(inner)
-            }
-            Node::Or(mut inner) => {
-                inner.lhs = Box::new(self.check_condition(*inner.lhs));
-                inner.rhs = Box::new(self.check_condition(*inner.rhs));
-                Node::Or(inner)
-            }
-            Node::Irange(inner) => {
-                let Irange {
-                    left,
-                    right,
-                    operator_l,
-                    expression_l,
-                } = inner;
-                Node::IFlipFlop(IFlipFlop {
-                    left: left.map(|node| Box::new(self.check_condition(*node))),
-                    right: right.map(|node| Box::new(self.check_condition(*node))),
+            Node::And(And {
+                lhs,
+                rhs,
+                operator_l,
+                expression_l,
+            }) => {
+                let lhs = Box::new(self.check_condition(*lhs));
+                let rhs = Box::new(self.check_condition(*rhs));
+                Node::And(And {
+                    lhs,
+                    rhs,
                     operator_l,
                     expression_l,
                 })
             }
-            Node::Erange(inner) => {
-                let Erange {
-                    left,
-                    right,
-                    operator_l,
-                    expression_l,
-                } = inner;
-                Node::EFlipFlop(EFlipFlop {
-                    left: left.map(|node| Box::new(self.check_condition(*node))),
-                    right: right.map(|node| Box::new(self.check_condition(*node))),
+            Node::Or(Or {
+                lhs,
+                rhs,
+                operator_l,
+                expression_l,
+            }) => {
+                let lhs = Box::new(self.check_condition(*lhs));
+                let rhs = Box::new(self.check_condition(*rhs));
+                Node::Or(Or {
+                    lhs,
+                    rhs,
                     operator_l,
                     expression_l,
                 })
             }
+            Node::Irange(Irange {
+                left,
+                right,
+                operator_l,
+                expression_l,
+            }) => Node::IFlipFlop(IFlipFlop {
+                left: left.map(|node| Box::new(self.check_condition(*node))),
+                right: right.map(|node| Box::new(self.check_condition(*node))),
+                operator_l,
+                expression_l,
+            }),
+            Node::Erange(Erange {
+                left,
+                right,
+                operator_l,
+                expression_l,
+            }) => Node::EFlipFlop(EFlipFlop {
+                left: left.map(|node| Box::new(self.check_condition(*node))),
+                right: right.map(|node| Box::new(self.check_condition(*node))),
+                operator_l,
+                expression_l,
+            }),
             Node::Regexp(inner) => Node::MatchCurrentLine(MatchCurrentLine {
                 expression_l: inner.expression_l.clone(),
                 re: Box::new(Node::Regexp(inner)),
@@ -3214,11 +3216,11 @@ impl Builder {
                 | Node::Blockarg(_) => {
                     self.check_duplicate_arg(arg, map);
                 }
-                Node::Mlhs(inner) => {
-                    self.check_duplicate_args(&inner.items, map);
+                Node::Mlhs(Mlhs { items, .. }) => {
+                    self.check_duplicate_args(items, map);
                 }
-                Node::Procarg0(inner) => {
-                    self.check_duplicate_args(&inner.args, map);
+                Node::Procarg0(Procarg0 { args, .. }) => {
+                    self.check_duplicate_args(args, map);
                 }
                 Node::ForwardArg(_) | Node::Kwnilarg(_) => {}
                 _ => unreachable!("unsupported arg type {:?}", arg),
@@ -3228,28 +3230,37 @@ impl Builder {
 
     fn arg_name<'a>(&self, node: &'a Node) -> Option<&'a String> {
         match node {
-            Node::Arg(inner) => Some(&inner.name),
-            Node::Optarg(inner) => Some(&inner.name),
-            Node::Kwarg(inner) => Some(&inner.name),
-            Node::Kwoptarg(inner) => Some(&inner.name),
-            Node::Shadowarg(inner) => Some(&inner.name),
-            Node::Blockarg(inner) => Some(&inner.name),
-            Node::Restarg(inner) => inner.name.as_ref(),
-            Node::Kwrestarg(inner) => inner.name.as_ref(),
+            Node::Arg(Arg { name, .. })
+            | Node::Optarg(Optarg { name, .. })
+            | Node::Kwarg(Kwarg { name, .. })
+            | Node::Kwoptarg(Kwoptarg { name, .. })
+            | Node::Shadowarg(Shadowarg { name, .. })
+            | Node::Blockarg(Blockarg { name, .. }) => Some(name),
+            Node::Restarg(Restarg { name, .. }) | Node::Kwrestarg(Kwrestarg { name, .. }) => {
+                name.as_ref()
+            }
             _ => unreachable!("unsupported arg {:?}", node),
         }
     }
 
     fn arg_name_loc<'a>(&self, node: &'a Node) -> &'a Range {
         match node {
-            Node::Arg(inner) => &inner.expression_l,
-            Node::Optarg(inner) => &inner.name_l,
-            Node::Kwarg(inner) => &inner.name_l,
-            Node::Kwoptarg(inner) => &inner.name_l,
-            Node::Shadowarg(inner) => &inner.expression_l,
-            Node::Blockarg(inner) => &inner.name_l,
-            Node::Restarg(inner) => inner.name_l.as_ref().unwrap_or(&inner.expression_l),
-            Node::Kwrestarg(inner) => inner.name_l.as_ref().unwrap_or(&inner.expression_l),
+            Node::Arg(Arg { expression_l, .. }) => expression_l,
+            Node::Optarg(Optarg { name_l, .. }) => name_l,
+            Node::Kwarg(Kwarg { name_l, .. }) => name_l,
+            Node::Kwoptarg(Kwoptarg { name_l, .. }) => name_l,
+            Node::Shadowarg(Shadowarg { expression_l, .. }) => expression_l,
+            Node::Blockarg(Blockarg { name_l, .. }) => name_l,
+            Node::Restarg(Restarg {
+                name_l,
+                expression_l,
+                ..
+            })
+            | Node::Kwrestarg(Kwrestarg {
+                name_l,
+                expression_l,
+                ..
+            }) => name_l.as_ref().unwrap_or(&expression_l),
 
             _ => unreachable!("unsupported arg {:?}", node),
         }
@@ -3378,12 +3389,12 @@ impl Builder {
 
         for node in nodes {
             match node {
-                Node::Str(inner) => {
-                    let value = inner.value.to_string_lossy();
+                Node::Str(Str { value, .. }) => {
+                    let value = value.to_string_lossy();
                     result.push_str(&value)
                 }
-                Node::Begin(inner) => {
-                    if let Some(s) = self.static_string(&inner.statements) {
+                Node::Begin(Begin { statements, .. }) => {
+                    if let Some(s) = self.static_string(&statements) {
                         result.push_str(&s)
                     } else {
                         return None;
@@ -3439,18 +3450,17 @@ impl Builder {
 
     #[cfg(feature = "onig")]
     pub(crate) fn static_regexp_captures(&self, node: &Node) -> Option<Vec<String>> {
-        if let Node::Regexp(inner) = node {
-            let Regexp {
-                parts,
-                options,
-                expression_l,
-                ..
-            } = &*inner;
-
+        if let Node::Regexp(Regexp {
+            parts,
+            options,
+            expression_l,
+            ..
+        }) = node
+        {
             let mut re_options: &[char] = &[];
             if let Some(options) = options {
-                if let Node::RegOpt(inner) = &**options {
-                    re_options = &inner.options;
+                if let Node::RegOpt(RegOpt { options, .. }) = &**options {
+                    re_options = options;
                 }
             };
             let regex = self.build_static_regexp(parts, re_options, expression_l)?;
@@ -3574,14 +3584,26 @@ impl Builder {
             Node::Return(_) | Node::Break(_) | Node::Next(_) | Node::Redo(_) | Node::Retry(_) => {
                 Some(node)
             }
-            Node::InMatch(inner) => self.void_value(&inner.value),
-            Node::Begin(inner) => check_stmts(&inner.statements),
-            Node::KwBegin(inner) => check_stmts(&inner.statements),
-            Node::If(inner) => check_maybe_condition(&inner.if_true, &inner.if_false),
-            Node::IfMod(inner) => check_maybe_condition(&inner.if_true, &inner.if_false),
-            Node::IfTernary(inner) => check_condition(&inner.if_true, &inner.if_false),
-            Node::And(inner) => self.void_value(&inner.lhs),
-            Node::Or(inner) => self.void_value(&inner.lhs),
+
+            Node::InMatch(InMatch { value, .. }) => self.void_value(value),
+
+            Node::Begin(Begin { statements, .. }) | Node::KwBegin(KwBegin { statements, .. }) => {
+                check_stmts(statements)
+            }
+
+            Node::If(If {
+                if_true, if_false, ..
+            })
+            | Node::IfMod(IfMod {
+                if_true, if_false, ..
+            }) => check_maybe_condition(if_true, if_false),
+
+            Node::IfTernary(IfTernary {
+                if_true, if_false, ..
+            }) => check_condition(if_true, if_false),
+
+            Node::And(And { lhs, .. }) | Node::Or(Or { lhs, .. }) => self.void_value(lhs),
+
             _ => None,
         }
     }
