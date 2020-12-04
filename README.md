@@ -131,7 +131,7 @@ If you use it from GitHub directly you also need Bison (because `parser.rs` is u
 You can use `parse` example:
 
 ```sh
-$ RUSTFLAGS="-C debug-assertions=n" cargo run --all-features --example parse -- -qq --profile "<pattern>"
+$ cargo run --all-features --example parse -- --no-output --profile "<pattern>"
 ```
 
 ## Benchmarking

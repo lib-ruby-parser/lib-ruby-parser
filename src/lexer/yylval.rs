@@ -1,6 +1,6 @@
 use crate::lexer::*;
-use crate::parser::TokenValue;
 use crate::TokenBuf;
+use crate::TokenValue;
 
 pub(crate) trait Yylval {
     fn set_yylval_id(&mut self, id: &str);

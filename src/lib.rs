@@ -18,7 +18,7 @@ pub use parser_result::ParserResult;
 
 mod parser;
 pub(crate) use parser::Loc;
-pub use parser::{token_name, Parser, Token};
+pub use parser::{token_name, Parser};
 
 mod builder;
 pub(crate) use builder::Builder;
@@ -62,3 +62,6 @@ pub mod traverse;
 
 mod string_value;
 pub use string_value::StringValue;
+
+mod token;
+pub use token::{Token, TokenValue};

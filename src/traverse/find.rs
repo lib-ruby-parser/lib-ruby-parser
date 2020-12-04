@@ -200,7 +200,7 @@ impl<'a> Find {
         self.visit(node)
     }
 
-    fn maybe_find(&mut self, node: &Option<Node>) -> Option<Node> {
+    fn maybe_find(&mut self, node: &Option<Box<Node>>) -> Option<Node> {
         if let Some(node) = node {
             self.find(node)
         } else {

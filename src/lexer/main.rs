@@ -1,8 +1,7 @@
 use crate::error::Diagnostics;
 use crate::lexer::*;
 use crate::maybe_byte::*;
-use crate::parser::TokenValue;
-use crate::parser::{Loc, Token};
+use crate::parser::Loc;
 use crate::source::buffer::*;
 use crate::source::Comment;
 use crate::source::CustomDecoder;
@@ -16,6 +15,7 @@ use crate::StaticEnvironment;
 use crate::TokenBuf;
 use crate::{lex_states::*, LexState};
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
+use crate::{Token, TokenValue};
 
 #[derive(Debug, Clone, Default)]
 pub struct Lexer {
