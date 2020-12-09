@@ -12,6 +12,18 @@ impl Node {
     }
 }
 
+#[allow(non_snake_case)]
+pub(crate) mod BoxedNode {
+    use super::{Node, ParseValue};
+
+    pub(crate) fn boxed_from(value: ParseValue) -> Box<Node> {
+        match value {
+            ParseValue::Node(value) => value,
+            other => unreachable!("expected BoxedNode, got {:?}", other),
+        }
+    }
+}
+
 impl Token {
     pub(crate) fn boxed_from(value: ParseValue) -> Token {
         match value {
@@ -72,7 +84,7 @@ pub(crate) mod Num {
 #[derive(Debug, Clone)]
 pub(crate) struct Superclass {
     pub(crate) lt_t: Option<Token>,
-    pub(crate) value: Option<Node>,
+    pub(crate) value: Option<Box<Node>>,
 }
 impl Superclass {
     pub(crate) fn boxed_from(value: ParseValue) -> Superclass {
@@ -86,7 +98,7 @@ impl Superclass {
 #[derive(Debug, Clone)]
 pub(crate) struct Ensure {
     pub(crate) ensure_t: Token,
-    pub(crate) body: Option<Node>,
+    pub(crate) body: Option<Box<Node>>,
 }
 #[allow(non_snake_case)]
 pub(crate) mod OptEnsure {
@@ -103,7 +115,7 @@ pub(crate) mod OptEnsure {
 #[derive(Debug, Clone)]
 pub(crate) struct Else {
     pub(crate) else_t: Token,
-    pub(crate) body: Option<Node>,
+    pub(crate) body: Option<Box<Node>>,
 }
 #[allow(non_snake_case)]
 pub(crate) mod OptElse {
@@ -120,7 +132,7 @@ pub(crate) mod OptElse {
 #[derive(Debug, Clone)]
 pub(crate) struct ExcVar {
     pub(crate) assoc_t: Option<Token>,
-    pub(crate) exc_var: Option<Node>,
+    pub(crate) exc_var: Option<Box<Node>>,
 }
 impl ExcVar {
     pub(crate) fn boxed_from(value: ParseValue) -> ExcVar {
@@ -134,7 +146,7 @@ impl ExcVar {
 #[derive(Debug, Clone)]
 pub(crate) struct IfTail {
     pub(crate) keyword_t: Option<Token>,
-    pub(crate) body: Option<Node>,
+    pub(crate) body: Option<Box<Node>>,
 }
 impl IfTail {
     pub(crate) fn boxed_from(value: ParseValue) -> IfTail {
@@ -147,7 +159,7 @@ impl IfTail {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ExprValueDo {
-    pub(crate) value: Node,
+    pub(crate) value: Box<Node>,
     pub(crate) do_t: Token,
 }
 impl ExprValueDo {
@@ -171,7 +183,7 @@ impl PKwLabel {
 #[derive(Debug, Clone)]
 pub(crate) struct BraceBody {
     pub(crate) args_type: ArgsType,
-    pub(crate) body: Option<Node>,
+    pub(crate) body: Option<Box<Node>>,
 }
 impl BraceBody {
     pub(crate) fn boxed_from(value: ParseValue) -> BraceBody {
@@ -186,7 +198,7 @@ impl BraceBody {
 pub(crate) struct CmdBraceBlock {
     pub(crate) begin_t: Token,
     pub(crate) args_type: ArgsType,
-    pub(crate) body: Option<Node>,
+    pub(crate) body: Option<Box<Node>>,
     pub(crate) end_t: Token,
 }
 impl CmdBraceBlock {
@@ -231,7 +243,7 @@ impl OptParenArgs {
 #[derive(Debug, Clone)]
 pub(crate) struct BeginBlock {
     pub(crate) begin_t: Token,
-    pub(crate) body: Option<Node>,
+    pub(crate) body: Option<Box<Node>>,
     pub(crate) end_t: Token,
 }
 impl BeginBlock {
@@ -246,7 +258,7 @@ impl BeginBlock {
 #[derive(Debug, Clone)]
 pub(crate) struct LambdaBody {
     pub(crate) begin_t: Token,
-    pub(crate) body: Option<Node>,
+    pub(crate) body: Option<Box<Node>>,
     pub(crate) end_t: Token,
 }
 impl LambdaBody {
@@ -262,7 +274,7 @@ impl LambdaBody {
 pub(crate) struct DoBlock {
     pub(crate) begin_t: Token,
     pub(crate) args_type: ArgsType,
-    pub(crate) body: Option<Node>,
+    pub(crate) body: Option<Box<Node>>,
     pub(crate) end_t: Token,
 }
 impl DoBlock {
@@ -278,7 +290,7 @@ impl DoBlock {
 pub(crate) struct BraceBlock {
     pub(crate) begin_t: Token,
     pub(crate) args_type: ArgsType,
-    pub(crate) body: Option<Node>,
+    pub(crate) body: Option<Box<Node>>,
     pub(crate) end_t: Token,
 }
 impl BraceBlock {
@@ -293,7 +305,7 @@ impl BraceBlock {
 #[derive(Debug, Clone)]
 pub(crate) struct DefsHead {
     pub(crate) def_t: Token,
-    pub(crate) definee: Node,
+    pub(crate) definee: Box<Node>,
     pub(crate) dot_t: Token,
     pub(crate) name_t: Token,
 }
@@ -382,7 +394,19 @@ pub(crate) mod MaybeNode {
 
     pub(crate) fn boxed_from(value: ParseValue) -> Option<Node> {
         match value {
-            ParseValue::MaybeNode(value) => *value,
+            ParseValue::MaybeNode(value) => value.map(|boxed| *boxed),
+            other => unreachable!("expected MaybeNode, got {:?}", other),
+        }
+    }
+}
+
+#[allow(non_snake_case)]
+pub(crate) mod MaybeBoxedNode {
+    use super::{Node, ParseValue};
+
+    pub(crate) fn boxed_from(value: ParseValue) -> Option<Box<Node>> {
+        match value {
+            ParseValue::MaybeNode(value) => value,
             other => unreachable!("expected MaybeNode, got {:?}", other),
         }
     }
@@ -391,7 +415,7 @@ pub(crate) mod MaybeNode {
 #[derive(Debug, Clone)]
 pub(crate) struct DoBody {
     pub(crate) args_type: ArgsType,
-    pub(crate) body: Option<Node>,
+    pub(crate) body: Option<Box<Node>>,
 }
 impl DoBody {
     pub(crate) fn boxed_from(value: ParseValue) -> DoBody {
@@ -404,8 +428,8 @@ impl DoBody {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PTopExpr {
-    pub(crate) pattern: Node,
-    pub(crate) guard: Option<Node>,
+    pub(crate) pattern: Box<Node>,
+    pub(crate) guard: Option<Box<Node>>,
 }
 impl PTopExpr {
     pub(crate) fn boxed_from(value: ParseValue) -> PTopExpr {
@@ -507,7 +531,7 @@ pub(crate) enum ParseValue {
     PCaseBody(Box<PCaseBody>),
 
     /* For custom compstmt rule */
-    MaybeNode(Box<Option<Node>>),
+    MaybeNode(Option<Box<Node>>),
 
     /* For custom do_body rule */
     DoBody(Box<DoBody>),
@@ -612,7 +636,7 @@ impl ParseValue {
         Self::PCaseBody(Box::new(value))
     }
     pub fn new_maybe_node(value: Option<Node>) -> Self {
-        Self::MaybeNode(Box::new(value))
+        Self::MaybeNode(value.map(Box::new))
     }
     pub fn new_do_body(value: DoBody) -> Self {
         Self::DoBody(Box::new(value))
