@@ -7,7 +7,7 @@ pub struct StringValue {
 }
 
 impl StringValue {
-    pub fn new(token: Token) -> Self {
+    pub fn new(token: Box<Token>) -> Self {
         match token.token_value {
             TokenValue::String(s) => StringValue {
                 valid: true,

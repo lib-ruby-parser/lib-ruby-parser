@@ -323,7 +323,7 @@
     top_compstmt: top_stmts opt_terms
                     {
                         // TODO: run void_stmts
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.compstmt($<NodeList>1)
                         );
                     }
@@ -367,7 +367,7 @@
                         $$ = Value::new_begin_block(
                             BeginBlock {
                                 begin_t: $<Token>1,
-                                body: $<MaybeNode>2,
+                                body: $<MaybeBoxedNode>2,
                                 end_t: $<Token>3
                             }
                         );
@@ -379,16 +379,16 @@
                   compstmt
                   opt_ensure
                     {
-                        let compound_stmt = $<MaybeNode>1;
+                        let compound_stmt = $<MaybeBoxedNode>1;
                         let rescue_bodies = $<NodeList>2;
                         if rescue_bodies.is_empty() {
                             return self.yyerror(&@3, DiagnosticMessage::ElseWithoutRescue);
                         }
 
-                        let else_ = Some(( $<Token>3, $<MaybeNode>4 ));
+                        let else_ = Some(( $<Token>3, $<MaybeBoxedNode>4 ));
                         let ensure = $<OptEnsure>5.map(|ensure| (ensure.ensure_t, ensure.body));
 
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.begin_body(
                                 compound_stmt,
                                 rescue_bodies,
@@ -401,11 +401,11 @@
                   opt_rescue
                   opt_ensure
                     {
-                        let compound_stmt = $<MaybeNode>1;
+                        let compound_stmt = $<MaybeBoxedNode>1;
                         let rescue_bodies = $<NodeList>2;
                         let ensure = $<OptEnsure>3.map(|ensure| (ensure.ensure_t, ensure.body));
 
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.begin_body(
                                 compound_stmt,
                                 rescue_bodies,
@@ -419,7 +419,7 @@
         compstmt: stmts opt_terms
                     {
                         // TODO: run void_stmts
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.compstmt($<NodeList>1)
                         );
                     }
@@ -467,7 +467,7 @@
                   fitem
                     {
                         $$ = Value::new_node(
-                            self.builder.alias($<Token>1, $<Node>2, $<Node>4)
+                            self.builder.alias($<Token>1, $<BoxedNode>2, $<BoxedNode>4)
                         );
                     }
                 | kALIAS tGVAR tGVAR
@@ -507,10 +507,10 @@
                     {
                         $$ = Value::new_node(
                             self.builder.condition_mod(
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 None,
                                 $<Token>2,
-                                $<Node>3,
+                                $<BoxedNode>3,
                             )
                         );
                     }
@@ -519,9 +519,9 @@
                         $$ = Value::new_node(
                             self.builder.condition_mod(
                                 None,
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 $<Token>2,
-                                $<Node>3,
+                                $<BoxedNode>3,
                             )
                         );
                     }
@@ -530,9 +530,9 @@
                         $$ = Value::new_node(
                             self.builder.loop_mod(
                                 LoopType::While,
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3,
+                                $<BoxedNode>3,
                             )
                         );
                     }
@@ -541,9 +541,9 @@
                         $$ = Value::new_node(
                             self.builder.loop_mod(
                                 LoopType::Until,
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3,
+                                $<BoxedNode>3,
                             )
                         );
                     }
@@ -555,13 +555,13 @@
                             None,
                             None,
                             None,
-                            Some($<Node>3)
+                            Some($<BoxedNode>3)
                         );
 
-                        $$ = Value::new_node(
+                        $$ = Value::Node(
                             self.builder.begin_body(
-                                Some($<Node>1),
-                                vec![rescue_body],
+                                Some($<BoxedNode>1),
+                                vec![*rescue_body],
                                 None,
                                 None,
                             ).expect("expected begin_body to return Some (compound_stmt was given)")
@@ -577,7 +577,7 @@
                             self.builder.postexe(
                                 $<Token>1,
                                 $<Token>2,
-                                $<MaybeNode>3,
+                                $<MaybeBoxedNode>3,
                                 $<Token>4,
                             )
                         );
@@ -588,12 +588,12 @@
                     }
                 | mlhs tEQL command_call
                     {
-                        let command_call = $<Node>3;
+                        let command_call = $<BoxedNode>3;
                         self.value_expr(&command_call)?;
 
                         $$ = Value::new_node(
                             self.builder.multi_assign(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 command_call
                             )
@@ -610,7 +610,7 @@
 
                         $$ = Value::new_node(
                             self.builder.assign(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 mrhs
                             )
@@ -624,22 +624,22 @@
                             None,
                             None,
                             None,
-                            Some($<Node>5)
+                            Some($<BoxedNode>5)
                         );
 
-                        let mrhs_arg = $<Node>3;
+                        let mrhs_arg = $<BoxedNode>3;
                         self.value_expr(&mrhs_arg)?;
 
                         let begin_body = self.builder.begin_body(
                             Some(mrhs_arg),
-                            vec![ rescue_body ],
+                            vec![ *rescue_body ],
                             None,
                             None
                         ).expect("expected begin_body to return Some (compound_stmt was given)");
 
                         $$ = Value::new_node(
                             self.builder.multi_assign(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 begin_body
                             )
@@ -649,9 +649,9 @@
                     {
                         $$ = Value::new_node(
                             self.builder.multi_assign(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )
                         );
                     }
@@ -665,9 +665,9 @@
                     {
                         $$ = Value::new_node(
                             self.builder.assign(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )
                         );
                     }
@@ -675,9 +675,9 @@
                     {
                         $$ = Value::new_node(
                             self.builder.op_assign(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -686,13 +686,13 @@
                         $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.index(
-                                    $<Node>1,
+                                    $<BoxedNode>1,
                                     $<Token>2,
                                     $<NodeList>3,
                                     $<Token>4
                                 ),
                                 $<Token>5,
-                                $<Node>6
+                                $<BoxedNode>6
                             )?
                         );
                     }
@@ -701,7 +701,7 @@
                         $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<Node>1),
+                                    Some($<BoxedNode>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
@@ -709,7 +709,7 @@
                                     None
                                 ),
                                 $<Token>4,
-                                $<Node>5
+                                $<BoxedNode>5
                             )?
                         );
                     }
@@ -718,7 +718,7 @@
                         $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<Node>1),
+                                    Some($<BoxedNode>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
@@ -726,7 +726,7 @@
                                     None
                                 ),
                                 $<Token>4,
-                                $<Node>5
+                                $<BoxedNode>5
                             )?
                         );
                     }
@@ -734,7 +734,7 @@
                     {
                         let const_ = self.builder.const_op_assignable(
                             self.builder.const_fetch(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -743,7 +743,7 @@
                             self.builder.op_assign(
                                 const_,
                                 $<Token>4,
-                                $<Node>5
+                                $<BoxedNode>5
                             )?
                         );
                     }
@@ -752,7 +752,7 @@
                         $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<Node>1),
+                                    Some($<BoxedNode>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
@@ -760,7 +760,7 @@
                                     None
                                 ),
                                 $<Token>4,
-                                $<Node>5
+                                $<BoxedNode>5
                             )?
                         );
                     }
@@ -768,9 +768,9 @@
                     {
                         $$ = Value::new_node(
                             self.builder.op_assign(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -778,13 +778,13 @@
 
      command_rhs: command_call   %prec tOP_ASGN
                     {
-                        let command_call = $<Node>1;
+                        let command_call = $<BoxedNode>1;
                         self.value_expr(&command_call)?;
                         $$ = Value::new_node(command_call);
                     }
                 | command_call kRESCUE_MOD stmt
                     {
-                        let command_call = $<Node>1;
+                        let command_call = $<BoxedNode>1;
                         self.value_expr(&command_call)?;
 
                         let rescue_body = self.builder.rescue_body(
@@ -793,13 +793,13 @@
                             None,
                             None,
                             None,
-                            Some($<Node>3)
+                            Some($<BoxedNode>3)
                         );
 
-                        $$ = Value::new_node(
+                        $$ = Value::Node(
                             self.builder.begin_body(
                                 Some(command_call),
-                                vec![ rescue_body ],
+                                vec![ *rescue_body ],
                                 None,
                                 None
                             ).expect("expected begin_body to return Some (compound_stmt was given)")
@@ -820,9 +820,9 @@
                         $$ = Value::new_node(
                             self.builder.logical_op(
                                 LogicalOp::And,
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -831,9 +831,9 @@
                         $$ = Value::new_node(
                             self.builder.logical_op(
                                 LogicalOp::Or,
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -843,7 +843,7 @@
                             self.builder.not_op(
                                 $<Token>1,
                                 None,
-                                Some($<Node>3),
+                                Some($<BoxedNode>3),
                                 None
                             )?
                         );
@@ -854,7 +854,7 @@
                             self.builder.not_op(
                                 $<Token>1,
                                 None,
-                                Some($<Node>2),
+                                Some($<BoxedNode>2),
                                 None
                             )?
                         );
@@ -881,9 +881,9 @@
 
                         $$ = Value::new_node(
                             self.builder.in_match(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>4
+                                $<BoxedNode>4
                             )
                         );
                     }
@@ -930,7 +930,7 @@
                         $$ = Value::new_defs_head(
                             DefsHead {
                                 def_t: $<Token>1,
-                                definee: $<Node>2,
+                                definee: $<BoxedNode>2,
                                 dot_t: $<Token>3,
                                 name_t: $<Token>5
                             }
@@ -940,7 +940,7 @@
 
       expr_value: expr
                     {
-                        let expr = $<Node>1;
+                        let expr = $<BoxedNode>1;
                         self.value_expr(&expr)?;
                         $$ = Value::new_node(expr);
                     }
@@ -956,7 +956,7 @@
 
                         $$ = Value::new_expr_value_do(
                             ExprValueDo {
-                                value: $<Node>2,
+                                value: $<BoxedNode>2,
                                 do_t: $<Token>3
                             }
                         );
@@ -982,7 +982,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.call_method(
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 None,
@@ -1058,7 +1058,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.call_method(
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 None,
@@ -1070,7 +1070,7 @@
                 | primary_value call_op operation2 command_args cmd_brace_block
                     {
                         let method_call = self.builder.call_method(
-                            Some($<Node>1),
+                            Some($<BoxedNode>1),
                             Some($<Token>2),
                             Some($<Token>3),
                             None,
@@ -1093,7 +1093,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.call_method(
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 None,
@@ -1105,7 +1105,7 @@
                 | primary_value tCOLON2 operation2 command_args cmd_brace_block
                     {
                         let method_call = self.builder.call_method(
-                            Some($<Node>1),
+                            Some($<BoxedNode>1),
                             Some($<Token>2),
                             Some($<Token>3),
                             None,
@@ -1201,7 +1201,7 @@
                         $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
-                                Some($<Node>2),
+                                Some($<BoxedNode>2),
                                 $<Token>3
                             )
                         );
@@ -1248,14 +1248,14 @@
                 | mlhs_head tSTAR mlhs_node
                     {
                         let mut nodes = $<NodeList>1;
-                        nodes.push( self.builder.splat($<Token>2, Some($<Node>3)) );
+                        nodes.push( *self.builder.splat($<Token>2, Some($<BoxedNode>3)) );
                         $$ = Value::new_node_list(nodes);
                     }
                 | mlhs_head tSTAR mlhs_node tCOMMA mlhs_post
                     {
                         let nodes = [
                             $<NodeList>1,
-                            vec![ self.builder.splat($<Token>2, Some($<Node>3)) ],
+                            vec![ *self.builder.splat($<Token>2, Some($<BoxedNode>3)) ],
                             $<NodeList>5
                         ].concat();
                         $$ = Value::new_node_list(nodes);
@@ -1263,14 +1263,14 @@
                 | mlhs_head tSTAR
                     {
                         let mut nodes = $<NodeList>1;
-                        nodes.push( self.builder.splat($<Token>2, None) );
+                        nodes.push( *self.builder.splat($<Token>2, None) );
                         $$ = Value::new_node_list(nodes);
                     }
                 | mlhs_head tSTAR tCOMMA mlhs_post
                     {
                         let nodes = [
                             $<NodeList>1,
-                            vec![ self.builder.splat($<Token>2, None) ],
+                            vec![ *self.builder.splat($<Token>2, None) ],
                             $<NodeList>4
                         ].concat();
                         $$ = Value::new_node_list(nodes);
@@ -1279,14 +1279,14 @@
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.splat($<Token>1, Some($<Node>2))
+                                *self.builder.splat($<Token>1, Some($<BoxedNode>2))
                             ]
                         );
                     }
                 | tSTAR mlhs_node tCOMMA mlhs_post
                     {
                         let nodes = [
-                            vec![ self.builder.splat($<Token>1, Some($<Node>2)) ],
+                            vec![ *self.builder.splat($<Token>1, Some($<BoxedNode>2)) ],
                             $<NodeList>4
                         ].concat();
                         $$ = Value::new_node_list(nodes);
@@ -1295,14 +1295,14 @@
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.splat($<Token>1, None)
+                                *self.builder.splat($<Token>1, None)
                             ]
                         );
                     }
                 | tSTAR tCOMMA mlhs_post
                     {
                         let nodes = [
-                            vec![ self.builder.splat($<Token>1, None) ],
+                            vec![ *self.builder.splat($<Token>1, None) ],
                             $<NodeList>3
                         ].concat();
                         $$ = Value::new_node_list(nodes);
@@ -1318,7 +1318,7 @@
                         $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
-                                Some($<Node>2),
+                                Some($<BoxedNode>2),
                                 $<Token>3
                             )
                         );
@@ -1352,20 +1352,20 @@
        mlhs_node: user_variable
                     {
                         $$ = Value::new_node(
-                            self.builder.assignable($<Node>1)?
+                            self.builder.assignable($<BoxedNode>1)?
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::new_node(
-                            self.builder.assignable($<Node>1)?
+                            self.builder.assignable($<BoxedNode>1)?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
                         $$ = Value::new_node(
                             self.builder.index_asgn(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<NodeList>3,
                                 $<Token>4
@@ -1381,7 +1381,7 @@
 
                         $$ = Value::new_node(
                             self.builder.attr_asgn(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 op_t,
                                 $<Token>3
                             )
@@ -1391,7 +1391,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.attr_asgn(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -1406,7 +1406,7 @@
 
                         $$ = Value::new_node(
                             self.builder.attr_asgn(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 op_t,
                                 $<Token>3
                             )
@@ -1417,7 +1417,7 @@
                         $$ = Value::new_node(
                             self.builder.assignable(
                                 self.builder.const_fetch(
-                                    $<Node>1,
+                                    $<BoxedNode>1,
                                     $<Token>2,
                                     $<Token>3
                                 )
@@ -1439,7 +1439,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.assignable(
-                                $<Node>1
+                                $<BoxedNode>1
                             )?
                         );
                     }
@@ -1448,20 +1448,20 @@
              lhs: user_variable
                     {
                         $$ = Value::new_node(
-                            self.builder.assignable($<Node>1)?
+                            self.builder.assignable($<BoxedNode>1)?
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::new_node(
-                            self.builder.assignable($<Node>1)?
+                            self.builder.assignable($<BoxedNode>1)?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
                         $$ = Value::new_node(
                             self.builder.index_asgn(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<NodeList>3,
                                 $<Token>4
@@ -1472,7 +1472,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.attr_asgn(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -1482,7 +1482,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.attr_asgn(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -1492,7 +1492,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.attr_asgn(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -1503,7 +1503,7 @@
                         $$ = Value::new_node(
                             self.builder.assignable(
                                 self.builder.const_fetch(
-                                    $<Node>1,
+                                    $<BoxedNode>1,
                                     $<Token>2,
                                     $<Token>3,
                                 )
@@ -1525,7 +1525,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.assignable(
-                                $<Node>1
+                                $<BoxedNode>1
                             )?
                         );
                     }
@@ -1557,7 +1557,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.const_fetch(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<Token>3,
                             )
@@ -1696,9 +1696,9 @@
                     {
                         $$ = Value::new_node(
                             self.builder.assign(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )
                         );
                     }
@@ -1706,9 +1706,9 @@
                     {
                         $$ = Value::new_node(
                             self.builder.op_assign(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -1717,13 +1717,13 @@
                         $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.index(
-                                    $<Node>1,
+                                    $<BoxedNode>1,
                                     $<Token>2,
                                     $<NodeList>3,
                                     $<Token>4
                                 ),
                                 $<Token>5,
-                                $<Node>6
+                                $<BoxedNode>6
                             )?
                         );
                     }
@@ -1732,7 +1732,7 @@
                         $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<Node>1),
+                                    Some($<BoxedNode>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
@@ -1740,7 +1740,7 @@
                                     None
                                 ),
                                 $<Token>4,
-                                $<Node>5
+                                $<BoxedNode>5
                             )?
                         );
                     }
@@ -1749,7 +1749,7 @@
                         $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<Node>1),
+                                    Some($<BoxedNode>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
@@ -1757,7 +1757,7 @@
                                     None
                                 ),
                                 $<Token>4,
-                                $<Node>5
+                                $<BoxedNode>5
                             )?
                         );
                     }
@@ -1766,7 +1766,7 @@
                         $$ = Value::new_node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<Node>1),
+                                    Some($<BoxedNode>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
@@ -1774,7 +1774,7 @@
                                     None
                                 ),
                                 $<Token>4,
-                                $<Node>5
+                                $<BoxedNode>5
                             )?
                         );
                     }
@@ -1782,7 +1782,7 @@
                     {
                         let const_ = self.builder.const_op_assignable(
                             self.builder.const_fetch(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -1791,7 +1791,7 @@
                             self.builder.op_assign(
                                 const_,
                                 $<Token>4,
-                                $<Node>5
+                                $<BoxedNode>5
                             )?
                         );
                     }
@@ -1807,7 +1807,7 @@
                             self.builder.op_assign(
                                 const_,
                                 $<Token>3,
-                                $<Node>4
+                                $<BoxedNode>4
                             )?
                         );
                     }
@@ -1815,18 +1815,18 @@
                     {
                         $$ = Value::new_node(
                             self.builder.op_assign(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
                 | arg tDOT2 arg
                     {
-                        let left = $<Node>1;
+                        let left = $<BoxedNode>1;
                         self.value_expr(&left)?;
 
-                        let right = $<Node>3;
+                        let right = $<BoxedNode>3;
                         self.value_expr(&right)?;
 
                         $$ = Value::new_node(
@@ -1839,10 +1839,10 @@
                     }
                 | arg tDOT3 arg
                     {
-                        let left = $<Node>1;
+                        let left = $<BoxedNode>1;
                         self.value_expr(&left)?;
 
-                        let right = $<Node>3;
+                        let right = $<BoxedNode>3;
                         self.value_expr(&right)?;
 
                         $$ = Value::new_node(
@@ -1855,7 +1855,7 @@
                     }
                 | arg tDOT2
                     {
-                        let left = $<Node>1;
+                        let left = $<BoxedNode>1;
                         self.value_expr(&left)?;
 
                         $$ = Value::new_node(
@@ -1868,7 +1868,7 @@
                     }
                 | arg tDOT3
                     {
-                        let left = $<Node>1;
+                        let left = $<BoxedNode>1;
                         self.value_expr(&left)?;
 
                         $$ = Value::new_node(
@@ -1881,7 +1881,7 @@
                     }
                 | tBDOT2 arg
                     {
-                        let right = $<Node>2;
+                        let right = $<BoxedNode>2;
                         self.value_expr(&right)?;
 
                         $$ = Value::new_node(
@@ -1894,7 +1894,7 @@
                     }
                 | tBDOT3 arg
                     {
-                        let right = $<Node>2;
+                        let right = $<BoxedNode>2;
                         self.value_expr(&right)?;
 
                         $$ = Value::new_node(
@@ -1908,37 +1908,37 @@
                 | arg tPLUS arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tMINUS arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tSTAR2 arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tDIVIDE arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tPERCENT arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tPOW arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | tUMINUS_NUM simple_numeric tPOW arg
@@ -1947,9 +1947,9 @@
                             self.builder.unary_op(
                                 $<Token>1,
                                 self.builder.binary_op(
-                                    $<Node>2,
+                                    $<BoxedNode>2,
                                     $<Token>3,
-                                    $<Node>4
+                                    $<BoxedNode>4
                                 )?
                             )?
                         );
@@ -1959,7 +1959,7 @@
                         $$ = Value::new_node(
                             self.builder.unary_op(
                                 $<Token>1,
-                                $<Node>2
+                                $<BoxedNode>2
                             )?
                         );
                     }
@@ -1968,32 +1968,32 @@
                         $$ = Value::new_node(
                             self.builder.unary_op(
                                 $<Token>1,
-                                $<Node>2
+                                $<BoxedNode>2
                             )?
                         );
                     }
                 | arg tPIPE arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tCARET arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tAMPER2 arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tCMP arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | rel_expr   %prec tCMP
@@ -2003,34 +2003,34 @@
                 | arg tEQ arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tEQQ arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tNEQ arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tMATCH arg
                     {
                         $$ = Value::new_node(
-                            self.builder.match_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.match_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tNMATCH arg
                     {
                         $$ = Value::new_node(
                             self.builder.binary_op(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -2040,7 +2040,7 @@
                             self.builder.not_op(
                                 $<Token>1,
                                 None,
-                                Some($<Node>2),
+                                Some($<BoxedNode>2),
                                 None
                             )?
                         );
@@ -2050,20 +2050,20 @@
                         $$ = Value::new_node(
                             self.builder.unary_op(
                                 $<Token>1,
-                                $<Node>2
+                                $<BoxedNode>2
                             )?
                         );
                     }
                 | arg tLSHFT arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tRSHFT arg
                     {
                         $$ = Value::new_node(
-                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
+                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
                         );
                     }
                 | arg tANDOP arg
@@ -2071,9 +2071,9 @@
                         $$ = Value::new_node(
                             self.builder.logical_op(
                                 LogicalOp::And,
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -2082,9 +2082,9 @@
                         $$ = Value::new_node(
                             self.builder.logical_op(
                                 LogicalOp::Or,
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -2102,16 +2102,16 @@
                     }
                 | arg tEH arg opt_nl tCOLON arg
                     {
-                        let expr = $<Node>1;
+                        let expr = $<BoxedNode>1;
                         self.value_expr(&expr)?;
 
                         $$ = Value::new_node(
                             self.builder.ternary(
                                 expr,
                                 $<Token>2,
-                                $<Node>3,
+                                $<BoxedNode>3,
                                 $<Token>5,
-                                $<Node>6
+                                $<BoxedNode>6
                             )
                         );
                     }
@@ -2124,9 +2124,9 @@
                             self.builder.def_endless_method(
                                 def_t,
                                 name_t,
-                                $<MaybeNode>2,
+                                $<MaybeBoxedNode>2,
                                 $<Token>3,
-                                Some($<Node>4)
+                                Some($<BoxedNode>4)
                             )?
                         );
 
@@ -2147,12 +2147,12 @@
                             None,
                             None,
                             None,
-                            Some($<Node>6)
+                            Some($<BoxedNode>6)
                         );
 
                         let method_body = self.builder.begin_body(
-                            Some($<Node>4),
-                            vec![ rescue_body ],
+                            Some($<BoxedNode>4),
+                            vec![ *rescue_body ],
                             None,
                             None
                         );
@@ -2161,7 +2161,7 @@
                             self.builder.def_endless_method(
                                 def_t,
                                 name_t,
-                                $<MaybeNode>2,
+                                $<MaybeBoxedNode>2,
                                 $<Token>3,
                                 method_body
                             )?
@@ -2184,9 +2184,9 @@
                                 definee,
                                 dot_t,
                                 name_t,
-                                $<MaybeNode>2,
+                                $<MaybeBoxedNode>2,
                                 $<Token>3,
-                                Some($<Node>4)
+                                Some($<BoxedNode>4)
                             )?
                         );
 
@@ -2207,12 +2207,12 @@
                             None,
                             None,
                             None,
-                            Some($<Node>6)
+                            Some($<BoxedNode>6)
                         );
 
                         let method_body = self.builder.begin_body(
-                            Some($<Node>4),
-                            vec![ rescue_body ],
+                            Some($<BoxedNode>4),
+                            vec![ *rescue_body ],
                             None,
                             None
                         );
@@ -2223,7 +2223,7 @@
                                 definee,
                                 dot_t,
                                 name_t,
-                                $<MaybeNode>2,
+                                $<MaybeBoxedNode>2,
                                 $<Token>3,
                                 method_body
                             )?
@@ -2263,9 +2263,9 @@
                     {
                         $$ = Value::new_node(
                             self.builder.binary_op(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -2275,9 +2275,9 @@
                         self.warn(&@2, DiagnosticMessage::ComparisonAfterComparison(clone_value(&op_t)));
                         $$ = Value::new_node(
                             self.builder.binary_op(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 op_t,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -2285,7 +2285,7 @@
 
        arg_value: arg
                     {
-                        let arg = $<Node>1;
+                        let arg = $<BoxedNode>1;
                         self.value_expr(&arg)?;
                         $$ = Value::new_node(arg);
                     }
@@ -2303,7 +2303,7 @@
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push(
-                            self.builder.associate(None, $<NodeList>3, None)
+                            *self.builder.associate(None, $<NodeList>3, None)
                         );
                         $$ = Value::new_node_list( nodes );
                     }
@@ -2311,7 +2311,7 @@
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.associate(None, $<NodeList>1, None)
+                                *self.builder.associate(None, $<NodeList>1, None)
                             ]
                         );
                     }
@@ -2319,13 +2319,13 @@
 
          arg_rhs: arg   %prec tOP_ASGN
                     {
-                        let arg = $<Node>1;
+                        let arg = $<BoxedNode>1;
                         self.value_expr(&arg)?;
                         $$ = Value::new_node(arg);
                     }
                 | arg kRESCUE_MOD arg
                     {
-                        let arg = $<Node>1;
+                        let arg = $<BoxedNode>1;
                         self.value_expr(&arg)?;
 
                         let rescue_body = self.builder.rescue_body(
@@ -2334,13 +2334,13 @@
                             None,
                             None,
                             None,
-                            Some($<Node>3)
+                            Some($<BoxedNode>3)
                         );
 
-                        $$ = Value::new_node(
+                        $$ = Value::Node(
                             self.builder.begin_body(
                                 Some(arg),
-                                vec![ rescue_body ],
+                                vec![ *rescue_body ],
                                 None,
                                 None
                             ).expect("expected begin_body to return Some (compound_stmt was given)")
@@ -2366,7 +2366,7 @@
 
                         let args = [
                             $<NodeList>2,
-                            vec![ self.builder.forwarded_args($<Token>4) ]
+                            vec![ *self.builder.forwarded_args($<Token>4) ]
                         ].concat();
                         $$ = Value::new_paren_args(
                             ParenArgs {
@@ -2385,7 +2385,7 @@
                         $$ = Value::new_paren_args(
                             ParenArgs {
                                 begin_t: $<Token>1,
-                                args: vec![ self.builder.forwarded_args($<Token>2) ],
+                                args: vec![ *self.builder.forwarded_args($<Token>2) ],
                                 end_t: $<Token>3
                             }
                         );
@@ -2430,14 +2430,14 @@
                 | args tCOMMA assocs tCOMMA
                     {
                         let mut nodes = $<NodeList>1;
-                        nodes.push( self.builder.associate(None, $<NodeList>3, None) );
+                        nodes.push( *self.builder.associate(None, $<NodeList>3, None) );
                         $$ = Value::new_node_list( nodes );
                     }
                 | assocs tCOMMA
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.associate(None, $<NodeList>1, None)
+                                *self.builder.associate(None, $<NodeList>1, None)
                             ]
                         );
                     }
@@ -2457,7 +2457,7 @@
                 | assocs opt_block_arg
                     {
                         let nodes = [
-                            vec![ self.builder.associate(None, $<NodeList>1, None) ],
+                            vec![ *self.builder.associate(None, $<NodeList>1, None) ],
                             $<NodeList>2
                         ].concat();
                         $$ = Value::new_node_list( nodes );
@@ -2466,7 +2466,7 @@
                     {
                         let nodes = [
                             $<NodeList>1,
-                            vec![ self.builder.associate(None, $<NodeList>3, None) ],
+                            vec![ *self.builder.associate(None, $<NodeList>3, None) ],
                             $<NodeList>4
                         ].concat();
                         $$ = Value::new_node_list( nodes );
@@ -2510,7 +2510,7 @@
                         $$ = Value::new_node(
                             self.builder.block_pass(
                                 $<Token>1,
-                                $<Node>2
+                                $<BoxedNode>2
                             )
                         );
                     }
@@ -2534,7 +2534,7 @@
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.splat($<Token>1, Some($<Node>2))
+                                *self.builder.splat($<Token>1, Some($<BoxedNode>2))
                             ]
                         );
                     }
@@ -2547,7 +2547,7 @@
                 | args tCOMMA tSTAR arg_value
                     {
                         let mut nodes = $<NodeList>1;
-                        nodes.push( self.builder.splat($<Token>3, Some($<Node>4)) );
+                        nodes.push( *self.builder.splat($<Token>3, Some($<BoxedNode>4)) );
                         $$ = Value::new_node_list(nodes);
                     }
                 ;
@@ -2574,7 +2574,7 @@
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push(
-                            self.builder.splat($<Token>3, Some($<Node>4))
+                            *self.builder.splat($<Token>3, Some($<BoxedNode>4))
                         );
                         $$ = Value::new_node_list(nodes);
                     }
@@ -2582,7 +2582,7 @@
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.splat($<Token>1, Some($<Node>2))
+                                *self.builder.splat($<Token>1, Some($<BoxedNode>2))
                             ]
                         );
                     }
@@ -2652,7 +2652,7 @@
                         self.yylexer.cmdarg.pop();
 
                         $$ = Value::new_node(
-                            self.builder.begin_keyword($<Token>1, $<MaybeNode>3, $<Token>4)
+                            self.builder.begin_keyword($<Token>1, $<MaybeBoxedNode>3, $<Token>4)
                         );
                     }
                 | tLPAREN_ARG { self.yylexer.lex_state.set(EXPR_ENDARG); $<None>$ = Value::new_none(); } rparen
@@ -2670,7 +2670,7 @@
                         $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
-                                Some($<Node>2),
+                                Some($<BoxedNode>2),
                                 $<Token>4
                             )
                         );
@@ -2680,7 +2680,7 @@
                         $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
-                                $<MaybeNode>2,
+                                $<MaybeBoxedNode>2,
                                 $<Token>3
                             )
                         );
@@ -2689,7 +2689,7 @@
                     {
                         $$ = Value::new_node(
                             self.builder.const_fetch(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<Token>3,
                             )
@@ -2787,7 +2787,7 @@
                             self.builder.not_op(
                                 $<Token>1,
                                 Some($<Token>2),
-                                Some($<Node>3),
+                                Some($<BoxedNode>3),
                                 Some($<Token>4)
                             )?
                         );
@@ -2834,7 +2834,7 @@
                         let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>2;
                         $$ = Value::new_node(
                             self.builder.block(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 begin_t,
                                 args_type,
                                 body,
@@ -2856,9 +2856,9 @@
                         $$ = Value::new_node(
                             self.builder.condition(
                                 $<Token>1,
-                                $<Node>2,
+                                $<BoxedNode>2,
                                 $<Token>3,
-                                $<MaybeNode>4,
+                                $<MaybeBoxedNode>4,
                                 keyword_t,
                                 else_body,
                                 Some($<Token>6)
@@ -2875,11 +2875,11 @@
                         $$ = Value::new_node(
                             self.builder.condition(
                                 $<Token>1,
-                                $<Node>2,
+                                $<BoxedNode>2,
                                 $<Token>3,
                                 body,
                                 else_t,
-                                $<MaybeNode>4,
+                                $<MaybeBoxedNode>4,
                                 Some($<Token>6)
                             )
                         );
@@ -2895,7 +2895,7 @@
                                 $<Token>1,
                                 value,
                                 do_t,
-                                $<MaybeNode>3,
+                                $<MaybeBoxedNode>3,
                                 $<Token>4
                             )
                         );
@@ -2911,7 +2911,7 @@
                                 $<Token>1,
                                 value,
                                 do_t,
-                                $<MaybeNode>3,
+                                $<MaybeBoxedNode>3,
                                 $<Token>4
                             )
                         );
@@ -2931,7 +2931,7 @@
                         $$ = Value::new_node(
                             self.builder.case(
                                 $<Token>1,
-                                Some($<Node>2),
+                                Some($<BoxedNode>2),
                                 when_bodies,
                                 else_t,
                                 else_body,
@@ -2972,7 +2972,7 @@
                         $$ = Value::new_node(
                             self.builder.case_match(
                                 $<Token>1,
-                                $<Node>2,
+                                $<BoxedNode>2,
                                 in_bodies,
                                 else_t,
                                 else_body,
@@ -2988,11 +2988,11 @@
                         $$ = Value::new_node(
                             self.builder.for_(
                                 $<Token>1,
-                                $<Node>2,
+                                $<BoxedNode>2,
                                 $<Token>3,
                                 value,
                                 do_t,
-                                $<MaybeNode>5,
+                                $<MaybeBoxedNode>5,
                                 $<Token>6
                             )
                         );
@@ -3017,10 +3017,10 @@
                         $$ = Value::new_node(
                             self.builder.def_class(
                                 $<Token>1,
-                                $<Node>2,
+                                $<BoxedNode>2,
                                 lt_t,
                                 value,
-                                $<MaybeNode>5,
+                                $<MaybeBoxedNode>5,
                                 $<Token>6
                             )
                         );
@@ -3046,8 +3046,8 @@
                             self.builder.def_sclass(
                                 $<Token>1,
                                 $<Token>2,
-                                $<Node>3,
-                                $<MaybeNode>6,
+                                $<BoxedNode>3,
+                                $<MaybeBoxedNode>6,
                                 $<Token>7
                             )
                         );
@@ -3074,8 +3074,8 @@
                         $$ = Value::new_node(
                             self.builder.def_module(
                                 $<Token>1,
-                                $<Node>2,
-                                $<MaybeNode>4,
+                                $<BoxedNode>2,
+                                $<MaybeBoxedNode>4,
                                 $<Token>5
                             )
                         );
@@ -3095,8 +3095,8 @@
                             self.builder.def_method(
                                 def_t,
                                 name_t,
-                                $<MaybeNode>2,
-                                $<MaybeNode>3,
+                                $<MaybeBoxedNode>2,
+                                $<MaybeBoxedNode>3,
                                 $<Token>4
                             )?
                         );
@@ -3120,8 +3120,8 @@
                                 definee,
                                 dot_t,
                                 name_t,
-                                $<MaybeNode>2,
-                                $<MaybeNode>3,
+                                $<MaybeBoxedNode>2,
+                                $<MaybeBoxedNode>3,
                                 $<Token>4
                             )?
                         );
@@ -3184,7 +3184,7 @@
 
    primary_value: primary
                     {
-                        let primary = $<Node>1;
+                        let primary = $<BoxedNode>1;
                         self.value_expr(&primary)?;
                         $$ = Value::new_node(primary);
                     }
@@ -3352,9 +3352,9 @@
                                 body: Some(
                                     self.builder.condition(
                                         elsif_t,
-                                        $<Node>2,
+                                        $<BoxedNode>2,
                                         $<Token>3,
-                                        $<MaybeNode>4,
+                                        $<MaybeBoxedNode>4,
                                         keyword_t,
                                         else_body,
                                         None
@@ -3372,7 +3372,7 @@
                 | k_else compstmt
                     {
                         let else_t = $<Token>1;
-                        let body   = $<MaybeNode>2;
+                        let body   = $<MaybeBoxedNode>2;
                         $$ = Value::new_opt_else(Some(Else { else_t, body }));
                     }
                 ;
@@ -3546,7 +3546,7 @@ opt_block_args_tail:
                         let nodes: Vec<Node>;
 
                         if opt_block_args_tail.is_empty() && f_arg.len() == 1 {
-                            nodes = vec![ self.builder.procarg0(f_arg.pop().expect("f_arg is non empty")) ];
+                            nodes = vec![ *self.builder.procarg0(Box::new(f_arg.pop().expect("f_arg is non empty"))) ];
                         } else {
                             nodes = [ f_arg, opt_block_args_tail ].concat();
                         }
@@ -3591,7 +3591,7 @@ opt_block_args_tail:
 
  opt_block_param: none
                     {
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.args(None, vec![], None)
                         );
                     }
@@ -3607,7 +3607,7 @@ opt_block_args_tail:
                         self.max_numparam_stack.set_has_ordinary_params();
                         self.current_arg_stack.set(None);
 
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.args(
                                 Some($<Token>1),
                                 $<NodeList>2,
@@ -3620,7 +3620,7 @@ opt_block_args_tail:
                         self.max_numparam_stack.set_has_ordinary_params();
                         self.current_arg_stack.set(None);
 
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.args(
                                 Some($<Token>1),
                                 [ $<NodeList>2, $<NodeList>3 ].concat(),
@@ -3689,7 +3689,7 @@ opt_block_args_tail:
                         let args = if self.max_numparam_stack.has_numparams() {
                             ArgsType::Numargs(self.max_numparam_stack.top() as u8)
                         } else {
-                            ArgsType::Args($<MaybeNode>3)
+                            ArgsType::Args($<MaybeBoxedNode>3)
                         };
                         let LambdaBody { begin_t, body, end_t } = $<LambdaBody>5;
 
@@ -3712,7 +3712,7 @@ opt_block_args_tail:
       f_larglist: tLPAREN2 f_args opt_bv_decl tRPAREN
                     {
                         self.max_numparam_stack.set_has_ordinary_params();
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.args(
                                 Some($<Token>1),
                                 vec![ $<NodeList>2, $<NodeList>3 ].concat(),
@@ -3726,7 +3726,7 @@ opt_block_args_tail:
                         if !args.is_empty() {
                             self.max_numparam_stack.set_has_ordinary_params();
                         }
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.args(None, args, None)
                         );
                     }
@@ -3743,7 +3743,7 @@ opt_block_args_tail:
                         $$ = Value::new_lambda_body(
                             LambdaBody {
                                 begin_t: $<Token>1,
-                                body: $<MaybeNode>3,
+                                body: $<MaybeBoxedNode>3,
                                 end_t: $<Token>4
                             }
                         );
@@ -3759,7 +3759,7 @@ opt_block_args_tail:
                         $$ = Value::new_lambda_body(
                             LambdaBody {
                                 begin_t: $<Token>1,
-                                body: $<MaybeNode>3,
+                                body: $<MaybeBoxedNode>3,
                                 end_t: $<Token>4
                             }
                         );
@@ -3791,7 +3791,7 @@ opt_block_args_tail:
                         let DoBlock { begin_t, args_type, body, end_t } = $<DoBlock>2;
                         $$ = Value::new_node(
                             self.builder.block(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 begin_t,
                                 args_type,
                                 body,
@@ -3804,7 +3804,7 @@ opt_block_args_tail:
                         let OptParenArgs { begin_t, args, end_t } = $<OptParenArgs>4;
                         $$ = Value::new_node(
                             self.builder.call_method(
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 begin_t,
@@ -3817,7 +3817,7 @@ opt_block_args_tail:
                     {
                         let OptParenArgs { begin_t, args, end_t } = $<OptParenArgs>4;
                         let method_call = self.builder.call_method(
-                            Some($<Node>1),
+                            Some($<BoxedNode>1),
                             Some($<Token>2),
                             Some($<Token>3),
                             begin_t,
@@ -3839,7 +3839,7 @@ opt_block_args_tail:
                 | block_call call_op2 operation2 command_args do_block
                     {
                         let method_call = self.builder.call_method(
-                            Some($<Node>1),
+                            Some($<BoxedNode>1),
                             Some($<Token>2),
                             Some($<Token>3),
                             None,
@@ -3881,7 +3881,7 @@ opt_block_args_tail:
 
                         $$ = Value::new_node(
                             self.builder.call_method(
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 begin_t,
@@ -3896,7 +3896,7 @@ opt_block_args_tail:
 
                         $$ = Value::new_node(
                             self.builder.call_method(
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 Some(begin_t),
@@ -3909,7 +3909,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_node(
                             self.builder.call_method(
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 None,
@@ -3924,7 +3924,7 @@ opt_block_args_tail:
 
                         $$ = Value::new_node(
                             self.builder.call_method(
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 Some($<Token>2),
                                 None,
                                 Some(begin_t),
@@ -3939,7 +3939,7 @@ opt_block_args_tail:
 
                         $$ = Value::new_node(
                             self.builder.call_method(
-                                Some($<Node>1),
+                                Some($<BoxedNode>1),
                                 Some($<Token>2),
                                 None,
                                 Some(begin_t),
@@ -3978,7 +3978,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_node(
                             self.builder.index(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<NodeList>3,
                                 $<Token>4
@@ -4037,7 +4037,7 @@ opt_block_args_tail:
                         let args_type = if self.max_numparam_stack.has_numparams() {
                             ArgsType::Numargs(self.max_numparam_stack.top() as u8)
                         } else {
-                            ArgsType::Args($<MaybeNode>2)
+                            ArgsType::Args($<MaybeBoxedNode>2)
                         };
 
                         self.max_numparam_stack.pop();
@@ -4046,7 +4046,7 @@ opt_block_args_tail:
                         $$ = Value::new_brace_body(
                             BraceBody {
                                 args_type,
-                                body: $<MaybeNode>3
+                                body: $<MaybeBoxedNode>3
                             }
                         );
                     }
@@ -4063,7 +4063,7 @@ opt_block_args_tail:
                         let args_type = if self.max_numparam_stack.has_numparams() {
                             ArgsType::Numargs(self.max_numparam_stack.top() as u8)
                         } else {
-                            ArgsType::Args($<MaybeNode>2)
+                            ArgsType::Args($<MaybeBoxedNode>2)
                         };
 
                         self.max_numparam_stack.pop();
@@ -4071,7 +4071,7 @@ opt_block_args_tail:
                         self.yylexer.cmdarg.pop();
 
                         $$ = Value::new_do_body(
-                            DoBody { args_type, body: $<MaybeNode>3 }
+                            DoBody { args_type, body: $<MaybeBoxedNode>3 }
                         );
                     }
                 ;
@@ -4084,7 +4084,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.splat($<Token>1, Some($<Node>2))
+                                *self.builder.splat($<Token>1, Some($<BoxedNode>2))
                             ]
                         );
                     }
@@ -4097,7 +4097,7 @@ opt_block_args_tail:
                 | case_args tCOMMA tSTAR arg_value
                     {
                         let mut nodes = $<NodeList>1;
-                        nodes.push( self.builder.splat($<Token>3, Some($<Node>4)) );
+                        nodes.push( *self.builder.splat($<Token>3, Some($<BoxedNode>4)) );
                         $$ = Value::new_node_list( nodes );
                     }
                 ;
@@ -4106,7 +4106,7 @@ opt_block_args_tail:
                   compstmt
                   cases
                     {
-                        let when = self.builder.when($<Token>1, $<NodeList>2, $<Token>3, $<MaybeNode>4);
+                        let when = *self.builder.when($<Token>1, $<NodeList>2, $<Token>3, $<MaybeBoxedNode>4);
                         let Cases { when_bodies, opt_else } = $<Cases>5;
                         let when_bodies = [ vec![when], when_bodies ].concat();
                         $$ = Value::new_case_body(CaseBody { when_bodies, opt_else });
@@ -4147,12 +4147,12 @@ opt_block_args_tail:
 
                         let in_bodies = [
                             vec![
-                                self.builder.in_pattern(
+                                *self.builder.in_pattern(
                                     $<Token>1,
                                     pattern,
                                     guard,
                                     $<Token>4,
-                                    $<MaybeNode>6
+                                    $<MaybeBoxedNode>6
                                 )
                             ],
                             in_bodies
@@ -4174,17 +4174,17 @@ opt_block_args_tail:
 
       p_top_expr: p_top_expr_body
                     {
-                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<Node>1, guard: None });
+                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<BoxedNode>1, guard: None });
                     }
                 | p_top_expr_body kIF_MOD expr_value
                     {
-                        let guard = self.builder.if_guard($<Token>2, $<Node>3);
-                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<Node>1, guard: Some(guard) });
+                        let guard = self.builder.if_guard($<Token>2, $<BoxedNode>3);
+                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<BoxedNode>1, guard: Some(guard) });
                     }
                 | p_top_expr_body kUNLESS_MOD expr_value
                     {
-                        let guard = self.builder.unless_guard($<Token>2, $<Node>3);
-                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<Node>1, guard: Some(guard) });
+                        let guard = self.builder.unless_guard($<Token>2, $<BoxedNode>3);
+                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<BoxedNode>1, guard: Some(guard) });
                     }
                 ;
 
@@ -4241,9 +4241,9 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_node(
                             self.builder.match_as(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )
                         );
                     }
@@ -4257,9 +4257,9 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_node(
                             self.builder.match_alt(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )
                         );
                     }
@@ -4294,7 +4294,7 @@ opt_block_args_tail:
                         let pattern = self.builder.array_pattern(None, elements, trailing_comma, None);
                         $$ = Value::new_node(
                             self.builder.const_pattern(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4307,7 +4307,7 @@ opt_block_args_tail:
                         let pattern = self.builder.find_pattern(None, $<NodeList>3, None);
                         $$ = Value::new_node(
                             self.builder.const_pattern(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4320,7 +4320,7 @@ opt_block_args_tail:
                         let pattern = self.builder.hash_pattern(None, $<NodeList>3, None);
                         $$ = Value::new_node(
                             self.builder.const_pattern(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4334,7 +4334,7 @@ opt_block_args_tail:
                         let pattern = self.builder.array_pattern(Some(lparen.clone()), vec![], None, Some(rparen.clone()));
                         $$ = Value::new_node(
                             self.builder.const_pattern(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 lparen,
                                 pattern,
                                 rparen
@@ -4348,7 +4348,7 @@ opt_block_args_tail:
                         let pattern = self.builder.array_pattern(None, elements, trailing_comma, None);
                         $$ = Value::new_node(
                             self.builder.const_pattern(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4361,7 +4361,7 @@ opt_block_args_tail:
                         let pattern = self.builder.find_pattern(None, $<NodeList>3, None);
                         $$ = Value::new_node(
                             self.builder.const_pattern(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4374,7 +4374,7 @@ opt_block_args_tail:
                         let pattern = self.builder.hash_pattern(None, $<NodeList>3, None);
                         $$ = Value::new_node(
                             self.builder.const_pattern(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4388,7 +4388,7 @@ opt_block_args_tail:
                         let pattern = self.builder.array_pattern(Some(lparen.clone()), vec![], None, Some(rparen.clone()));
                         $$ = Value::new_node(
                             self.builder.const_pattern(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 lparen,
                                 pattern,
                                 rparen
@@ -4467,7 +4467,7 @@ opt_block_args_tail:
                         $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
-                                Some($<Node>3),
+                                Some($<BoxedNode>3),
                                 $<Token>4
                             )
                         );
@@ -4500,7 +4500,7 @@ opt_block_args_tail:
                 | p_args_head tSTAR tIDENTIFIER
                     {
                         let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3))?;
-                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ] ].concat();
+                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ *match_rest ] ].concat();
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements,
@@ -4511,7 +4511,7 @@ opt_block_args_tail:
                 | p_args_head tSTAR tIDENTIFIER tCOMMA p_args_post
                     {
                         let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3))?;
-                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ], $<NodeList>5 ].concat();
+                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ *match_rest ], $<NodeList>5 ].concat();
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements,
@@ -4522,7 +4522,7 @@ opt_block_args_tail:
                 | p_args_head tSTAR
                     {
                         let match_rest = self.builder.match_rest($<Token>2, None)?;
-                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ] ].concat();
+                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ *match_rest ] ].concat();
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements,
@@ -4533,7 +4533,7 @@ opt_block_args_tail:
                 | p_args_head tSTAR tCOMMA p_args_post
                     {
                         let match_rest = self.builder.match_rest($<Token>2, None)?;
-                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ match_rest ], $<NodeList>4 ].concat();
+                        let elements = [ $<MatchPatternWithTrailingComma>1.elements, vec![ *match_rest ], $<NodeList>4 ].concat();
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
                                 elements,
@@ -4660,7 +4660,7 @@ opt_block_args_tail:
                         $$ = Value::new_node(
                             self.builder.match_pair(
                                 $<PKwLabel>1,
-                                $<Node>2
+                                $<BoxedNode>2
                             )?
                         );
                     }
@@ -4692,7 +4692,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.match_rest($<Token>1, Some($<Token>2))?
+                                *self.builder.match_rest($<Token>1, Some($<Token>2))?
                             ]
                         );
                     }
@@ -4700,7 +4700,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.match_rest($<Token>1, None)?
+                                *self.builder.match_rest($<Token>1, None)?
                             ]
                         );
                     }
@@ -4710,7 +4710,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.match_nil_pattern($<Token>1, $<Token>2)
+                                *self.builder.match_nil_pattern($<Token>1, $<Token>2)
                             ]
                         );
                     }
@@ -4732,10 +4732,10 @@ opt_block_args_tail:
                     }
                 | p_primitive tDOT2 p_primitive
                     {
-                        let left = $<Node>1;
+                        let left = $<BoxedNode>1;
                         self.value_expr(&left)?;
 
-                        let right = $<Node>3;
+                        let right = $<BoxedNode>3;
                         self.value_expr(&right)?;
 
                         $$ = Value::new_node(
@@ -4748,10 +4748,10 @@ opt_block_args_tail:
                     }
                 | p_primitive tDOT3 p_primitive
                     {
-                        let left = $<Node>1;
+                        let left = $<BoxedNode>1;
                         self.value_expr(&left)?;
 
-                        let right = $<Node>3;
+                        let right = $<BoxedNode>3;
                         self.value_expr(&right)?;
 
                         $$ = Value::new_node(
@@ -4764,7 +4764,7 @@ opt_block_args_tail:
                     }
                 | p_primitive tDOT2
                     {
-                        let left = $<Node>1;
+                        let left = $<BoxedNode>1;
                         self.value_expr(&left)?;
 
                         $$ = Value::new_node(
@@ -4777,7 +4777,7 @@ opt_block_args_tail:
                     }
                 | p_primitive tDOT3
                     {
-                        let left = $<Node>1;
+                        let left = $<BoxedNode>1;
                         self.value_expr(&left)?;
 
                         $$ = Value::new_node(
@@ -4802,7 +4802,7 @@ opt_block_args_tail:
                     }
                 | tBDOT2 p_primitive
                     {
-                        let right = $<Node>2;
+                        let right = $<BoxedNode>2;
                         self.value_expr(&right)?;
 
                         $$ = Value::new_node(
@@ -4815,7 +4815,7 @@ opt_block_args_tail:
                     }
                 | tBDOT3 p_primitive
                     {
-                        let right = $<Node>2;
+                        let right = $<BoxedNode>2;
                         self.value_expr(&right)?;
 
                         $$ = Value::new_node(
@@ -4863,7 +4863,7 @@ opt_block_args_tail:
                 | keyword_variable
                     {
                         $$ = Value::new_node(
-                            self.builder.accessible($<Node>1)
+                            self.builder.accessible($<BoxedNode>1)
                         );
                     }
                 | lambda
@@ -4906,7 +4906,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_node(
                             self.builder.const_fetch(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
                                 $<Token>3,
                             )
@@ -4937,9 +4937,9 @@ opt_block_args_tail:
                             assoc_t,
                             exc_var,
                             Some($<Token>4),
-                            $<MaybeNode>5
+                            $<MaybeBoxedNode>5
                         );
-                        let nodes = [ vec![rescue_body], $<NodeList>6 ].concat();
+                        let nodes = [ vec![*rescue_body], $<NodeList>6 ].concat();
 
                         $$ = Value::new_node_list(nodes);
                     }
@@ -4966,7 +4966,7 @@ opt_block_args_tail:
          exc_var: tASSOC lhs
                     {
                         let assoc_t = Some($<Token>1);
-                        let exc_var = Some($<Node>2);
+                        let exc_var = Some($<BoxedNode>2);
                         $$ = Value::new_exc_var(ExcVar { assoc_t, exc_var });
                     }
                 | none
@@ -4978,7 +4978,7 @@ opt_block_args_tail:
       opt_ensure: k_ensure compstmt
                     {
                         let ensure_t = $<Token>1;
-                        let body = $<MaybeNode>2;
+                        let body = $<MaybeBoxedNode>2;
                         $$ = Value::new_opt_ensure(Some(Ensure { ensure_t, body }));
                     }
                 | none
@@ -5013,7 +5013,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.character($<Token>1)
+                                *self.builder.character($<Token>1)
                             ]
                         );
                     }
@@ -5085,7 +5085,7 @@ opt_block_args_tail:
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push(
-                            self.builder.word( $<NodeList>2 )
+                            *self.builder.word( $<NodeList>2 )
                         );
                         $$ = Value::new_node_list(nodes);
                     }
@@ -5123,7 +5123,7 @@ opt_block_args_tail:
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push(
-                            self.builder.word( $<NodeList>2 )
+                            *self.builder.word( $<NodeList>2 )
                         );
                         $$ = Value::new_node_list( nodes );
                     }
@@ -5161,7 +5161,7 @@ opt_block_args_tail:
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push(
-                            self.builder.string_internal( $<Token>2 )
+                            *self.builder.string_internal( $<Token>2 )
                         );
                         $$ = Value::new_node_list( nodes );
                     }
@@ -5175,7 +5175,7 @@ opt_block_args_tail:
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push(
-                            self.builder.symbol_internal( $<Token>2 )
+                            *self.builder.symbol_internal( $<Token>2 )
                         );
                         $$ = Value::new_node_list( nodes );
                     }
@@ -5267,7 +5267,7 @@ xstring_contents: /* none */
                         $$ = Value::new_node(
                             self.builder.begin(
                                 $<Token>1,
-                                $<MaybeNode>7,
+                                $<MaybeBoxedNode>7,
                                 $<Token>8
                             )
                         );
@@ -5330,7 +5330,7 @@ xstring_contents: /* none */
                         $$ = Value::new_node(
                             self.builder.unary_num(
                                 $<Token>1,
-                                $<Node>2
+                                $<BoxedNode>2
                             )
                         );
                     }
@@ -5440,8 +5440,8 @@ keyword_variable: kNIL
 
          var_ref: user_variable
                     {
-                        let node = Node::boxed_from(yystack.owned_value_at(0));
-                        if let Node::Lvar(node) = &node {
+                        let node = $<BoxedNode>1;
+                        if let Node::Lvar(node) = &*node {
                             let name = &node.name;
                             match name.chars().collect::<Vec<_>>()[..] {
                                 ['_', n] if n >= '1' && n <= '9' => {
@@ -5499,7 +5499,7 @@ keyword_variable: kNIL
                 | keyword_variable
                     {
                         $$ = Value::new_node(
-                            self.builder.accessible($<Node>1)
+                            self.builder.accessible($<BoxedNode>1)
                         );
                     }
                 ;
@@ -5507,13 +5507,13 @@ keyword_variable: kNIL
          var_lhs: user_variable
                     {
                         $$ = Value::new_node(
-                            self.builder.assignable($<Node>1)?
+                            self.builder.assignable($<BoxedNode>1)?
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::new_node(
-                            self.builder.assignable($<Node>1)?
+                            self.builder.assignable($<BoxedNode>1)?
                         );
                     }
                 ;
@@ -5541,7 +5541,7 @@ keyword_variable: kNIL
                   expr_value term
                     {
                         let lt_t  = Some($<Token>1);
-                        let value = Some($<Node>3);
+                        let value = Some($<BoxedNode>3);
                         $$ = Value::new_superclass(
                             Superclass { lt_t, value }
                         );
@@ -5558,13 +5558,13 @@ f_opt_paren_args: f_paren_args
                     }
                 | none
                     {
-                        $$ = Value::new_maybe_node(None);
+                        $$ = Value::MaybeNode(None);
                     }
                 ;
 
     f_paren_args: tLPAREN2 f_args rparen
                     {
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.args(Some($<Token>1), $<NodeList>2, Some($<Token>3))
                         );
 
@@ -5575,9 +5575,9 @@ f_opt_paren_args: f_paren_args
                     {
                         let args = [
                             $<NodeList>2,
-                            vec![ self.builder.forward_arg($<Token>4) ]
+                            vec![ *self.builder.forward_arg($<Token>4) ]
                         ].concat();
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.args(
                                 Some($<Token>1),
                                 args,
@@ -5591,7 +5591,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | tLPAREN2 args_forward rparen
                     {
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             Some(
                                 self.builder.forward_only_args($<Token>1, $<Token>2, $<Token>3)
                             )
@@ -5615,7 +5615,7 @@ f_opt_paren_args: f_paren_args
                   f_args term
                     {
                         self.yylexer.in_kwarg = $<Bool>1;
-                        $$ = Value::new_maybe_node(
+                        $$ = Value::MaybeNode(
                             self.builder.args(None, $<NodeList>2, None)
                         );
                         self.yylexer.lex_state.set(EXPR_BEG);
@@ -5829,7 +5829,7 @@ f_opt_paren_args: f_paren_args
                     {
                         self.current_arg_stack.set(None);
                         $$ = Value::new_node(
-                            self.builder.kwoptarg($<Token>1, $<Node>2)?
+                            self.builder.kwoptarg($<Token>1, $<BoxedNode>2)?
                         );
                     }
                 | f_label
@@ -5844,7 +5844,7 @@ f_opt_paren_args: f_paren_args
       f_block_kw: f_label primary_value
                     {
                         $$ = Value::new_node(
-                            self.builder.kwoptarg($<Token>1, $<Node>2)?
+                            self.builder.kwoptarg($<Token>1, $<BoxedNode>2)?
                         );
                     }
                 | f_label
@@ -5894,7 +5894,7 @@ f_opt_paren_args: f_paren_args
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.kwnilarg($<Token>1, $<Token>2)
+                                *self.builder.kwnilarg($<Token>1, $<Token>2)
                             ]
                         );
                     }
@@ -5906,7 +5906,7 @@ f_opt_paren_args: f_paren_args
                         self.static_env.declare(&clone_value(&ident_t));
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.kwrestarg($<Token>1, Some(ident_t))?
+                                *self.builder.kwrestarg($<Token>1, Some(ident_t))?
                             ]
                         );
                     }
@@ -5914,7 +5914,7 @@ f_opt_paren_args: f_paren_args
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.kwrestarg($<Token>1, None)?
+                                *self.builder.kwrestarg($<Token>1, None)?
                             ]
                         );
                     }
@@ -5927,7 +5927,7 @@ f_opt_paren_args: f_paren_args
                             self.builder.optarg(
                                 $<Token>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -5940,7 +5940,7 @@ f_opt_paren_args: f_paren_args
                             self.builder.optarg(
                                 $<Token>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )?
                         );
                     }
@@ -5987,7 +5987,7 @@ f_opt_paren_args: f_paren_args
 
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.restarg($<Token>1, Some(ident_t))?
+                                *self.builder.restarg($<Token>1, Some(ident_t))?
                             ]
                         );
                     }
@@ -5995,7 +5995,7 @@ f_opt_paren_args: f_paren_args
                     {
                         $$ = Value::new_node_list(
                             vec![
-                                self.builder.restarg($<Token>1, None)?
+                                *self.builder.restarg($<Token>1, None)?
                             ]
                         );
                     }
@@ -6033,14 +6033,14 @@ f_opt_paren_args: f_paren_args
 
        singleton: var_ref
                     {
-                        let var_ref = $<Node>1;
+                        let var_ref = $<BoxedNode>1;
                         self.value_expr(&var_ref)?;
                         $$ = Value::new_node(var_ref);
                     }
                 | tLPAREN2 { self.yylexer.lex_state.set(EXPR_BEG); $<None>$ = Value::new_none(); } expr rparen
                     {
-                        let expr = $<Node>3;
-                        match &expr {
+                        let expr = $<BoxedNode>3;
+                        match &*expr {
                             Node::Int(_)
                             | Node::Float(_)
                             | Node::Rational(_)
@@ -6093,9 +6093,9 @@ f_opt_paren_args: f_paren_args
                     {
                         $$ = Value::new_node(
                             self.builder.pair(
-                                $<Node>1,
+                                $<BoxedNode>1,
                                 $<Token>2,
-                                $<Node>3
+                                $<BoxedNode>3
                             )
                         );
                     }
@@ -6104,7 +6104,7 @@ f_opt_paren_args: f_paren_args
                         $$ = Value::new_node(
                             self.builder.pair_keyword(
                                 $<Token>1,
-                                $<Node>2
+                                $<BoxedNode>2
                             )
                         );
                     }
@@ -6115,14 +6115,14 @@ f_opt_paren_args: f_paren_args
                                 $<Token>1,
                                 $<NodeList>2,
                                 $<Token>3,
-                                $<Node>4
+                                $<BoxedNode>4
                             )
                         );
                     }
                 | tDSTAR arg_value
                     {
                         $$ = Value::new_node(
-                            self.builder.kwsplat($<Token>1, $<Node>2)
+                            self.builder.kwsplat($<Token>1, $<BoxedNode>2)
                         );
                     }
                 ;
