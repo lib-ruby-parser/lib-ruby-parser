@@ -548,30 +548,6 @@ impl ParseValue {
         Self::Token(Box::new(token))
     }
 
-    pub fn new_none() -> Self {
-        Self::None
-    }
-    pub fn new_token(token: Box<Token>) -> Self {
-        Self::Token(token)
-    }
-    pub fn new_token_list(token_list: Vec<Token>) -> Self {
-        Self::TokenList(token_list)
-    }
-    pub fn new_node(node: Box<Node>) -> Self {
-        Self::Node(node)
-    }
-    pub fn new_node_list(node_list: Vec<Node>) -> Self {
-        Self::NodeList(node_list)
-    }
-    pub fn new_bool(value: bool) -> Self {
-        Self::Bool(value)
-    }
-    pub fn new_maybe_str_term(str_term: Option<StrTerm>) -> Self {
-        Self::MaybeStrTerm(Box::new(str_term))
-    }
-    pub fn new_num(value: i32) -> Self {
-        Self::Num(value)
-    }
     pub fn new_superclass(value: Superclass) -> Self {
         Self::Superclass(Box::new(value))
     }
