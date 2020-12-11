@@ -621,3 +621,9 @@ impl ParseValue {
         Self::MatchPatternWithTrailingComma(Box::new(value))
     }
 }
+
+impl Default for ParseValue {
+    fn default() -> Self {
+        Self::Stolen
+    }
+}
