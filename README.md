@@ -38,7 +38,7 @@ TLDR; it's fast, it's precise, and it has a beautiful interface.
 Comparison with `Ripper`/`RubyVM::AST`:
 1. It's based on MRI's `parse.y`, and so it returns **exactly** the same sequence of tokens.
 2. It's been tested on top 300 gems (by total downlads, that's about 3M LOC), `rubyspec` and `ruby/ruby` repos and there's no difference with `Ripper.lex`.
-3. It's as fast as `Ripper` (with `jemalloc`), both parse 3M LOC in 15s. That's ~200K LOC/s.
+3. It's ~2-3 times faster than `Ripper` (with `jemalloc`), Ripper parses 3.9M LOC in 16-17s, `lib-ruby-parser` does it 8-9s. That's ~450K LOC/s. And these benchmarks include IO that is roughly the same in Ruby and Rust. Without IO (i.e. for example with mmaped file from tmpfs) the difference is even more noticeable, however it's not what you are going to do anyway. I think it's valid to include IO into benchmarks.
 4. It has a much, much better interface. AST is strongly typed and well documented.
 5. It doesn't throw away information about tokens. All nodes have information about their source locations.
 
@@ -140,5 +140,6 @@ A pretty big codebase could be generated using a `download.rb` script:
 
 ```sh
 $ ruby gems/download.rb
-$ cargo run --release --all-features --example parse -- --no-output "gems/repos/**/*.rb"
+$ cargo build --release --all-features --example parse
+$ target/release/examples/parse --no-output "gems/repos/**/*.rb"
 ```
