@@ -72,7 +72,18 @@ fn decode(encoding: RecognizedEncoding, input: &[u8]) -> Result<Vec<u8>, InputEr
     ))
 }
 
-let decoder = CustomDecoder::new(decode);
+/// // Or
+let decode_closure = |encoding: RecognizedEncoding, input: &[u8]| -> Result<Vec<u8>, InputError> {
+    if let RecognizedEncoding::US_ASCII = encoding {
+        // reencode and return Ok(result)
+        return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
+    }
+    Err(InputError::DecodingError(
+        "only us-ascii is supported".to_owned(),
+    ))
+};
+
+let decoder = CustomDecoder::new(Box::new(decode_closure));
 let options = ParserOptions { decoder, debug: true, ..Default::default() };
 let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options);
 let result = parser.do_parse();

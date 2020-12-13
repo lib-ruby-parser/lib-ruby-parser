@@ -2,7 +2,7 @@ use crate::source::RecognizedEncoding;
 use std::error::Error;
 use std::fmt;
 
-type DecodeFn = fn(RecognizedEncoding, &[u8]) -> Result<Vec<u8>, InputError>;
+type DecodeFn = Box<dyn Fn(RecognizedEncoding, &[u8]) -> Result<Vec<u8>, InputError>>;
 
 pub struct CustomDecoder {
     pub(crate) f: Option<DecodeFn>,
