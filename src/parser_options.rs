@@ -23,8 +23,6 @@ pub struct ParserOptions {
     /// fn decode(encoding: RecognizedEncoding, input: &[u8]) -> Result<Vec<u8>, InputError> {
     ///     if let RecognizedEncoding::US_ASCII = encoding {
     ///         // reencode and return Ok(result)
-    ///         println!("{:?}", input);
-    ///         println!("{:?}", b"# encoding: us-ascii\ndecoded".to_vec());
     ///         return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     ///     }
     ///     Err(InputError::DecodingError(
@@ -32,7 +30,7 @@ pub struct ParserOptions {
     ///     ))
     /// }
     ///
-    /// let decoder = CustomDecoder { f: Some(Box::new(decode)) };
+    /// let decoder = CustomDecoder::new(decode);
     /// let options = ParserOptions { decoder, debug: true, ..Default::default() };
     /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options);
     /// let ParserResult { ast, input, .. } = parser.do_parse();
