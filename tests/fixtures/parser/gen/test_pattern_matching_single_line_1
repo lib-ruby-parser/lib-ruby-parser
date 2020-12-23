@@ -1,5 +1,5 @@
 --INPUT
-1 => [a]; a
+1 in [a]; a
 --LOCATIONS
 ~~~~~~~~~~~ expression ()
   ~~ operator (stmt[0])
@@ -13,7 +13,7 @@
           ~ expression (stmt[1])
 --AST
 s(:begin,
-  s(:match_pattern,
+  s(:match_pattern_p,
     s(:int, "1"),
     s(:array_pattern,
       s(:match_var, "a"))),

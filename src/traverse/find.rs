@@ -582,14 +582,6 @@ impl<'a> Visitor<Option<Node>> for Find {
         }
     }
 
-    fn on_in_match(&mut self, node: &InMatch) -> Option<Node> {
-        match self.current_pattern() {
-            PatternItem::Value => self.find(&node.value),
-            PatternItem::Pattern => self.find(&node.pattern),
-            _ => None,
-        }
-    }
-
     fn on_in_pattern(&mut self, node: &InPattern) -> Option<Node> {
         match self.current_pattern() {
             PatternItem::Pattern => self.find(&node.pattern),
@@ -714,6 +706,22 @@ impl<'a> Visitor<Option<Node>> for Find {
 
     fn on_match_nil_pattern(&mut self, _: &MatchNilPattern) -> Option<Node> {
         None
+    }
+
+    fn on_match_pattern(&mut self, node: &MatchPattern) -> Option<Node> {
+        match self.current_pattern() {
+            PatternItem::Value => self.find(&node.value),
+            PatternItem::Pattern => self.find(&node.pattern),
+            _ => None,
+        }
+    }
+
+    fn on_match_pattern_p(&mut self, node: &MatchPatternP) -> Option<Node> {
+        match self.current_pattern() {
+            PatternItem::Value => self.find(&node.value),
+            PatternItem::Pattern => self.find(&node.pattern),
+            _ => None,
+        }
     }
 
     fn on_match_rest(&mut self, node: &MatchRest) -> Option<Node> {

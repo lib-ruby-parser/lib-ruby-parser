@@ -2854,19 +2854,36 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn in_match(
+    pub(crate) fn match_pattern(
+        &self,
+        value: Box<Node>,
+        assoc_t: Box<Token>,
+        pattern: Box<Node>,
+    ) -> Box<Node> {
+        let operator_l = self.loc(&assoc_t);
+        let expression_l = join_exprs(&value, &pattern);
+
+        Box::new(Node::MatchPattern(MatchPattern {
+            value,
+            pattern,
+            operator_l,
+            expression_l,
+        }))
+    }
+
+    pub(crate) fn match_pattern_p(
         &self,
         value: Box<Node>,
         in_t: Box<Token>,
         pattern: Box<Node>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&in_t);
+        let operator_l = self.loc(&in_t);
         let expression_l = join_exprs(&value, &pattern);
 
-        Box::new(Node::InMatch(InMatch {
+        Box::new(Node::MatchPatternP(MatchPatternP {
             value,
             pattern,
-            operator_l: keyword_l,
+            operator_l,
             expression_l,
         }))
     }
@@ -3696,7 +3713,8 @@ impl Builder {
                 Some(node)
             }
 
-            Node::InMatch(InMatch { value, .. }) => self.void_value(value),
+            Node::MatchPattern(MatchPattern { value, .. }) => self.void_value(value),
+            Node::MatchPatternP(MatchPatternP { value, .. }) => self.void_value(value),
 
             Node::Begin(Begin { statements, .. }) | Node::KwBegin(KwBegin { statements, .. }) => {
                 check_stmts(statements)
