@@ -1,0 +1,16 @@
+--INPUT
+<<~HERE
+  #{}
+HERE
+--LOCATIONS
+        ~~~~~~ heredoc_body ()
+              ~~~~ heredoc_end ()
+~~~~~~~ expression ()
+          ~~ begin (part[0])
+            ~ end (part[0])
+          ~~~ expression (part[0])
+             ~ expression (part[1])
+--AST
+s(:dstr,
+  s(:begin),
+  s(:str, "\n"))

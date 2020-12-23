@@ -402,12 +402,21 @@ impl Builder {
             .expect("dedent_level must be positive");
 
         let dedent_heredoc_parts = |parts: &mut Vec<Node>| {
-            for part in parts.iter_mut() {
+            let mut idx_to_drop = vec![];
+            for (idx, part) in parts.iter_mut().enumerate() {
                 match part {
-                    Node::Str(Str { value, .. }) => Self::dedent_string(value, dedent_level),
+                    Node::Str(Str { value, .. }) => {
+                        Self::dedent_string(value, dedent_level);
+                        if value.as_bytes().is_empty() {
+                            idx_to_drop.push(idx);
+                        }
+                    }
                     Node::Begin(_) => {}
                     _ => unreachable!("unsupported heredoc child {}", part.str_type()),
                 }
+            }
+            for idx in idx_to_drop.iter().rev() {
+                parts.remove(*idx);
             }
         };
 
