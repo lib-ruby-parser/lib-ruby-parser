@@ -278,11 +278,6 @@ pub trait Visitor<T: Default = ()> {
         self.maybe_visit(&node.value)
     }
 
-    fn on_in_match(&mut self, node: &InMatch) -> T {
-        self.visit(&node.value);
-        self.visit(&node.pattern)
-    }
-
     fn on_in_pattern(&mut self, node: &InPattern) -> T {
         self.visit(&node.pattern);
         self.maybe_visit(&node.guard);
@@ -380,6 +375,16 @@ pub trait Visitor<T: Default = ()> {
     #[allow(unused_variables)]
     fn on_match_nil_pattern(&mut self, node: &MatchNilPattern) -> T {
         T::default()
+    }
+
+    fn on_match_pattern(&mut self, node: &MatchPattern) -> T {
+        self.visit(&node.value);
+        self.visit(&node.pattern)
+    }
+
+    fn on_match_pattern_p(&mut self, node: &MatchPatternP) -> T {
+        self.visit(&node.value);
+        self.visit(&node.pattern)
     }
 
     fn on_match_rest(&mut self, node: &MatchRest) -> T {
@@ -658,7 +663,6 @@ pub trait Visitor<T: Default = ()> {
             Node::IfTernary(inner) => self.on_if_ternary(inner),
             Node::Index(inner) => self.on_index(inner),
             Node::IndexAsgn(inner) => self.on_index_asgn(inner),
-            Node::InMatch(inner) => self.on_in_match(inner),
             Node::InPattern(inner) => self.on_in_pattern(inner),
             Node::Int(inner) => self.on_int(inner),
             Node::Irange(inner) => self.on_irange(inner),
@@ -680,6 +684,8 @@ pub trait Visitor<T: Default = ()> {
             Node::MatchAs(inner) => self.on_match_as(inner),
             Node::MatchCurrentLine(inner) => self.on_match_current_line(inner),
             Node::MatchNilPattern(inner) => self.on_match_nil_pattern(inner),
+            Node::MatchPattern(inner) => self.on_match_pattern(inner),
+            Node::MatchPatternP(inner) => self.on_match_pattern_p(inner),
             Node::MatchRest(inner) => self.on_match_rest(inner),
             Node::MatchVar(inner) => self.on_match_var(inner),
             Node::MatchWithLvasgn(inner) => self.on_match_with_lvasgn(inner),

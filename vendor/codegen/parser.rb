@@ -418,7 +418,7 @@ module ParseHelperPatch
         locs(lhs, path + ['lhs']),
         locs(rhs, path + ['rhs'])
       ]
-    when :in_match
+    when :match_pattern, :match_pattern_p
       value, pattern = *ast
       [
         locs(value, path + ['value']),

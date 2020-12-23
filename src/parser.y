@@ -868,7 +868,7 @@
                         self.value_expr(arg)?;
 
                         self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
-                        self.yylexer.command_start = true;
+                        self.yylexer.command_start = false;
                         self.pattern_variables.push();
 
                         $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
@@ -880,7 +880,35 @@
                         self.yylexer.in_kwarg = $<Bool>3;
 
                         $$ = Value::Node(
-                            self.builder.in_match(
+                            self.builder.match_pattern(
+                                $<BoxedNode>1,
+                                $<Token>2,
+                                $<BoxedNode>4
+                            )
+                        );
+                    }
+                | arg kIN
+                    {
+                        let arg = match yystack.borrow_value_at(1) {
+                            Value::Node(node) => node,
+                            other => unreachable!("expected Node, got {:?}", other)
+                        };
+                        self.value_expr(arg)?;
+
+                        self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
+                        self.yylexer.command_start = false;
+                        self.pattern_variables.push();
+
+                        $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
+                        self.yylexer.in_kwarg = true;
+                    }
+                  p_expr
+                    {
+                        self.pattern_variables.pop();
+                        self.yylexer.in_kwarg = $<Bool>3;
+
+                        $$ = Value::Node(
+                            self.builder.match_pattern_p(
                                 $<BoxedNode>1,
                                 $<Token>2,
                                 $<BoxedNode>4
