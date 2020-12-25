@@ -160,7 +160,11 @@ fn test_file(fixture_path: &str) -> TestResult {
         parser.static_env.declare("bar");
         parser.static_env.declare("baz");
 
-        let result = parser.do_parse();
+        let result = if test_case.diagnostic.is_some() {
+            parser.do_parse()
+        } else {
+            parser.do_parse_with_state_validation()
+        };
 
         test_case.compare(&result)
     });

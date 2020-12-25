@@ -9,6 +9,10 @@ impl StackState {
         Self { name, stack: 0 }
     }
 
+    pub(crate) fn is_empty(&self) -> bool {
+        self.stack == 0
+    }
+
     pub fn push(&mut self, bit: bool) {
         let bit_value = if bit { 1 } else { 0 };
         self.stack = (self.stack << 1) | bit_value

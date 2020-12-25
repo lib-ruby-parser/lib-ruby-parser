@@ -310,13 +310,18 @@
 
          program:   {
                         self.yylexer.lex_state.set(EXPR_BEG);
+                        self.current_arg_stack.push(None);
+                        self.max_numparam_stack.push();
+
                         $<None>$ = Value::None;
                     }
                   top_compstmt
                     {
-                        let _trigger_locs = @2;
                         self.result = $<MaybeNode>2;
                         $$ = Value::None;
+
+                        self.current_arg_stack.pop();
+                        self.max_numparam_stack.pop();
                     }
                 ;
 
@@ -4302,6 +4307,8 @@ opt_block_args_tail:
                   p_top_expr then
                     {
                         self.yylexer.in_kwarg = $<Bool>2;
+                        self.pattern_variables.pop();
+                        self.pattern_hash_keys.pop();
                         $<None>$ = Value::None;
                     }
                   compstmt
@@ -6653,8 +6660,24 @@ impl Parser {
 
         ParserResult {
             ast: self.result,
-            tokens: std::mem::take(&mut self.tokens),
-            diagnostics: self.diagnostics.take(),
+            tokens: self.tokens,
+            diagnostics: self.diagnostics.take_inner(),
+            comments: self.yylexer.comments,
+            magic_comments: self.yylexer.magic_comments,
+            input: self.yylexer.buffer.input,
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn do_parse_with_state_validation(mut self) -> ParserResult {
+        self.parse();
+
+        self.assert_state_is_final();
+
+        ParserResult {
+            ast: self.result,
+            tokens: self.tokens,
+            diagnostics: self.diagnostics.take_inner(),
             comments: self.yylexer.comments,
             magic_comments: self.yylexer.magic_comments,
             input: self.yylexer.buffer.input,
@@ -6744,5 +6767,19 @@ impl Parser {
 
     fn value_expr(&self, node: &Node) -> Result<(), ()> {
         self.builder.value_expr(node)
+    }
+
+    #[doc(hidden)]
+    fn assert_state_is_final(&self) {
+        assert!(self.yylexer.cmdarg.is_empty());
+        assert!(self.yylexer.cond.is_empty());
+        assert!(self.yylexer.paren_nest == 0);
+
+        assert!(self.static_env.is_empty());
+        assert!(self.context.is_empty());
+        assert!(self.max_numparam_stack.is_empty());
+        assert!(self.current_arg_stack.is_empty());
+        assert!(self.pattern_variables.is_empty());
+        assert!(self.pattern_hash_keys.is_empty());
     }
 }

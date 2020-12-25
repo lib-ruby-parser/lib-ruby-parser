@@ -24,6 +24,10 @@ impl Context {
         }
     }
 
+    pub(crate) fn is_empty(&self) -> bool {
+        self.stack.borrow().is_empty()
+    }
+
     fn push(&self, item: ContextItem) {
         self.stack.borrow_mut().push(item);
     }

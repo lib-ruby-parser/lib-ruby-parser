@@ -77,7 +77,7 @@ impl Diagnostics {
         self.list.borrow_mut().push(diagnostic)
     }
 
-    pub(crate) fn take(&self) -> Vec<Diagnostic> {
-        std::mem::take(&mut *self.list.borrow_mut())
+    pub(crate) fn take_inner(self) -> Vec<Diagnostic> {
+        self.list.replace(vec![])
     }
 }

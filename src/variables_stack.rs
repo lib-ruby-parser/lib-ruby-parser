@@ -9,11 +9,13 @@ pub(crate) struct VariablesStack {
 
 impl VariablesStack {
     pub(crate) fn new() -> Self {
-        let instance = Self {
+        Self {
             stack: Rc::new(RefCell::new(vec![])),
-        };
-        instance.push();
-        instance
+        }
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.stack.borrow().is_empty()
     }
 
     pub(crate) fn push(&self) {

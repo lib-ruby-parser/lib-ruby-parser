@@ -21,6 +21,10 @@ impl CurrentArgStack {
         }
     }
 
+    pub(crate) fn is_empty(&self) -> bool {
+        self.stack.borrow().is_empty()
+    }
+
     pub(crate) fn push(&self, value: Option<String>) {
         self.stack.borrow_mut().push(value)
     }

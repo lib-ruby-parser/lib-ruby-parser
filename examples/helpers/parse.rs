@@ -7,5 +7,5 @@ pub fn parse(source: &[u8], filename: &str, debug: bool) -> ParserResult {
         debug,
         ..Default::default()
     };
-    Parser::new(source, options).do_parse()
+    Parser::new(source, options).do_parse_with_state_validation()
 }
