@@ -940,6 +940,7 @@ impl Lexer {
                     if self.lex_state.is_after_operator() {
                         c = self.nextc();
                         if c == b']' {
+                            self.paren_nest -= 1;
                             self.lex_state.set(EXPR_ARG);
                             c = self.nextc();
                             if c == b'=' {
