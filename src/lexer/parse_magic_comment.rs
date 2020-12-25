@@ -2,12 +2,16 @@ use crate::source::{MagicComment, MagicCommentKind};
 use crate::DiagnosticMessage;
 use crate::Lexer;
 
-const MAGIC_COMMENTS: [(&str, MagicCommentKind); 4] = [
+const MAGIC_COMMENTS: &[(&str, MagicCommentKind)] = &[
     ("coding", MagicCommentKind::Encoding),
     ("encoding", MagicCommentKind::Encoding),
     (
         "frozen_string_literal",
         MagicCommentKind::FrozenStringLiteral,
+    ),
+    (
+        "shareable_constant_value",
+        MagicCommentKind::ShareableContstantValue,
     ),
     ("warn_indent", MagicCommentKind::WarnIndent),
 ];

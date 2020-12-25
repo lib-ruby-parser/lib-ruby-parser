@@ -5,9 +5,10 @@ pub enum MagicCommentKind {
     Encoding,
     FrozenStringLiteral,
     WarnIndent,
+    ShareableContstantValue,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct MagicComment {
     pub kind: MagicCommentKind,
     pub key_l: Range,

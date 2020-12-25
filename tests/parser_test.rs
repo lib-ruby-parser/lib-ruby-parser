@@ -1,4 +1,7 @@
-use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
+use lib_ruby_parser::{
+    source::MagicComment, source::MagicCommentKind, source::Range, Parser, ParserOptions,
+    ParserResult,
+};
 use std::fs;
 use std::panic;
 
@@ -223,4 +226,54 @@ fn test_gen() {
 #[test]
 fn test_manual() {
     test_dir("tests/fixtures/parser/manual")
+}
+
+fn read_fixture(path: &str) -> Vec<u8> {
+    fs::read(path).unwrap()
+}
+
+fn parse(input: &[u8]) -> ParserResult {
+    let options = ParserOptions {
+        buffer_name: "(eval)".to_string(),
+        debug: false,
+        ..Default::default()
+    };
+    let parser = Parser::new(input, options);
+    parser.do_parse()
+}
+
+#[test]
+fn test_magic_comment() {
+    let result = parse(&read_fixture("tests/fixtures/magic_comments.rb"));
+
+    assert_eq!(
+        result.magic_comments,
+        vec![
+            MagicComment {
+                kind: MagicCommentKind::Encoding,
+                key_l: Range::new(2, 10),
+                value_l: Range::new(12, 17),
+            },
+            MagicComment {
+                kind: MagicCommentKind::FrozenStringLiteral,
+                key_l: Range::new(20, 41),
+                value_l: Range::new(43, 47),
+            },
+            MagicComment {
+                kind: MagicCommentKind::Encoding,
+                key_l: Range::new(50, 56),
+                value_l: Range::new(58, 63),
+            },
+            MagicComment {
+                kind: MagicCommentKind::ShareableContstantValue,
+                key_l: Range::new(66, 90),
+                value_l: Range::new(92, 99),
+            },
+            MagicComment {
+                kind: MagicCommentKind::WarnIndent,
+                key_l: Range::new(102, 113),
+                value_l: Range::new(115, 119),
+            },
+        ]
+    );
 }
