@@ -18,6 +18,10 @@ impl StaticEnvironment {
         }
     }
 
+    pub(crate) fn is_empty(&self) -> bool {
+        self.stack.borrow().is_empty()
+    }
+
     #[allow(dead_code)]
     pub(crate) fn reset(&self) {
         self.variables.borrow_mut().clear();

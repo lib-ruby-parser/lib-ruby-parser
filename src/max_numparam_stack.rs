@@ -7,18 +7,24 @@ pub(crate) struct MaxNumparamStack {
 }
 
 impl MaxNumparamStack {
+    const ORDINARY_PARAMS: i32 = -1;
+
     pub(crate) fn new() -> Self {
         Self {
             stack: Rc::new(RefCell::new(vec![])),
         }
     }
 
+    pub(crate) fn is_empty(&self) -> bool {
+        self.stack.borrow().is_empty()
+    }
+
     pub(crate) fn set_has_ordinary_params(&self) {
-        self.set(-1)
+        self.set(Self::ORDINARY_PARAMS)
     }
 
     pub(crate) fn has_ordinary_params(&self) -> bool {
-        self.top() < 0
+        self.top() == Self::ORDINARY_PARAMS
     }
 
     pub(crate) fn has_numparams(&self) -> bool {
@@ -43,8 +49,8 @@ impl MaxNumparamStack {
 
     fn set(&self, value: i32) {
         let mut stack = self.stack.borrow_mut();
-        stack.pop();
-        stack.push(value)
+        let len = stack.len();
+        stack[len - 1] = value;
     }
 
     pub(crate) fn inner_clone(&self) -> Vec<i32> {
