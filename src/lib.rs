@@ -67,3 +67,16 @@ mod token;
 pub use token::{Token, TokenValue};
 
 pub mod token_rewriter;
+
+#[cfg(feature = "sorbet")]
+pub mod sorbet_token_rewriter;
+
+#[cfg(feature = "sorbet")]
+pub(crate) fn default_token_rewriter() -> Option<Box<dyn token_rewriter::TokenRewriter>> {
+    Some(sorbet_token_rewriter::SorbetTokenRewriter::new_boxed())
+}
+
+#[cfg(not(feature = "sorbet"))]
+pub(crate) fn default_token_rewriter() -> Option<Box<dyn token_rewriter::TokenRewriter>> {
+    None
+}

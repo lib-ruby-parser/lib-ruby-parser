@@ -1,0 +1,17 @@
+--INPUT
+def method_named_alias(x)
+  x.alias # ok
+  x
+    .alias # ok
+  x.
+    alias # error: unexpected token
+end
+--DIAGNOSTIC
+/* ! = "\n"
+def method_named_alias(x)!  x.alias # ok!  x!    .alias # ok!  x.!    alias # error: unexpected token!end
+*/
+                                                                      ~~~~~ (error) unexpected kALIAS
+--AST
+s(:def, "method_named_alias",
+  s(:args,
+    s(:arg, "x")), nil)

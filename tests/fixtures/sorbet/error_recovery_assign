@@ -1,0 +1,13 @@
+--INPUT
+def test_bad_assign(x)
+  x =
+end
+--DIAGNOSTIC
+/* ! = "\n"
+def test_bad_assign(x)!  x =!end
+*/
+                             ~~~ (error) unexpected kEND
+--AST
+s(:def, "test_bad_assign",
+  s(:args,
+    s(:arg, "x")), nil)
