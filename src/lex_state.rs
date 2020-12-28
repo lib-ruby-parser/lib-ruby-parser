@@ -121,16 +121,16 @@ impl std::fmt::Debug for LexState {
         }
 
         if self.is_some(lex_states::EXPR_VALUE) {
-            states.push("++ EXPR_VALUE ++")
+            states.push("Also(EXPR_VALUE)")
         }
         if self.is_some(lex_states::EXPR_BEG_ANY) {
-            states.push("++ EXPR_BEG_ANY ++")
+            states.push("Also(EXPR_BEG_ANY)")
         }
         if self.is_some(lex_states::EXPR_END_ANY) {
-            states.push("++ EXPR_END_ANY ++")
+            states.push("Also(EXPR_END_ANY)")
         }
         if self.is_some(lex_states::EXPR_END_ANY) {
-            states.push("++ EXPR_END_ANY ++")
+            states.push("Also(EXPR_END_ANY)")
         }
 
         f.write_str(&states.join("|"))

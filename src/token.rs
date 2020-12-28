@@ -1,4 +1,4 @@
-use crate::{token_name, Loc};
+use crate::{token_name, LexState, Loc};
 
 #[derive(Debug, Clone)]
 pub enum TokenValue {
@@ -43,17 +43,21 @@ pub struct Token {
     pub token_type: i32,
     pub token_value: TokenValue,
     pub loc: Loc,
+    pub lex_state_before: LexState,
+    pub lex_state_after: LexState,
 }
 
 use std::fmt;
 impl fmt::Debug for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&format!(
-            "[{}, {:?}, {}...{}]",
+            "[{}, {:?}, {}...{}, {:?} -> {:?}]",
             token_name(self.token_type),
             self.token_value,
             self.loc.begin,
-            self.loc.end
+            self.loc.end,
+            self.lex_state_before,
+            self.lex_state_after
         ))
     }
 }
