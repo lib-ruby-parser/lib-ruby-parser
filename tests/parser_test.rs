@@ -20,6 +20,7 @@ enum TestSection {
     AST,
     Locations,
     Diagnostic,
+    SkipIfFeatureEnabled,
 }
 
 #[derive(Debug)]
@@ -28,6 +29,7 @@ struct Fixture {
     ast: Option<String>,
     locs: Option<Vec<String>>,
     diagnostic: Option<String>,
+    skip_if_feature_enabled: Option<String>,
 }
 
 fn none_if_empty<T: PartialEq<&'static str>>(v: Vec<T>) -> Option<Vec<T>> {
@@ -47,19 +49,29 @@ impl Fixture {
         let mut ast: Vec<String> = vec![];
         let mut locs: Vec<String> = vec![];
         let mut diagnostics: Vec<String> = vec![];
+        let mut skip_if_feature_enabled: Option<String> = None;
         let mut current_section = TestSection::None;
 
         for line in content.lines() {
             match (line.as_bytes(), &current_section) {
                 (&[b'/', b'/', b' ', ..], _) => { /* skip comment */ }
+
                 (b"--INPUT", _) => current_section = TestSection::Input,
                 (b"--AST", _) => current_section = TestSection::AST,
                 (b"--LOCATIONS", _) => current_section = TestSection::Locations,
                 (b"--DIAGNOSTIC", _) => current_section = TestSection::Diagnostic,
+                (b"--SKIP-IF-FEATURE-ENABLED", _) => {
+                    current_section = TestSection::SkipIfFeatureEnabled
+                }
+
                 (_, &TestSection::Input) => input.push(line.to_owned()),
                 (_, &TestSection::AST) => ast.push(line.to_owned()),
                 (_, &TestSection::Locations) => locs.push(line.to_owned()),
                 (_, &TestSection::Diagnostic) => diagnostics.push(line.to_owned()),
+                (_, &TestSection::SkipIfFeatureEnabled) => {
+                    skip_if_feature_enabled = Some(line.to_owned())
+                }
+
                 (_, &TestSection::None) => {
                     panic!("empty state while parsing fixture on line {:#?}", line)
                 }
@@ -80,10 +92,11 @@ impl Fixture {
             ast,
             locs,
             diagnostic,
+            skip_if_feature_enabled,
         }
     }
 
-    fn compare(&self, actual: &ParserResult) -> Result<(), String> {
+    fn compare(&self, actual: &ParserResult) -> TestOutput {
         match &self.ast {
             Some(expected_ast) => {
                 let actual_ast = actual
@@ -94,7 +107,7 @@ impl Fixture {
 
                 if &actual_ast != expected_ast {
                     println!("{:?}", self.input);
-                    return Err(format!(
+                    return TestOutput::Failure(format!(
                         "AST diff:\nactual:\n{}\nexpected:\n{}\n",
                         actual_ast, expected_ast
                     ));
@@ -105,13 +118,17 @@ impl Fixture {
 
         match &self.locs {
             Some(locs) => {
-                let ast = actual
-                    .ast
-                    .as_ref()
-                    .ok_or_else(|| "can't compare locs, ast is empty".to_owned())?;
+                let ast = if let Some(ast) = actual.ast.as_ref() {
+                    ast
+                } else {
+                    return TestOutput::Failure("can't compare locs, ast is empty".to_owned());
+                };
 
                 for loc in locs {
-                    LocMatcher::new(loc).test(ast)?
+                    match LocMatcher::new(loc).test(ast) {
+                        Ok(_) => {}
+                        Err(err) => return TestOutput::Failure(err),
+                    }
                 }
             }
             None => {}
@@ -123,34 +140,61 @@ impl Fixture {
                     match actual.diagnostics.len() {
                         1 => actual.diagnostics[0].clone(),
                         0 => {
-                            return Err(format!(
+                            return TestOutput::Failure(format!(
                                 "expected diagnostic {:?} to be emitted",
                                 diagnostic
                             ))
                         }
-                        _ => return Err(
+                        _ => return TestOutput::Failure(
                             "your input returns multiple diagnostics, don't know how to match them"
                                 .to_owned(),
                         ),
                     };
-                DiagnosticMatcher::new(diagnostic)?.test(&actual)?
+
+                match DiagnosticMatcher::new(diagnostic) {
+                    Ok(matcher) => match matcher.test(&actual) {
+                        Ok(_) => {}
+                        Err(err) => return TestOutput::Failure(err),
+                    },
+                    Err(err) => return TestOutput::Failure(err),
+                }
             }
             None => {}
         }
 
-        Ok(())
+        TestOutput::Pass
     }
+}
+
+enum TestOutput {
+    Pass,
+    Failure(String),
 }
 
 enum TestResult {
     Segfault,
-    Pass,
-    Failure(String),
+    Some(TestOutput),
+    Skip,
 }
 
 fn test_file(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = Fixture::new(fixture_path);
+
+        match &test_case.skip_if_feature_enabled {
+            Some(feature) if feature == "lsp-error-recovery" => {
+                if cfg!(feature = "lsp-error-recovery") {
+                    return TestResult::Skip;
+                }
+            }
+            Some(unknown) => {
+                return TestResult::Some(TestOutput::Failure(format!(
+                    "unknown --SKIP-IF-ENABLED feature {:?}",
+                    unknown
+                )));
+            }
+            _ => {}
+        }
 
         let options = ParserOptions {
             buffer_name: format!("(test {})", fixture_path),
@@ -169,13 +213,12 @@ fn test_file(fixture_path: &str) -> TestResult {
             parser.do_parse_with_state_validation()
         };
 
-        test_case.compare(&result)
+        TestResult::Some(test_case.compare(&result))
     });
 
     match result {
         Err(_) => TestResult::Segfault,
-        Ok(Err(output)) => TestResult::Failure(output),
-        Ok(Ok(_)) => TestResult::Pass,
+        Ok(output) => output,
     }
 }
 
@@ -185,6 +228,7 @@ fn test_dir(dir: &str) {
     let mut passed: usize = 0;
     let mut failed: usize = 0;
     let mut segfaults: usize = 0;
+    let mut skipped: usize = 0;
 
     for filename in files_under_dir(dir) {
         eprint!("test {} ... ", filename);
@@ -193,20 +237,24 @@ fn test_dir(dir: &str) {
                 eprintln!("SEG");
                 segfaults += 1;
             }
-            TestResult::Pass => {
+            TestResult::Some(TestOutput::Pass) => {
                 eprintln!("OK");
                 passed += 1;
             }
-            TestResult::Failure(output) => {
+            TestResult::Some(TestOutput::Failure(output)) => {
                 eprintln!("Err:\n{}\n", output);
                 failed += 1;
+            }
+            TestResult::Skip => {
+                eprintln!("Skip");
+                skipped += 1;
             }
         }
     }
 
     eprintln!(
-        "{} tests passed, {} failed, {} segfaults",
-        passed, failed, segfaults
+        "{} tests passed, {} failed, {} segfaults, {} skipped",
+        passed, failed, segfaults, skipped
     );
 
     assert_eq!(

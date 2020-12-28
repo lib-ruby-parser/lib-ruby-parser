@@ -2,3 +2,5 @@
 proc {_1; _1, foo = [nil, nil]}
 --DIAGNOSTIC
           ~~ (error) Can't assign to numbered parameter _1
+--SKIP-IF-FEATURE-ENABLED
+lsp-error-recovery
