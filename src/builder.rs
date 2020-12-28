@@ -6,6 +6,7 @@ use std::convert::TryInto;
 use crate::error::Diagnostics;
 use crate::nodes::*;
 use crate::source::Range;
+use crate::LexState;
 use crate::StringValue;
 use crate::{
     Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node, StaticEnvironment, Token,
@@ -680,6 +681,8 @@ impl Builder {
             token_type: end_t.token_type,
             token_value: end_t.token_value,
             loc: quote_loc,
+            lex_state_before: LexState::default(),
+            lex_state_after: LexState::default(),
         });
         let expression_l = self.loc(&begin_t).join(&value.expression());
 

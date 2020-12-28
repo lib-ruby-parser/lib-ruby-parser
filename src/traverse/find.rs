@@ -179,7 +179,7 @@ pub struct Find {
     pattern: Pattern,
 }
 
-impl<'a> Find {
+impl Find {
     pub fn run(pattern: &[String], root: &Node) -> Result<Option<Node>, PatternError> {
         let pattern = Pattern::new(pattern)?;
         let mut this = Self { pattern };

@@ -35,6 +35,7 @@
     use crate::source::Range;
     use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
     use crate::error::Diagnostics;
+    use crate::LexState;
 }
 
 %code {
@@ -6635,7 +6636,9 @@ impl Parser {
         let last_token = Token {
             token_type: 0,
             token_value: TokenValue::String("".to_owned()),
-            loc: Loc { begin: 0, end: 0 }
+            loc: Loc { begin: 0, end: 0 },
+            lex_state_before: LexState::default(),
+            lex_state_after: LexState::default(),
         };
 
         Self {
