@@ -22,6 +22,13 @@ impl TokenValue {
         }
     }
 
+    pub fn as_bytes(&self) -> &[u8] {
+        match &self {
+            Self::String(s) => s.as_bytes(),
+            Self::InvalidString(bytes) => bytes,
+        }
+    }
+
     pub fn into_string_lossy(self) -> String {
         match self {
             Self::String(s) => s,
@@ -71,6 +78,10 @@ impl Token {
     /// Converts Token to a vector of bytes
     pub fn to_bytes(&self) -> Vec<u8> {
         self.token_value.to_bytes()
+    }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        self.token_value.as_bytes()
     }
 
     pub fn into_string_lossy(self) -> String {

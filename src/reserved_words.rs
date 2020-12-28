@@ -271,7 +271,7 @@ fn assert_sorted() {
     );
 }
 
-pub(crate) fn reserved_word(tok: &str) -> Option<&'static ReservedWord> {
+pub fn reserved_word(tok: &str) -> Option<&'static ReservedWord> {
     if cfg!(debug_assertions) {
         assert_sorted();
     }

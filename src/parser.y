@@ -19,6 +19,7 @@
     pattern_hash_keys: VariablesStack,
     tokens: Vec<Token>,
     diagnostics: Diagnostics,
+    token_rewriter: Option<Box<dyn TokenRewriter>>,
 }
 
 %code use {
@@ -36,6 +37,7 @@
     use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
     use crate::error::Diagnostics;
     use crate::LexState;
+    use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
 }
 
 %code {
@@ -6613,6 +6615,7 @@ impl Parser {
             buffer_name,
             debug,
             decoder,
+            token_rewriter,
         } = options;
 
         let mut lexer = Lexer::new(input, &buffer_name, decoder);
@@ -6658,6 +6661,7 @@ impl Parser {
             tokens: vec![],
             diagnostics: lexer.diagnostics.clone(),
             yylexer: lexer,
+            token_rewriter,
         }
     }
 
@@ -6714,7 +6718,23 @@ impl Parser {
     }
 
     fn next_token(&mut self) -> Token {
-        let token = self.yylexer.yylex();
+        let mut token = self.yylexer.yylex();
+
+        if let Some(token_rewriter) = &mut self.token_rewriter {
+            let (rewritten_token, token_action, lex_state_action) =
+                token_rewriter.rewrite_token(token, &self.yylexer.buffer.input.bytes);
+
+            match lex_state_action {
+                LexStateAction::Set(new_state) => self.yylexer.lex_state.set(new_state),
+                LexStateAction::Keep => {}
+            }
+
+            match token_action {
+                RewriteAction::Drop => return self.next_token(),
+                RewriteAction::Keep => token = rewritten_token
+            }
+        }
+
         self.last_token = token.clone();
         self.tokens.push(token.clone());
 
