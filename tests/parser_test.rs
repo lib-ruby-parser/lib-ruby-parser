@@ -12,7 +12,7 @@ mod loc_matcher;
 use loc_matcher::LocMatcher;
 
 mod diagnostic_matcher;
-use diagnostic_matcher::DiagnosticMatcher;
+use diagnostic_matcher::render_diagnostic_for_testing;
 
 enum TestSection {
     None,
@@ -28,7 +28,7 @@ struct Fixture {
     input: String,
     ast: Option<String>,
     locs: Option<Vec<String>>,
-    diagnostic: Option<String>,
+    diagnostics: Option<Vec<String>>,
     skip_if_feature_enabled: Option<String>,
 }
 
@@ -81,17 +81,18 @@ impl Fixture {
         let input = input.join("\n");
         let ast = none_if_empty(ast).map(|lines| lines.join("\n"));
         let locs = none_if_empty(locs);
-        let diagnostic = match diagnostics.len() {
-            1 => diagnostics.pop(),
-            0 => None,
-            _ => panic!("only one diagnostic per file is supported"),
-        };
+        let diagnostics = none_if_empty(diagnostics);
+
+        match (&ast, &locs, &diagnostics) {
+            (None, None, None) => panic!("empty test"),
+            _ => {}
+        }
 
         Self {
             input,
             ast,
             locs,
-            diagnostic,
+            diagnostics,
             skip_if_feature_enabled,
         }
     }
@@ -134,32 +135,37 @@ impl Fixture {
             None => {}
         }
 
-        match &self.diagnostic {
-            Some(diagnostic) => {
-                let actual =
-                    match actual.diagnostics.len() {
-                        1 => actual.diagnostics[0].clone(),
-                        0 => {
-                            return TestOutput::Failure(format!(
-                                "expected diagnostic {:?} to be emitted",
-                                diagnostic
-                            ))
-                        }
-                        _ => return TestOutput::Failure(
-                            "your input returns multiple diagnostics, don't know how to match them"
-                                .to_owned(),
-                        ),
-                    };
+        let actual_diagnostics = actual
+            .diagnostics
+            .iter()
+            .map(|d| render_diagnostic_for_testing(d))
+            .collect::<Vec<_>>();
 
-                match DiagnosticMatcher::new(diagnostic) {
-                    Ok(matcher) => match matcher.test(&actual) {
-                        Ok(_) => {}
-                        Err(err) => return TestOutput::Failure(err),
-                    },
-                    Err(err) => return TestOutput::Failure(err),
+        match &self.diagnostics {
+            None => {
+                if actual.diagnostics.len() == 0 {
+                    // ok
+                } else {
+                    return TestOutput::Failure(format!(
+                        "expected no diagnostics to be emitted, got:\n{}",
+                        actual_diagnostics.join("\n")
+                    ));
                 }
             }
-            None => {}
+            Some(diagnostics) => {
+                let expected = diagnostics;
+                let actual = actual_diagnostics;
+
+                if expected == &actual {
+                    // ok
+                } else {
+                    return TestOutput::Failure(format!(
+                        "expected diagnostcs:\n{}\nactual diagnostics:\n{}",
+                        expected.join("\n"),
+                        actual.join("\n")
+                    ));
+                }
+            }
         }
 
         TestOutput::Pass
@@ -207,7 +213,7 @@ fn test_file(fixture_path: &str) -> TestResult {
         parser.static_env.declare("bar");
         parser.static_env.declare("baz");
 
-        let result = if test_case.diagnostic.is_some() {
+        let result = if test_case.diagnostics.is_some() {
             parser.do_parse()
         } else {
             parser.do_parse_with_state_validation()

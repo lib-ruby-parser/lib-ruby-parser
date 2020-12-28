@@ -7,3 +7,5 @@
 --AST
 s(:erange,
   s(:int, "1"), nil)
+--DIAGNOSTIC
+ ~~~ (warning) ... at EOL, should be parenthesized?

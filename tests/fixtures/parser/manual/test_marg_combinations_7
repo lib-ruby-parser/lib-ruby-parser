@@ -1,5 +1,5 @@
 --INPUT
-def f ((a, a1)); end
+def f ((*r, p)); end
 --LOCATIONS
 ~~~ keyword ()
     ~ name ()
@@ -11,11 +11,14 @@ def f ((a, a1)); end
        ~ begin (args/arg[0])
              ~ end (args/arg[0])
        ~~~~~~~ expression (args/arg[0])
-        ~ expression (args/arg[0]/item[0])
-           ~~ expression (args/arg[0]/item[1])
+         ~ name (args/arg[0]/item[0])
+        ~~ expression (args/arg[0]/item[0])
+            ~ expression (args/arg[0]/item[1])
 --AST
 s(:def, "f",
   s(:args,
     s(:mlhs,
-      s(:arg, "a"),
-      s(:arg, "a1"))), nil)
+      s(:restarg, "r"),
+      s(:arg, "p"))), nil)
+--DIAGNOSTIC
+      ~ (warning) parentheses after method name is interpreted as an argument list, not a decomposed argument

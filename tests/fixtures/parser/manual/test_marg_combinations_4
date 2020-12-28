@@ -1,5 +1,5 @@
 --INPUT
-def f ((*, p)); end
+def f ((a, *)); end
 --LOCATIONS
 ~~~ keyword ()
     ~ name ()
@@ -17,5 +17,7 @@ def f ((*, p)); end
 s(:def, "f",
   s(:args,
     s(:mlhs,
-      s(:restarg),
-      s(:arg, "p"))), nil)
+      s(:arg, "a"),
+      s(:restarg))), nil)
+--DIAGNOSTIC
+      ~ (warning) parentheses after method name is interpreted as an argument list, not a decomposed argument
