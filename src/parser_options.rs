@@ -1,4 +1,5 @@
 use crate::source::CustomDecoder;
+use crate::token_rewriter::TokenRewriter;
 
 /// Configuration of the parser
 pub struct ParserOptions {
@@ -49,6 +50,9 @@ pub struct ParserOptions {
     /// assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_owned())
     /// ```
     pub decoder: CustomDecoder,
+
+    // Optional token rewriter, see TokenRewriter API
+    pub token_rewriter: Option<Box<dyn TokenRewriter>>,
 }
 
 const DEFAULT_BUFFER_NAME: &str = "(eval)";
@@ -59,6 +63,7 @@ impl Default for ParserOptions {
             buffer_name: DEFAULT_BUFFER_NAME.to_owned(),
             debug: false,
             decoder: CustomDecoder { f: None },
+            token_rewriter: None,
         }
     }
 }

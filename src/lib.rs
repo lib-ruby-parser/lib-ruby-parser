@@ -45,7 +45,7 @@ mod token_buf;
 pub(crate) use token_buf::TokenBuf;
 
 mod reserved_words;
-pub(crate) use reserved_words::reserved_word;
+pub use reserved_words::reserved_word;
 
 mod stack_state;
 pub(crate) use stack_state::StackState;
@@ -65,3 +65,5 @@ pub use string_value::StringValue;
 
 mod token;
 pub use token::{Token, TokenValue};
+
+pub mod token_rewriter;
