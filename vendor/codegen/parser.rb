@@ -694,6 +694,10 @@ IGNORE = [
   # we emit all diagnostics, these examples produce multiple syntax errors during error recovery
   'test_ambiuous_quoted_label_in_ternary_operator_2',
   'test_ambiuous_quoted_label_in_ternary_operator_3',
+
+  # The following tests produce more diagnostic errors that wq/parser is aware of
+  # Thus, they are ported manually
+  'test_assignment_to_numparams_1',
 ]
 
 Minitest.after_run do

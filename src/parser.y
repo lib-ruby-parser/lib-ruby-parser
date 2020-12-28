@@ -444,10 +444,19 @@
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
+                // skip if lsp-error-recovery
                 | error stmt
                     {
                         $$ = Value::NodeList( vec![ $<Node>2 ] );
                     }
+                // end skip
+
+                // skip unless lsp-error-recovery
+                | error
+                    {
+                        $$ = Value::NodeList( vec![] );
+                    }
+                // end skip
                 ;
 
    stmt_or_begin: stmt
