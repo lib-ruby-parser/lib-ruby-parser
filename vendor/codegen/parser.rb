@@ -698,6 +698,19 @@ IGNORE = [
   # The following tests produce more diagnostic errors that wq/parser is aware of
   # Thus, they are ported manually
   'test_assignment_to_numparams_1',
+  'test_kwarg_combinations_0',
+  'test_kwarg_combinations_1',
+  'test_marg_combinations_0',
+  'test_marg_combinations_1',
+  'test_marg_combinations_2',
+  'test_marg_combinations_3',
+  'test_marg_combinations_4',
+  'test_marg_combinations_5',
+  'test_marg_combinations_6',
+  'test_marg_combinations_7',
+  'test_marg_combinations_8',
+  'test_marg_combinations_9',
+  'test_range_endless_1',
 ]
 
 Minitest.after_run do

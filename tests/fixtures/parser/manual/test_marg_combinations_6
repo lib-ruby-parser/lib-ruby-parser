@@ -18,3 +18,5 @@ s(:def, "f",
   s(:args,
     s(:mlhs,
       s(:restarg, "r"))), nil)
+--DIAGNOSTIC
+      ~ (warning) parentheses after method name is interpreted as an argument list, not a decomposed argument

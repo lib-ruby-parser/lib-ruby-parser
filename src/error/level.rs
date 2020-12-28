@@ -5,11 +5,18 @@ pub enum ErrorLevel {
     Error,
 }
 
+impl ToString for ErrorLevel {
+    fn to_string(&self) -> String {
+        match self {
+            Self::Warning => "warning",
+            Self::Error => "error",
+        }
+        .into()
+    }
+}
+
 impl std::fmt::Debug for ErrorLevel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Warning => f.write_str("warning"),
-            Self::Error => f.write_str("error"),
-        }
+        f.write_str(&self.to_string())
     }
 }

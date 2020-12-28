@@ -19,3 +19,5 @@ s(:def, "f",
     s(:kwoptarg, "foo",
       s(:int, "1")),
     s(:blockarg, "b")), nil)
+--DIAGNOSTIC
+      ~ (warning) parentheses after method name is interpreted as an argument list, not a decomposed argument
