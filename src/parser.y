@@ -5669,8 +5669,8 @@ keyword_variable: kNIL
                         let node = $<BoxedNode>1;
                         if let Node::Lvar(node) = &*node {
                             let name = &node.name;
-                            match name.chars().collect::<Vec<_>>()[..] {
-                                ['_', n] if n >= '1' && n <= '9' => {
+                            match name.as_bytes()[..] {
+                                [b'_', n] if n >= b'1' && n <= b'9' => {
                                     if !self.static_env.is_declared(&name) && self.context.is_in_dynamic_block() {
                                         /* definitely an implicit param */
 
@@ -5711,7 +5711,7 @@ keyword_variable: kNIL
                                         }
 
                                         self.static_env.declare(&name);
-                                        self.max_numparam_stack.register(n.to_digit(10).expect("numparam must have a digit after _") as i32)
+                                        self.max_numparam_stack.register((n - b'0') as i32)
                                     }
                                 },
                                 _ => {}
