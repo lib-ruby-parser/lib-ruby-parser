@@ -11,7 +11,7 @@ pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
         input,
         diagnostics,
         ..
-    } = parse(&source, filepath, false);
+    } = parse(&source, filepath, false, false);
 
     let mut encoding_error: Option<String> = None;
     for diagnostic in diagnostics.iter() {

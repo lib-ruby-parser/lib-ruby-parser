@@ -51,8 +51,13 @@ pub struct ParserOptions {
     /// ```
     pub decoder: CustomDecoder,
 
-    // Optional token rewriter, see TokenRewriter API
+    /// Optional token rewriter, see TokenRewriter API
     pub token_rewriter: Option<Box<dyn TokenRewriter>>,
+
+    /// When set to true Parser records tokens.
+    /// When set to false `ParserResult.tokens` is guaranteed to be empty
+    /// If you don't need tokens better set it to false to speed up parsing.
+    pub record_tokens: bool,
 }
 
 const DEFAULT_BUFFER_NAME: &str = "(eval)";
@@ -64,6 +69,7 @@ impl Default for ParserOptions {
             debug: false,
             decoder: CustomDecoder { f: None },
             token_rewriter: None,
+            record_tokens: true,
         }
     }
 }

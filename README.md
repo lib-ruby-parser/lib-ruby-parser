@@ -149,7 +149,7 @@ A pretty big codebase could be generated using a `download.rb` script:
 ```sh
 $ ruby gems/download.rb
 $ cargo build --release --all-features --example parse
-$ target/release/examples/parse --no-output "gems/repos/**/*.rb"
+$ target/release/examples/parse --no-output --drop-tokens "gems/repos/**/*.rb"
 ```
 
 ## Profile-guided optimization
