@@ -151,3 +151,47 @@ $ ruby gems/download.rb
 $ cargo build --release --all-features --example parse
 $ target/release/examples/parse --no-output "gems/repos/**/*.rb"
 ```
+
+## Profile-guided optimization
+
+```sh
+# Build recording executable
+RUSTFLAGS="-Cprofile-generate=$(PWD)/target/pgo/pgo.profraw" cargo build --release --all-features --example parse
+
+# Record raw profiling data
+target/release/examples/parse --no-output "gems/repos/**/*.rb"
+
+# Merge profiled data
+llvm-profdata merge -o target/pgo/pgo.profraw/merged.profdata target/pgo/pgo.profraw
+
+# Build optimized executable
+RUSTFLAGS="-Cprofile-use=$(PWD)/target/pgo/pgo.profraw/merged.profdata" cargo build --release --all-features --example parse
+```
+
+PGO, No LTO:
+
+```
+$ repeat 5 time target/release/examples/parse --no-output "gems/repos/**/*.rb"
+9.46s user 1.27s system 80% cpu 13.371 total
+8.51s user 0.66s system 99% cpu 9.171 total
+8.52s user 0.68s system 99% cpu 9.208 total
+9.63s user 0.74s system 99% cpu 10.381 total
+9.70s user 0.73s system 99% cpu 10.443 total
+```
+
+No PGO, LTO=fat:
+
+```
+$ repeat 5 time target/release/examples/parse --no-output "gems/repos/**/*.rb"
+9.90s user 1.29s system 80% cpu 13.917 total
+9.42s user 0.71s system 99% cpu 10.138 total
+10.24s user 0.76s system 99% cpu 11.004 total
+10.21s user 0.75s system 99% cpu 10.962 total
+10.22s user 0.74s system 99% cpu 10.966 total
+```
+
+The diff seems to be too small to use this feature.
+
+When both PGO and LTO are enabled building a `parse` example gives a bunch of LLVM errors about wrong types of functions (like `expected a Function or null`).
+
+If you know how to fix them, please open an issue.
