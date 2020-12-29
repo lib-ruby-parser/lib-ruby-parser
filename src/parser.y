@@ -13,18 +13,19 @@
     current_arg_stack: CurrentArgStack,
     pub static_env: StaticEnvironment,
     context: ParserContext,
-    last_token: Token,
+    last_token_type: i32,
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
     tokens: Vec<Token>,
     diagnostics: Diagnostics,
     token_rewriter: Option<Box<dyn TokenRewriter>>,
+    record_tokens: bool,
 }
 
 %code use {
     use crate::{ParserOptions, ParserResult};
-    use crate::{Token, TokenValue};
+    use crate::{Token};
     use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
     use crate::lex_states::*;
     use crate::{Context as ParserContext, ContextItem};
@@ -36,7 +37,6 @@
     use crate::source::Range;
     use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
     use crate::error::Diagnostics;
-    use crate::LexState;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
 }
 
@@ -2539,7 +2539,7 @@
     command_args:   {
                         let lookahead =
                             matches!(
-                                self.last_token.token_type,
+                                self.last_token_type,
                                 Lexer::tLPAREN2
                                     | Lexer::tLPAREN
                                     | Lexer:: tLPAREN_ARG
@@ -2554,7 +2554,7 @@
                     }
                   call_args
                     {
-                        let lookahead = matches!(self.last_token.token_type, Lexer::tLBRACE_ARG);
+                        let lookahead = matches!(self.last_token_type, Lexer::tLBRACE_ARG);
 
                         if lookahead { self.yylexer.cmdarg.pop() }
                         self.yylexer.cmdarg.pop();
@@ -6616,6 +6616,7 @@ impl Parser {
             debug,
             decoder,
             token_rewriter,
+            record_tokens,
         } = options;
 
         let mut lexer = Lexer::new(input, &buffer_name, decoder);
@@ -6636,13 +6637,7 @@ impl Parser {
             lexer.diagnostics.clone(),
         );
 
-        let last_token = Token {
-            token_type: 0,
-            token_value: TokenValue::String("".to_owned()),
-            loc: Loc { begin: 0, end: 0 },
-            lex_state_before: LexState::default(),
-            lex_state_after: LexState::default(),
-        };
+        let last_token_type = 0;
 
         Self {
             yy_error_verbose: true,
@@ -6657,11 +6652,12 @@ impl Parser {
             pattern_variables,
             pattern_hash_keys,
             static_env: lexer.static_env.clone(),
-            last_token,
+            last_token_type,
             tokens: vec![],
             diagnostics: lexer.diagnostics.clone(),
             yylexer: lexer,
             token_rewriter,
+            record_tokens,
         }
     }
 
@@ -6717,8 +6713,12 @@ impl Parser {
         self.diagnostics.emit(diagnostic);
     }
 
+    fn yylex(&mut self) -> Token {
+        self.yylexer.yylex()
+    }
+
     fn next_token(&mut self) -> Token {
-        let mut token = self.yylexer.yylex();
+        let mut token = self.yylex();
 
         if let Some(token_rewriter) = &mut self.token_rewriter {
             let (rewritten_token, token_action, lex_state_action) =
@@ -6735,8 +6735,11 @@ impl Parser {
             }
         }
 
-        self.last_token = token.clone();
-        self.tokens.push(token.clone());
+        self.last_token_type = token.token_type;
+
+        if self.record_tokens {
+            self.tokens.push(token.clone());
+        }
 
         token
     }

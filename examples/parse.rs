@@ -37,6 +37,9 @@ struct Args {
 
     #[clap(short, long, about = "Run profiles")]
     profile: bool,
+
+    #[clap(long, about = "Drop tokens info")]
+    drop_tokens: bool,
 }
 
 fn print_diagnostics(result: &ParserResult) {
@@ -89,14 +92,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let profile = start_profiling(args.profile);
     let debug = args.debug;
+    let drop_tokens = args.drop_tokens;
 
     if let Some(code) = args.code {
-        let result = parse(code.as_bytes(), "(eval)", debug);
+        let result = parse(code.as_bytes(), "(eval)", debug, drop_tokens);
         callback(&code, &result);
     } else if let Some(path) = args.path {
         each_ruby_file(&path, &|entry| {
             let code = fs::read(Path::new(entry))?;
-            let result = parse(&code, entry, debug);
+            let result = parse(&code, entry, debug, drop_tokens);
             callback(&String::from_utf8_lossy(&code), &result);
             Ok(())
         })?;
