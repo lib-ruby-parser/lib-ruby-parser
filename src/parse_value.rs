@@ -4,7 +4,7 @@ use crate::Node;
 use crate::Token;
 
 impl Node {
-    pub(crate) fn boxed_from(value: ParseValue) -> Node {
+    pub(crate) fn from(value: ParseValue) -> Node {
         match value {
             ParseValue::Node(value) => *value,
             other => unreachable!("expected Node, got {:?}", other),
@@ -16,7 +16,7 @@ impl Node {
 pub(crate) mod BoxedNode {
     use super::{Node, ParseValue};
 
-    pub(crate) fn boxed_from(value: ParseValue) -> Box<Node> {
+    pub(crate) fn from(value: ParseValue) -> Box<Node> {
         match value {
             ParseValue::Node(value) => value,
             other => unreachable!("expected BoxedNode, got {:?}", other),
@@ -25,7 +25,7 @@ pub(crate) mod BoxedNode {
 }
 
 impl Token {
-    pub(crate) fn boxed_from(value: ParseValue) -> Box<Token> {
+    pub(crate) fn from(value: ParseValue) -> Box<Token> {
         match value {
             ParseValue::Token(value) => value,
             other => unreachable!("expected Token, got {:?}", other),
@@ -37,7 +37,7 @@ impl Token {
 pub(crate) mod NodeList {
     use super::{Node, ParseValue};
 
-    pub(crate) fn boxed_from(value: ParseValue) -> Vec<Node> {
+    pub(crate) fn from(value: ParseValue) -> Vec<Node> {
         match value {
             ParseValue::NodeList(value) => value,
             other => unreachable!("expected NodeList, got {:?}", other),
@@ -49,7 +49,7 @@ pub(crate) mod NodeList {
 pub(crate) mod Bool {
     use super::ParseValue;
 
-    pub(crate) fn boxed_from(value: ParseValue) -> bool {
+    pub(crate) fn from(value: ParseValue) -> bool {
         match value {
             ParseValue::Bool(value) => value,
             other => unreachable!("expected Bool, got {:?}", other),
@@ -61,7 +61,7 @@ pub(crate) mod Bool {
 pub(crate) mod MaybeStrTerm {
     use super::{ParseValue, StrTerm};
 
-    pub(crate) fn boxed_from(value: ParseValue) -> Option<StrTerm> {
+    pub(crate) fn from(value: ParseValue) -> Option<StrTerm> {
         match value {
             ParseValue::MaybeStrTerm(value) => *value,
             other => unreachable!("expected MaybeStrTerm, got {:?}", other),
@@ -73,7 +73,7 @@ pub(crate) mod MaybeStrTerm {
 pub(crate) mod Num {
     use super::ParseValue;
 
-    pub(crate) fn boxed_from(value: ParseValue) -> i32 {
+    pub(crate) fn from(value: ParseValue) -> i32 {
         match value {
             ParseValue::Num(value) => value,
             other => unreachable!("expected Num, got {:?}", other),
@@ -87,7 +87,7 @@ pub(crate) struct Superclass {
     pub(crate) value: Option<Box<Node>>,
 }
 impl Superclass {
-    pub(crate) fn boxed_from(value: ParseValue) -> Superclass {
+    pub(crate) fn from(value: ParseValue) -> Superclass {
         match value {
             ParseValue::Superclass(value) => *value,
             other => unreachable!("expected Superclass, got {:?}", other),
@@ -104,7 +104,7 @@ pub(crate) struct Ensure {
 pub(crate) mod OptEnsure {
     use super::{Ensure, ParseValue};
 
-    pub(crate) fn boxed_from(value: ParseValue) -> Option<Ensure> {
+    pub(crate) fn from(value: ParseValue) -> Option<Ensure> {
         match value {
             ParseValue::OptEnsure(value) => *value,
             other => unreachable!("expected OptEnsure, got {:?}", other),
@@ -121,7 +121,7 @@ pub(crate) struct Else {
 pub(crate) mod OptElse {
     use super::{Else, ParseValue};
 
-    pub(crate) fn boxed_from(value: ParseValue) -> Option<Else> {
+    pub(crate) fn from(value: ParseValue) -> Option<Else> {
         match value {
             ParseValue::OptElse(value) => *value,
             other => unreachable!("expected OptElse, got {:?}", other),
@@ -135,7 +135,7 @@ pub(crate) struct ExcVar {
     pub(crate) exc_var: Option<Box<Node>>,
 }
 impl ExcVar {
-    pub(crate) fn boxed_from(value: ParseValue) -> ExcVar {
+    pub(crate) fn from(value: ParseValue) -> ExcVar {
         match value {
             ParseValue::ExcVar(value) => *value,
             other => unreachable!("expected ExcVar, got {:?}", other),
@@ -149,7 +149,7 @@ pub(crate) struct IfTail {
     pub(crate) body: Option<Box<Node>>,
 }
 impl IfTail {
-    pub(crate) fn boxed_from(value: ParseValue) -> IfTail {
+    pub(crate) fn from(value: ParseValue) -> IfTail {
         match value {
             ParseValue::IfTail(value) => *value,
             other => unreachable!("expected IfTail, got {:?}", other),
@@ -163,7 +163,7 @@ pub(crate) struct ExprValueDo {
     pub(crate) do_t: Box<Token>,
 }
 impl ExprValueDo {
-    pub(crate) fn boxed_from(value: ParseValue) -> ExprValueDo {
+    pub(crate) fn from(value: ParseValue) -> ExprValueDo {
         match value {
             ParseValue::ExprValueDo(value) => *value,
             other => unreachable!("expected ExprValueDo, got {:?}", other),
@@ -172,7 +172,7 @@ impl ExprValueDo {
 }
 
 impl PKwLabel {
-    pub(crate) fn boxed_from(value: ParseValue) -> PKwLabel {
+    pub(crate) fn from(value: ParseValue) -> PKwLabel {
         match value {
             ParseValue::PKwLabel(value) => *value,
             other => unreachable!("expected PKwLabel, got {:?}", other),
@@ -186,7 +186,7 @@ pub(crate) struct BraceBody {
     pub(crate) body: Option<Box<Node>>,
 }
 impl BraceBody {
-    pub(crate) fn boxed_from(value: ParseValue) -> BraceBody {
+    pub(crate) fn from(value: ParseValue) -> BraceBody {
         match value {
             ParseValue::BraceBody(value) => *value,
             other => unreachable!("expected BraceBody, got {:?}", other),
@@ -202,7 +202,7 @@ pub(crate) struct CmdBraceBlock {
     pub(crate) end_t: Box<Token>,
 }
 impl CmdBraceBlock {
-    pub(crate) fn boxed_from(value: ParseValue) -> CmdBraceBlock {
+    pub(crate) fn from(value: ParseValue) -> CmdBraceBlock {
         match value {
             ParseValue::CmdBraceBlock(value) => *value,
             other => unreachable!("expected CmdBraceBlock, got {:?}", other),
@@ -217,7 +217,7 @@ pub(crate) struct ParenArgs {
     pub(crate) end_t: Box<Token>,
 }
 impl ParenArgs {
-    pub(crate) fn boxed_from(value: ParseValue) -> ParenArgs {
+    pub(crate) fn from(value: ParseValue) -> ParenArgs {
         match value {
             ParseValue::ParenArgs(value) => *value,
             other => unreachable!("expected ParenArgs, got {:?}", other),
@@ -232,7 +232,7 @@ pub(crate) struct OptParenArgs {
     pub(crate) end_t: Option<Box<Token>>,
 }
 impl OptParenArgs {
-    pub(crate) fn boxed_from(value: ParseValue) -> OptParenArgs {
+    pub(crate) fn from(value: ParseValue) -> OptParenArgs {
         match value {
             ParseValue::OptParenArgs(value) => *value,
             other => unreachable!("expected OptParenArgs, got {:?}", other),
@@ -247,7 +247,7 @@ pub(crate) struct BeginBlock {
     pub(crate) end_t: Box<Token>,
 }
 impl BeginBlock {
-    pub(crate) fn boxed_from(value: ParseValue) -> BeginBlock {
+    pub(crate) fn from(value: ParseValue) -> BeginBlock {
         match value {
             ParseValue::BeginBlock(value) => *value,
             other => unreachable!("expected BeginBlock, got {:?}", other),
@@ -262,7 +262,7 @@ pub(crate) struct LambdaBody {
     pub(crate) end_t: Box<Token>,
 }
 impl LambdaBody {
-    pub(crate) fn boxed_from(value: ParseValue) -> LambdaBody {
+    pub(crate) fn from(value: ParseValue) -> LambdaBody {
         match value {
             ParseValue::LambdaBody(value) => *value,
             other => unreachable!("expected LambdaBody, got {:?}", other),
@@ -278,7 +278,7 @@ pub(crate) struct DoBlock {
     pub(crate) end_t: Box<Token>,
 }
 impl DoBlock {
-    pub(crate) fn boxed_from(value: ParseValue) -> DoBlock {
+    pub(crate) fn from(value: ParseValue) -> DoBlock {
         match value {
             ParseValue::DoBlock(value) => *value,
             other => unreachable!("expected DoBlock, got {:?}", other),
@@ -294,7 +294,7 @@ pub(crate) struct BraceBlock {
     pub(crate) end_t: Box<Token>,
 }
 impl BraceBlock {
-    pub(crate) fn boxed_from(value: ParseValue) -> BraceBlock {
+    pub(crate) fn from(value: ParseValue) -> BraceBlock {
         match value {
             ParseValue::BraceBlock(value) => *value,
             other => unreachable!("expected BraceBlock, got {:?}", other),
@@ -310,7 +310,7 @@ pub(crate) struct DefsHead {
     pub(crate) name_t: Box<Token>,
 }
 impl DefsHead {
-    pub(crate) fn boxed_from(value: ParseValue) -> DefsHead {
+    pub(crate) fn from(value: ParseValue) -> DefsHead {
         match value {
             ParseValue::DefsHead(value) => *value,
             other => unreachable!("expected DefsHead, got {:?}", other),
@@ -324,7 +324,7 @@ pub(crate) struct DefnHead {
     pub(crate) name_t: Box<Token>,
 }
 impl DefnHead {
-    pub(crate) fn boxed_from(value: ParseValue) -> DefnHead {
+    pub(crate) fn from(value: ParseValue) -> DefnHead {
         match value {
             ParseValue::DefnHead(value) => *value,
             other => unreachable!("expected DefnHead, got {:?}", other),
@@ -338,7 +338,7 @@ pub(crate) struct Cases {
     pub(crate) opt_else: Option<Else>,
 }
 impl Cases {
-    pub(crate) fn boxed_from(value: ParseValue) -> Cases {
+    pub(crate) fn from(value: ParseValue) -> Cases {
         match value {
             ParseValue::Cases(value) => *value,
             other => unreachable!("expected Cases, got {:?}", other),
@@ -352,7 +352,7 @@ pub(crate) struct CaseBody {
     pub(crate) opt_else: Option<Else>,
 }
 impl CaseBody {
-    pub(crate) fn boxed_from(value: ParseValue) -> CaseBody {
+    pub(crate) fn from(value: ParseValue) -> CaseBody {
         match value {
             ParseValue::CaseBody(value) => *value,
             other => unreachable!("expected CaseBody, got {:?}", other),
@@ -366,7 +366,7 @@ pub(crate) struct PCases {
     pub(crate) opt_else: Option<Else>,
 }
 impl PCases {
-    pub(crate) fn boxed_from(value: ParseValue) -> PCases {
+    pub(crate) fn from(value: ParseValue) -> PCases {
         match value {
             ParseValue::PCases(value) => *value,
             other => unreachable!("expected PCases, got {:?}", other),
@@ -380,7 +380,7 @@ pub(crate) struct PCaseBody {
     pub(crate) opt_else: Option<Else>,
 }
 impl PCaseBody {
-    pub(crate) fn boxed_from(value: ParseValue) -> PCaseBody {
+    pub(crate) fn from(value: ParseValue) -> PCaseBody {
         match value {
             ParseValue::PCaseBody(value) => *value,
             other => unreachable!("expected PCaseBody, got {:?}", other),
@@ -392,7 +392,7 @@ impl PCaseBody {
 pub(crate) mod MaybeNode {
     use super::{Node, ParseValue};
 
-    pub(crate) fn boxed_from(value: ParseValue) -> Option<Node> {
+    pub(crate) fn from(value: ParseValue) -> Option<Node> {
         match value {
             ParseValue::MaybeNode(value) => value.map(|boxed| *boxed),
             other => unreachable!("expected MaybeNode, got {:?}", other),
@@ -404,7 +404,7 @@ pub(crate) mod MaybeNode {
 pub(crate) mod MaybeBoxedNode {
     use super::{Node, ParseValue};
 
-    pub(crate) fn boxed_from(value: ParseValue) -> Option<Box<Node>> {
+    pub(crate) fn from(value: ParseValue) -> Option<Box<Node>> {
         match value {
             ParseValue::MaybeNode(value) => value,
             other => unreachable!("expected MaybeNode, got {:?}", other),
@@ -418,7 +418,7 @@ pub(crate) struct DoBody {
     pub(crate) body: Option<Box<Node>>,
 }
 impl DoBody {
-    pub(crate) fn boxed_from(value: ParseValue) -> DoBody {
+    pub(crate) fn from(value: ParseValue) -> DoBody {
         match value {
             ParseValue::DoBody(value) => *value,
             other => unreachable!("expected DoBody, got {:?}", other),
@@ -432,7 +432,7 @@ pub(crate) struct PTopExpr {
     pub(crate) guard: Option<Box<Node>>,
 }
 impl PTopExpr {
-    pub(crate) fn boxed_from(value: ParseValue) -> PTopExpr {
+    pub(crate) fn from(value: ParseValue) -> PTopExpr {
         match value {
             ParseValue::PTopExpr(value) => *value,
             other => unreachable!("expected PTopExpr, got {:?}", other),
@@ -446,7 +446,7 @@ pub(crate) struct MatchPatternWithTrailingComma {
     pub(crate) trailing_comma: Option<Box<Token>>,
 }
 impl MatchPatternWithTrailingComma {
-    pub(crate) fn boxed_from(value: ParseValue) -> MatchPatternWithTrailingComma {
+    pub(crate) fn from(value: ParseValue) -> MatchPatternWithTrailingComma {
         match value {
             ParseValue::MatchPatternWithTrailingComma(value) => *value,
             other => unreachable!("expected MatchPatternWithTrailingComma, got {:?}", other),
