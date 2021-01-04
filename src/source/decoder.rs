@@ -1,8 +1,7 @@
-use crate::source::RecognizedEncoding;
 use std::error::Error;
 use std::fmt;
 
-type DecodeFn = Box<dyn Fn(RecognizedEncoding, &[u8]) -> Result<Vec<u8>, InputError>>;
+type DecodeFn = Box<dyn Fn(&str, &[u8]) -> Result<Vec<u8>, InputError>>;
 
 pub struct CustomDecoder {
     pub(crate) f: Option<DecodeFn>,
@@ -38,7 +37,6 @@ impl std::clone::Clone for CustomDecoder {
 pub enum InputError {
     UnableToRecognizeEncoding,
     UnsupportdEncoding(String),
-    NoDecoder(RecognizedEncoding),
     DecodingError(String),
 }
 
@@ -57,13 +55,11 @@ pub fn decode_input(
 ) -> Result<Vec<u8>, InputError> {
     match &enc.to_uppercase()[..] {
         "UTF-8" | "ASCII-8BIT" | "BINARY" => Ok(input.to_vec()),
-        _ => {
-            let enc = RecognizedEncoding::parse(&enc)
-                .ok_or(InputError::UnsupportdEncoding(enc.to_owned()))?;
+        enc => {
             if let Some(f) = &decoder.f {
                 f(enc, input)
             } else {
-                Err(InputError::NoDecoder(enc))
+                Err(InputError::UnsupportdEncoding(enc.to_owned()))
             }
         }
     }
