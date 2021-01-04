@@ -18,11 +18,11 @@ pub struct ParserOptions {
     ///
     /// # Example
     /// ```rust
-    /// use lib_ruby_parser::source::{InputError, RecognizedEncoding, CustomDecoder};
+    /// use lib_ruby_parser::source::{InputError, CustomDecoder};
     /// use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
     ///
-    /// fn decode(encoding: RecognizedEncoding, input: &[u8]) -> Result<Vec<u8>, InputError> {
-    ///     if let RecognizedEncoding::US_ASCII = encoding {
+    /// fn decode(encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError> {
+    ///     if "US-ASCII" == encoding.to_uppercase() {
     ///         // reencode and return Ok(result)
     ///         return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     ///     }
@@ -32,8 +32,8 @@ pub struct ParserOptions {
     /// }
     ///
     /// // Or
-    /// let decode_closure = |encoding: RecognizedEncoding, input: &[u8]| -> Result<Vec<u8>, InputError> {
-    ///     if let RecognizedEncoding::US_ASCII = encoding {
+    /// let decode_closure = |encoding: &str, input: &[u8]| -> Result<Vec<u8>, InputError> {
+    ///     if "US-ASCII" == encoding.to_uppercase() {
     ///         // reencode and return Ok(result)
     ///         return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     ///     }
