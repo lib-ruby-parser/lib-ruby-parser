@@ -38,7 +38,7 @@ pub(crate) mod maybe_byte;
 
 mod lex_state;
 pub use lex_state::lex_states;
-pub(crate) use lex_state::LexState;
+pub use lex_state::LexState;
 
 mod token_buf;
 pub(crate) use token_buf::TokenBuf;
