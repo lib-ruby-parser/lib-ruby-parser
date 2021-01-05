@@ -17,8 +17,7 @@ mod parser_result;
 pub use parser_result::ParserResult;
 
 mod parser;
-pub(crate) use parser::Loc;
-pub use parser::{token_name, Parser};
+pub use parser::{token_name, Loc, Parser};
 
 mod builder;
 pub(crate) use builder::Builder;
