@@ -59,22 +59,22 @@ By default `lib-ruby-parser` can only parse source files encoded in `UTF-8` or `
 It's possible to pass a `decoder` function in `ParserOptions` that takes a recognized (by the library) encoding and a byte array. It must return a UTF-8 encoded byte array or an error:
 
 ```rust
-use lib_ruby_parser::source::{InputError, CustomDecoder};
+use lib_ruby_parser::source::{InputError, CustomDecoder, RustFnBasedCustomDecoder};
 use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
 
 fn decode(encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError> {
-    if encoding == "us-ascii" {
+    if "US-ASCII" == encoding.to_uppercase() {
         // reencode and return Ok(result)
-        return Ok(b"# encoding: us-ascii\n2 + 2".to_vec());
+        return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     }
     Err(InputError::DecodingError(
         "only us-ascii is supported".to_owned(),
     ))
 }
 
-/// // Or
+// Or
 let decode_closure = |encoding: &str, input: &[u8]| -> Result<Vec<u8>, InputError> {
-    if encoding == "us-ascii" {
+    if "US-ASCII" == encoding.to_uppercase() {
         // reencode and return Ok(result)
         return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     }
@@ -83,12 +83,11 @@ let decode_closure = |encoding: &str, input: &[u8]| -> Result<Vec<u8>, InputErro
     ))
 };
 
-let decoder = CustomDecoder::new(Box::new(decode_closure));
-let options = ParserOptions { decoder, debug: true, ..Default::default() };
+let decoder = RustFnBasedCustomDecoder::new(Box::new(decode_closure));
+let options = ParserOptions { decoder: Some(Box::new(decoder)), debug: true, ..Default::default() };
 let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options);
-let result = parser.do_parse();
-println!("{:#?}", result);
-// prints AST for "2 + 2"
+let ParserResult { ast, input, .. } = parser.do_parse();
+assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_owned())
 ```
 
 ## Invalid string values

@@ -17,7 +17,7 @@ use crate::{lex_states::*, LexState};
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::{Token, TokenValue};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Default)]
 pub struct Lexer {
     pub(crate) buffer: Buffer,
     pub debug: bool,
@@ -59,7 +59,7 @@ impl Lexer {
     pub(crate) const LF_CHAR: u8 = 0x0c;
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
-    pub fn new(bytes: &[u8], name: &str, decoder: CustomDecoder) -> Self {
+    pub fn new(bytes: &[u8], name: &str, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
         Self {
             cond: StackState::new("cond"),
             cmdarg: StackState::new("cmdarg"),

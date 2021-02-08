@@ -18,7 +18,7 @@ pub struct ParserOptions {
     ///
     /// # Example
     /// ```rust
-    /// use lib_ruby_parser::source::{InputError, CustomDecoder};
+    /// use lib_ruby_parser::source::{InputError, CustomDecoder, RustFnBasedCustomDecoder};
     /// use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
     ///
     /// fn decode(encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError> {
@@ -42,14 +42,14 @@ pub struct ParserOptions {
     ///     ))
     /// };
     ///
-    /// let decoder = CustomDecoder::new(Box::new(decode_closure));
-    /// let options = ParserOptions { decoder, debug: true, ..Default::default() };
+    /// let decoder = RustFnBasedCustomDecoder::new(Box::new(decode_closure));
+    /// let options = ParserOptions { decoder: Some(Box::new(decoder)), debug: true, ..Default::default() };
     /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options);
     /// let ParserResult { ast, input, .. } = parser.do_parse();
     ///
     /// assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_owned())
     /// ```
-    pub decoder: CustomDecoder,
+    pub decoder: Option<Box<dyn CustomDecoder>>,
 
     /// Optional token rewriter, see TokenRewriter API
     pub token_rewriter: Option<Box<dyn TokenRewriter>>,
@@ -67,7 +67,7 @@ impl Default for ParserOptions {
         Self {
             buffer_name: DEFAULT_BUFFER_NAME.to_owned(),
             debug: false,
-            decoder: CustomDecoder { f: None },
+            decoder: None,
             token_rewriter: None,
             record_tokens: true,
         }

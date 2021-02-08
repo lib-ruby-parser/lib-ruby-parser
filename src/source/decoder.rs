@@ -1,35 +1,31 @@
 use std::error::Error;
-use std::fmt;
+
+pub trait CustomDecoder: std::fmt::Debug {
+    fn decode(&self, encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError>;
+}
 
 type DecodeFn = Box<dyn Fn(&str, &[u8]) -> Result<Vec<u8>, InputError>>;
 
-pub struct CustomDecoder {
-    pub(crate) f: Option<DecodeFn>,
+pub struct RustFnBasedCustomDecoder {
+    pub(crate) f: DecodeFn,
 }
 
-impl CustomDecoder {
+impl RustFnBasedCustomDecoder {
     pub fn new(f: DecodeFn) -> Self {
-        Self { f: Some(f) }
+        Self { f }
     }
 }
 
-impl std::fmt::Debug for CustomDecoder {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("CustomDecoder")
-            .field("f", &self.f.as_ref().map(|_| "function"))
-            .finish()
+impl CustomDecoder for RustFnBasedCustomDecoder {
+    fn decode(&self, encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError> {
+        let f = &self.f;
+        f(encoding, input)
     }
 }
 
-impl Default for CustomDecoder {
-    fn default() -> Self {
-        Self { f: None }
-    }
-}
-
-impl std::clone::Clone for CustomDecoder {
-    fn clone(&self) -> Self {
-        Self::default()
+impl std::fmt::Debug for RustFnBasedCustomDecoder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RustFnBasedCustomDecoder").finish()
     }
 }
 
@@ -40,8 +36,8 @@ pub enum InputError {
     DecodingError(String),
 }
 
-impl fmt::Display for InputError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl std::fmt::Display for InputError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }
@@ -51,13 +47,13 @@ impl Error for InputError {}
 pub fn decode_input(
     input: &[u8],
     enc: &str,
-    decoder: &CustomDecoder,
+    decoder: &Option<Box<dyn CustomDecoder>>,
 ) -> Result<Vec<u8>, InputError> {
     match &enc.to_uppercase()[..] {
         "UTF-8" | "ASCII-8BIT" | "BINARY" => Ok(input.to_vec()),
         enc => {
-            if let Some(f) = &decoder.f {
-                f(enc, input)
+            if let Some(f) = &decoder {
+                f.decode(enc, input)
             } else {
                 Err(InputError::UnsupportdEncoding(enc.to_owned()))
             }

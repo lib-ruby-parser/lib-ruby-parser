@@ -1,16 +1,11 @@
 use lib_ruby_parser::{
-    source::buffer::*, source::CustomDecoder, source::Range, Diagnostic, DiagnosticMessage,
-    ErrorLevel,
+    source::buffer::*, source::Range, Diagnostic, DiagnosticMessage, ErrorLevel,
 };
 
 #[test]
 fn it_renders() {
     let source = "line 1\nvery long line 2\n";
-    let buffer = Buffer::new(
-        "(test_render)",
-        source.as_bytes().to_vec(),
-        CustomDecoder::default(),
-    );
+    let buffer = Buffer::new("(test_render)", source.as_bytes().to_vec(), None);
 
     let error = Diagnostic::new(
         ErrorLevel::Warning,

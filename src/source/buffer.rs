@@ -95,7 +95,7 @@ impl Clone for Input {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Default)]
 pub struct Buffer {
     pub input: Input,
 
@@ -126,14 +126,14 @@ pub struct Buffer {
     pub(crate) ruby_sourcefile_string: Vec<char>,
 
     pub(crate) debug: bool,
-    pub(crate) decoder: CustomDecoder,
+    pub(crate) decoder: Option<Box<dyn CustomDecoder>>,
 }
 
 impl Buffer {
     const CTRL_Z_CHAR: char = 0x1a as char;
     const CTRL_D_CHAR: char = 0x04 as char;
 
-    pub fn new(name: &str, bytes: Vec<u8>, decoder: CustomDecoder) -> Self {
+    pub fn new(name: &str, bytes: Vec<u8>, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
         let mut input = Input {
             name: name.to_owned(),
             ..Default::default()
