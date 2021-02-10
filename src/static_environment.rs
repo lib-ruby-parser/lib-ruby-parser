@@ -1,11 +1,11 @@
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::rc::Rc;
 
 #[derive(Debug, Clone, Default)]
 pub struct StaticEnvironment {
-    variables: Rc<RefCell<HashSet<String>>>,
-    stack: Rc<RefCell<Vec<HashSet<String>>>>,
+    variables: Rc<RefCell<BTreeSet<String>>>,
+    stack: Rc<RefCell<Vec<BTreeSet<String>>>>,
 }
 
 const FORWARD_ARGS: &str = "FORWARD_ARGS";
@@ -13,7 +13,7 @@ const FORWARD_ARGS: &str = "FORWARD_ARGS";
 impl StaticEnvironment {
     pub fn new() -> Self {
         Self {
-            variables: Rc::new(RefCell::new(HashSet::new())),
+            variables: Rc::new(RefCell::new(BTreeSet::new())),
             stack: Rc::new(RefCell::new(vec![])),
         }
     }

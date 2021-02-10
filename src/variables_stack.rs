@@ -1,10 +1,10 @@
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 use std::rc::Rc;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct VariablesStack {
-    stack: Rc<RefCell<Vec<HashSet<String>>>>,
+    stack: Rc<RefCell<Vec<BTreeSet<String>>>>,
 }
 
 impl VariablesStack {
@@ -19,7 +19,7 @@ impl VariablesStack {
     }
 
     pub(crate) fn push(&self) {
-        self.stack.borrow_mut().push(HashSet::new())
+        self.stack.borrow_mut().push(BTreeSet::new())
     }
 
     pub(crate) fn pop(&self) {
