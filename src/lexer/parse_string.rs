@@ -1,13 +1,16 @@
 use std::convert::TryInto;
 
-use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::str_term::{str_types::*, StrTerm};
 use crate::TokenBuf;
 use crate::{lex_states::*, DiagnosticMessage};
+use crate::{lexer::*, str_term::StringLiteral};
 
 pub(crate) trait ParseString {
+    fn take_strterm(&mut self) -> StringLiteral;
+    fn restore_strterm(&mut self, lit: StringLiteral);
+
     fn parse_string(&mut self) -> i32;
     fn string_term(&mut self, term: u8, func: usize) -> i32;
     fn regx_options(&mut self) -> String;
@@ -41,15 +44,22 @@ const ESCAPE_CONTROL: usize = 1;
 const ESCAPE_META: usize = 2;
 
 impl ParseString for Lexer {
-    fn parse_string(&mut self) -> i32 {
-        let quote = match self.strterm.as_ref().unwrap() {
-            StrTerm::StringLiteral(s) => s.clone(),
-            StrTerm::HeredocLiteral(_) => unreachable!("strterm must be string"),
-        };
+    fn take_strterm(&mut self) -> StringLiteral {
+        match self.strterm.take() {
+            Some(StrTerm::StringLiteral(s)) => s,
+            _ => unreachable!("strterm must be string"),
+        }
+    }
+    fn restore_strterm(&mut self, literal: StringLiteral) {
+        self.strterm = Some(StrTerm::StringLiteral(literal));
+    }
 
-        let func = quote.func();
-        let term = quote.term();
-        let paren = quote.paren();
+    fn parse_string(&mut self) -> i32 {
+        let mut quote = self.take_strterm();
+
+        let func = quote.func;
+        let term = quote.term;
+        let paren = quote.paren;
         let mut c: MaybeByte;
         let mut space = false;
         self.lval_start = Some(self.buffer.pcur);
@@ -57,10 +67,7 @@ impl ParseString for Lexer {
         if self.debug {
             println!(
                 "func = {}, pcur = {}, ptok = {}, term = {}",
-                func,
-                self.buffer.pcur,
-                self.buffer.ptok,
-                quote.term()
+                func, self.buffer.pcur, self.buffer.ptok, quote.term
             );
         }
 
@@ -73,7 +80,7 @@ impl ParseString for Lexer {
             if (func & STR_FUNC_REGEXP) != 0 {
                 return Self::tREGEXP_END;
             } else {
-                if let Some(heredoc_end) = quote.heredoc_end() {
+                if let Some(heredoc_end) = quote.heredoc_end {
                     self.lval_start = Some(heredoc_end.start);
                     self.lval_end = Some(heredoc_end.end);
                     self.set_yylval_str(&TokenBuf::new(heredoc_end.value.as_bytes()));
@@ -93,24 +100,28 @@ impl ParseString for Lexer {
             space = true;
         }
         if (func & STR_FUNC_LIST) != 0 {
-            quote.set_func(quote.func() & !STR_FUNC_LIST);
+            quote.func = quote.func & !STR_FUNC_LIST;
             space = true;
         }
-        if c == term && quote.nest() == 0 {
+        if c == term && quote.nest == 0 {
             if (func & STR_FUNC_QWORDS) != 0 {
-                quote.set_func(quote.func() | STR_FUNC_TERM);
+                quote.func = quote.func | STR_FUNC_TERM;
                 self.buffer.pushback(&c); /* dispatch the term at tSTRING_END */
+                self.restore_strterm(quote);
                 return Self::tSPACE;
             }
+            self.restore_strterm(quote);
             return self.string_term(term, func);
         }
         if space {
             self.buffer.pushback(&c);
+            self.restore_strterm(quote);
             return Self::tSPACE;
         }
         self.newtok();
         if ((func & STR_FUNC_EXPAND) != 0) && c == b'#' {
             if let Some(t) = self.peek_variable_name() {
+                self.restore_strterm(quote);
                 return t;
             }
             self.tokadd(b'#');
@@ -118,9 +129,9 @@ impl ParseString for Lexer {
         }
         self.buffer.pushback(&c);
 
-        let mut nest = quote.nest();
+        let mut nest = quote.nest;
         let added = self.tokadd_string(func, term, paren, &mut nest);
-        quote.set_nest(nest);
+        quote.nest = nest;
 
         if added.is_some() && self.buffer.eofp {
             self.literal_flush(self.buffer.pcur);
@@ -135,12 +146,13 @@ impl ParseString for Lexer {
             } else {
                 self.yyerror0(DiagnosticMessage::UnterminatedString);
             }
-            quote.set_func(quote.func() | STR_FUNC_TERM);
+            quote.func = quote.func | STR_FUNC_TERM;
         }
 
         self.tokfix();
         self.set_yylval_str(&self.tokenbuf.clone());
         self.flush_string_content();
+        self.restore_strterm(quote);
 
         Self::tSTRING_CONTENT
     }

@@ -1,6 +1,3 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
 pub(crate) mod str_types {
     pub(crate) const STR_FUNC_ESCAPE: usize = 0x01;
     pub(crate) const STR_FUNC_EXPAND: usize = 0x02;
@@ -40,23 +37,13 @@ pub(crate) struct HeredocEnd {
 }
 
 #[derive(Debug, Clone, Default)]
-struct InnerStringLiteral {
+pub(crate) struct StringLiteral {
     // struct rb_strterm_literal_struct
     pub(crate) nest: usize,
     pub(crate) func: usize,
     pub(crate) paren: Option<u8>,
     pub(crate) term: u8,
     pub(crate) heredoc_end: Option<HeredocEnd>,
-}
-
-#[derive(Debug, Clone, Default)]
-pub(crate) struct StringLiteral {
-    // struct rb_strterm_literal_struct
-    pub(crate) nest: Rc<RefCell<usize>>,
-    pub(crate) func: Rc<RefCell<usize>>,
-    pub(crate) paren: Rc<RefCell<Option<u8>>>,
-    pub(crate) term: Rc<RefCell<u8>>,
-    pub(crate) heredoc_end: Rc<RefCell<Option<HeredocEnd>>>,
 }
 
 impl StringLiteral {
@@ -68,56 +55,24 @@ impl StringLiteral {
         heredoc_end: Option<HeredocEnd>,
     ) -> Self {
         Self {
-            nest: Rc::new(RefCell::new(nest)),
-            func: Rc::new(RefCell::new(func)),
-            paren: Rc::new(RefCell::new(paren)),
-            term: Rc::new(RefCell::new(term)),
-            heredoc_end: Rc::new(RefCell::new(heredoc_end)),
+            nest,
+            func,
+            paren,
+            term,
+            heredoc_end,
         }
-    }
-
-    pub(crate) fn nest(&self) -> usize {
-        *self.nest.borrow()
-    }
-    pub(crate) fn func(&self) -> usize {
-        *self.func.borrow()
-    }
-    pub(crate) fn paren(&self) -> Option<u8> {
-        *self.paren.borrow()
-    }
-    pub(crate) fn term(&self) -> u8 {
-        *self.term.borrow()
-    }
-
-    pub(crate) fn set_nest(&self, nest: usize) {
-        *self.nest.borrow_mut() = nest;
-    }
-    pub(crate) fn set_func(&self, func: usize) {
-        *self.func.borrow_mut() = func;
-    }
-    #[allow(dead_code)]
-    pub(crate) fn set_paren(&self, paren: Option<u8>) {
-        *self.paren.borrow_mut() = paren;
-    }
-    #[allow(dead_code)]
-    pub(crate) fn set_term(&self, term: u8) {
-        *self.term.borrow_mut() = term;
-    }
-
-    pub(crate) fn heredoc_end(&self) -> Option<HeredocEnd> {
-        self.heredoc_end.borrow().clone()
     }
 }
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct HeredocLiteral {
-    lastline: Rc<RefCell<usize>>, /* the string of line that contains `<<"END"` */
-    offset: Rc<RefCell<usize>>,   /* the column of END in `<<"END"` */
-    sourceline: Rc<RefCell<usize>>, /* lineno of the line that contains `<<"END"` */
-    length: Rc<RefCell<usize>>,   /* the length of END in `<<"END"` */
+    pub(crate) lastline: usize, /* the string of line that contains `<<"END"` */
+    pub(crate) offset: usize,   /* the column of END in `<<"END"` */
+    pub(crate) sourceline: usize, /* lineno of the line that contains `<<"END"` */
+    pub(crate) length: usize,   /* the length of END in `<<"END"` */
 
-    quote: Rc<RefCell<usize>>,
-    func: Rc<RefCell<usize>>,
+    pub(crate) quote: usize,
+    pub(crate) func: usize,
 }
 
 impl HeredocLiteral {
@@ -130,57 +85,13 @@ impl HeredocLiteral {
         func: usize,
     ) -> Self {
         Self {
-            lastline: Rc::new(RefCell::new(lastline)),
-            offset: Rc::new(RefCell::new(offset)),
-            sourceline: Rc::new(RefCell::new(sourceline)),
-            length: Rc::new(RefCell::new(length)),
-            quote: Rc::new(RefCell::new(quote)),
-            func: Rc::new(RefCell::new(func)),
+            lastline,
+            offset,
+            sourceline,
+            length,
+            quote,
+            func,
         }
-    }
-
-    pub(crate) fn lastline(&self) -> usize {
-        *self.lastline.borrow()
-    }
-    pub(crate) fn offset(&self) -> usize {
-        *self.offset.borrow()
-    }
-    pub(crate) fn sourceline(&self) -> usize {
-        *self.sourceline.borrow()
-    }
-    pub(crate) fn length(&self) -> usize {
-        *self.length.borrow()
-    }
-    pub(crate) fn quote(&self) -> usize {
-        *self.quote.borrow()
-    }
-    pub(crate) fn func(&self) -> usize {
-        *self.func.borrow()
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn set_lastline(&self, lastline: usize) {
-        *self.lastline.borrow_mut() = lastline;
-    }
-    #[allow(dead_code)]
-    pub(crate) fn set_offset(&self, offset: usize) {
-        *self.offset.borrow_mut() = offset;
-    }
-    #[allow(dead_code)]
-    pub(crate) fn set_sourceline(&self, sourceline: usize) {
-        *self.sourceline.borrow_mut() = sourceline;
-    }
-    #[allow(dead_code)]
-    pub(crate) fn set_length(&self, length: usize) {
-        *self.length.borrow_mut() = length;
-    }
-    #[allow(dead_code)]
-    pub(crate) fn set_quote(&self, quote: usize) {
-        *self.quote.borrow_mut() = quote;
-    }
-    #[allow(dead_code)]
-    pub(crate) fn set_func(&self, func: usize) {
-        *self.func.borrow_mut() = func;
     }
 }
 

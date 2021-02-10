@@ -143,10 +143,10 @@ impl ParseHeredoc for Lexer {
 
         let heredoc_end: HeredocEnd;
 
-        eos = self.buffer.input.lines[here.lastline()].start + here.offset();
-        len = here.length();
-        func = here.func();
-        indent = here.func() & STR_FUNC_INDENT;
+        eos = self.buffer.input.lines[here.lastline].start + here.offset;
+        len = here.length;
+        func = here.func;
+        indent = here.func & STR_FUNC_INDENT;
 
         c = self.nextc();
         if c.is_eof() {
@@ -376,14 +376,14 @@ impl ParseHeredoc for Lexer {
 
     fn heredoc_restore(&mut self, here: &HeredocLiteral) {
         self.strterm = None;
-        let line = here.lastline();
+        let line = here.lastline;
         self.buffer.lastline = line;
         self.buffer.pbeg = self.buffer.input.lines[line].start;
         self.buffer.pend = self.buffer.pbeg + self.buffer.input.lines[line].len();
-        self.buffer.pcur = self.buffer.pbeg + here.offset() + here.length() + here.quote();
-        self.buffer.ptok = self.buffer.pbeg + here.offset() - here.quote();
+        self.buffer.pcur = self.buffer.pbeg + here.offset + here.length + here.quote;
+        self.buffer.ptok = self.buffer.pbeg + here.offset - here.quote;
         self.buffer.heredoc_end = self.buffer.ruby_sourceline;
-        self.buffer.ruby_sourceline = here.sourceline();
+        self.buffer.ruby_sourceline = here.sourceline;
         if self.buffer.eofp {
             self.buffer.nextline = 0
         }
