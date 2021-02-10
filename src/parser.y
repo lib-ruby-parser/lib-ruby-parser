@@ -6713,11 +6713,11 @@ impl Parser {
         self.diagnostics.emit(diagnostic);
     }
 
-    fn yylex(&mut self) -> Token {
+    fn yylex(&mut self) -> Box<Token> {
         self.yylexer.yylex()
     }
 
-    fn next_token(&mut self) -> Token {
+    fn next_token(&mut self) -> Box<Token> {
         let mut token = self.yylex();
 
         if let Some(token_rewriter) = &mut self.token_rewriter {
@@ -6738,7 +6738,7 @@ impl Parser {
         self.last_token_type = token.token_type;
 
         if self.record_tokens {
-            self.tokens.push(token.clone());
+            self.tokens.push(*token.clone());
         }
 
         token

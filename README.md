@@ -147,7 +147,7 @@ A pretty big codebase could be generated using a `download.rb` script:
 
 ```sh
 $ ruby gems/download.rb
-$ cargo build --release --all-features --example parse
+$ cargo build --release --features onig,rebuild-grammar --example parse
 $ target/release/examples/parse --no-output --drop-tokens "gems/repos/**/*.rb"
 ```
 

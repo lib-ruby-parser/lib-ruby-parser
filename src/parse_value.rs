@@ -544,8 +544,8 @@ pub(crate) enum ParseValue {
 }
 
 impl ParseValue {
-    pub fn from_token(token: Token) -> Self {
-        Self::Token(Box::new(token))
+    pub fn from_token(token: Box<Token>) -> Self {
+        Self::Token(token)
     }
 
     pub fn new_superclass(value: Superclass) -> Self {

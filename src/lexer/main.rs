@@ -79,7 +79,7 @@ impl Lexer {
         let mut tokens = vec![];
 
         loop {
-            let token = self.yylex();
+            let token = *self.yylex();
             match token {
                 Token {
                     token_type: Self::END_OF_INPUT,
@@ -96,7 +96,7 @@ impl Lexer {
         self.buffer.input.line_col_for_pos(loc)
     }
 
-    pub(crate) fn yylex(&mut self) -> Token {
+    pub(crate) fn yylex(&mut self) -> Box<Token> {
         let lex_state_before = self.lex_state.clone();
         self.lval = None;
 
@@ -123,13 +123,13 @@ impl Lexer {
             end = begin + 1;
         }
 
-        let token = Token {
+        let token = Box::new(Token {
             token_type,
             token_value,
             loc: Loc { begin, end },
             lex_state_before,
             lex_state_after: self.lex_state.clone(),
-        };
+        });
         if self.debug {
             println!(
                 "yylex ({:?}, {:?}, {:?})",

@@ -13,7 +13,7 @@ pub enum LexStateAction {
 pub trait TokenRewriter: std::fmt::Debug {
     fn rewrite_token(
         &mut self,
-        token: Token,
+        token: Box<Token>,
         input: &[u8],
-    ) -> (Token, RewriteAction, LexStateAction);
+    ) -> (Box<Token>, RewriteAction, LexStateAction);
 }
