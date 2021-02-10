@@ -73,6 +73,12 @@ pub(crate) struct Diagnostics {
 }
 
 impl Diagnostics {
+    pub(crate) fn new() -> Self {
+        Self {
+            list: Rc::new(RefCell::new(vec![])),
+        }
+    }
+
     pub(crate) fn emit(&self, diagnostic: Diagnostic) {
         self.list.borrow_mut().push(diagnostic)
     }

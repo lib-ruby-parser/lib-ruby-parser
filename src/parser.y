@@ -6619,22 +6619,28 @@ impl Parser {
             record_tokens,
         } = options;
 
-        let mut lexer = Lexer::new(input, &buffer_name, decoder);
-        lexer.set_debug(debug);
-
+        let context = ParserContext::new();
         let current_arg_stack = CurrentArgStack::new();
         let max_numparam_stack = MaxNumparamStack::new();
         let pattern_variables = VariablesStack::new();
         let pattern_hash_keys = VariablesStack::new();
+        let static_env = StaticEnvironment::new();
+        let diagnostics = Diagnostics::new();
+
+        let mut lexer = Lexer::new(input, &buffer_name, decoder);
+        lexer.context = context.clone();
+        lexer.static_env = static_env.clone();
+        lexer.diagnostics = diagnostics.clone();
+        lexer.set_debug(debug);
 
         let builder = Builder::new(
-            lexer.static_env.clone(),
-            lexer.context.clone(),
+            static_env.clone(),
+            context.clone(),
             current_arg_stack.clone(),
             max_numparam_stack.clone(),
             pattern_variables.clone(),
             pattern_hash_keys.clone(),
-            lexer.diagnostics.clone(),
+            diagnostics.clone(),
         );
 
         let last_token_type = 0;
@@ -6645,16 +6651,17 @@ impl Parser {
             yydebug: debug,
             yyerrstatus_: 0,
             result: None,
+
             builder,
-            context: lexer.context.clone(),
+            context,
             current_arg_stack,
             max_numparam_stack,
             pattern_variables,
             pattern_hash_keys,
-            static_env: lexer.static_env.clone(),
+            static_env,
             last_token_type,
             tokens: vec![],
-            diagnostics: lexer.diagnostics.clone(),
+            diagnostics,
             yylexer: lexer,
             token_rewriter,
             record_tokens,

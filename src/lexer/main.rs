@@ -37,13 +37,13 @@ pub struct Lexer {
 
     pub(crate) tokenbuf: TokenBuf,
 
-    max_numparam: usize,
+    pub(crate) max_numparam: usize,
 
     pub(crate) context: Context,
     pub(crate) in_kwarg: bool,
 
     pub(crate) command_start: bool,
-    token_seen: bool,
+    pub(crate) token_seen: bool,
 
     pub static_env: StaticEnvironment,
 
@@ -65,7 +65,6 @@ impl Lexer {
             cmdarg: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
             buffer: Buffer::new(name, bytes.to_owned(), decoder),
-            context: Context::new(),
             ..Self::default()
         }
     }
