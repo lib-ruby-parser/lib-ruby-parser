@@ -38,6 +38,7 @@
     use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
+    use crate::default_token_rewriter;
 }
 
 %code {
@@ -6618,6 +6619,11 @@ impl Parser {
             token_rewriter,
             record_tokens,
         } = options;
+
+        let token_rewriter = match token_rewriter {
+            Some(rewriter) => Some(rewriter),
+            None => default_token_rewriter(),
+        };
 
         let mut lexer = Lexer::new(input, &buffer_name, decoder);
         lexer.set_debug(debug);

@@ -1,0 +1,15 @@
+--INPUT
+def test_method_with_multiple_stmts
+  x = 1
+  x = ; # error: unexpected token
+  y = 1
+end
+--DIAGNOSTIC
+/* ! = "\n"
+def test_method_with_multiple_stmts!  x = 1!  x = ; # error: unexpected token!  y = 1!end
+*/
+                                                  ~ (error) unexpected tSEMI
+--AST
+s(:def, "test_method_with_multiple_stmts", nil,
+  s(:lvasgn, "y",
+    s(:int, "1")))

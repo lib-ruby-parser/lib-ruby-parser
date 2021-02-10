@@ -1,0 +1,17 @@
+--INPUT
+def foo(x)
+  Integer::
+  case x
+  when Integer
+  end
+end
+--DIAGNOSTIC
+/* ! = "\n"
+def foo(x)!  Integer::!  case x!  when Integer!  end!end
+*/
+                         ~~~~ (error) unexpected kCASE
+                                                     ~~~ (error) unexpected kEND
+--AST
+s(:def, "foo",
+  s(:args,
+    s(:arg, "x")), nil)

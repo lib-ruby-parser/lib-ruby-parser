@@ -14,8 +14,10 @@ use loc_matcher::LocMatcher;
 mod diagnostic_matcher;
 use diagnostic_matcher::render_diagnostic_for_testing;
 
+#[derive(Clone)]
 enum TestSection {
     None,
+    MultiLineComment,
     Input,
     AST,
     Locations,
@@ -50,11 +52,23 @@ impl Fixture {
         let mut locs: Vec<String> = vec![];
         let mut diagnostics: Vec<String> = vec![];
         let mut skip_if_feature_enabled: Option<String> = None;
+        let mut section_before_comment = TestSection::None;
         let mut current_section = TestSection::None;
 
         for line in content.lines() {
             match (line.as_bytes(), &current_section) {
                 (&[b'/', b'/', b' ', ..], _) => { /* skip comment */ }
+
+                (&[b'/', b'*', ..], _) => {
+                    // enter multiline comment
+                    section_before_comment = current_section;
+                    current_section = TestSection::MultiLineComment
+                }
+                (&[.., b'*', b'/'], TestSection::MultiLineComment) => {
+                    // exit multiline comment
+                    current_section = section_before_comment.clone()
+                }
+                (_, TestSection::MultiLineComment) => { /* skip multiline comment */ }
 
                 (b"--INPUT", _) => current_section = TestSection::Input,
                 (b"--AST", _) => current_section = TestSection::AST,
@@ -193,6 +207,13 @@ fn test_file(fixture_path: &str) -> TestResult {
                     return TestResult::Skip;
                 }
             }
+
+            Some(feature) if feature == "sorbet" => {
+                if cfg!(feature = "sorbet") {
+                    return TestResult::Skip;
+                }
+            }
+
             Some(unknown) => {
                 return TestResult::Some(TestOutput::Failure(format!(
                     "unknown --SKIP-IF-ENABLED feature {:?}",
@@ -216,7 +237,8 @@ fn test_file(fixture_path: &str) -> TestResult {
         let result = if test_case.diagnostics.is_some() {
             parser.do_parse()
         } else {
-            parser.do_parse_with_state_validation()
+            parser.do_parse()
+            // parser.do_parse_with_state_validation()
         };
 
         TestResult::Some(test_case.compare(&result))
@@ -330,4 +352,10 @@ fn test_magic_comment() {
             },
         ]
     );
+}
+
+#[cfg(feature = "sorbet")]
+#[test]
+fn test_sorbet() {
+    test_dir("tests/fixtures/sorbet")
 }

@@ -1,0 +1,11 @@
+--INPUT
+def test_constant_only_scope
+  A::
+end
+--DIAGNOSTIC
+/* ! = "\n"
+def test_constant_only_scope!  A::!end
+*/
+                                   ~~~ (error) unexpected kEND
+--AST
+s(:def, "test_constant_only_scope", nil, nil)

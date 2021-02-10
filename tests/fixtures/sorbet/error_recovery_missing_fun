@@ -1,0 +1,49 @@
+--INPUT
+def test_method_without_fun_name(x)
+  x.
+end
+
+def test_method_without_fun_name_plus_before(x)
+  before = 1
+  x.
+end
+
+def test_method_without_fun_name_plus_after(x)
+  x.
+  after = 1
+end
+
+def test_method_without_fun_name_before_and_after(x)
+  before = 1
+  x.
+  after = 1
+end
+--DIAGNOSTIC
+/* ! = "\n"
+def test_method_without_fun_name(x)!  x.!end!!def test_method_without_fun_name_plus_before(x)!  before = 1!  x.!end!!def test_method_without_fun_name_plus_after(x)!  x.!  after = 1!end!!def test_method_without_fun_name_before_and_after(x)!  before = 1!  x.!  after = 1!end
+*/
+                                         ~~~ (error) unexpected kEND
+                                                                                                                ~~~ (error) unexpected kEND
+--AST
+s(:begin,
+  s(:def, "test_method_without_fun_name",
+    s(:args,
+      s(:arg, "x")), nil),
+  s(:def, "test_method_without_fun_name_plus_before",
+    s(:args,
+      s(:arg, "x")), nil),
+  s(:def, "test_method_without_fun_name_plus_after",
+    s(:args,
+      s(:arg, "x")),
+    s(:send,
+      s(:lvar, "x"), "after=",
+      s(:int, "1"))),
+  s(:def, "test_method_without_fun_name_before_and_after",
+    s(:args,
+      s(:arg, "x")),
+    s(:begin,
+      s(:lvasgn, "before",
+        s(:int, "1")),
+      s(:send,
+        s(:lvar, "x"), "after=",
+        s(:int, "1")))))
