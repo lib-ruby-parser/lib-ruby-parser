@@ -65,7 +65,7 @@ pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
 
         let (line, col) = input
             .line_col_for_pos(token.loc.begin)
-            .ok_or_else(|| format!("token {:#?} has invalid range", token))?;
+            .ok_or_else(|| format!("token {:#?} has invalid loc", token))?;
 
         output.push_str(&format!(
             "{} {:?} {}:{}\n",

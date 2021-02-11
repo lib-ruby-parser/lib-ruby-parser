@@ -1,5 +1,5 @@
 use crate::source::buffer::Input;
-use crate::source::Range;
+use crate::Loc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CommentType {
@@ -10,12 +10,12 @@ pub enum CommentType {
 
 #[derive(Debug, Clone)]
 pub struct Comment {
-    pub location: Range,
+    pub location: Loc,
     pub kind: CommentType,
 }
 
 impl Comment {
-    pub fn new(location: Range, input: &Input) -> Self {
+    pub fn new(location: Loc, input: &Input) -> Self {
         let kind = match location.source(input) {
             Some(source) => {
                 if source.starts_with('#') {

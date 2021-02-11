@@ -1,9 +1,9 @@
-use crate::source::Range;
+use crate::Loc;
 use crate::Node;
 use crate::StringValue;
 
 pub trait InnerNode {
-    fn expression(&self) -> &Range;
+    fn expression(&self) -> &Loc;
     fn str_type(&self) -> &'static str;
     fn inspected_children(&self, indent: usize) -> Vec<String>;
 

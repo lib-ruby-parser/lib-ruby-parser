@@ -5,11 +5,11 @@ use std::convert::TryInto;
 
 use crate::error::Diagnostics;
 use crate::nodes::*;
-use crate::source::Range;
 use crate::LexState;
+use crate::Loc;
 use crate::StringValue;
 use crate::{
-    Bytes, Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node, StaticEnvironment, Token,
+    Bytes, Context, CurrentArgStack, Lexer, MaxNumparamStack, Node, StaticEnvironment, Token,
     VariablesStack,
 };
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
@@ -271,11 +271,11 @@ impl Builder {
     }
 
     pub(crate) fn character(&self, char_t: Box<Token>) -> Box<Node> {
-        let str_range = self.loc(&char_t);
+        let str_loc = self.loc(&char_t);
 
-        let begin_l = Some(str_range.with_end(str_range.begin_pos + 1));
+        let begin_l = Some(str_loc.with_end(str_loc.begin + 1));
         let end_l = None;
-        let expression_l = str_range;
+        let expression_l = str_loc;
 
         let value = StringValue::new(char_t);
         Box::new(Node::Str(Str {
@@ -294,7 +294,7 @@ impl Builder {
 
     // Symbols
 
-    fn validate_sym_value(&self, value: &StringValue, loc: &Range) {
+    fn validate_sym_value(&self, value: &StringValue, loc: &Loc) {
         if !value.bytes.is_valid_utf8() {
             self.error(
                 DiagnosticMessage::InvalidSymbol("UTF-8".to_owned()),
@@ -638,10 +638,10 @@ impl Builder {
     }
 
     pub(crate) fn pair_keyword(&self, key_t: Box<Token>, value: Box<Node>) -> Box<Node> {
-        let key_range = self.loc(&key_t);
-        let key_l = key_range.adjust_end(-1);
-        let colon_l = key_range.with_begin(key_range.end_pos - 1);
-        let expression_l = key_range.join(&value.expression());
+        let key_loc = self.loc(&key_t);
+        let key_l = key_loc.adjust_end(-1);
+        let colon_l = key_loc.with_begin(key_loc.end - 1);
+        let expression_l = key_loc.join(&value.expression());
 
         let key = StringValue::new(key_t);
         self.validate_sym_value(&key, &key_l);
@@ -669,11 +669,11 @@ impl Builder {
         let end_l = self.loc(&end_t);
 
         let quote_loc = Loc {
-            begin: end_l.end_pos - 2,
-            end: end_l.end_pos - 1,
+            begin: end_l.end - 2,
+            end: end_l.end - 1,
         };
 
-        let colon_l = end_l.with_begin(end_l.end_pos - 1);
+        let colon_l = end_l.with_begin(end_l.end - 1);
 
         let end_t: Box<Token> = Box::new(Token {
             token_type: end_t.token_type,
@@ -1803,7 +1803,7 @@ impl Builder {
 
         let rewrite_args_and_loc =
             |method_args: &[Node],
-             keyword_expression_l: &Range,
+             keyword_expression_l: &Loc,
              block_args: ArgsType,
              block_body: Option<Box<Node>>| {
                 // Code like "return foo 1 do end" is reduced in a weird sequence.
@@ -2996,19 +2996,19 @@ impl Builder {
                 self.static_env.declare(&name);
 
                 if let Some(begin_l) = &begin_l {
-                    let begin_pos_d: i32 = begin_l
+                    let begin_d: i32 = begin_l
                         .size()
                         .try_into()
                         .expect("failed to convert usize loc into i32, is it too big?");
-                    name_l = name_l.adjust_begin(begin_pos_d)
+                    name_l = name_l.adjust_begin(begin_d)
                 }
 
                 if let Some(end_l) = &end_l {
-                    let end_pos_d: i32 = end_l
+                    let end_d: i32 = end_l
                         .size()
                         .try_into()
                         .expect("failed to convert usize loc into i32, is it too big?");
-                    name_l = name_l.adjust_end(-end_pos_d)
+                    name_l = name_l.adjust_end(-end_d)
                 }
 
                 let expression_l = self
@@ -3370,7 +3370,7 @@ impl Builder {
         }
     }
 
-    fn arg_name_loc<'a>(&self, node: &'a Node) -> &'a Range {
+    fn arg_name_loc<'a>(&self, node: &'a Node) -> &'a Loc {
         match node {
             Node::Arg(Arg { expression_l, .. }) => expression_l,
             Node::Optarg(Optarg { name_l, .. }) => name_l,
@@ -3424,7 +3424,7 @@ impl Builder {
         }
     }
 
-    pub(crate) fn check_assignment_to_numparam(&self, name: &str, loc: &Range) -> Result<(), ()> {
+    pub(crate) fn check_assignment_to_numparam(&self, name: &str, loc: &Loc) -> Result<(), ()> {
         let assigning_to_numparam = self.context.is_in_dynamic_block()
             && matches!(
                 name,
@@ -3442,7 +3442,7 @@ impl Builder {
         Ok(())
     }
 
-    pub(crate) fn check_reserved_for_numparam(&self, name: &str, loc: &Range) -> Result<(), ()> {
+    pub(crate) fn check_reserved_for_numparam(&self, name: &str, loc: &Loc) -> Result<(), ()> {
         match name {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
                 self.error(
@@ -3459,7 +3459,7 @@ impl Builder {
         &this_name[0..1] != "_" && this_name == that_name
     }
 
-    pub(crate) fn check_lvar_name(&self, name: &str, loc: &Range) -> Result<(), ()> {
+    pub(crate) fn check_lvar_name(&self, name: &str, loc: &Loc) -> Result<(), ()> {
         let first = name
             .chars()
             .next()
@@ -3479,11 +3479,7 @@ impl Builder {
         }
     }
 
-    pub(crate) fn check_duplicate_pattern_variable(
-        &self,
-        name: &str,
-        loc: &Range,
-    ) -> Result<(), ()> {
+    pub(crate) fn check_duplicate_pattern_variable(&self, name: &str, loc: &Loc) -> Result<(), ()> {
         if name.starts_with('_') {
             return Ok(());
         }
@@ -3497,7 +3493,7 @@ impl Builder {
         Ok(())
     }
 
-    pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: &Range) -> Result<(), ()> {
+    pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: &Loc) -> Result<(), ()> {
         if self.pattern_hash_keys.is_declared(name) {
             self.error(DiagnosticMessage::DuplicateKeyName, loc.clone());
             return Err(());
@@ -3539,7 +3535,7 @@ impl Builder {
         &self,
         parts: &[Node],
         options: &[char],
-        range: &Range,
+        loc: &Loc,
     ) -> Option<Regex> {
         let source = self.static_string(&parts)?;
         let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
@@ -3554,7 +3550,7 @@ impl Builder {
             Err(err) => {
                 self.error(
                     DiagnosticMessage::RegexError(err.description().to_owned()),
-                    range.clone(),
+                    loc.clone(),
                 );
                 None
             }
@@ -3562,18 +3558,12 @@ impl Builder {
     }
 
     #[cfg(feature = "onig")]
-    pub(crate) fn validate_static_regexp(&self, parts: &[Node], options: &[char], range: &Range) {
-        self.build_static_regexp(parts, options, range);
+    pub(crate) fn validate_static_regexp(&self, parts: &[Node], options: &[char], loc: &Loc) {
+        self.build_static_regexp(parts, options, loc);
     }
 
     #[cfg(not(feature = "onig"))]
-    pub(crate) fn validate_static_regexp(
-        &self,
-        _parts: &[Node],
-        _options: &[char],
-        _range: &Range,
-    ) {
-    }
+    pub(crate) fn validate_static_regexp(&self, _parts: &[Node], _options: &[char], _loc: &Loc) {}
 
     #[cfg(feature = "onig")]
     pub(crate) fn static_regexp_captures(&self, node: &Node) -> Option<Vec<String>> {
@@ -3609,11 +3599,11 @@ impl Builder {
         None
     }
 
-    pub(crate) fn loc(&self, token: &Token) -> Range {
-        Range::new(token.loc.begin, token.loc.end)
+    pub(crate) fn loc(&self, token: &Token) -> Loc {
+        token.loc.clone()
     }
 
-    pub(crate) fn maybe_loc(&self, token: &Option<Box<Token>>) -> Option<Range> {
+    pub(crate) fn maybe_loc(&self, token: &Option<Box<Token>>) -> Option<Loc> {
         token.as_ref().map(|t| self.loc(t))
     }
 
@@ -3622,7 +3612,7 @@ impl Builder {
         begin_t: &Option<Box<Token>>,
         parts: &[Node],
         end_t: &Option<Box<Token>>,
-    ) -> (Option<Range>, Option<Range>, Range) {
+    ) -> (Option<Loc>, Option<Loc>, Loc) {
         let begin_l = self.maybe_loc(begin_t);
         let end_l = self.maybe_loc(end_t);
 
@@ -3658,14 +3648,14 @@ impl Builder {
         StringMap::CollectionMap(self.collection_map(begin_t, parts, end_t))
     }
 
-    pub(crate) fn error(&self, message: DiagnosticMessage, range: Range) {
+    pub(crate) fn error(&self, message: DiagnosticMessage, loc: Loc) {
         self.diagnostics
-            .emit(Diagnostic::new(ErrorLevel::Error, message, range))
+            .emit(Diagnostic::new(ErrorLevel::Error, message, loc))
     }
 
-    pub(crate) fn warn(&self, message: DiagnosticMessage, range: Range) {
+    pub(crate) fn warn(&self, message: DiagnosticMessage, loc: Loc) {
         self.diagnostics
-            .emit(Diagnostic::new(ErrorLevel::Warning, message, range))
+            .emit(Diagnostic::new(ErrorLevel::Warning, message, loc))
     }
 
     pub(crate) fn value_expr(&self, node: &Node) -> Result<(), ()> {
@@ -3753,15 +3743,15 @@ impl Builder {
     }
 }
 
-pub(crate) fn maybe_node_expr(node: &Option<&Node>) -> Option<Range> {
+pub(crate) fn maybe_node_expr(node: &Option<&Node>) -> Option<Loc> {
     node.map(|node| node.expression().clone())
 }
 
-pub(crate) fn maybe_boxed_node_expr(node: &Option<Box<Node>>) -> Option<Range> {
+pub(crate) fn maybe_boxed_node_expr(node: &Option<Box<Node>>) -> Option<Loc> {
     node.as_ref().map(|node| node.expression().clone())
 }
 
-pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Range> {
+pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Loc> {
     join_maybe_exprs(&nodes.first(), &nodes.last())
 }
 
@@ -3777,15 +3767,15 @@ pub(crate) fn maybe_value(token: Option<Box<Token>>) -> Option<String> {
     token.map(value)
 }
 
-pub(crate) fn join_exprs(lhs: &Node, rhs: &Node) -> Range {
+pub(crate) fn join_exprs(lhs: &Node, rhs: &Node) -> Loc {
     lhs.expression().join(rhs.expression())
 }
 
-pub(crate) fn join_maybe_exprs(lhs: &Option<&Node>, rhs: &Option<&Node>) -> Option<Range> {
+pub(crate) fn join_maybe_exprs(lhs: &Option<&Node>, rhs: &Option<&Node>) -> Option<Loc> {
     join_maybe_locs(&maybe_node_expr(&lhs), &maybe_node_expr(&rhs))
 }
 
-pub(crate) fn join_maybe_locs(lhs: &Option<Range>, rhs: &Option<Range>) -> Option<Range> {
+pub(crate) fn join_maybe_locs(lhs: &Option<Loc>, rhs: &Option<Loc>) -> Option<Loc> {
     match (lhs, rhs) {
         (None, None) => None,
         (None, Some(rhs)) => Some(rhs.clone()),
@@ -3795,8 +3785,8 @@ pub(crate) fn join_maybe_locs(lhs: &Option<Range>, rhs: &Option<Range>) -> Optio
 }
 
 pub(crate) enum StringMap {
-    CollectionMap((Option<Range>, Option<Range>, Range)),
-    HeredocMap((Range, Range, Range)),
+    CollectionMap((Option<Loc>, Option<Loc>, Loc)),
+    HeredocMap((Loc, Loc, Loc)),
 }
 
 fn first<T>(vec: Vec<T>) -> T {

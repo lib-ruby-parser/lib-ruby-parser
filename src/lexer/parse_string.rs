@@ -208,7 +208,7 @@ impl ParseString for Lexer {
                         .expect("expected buffer to have only utf-8 chars")
                         .to_owned(),
                 ),
-                self.current_range(),
+                self.current_loc(),
             );
         }
 
@@ -396,7 +396,7 @@ impl ParseString for Lexer {
         self.token_flush();
         self.yyerror1(
             DiagnosticMessage::UnterminatedUnicodeEscape,
-            self.range(self.buffer.ptok, self.buffer.pcur + 1),
+            self.loc(self.buffer.ptok, self.buffer.pcur + 1),
         );
     }
 
@@ -479,7 +479,7 @@ impl ParseString for Lexer {
         } {
             self.yyerror1(
                 DiagnosticMessage::InvalidUnicodeEscape,
-                self.range(self.buffer.pcur, self.buffer.pcur + 1),
+                self.loc(self.buffer.pcur, self.buffer.pcur + 1),
             );
             return wide && numlen > 0;
         }
@@ -721,7 +721,7 @@ impl ParseString for Lexer {
 
         c = self.scan_hex(self.buffer.pcur, 2, numlen);
         if *numlen == 0 {
-            self.yyerror1(DiagnosticMessage::InvalidHexEscape, self.current_range());
+            self.yyerror1(DiagnosticMessage::InvalidHexEscape, self.current_loc());
             self.token_flush();
             return MaybeByte::new(0);
         }
@@ -848,7 +848,7 @@ impl ParseString for Lexer {
             DiagnosticMessage::InvalidCharacterSyntax {
                 suggestion: format!("{}\\{}", prefix, c),
             },
-            self.current_range(),
+            self.current_loc(),
         )
     }
 }

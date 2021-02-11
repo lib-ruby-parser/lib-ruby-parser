@@ -1,4 +1,4 @@
-use crate::source::Range;
+use crate::Loc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum MagicCommentKind {
@@ -11,12 +11,12 @@ pub enum MagicCommentKind {
 #[derive(Debug, Clone, PartialEq)]
 pub struct MagicComment {
     pub kind: MagicCommentKind,
-    pub key_l: Range,
-    pub value_l: Range,
+    pub key_l: Loc,
+    pub value_l: Loc,
 }
 
 impl MagicComment {
-    pub fn new(kind: MagicCommentKind, key_l: Range, value_l: Range) -> Self {
+    pub fn new(kind: MagicCommentKind, key_l: Loc, value_l: Loc) -> Self {
         Self {
             kind,
             key_l,

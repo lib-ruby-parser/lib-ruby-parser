@@ -1,5 +1,5 @@
-use lib_ruby_parser::source::Range;
 use lib_ruby_parser::traverse::Find;
+use lib_ruby_parser::Loc;
 use lib_ruby_parser::Node;
 
 #[derive(Debug, PartialEq)]
@@ -53,7 +53,7 @@ impl LocName {
         }
     }
 
-    pub fn get(&self, node: &Node) -> Option<Range> {
+    pub fn get(&self, node: &Node) -> Option<Loc> {
         match self {
             LocName::Begin => match node {
                 Node::Args(inner) => inner.begin_l.clone(),
@@ -360,18 +360,18 @@ impl LocMatcher {
     pub fn test(&self, root: &Node) -> Result<(), String> {
         match Find::run(&self.pattern, root).unwrap() {
             Some(node) => match self.name.get(&node) {
-                Some(range) => {
-                    if range.begin_pos != self.begin {
+                Some(loc) => {
+                    if loc.begin != self.begin {
                         return Err(format!(
                             "begin of {:?} - {:?} doesn't match, expected {}, got {}",
-                            self.pattern, self.name, self.begin, range.begin_pos
+                            self.pattern, self.name, self.begin, loc.begin
                         ));
                     }
 
-                    if range.end_pos != self.end {
+                    if loc.end != self.end {
                         return Err(format!(
                             "end of {:?} - {:?} doesn't match, expected {}, got {}",
-                            self.pattern, self.name, self.end, range.end_pos
+                            self.pattern, self.name, self.end, loc.end
                         ));
                     }
 

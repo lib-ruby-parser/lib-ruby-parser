@@ -28,7 +28,7 @@ impl ParseQmark for Lexer {
         if c.is_eof() {
             self.compile_error(
                 DiagnosticMessage::IncompleteCharacterSyntax,
-                self.current_range(),
+                self.current_loc(),
             );
             return Ok(Self::END_OF_INPUT);
         }
@@ -70,7 +70,7 @@ impl ParseQmark for Lexer {
                         String::from_utf8_lossy(self.buffer.substr_at(start, ptr).unwrap())
                             .into_owned(),
                     ),
-                    self.range(start - 1, start),
+                    self.loc(start - 1, start),
                 )
             }
             return self.parse_qmark_ternary(&c);

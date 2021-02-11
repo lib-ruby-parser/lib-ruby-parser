@@ -341,7 +341,7 @@ impl ParseHeredoc for Lexer {
                 )
                 .into_owned(),
             ),
-            self.current_range(),
+            self.current_loc(),
         );
         self.token_flush();
         self.strterm = None;

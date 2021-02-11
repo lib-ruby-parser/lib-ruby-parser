@@ -34,7 +34,6 @@
     use crate::parse_value::ParseValue as Value;
     use crate::parse_value::*;
     use crate::Node;
-    use crate::source::Range;
     use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
@@ -6715,7 +6714,7 @@ impl Parser {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Warning,
             message,
-            Range::new(loc.begin, loc.end)
+            loc.clone(),
         );
         self.diagnostics.emit(diagnostic);
     }
@@ -6757,12 +6756,12 @@ impl Parser {
         if first_char.is_lowercase() || first_char == '_' {
             Ok(())
         } else {
-            let range = Range::new(ident_t.loc.begin, ident_t.loc.end);
+            let loc = ident_t.loc.clone();
             self.diagnostics.emit(
                 Diagnostic::new(
                     ErrorLevel::Error,
                     DiagnosticMessage::ConstArgument,
-                    range
+                    loc
                 )
             );
             Err(())
@@ -6781,12 +6780,12 @@ impl Parser {
     fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage) -> Result<i32, ()> {
         self.yyerror1(
             message,
-            Range::new(loc.begin, loc.end)
+            loc.clone()
         )
     }
 
-    fn yyerror1(&mut self, message: DiagnosticMessage, range: Range) -> Result<i32, ()> {
-        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, range);
+    fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) -> Result<i32, ()> {
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc);
         self.diagnostics.emit(diagnostic);
         Err(())
     }
@@ -6796,7 +6795,7 @@ impl Parser {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,
             DiagnosticMessage::UnexpectedToken(Lexer::TOKEN_NAMES[id].to_owned()),
-            Range::new(ctx.location().begin, ctx.location().end)
+            ctx.location().clone(),
         );
         self.diagnostics.emit(diagnostic);
     }

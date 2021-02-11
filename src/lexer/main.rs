@@ -5,7 +5,6 @@ use crate::source::buffer::*;
 use crate::source::Comment;
 use crate::source::CustomDecoder;
 use crate::source::MagicComment;
-use crate::source::Range;
 use crate::str_term::{str_types::*, HeredocEnd, StrTerm, StringLiteral};
 use crate::token_name;
 use crate::Context;
@@ -194,10 +193,7 @@ impl Lexer {
                 Some(b'\r') => {
                     if !self.buffer.cr_seen {
                         self.buffer.cr_seen = true;
-                        self.warn(
-                            DiagnosticMessage::SlashRAtMiddleOfLine,
-                            self.current_range(),
-                        );
+                        self.warn(DiagnosticMessage::SlashRAtMiddleOfLine, self.current_loc());
                     }
                 }
 
@@ -223,7 +219,7 @@ impl Lexer {
                         }
                         self.buffer.goto_eol();
                         self.comments
-                            .push(Comment::new(self.current_range(), &self.buffer.input))
+                            .push(Comment::new(self.current_loc(), &self.buffer.input))
                     }
                     self.token_seen = token_seen;
                     let cc = self
@@ -297,7 +293,7 @@ impl Lexer {
                         if self.lex_state.is_spacearg(&c, space_seen) {
                             self.warn(
                                 DiagnosticMessage::DStarInterpretedAsArgPrefix,
-                                self.current_range(),
+                                self.current_loc(),
                             );
                             result = Self::tDSTAR;
                         } else if self.lex_state.is_beg() {
@@ -322,7 +318,7 @@ impl Lexer {
                         if self.lex_state.is_spacearg(&c, space_seen) {
                             self.warn(
                                 DiagnosticMessage::StarInterpretedAsArgPrefix,
-                                self.current_range(),
+                                self.current_loc(),
                             );
                             result = Self::tSTAR;
                         } else if self.lex_state.is_beg() {
@@ -371,8 +367,7 @@ impl Lexer {
                     if self.buffer.was_bol() {
                         // skip embedded rd document
                         if self.buffer.is_word_match("begin") {
-                            let begin_range =
-                                self.range(self.buffer.pcur - 1, self.buffer.pcur + 5);
+                            let begin_loc = self.loc(self.buffer.pcur - 1, self.buffer.pcur + 5);
                             self.buffer.goto_eol();
                             loop {
                                 self.buffer.goto_eol();
@@ -380,7 +375,7 @@ impl Lexer {
                                 if c.is_eof() {
                                     self.compile_error(
                                         DiagnosticMessage::EmbeddedDocumentMeetsEof,
-                                        begin_range,
+                                        begin_loc,
                                     );
                                     return Self::END_OF_INPUT;
                                 }
@@ -391,7 +386,7 @@ impl Lexer {
                             }
                             self.buffer.goto_eol();
                             self.comments.push(Comment::new(
-                                begin_range.with_end(self.buffer.pcur),
+                                begin_loc.with_end(self.buffer.pcur),
                                 &self.buffer.input,
                             ));
                             continue 'retrying;
@@ -578,7 +573,7 @@ impl Lexer {
                         {
                             self.warn(
                                 DiagnosticMessage::AmpersandInterpretedAsArgPrefix,
-                                self.current_range(),
+                                self.current_loc(),
                             );
                         }
                         result = Self::tAMPER;
@@ -650,7 +645,7 @@ impl Lexer {
                     }
                     if self.lex_state.is_beg()
                         || (self.lex_state.is_spacearg(&c, space_seen)
-                            && self.arg_ambiguous(b'+', self.current_range().adjust_end(-1)))
+                            && self.arg_ambiguous(b'+', self.current_loc().adjust_end(-1)))
                     {
                         self.lex_state.set(EXPR_BEG);
                         self.buffer.pushback(&c);
@@ -692,7 +687,7 @@ impl Lexer {
                     }
                     if self.lex_state.is_beg()
                         || (self.lex_state.is_spacearg(&c, space_seen)
-                            && self.arg_ambiguous(b'-', self.current_range().adjust_end(-1)))
+                            && self.arg_ambiguous(b'-', self.current_loc().adjust_end(-1)))
                     {
                         self.lex_state.set(EXPR_BEG);
                         self.buffer.pushback(&c);
@@ -721,7 +716,7 @@ impl Lexer {
                         c = self.nextc();
                         if c == b'.' {
                             if self.paren_nest == 0 && self.buffer.is_looking_at_eol() {
-                                self.warn(DiagnosticMessage::TripleDotAtEol, self.current_range());
+                                self.warn(DiagnosticMessage::TripleDotAtEol, self.current_loc());
                             } else if self.lpar_beg >= 0
                                 && self.lpar_beg + 1 == self.paren_nest
                                 && last_state.is_some(EXPR_LABEL)
@@ -847,7 +842,7 @@ impl Lexer {
                     }
                     self.buffer.pushback(&c);
                     if self.lex_state.is_spacearg(&c, space_seen) {
-                        self.arg_ambiguous(b'/', self.current_range());
+                        self.arg_ambiguous(b'/', self.current_loc());
                         self.strterm = self.new_strterm(str_regexp, b'/', None, None);
                         return Self::tREGEXP_BEG;
                     }
@@ -921,7 +916,7 @@ impl Lexer {
                     } else if self.lex_state.is_some(EXPR_ENDFN) && !self.is_lambda_beginning() {
                         self.warn(
                             DiagnosticMessage::ParenthesesIterpretedAsArglist,
-                            self.current_range(),
+                            self.current_loc(),
                         );
                     }
 
@@ -1039,7 +1034,7 @@ impl Lexer {
 
                 Some(c) => {
                     if !self.is_identchar() {
-                        self.compile_error(DiagnosticMessage::InvalidChar(c), self.current_range());
+                        self.compile_error(DiagnosticMessage::InvalidChar(c), self.current_loc());
                         self.token_flush();
                         continue 'retrying;
                     }
@@ -1054,11 +1049,11 @@ impl Lexer {
         self.parse_ident(&c, cmd_state)
     }
 
-    pub(crate) fn warn(&mut self, message: DiagnosticMessage, range: Range) {
+    pub(crate) fn warn(&mut self, message: DiagnosticMessage, loc: Loc) {
         if self.debug {
             println!("WARNING: {}", message.render())
         }
-        let diagnostic = Diagnostic::new(ErrorLevel::Warning, message, range);
+        let diagnostic = Diagnostic::new(ErrorLevel::Warning, message, loc);
         self.diagnostics.emit(diagnostic);
     }
 
@@ -1079,17 +1074,17 @@ impl Lexer {
                     operator: op,
                     interpreted_as: syn,
                 },
-                self.current_range(),
+                self.current_loc(),
             );
         }
         token_type
     }
 
-    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage, range: Range) {
+    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage, loc: Loc) {
         if self.debug {
             println!("Compile error: {}", message.render())
         }
-        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, range);
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc);
         self.diagnostics.emit(diagnostic);
     }
 
@@ -1109,21 +1104,21 @@ impl Lexer {
         )))
     }
 
-    pub(crate) fn range(&self, begin_pos: usize, end_pos: usize) -> Range {
-        Range::new(begin_pos, end_pos)
+    pub(crate) fn loc(&self, begin_pos: usize, end_pos: usize) -> Loc {
+        Loc::new(begin_pos, end_pos)
     }
 
-    pub(crate) fn current_range(&self) -> Range {
-        self.range(self.buffer.ptok, self.buffer.pcur)
+    pub(crate) fn current_loc(&self) -> Loc {
+        self.loc(self.buffer.ptok, self.buffer.pcur)
     }
 
-    pub(crate) fn arg_ambiguous(&mut self, c: u8, range: Range) -> bool {
+    pub(crate) fn arg_ambiguous(&mut self, c: u8, loc: Loc) -> bool {
         if c == b'/' {
-            self.warn(DiagnosticMessage::AmbiguousRegexp, range);
+            self.warn(DiagnosticMessage::AmbiguousRegexp, loc);
         } else {
             self.warn(
                 DiagnosticMessage::AmbiguousFirstArgument { operator: c },
-                range,
+                loc,
             );
         }
         true
@@ -1138,14 +1133,14 @@ impl Lexer {
     }
 
     pub(crate) fn yyerror0(&mut self, message: DiagnosticMessage) {
-        self.yyerror1(message, self.current_range());
+        self.yyerror1(message, self.current_loc());
     }
 
-    pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage, range: Range) {
+    pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) {
         if self.debug {
             println!("yyerror0: {}", message.render())
         }
-        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, range);
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc);
         self.diagnostics.emit(diagnostic);
     }
 

@@ -1,6 +1,6 @@
 use crate::nodes::InnerNode;
 use crate::nodes::*;
-use crate::source::Range;
+use crate::Loc;
 
 /// Generic combination of all known nodes.
 #[derive(Debug, Clone, PartialEq)]
@@ -269,7 +269,7 @@ impl Node {
     }
 
     /// Returns location of the full node expression
-    pub fn expression(&self) -> &Range {
+    pub fn expression(&self) -> &Loc {
         self.inner_ref().expression()
     }
 

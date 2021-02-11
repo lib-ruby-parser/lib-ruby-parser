@@ -1,6 +1,4 @@
-use lib_ruby_parser::{
-    source::buffer::*, source::Range, Diagnostic, DiagnosticMessage, ErrorLevel,
-};
+use lib_ruby_parser::{source::buffer::*, Diagnostic, DiagnosticMessage, ErrorLevel, Loc};
 
 #[test]
 fn it_renders() {
@@ -10,7 +8,7 @@ fn it_renders() {
     let error = Diagnostic::new(
         ErrorLevel::Warning,
         DiagnosticMessage::FractionAfterNumeric,
-        Range::new(8, 12),
+        Loc::new(8, 12),
     );
 
     assert_eq!(

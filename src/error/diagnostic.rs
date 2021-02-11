@@ -1,4 +1,5 @@
-use crate::source::{buffer::Input, Range};
+use crate::source::buffer::Input;
+use crate::Loc;
 use crate::{DiagnosticMessage, ErrorLevel};
 
 /// Diagnostic message that comes from the parser when there's an error or warning
@@ -6,15 +7,15 @@ use crate::{DiagnosticMessage, ErrorLevel};
 pub struct Diagnostic {
     pub level: ErrorLevel,
     pub message: DiagnosticMessage,
-    pub range: Range,
+    pub loc: Loc,
 }
 
 impl Diagnostic {
-    pub fn new(level: ErrorLevel, message: DiagnosticMessage, range: Range) -> Self {
+    pub fn new(level: ErrorLevel, message: DiagnosticMessage, loc: Loc) -> Self {
         Self {
             level,
             message,
-            range,
+            loc,
         }
     }
 
@@ -23,18 +24,18 @@ impl Diagnostic {
     }
 
     pub fn render(&self, input: &Input) -> Option<String> {
-        let (line_no, line_loc) = self.range.expand_to_line(input)?;
+        let (line_no, line_loc) = self.loc.expand_to_line(input)?;
         let line = line_loc.source(input)?;
 
         let filename = &input.name;
-        let (_, start_col) = self.range.begin_line_col(input)?;
+        let (_, start_col) = self.loc.begin_line_col(input)?;
 
         let prefix = format!("{}:{}", filename, line_no + 1);
         let highlight = format!(
             "{indent}^{tildes}",
             indent = " ".repeat(start_col),
-            tildes = if self.range.size() > 0 {
-                "~".repeat(self.range.size() - 1)
+            tildes = if self.loc.size() > 0 {
+                "~".repeat(self.loc.size() - 1)
             } else {
                 "".to_owned()
             }

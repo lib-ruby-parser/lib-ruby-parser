@@ -332,15 +332,15 @@ impl ParseMagicComment for Lexer {
                             Err(err) => {
                                 self.yyerror1(
                                     DiagnosticMessage::EncodingError(err.to_string()),
-                                    self.range(vbeg, vend),
+                                    self.loc(vbeg, vend),
                                 );
                                 return Err(());
                             }
                         }
                     }
 
-                    let key_l = self.range(beg, beg + n);
-                    let value_l = self.range(vbeg, vend);
+                    let key_l = self.loc(beg, beg + n);
+                    let value_l = self.loc(vbeg, vend);
 
                     let magic_comment = MagicComment::new(kind.clone(), key_l, value_l);
                     self.magic_comments.push(magic_comment);

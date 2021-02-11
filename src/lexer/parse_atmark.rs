@@ -29,9 +29,9 @@ impl ParseAtMark for Lexer {
         if c.is_eof() || !self.is_identchar() {
             self.buffer.pushback(&c);
             if result == Self::tIVAR {
-                self.compile_error(DiagnosticMessage::IvarWithoutId, self.current_range());
+                self.compile_error(DiagnosticMessage::IvarWithoutId, self.current_loc());
             } else {
-                self.compile_error(DiagnosticMessage::CvarWithoutId, self.current_range());
+                self.compile_error(DiagnosticMessage::CvarWithoutId, self.current_loc());
             }
             self.lex_state.set(EXPR_END);
             return result;
@@ -41,12 +41,12 @@ impl ParseAtMark for Lexer {
             if result == Self::tIVAR {
                 self.compile_error(
                     DiagnosticMessage::InvalidIvarName(c.expect("c is a digit")),
-                    self.current_range(),
+                    self.current_loc(),
                 );
             } else {
                 self.compile_error(
                     DiagnosticMessage::InvalidCvarName(c.expect("c is a digit")),
-                    self.current_range(),
+                    self.current_loc(),
                 );
             }
             self.lex_state.set(EXPR_END);

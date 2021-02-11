@@ -19,7 +19,7 @@ impl ParsePercent for Lexer {
             self.buffer.pcur += len;
             self.yyerror1(
                 DiagnosticMessage::UnknownTypeOfPercentString,
-                self.current_range().adjust_end(-1),
+                self.current_loc().adjust_end(-1),
             );
         }
         Self::END_OF_INPUT
@@ -46,7 +46,7 @@ impl ParsePercent for Lexer {
             None => {
                 self.compile_error(
                     DiagnosticMessage::UnterminatedQuotedString,
-                    self.current_range(),
+                    self.current_loc(),
                 );
                 return Self::END_OF_INPUT;
             }
@@ -108,7 +108,7 @@ impl ParsePercent for Lexer {
             _ => {
                 self.yyerror1(
                     DiagnosticMessage::UnknownTypeOfPercentString,
-                    self.current_range().adjust_end(-1),
+                    self.current_loc().adjust_end(-1),
                 );
                 Self::END_OF_INPUT
             }

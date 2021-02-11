@@ -7,8 +7,8 @@ fn map_field(field_type: &FieldType) -> String {
         FieldType::Node => "Box<Node>",
         FieldType::Nodes => "Vec<Node>",
         FieldType::MaybeNode => "Option<Box<Node>>",
-        FieldType::Range => "Range",
-        FieldType::MaybeRange => "Option<Range>",
+        FieldType::Loc => "Loc",
+        FieldType::MaybeLoc => "Option<Loc>",
         FieldType::Str => "String",
         FieldType::MaybeStr => "Option<String>",
         FieldType::Chars => "Vec<char>",
@@ -46,8 +46,8 @@ fn print_field_code(field: &Field) -> Option<String> {
                 ))
             }
         }
-        FieldType::Range => None,
-        FieldType::MaybeRange => None,
+        FieldType::Loc => None,
+        FieldType::MaybeLoc => None,
         FieldType::Str => Some(format!(
             "{}result.push_str(&self.{});",
             FIELD_PREFIX, field.field_name
@@ -106,7 +106,7 @@ fn print_field_with_locs(field: &Field) -> Option<String> {
             offset = offset,
             field_name = field.field_name
         )),
-        FieldType::Range => Some(format!(
+        FieldType::Loc => Some(format!(
             "{offset}self.{field_name}.print(\"{printable_field_name}\");",
             offset = offset,
             field_name = field.field_name,
@@ -115,9 +115,9 @@ fn print_field_with_locs(field: &Field) -> Option<String> {
                 .strip_suffix("_l")
                 .expect("expected loc field to end with _l")
         )),
-        FieldType::MaybeRange => Some(format!(
-            "{offset}if let Some(range) = &self.{field_name} {{
-{offset}    range.print(\"{printable_field_name}\");
+        FieldType::MaybeLoc => Some(format!(
+            "{offset}if let Some(loc) = &self.{field_name} {{
+{offset}    loc.print(\"{printable_field_name}\");
 {offset}}}",
             offset = offset,
             field_name = field.field_name,
@@ -149,11 +149,11 @@ fn uses(node: &Node) -> Vec<String> {
     if node
         .fields
         .iter()
-        .any(|f| !f.field_type.has_reference_to_range())
+        .any(|f| !f.field_type.has_reference_to_loc())
     {
         uses.push("use crate::nodes::InspectVec;".to_owned());
     }
-    uses.push("use crate::source::Range;".to_owned());
+    uses.push("use crate::Loc;".to_owned());
     if node
         .fields
         .iter()
@@ -221,7 +221,7 @@ fn epilogue(node: &Node) -> String {
     format!(
         "
 impl InnerNode for {struct_name} {{
-    fn expression(&self) -> &Range {{
+    fn expression(&self) -> &Loc {{
         &self.expression_l
     }}
 

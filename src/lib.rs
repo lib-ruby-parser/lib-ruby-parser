@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod loc;
 pub mod source;
 
 mod lexer;
