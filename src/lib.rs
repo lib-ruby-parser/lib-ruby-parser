@@ -63,6 +63,9 @@ mod string_value;
 pub use string_value::StringValue;
 
 mod token;
-pub use token::{Token, TokenValue};
+pub use token::Token;
 
 pub mod token_rewriter;
+
+mod bytes;
+pub use bytes::Bytes;

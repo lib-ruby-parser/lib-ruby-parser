@@ -9,7 +9,7 @@ use crate::source::Range;
 use crate::LexState;
 use crate::StringValue;
 use crate::{
-    Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node, StaticEnvironment, Token,
+    Bytes, Context, CurrentArgStack, Lexer, Loc, MaxNumparamStack, Node, StaticEnvironment, Token,
     VariablesStack,
 };
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
@@ -295,7 +295,7 @@ impl Builder {
     // Symbols
 
     fn validate_sym_value(&self, value: &StringValue, loc: &Range) {
-        if !value.valid {
+        if !value.bytes.is_valid_utf8() {
             self.error(
                 DiagnosticMessage::InvalidSymbol("UTF-8".to_owned()),
                 loc.clone(),
@@ -408,7 +408,7 @@ impl Builder {
                 match part {
                     Node::Str(Str { value, .. }) => {
                         Self::dedent_string(value, dedent_level);
-                        if value.as_bytes().is_empty() {
+                        if value.bytes.is_empty() {
                             idx_to_drop.push(idx);
                         }
                     }
@@ -458,7 +458,7 @@ impl Builder {
             i += 1;
         }
 
-        s.bytes = s.bytes[i..].to_owned()
+        s.bytes = Bytes::new(s.bytes.raw[i..].to_vec());
     }
 
     // Regular expressions
@@ -2987,7 +2987,7 @@ impl Builder {
                 end_l,
                 expression_l,
             }) => {
-                let name = value.to_string_lossy();
+                let name = value.bytes.to_string_lossy();
                 let mut name_l = expression_l.clone();
 
                 self.check_lvar_name(&name, &name_l)?;
@@ -3517,7 +3517,7 @@ impl Builder {
         for node in nodes {
             match node {
                 Node::Str(Str { value, .. }) => {
-                    let value = value.to_string_lossy();
+                    let value = value.bytes.to_string_lossy();
                     result.push_str(&value)
                 }
                 Node::Begin(Begin { statements, .. }) => {
@@ -3766,7 +3766,7 @@ pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Range> {
 }
 
 pub(crate) fn value(token: Box<Token>) -> String {
-    token.into_string_lossy()
+    token.to_string_lossy()
 }
 
 pub(crate) fn clone_value(token: &Token) -> String {

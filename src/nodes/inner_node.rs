@@ -102,7 +102,7 @@ impl InspectVec {
     }
 
     pub(crate) fn push_string_value(&mut self, s: &StringValue) {
-        self.push_str(&s.to_string_lossy())
+        self.push_str(&s.bytes.to_string_lossy())
     }
 
     pub(crate) fn strings(self) -> Vec<String> {

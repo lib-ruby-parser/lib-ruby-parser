@@ -1,14 +1,14 @@
-use crate::TokenValue;
+use crate::Bytes;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct TokenBuf {
-    bytes: Vec<u8>,
+    pub(crate) bytes: Bytes,
 }
 
 impl TokenBuf {
     pub fn new(bytes: &[u8]) -> Self {
         Self {
-            bytes: bytes.to_owned(),
+            bytes: Bytes::new(bytes.to_vec()),
         }
     }
 
@@ -17,7 +17,7 @@ impl TokenBuf {
     }
 
     pub(crate) fn push(&mut self, byte: u8) {
-        self.bytes.push(byte);
+        self.bytes.raw.push(byte);
     }
 
     pub(crate) fn append(&mut self, bytes: &[u8]) {
@@ -28,28 +28,14 @@ impl TokenBuf {
 
     pub(crate) fn prepend(&mut self, part: &[u8]) {
         let mut tmp = part.to_vec();
-        tmp.extend(self.bytes.iter());
-        self.bytes = tmp;
+        tmp.extend(self.bytes.raw.iter());
+        self.bytes.raw = tmp;
     }
 
     pub(crate) fn borrow_string(&self) -> Result<&str, &Vec<u8>> {
-        match std::str::from_utf8(&self.bytes) {
+        match std::str::from_utf8(&self.bytes.raw) {
             Ok(s) => Ok(s),
-            Err(_) => Err(&self.bytes),
-        }
-    }
-
-    pub(crate) fn to_string(&self) -> Result<String, Vec<u8>> {
-        match std::str::from_utf8(&self.bytes) {
-            Ok(s) => Ok(s.to_owned()),
-            Err(_) => Err(self.bytes.clone()),
-        }
-    }
-
-    pub(crate) fn to_token_value(&self) -> TokenValue {
-        match self.to_string() {
-            Ok(s) => TokenValue::String(s),
-            Err(bytes) => TokenValue::InvalidString(bytes),
+            Err(_) => Err(&self.bytes.raw),
         }
     }
 
@@ -58,12 +44,12 @@ impl TokenBuf {
     }
 
     pub(crate) fn clear(&mut self) {
-        self.bytes.clear()
+        self.bytes.raw.clear()
     }
 }
 
 impl PartialEq<str> for TokenBuf {
     fn eq(&self, other: &str) -> bool {
-        other.as_bytes() == self.bytes
+        other.as_bytes() == self.bytes.raw
     }
 }

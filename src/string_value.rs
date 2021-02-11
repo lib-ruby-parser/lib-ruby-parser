@@ -1,41 +1,20 @@
-use crate::{Token, TokenValue};
+use crate::{Bytes, Token};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StringValue {
-    pub valid: bool,
-    pub bytes: Vec<u8>,
+    pub bytes: Bytes,
 }
 
 impl StringValue {
     pub fn new(token: Box<Token>) -> Self {
-        match token.token_value {
-            TokenValue::String(s) => StringValue {
-                valid: true,
-                bytes: s.as_bytes().to_owned(),
-            },
-            TokenValue::InvalidString(bytes) => StringValue {
-                valid: false,
-                bytes,
-            },
+        Self {
+            bytes: token.token_value,
         }
     }
 
     pub fn empty() -> Self {
-        StringValue {
-            valid: true,
-            bytes: vec![],
+        Self {
+            bytes: Bytes::empty(),
         }
-    }
-
-    pub fn to_string_lossy(&self) -> String {
-        String::from_utf8_lossy(&self.bytes).into_owned()
-    }
-
-    pub fn to_string(&self) -> Option<String> {
-        String::from_utf8(self.bytes.clone()).ok()
-    }
-
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes
     }
 }

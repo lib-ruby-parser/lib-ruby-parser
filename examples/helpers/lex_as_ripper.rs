@@ -31,7 +31,7 @@ pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
             continue;
         }
         let token_name = token_name(token.token_type);
-        let bytes = token.to_bytes();
+        let bytes = token.token_value.as_bytes();
 
         let token_name = match &token_name[..] {
             "tNL" | "tSPACE" | "tSP" => continue,

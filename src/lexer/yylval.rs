@@ -1,6 +1,6 @@
 use crate::lexer::*;
+use crate::Bytes;
 use crate::TokenBuf;
-use crate::TokenValue;
 
 pub(crate) trait Yylval {
     fn set_yylval_id(&mut self, id: &str);
@@ -15,7 +15,7 @@ impl Yylval for Lexer {
         if self.debug {
             println!("set_yylval_id({})", id);
         }
-        self.lval = Some(TokenValue::String(id.to_owned()));
+        self.lval = Some(Bytes::new(id.as_bytes().to_vec()));
     }
 
     fn set_yylval_literal(&mut self, value: &TokenBuf) {
@@ -25,27 +25,27 @@ impl Yylval for Lexer {
                 value, self.buffer.ptok, self.buffer.pcur
             );
         }
-        self.lval = Some(value.to_token_value());
+        self.lval = Some(value.bytes.clone());
     }
 
     fn set_yylval_num(&mut self, flags: String) {
         if self.debug {
             println!("set_yylval_num {:#?}", flags);
         }
-        self.lval = Some(TokenValue::String(flags));
+        self.lval = Some(Bytes::new(flags.into_bytes()));
     }
 
     fn set_yylval_str(&mut self, value: &TokenBuf) {
         if self.debug {
             println!("set_yylval_str {:#?}", value);
         }
-        self.lval = Some(value.to_token_value());
+        self.lval = Some(value.bytes.clone());
     }
 
     fn set_yylval_name(&mut self) {
         if self.debug {
             println!("set_yyval_name({:#?})", self.tokenbuf);
         }
-        self.lval = Some(self.tokenbuf.to_token_value());
+        self.lval = Some(self.tokenbuf.bytes.clone());
     }
 }

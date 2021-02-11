@@ -1,4 +1,3 @@
-use crate::error::Diagnostics;
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::parser::Loc;
@@ -12,17 +11,18 @@ use crate::token_name;
 use crate::Context;
 use crate::StackState;
 use crate::StaticEnvironment;
+use crate::Token;
 use crate::TokenBuf;
+use crate::{error::Diagnostics, Bytes};
 use crate::{lex_states::*, LexState};
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
-use crate::{Token, TokenValue};
 
 #[derive(Debug, Default)]
 pub struct Lexer {
     pub(crate) buffer: Buffer,
     pub debug: bool,
 
-    pub(crate) lval: Option<TokenValue>,
+    pub(crate) lval: Option<Bytes>,
     pub(crate) lval_start: Option<usize>,
     pub(crate) lval_end: Option<usize>,
 
@@ -109,16 +109,14 @@ impl Lexer {
             .take()
             .or_else(|| {
                 // take raw value if nothing was manually captured
-                self.buffer.substr_at(begin, end).map(|s| {
-                    TokenValue::String(
-                        String::from_utf8(s.to_vec()).expect("source must be encoded in utf-8"),
-                    )
-                })
+                self.buffer
+                    .substr_at(begin, end)
+                    .map(|s| Bytes::new(s.to_vec()))
             })
-            .unwrap_or_else(|| TokenValue::String("".to_owned()));
+            .unwrap_or_else(|| Bytes::new(b"".to_vec()));
 
         if token_type == Self::tNL {
-            token_value = TokenValue::String("\n".to_owned());
+            token_value = Bytes::new(b"\n".to_vec());
             end = begin + 1;
         }
 
