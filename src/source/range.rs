@@ -101,10 +101,10 @@ impl Range {
         )
     }
 
-    pub(crate) fn maybe_join(self, other: &Option<Self>) -> Self {
+    pub(crate) fn maybe_join(&self, other: &Option<Self>) -> Self {
         match other {
             Some(other) => self.join(other),
-            None => self,
+            None => self.clone(),
         }
     }
 

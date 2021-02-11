@@ -525,9 +525,7 @@ impl Builder {
 
     pub(crate) fn splat(&self, star_t: Box<Token>, value: Option<Box<Node>>) -> Box<Node> {
         let operator_l = self.loc(&star_t);
-        let expression_l = operator_l
-            .clone()
-            .maybe_join(&maybe_boxed_node_expr(&value));
+        let expression_l = operator_l.maybe_join(&maybe_boxed_node_expr(&value));
 
         Box::new(Node::Splat(Splat {
             operator_l,
@@ -730,7 +728,6 @@ impl Builder {
     ) -> Box<Node> {
         let operator_l = self.loc(&dot2_t);
         let expression_l = operator_l
-            .clone()
             .maybe_join(&maybe_boxed_node_expr(&left))
             .maybe_join(&maybe_boxed_node_expr(&right));
 
@@ -750,7 +747,6 @@ impl Builder {
     ) -> Box<Node> {
         let operator_l = self.loc(&dot3_t);
         let expression_l = operator_l
-            .clone()
             .maybe_join(&maybe_boxed_node_expr(&left))
             .maybe_join(&maybe_boxed_node_expr(&right));
 
@@ -1437,7 +1433,7 @@ impl Builder {
 
     pub(crate) fn undef_method(&self, undef_t: Box<Token>, names: Vec<Node>) -> Box<Node> {
         let keyword_l = self.loc(&undef_t);
-        let expression_l = keyword_l.clone().maybe_join(&collection_expr(&names));
+        let expression_l = keyword_l.maybe_join(&collection_expr(&names));
         Box::new(Node::Undef(Undef {
             names,
             keyword_l,
@@ -1555,7 +1551,7 @@ impl Builder {
         };
 
         let operator_l = self.loc(&star_t);
-        let expression_l = operator_l.clone().maybe_join(&name_l);
+        let expression_l = operator_l.maybe_join(&name_l);
 
         Ok(Box::new(Node::Restarg(Restarg {
             name,
@@ -1613,7 +1609,7 @@ impl Builder {
         };
 
         let operator_l = self.loc(&dstar_t);
-        let expression_l = operator_l.clone().maybe_join(&name_l);
+        let expression_l = operator_l.maybe_join(&name_l);
 
         Ok(Box::new(Node::Kwrestarg(Kwrestarg {
             name,
@@ -3051,7 +3047,7 @@ impl Builder {
         };
 
         let operator_l = self.loc(&star_t);
-        let expression_l = operator_l.clone().maybe_join(&maybe_boxed_node_expr(&name));
+        let expression_l = operator_l.maybe_join(&maybe_boxed_node_expr(&name));
 
         Ok(Box::new(Node::MatchRest(MatchRest {
             name,
