@@ -3630,12 +3630,10 @@ impl Builder {
         let begin_l = self.maybe_loc(begin_t);
         let end_l = self.maybe_loc(end_t);
 
-        let expr_l = merge_maybe_locs(vec![
-            begin_l.clone(),
-            collection_expr(&parts),
-            end_l.clone(),
-        ])
-        .unwrap_or_else(|| {
+        let expr_l = collection_expr(&parts);
+        let expr_l = join_maybe_locs(&expr_l, &begin_l);
+        let expr_l = join_maybe_locs(&expr_l, &end_l);
+        let expr_l = expr_l.unwrap_or_else(|| {
             unreachable!("empty collection without begin_t/end_t, can't build source map")
         });
 
@@ -3769,14 +3767,6 @@ pub(crate) fn maybe_boxed_node_expr(node: &Option<Box<Node>>) -> Option<Range> {
 
 pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Range> {
     join_maybe_exprs(&nodes.first(), &nodes.last())
-}
-
-pub(crate) fn merge_maybe_locs(locs: Vec<Option<Range>>) -> Option<Range> {
-    let mut result: Option<Range> = None;
-    for loc in locs {
-        result = join_maybe_locs(&result, &loc)
-    }
-    result
 }
 
 pub(crate) fn value(token: Box<Token>) -> String {
