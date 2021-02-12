@@ -4,4 +4,5 @@ test.rb
 out
 src/parser.rs
 src/nodes/types
+src/nodes/node_enum_gen.rs
 flamegraph.svg

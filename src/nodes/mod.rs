@@ -1,5 +1,8 @@
+mod node_enum_gen;
+pub use node_enum_gen::Node;
+
 mod node;
-pub use node::Node;
+
 mod inner_node;
 pub(crate) use inner_node::{InnerNode, InspectVec};
 
