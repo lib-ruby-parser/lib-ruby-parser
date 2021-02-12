@@ -105,7 +105,7 @@ impl InspectVec {
         self.push_str(&s.bytes.to_string_lossy())
     }
 
-    pub(crate) fn strings(self) -> Vec<String> {
-        self.strings
+    pub(crate) fn strings(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.strings)
     }
 }
