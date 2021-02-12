@@ -5,4 +5,5 @@ out
 src/parser.rs
 src/nodes/types
 src/nodes/node_enum_gen.rs
+src/traverse/visitor/visit_gen.rs
 flamegraph.svg
