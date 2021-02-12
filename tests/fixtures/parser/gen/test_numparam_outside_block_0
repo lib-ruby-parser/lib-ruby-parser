@@ -1,13 +1,13 @@
 --INPUT
 class A; _1; end
 --LOCATIONS
-~~~~~ keyword ()
-             ~~~ end ()
-~~~~~~~~~~~~~~~~ expression ()
-      ~ name (name)
-      ~ expression (name)
-         ~~ selector (body)
-         ~~ expression (body)
+~~~~~ keyword (root)
+             ~~~ end (root)
+~~~~~~~~~~~~~~~~ expression (root)
+      ~ name (root -> name)
+      ~ expression (root -> name)
+         ~~ selector (root -> body)
+         ~~ expression (root -> body)
 --AST
 s(:class,
   s(:const, nil, "A"), nil,

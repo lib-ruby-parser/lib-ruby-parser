@@ -1,19 +1,19 @@
 --INPUT
 undef foo, :bar, :"foo#{1}"
 --LOCATIONS
-~~~~~ keyword ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-      ~~~ expression (arg[0])
-           ~ begin (arg[1])
-           ~~~~ expression (arg[1])
-                 ~~ begin (arg[2])
-                          ~ end (arg[2])
-                 ~~~~~~~~~~ expression (arg[2])
-                   ~~~ expression (arg[2]/part[0])
-                      ~~ begin (arg[2]/part[1])
-                         ~ end (arg[2]/part[1])
-                      ~~~~ expression (arg[2]/part[1])
-                        ~ expression (arg[2]/part[1]/stmt[0])
+~~~~~ keyword (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~ expression (root -> args -> 0)
+           ~ begin (root -> args -> 1)
+           ~~~~ expression (root -> args -> 1)
+                 ~~ begin (root -> args -> 2)
+                          ~ end (root -> args -> 2)
+                 ~~~~~~~~~~ expression (root -> args -> 2)
+                   ~~~ expression (root -> args -> 2 -> parts -> 0)
+                      ~~ begin (root -> args -> 2 -> parts -> 1)
+                         ~ end (root -> args -> 2 -> parts -> 1)
+                      ~~~~ expression (root -> args -> 2 -> parts -> 1)
+                        ~ expression (root -> args -> 2 -> parts -> 1 -> stmts -> 0)
 --AST
 s(:undef,
   s(:sym, "foo"),

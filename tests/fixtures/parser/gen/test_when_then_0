@@ -1,17 +1,17 @@
 --INPUT
 case foo; when 'bar' then bar; end
 --LOCATIONS
-~~~~ keyword ()
-                               ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-     ~~~ expression (expr)
-                     ~~~~ begin (when_body[0])
-          ~~~~ keyword (when_body[0])
-          ~~~~~~~~~~~~~~~~~~~ expression (when_body[0])
-               ~ begin (when_body[0]/arg[0])
-                   ~ end (when_body[0]/arg[0])
-               ~~~~~ expression (when_body[0]/arg[0])
-                          ~~~ expression (when_body[0]/body)
+~~~~ keyword (root)
+                               ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+     ~~~ expression (root -> expr)
+                     ~~~~ begin (root -> when_bodies -> 0)
+          ~~~~ keyword (root -> when_bodies -> 0)
+          ~~~~~~~~~~~~~~~~~~~ expression (root -> when_bodies -> 0)
+               ~ begin (root -> when_bodies -> 0 -> args -> 0)
+                   ~ end (root -> when_bodies -> 0 -> args -> 0)
+               ~~~~~ expression (root -> when_bodies -> 0 -> args -> 0)
+                          ~~~ expression (root -> when_bodies -> 0 -> body)
 --AST
 s(:case,
   s(:lvar, "foo"),

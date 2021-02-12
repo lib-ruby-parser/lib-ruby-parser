@@ -1,19 +1,19 @@
 --INPUT
 def foo(...); bar(...); end
 --LOCATIONS
-~~~ keyword ()
-    ~~~ name ()
-                        ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-       ~ begin (args)
-           ~ end (args)
-       ~~~~~ expression (args)
-        ~~~ expression (args/arg[0])
-                 ~ begin (body)
-                     ~ end (body)
-              ~~~ selector (body)
-              ~~~~~~~~ expression (body)
-                  ~~~ expression (body/arg[0])
+~~~ keyword (root)
+    ~~~ name (root)
+                        ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+       ~ begin (root -> args)
+           ~ end (root -> args)
+       ~~~~~ expression (root -> args)
+        ~~~ expression (root -> args -> arglist -> 0)
+                 ~ begin (root -> body)
+                     ~ end (root -> body)
+              ~~~ selector (root -> body)
+              ~~~~~~~~ expression (root -> body)
+                  ~~~ expression (root -> body -> args -> 0)
 --AST
 s(:def, "foo",
   s(:args,

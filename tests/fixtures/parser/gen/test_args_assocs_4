@@ -1,16 +1,16 @@
 --INPUT
 yield(:foo => 42)
 --LOCATIONS
-     ~ begin ()
-                ~ end ()
-~~~~~ keyword ()
-~~~~~~~~~~~~~~~~~ expression ()
-      ~~~~~~~~~~ expression (arg[0])
-           ~~ operator (arg[0]/pair[0])
-      ~~~~~~~~~~ expression (arg[0]/pair[0])
-      ~ begin (arg[0]/pair[0]/key)
-      ~~~~ expression (arg[0]/pair[0]/key)
-              ~~ expression (arg[0]/pair[0]/value)
+     ~ begin (root)
+                ~ end (root)
+~~~~~ keyword (root)
+~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~~~~~~~~ expression (root -> args -> 0)
+           ~~ operator (root -> args -> 0 -> pairs -> 0)
+      ~~~~~~~~~~ expression (root -> args -> 0 -> pairs -> 0)
+      ~ begin (root -> args -> 0 -> pairs -> 0 -> key)
+      ~~~~ expression (root -> args -> 0 -> pairs -> 0 -> key)
+              ~~ expression (root -> args -> 0 -> pairs -> 0 -> value)
 --AST
 s(:yield,
   s(:kwargs,

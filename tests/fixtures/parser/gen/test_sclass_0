@@ -1,12 +1,12 @@
 --INPUT
 class << foo; nil; end
 --LOCATIONS
-~~~~~ keyword ()
-      ~~ operator ()
-                   ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~ expression ()
-         ~~~ expression (expr)
-              ~~~ expression (body)
+~~~~~ keyword (root)
+      ~~ operator (root)
+                   ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+         ~~~ expression (root -> expr)
+              ~~~ expression (root -> body)
 --AST
 s(:sclass,
   s(:lvar, "foo"),

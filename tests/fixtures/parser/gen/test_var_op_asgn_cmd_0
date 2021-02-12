@@ -1,9 +1,9 @@
 --INPUT
 foo += m foo
 --LOCATIONS
-    ~~ operator ()
-~~~~~~~~~~~~ expression ()
-~~~ expression (recv)
+    ~~ operator (root)
+~~~~~~~~~~~~ expression (root)
+~~~ expression (root -> recv)
 --AST
 s(:op_asgn,
   s(:lvasgn, "foo"), "+",

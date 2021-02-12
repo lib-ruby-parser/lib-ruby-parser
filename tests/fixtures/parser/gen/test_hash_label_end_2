@@ -1,19 +1,19 @@
 --INPUT
 f(a ? "a":1)
 --LOCATIONS
- ~ begin ()
-           ~ end ()
-~ selector ()
-~~~~~~~~~~~~ expression ()
-         ~ colon (arg[0])
-    ~ question (arg[0])
-  ~~~~~~~~~ expression (arg[0])
-  ~ selector (arg[0]/cond)
-  ~ expression (arg[0]/cond)
-      ~ begin (arg[0]/if_true)
-        ~ end (arg[0]/if_true)
-      ~~~ expression (arg[0]/if_true)
-          ~ expression (arg[0]/if_false)
+ ~ begin (root)
+           ~ end (root)
+~ selector (root)
+~~~~~~~~~~~~ expression (root)
+         ~ colon (root -> args -> 0)
+    ~ question (root -> args -> 0)
+  ~~~~~~~~~ expression (root -> args -> 0)
+  ~ selector (root -> args -> 0 -> cond)
+  ~ expression (root -> args -> 0 -> cond)
+      ~ begin (root -> args -> 0 -> if_true)
+        ~ end (root -> args -> 0 -> if_true)
+      ~~~ expression (root -> args -> 0 -> if_true)
+          ~ expression (root -> args -> 0 -> if_false)
 --AST
 s(:send, nil, "f",
   s(:if,

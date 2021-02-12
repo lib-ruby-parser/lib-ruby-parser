@@ -1,19 +1,19 @@
 --INPUT
 a ? b & '': nil
 --LOCATIONS
-          ~ colon ()
-  ~ question ()
-~~~~~~~~~~~~~~~ expression ()
-~ selector (cond)
-~ expression (cond)
-      ~ selector (if_true)
-    ~~~~~~ expression (if_true)
-    ~ selector (if_true/recv)
-    ~ expression (if_true/recv)
-        ~ begin (if_true/arg[0])
-         ~ end (if_true/arg[0])
-        ~~ expression (if_true/arg[0])
-            ~~~ expression (if_false)
+          ~ colon (root)
+  ~ question (root)
+~~~~~~~~~~~~~~~ expression (root)
+~ selector (root -> cond)
+~ expression (root -> cond)
+      ~ selector (root -> if_true)
+    ~~~~~~ expression (root -> if_true)
+    ~ selector (root -> if_true -> recv)
+    ~ expression (root -> if_true -> recv)
+        ~ begin (root -> if_true -> args -> 0)
+         ~ end (root -> if_true -> args -> 0)
+        ~~ expression (root -> if_true -> args -> 0)
+            ~~~ expression (root -> if_false)
 --AST
 s(:if,
   s(:send, nil, "a"),

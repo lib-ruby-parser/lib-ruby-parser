@@ -1,13 +1,13 @@
 --INPUT
 B::A += 1
 --LOCATIONS
-     ~~ operator ()
-~~~~~~~~~ expression ()
-   ~ name (recv)
- ~~ double_colon (recv)
-~~~~ expression (recv)
-~ name (recv/scope)
-~ expression (recv/scope)
+     ~~ operator (root)
+~~~~~~~~~ expression (root)
+   ~ name (root -> recv)
+ ~~ double_colon (root -> recv)
+~~~~ expression (root -> recv)
+~ name (root -> recv -> scope)
+~ expression (root -> recv -> scope)
 --AST
 s(:op_asgn,
   s(:casgn,

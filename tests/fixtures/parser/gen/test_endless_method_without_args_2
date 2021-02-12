@@ -1,13 +1,13 @@
 --INPUT
 def self.foo = 42
 --LOCATIONS
-~~~ keyword ()
-        ~ operator ()
-         ~~~ name ()
-             ~ assignment ()
-~~~~~~~~~~~~~~~~~ expression ()
-    ~~~~ expression (definee)
-               ~~ expression (body)
+~~~ keyword (root)
+        ~ operator (root)
+         ~~~ name (root)
+             ~ assignment (root)
+~~~~~~~~~~~~~~~~~ expression (root)
+    ~~~~ expression (root -> definee)
+               ~~ expression (root -> body)
 --AST
 s(:defs,
   s(:self), "foo", nil,

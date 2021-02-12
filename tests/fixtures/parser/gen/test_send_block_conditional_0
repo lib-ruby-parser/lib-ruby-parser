@@ -1,12 +1,12 @@
 --INPUT
 foo&.bar {}
 --LOCATIONS
-         ~ begin ()
-          ~ end ()
-~~~~~~~~~~~ expression ()
-     ~~~ selector (call)
-~~~~~~~~ expression (call)
-~~~ expression (call/recv)
+         ~ begin (root)
+          ~ end (root)
+~~~~~~~~~~~ expression (root)
+     ~~~ selector (root -> method_call)
+~~~~~~~~ expression (root -> method_call)
+~~~ expression (root -> method_call -> recv)
 --AST
 s(:block,
   s(:csend,

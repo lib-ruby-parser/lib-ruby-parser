@@ -1,12 +1,12 @@
 --INPUT
 foo::A += m foo
 --LOCATIONS
-       ~~ operator ()
-~~~~~~~~~~~~~~~ expression ()
-     ~ name (recv)
-   ~~ double_colon (recv)
-~~~~~~ expression (recv)
-~~~ expression (recv/scope)
+       ~~ operator (root)
+~~~~~~~~~~~~~~~ expression (root)
+     ~ name (root -> recv)
+   ~~ double_colon (root -> recv)
+~~~~~~ expression (root -> recv)
+~~~ expression (root -> recv -> scope)
 --AST
 s(:op_asgn,
   s(:casgn,

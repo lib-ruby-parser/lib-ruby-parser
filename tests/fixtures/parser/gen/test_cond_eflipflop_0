@@ -1,14 +1,14 @@
 --INPUT
 if foo...bar; end
 --LOCATIONS
-~~ keyword ()
-              ~~~ end ()
-            ~ begin ()
-~~~~~~~~~~~~~~~~~ expression ()
-      ~~~ operator (cond)
-   ~~~~~~~~~ expression (cond)
-   ~~~ expression (cond/left)
-         ~~~ expression (cond/right)
+~~ keyword (root)
+              ~~~ end (root)
+            ~ begin (root)
+~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~ operator (root -> cond)
+   ~~~~~~~~~ expression (root -> cond)
+   ~~~ expression (root -> cond -> left)
+         ~~~ expression (root -> cond -> right)
 --AST
 s(:if,
   s(:eflipflop,

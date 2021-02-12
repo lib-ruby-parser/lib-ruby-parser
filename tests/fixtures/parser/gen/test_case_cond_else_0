@@ -1,20 +1,20 @@
 --INPUT
 case; when foo; 'foo'; else 'bar'; end
 --LOCATIONS
-~~~~ keyword ()
-                                   ~~~ end ()
-                       ~~~~ else ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-              ~ begin (when_body[0])
-      ~~~~ keyword (when_body[0])
-      ~~~~~~~~~~~~~~~ expression (when_body[0])
-           ~~~ expression (when_body[0]/arg[0])
-                ~ begin (when_body[0]/body)
-                    ~ end (when_body[0]/body)
-                ~~~~~ expression (when_body[0]/body)
-                            ~ begin (else_body)
-                                ~ end (else_body)
-                            ~~~~~ expression (else_body)
+~~~~ keyword (root)
+                                   ~~~ end (root)
+                       ~~~~ else (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+              ~ begin (root -> when_bodies -> 0)
+      ~~~~ keyword (root -> when_bodies -> 0)
+      ~~~~~~~~~~~~~~~ expression (root -> when_bodies -> 0)
+           ~~~ expression (root -> when_bodies -> 0 -> args -> 0)
+                ~ begin (root -> when_bodies -> 0 -> body)
+                    ~ end (root -> when_bodies -> 0 -> body)
+                ~~~~~ expression (root -> when_bodies -> 0 -> body)
+                            ~ begin (root -> else_body)
+                                ~ end (root -> else_body)
+                            ~~~~~ expression (root -> else_body)
 --AST
 s(:case, nil,
   s(:when,

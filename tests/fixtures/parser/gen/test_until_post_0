@@ -1,14 +1,14 @@
 --INPUT
 begin meth end until foo
 --LOCATIONS
-               ~~~~~ keyword ()
-~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-                     ~~~ expression (cond)
-~~~~~ begin (body)
-           ~~~ end (body)
-~~~~~~~~~~~~~~ expression (body)
-      ~~~~ selector (body/stmt[0])
-      ~~~~ expression (body/stmt[0])
+               ~~~~~ keyword (root)
+~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+                     ~~~ expression (root -> cond)
+~~~~~ begin (root -> body)
+           ~~~ end (root -> body)
+~~~~~~~~~~~~~~ expression (root -> body)
+      ~~~~ selector (root -> body -> stmts -> 0)
+      ~~~~ expression (root -> body -> stmts -> 0)
 --AST
 s(:until_post,
   s(:lvar, "foo"),

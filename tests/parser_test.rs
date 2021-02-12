@@ -236,6 +236,7 @@ fn test_dir(dir: &str) {
     let mut skipped: usize = 0;
 
     for filename in files_under_dir(dir) {
+        // let filename = "tests/fixtures/parser/manual/test_marg_combinations_9".to_owned();
         eprint!("test {} ... ", filename);
         match test_file(&filename) {
             TestResult::Segfault => {
@@ -255,6 +256,7 @@ fn test_dir(dir: &str) {
                 skipped += 1;
             }
         }
+        // break;
     }
 
     eprintln!(

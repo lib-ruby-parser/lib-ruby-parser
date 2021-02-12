@@ -1,18 +1,18 @@
 --INPUT
 f { || a:b }
 --LOCATIONS
-  ~ begin ()
-           ~ end ()
-~~~~~~~~~~~~ expression ()
-~ selector (call)
-~ expression (call)
-    ~ begin (args)
-     ~ end (args)
-    ~~ expression (args)
-       ~ selector (body)
-       ~~~ expression (body)
-        ~ begin (body/arg[0])
-        ~~ expression (body/arg[0])
+  ~ begin (root)
+           ~ end (root)
+~~~~~~~~~~~~ expression (root)
+~ selector (root -> method_call)
+~ expression (root -> method_call)
+    ~ begin (root -> args)
+     ~ end (root -> args)
+    ~~ expression (root -> args)
+       ~ selector (root -> body)
+       ~~~ expression (root -> body)
+        ~ begin (root -> body -> args -> 0)
+        ~~ expression (root -> body -> args -> 0)
 --AST
 s(:block,
   s(:send, nil, "f"),

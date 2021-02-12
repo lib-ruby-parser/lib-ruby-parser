@@ -1,10 +1,10 @@
 --INPUT
 A += 1
 --LOCATIONS
-  ~~ operator ()
-~~~~~~ expression ()
-~ name (recv)
-~ expression (recv)
+  ~~ operator (root)
+~~~~~~ expression (root)
+~ name (root -> recv)
+~ expression (root -> recv)
 --AST
 s(:op_asgn,
   s(:casgn, nil, "A"), "+",

@@ -1,13 +1,13 @@
 --INPUT
 super foo, bar do end
 --LOCATIONS
-               ~~ begin ()
-                  ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~ expression ()
-~~~~~ keyword (call)
-~~~~~~~~~~~~~~ expression (call)
-      ~~~ expression (call/arg[0])
-           ~~~ expression (call/arg[1])
+               ~~ begin (root)
+                  ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~~~~~ keyword (root -> method_call)
+~~~~~~~~~~~~~~ expression (root -> method_call)
+      ~~~ expression (root -> method_call -> args -> 0)
+           ~~~ expression (root -> method_call -> args -> 1)
 --AST
 s(:block,
   s(:super,

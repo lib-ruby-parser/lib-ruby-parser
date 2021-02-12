@@ -1,20 +1,20 @@
 --INPUT
 def f ((a, *r, p)); end
 --LOCATIONS
-~~~ keyword ()
-    ~ name ()
-                    ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-      ~ begin (args)
-                 ~ end (args)
-      ~~~~~~~~~~~~ expression (args)
-       ~ begin (args/arg[0])
-                ~ end (args/arg[0])
-       ~~~~~~~~~~ expression (args/arg[0])
-        ~ expression (args/arg[0]/item[0])
-            ~ name (args/arg[0]/item[1])
-           ~~ expression (args/arg[0]/item[1])
-               ~ expression (args/arg[0]/item[2])
+~~~ keyword (root)
+    ~ name (root)
+                    ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~ begin (root -> args)
+                 ~ end (root -> args)
+      ~~~~~~~~~~~~ expression (root -> args)
+       ~ begin (root -> args -> arglist -> 0)
+                ~ end (root -> args -> arglist -> 0)
+       ~~~~~~~~~~ expression (root -> args -> arglist -> 0)
+        ~ expression (root -> args -> arglist -> 0 -> mlhs_items -> 0)
+            ~ name (root -> args -> arglist -> 0 -> mlhs_items -> 1)
+           ~~ expression (root -> args -> arglist -> 0 -> mlhs_items -> 1)
+               ~ expression (root -> args -> arglist -> 0 -> mlhs_items -> 2)
 --AST
 s(:def, "f",
   s(:args,

@@ -1,14 +1,14 @@
 --INPUT
 unless foo then bar; else baz; end
 --LOCATIONS
-~~~~~~ keyword ()
-                               ~~~ end ()
-                     ~~~~ else ()
-           ~~~~ begin ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-       ~~~ expression (cond)
-                          ~~~ expression (if_true)
-                ~~~ expression (if_false)
+~~~~~~ keyword (root)
+                               ~~~ end (root)
+                     ~~~~ else (root)
+           ~~~~ begin (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+       ~~~ expression (root -> cond)
+                          ~~~ expression (root -> if_true)
+                ~~~ expression (root -> if_false)
 --AST
 s(:if,
   s(:lvar, "foo"),

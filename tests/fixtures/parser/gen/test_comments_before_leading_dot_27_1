@@ -4,10 +4,10 @@ a #
 .foo
 
 --LOCATIONS
-         ~~~ selector ()
-~~~~~~~~~~~~ expression ()
-~ selector (recv)
-~ expression (recv)
+         ~~~ selector (root)
+~~~~~~~~~~~~ expression (root)
+~ selector (root -> recv)
+~ expression (root -> recv)
 --AST
 s(:send,
   s(:send, nil, "a"), "foo")

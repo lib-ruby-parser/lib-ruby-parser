@@ -1,6 +1,6 @@
 --INPUT
 __FILE__
 --LOCATIONS
-~~~~~~~~ expression ()
+~~~~~~~~ expression (root)
 --AST
 s(:__FILE__)

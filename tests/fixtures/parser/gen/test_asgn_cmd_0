@@ -1,12 +1,12 @@
 --INPUT
 foo = m foo
 --LOCATIONS
-    ~ operator ()
-~~~ name ()
-~~~~~~~~~~~ expression ()
-      ~ selector (value)
-      ~~~~~ expression (value)
-        ~~~ expression (value/arg[0])
+    ~ operator (root)
+~~~ name (root)
+~~~~~~~~~~~ expression (root)
+      ~ selector (root -> value)
+      ~~~~~ expression (root -> value)
+        ~~~ expression (root -> value -> args -> 0)
 --AST
 s(:lvasgn, "foo",
   s(:send, nil, "m",

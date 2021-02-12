@@ -1,17 +1,17 @@
 --INPUT
 ->(scope) {}; scope
 --LOCATIONS
-~~~~~~~~~~~~~~~~~~~ expression ()
-          ~ begin (stmt[0])
-           ~ end (stmt[0])
-~~~~~~~~~~~~ expression (stmt[0])
-~~ expression (stmt[0]/call)
-  ~ begin (stmt[0]/args)
-        ~ end (stmt[0]/args)
-  ~~~~~~~ expression (stmt[0]/args)
-   ~~~~~ expression (stmt[0]/args/arg[0])
-              ~~~~~ selector (stmt[1])
-              ~~~~~ expression (stmt[1])
+~~~~~~~~~~~~~~~~~~~ expression (root)
+          ~ begin (root -> stmts -> 0)
+           ~ end (root -> stmts -> 0)
+~~~~~~~~~~~~ expression (root -> stmts -> 0)
+~~ expression (root -> stmts -> 0 -> method_call)
+  ~ begin (root -> stmts -> 0 -> args)
+        ~ end (root -> stmts -> 0 -> args)
+  ~~~~~~~ expression (root -> stmts -> 0 -> args)
+   ~~~~~ expression (root -> stmts -> 0 -> args -> arglist -> 0)
+              ~~~~~ selector (root -> stmts -> 1)
+              ~~~~~ expression (root -> stmts -> 1)
 --AST
 s(:begin,
   s(:block,

@@ -1,11 +1,11 @@
 --INPUT
 begin ensure end
 --LOCATIONS
-~~~~~ begin ()
-             ~~~ end ()
-~~~~~~~~~~~~~~~~ expression ()
-      ~~~~~~ keyword (stmt[0])
-      ~~~~~~ expression (stmt[0])
+~~~~~ begin (root)
+             ~~~ end (root)
+~~~~~~~~~~~~~~~~ expression (root)
+      ~~~~~~ keyword (root -> stmts -> 0)
+      ~~~~~~ expression (root -> stmts -> 0)
 --AST
 s(:kwbegin,
   s(:ensure, nil, nil))

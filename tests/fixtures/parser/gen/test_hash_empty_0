@@ -1,8 +1,8 @@
 --INPUT
 { }
 --LOCATIONS
-~ begin ()
-  ~ end ()
-~~~ expression ()
+~ begin (root)
+  ~ end (root)
+~~~ expression (root)
 --AST
 s(:hash)

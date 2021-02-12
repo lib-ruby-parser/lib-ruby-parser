@@ -1,6 +1,6 @@
 --INPUT
 retry
 --LOCATIONS
-~~~~~ expression ()
+~~~~~ expression (root)
 --AST
 s(:retry)

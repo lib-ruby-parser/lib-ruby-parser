@@ -1,10 +1,10 @@
 --INPUT
 a &&= 1
 --LOCATIONS
-  ~~~ operator ()
-~~~~~~~ expression ()
-~ expression (recv)
-      ~ expression (value)
+  ~~~ operator (root)
+~~~~~~~ expression (root)
+~ expression (root -> recv)
+      ~ expression (root -> value)
 --AST
 s(:and_asgn,
   s(:lvasgn, "a"),

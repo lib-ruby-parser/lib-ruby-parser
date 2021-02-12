@@ -1,14 +1,14 @@
 --INPUT
 fun(foo, *bar)
 --LOCATIONS
-   ~ begin ()
-             ~ end ()
-~~~ selector ()
-~~~~~~~~~~~~~~ expression ()
-    ~~~ expression (arg[0])
-         ~ operator (arg[1])
-         ~~~~ expression (arg[1])
-          ~~~ expression (arg[1]/value)
+   ~ begin (root)
+             ~ end (root)
+~~~ selector (root)
+~~~~~~~~~~~~~~ expression (root)
+    ~~~ expression (root -> args -> 0)
+         ~ operator (root -> args -> 1)
+         ~~~~ expression (root -> args -> 1)
+          ~~~ expression (root -> args -> 1 -> value)
 --AST
 s(:send, nil, "fun",
   s(:lvar, "foo"),

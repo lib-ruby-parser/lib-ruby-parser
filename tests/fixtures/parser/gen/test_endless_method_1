@@ -1,18 +1,18 @@
 --INPUT
 def inc(x) = x + 1
 --LOCATIONS
-~~~ keyword ()
-    ~~~ name ()
-           ~ assignment ()
-~~~~~~~~~~~~~~~~~~ expression ()
-       ~ begin (args)
-         ~ end (args)
-       ~~~ expression (args)
-        ~ expression (args/arg[0])
-               ~ selector (body)
-             ~~~~~ expression (body)
-             ~ expression (body/recv)
-                 ~ expression (body/arg[0])
+~~~ keyword (root)
+    ~~~ name (root)
+           ~ assignment (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+       ~ begin (root -> args)
+         ~ end (root -> args)
+       ~~~ expression (root -> args)
+        ~ expression (root -> args -> arglist -> 0)
+               ~ selector (root -> body)
+             ~~~~~ expression (root -> body)
+             ~ expression (root -> body -> recv)
+                 ~ expression (root -> body -> args -> 0)
 --AST
 s(:def, "inc",
   s(:args,

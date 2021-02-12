@@ -1,9 +1,9 @@
 --INPUT
 super()
 --LOCATIONS
-     ~ begin ()
-      ~ end ()
-~~~~~ keyword ()
-~~~~~~~ expression ()
+     ~ begin (root)
+      ~ end (root)
+~~~~~ keyword (root)
+~~~~~~~ expression (root)
 --AST
 s(:super)

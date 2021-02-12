@@ -1,19 +1,19 @@
 --INPUT
 /#{1}(?<match>bar)/ =~ 'bar'
 --LOCATIONS
-                    ~~ selector ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-~ begin (recv)
-                  ~ end (recv)
-~~~~~~~~~~~~~~~~~~~ expression (recv)
- ~~ begin (recv/part[0])
-    ~ end (recv/part[0])
- ~~~~ expression (recv/part[0])
-   ~ expression (recv/part[0]/stmt[0])
-     ~~~~~~~~~~~~~ expression (recv/part[1])
-                       ~ begin (arg[0])
-                           ~ end (arg[0])
-                       ~~~~~ expression (arg[0])
+                    ~~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~ begin (root -> recv)
+                  ~ end (root -> recv)
+~~~~~~~~~~~~~~~~~~~ expression (root -> recv)
+ ~~ begin (root -> recv -> parts -> 0)
+    ~ end (root -> recv -> parts -> 0)
+ ~~~~ expression (root -> recv -> parts -> 0)
+   ~ expression (root -> recv -> parts -> 0 -> stmts -> 0)
+     ~~~~~~~~~~~~~ expression (root -> recv -> parts -> 1)
+                       ~ begin (root -> args -> 0)
+                           ~ end (root -> args -> 0)
+                       ~~~~~ expression (root -> args -> 0)
 --AST
 s(:send,
   s(:regexp,

@@ -1,14 +1,14 @@
 --INPUT
 foo[1, 2] = 3
 --LOCATIONS
-   ~ begin ()
-        ~ end ()
-          ~ operator ()
-~~~~~~~~~~~~~ expression ()
-~~~ expression (recv)
-    ~ expression (index[0])
-       ~ expression (index[1])
-            ~ expression (value)
+   ~ begin (root)
+        ~ end (root)
+          ~ operator (root)
+~~~~~~~~~~~~~ expression (root)
+~~~ expression (root -> recv)
+    ~ expression (root -> indexes -> 0)
+       ~ expression (root -> indexes -> 1)
+            ~ expression (root -> value)
 --AST
 s(:indexasgn,
   s(:lvar, "foo"),

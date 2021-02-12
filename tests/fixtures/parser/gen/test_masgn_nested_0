@@ -1,16 +1,16 @@
 --INPUT
 a, (b, c) = foo
 --LOCATIONS
-          ~ operator ()
-~~~~~~~~~~~~~~~ expression ()
-~~~~~~~~~ expression (lhs)
-~ expression (lhs/item[0])
-   ~ begin (lhs/item[1])
-        ~ end (lhs/item[1])
-   ~~~~~~ expression (lhs/item[1])
-    ~ expression (lhs/item[1]/item[0])
-       ~ expression (lhs/item[1]/item[1])
-            ~~~ expression (rhs)
+          ~ operator (root)
+~~~~~~~~~~~~~~~ expression (root)
+~~~~~~~~~ expression (root -> lhs)
+~ expression (root -> lhs -> mlhs_items -> 0)
+   ~ begin (root -> lhs -> mlhs_items -> 1)
+        ~ end (root -> lhs -> mlhs_items -> 1)
+   ~~~~~~ expression (root -> lhs -> mlhs_items -> 1)
+    ~ expression (root -> lhs -> mlhs_items -> 1 -> mlhs_items -> 0)
+       ~ expression (root -> lhs -> mlhs_items -> 1 -> mlhs_items -> 1)
+            ~~~ expression (root -> rhs)
 --AST
 s(:masgn,
   s(:mlhs,

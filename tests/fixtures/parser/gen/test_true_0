@@ -1,6 +1,6 @@
 --INPUT
 true
 --LOCATIONS
-~~~~ expression ()
+~~~~ expression (root)
 --AST
 s(:true)

@@ -1,19 +1,19 @@
 --INPUT
 fun(:foo => 1, &baz)
 --LOCATIONS
-   ~ begin ()
-                   ~ end ()
-~~~ selector ()
-~~~~~~~~~~~~~~~~~~~~ expression ()
-    ~~~~~~~~~ expression (arg[0])
-         ~~ operator (arg[0]/pair[0])
-    ~~~~~~~~~ expression (arg[0]/pair[0])
-    ~ begin (arg[0]/pair[0]/key)
-    ~~~~ expression (arg[0]/pair[0]/key)
-            ~ expression (arg[0]/pair[0]/value)
-               ~ operator (arg[1])
-               ~~~~ expression (arg[1])
-                ~~~ expression (arg[1]/value)
+   ~ begin (root)
+                   ~ end (root)
+~~~ selector (root)
+~~~~~~~~~~~~~~~~~~~~ expression (root)
+    ~~~~~~~~~ expression (root -> args -> 0)
+         ~~ operator (root -> args -> 0 -> pairs -> 0)
+    ~~~~~~~~~ expression (root -> args -> 0 -> pairs -> 0)
+    ~ begin (root -> args -> 0 -> pairs -> 0 -> key)
+    ~~~~ expression (root -> args -> 0 -> pairs -> 0 -> key)
+            ~ expression (root -> args -> 0 -> pairs -> 0 -> value)
+               ~ operator (root -> args -> 1)
+               ~~~~ expression (root -> args -> 1)
+                ~~~ expression (root -> args -> 1 -> value)
 --AST
 s(:send, nil, "fun",
   s(:kwargs,

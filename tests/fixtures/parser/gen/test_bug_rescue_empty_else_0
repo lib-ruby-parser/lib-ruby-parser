@@ -1,17 +1,17 @@
 --INPUT
 begin; rescue LoadError; else; end
 --LOCATIONS
-~~~~~ begin ()
-                               ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-                         ~~~~ else (stmt[0])
-       ~~~~~~~~~~~~~~~~~~~~~~ expression (stmt[0])
-       ~~~~~~ keyword (stmt[0]/rescue_body[0])
-                       ~ begin (stmt[0]/rescue_body[0])
-       ~~~~~~~~~~~~~~~~~ expression (stmt[0]/rescue_body[0])
-              ~~~~~~~~~ expression (stmt[0]/rescue_body[0]/exc_list)
-              ~~~~~~~~~ name (stmt[0]/rescue_body[0]/exc_list/element[0])
-              ~~~~~~~~~ expression (stmt[0]/rescue_body[0]/exc_list/element[0])
+~~~~~ begin (root)
+                               ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+                         ~~~~ else (root -> stmts -> 0)
+       ~~~~~~~~~~~~~~~~~~~~~~ expression (root -> stmts -> 0)
+       ~~~~~~ keyword (root -> stmts -> 0 -> rescue_bodies -> 0)
+                       ~ begin (root -> stmts -> 0 -> rescue_bodies -> 0)
+       ~~~~~~~~~~~~~~~~~ expression (root -> stmts -> 0 -> rescue_bodies -> 0)
+              ~~~~~~~~~ expression (root -> stmts -> 0 -> rescue_bodies -> 0 -> exc_list)
+              ~~~~~~~~~ name (root -> stmts -> 0 -> rescue_bodies -> 0 -> exc_list -> elements -> 0)
+              ~~~~~~~~~ expression (root -> stmts -> 0 -> rescue_bodies -> 0 -> exc_list -> elements -> 0)
 --AST
 s(:kwbegin,
   s(:rescue, nil,

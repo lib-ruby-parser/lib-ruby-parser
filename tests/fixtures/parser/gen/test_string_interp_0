@@ -1,15 +1,15 @@
 --INPUT
 "foo#{bar}baz"
 --LOCATIONS
-~ begin ()
-             ~ end ()
-~~~~~~~~~~~~~~ expression ()
- ~~~ expression (part[0])
-    ~~ begin (part[1])
-         ~ end (part[1])
-    ~~~~~~ expression (part[1])
-      ~~~ expression (part[1]/stmt[0])
-          ~~~ expression (part[2])
+~ begin (root)
+             ~ end (root)
+~~~~~~~~~~~~~~ expression (root)
+ ~~~ expression (root -> parts -> 0)
+    ~~ begin (root -> parts -> 1)
+         ~ end (root -> parts -> 1)
+    ~~~~~~ expression (root -> parts -> 1)
+      ~~~ expression (root -> parts -> 1 -> stmts -> 0)
+          ~~~ expression (root -> parts -> 2)
 --AST
 s(:dstr,
   s(:str, "foo"),

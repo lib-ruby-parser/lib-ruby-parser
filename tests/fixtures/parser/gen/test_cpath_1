@@ -1,14 +1,14 @@
 --INPUT
 module Bar::Foo; end
 --LOCATIONS
-~~~~~~ keyword ()
-                 ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~ expression ()
-            ~~~ name (name)
-          ~~ double_colon (name)
-       ~~~~~~~~ expression (name)
-       ~~~ name (name/scope)
-       ~~~ expression (name/scope)
+~~~~~~ keyword (root)
+                 ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~ expression (root)
+            ~~~ name (root -> name)
+          ~~ double_colon (root -> name)
+       ~~~~~~~~ expression (root -> name)
+       ~~~ name (root -> name -> scope)
+       ~~~ expression (root -> name -> scope)
 --AST
 s(:module,
   s(:const,

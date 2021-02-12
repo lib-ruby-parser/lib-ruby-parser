@@ -1,10 +1,10 @@
 --INPUT
 alias $a $b
 --LOCATIONS
-~~~~~ keyword ()
-~~~~~~~~~~~ expression ()
-      ~~ expression (to)
-         ~~ expression (from)
+~~~~~ keyword (root)
+~~~~~~~~~~~ expression (root)
+      ~~ expression (root -> to)
+         ~~ expression (root -> from)
 --AST
 s(:alias,
   s(:gvar, "$a"),

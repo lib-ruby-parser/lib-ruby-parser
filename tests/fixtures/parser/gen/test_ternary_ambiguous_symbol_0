@@ -1,21 +1,21 @@
 --INPUT
 t=1;(foo)?t:T
 --LOCATIONS
-~~~~~~~~~~~~~ expression ()
- ~ operator (stmt[0])
-~ name (stmt[0])
-~~~ expression (stmt[0])
-  ~ expression (stmt[0]/value)
-           ~ colon (stmt[1])
-         ~ question (stmt[1])
-    ~~~~~~~~~ expression (stmt[1])
-    ~ begin (stmt[1]/cond)
-        ~ end (stmt[1]/cond)
-    ~~~~~ expression (stmt[1]/cond)
-     ~~~ expression (stmt[1]/cond/stmt[0])
-          ~ expression (stmt[1]/if_true)
-            ~ name (stmt[1]/if_false)
-            ~ expression (stmt[1]/if_false)
+~~~~~~~~~~~~~ expression (root)
+ ~ operator (root -> stmts -> 0)
+~ name (root -> stmts -> 0)
+~~~ expression (root -> stmts -> 0)
+  ~ expression (root -> stmts -> 0 -> value)
+           ~ colon (root -> stmts -> 1)
+         ~ question (root -> stmts -> 1)
+    ~~~~~~~~~ expression (root -> stmts -> 1)
+    ~ begin (root -> stmts -> 1 -> cond)
+        ~ end (root -> stmts -> 1 -> cond)
+    ~~~~~ expression (root -> stmts -> 1 -> cond)
+     ~~~ expression (root -> stmts -> 1 -> cond -> stmts -> 0)
+          ~ expression (root -> stmts -> 1 -> if_true)
+            ~ name (root -> stmts -> 1 -> if_false)
+            ~ expression (root -> stmts -> 1 -> if_false)
 --AST
 s(:begin,
   s(:lvasgn, "t",

@@ -1,6 +1,6 @@
 --INPUT
 42r
 --LOCATIONS
-~~~ expression ()
+~~~ expression (root)
 --AST
 s(:rational, "42r")

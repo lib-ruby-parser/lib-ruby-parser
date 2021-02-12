@@ -2,12 +2,12 @@
 if foo
 then bar end
 --LOCATIONS
-~~ keyword ()
-                ~~~ end ()
-       ~~~~ begin ()
-~~~~~~~~~~~~~~~~~~~ expression ()
-   ~~~ expression (cond)
-            ~~~ expression (if_true)
+~~ keyword (root)
+                ~~~ end (root)
+       ~~~~ begin (root)
+~~~~~~~~~~~~~~~~~~~ expression (root)
+   ~~~ expression (root -> cond)
+            ~~~ expression (root -> if_true)
 --AST
 s(:if,
   s(:lvar, "foo"),

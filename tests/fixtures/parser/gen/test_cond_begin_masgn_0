@@ -1,20 +1,20 @@
 --INPUT
 if (bar; a, b = foo); end
 --LOCATIONS
-~~ keyword ()
-                      ~~~ end ()
-                    ~ begin ()
-~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-   ~ begin (cond)
-                   ~ end (cond)
-   ~~~~~~~~~~~~~~~~~ expression (cond)
-    ~~~ expression (cond/stmt[0])
-              ~ operator (cond/stmt[1])
-         ~~~~~~~~~~ expression (cond/stmt[1])
-         ~~~~ expression (cond/stmt[1]/lhs)
-         ~ expression (cond/stmt[1]/lhs/item[0])
-            ~ expression (cond/stmt[1]/lhs/item[1])
-                ~~~ expression (cond/stmt[1]/rhs)
+~~ keyword (root)
+                      ~~~ end (root)
+                    ~ begin (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+   ~ begin (root -> cond)
+                   ~ end (root -> cond)
+   ~~~~~~~~~~~~~~~~~ expression (root -> cond)
+    ~~~ expression (root -> cond -> stmts -> 0)
+              ~ operator (root -> cond -> stmts -> 1)
+         ~~~~~~~~~~ expression (root -> cond -> stmts -> 1)
+         ~~~~ expression (root -> cond -> stmts -> 1 -> lhs)
+         ~ expression (root -> cond -> stmts -> 1 -> lhs -> mlhs_items -> 0)
+            ~ expression (root -> cond -> stmts -> 1 -> lhs -> mlhs_items -> 1)
+                ~~~ expression (root -> cond -> stmts -> 1 -> rhs)
 --AST
 s(:if,
   s(:begin,

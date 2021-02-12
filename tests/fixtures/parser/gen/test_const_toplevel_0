@@ -1,10 +1,10 @@
 --INPUT
 ::Foo
 --LOCATIONS
-  ~~~ name ()
-~~ double_colon ()
-~~~~~ expression ()
-~~ expression (scope)
+  ~~~ name (root)
+~~ double_colon (root)
+~~~~~ expression (root)
+~~ expression (root -> scope)
 --AST
 s(:const,
   s(:cbase), "Foo")

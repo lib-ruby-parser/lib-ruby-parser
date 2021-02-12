@@ -1,16 +1,16 @@
 --INPUT
 self[:bar => 1]
 --LOCATIONS
-    ~ begin ()
-              ~ end ()
-~~~~~~~~~~~~~~~ expression ()
-~~~~ expression (recv)
-     ~~~~~~~~~ expression (index[0])
-          ~~ operator (index[0]/pair[0])
-     ~~~~~~~~~ expression (index[0]/pair[0])
-     ~ begin (index[0]/pair[0]/key)
-     ~~~~ expression (index[0]/pair[0]/key)
-             ~ expression (index[0]/pair[0]/value)
+    ~ begin (root)
+              ~ end (root)
+~~~~~~~~~~~~~~~ expression (root)
+~~~~ expression (root -> recv)
+     ~~~~~~~~~ expression (root -> indexes -> 0)
+          ~~ operator (root -> indexes -> 0 -> pairs -> 0)
+     ~~~~~~~~~ expression (root -> indexes -> 0 -> pairs -> 0)
+     ~ begin (root -> indexes -> 0 -> pairs -> 0 -> key)
+     ~~~~ expression (root -> indexes -> 0 -> pairs -> 0 -> key)
+             ~ expression (root -> indexes -> 0 -> pairs -> 0 -> value)
 --AST
 s(:index,
   s(:self),

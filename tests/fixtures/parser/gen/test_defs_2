@@ -1,12 +1,12 @@
 --INPUT
 def (foo).foo; end
 --LOCATIONS
-~~~ keyword ()
-         ~ operator ()
-          ~~~ name ()
-               ~~~ end ()
-~~~~~~~~~~~~~~~~~~ expression ()
-     ~~~ expression (definee)
+~~~ keyword (root)
+         ~ operator (root)
+          ~~~ name (root)
+               ~~~ end (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+     ~~~ expression (root -> definee)
 --AST
 s(:defs,
   s(:lvar, "foo"), "foo", nil, nil)

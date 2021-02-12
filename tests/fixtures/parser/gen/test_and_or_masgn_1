@@ -1,18 +1,18 @@
 --INPUT
 foo || (a, b = bar)
 --LOCATIONS
-    ~~ operator ()
-~~~~~~~~~~~~~~~~~~~ expression ()
-~~~ expression (lhs)
-       ~ begin (rhs)
-                  ~ end (rhs)
-       ~~~~~~~~~~~~ expression (rhs)
-             ~ operator (rhs/stmt[0])
-        ~~~~~~~~~~ expression (rhs/stmt[0])
-        ~~~~ expression (rhs/stmt[0]/lhs)
-        ~ expression (rhs/stmt[0]/lhs/item[0])
-           ~ expression (rhs/stmt[0]/lhs/item[1])
-               ~~~ expression (rhs/stmt[0]/rhs)
+    ~~ operator (root)
+~~~~~~~~~~~~~~~~~~~ expression (root)
+~~~ expression (root -> lhs)
+       ~ begin (root -> rhs)
+                  ~ end (root -> rhs)
+       ~~~~~~~~~~~~ expression (root -> rhs)
+             ~ operator (root -> rhs -> stmts -> 0)
+        ~~~~~~~~~~ expression (root -> rhs -> stmts -> 0)
+        ~~~~ expression (root -> rhs -> stmts -> 0 -> lhs)
+        ~ expression (root -> rhs -> stmts -> 0 -> lhs -> mlhs_items -> 0)
+           ~ expression (root -> rhs -> stmts -> 0 -> lhs -> mlhs_items -> 1)
+               ~~~ expression (root -> rhs -> stmts -> 0 -> rhs)
 --AST
 s(:or,
   s(:lvar, "foo"),

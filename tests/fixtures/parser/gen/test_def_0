@@ -1,9 +1,9 @@
 --INPUT
 def foo; end
 --LOCATIONS
-~~~ keyword ()
-    ~~~ name ()
-         ~~~ end ()
-~~~~~~~~~~~~ expression ()
+~~~ keyword (root)
+    ~~~ name (root)
+         ~~~ end (root)
+~~~~~~~~~~~~ expression (root)
 --AST
 s(:def, "foo", nil, nil)

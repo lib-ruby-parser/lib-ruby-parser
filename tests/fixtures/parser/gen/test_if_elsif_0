@@ -1,20 +1,20 @@
 --INPUT
 if foo; bar; elsif baz; 1; else 2; end
 --LOCATIONS
-~~ keyword ()
-                                   ~~~ end ()
-             ~~~~~ else ()
-      ~ begin ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-   ~~~ expression (cond)
-        ~~~ expression (if_true)
-             ~~~~~ keyword (if_false)
-                           ~~~~ else (if_false)
-                      ~ begin (if_false)
-             ~~~~~~~~~~~~~~~~~~~~ expression (if_false)
-                   ~~~ expression (if_false/cond)
-                        ~ expression (if_false/if_true)
-                                ~ expression (if_false/if_false)
+~~ keyword (root)
+                                   ~~~ end (root)
+             ~~~~~ else (root)
+      ~ begin (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+   ~~~ expression (root -> cond)
+        ~~~ expression (root -> if_true)
+             ~~~~~ keyword (root -> if_false)
+                           ~~~~ else (root -> if_false)
+                      ~ begin (root -> if_false)
+             ~~~~~~~~~~~~~~~~~~~~ expression (root -> if_false)
+                   ~~~ expression (root -> if_false -> cond)
+                        ~ expression (root -> if_false -> if_true)
+                                ~ expression (root -> if_false -> if_false)
 --AST
 s(:if,
   s(:lvar, "foo"),

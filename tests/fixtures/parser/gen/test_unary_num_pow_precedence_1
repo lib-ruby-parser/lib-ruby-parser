@@ -1,12 +1,12 @@
 --INPUT
 -2 ** 10
 --LOCATIONS
-~ selector ()
-~~~~~~~~ expression ()
-   ~~ selector (recv)
- ~~~~~~~ expression (recv)
- ~ expression (recv/recv)
-      ~~ expression (recv/arg[0])
+~ selector (root)
+~~~~~~~~ expression (root)
+   ~~ selector (root -> recv)
+ ~~~~~~~ expression (root -> recv)
+ ~ expression (root -> recv -> recv)
+      ~~ expression (root -> recv -> args -> 0)
 --AST
 s(:send,
   s(:send,

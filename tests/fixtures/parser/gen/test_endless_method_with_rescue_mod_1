@@ -1,20 +1,20 @@
 --INPUT
 def self.m() = 1 rescue 2
 --LOCATIONS
-~~~ keyword ()
-        ~ operator ()
-         ~ name ()
-             ~ assignment ()
-~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-    ~~~~ expression (definee)
-          ~ begin (args)
-           ~ end (args)
-          ~~ expression (args)
-               ~~~~~~~~~~ expression (body)
-               ~ expression (body/body)
-                 ~~~~~~ keyword (body/rescue_body[0])
-                 ~~~~~~~~ expression (body/rescue_body[0])
-                        ~ expression (body/rescue_body[0]/body)
+~~~ keyword (root)
+        ~ operator (root)
+         ~ name (root)
+             ~ assignment (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+    ~~~~ expression (root -> definee)
+          ~ begin (root -> args)
+           ~ end (root -> args)
+          ~~ expression (root -> args)
+               ~~~~~~~~~~ expression (root -> body)
+               ~ expression (root -> body -> body)
+                 ~~~~~~ keyword (root -> body -> rescue_bodies -> 0)
+                 ~~~~~~~~ expression (root -> body -> rescue_bodies -> 0)
+                        ~ expression (root -> body -> rescue_bodies -> 0 -> body)
 --AST
 s(:defs,
   s(:self), "m",

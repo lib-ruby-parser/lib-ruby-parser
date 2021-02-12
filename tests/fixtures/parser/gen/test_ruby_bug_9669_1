@@ -4,16 +4,16 @@ a:
 1
 }
 --LOCATIONS
-  ~ operator ()
-~ name ()
-~~~~~~~~~~~~ expression ()
-    ~ begin (value)
-           ~ end (value)
-    ~~~~~~~~ expression (value)
-       ~ operator (value/pair[0])
-      ~~~~ expression (value/pair[0])
-      ~ expression (value/pair[0]/key)
-         ~ expression (value/pair[0]/value)
+  ~ operator (root)
+~ name (root)
+~~~~~~~~~~~~ expression (root)
+    ~ begin (root -> value)
+           ~ end (root -> value)
+    ~~~~~~~~ expression (root -> value)
+       ~ operator (root -> value -> pairs -> 0)
+      ~~~~ expression (root -> value -> pairs -> 0)
+      ~ expression (root -> value -> pairs -> 0 -> key)
+         ~ expression (root -> value -> pairs -> 0 -> value)
 --AST
 s(:lvasgn, "o",
   s(:hash,

@@ -1,14 +1,14 @@
 --INPUT
 [ 1 => 2 ]
 --LOCATIONS
-~ begin ()
-         ~ end ()
-~~~~~~~~~~ expression ()
-  ~~~~~~ expression (element[0])
-    ~~ operator (element[0]/pair[0])
-  ~~~~~~ expression (element[0]/pair[0])
-  ~ expression (element[0]/pair[0]/key)
-       ~ expression (element[0]/pair[0]/value)
+~ begin (root)
+         ~ end (root)
+~~~~~~~~~~ expression (root)
+  ~~~~~~ expression (root -> elements -> 0)
+    ~~ operator (root -> elements -> 0 -> pairs -> 0)
+  ~~~~~~ expression (root -> elements -> 0 -> pairs -> 0)
+  ~ expression (root -> elements -> 0 -> pairs -> 0 -> key)
+       ~ expression (root -> elements -> 0 -> pairs -> 0 -> value)
 --AST
 s(:array,
   s(:hash,

@@ -1,11 +1,11 @@
 --INPUT
 foo.(1)
 --LOCATIONS
-    ~ begin ()
-      ~ end ()
-~~~~~~~ expression ()
-~~~ expression (recv)
-     ~ expression (arg[0])
+    ~ begin (root)
+      ~ end (root)
+~~~~~~~ expression (root)
+~~~ expression (root -> recv)
+     ~ expression (root -> args -> 0)
 --AST
 s(:send,
   s(:lvar, "foo"), "call",

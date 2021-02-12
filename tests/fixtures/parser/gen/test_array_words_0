@@ -1,11 +1,11 @@
 --INPUT
 %w[foo bar]
 --LOCATIONS
-~~~ begin ()
-          ~ end ()
-~~~~~~~~~~~ expression ()
-   ~~~ expression (element[0])
-       ~~~ expression (element[1])
+~~~ begin (root)
+          ~ end (root)
+~~~~~~~~~~~ expression (root)
+   ~~~ expression (root -> elements -> 0)
+       ~~~ expression (root -> elements -> 1)
 --AST
 s(:array,
   s(:str, "foo"),

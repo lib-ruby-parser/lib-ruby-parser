@@ -1,13 +1,13 @@
 --INPUT
 { 1 => 2 }
 --LOCATIONS
-~ begin ()
-         ~ end ()
-~~~~~~~~~~ expression ()
-    ~~ operator (pair[0])
-  ~~~~~~ expression (pair[0])
-  ~ expression (pair[0]/key)
-       ~ expression (pair[0]/value)
+~ begin (root)
+         ~ end (root)
+~~~~~~~~~~ expression (root)
+    ~~ operator (root -> pairs -> 0)
+  ~~~~~~ expression (root -> pairs -> 0)
+  ~ expression (root -> pairs -> 0 -> key)
+       ~ expression (root -> pairs -> 0 -> value)
 --AST
 s(:hash,
   s(:pair,

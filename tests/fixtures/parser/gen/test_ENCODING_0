@@ -1,6 +1,6 @@
 --INPUT
 __ENCODING__
 --LOCATIONS
-~~~~~~~~~~~~ expression ()
+~~~~~~~~~~~~ expression (root)
 --AST
 s(:__ENCODING__)

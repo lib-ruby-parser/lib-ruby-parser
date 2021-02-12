@@ -1,10 +1,10 @@
 --INPUT
 1..2
 --LOCATIONS
- ~~ operator ()
-~~~~ expression ()
-~ expression (left)
-   ~ expression (right)
+ ~~ operator (root)
+~~~~ expression (root)
+~ expression (root -> left)
+   ~ expression (root -> right)
 --AST
 s(:irange,
   s(:int, "1"),

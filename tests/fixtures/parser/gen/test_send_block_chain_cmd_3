@@ -1,17 +1,17 @@
 --INPUT
 meth 1 do end::fun(bar)
 --LOCATIONS
-                  ~ begin ()
-                      ~ end ()
-               ~~~ selector ()
-~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-       ~~ begin (recv)
-          ~~~ end (recv)
-~~~~~~~~~~~~~ expression (recv)
-~~~~ selector (recv/call)
-~~~~~~ expression (recv/call)
-     ~ expression (recv/call/arg[0])
-                   ~~~ expression (arg[0])
+                  ~ begin (root)
+                      ~ end (root)
+               ~~~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+       ~~ begin (root -> recv)
+          ~~~ end (root -> recv)
+~~~~~~~~~~~~~ expression (root -> recv)
+~~~~ selector (root -> recv -> method_call)
+~~~~~~ expression (root -> recv -> method_call)
+     ~ expression (root -> recv -> method_call -> args -> 0)
+                   ~~~ expression (root -> args -> 0)
 --AST
 s(:send,
   s(:block,

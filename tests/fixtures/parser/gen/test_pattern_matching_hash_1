@@ -1,19 +1,19 @@
 --INPUT
 case foo; in a: 1 then true; end
 --LOCATIONS
-~~~~ keyword ()
-                             ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-     ~~~ expression (expr)
-                  ~~~~ begin (in_body[0])
-          ~~ keyword (in_body[0])
-          ~~~~~~~~~~~~~~~~~ expression (in_body[0])
-             ~~~~ expression (in_body[0]/pattern)
-              ~ operator (in_body[0]/pattern/element[0])
-             ~~~~ expression (in_body[0]/pattern/element[0])
-             ~ expression (in_body[0]/pattern/element[0]/key)
-                ~ expression (in_body[0]/pattern/element[0]/value)
-                       ~~~~ expression (in_body[0]/body)
+~~~~ keyword (root)
+                             ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+     ~~~ expression (root -> expr)
+                  ~~~~ begin (root -> in_bodies -> 0)
+          ~~ keyword (root -> in_bodies -> 0)
+          ~~~~~~~~~~~~~~~~~ expression (root -> in_bodies -> 0)
+             ~~~~ expression (root -> in_bodies -> 0 -> pattern)
+              ~ operator (root -> in_bodies -> 0 -> pattern -> elements -> 0)
+             ~~~~ expression (root -> in_bodies -> 0 -> pattern -> elements -> 0)
+             ~ expression (root -> in_bodies -> 0 -> pattern -> elements -> 0 -> key)
+                ~ expression (root -> in_bodies -> 0 -> pattern -> elements -> 0 -> value)
+                       ~~~~ expression (root -> in_bodies -> 0 -> body)
 --AST
 s(:case_match,
   s(:lvar, "foo"),

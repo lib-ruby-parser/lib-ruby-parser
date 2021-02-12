@@ -1,17 +1,17 @@
 --INPUT
 /(?<match>bar)/ =~ 'bar'; match
 --LOCATIONS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-~~~~~~~~~~~~~~~~~~~~~~~~ expression (stmt[0])
-~~~~~~~~~~~~~~~~~~~~~~~~ expression (stmt[0])
-~ begin (stmt[0]/re)
-              ~ end (stmt[0]/re)
-~~~~~~~~~~~~~~~ expression (stmt[0]/re)
- ~~~~~~~~~~~~~ expression (stmt[0]/re/part[0])
-                   ~ begin (stmt[0]/value)
-                       ~ end (stmt[0]/value)
-                   ~~~~~ expression (stmt[0]/value)
-                          ~~~~~ expression (stmt[1])
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> stmts -> 0)
+~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> stmts -> 0)
+~ begin (root -> stmts -> 0 -> re)
+              ~ end (root -> stmts -> 0 -> re)
+~~~~~~~~~~~~~~~ expression (root -> stmts -> 0 -> re)
+ ~~~~~~~~~~~~~ expression (root -> stmts -> 0 -> re -> parts -> 0)
+                   ~ begin (root -> stmts -> 0 -> value)
+                       ~ end (root -> stmts -> 0 -> value)
+                   ~~~~~ expression (root -> stmts -> 0 -> value)
+                          ~~~~~ expression (root -> stmts -> 1)
 --AST
 s(:begin,
   s(:match_with_lvasgn,

@@ -1,16 +1,16 @@
 --INPUT
 while not (true) do end
 --LOCATIONS
-                 ~~ begin ()
-                    ~~~ end ()
-~~~~~ keyword ()
-~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-      ~~~ selector (cond)
-      ~~~~~~~~~~ expression (cond)
-          ~ begin (cond/recv)
-               ~ end (cond/recv)
-          ~~~~~~ expression (cond/recv)
-           ~~~~ expression (cond/recv/stmt[0])
+                 ~~ begin (root)
+                    ~~~ end (root)
+~~~~~ keyword (root)
+~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~ selector (root -> cond)
+      ~~~~~~~~~~ expression (root -> cond)
+          ~ begin (root -> cond -> recv)
+               ~ end (root -> cond -> recv)
+          ~~~~~~ expression (root -> cond -> recv)
+           ~~~~ expression (root -> cond -> recv -> stmts -> 0)
 --AST
 s(:while,
   s(:send,

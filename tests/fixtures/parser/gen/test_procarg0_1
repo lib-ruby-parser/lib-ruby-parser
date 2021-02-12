@@ -1,19 +1,19 @@
 --INPUT
 m { |(foo, bar)| } 
 --LOCATIONS
-  ~ begin ()
-                 ~ end ()
-~~~~~~~~~~~~~~~~~~ expression ()
-~ selector (call)
-~ expression (call)
-    ~ begin (args)
-               ~ end (args)
-    ~~~~~~~~~~~~ expression (args)
-     ~ begin (args/arg[0])
-              ~ end (args/arg[0])
-     ~~~~~~~~~~ expression (args/arg[0])
-      ~~~ expression (args/arg[0]/arg[0])
-           ~~~ expression (args/arg[0]/arg[1])
+  ~ begin (root)
+                 ~ end (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+~ selector (root -> method_call)
+~ expression (root -> method_call)
+    ~ begin (root -> args)
+               ~ end (root -> args)
+    ~~~~~~~~~~~~ expression (root -> args)
+     ~ begin (root -> args -> arglist -> 0)
+              ~ end (root -> args -> arglist -> 0)
+     ~~~~~~~~~~ expression (root -> args -> arglist -> 0)
+      ~~~ expression (root -> args -> arglist -> 0 -> arglist -> 0)
+           ~~~ expression (root -> args -> arglist -> 0 -> arglist -> 1)
 --AST
 s(:block,
   s(:send, nil, "m"),

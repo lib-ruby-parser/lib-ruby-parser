@@ -1,12 +1,12 @@
 --INPUT
 foo ? 1 : 2
 --LOCATIONS
-        ~ colon ()
-    ~ question ()
-~~~~~~~~~~~ expression ()
-~~~ expression (cond)
-      ~ expression (if_true)
-          ~ expression (if_false)
+        ~ colon (root)
+    ~ question (root)
+~~~~~~~~~~~ expression (root)
+~~~ expression (root -> cond)
+      ~ expression (root -> if_true)
+          ~ expression (root -> if_false)
 --AST
 s(:if,
   s(:lvar, "foo"),

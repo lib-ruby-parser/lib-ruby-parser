@@ -2,14 +2,14 @@
 class A < B
 end
 --LOCATIONS
-~~~~~ keyword ()
-        ~ operator ()
-            ~~~ end ()
-~~~~~~~~~~~~~~~ expression ()
-      ~ name (name)
-      ~ expression (name)
-          ~ name (superclass)
-          ~ expression (superclass)
+~~~~~ keyword (root)
+        ~ operator (root)
+            ~~~ end (root)
+~~~~~~~~~~~~~~~ expression (root)
+      ~ name (root -> name)
+      ~ expression (root -> name)
+          ~ name (root -> superclass)
+          ~ expression (root -> superclass)
 --AST
 s(:class,
   s(:const, nil, "A"),

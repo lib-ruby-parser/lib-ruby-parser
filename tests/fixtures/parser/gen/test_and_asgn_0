@@ -1,12 +1,12 @@
 --INPUT
 foo.a &&= 1
 --LOCATIONS
-      ~~~ operator ()
-~~~~~~~~~~~ expression ()
-    ~ selector (recv)
-~~~~~ expression (recv)
-~~~ expression (recv/recv)
-          ~ expression (value)
+      ~~~ operator (root)
+~~~~~~~~~~~ expression (root)
+    ~ selector (root -> recv)
+~~~~~ expression (root -> recv)
+~~~ expression (root -> recv -> recv)
+          ~ expression (root -> value)
 --AST
 s(:and_asgn,
   s(:send,

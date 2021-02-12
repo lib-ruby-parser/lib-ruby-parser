@@ -1,22 +1,22 @@
 --INPUT
 a b{c d}, :e do end
 --LOCATIONS
-             ~~ begin ()
-                ~~~ end ()
-~~~~~~~~~~~~~~~~~~~ expression ()
-~ selector (call)
-~~~~~~~~~~~~ expression (call)
-   ~ begin (call/arg[0])
-       ~ end (call/arg[0])
-  ~~~~~~ expression (call/arg[0])
-  ~ selector (call/arg[0]/call)
-  ~ expression (call/arg[0]/call)
-    ~ selector (call/arg[0]/body)
-    ~~~ expression (call/arg[0]/body)
-      ~ selector (call/arg[0]/body/arg[0])
-      ~ expression (call/arg[0]/body/arg[0])
-          ~ begin (call/arg[1])
-          ~~ expression (call/arg[1])
+             ~~ begin (root)
+                ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~ expression (root)
+~ selector (root -> method_call)
+~~~~~~~~~~~~ expression (root -> method_call)
+   ~ begin (root -> method_call -> args -> 0)
+       ~ end (root -> method_call -> args -> 0)
+  ~~~~~~ expression (root -> method_call -> args -> 0)
+  ~ selector (root -> method_call -> args -> 0 -> method_call)
+  ~ expression (root -> method_call -> args -> 0 -> method_call)
+    ~ selector (root -> method_call -> args -> 0 -> body)
+    ~~~ expression (root -> method_call -> args -> 0 -> body)
+      ~ selector (root -> method_call -> args -> 0 -> body -> args -> 0)
+      ~ expression (root -> method_call -> args -> 0 -> body -> args -> 0)
+          ~ begin (root -> method_call -> args -> 1)
+          ~~ expression (root -> method_call -> args -> 1)
 --AST
 s(:block,
   s(:send, nil, "a",

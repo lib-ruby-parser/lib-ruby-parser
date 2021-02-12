@@ -1,16 +1,16 @@
 --INPUT
 /\xa8/n =~ ""
 --LOCATIONS
-~~~~~~~~~~~~~ expression ()
-~~~~~~~~~~~~~ expression ()
-~ begin (re)
-     ~ end (re)
-~~~~~~~ expression (re)
- ~~~~ expression (re/part[0])
-      ~ expression (re/options)
-           ~ begin (value)
-            ~ end (value)
-           ~~ expression (value)
+~~~~~~~~~~~~~ expression (root)
+~~~~~~~~~~~~~ expression (root)
+~ begin (root -> re)
+     ~ end (root -> re)
+~~~~~~~ expression (root -> re)
+ ~~~~ expression (root -> re -> parts -> 0)
+      ~ expression (root -> re -> options)
+           ~ begin (root -> value)
+            ~ end (root -> value)
+           ~~ expression (root -> value)
 --AST
 s(:match_with_lvasgn,
   s(:regexp,

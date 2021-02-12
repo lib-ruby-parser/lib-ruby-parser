@@ -1,11 +1,11 @@
 --INPUT
 foo.A += m foo
 --LOCATIONS
-      ~~ operator ()
-~~~~~~~~~~~~~~ expression ()
-    ~ selector (recv)
-~~~~~ expression (recv)
-~~~ expression (recv/recv)
+      ~~ operator (root)
+~~~~~~~~~~~~~~ expression (root)
+    ~ selector (root -> recv)
+~~~~~ expression (root -> recv)
+~~~ expression (root -> recv -> recv)
 --AST
 s(:op_asgn,
   s(:send,

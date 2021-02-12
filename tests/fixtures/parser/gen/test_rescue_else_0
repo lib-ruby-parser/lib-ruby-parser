@@ -1,18 +1,18 @@
 --INPUT
 begin; meth; rescue; foo; else; bar; end
 --LOCATIONS
-~~~~~ begin ()
-                                     ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-                          ~~~~ else (stmt[0])
-       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (stmt[0])
-       ~~~~ selector (stmt[0]/body)
-       ~~~~ expression (stmt[0]/body)
-             ~~~~~~ keyword (stmt[0]/rescue_body[0])
-                   ~ begin (stmt[0]/rescue_body[0])
-             ~~~~~~~~~~~ expression (stmt[0]/rescue_body[0])
-                     ~~~ expression (stmt[0]/rescue_body[0]/body)
-                                ~~~ expression (stmt[0]/else)
+~~~~~ begin (root)
+                                     ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+                          ~~~~ else (root -> stmts -> 0)
+       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> stmts -> 0)
+       ~~~~ selector (root -> stmts -> 0 -> body)
+       ~~~~ expression (root -> stmts -> 0 -> body)
+             ~~~~~~ keyword (root -> stmts -> 0 -> rescue_bodies -> 0)
+                   ~ begin (root -> stmts -> 0 -> rescue_bodies -> 0)
+             ~~~~~~~~~~~ expression (root -> stmts -> 0 -> rescue_bodies -> 0)
+                     ~~~ expression (root -> stmts -> 0 -> rescue_bodies -> 0 -> body)
+                                ~~~ expression (root -> stmts -> 0 -> else_body)
 --AST
 s(:kwbegin,
   s(:rescue,

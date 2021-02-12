@@ -1,20 +1,20 @@
 --INPUT
 def f o=1, *r, p, &b; end
 --LOCATIONS
-~~~ keyword ()
-    ~ name ()
-                      ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-      ~~~~~~~~~~~~~~ expression (args)
-       ~ operator (args/arg[0])
-      ~ name (args/arg[0])
-      ~~~ expression (args/arg[0])
-        ~ expression (args/arg[0]/default)
-            ~ name (args/arg[1])
-           ~~ expression (args/arg[1])
-               ~ expression (args/arg[2])
-                   ~ name (args/arg[3])
-                  ~~ expression (args/arg[3])
+~~~ keyword (root)
+    ~ name (root)
+                      ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~~~~~~~~~~~~ expression (root -> args)
+       ~ operator (root -> args -> arglist -> 0)
+      ~ name (root -> args -> arglist -> 0)
+      ~~~ expression (root -> args -> arglist -> 0)
+        ~ expression (root -> args -> arglist -> 0 -> default_value)
+            ~ name (root -> args -> arglist -> 1)
+           ~~ expression (root -> args -> arglist -> 1)
+               ~ expression (root -> args -> arglist -> 2)
+                   ~ name (root -> args -> arglist -> 3)
+                  ~~ expression (root -> args -> arglist -> 3)
 --AST
 s(:def, "f",
   s(:args,

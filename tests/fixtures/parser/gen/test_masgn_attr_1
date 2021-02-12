@@ -1,14 +1,14 @@
 --INPUT
 self::a, foo = foo
 --LOCATIONS
-             ~ operator ()
-~~~~~~~~~~~~~~~~~~ expression ()
-~~~~~~~~~~~~ expression (lhs)
-      ~ selector (lhs/item[0])
-~~~~~~~ expression (lhs/item[0])
-~~~~ expression (lhs/item[0]/recv)
-         ~~~ expression (lhs/item[1])
-               ~~~ expression (rhs)
+             ~ operator (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+~~~~~~~~~~~~ expression (root -> lhs)
+      ~ selector (root -> lhs -> mlhs_items -> 0)
+~~~~~~~ expression (root -> lhs -> mlhs_items -> 0)
+~~~~ expression (root -> lhs -> mlhs_items -> 0 -> recv)
+         ~~~ expression (root -> lhs -> mlhs_items -> 1)
+               ~~~ expression (root -> rhs)
 --AST
 s(:masgn,
   s(:mlhs,

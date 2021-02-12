@@ -1,13 +1,13 @@
 --INPUT
 def a; @@var |= 10; end
 --LOCATIONS
-~~~ keyword ()
-    ~ name ()
-                    ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-             ~~ operator (body)
-       ~~~~~~~~~~~ expression (body)
-       ~~~~~ expression (body/recv)
+~~~ keyword (root)
+    ~ name (root)
+                    ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+             ~~ operator (root -> body)
+       ~~~~~~~~~~~ expression (root -> body)
+       ~~~~~ expression (root -> body -> recv)
 --AST
 s(:def, "a", nil,
   s(:op_asgn,

@@ -1,22 +1,22 @@
 --INPUT
 while class << self; tap do end; end; break; end
 --LOCATIONS
-                                    ~ begin ()
-                                             ~~~ end ()
-~~~~~ keyword ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-      ~~~~~ keyword (cond)
-            ~~ operator (cond)
-                                 ~~~ end (cond)
-      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (cond)
-               ~~~~ expression (cond/expr)
-                         ~~ begin (cond/body)
-                            ~~~ end (cond/body)
-                     ~~~~~~~~~~ expression (cond/body)
-                     ~~~ selector (cond/body/call)
-                     ~~~ expression (cond/body/call)
-                                      ~~~~~ keyword (body)
-                                      ~~~~~ expression (body)
+                                    ~ begin (root)
+                                             ~~~ end (root)
+~~~~~ keyword (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~~~ keyword (root -> cond)
+            ~~ operator (root -> cond)
+                                 ~~~ end (root -> cond)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> cond)
+               ~~~~ expression (root -> cond -> expr)
+                         ~~ begin (root -> cond -> body)
+                            ~~~ end (root -> cond -> body)
+                     ~~~~~~~~~~ expression (root -> cond -> body)
+                     ~~~ selector (root -> cond -> body -> method_call)
+                     ~~~ expression (root -> cond -> body -> method_call)
+                                      ~~~~~ keyword (root -> body)
+                                      ~~~~~ expression (root -> body)
 --AST
 s(:while,
   s(:sclass,

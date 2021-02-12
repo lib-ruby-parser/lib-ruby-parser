@@ -1,21 +1,21 @@
 --INPUT
 f{ |o=1, p, &b| }
 --LOCATIONS
- ~ begin ()
-                ~ end ()
-~~~~~~~~~~~~~~~~~ expression ()
-~ selector (call)
-~ expression (call)
-   ~ begin (args)
-              ~ end (args)
-   ~~~~~~~~~~~~ expression (args)
-     ~ operator (args/arg[0])
-    ~ name (args/arg[0])
-    ~~~ expression (args/arg[0])
-      ~ expression (args/arg[0]/default)
-         ~ expression (args/arg[1])
-             ~ name (args/arg[2])
-            ~~ expression (args/arg[2])
+ ~ begin (root)
+                ~ end (root)
+~~~~~~~~~~~~~~~~~ expression (root)
+~ selector (root -> method_call)
+~ expression (root -> method_call)
+   ~ begin (root -> args)
+              ~ end (root -> args)
+   ~~~~~~~~~~~~ expression (root -> args)
+     ~ operator (root -> args -> arglist -> 0)
+    ~ name (root -> args -> arglist -> 0)
+    ~~~ expression (root -> args -> arglist -> 0)
+      ~ expression (root -> args -> arglist -> 0 -> default_value)
+         ~ expression (root -> args -> arglist -> 1)
+             ~ name (root -> args -> arglist -> 2)
+            ~~ expression (root -> args -> arglist -> 2)
 --AST
 s(:block,
   s(:send, nil, "f"),

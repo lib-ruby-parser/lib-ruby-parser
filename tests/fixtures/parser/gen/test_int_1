@@ -1,6 +1,6 @@
 --INPUT
 +42
 --LOCATIONS
-~~~ expression ()
+~~~ expression (root)
 --AST
 s(:int, "+42")

@@ -1,12 +1,12 @@
 --INPUT
 break(foo)
 --LOCATIONS
-~~~~~ keyword ()
-~~~~~~~~~~ expression ()
-     ~ begin (arg[0])
-         ~ end (arg[0])
-     ~~~~~ expression (arg[0])
-      ~~~ expression (arg[0]/stmt[0])
+~~~~~ keyword (root)
+~~~~~~~~~~ expression (root)
+     ~ begin (root -> args -> 0)
+         ~ end (root -> args -> 0)
+     ~~~~~ expression (root -> args -> 0)
+      ~~~ expression (root -> args -> 0 -> stmts -> 0)
 --AST
 s(:break,
   s(:begin,

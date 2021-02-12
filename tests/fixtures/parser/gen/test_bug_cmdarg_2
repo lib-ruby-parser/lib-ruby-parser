@@ -1,21 +1,21 @@
 --INPUT
 f x: -> do meth do end end
 --LOCATIONS
-~ selector ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-  ~~~~~~~~~~~~~~~~~~~~~~~~ expression (arg[0])
-   ~ operator (arg[0]/pair[0])
-  ~~~~~~~~~~~~~~~~~~~~~~~~ expression (arg[0]/pair[0])
-  ~ expression (arg[0]/pair[0]/key)
-        ~~ begin (arg[0]/pair[0]/value)
-                       ~~~ end (arg[0]/pair[0]/value)
-     ~~~~~~~~~~~~~~~~~~~~~ expression (arg[0]/pair[0]/value)
-     ~~ expression (arg[0]/pair[0]/value/call)
-                ~~ begin (arg[0]/pair[0]/value/body)
-                   ~~~ end (arg[0]/pair[0]/value/body)
-           ~~~~~~~~~~~ expression (arg[0]/pair[0]/value/body)
-           ~~~~ selector (arg[0]/pair[0]/value/body/call)
-           ~~~~ expression (arg[0]/pair[0]/value/body/call)
+~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+  ~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> args -> 0)
+   ~ operator (root -> args -> 0 -> pairs -> 0)
+  ~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> args -> 0 -> pairs -> 0)
+  ~ expression (root -> args -> 0 -> pairs -> 0 -> key)
+        ~~ begin (root -> args -> 0 -> pairs -> 0 -> value)
+                       ~~~ end (root -> args -> 0 -> pairs -> 0 -> value)
+     ~~~~~~~~~~~~~~~~~~~~~ expression (root -> args -> 0 -> pairs -> 0 -> value)
+     ~~ expression (root -> args -> 0 -> pairs -> 0 -> value -> method_call)
+                ~~ begin (root -> args -> 0 -> pairs -> 0 -> value -> body)
+                   ~~~ end (root -> args -> 0 -> pairs -> 0 -> value -> body)
+           ~~~~~~~~~~~ expression (root -> args -> 0 -> pairs -> 0 -> value -> body)
+           ~~~~ selector (root -> args -> 0 -> pairs -> 0 -> value -> body -> method_call)
+           ~~~~ expression (root -> args -> 0 -> pairs -> 0 -> value -> body -> method_call)
 --AST
 s(:send, nil, "f",
   s(:kwargs,

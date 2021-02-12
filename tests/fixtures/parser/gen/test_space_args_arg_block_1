@@ -1,16 +1,16 @@
 --INPUT
 foo.fun (1) {}
 --LOCATIONS
-            ~ begin ()
-             ~ end ()
-~~~~~~~~~~~~~~ expression ()
-    ~~~ selector (call)
-~~~~~~~~~~~ expression (call)
-~~~ expression (call/recv)
-        ~ begin (call/arg[0])
-          ~ end (call/arg[0])
-        ~~~ expression (call/arg[0])
-         ~ expression (call/arg[0]/stmt[0])
+            ~ begin (root)
+             ~ end (root)
+~~~~~~~~~~~~~~ expression (root)
+    ~~~ selector (root -> method_call)
+~~~~~~~~~~~ expression (root -> method_call)
+~~~ expression (root -> method_call -> recv)
+        ~ begin (root -> method_call -> args -> 0)
+          ~ end (root -> method_call -> args -> 0)
+        ~~~ expression (root -> method_call -> args -> 0)
+         ~ expression (root -> method_call -> args -> 0 -> stmts -> 0)
 --AST
 s(:block,
   s(:send,

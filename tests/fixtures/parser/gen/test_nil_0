@@ -1,6 +1,6 @@
 --INPUT
 nil
 --LOCATIONS
-~~~ expression ()
+~~~ expression (root)
 --AST
 s(:nil)

@@ -1,18 +1,18 @@
 --INPUT
 a = 1; a b: 1
 --LOCATIONS
-~~~~~~~~~~~~~ expression ()
-  ~ operator (stmt[0])
-~ name (stmt[0])
-~~~~~ expression (stmt[0])
-    ~ expression (stmt[0]/value)
-       ~ selector (stmt[1])
-       ~~~~~~ expression (stmt[1])
-         ~~~~ expression (stmt[1]/arg[0])
-          ~ operator (stmt[1]/arg[0]/pair[0])
-         ~~~~ expression (stmt[1]/arg[0]/pair[0])
-         ~ expression (stmt[1]/arg[0]/pair[0]/key)
-            ~ expression (stmt[1]/arg[0]/pair[0]/value)
+~~~~~~~~~~~~~ expression (root)
+  ~ operator (root -> stmts -> 0)
+~ name (root -> stmts -> 0)
+~~~~~ expression (root -> stmts -> 0)
+    ~ expression (root -> stmts -> 0 -> value)
+       ~ selector (root -> stmts -> 1)
+       ~~~~~~ expression (root -> stmts -> 1)
+         ~~~~ expression (root -> stmts -> 1 -> args -> 0)
+          ~ operator (root -> stmts -> 1 -> args -> 0 -> pairs -> 0)
+         ~~~~ expression (root -> stmts -> 1 -> args -> 0 -> pairs -> 0)
+         ~ expression (root -> stmts -> 1 -> args -> 0 -> pairs -> 0 -> key)
+            ~ expression (root -> stmts -> 1 -> args -> 0 -> pairs -> 0 -> value)
 --AST
 s(:begin,
   s(:lvasgn, "a",

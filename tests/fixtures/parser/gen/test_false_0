@@ -1,6 +1,6 @@
 --INPUT
 false
 --LOCATIONS
-~~~~~ expression ()
+~~~~~ expression (root)
 --AST
 s(:false)

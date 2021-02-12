@@ -1,11 +1,11 @@
 --INPUT
 fun(1)
 --LOCATIONS
-   ~ begin ()
-     ~ end ()
-~~~ selector ()
-~~~~~~ expression ()
-    ~ expression (arg[0])
+   ~ begin (root)
+     ~ end (root)
+~~~ selector (root)
+~~~~~~ expression (root)
+    ~ expression (root -> args -> 0)
 --AST
 s(:send, nil, "fun",
   s(:int, "1"))

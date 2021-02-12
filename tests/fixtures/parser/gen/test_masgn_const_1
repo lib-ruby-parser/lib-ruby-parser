@@ -1,15 +1,15 @@
 --INPUT
 ::A, foo = foo
 --LOCATIONS
-         ~ operator ()
-~~~~~~~~~~~~~~ expression ()
-~~~~~~~~ expression (lhs)
-  ~ name (lhs/item[0])
-~~ double_colon (lhs/item[0])
-~~~ expression (lhs/item[0])
-~~ expression (lhs/item[0]/scope)
-     ~~~ expression (lhs/item[1])
-           ~~~ expression (rhs)
+         ~ operator (root)
+~~~~~~~~~~~~~~ expression (root)
+~~~~~~~~ expression (root -> lhs)
+  ~ name (root -> lhs -> mlhs_items -> 0)
+~~ double_colon (root -> lhs -> mlhs_items -> 0)
+~~~ expression (root -> lhs -> mlhs_items -> 0)
+~~ expression (root -> lhs -> mlhs_items -> 0 -> scope)
+     ~~~ expression (root -> lhs -> mlhs_items -> 1)
+           ~~~ expression (root -> rhs)
 --AST
 s(:masgn,
   s(:mlhs,

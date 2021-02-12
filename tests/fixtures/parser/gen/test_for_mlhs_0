@@ -1,18 +1,18 @@
 --INPUT
 for a, b in foo; p a, b; end
 --LOCATIONS
-~~~ keyword ()
-                         ~~~ end ()
-               ~ begin ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-    ~~~~ expression (iterator)
-    ~ expression (iterator/item[0])
-       ~ expression (iterator/item[1])
-            ~~~ expression (iteratee)
-                 ~ selector (body)
-                 ~~~~~~ expression (body)
-                   ~ expression (body/arg[0])
-                      ~ expression (body/arg[1])
+~~~ keyword (root)
+                         ~~~ end (root)
+               ~ begin (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+    ~~~~ expression (root -> iterator)
+    ~ expression (root -> iterator -> mlhs_items -> 0)
+       ~ expression (root -> iterator -> mlhs_items -> 1)
+            ~~~ expression (root -> iteratee)
+                 ~ selector (root -> body)
+                 ~~~~~~ expression (root -> body)
+                   ~ expression (root -> body -> args -> 0)
+                      ~ expression (root -> body -> args -> 1)
 --AST
 s(:for,
   s(:mlhs,

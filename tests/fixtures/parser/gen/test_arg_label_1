@@ -2,14 +2,14 @@
 def foo
  a:b end
 --LOCATIONS
-~~~ keyword ()
-    ~~~ name ()
-             ~~~ end ()
-~~~~~~~~~~~~~~~~ expression ()
-         ~ selector (body)
-         ~~~ expression (body)
-          ~ begin (body/arg[0])
-          ~~ expression (body/arg[0])
+~~~ keyword (root)
+    ~~~ name (root)
+             ~~~ end (root)
+~~~~~~~~~~~~~~~~ expression (root)
+         ~ selector (root -> body)
+         ~~~ expression (root -> body)
+          ~ begin (root -> body -> args -> 0)
+          ~~ expression (root -> body -> args -> 0)
 --AST
 s(:def, "foo", nil,
   s(:send, nil, "a",

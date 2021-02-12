@@ -1,17 +1,17 @@
 --INPUT
 m a + b do end
 --LOCATIONS
-        ~~ begin ()
-           ~~~ end ()
-~~~~~~~~~~~~~~ expression ()
-~ selector (call)
-~~~~~~~ expression (call)
-    ~ selector (call/arg[0])
-  ~~~~~ expression (call/arg[0])
-  ~ selector (call/arg[0]/recv)
-  ~ expression (call/arg[0]/recv)
-      ~ selector (call/arg[0]/arg[0])
-      ~ expression (call/arg[0]/arg[0])
+        ~~ begin (root)
+           ~~~ end (root)
+~~~~~~~~~~~~~~ expression (root)
+~ selector (root -> method_call)
+~~~~~~~ expression (root -> method_call)
+    ~ selector (root -> method_call -> args -> 0)
+  ~~~~~ expression (root -> method_call -> args -> 0)
+  ~ selector (root -> method_call -> args -> 0 -> recv)
+  ~ expression (root -> method_call -> args -> 0 -> recv)
+      ~ selector (root -> method_call -> args -> 0 -> args -> 0)
+      ~ expression (root -> method_call -> args -> 0 -> args -> 0)
 --AST
 s(:block,
   s(:send, nil, "m",

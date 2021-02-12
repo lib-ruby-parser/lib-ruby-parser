@@ -1,14 +1,14 @@
 --INPUT
 %W"#{1}"
 --LOCATIONS
-~~~ begin ()
-       ~ end ()
-~~~~~~~~ expression ()
-   ~~~~ expression (element[0])
-   ~~ begin (element[0]/part[0])
-      ~ end (element[0]/part[0])
-   ~~~~ expression (element[0]/part[0])
-     ~ expression (element[0]/part[0]/stmt[0])
+~~~ begin (root)
+       ~ end (root)
+~~~~~~~~ expression (root)
+   ~~~~ expression (root -> elements -> 0)
+   ~~ begin (root -> elements -> 0 -> parts -> 0)
+      ~ end (root -> elements -> 0 -> parts -> 0)
+   ~~~~ expression (root -> elements -> 0 -> parts -> 0)
+     ~ expression (root -> elements -> 0 -> parts -> 0 -> stmts -> 0)
 --AST
 s(:array,
   s(:dstr,

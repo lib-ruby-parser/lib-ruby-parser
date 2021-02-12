@@ -1,15 +1,15 @@
 --INPUT
 !(foo...bar)
 --LOCATIONS
-~ selector ()
-~~~~~~~~~~~~ expression ()
- ~ begin (recv)
-           ~ end (recv)
- ~~~~~~~~~~~ expression (recv)
-     ~~~ operator (recv/stmt[0])
-  ~~~~~~~~~ expression (recv/stmt[0])
-  ~~~ expression (recv/stmt[0]/left)
-        ~~~ expression (recv/stmt[0]/right)
+~ selector (root)
+~~~~~~~~~~~~ expression (root)
+ ~ begin (root -> recv)
+           ~ end (root -> recv)
+ ~~~~~~~~~~~ expression (root -> recv)
+     ~~~ operator (root -> recv -> stmts -> 0)
+  ~~~~~~~~~ expression (root -> recv -> stmts -> 0)
+  ~~~ expression (root -> recv -> stmts -> 0 -> left)
+        ~~~ expression (root -> recv -> stmts -> 0 -> right)
 --AST
 s(:send,
   s(:begin,

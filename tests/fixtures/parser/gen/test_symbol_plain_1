@@ -1,8 +1,8 @@
 --INPUT
 :'foo'
 --LOCATIONS
-~~ begin ()
-     ~ end ()
-~~~~~~ expression ()
+~~ begin (root)
+     ~ end (root)
+~~~~~~ expression (root)
 --AST
 s(:sym, "foo")

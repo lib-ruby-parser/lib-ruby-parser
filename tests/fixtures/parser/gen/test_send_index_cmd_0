@@ -1,13 +1,13 @@
 --INPUT
 foo[m bar]
 --LOCATIONS
-   ~ begin ()
-         ~ end ()
-~~~~~~~~~~ expression ()
-~~~ expression (recv)
-    ~ selector (index[0])
-    ~~~~~ expression (index[0])
-      ~~~ expression (index[0]/arg[0])
+   ~ begin (root)
+         ~ end (root)
+~~~~~~~~~~ expression (root)
+~~~ expression (root -> recv)
+    ~ selector (root -> indexes -> 0)
+    ~~~~~ expression (root -> indexes -> 0)
+      ~~~ expression (root -> indexes -> 0 -> args -> 0)
 --AST
 s(:index,
   s(:lvar, "foo"),

@@ -1,16 +1,16 @@
 --INPUT
 tap (proc do end)
 --LOCATIONS
-~~~ selector ()
-~~~~~~~~~~~~~~~~~ expression ()
-    ~ begin (arg[0])
-                ~ end (arg[0])
-    ~~~~~~~~~~~~~ expression (arg[0])
-          ~~ begin (arg[0]/stmt[0])
-             ~~~ end (arg[0]/stmt[0])
-     ~~~~~~~~~~~ expression (arg[0]/stmt[0])
-     ~~~~ selector (arg[0]/stmt[0]/call)
-     ~~~~ expression (arg[0]/stmt[0]/call)
+~~~ selector (root)
+~~~~~~~~~~~~~~~~~ expression (root)
+    ~ begin (root -> args -> 0)
+                ~ end (root -> args -> 0)
+    ~~~~~~~~~~~~~ expression (root -> args -> 0)
+          ~~ begin (root -> args -> 0 -> stmts -> 0)
+             ~~~ end (root -> args -> 0 -> stmts -> 0)
+     ~~~~~~~~~~~ expression (root -> args -> 0 -> stmts -> 0)
+     ~~~~ selector (root -> args -> 0 -> stmts -> 0 -> method_call)
+     ~~~~ expression (root -> args -> 0 -> stmts -> 0 -> method_call)
 --AST
 s(:send, nil, "tap",
   s(:begin,

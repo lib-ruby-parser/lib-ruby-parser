@@ -1,6 +1,6 @@
 --INPUT
 $+
 --LOCATIONS
-~~ expression ()
+~~ expression (root)
 --AST
 s(:back_ref, "$+")

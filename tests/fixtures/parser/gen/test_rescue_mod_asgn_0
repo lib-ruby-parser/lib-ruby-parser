@@ -1,15 +1,15 @@
 --INPUT
 foo = meth rescue bar
 --LOCATIONS
-    ~ operator ()
-~~~ name ()
-~~~~~~~~~~~~~~~~~~~~~ expression ()
-      ~~~~~~~~~~~~~~~ expression (value)
-      ~~~~ selector (value/body)
-      ~~~~ expression (value/body)
-           ~~~~~~ keyword (value/rescue_body[0])
-           ~~~~~~~~~~ expression (value/rescue_body[0])
-                  ~~~ expression (value/rescue_body[0]/body)
+    ~ operator (root)
+~~~ name (root)
+~~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~~~~~~~~~~~~~ expression (root -> value)
+      ~~~~ selector (root -> value -> body)
+      ~~~~ expression (root -> value -> body)
+           ~~~~~~ keyword (root -> value -> rescue_bodies -> 0)
+           ~~~~~~~~~~ expression (root -> value -> rescue_bodies -> 0)
+                  ~~~ expression (root -> value -> rescue_bodies -> 0 -> body)
 --AST
 s(:lvasgn, "foo",
   s(:rescue,

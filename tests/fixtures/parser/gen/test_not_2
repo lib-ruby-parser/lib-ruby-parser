@@ -1,11 +1,11 @@
 --INPUT
 not()
 --LOCATIONS
-~~~ selector ()
-~~~~~ expression ()
-   ~ begin (recv)
-    ~ end (recv)
-   ~~ expression (recv)
+~~~ selector (root)
+~~~~~ expression (root)
+   ~ begin (root -> recv)
+    ~ end (root -> recv)
+   ~~ expression (root -> recv)
 --AST
 s(:send,
   s(:begin), "!")

@@ -1,11 +1,11 @@
 --INPUT
 super(foo)
 --LOCATIONS
-     ~ begin ()
-         ~ end ()
-~~~~~ keyword ()
-~~~~~~~~~~ expression ()
-      ~~~ expression (arg[0])
+     ~ begin (root)
+         ~ end (root)
+~~~~~ keyword (root)
+~~~~~~~~~~ expression (root)
+      ~~~ expression (root -> args -> 0)
 --AST
 s(:super,
   s(:lvar, "foo"))

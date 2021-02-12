@@ -1,7 +1,7 @@
 --INPUT
 ?a
 --LOCATIONS
-~ begin ()
-~~ expression ()
+~ begin (root)
+~~ expression (root)
 --AST
 s(:str, "a")

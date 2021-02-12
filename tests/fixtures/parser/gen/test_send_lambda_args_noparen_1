@@ -1,13 +1,13 @@
 --INPUT
 -> a: { }
 --LOCATIONS
-      ~ begin ()
-        ~ end ()
-~~~~~~~~~ expression ()
-~~ expression (call)
-   ~~ expression (args)
-   ~ name (args/arg[0])
-   ~~ expression (args/arg[0])
+      ~ begin (root)
+        ~ end (root)
+~~~~~~~~~ expression (root)
+~~ expression (root -> method_call)
+   ~~ expression (root -> args)
+   ~ name (root -> args -> arglist -> 0)
+   ~~ expression (root -> args -> arglist -> 0)
 --AST
 s(:block,
   s(:lambda),

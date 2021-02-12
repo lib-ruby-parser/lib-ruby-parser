@@ -1,11 +1,11 @@
 --INPUT
 return()
 --LOCATIONS
-~~~~~~ keyword ()
-~~~~~~~~ expression ()
-      ~ begin (arg[0])
-       ~ end (arg[0])
-      ~~ expression (arg[0])
+~~~~~~ keyword (root)
+~~~~~~~~ expression (root)
+      ~ begin (root -> args -> 0)
+       ~ end (root -> args -> 0)
+      ~~ expression (root -> args -> 0)
 --AST
 s(:return,
   s(:begin))

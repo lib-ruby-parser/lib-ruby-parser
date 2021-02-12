@@ -1,22 +1,22 @@
 --INPUT
 m def x(); end; 1.tap do end
 --LOCATIONS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-~ selector (stmt[0])
-~~~~~~~~~~~~~~ expression (stmt[0])
-  ~~~ keyword (stmt[0]/arg[0])
-      ~ name (stmt[0]/arg[0])
-           ~~~ end (stmt[0]/arg[0])
-  ~~~~~~~~~~~~ expression (stmt[0]/arg[0])
-       ~ begin (stmt[0]/arg[0]/args)
-        ~ end (stmt[0]/arg[0]/args)
-       ~~ expression (stmt[0]/arg[0]/args)
-                      ~~ begin (stmt[1])
-                         ~~~ end (stmt[1])
-                ~~~~~~~~~~~~ expression (stmt[1])
-                  ~~~ selector (stmt[1]/call)
-                ~~~~~ expression (stmt[1]/call)
-                ~ expression (stmt[1]/call/recv)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~ selector (root -> stmts -> 0)
+~~~~~~~~~~~~~~ expression (root -> stmts -> 0)
+  ~~~ keyword (root -> stmts -> 0 -> args -> 0)
+      ~ name (root -> stmts -> 0 -> args -> 0)
+           ~~~ end (root -> stmts -> 0 -> args -> 0)
+  ~~~~~~~~~~~~ expression (root -> stmts -> 0 -> args -> 0)
+       ~ begin (root -> stmts -> 0 -> args -> 0 -> args)
+        ~ end (root -> stmts -> 0 -> args -> 0 -> args)
+       ~~ expression (root -> stmts -> 0 -> args -> 0 -> args)
+                      ~~ begin (root -> stmts -> 1)
+                         ~~~ end (root -> stmts -> 1)
+                ~~~~~~~~~~~~ expression (root -> stmts -> 1)
+                  ~~~ selector (root -> stmts -> 1 -> method_call)
+                ~~~~~ expression (root -> stmts -> 1 -> method_call)
+                ~ expression (root -> stmts -> 1 -> method_call -> recv)
 --AST
 s(:begin,
   s(:send, nil, "m",

@@ -1,17 +1,17 @@
 --INPUT
 fun(foo, :foo => 1)
 --LOCATIONS
-   ~ begin ()
-                  ~ end ()
-~~~ selector ()
-~~~~~~~~~~~~~~~~~~~ expression ()
-    ~~~ expression (arg[0])
-         ~~~~~~~~~ expression (arg[1])
-              ~~ operator (arg[1]/pair[0])
-         ~~~~~~~~~ expression (arg[1]/pair[0])
-         ~ begin (arg[1]/pair[0]/key)
-         ~~~~ expression (arg[1]/pair[0]/key)
-                 ~ expression (arg[1]/pair[0]/value)
+   ~ begin (root)
+                  ~ end (root)
+~~~ selector (root)
+~~~~~~~~~~~~~~~~~~~ expression (root)
+    ~~~ expression (root -> args -> 0)
+         ~~~~~~~~~ expression (root -> args -> 1)
+              ~~ operator (root -> args -> 1 -> pairs -> 0)
+         ~~~~~~~~~ expression (root -> args -> 1 -> pairs -> 0)
+         ~ begin (root -> args -> 1 -> pairs -> 0 -> key)
+         ~~~~ expression (root -> args -> 1 -> pairs -> 0 -> key)
+                 ~ expression (root -> args -> 1 -> pairs -> 0 -> value)
 --AST
 s(:send, nil, "fun",
   s(:lvar, "foo"),

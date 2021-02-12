@@ -1,11 +1,11 @@
 --INPUT
 Bar::Foo
 --LOCATIONS
-     ~~~ name ()
-   ~~ double_colon ()
-~~~~~~~~ expression ()
-~~~ name (scope)
-~~~ expression (scope)
+     ~~~ name (root)
+   ~~ double_colon (root)
+~~~~~~~~ expression (root)
+~~~ name (root -> scope)
+~~~ expression (root -> scope)
 --AST
 s(:const,
   s(:const, nil, "Bar"), "Foo")

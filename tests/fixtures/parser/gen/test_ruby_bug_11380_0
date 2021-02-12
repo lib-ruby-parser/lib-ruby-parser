@@ -1,22 +1,22 @@
 --INPUT
 p -> { :hello }, a: 1 do end
 --LOCATIONS
-                      ~~ begin ()
-                         ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-~ selector (call)
-~~~~~~~~~~~~~~~~~~~~~ expression (call)
-     ~ begin (call/arg[0])
-              ~ end (call/arg[0])
-  ~~~~~~~~~~~~~ expression (call/arg[0])
-  ~~ expression (call/arg[0]/call)
-       ~ begin (call/arg[0]/body)
-       ~~~~~~ expression (call/arg[0]/body)
-                 ~~~~ expression (call/arg[1])
-                  ~ operator (call/arg[1]/pair[0])
-                 ~~~~ expression (call/arg[1]/pair[0])
-                 ~ expression (call/arg[1]/pair[0]/key)
-                    ~ expression (call/arg[1]/pair[0]/value)
+                      ~~ begin (root)
+                         ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~ selector (root -> method_call)
+~~~~~~~~~~~~~~~~~~~~~ expression (root -> method_call)
+     ~ begin (root -> method_call -> args -> 0)
+              ~ end (root -> method_call -> args -> 0)
+  ~~~~~~~~~~~~~ expression (root -> method_call -> args -> 0)
+  ~~ expression (root -> method_call -> args -> 0 -> method_call)
+       ~ begin (root -> method_call -> args -> 0 -> body)
+       ~~~~~~ expression (root -> method_call -> args -> 0 -> body)
+                 ~~~~ expression (root -> method_call -> args -> 1)
+                  ~ operator (root -> method_call -> args -> 1 -> pairs -> 0)
+                 ~~~~ expression (root -> method_call -> args -> 1 -> pairs -> 0)
+                 ~ expression (root -> method_call -> args -> 1 -> pairs -> 0 -> key)
+                    ~ expression (root -> method_call -> args -> 1 -> pairs -> 0 -> value)
 --AST
 s(:block,
   s(:send, nil, "p",

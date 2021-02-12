@@ -3,13 +3,13 @@
   #{}
 HERE
 --LOCATIONS
-        ~~~~~~ heredoc_body ()
-              ~~~~ heredoc_end ()
-~~~~~~~ expression ()
-          ~~ begin (part[0])
-            ~ end (part[0])
-          ~~~ expression (part[0])
-             ~ expression (part[1])
+        ~~~~~~ heredoc_body (root)
+              ~~~~ heredoc_end (root)
+~~~~~~~ expression (root)
+          ~~ begin (root -> parts -> 0)
+            ~ end (root -> parts -> 0)
+          ~~~ expression (root -> parts -> 0)
+             ~ expression (root -> parts -> 1)
 --AST
 s(:dstr,
   s(:begin),

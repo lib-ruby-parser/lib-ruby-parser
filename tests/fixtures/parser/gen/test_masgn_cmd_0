@@ -1,14 +1,14 @@
 --INPUT
 foo, bar = m foo
 --LOCATIONS
-         ~ operator ()
-~~~~~~~~~~~~~~~~ expression ()
-~~~~~~~~ expression (lhs)
-~~~ expression (lhs/item[0])
-     ~~~ expression (lhs/item[1])
-           ~ selector (rhs)
-           ~~~~~ expression (rhs)
-             ~~~ expression (rhs/arg[0])
+         ~ operator (root)
+~~~~~~~~~~~~~~~~ expression (root)
+~~~~~~~~ expression (root -> lhs)
+~~~ expression (root -> lhs -> mlhs_items -> 0)
+     ~~~ expression (root -> lhs -> mlhs_items -> 1)
+           ~ selector (root -> rhs)
+           ~~~~~ expression (root -> rhs)
+             ~~~ expression (root -> rhs -> args -> 0)
 --AST
 s(:masgn,
   s(:mlhs,

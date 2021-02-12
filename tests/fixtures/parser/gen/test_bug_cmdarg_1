@@ -1,13 +1,13 @@
 --INPUT
 assert do: true
 --LOCATIONS
-~~~~~~ selector ()
-~~~~~~~~~~~~~~~ expression ()
-       ~~~~~~~~ expression (arg[0])
-         ~ operator (arg[0]/pair[0])
-       ~~~~~~~~ expression (arg[0]/pair[0])
-       ~~ expression (arg[0]/pair[0]/key)
-           ~~~~ expression (arg[0]/pair[0]/value)
+~~~~~~ selector (root)
+~~~~~~~~~~~~~~~ expression (root)
+       ~~~~~~~~ expression (root -> args -> 0)
+         ~ operator (root -> args -> 0 -> pairs -> 0)
+       ~~~~~~~~ expression (root -> args -> 0 -> pairs -> 0)
+       ~~ expression (root -> args -> 0 -> pairs -> 0 -> key)
+           ~~~~ expression (root -> args -> 0 -> pairs -> 0 -> value)
 --AST
 s(:send, nil, "assert",
   s(:kwargs,

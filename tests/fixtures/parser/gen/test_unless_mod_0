@@ -1,10 +1,10 @@
 --INPUT
 bar unless foo
 --LOCATIONS
-    ~~~~~~ keyword ()
-~~~~~~~~~~~~~~ expression ()
-           ~~~ expression (cond)
-~~~ expression (if_false)
+    ~~~~~~ keyword (root)
+~~~~~~~~~~~~~~ expression (root)
+           ~~~ expression (root -> cond)
+~~~ expression (root -> if_false)
 --AST
 s(:if,
   s(:lvar, "foo"), nil,

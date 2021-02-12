@@ -1,11 +1,11 @@
 --INPUT
 defined?(foo)
 --LOCATIONS
-        ~ begin ()
-            ~ end ()
-~~~~~~~~ keyword ()
-~~~~~~~~~~~~~ expression ()
-         ~~~ expression (value)
+        ~ begin (root)
+            ~ end (root)
+~~~~~~~~ keyword (root)
+~~~~~~~~~~~~~ expression (root)
+         ~~~ expression (root -> value)
 --AST
 s(:defined?,
   s(:lvar, "foo"))

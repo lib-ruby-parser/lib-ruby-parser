@@ -1,13 +1,13 @@
 --INPUT
 foo[0] += raise bar rescue nil
 --LOCATIONS
-       ~~ operator ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-   ~ begin (recv)
-     ~ end (recv)
-~~~~~~ expression (recv)
-~~~ expression (recv/recv)
-    ~ expression (recv/index[0])
+       ~~ operator (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+   ~ begin (root -> recv)
+     ~ end (root -> recv)
+~~~~~~ expression (root -> recv)
+~~~ expression (root -> recv -> recv)
+    ~ expression (root -> recv -> indexes -> 0)
 --AST
 s(:op_asgn,
   s(:indexasgn,

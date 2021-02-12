@@ -1,14 +1,14 @@
 --INPUT
 "#@a #@@a #$a"
 --LOCATIONS
-~ begin ()
-             ~ end ()
-~~~~~~~~~~~~~~ expression ()
-  ~~ expression (part[0])
-    ~ expression (part[1])
-      ~~~ expression (part[2])
-         ~ expression (part[3])
-           ~~ expression (part[4])
+~ begin (root)
+             ~ end (root)
+~~~~~~~~~~~~~~ expression (root)
+  ~~ expression (root -> parts -> 0)
+    ~ expression (root -> parts -> 1)
+      ~~~ expression (root -> parts -> 2)
+         ~ expression (root -> parts -> 3)
+           ~~ expression (root -> parts -> 4)
 --AST
 s(:dstr,
   s(:ivar, "@a"),

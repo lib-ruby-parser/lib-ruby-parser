@@ -1,15 +1,15 @@
 --INPUT
 def foo = 42 rescue nil
 --LOCATIONS
-~~~ keyword ()
-    ~~~ name ()
-        ~ assignment ()
-~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-          ~~~~~~~~~~~~~ expression (body)
-          ~~ expression (body/body)
-             ~~~~~~ keyword (body/rescue_body[0])
-             ~~~~~~~~~~ expression (body/rescue_body[0])
-                    ~~~ expression (body/rescue_body[0]/body)
+~~~ keyword (root)
+    ~~~ name (root)
+        ~ assignment (root)
+~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+          ~~~~~~~~~~~~~ expression (root -> body)
+          ~~ expression (root -> body -> body)
+             ~~~~~~ keyword (root -> body -> rescue_bodies -> 0)
+             ~~~~~~~~~~ expression (root -> body -> rescue_bodies -> 0)
+                    ~~~ expression (root -> body -> rescue_bodies -> 0 -> body)
 --AST
 s(:def, "foo", nil,
   s(:rescue,

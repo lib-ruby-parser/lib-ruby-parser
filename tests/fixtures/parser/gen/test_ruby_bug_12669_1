@@ -1,9 +1,9 @@
 --INPUT
 a += b = raise :x
 --LOCATIONS
-  ~~ operator ()
-~~~~~~~~~~~~~~~~~ expression ()
-~ expression (recv)
+  ~~ operator (root)
+~~~~~~~~~~~~~~~~~ expression (root)
+~ expression (root -> recv)
 --AST
 s(:op_asgn,
   s(:lvasgn, "a"), "+",

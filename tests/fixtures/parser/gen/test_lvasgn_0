@@ -1,12 +1,12 @@
 --INPUT
 var = 10; var
 --LOCATIONS
-~~~~~~~~~~~~~ expression ()
-    ~ operator (stmt[0])
-~~~ name (stmt[0])
-~~~~~~~~ expression (stmt[0])
-      ~~ expression (stmt[0]/value)
-          ~~~ expression (stmt[1])
+~~~~~~~~~~~~~ expression (root)
+    ~ operator (root -> stmts -> 0)
+~~~ name (root -> stmts -> 0)
+~~~~~~~~ expression (root -> stmts -> 0)
+      ~~ expression (root -> stmts -> 0 -> value)
+          ~~~ expression (root -> stmts -> 1)
 --AST
 s(:begin,
   s(:lvasgn, "var",

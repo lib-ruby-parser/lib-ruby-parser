@@ -1,19 +1,19 @@
 --INPUT
 foo::C ||= raise bar rescue nil
 --LOCATIONS
-       ~~~ operator ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-     ~ name (recv)
-   ~~ double_colon (recv)
-~~~~~~ expression (recv)
-~~~ expression (recv/scope)
-           ~~~~~~~~~~~~~~~~~~~~ expression (value)
-           ~~~~~ selector (value/body)
-           ~~~~~~~~~ expression (value/body)
-                 ~~~ expression (value/body/arg[0])
-                     ~~~~~~ keyword (value/rescue_body[0])
-                     ~~~~~~~~~~ expression (value/rescue_body[0])
-                            ~~~ expression (value/rescue_body[0]/body)
+       ~~~ operator (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+     ~ name (root -> recv)
+   ~~ double_colon (root -> recv)
+~~~~~~ expression (root -> recv)
+~~~ expression (root -> recv -> scope)
+           ~~~~~~~~~~~~~~~~~~~~ expression (root -> value)
+           ~~~~~ selector (root -> value -> body)
+           ~~~~~~~~~ expression (root -> value -> body)
+                 ~~~ expression (root -> value -> body -> args -> 0)
+                     ~~~~~~ keyword (root -> value -> rescue_bodies -> 0)
+                     ~~~~~~~~~~ expression (root -> value -> rescue_bodies -> 0)
+                            ~~~ expression (root -> value -> rescue_bodies -> 0 -> body)
 --AST
 s(:or_asgn,
   s(:casgn,

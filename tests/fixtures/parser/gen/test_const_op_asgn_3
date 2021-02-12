@@ -1,17 +1,17 @@
 --INPUT
 def x; self::A ||= 1; end
 --LOCATIONS
-~~~ keyword ()
-    ~ name ()
-                      ~~~ end ()
-~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-               ~~~ operator (body)
-       ~~~~~~~~~~~~~ expression (body)
-             ~ name (body/recv)
-           ~~ double_colon (body/recv)
-       ~~~~~~~ expression (body/recv)
-       ~~~~ expression (body/recv/scope)
-                   ~ expression (body/value)
+~~~ keyword (root)
+    ~ name (root)
+                      ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+               ~~~ operator (root -> body)
+       ~~~~~~~~~~~~~ expression (root -> body)
+             ~ name (root -> body -> recv)
+           ~~ double_colon (root -> body -> recv)
+       ~~~~~~~ expression (root -> body -> recv)
+       ~~~~ expression (root -> body -> recv -> scope)
+                   ~ expression (root -> body -> value)
 --AST
 s(:def, "x", nil,
   s(:or_asgn,

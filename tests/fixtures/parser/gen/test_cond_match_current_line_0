@@ -1,15 +1,15 @@
 --INPUT
 if /wat/; end
 --LOCATIONS
-~~ keyword ()
-          ~~~ end ()
-        ~ begin ()
-~~~~~~~~~~~~~ expression ()
-   ~~~~~ expression (cond)
-   ~ begin (cond/re)
-       ~ end (cond/re)
-   ~~~~~ expression (cond/re)
-    ~~~ expression (cond/re/part[0])
+~~ keyword (root)
+          ~~~ end (root)
+        ~ begin (root)
+~~~~~~~~~~~~~ expression (root)
+   ~~~~~ expression (root -> cond)
+   ~ begin (root -> cond -> re)
+       ~ end (root -> cond -> re)
+   ~~~~~ expression (root -> cond -> re)
+    ~~~ expression (root -> cond -> re -> parts -> 0)
 --AST
 s(:if,
   s(:match_current_line,

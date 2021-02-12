@@ -1,15 +1,15 @@
 --INPUT
 def f foo = 1; end
 --LOCATIONS
-~~~ keyword ()
-    ~ name ()
-               ~~~ end ()
-~~~~~~~~~~~~~~~~~~ expression ()
-      ~~~~~~~ expression (args)
-          ~ operator (args/arg[0])
-      ~~~ name (args/arg[0])
-      ~~~~~~~ expression (args/arg[0])
-            ~ expression (args/arg[0]/default)
+~~~ keyword (root)
+    ~ name (root)
+               ~~~ end (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~~~~~ expression (root -> args)
+          ~ operator (root -> args -> arglist -> 0)
+      ~~~ name (root -> args -> arglist -> 0)
+      ~~~~~~~ expression (root -> args -> arglist -> 0)
+            ~ expression (root -> args -> arglist -> 0 -> default_value)
 --AST
 s(:def, "f",
   s(:args,

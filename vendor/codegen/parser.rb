@@ -261,7 +261,7 @@ module ParseHelperPatch
     end
   end
 
-  def locs(ast, path = [])
+  def locs(ast, path = ['root'])
     return [] unless ast.is_a?(Parser::AST::Node)
 
     type = ast.type
@@ -317,7 +317,7 @@ module ParseHelperPatch
       []
     when :dstr, :xstr, :dsym
       parts = *ast
-      [ *parts.map.with_index { |part, idx| locs(part, path + ["part[#{idx}]"]) } ]
+      [ *parts.map.with_index { |part, idx| locs(part, path + ['parts', idx.to_s]) } ]
     when :lvasgn, :ivasgn, :cvasgn, :gvasgn
       _name, value = *ast
       [
@@ -327,7 +327,7 @@ module ParseHelperPatch
       recv, _op, *args = *ast
       [
         locs(recv, path + ['recv']),
-        *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }
+        *args.map.with_index { |arg, idx| locs(arg, path + ['args', idx.to_s]) }
       ]
     when :block_pass, :splat, :defined?, :kwsplat
       value, _ = *ast
@@ -347,22 +347,22 @@ module ParseHelperPatch
     when :block
       call, args, body = *ast
       [
-        locs(call, path + ['call']),
+        locs(call, path + ['method_call']),
         locs(args, path + ['args']),
         locs(body, path + ['body'])
       ]
     when :numblock
       call, _n, body = *ast
       [
-        locs(call, path + ['call']),
+        locs(call, path + ['method_call']),
         locs(body, path + ['body'])
       ]
     when :super, :yield, :return, :break, :next
       args = *ast
-      [ *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }, ]
+      [ *args.map.with_index { |arg, idx| locs(arg, path + ['args', idx.to_s]) }, ]
     when :kwbegin, :begin
       stmts = *ast
-      [ *stmts.map.with_index { |stmt, idx| locs(stmt, path + ["stmt[#{idx}]"]) }, ]
+      [ *stmts.map.with_index { |stmt, idx| locs(stmt, path + ['stmts', idx.to_s]) }, ]
     when :preexe, :postexe
       body, * = *ast
       [
@@ -375,10 +375,10 @@ module ParseHelperPatch
       ]
     when :array, :array_pattern, :array_pattern_with_tail, :hash_pattern, :find_pattern
       elements = *ast
-      [ *elements.map.with_index { |element, idx| locs(element, path + ["element[#{idx}]"]) }, ]
+      [ *elements.map.with_index { |element, idx| locs(element, path + ['elements', idx.to_s]) }, ]
     when :undef
       args = *ast
-      [ *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }, ]
+      [ *args.map.with_index { |arg, idx| locs(arg, path + ['args', idx.to_s]) }, ]
     when :class
       name, superclass, body = *ast
       [
@@ -402,14 +402,14 @@ module ParseHelperPatch
       expr, *in_bodies, else_body = *ast
       [
         locs(expr, path + ['expr']),
-        *in_bodies.map.with_index { |in_body, idx| locs(in_body, path + ["in_body[#{idx}]"]) },
+        *in_bodies.map.with_index { |in_body, idx| locs(in_body, path + ['in_bodies', idx.to_s]) },
         locs(else_body, path + ['else_body'])
       ]
     when :case
       expr, *when_bodies, else_body = *ast
       [
         locs(expr, path + ['expr']),
-        *when_bodies.map.with_index { |when_body, idx| locs(when_body, path + ["when_body[#{idx}]"]) },
+        *when_bodies.map.with_index { |when_body, idx| locs(when_body, path + ['when_bodies', idx.to_s]) },
         locs(else_body, path + ['else_body'])
       ]
     when :masgn, :and, :or
@@ -428,8 +428,8 @@ module ParseHelperPatch
       body, *rescue_bodies, else_ = *ast
       [
         locs(body, path + ['body']),
-        *rescue_bodies.map.with_index { |rescue_body, idx| locs(rescue_body, path + ["rescue_body[#{idx}]"]) },
-        locs(else_, path + ['else'])
+        *rescue_bodies.map.with_index { |rescue_body, idx| locs(rescue_body, path + ['rescue_bodies', idx.to_s]) },
+        locs(else_, path + ['else_body'])
       ]
     when :defs
       definee, _mid, args, body = *ast
@@ -469,10 +469,10 @@ module ParseHelperPatch
       [ locs(scope, path + ['scope']) ]
     when :mlhs
       items = *ast
-      [ *items.map.with_index { |item, idx| locs(item, path + ["item[#{idx}]"]) }, ]
+      [ *items.map.with_index { |item, idx| locs(item, path + ['mlhs_items', idx.to_s]) }, ]
     when :procarg0
       args = *ast
-      [ *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }, ]
+      [ *args.map.with_index { |arg, idx| locs(arg, path + ['arglist', idx.to_s]) }, ]
     when :irange, :erange, :iflipflop, :eflipflop
       left, right = *ast
       [
@@ -487,7 +487,7 @@ module ParseHelperPatch
       ]
     when :hash, :kwargs
       pairs = *ast
-      [ *pairs.map.with_index { |pair, idx| locs(pair, path + ["pair[#{idx}]"]) } ]
+      [ *pairs.map.with_index { |pair, idx| locs(pair, path + ['pairs', idx.to_s]) } ]
     when :module
       name, body = *ast
       [
@@ -496,15 +496,15 @@ module ParseHelperPatch
       ]
     when :args
       args = *ast
-      [ *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) }, ]
+      [ *args.map.with_index { |arg, idx| locs(arg, path + ['arglist', idx.to_s]) }, ]
     when :optarg, :kwoptarg
       _name, default = *ast
-      [ locs(default, path + ['default']) ]
+      [ locs(default, path + ['default_value']) ]
     when :index
       recv, *indexes = *ast
       [
         locs(recv, path + ['recv']),
-        *indexes.map.with_index { |index, idx| locs(index, path + ["index[#{idx}]"]) }
+        *indexes.map.with_index { |index, idx| locs(index, path + ['indexes', idx.to_s]) }
       ]
     when :pair
       key, value = *ast
@@ -545,19 +545,19 @@ module ParseHelperPatch
       end
       [
         locs(recv, path + ['recv']),
-        *indexes.map.with_index { |index, idx| locs(index, path + ["index[#{idx}]"]) },
+        *indexes.map.with_index { |index, idx| locs(index, path + ['indexes', idx.to_s]) },
         value ? locs(value, path + ['value']) : [],
       ]
     when :when
       *args, body = *ast
       [
-        *args.map.with_index { |arg, idx| locs(arg, path + ["arg[#{idx}]"]) },
+        *args.map.with_index { |arg, idx| locs(arg, path + ['args', idx.to_s]) },
         locs(body, path + ['body']),
       ]
     when :regexp
       *parts, options = *ast
       [
-        *parts.map.with_index { |part, idx| locs(part, path + ["part[#{idx}]"]) },
+        *parts.map.with_index { |part, idx| locs(part, path + ['parts', idx.to_s]) },
         options.children.empty? ? [] : locs(options, path + ['options']),
       ]
     when :ensure
@@ -596,7 +596,7 @@ module ParseHelperPatch
   end
 
   def ranges(loc, path, *fields)
-    path = path.join('/')
+    path = path.join(' -> ')
     if %i[and_asgn or_asgn op_asgn].include?(loc.node.type)
       # drop locs that are copied from children
       fields = [:operator]

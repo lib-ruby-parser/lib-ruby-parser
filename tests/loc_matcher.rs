@@ -1,4 +1,4 @@
-use lib_ruby_parser::traverse::Find;
+use lib_ruby_parser::traverse::finder::Finder;
 use lib_ruby_parser::Loc;
 use lib_ruby_parser::Node;
 
@@ -294,7 +294,7 @@ pub struct LocMatcher {
     begin: usize,
     end: usize,
     name: LocName,
-    pattern: Vec<String>,
+    pattern: String,
 }
 
 impl LocMatcher {
@@ -342,11 +342,6 @@ impl LocMatcher {
         let begin = begin.unwrap_or_else(|| panic!("no begin captured"));
         let end = end.unwrap_or_else(|| panic!("no begin captured"));
 
-        let pattern = pattern
-            .split('/')
-            .filter(|e| !e.is_empty())
-            .map(|e| e.to_owned())
-            .collect::<Vec<_>>();
         let name = LocName::new(&name);
 
         LocMatcher {
@@ -358,7 +353,7 @@ impl LocMatcher {
     }
 
     pub fn test(&self, root: &Node) -> Result<(), String> {
-        match Find::run(&self.pattern, root).unwrap() {
+        match Finder::run(&self.pattern, root).unwrap() {
             Some(node) => match self.name.get(&node) {
                 Some(loc) => {
                     if loc.begin != self.begin {

@@ -1,10 +1,10 @@
 --INPUT
  %r{#@1} 
 --LOCATIONS
- ~~~ begin ()
-       ~ end ()
- ~~~~~~~ expression ()
-    ~~~ expression (part[0])
+ ~~~ begin (root)
+       ~ end (root)
+ ~~~~~~~ expression (root)
+    ~~~ expression (root -> parts -> 0)
 --AST
 s(:regexp,
   s(:str, "#@1"),

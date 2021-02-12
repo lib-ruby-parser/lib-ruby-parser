@@ -1,10 +1,10 @@
 --INPUT
 foo || bar
 --LOCATIONS
-    ~~ operator ()
-~~~~~~~~~~ expression ()
-~~~ expression (lhs)
-       ~~~ expression (rhs)
+    ~~ operator (root)
+~~~~~~~~~~ expression (root)
+~~~ expression (root -> lhs)
+       ~~~ expression (root -> rhs)
 --AST
 s(:or,
   s(:lvar, "foo"),

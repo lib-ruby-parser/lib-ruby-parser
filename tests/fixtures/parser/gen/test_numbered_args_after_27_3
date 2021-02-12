@@ -1,14 +1,14 @@
 --INPUT
 -> do _1 + _9 end
 --LOCATIONS
-   ~~ begin ()
-              ~~~ end ()
-~~~~~~~~~~~~~~~~~ expression ()
-~~ expression (call)
-         ~ selector (body)
-      ~~~~~~~ expression (body)
-      ~~ expression (body/recv)
-           ~~ expression (body/arg[0])
+   ~~ begin (root)
+              ~~~ end (root)
+~~~~~~~~~~~~~~~~~ expression (root)
+~~ expression (root -> method_call)
+         ~ selector (root -> body)
+      ~~~~~~~ expression (root -> body)
+      ~~ expression (root -> body -> recv)
+           ~~ expression (root -> body -> args -> 0)
 --AST
 s(:numblock,
   s(:lambda), 9,

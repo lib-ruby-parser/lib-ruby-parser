@@ -1,6 +1,6 @@
 --INPUT
 redo
 --LOCATIONS
-~~~~ expression ()
+~~~~ expression (root)
 --AST
 s(:redo)

@@ -1,18 +1,18 @@
 --INPUT
 "#{-> foo {}}"
 --LOCATIONS
-~ begin ()
-             ~ end ()
-~~~~~~~~~~~~~~ expression ()
- ~~ begin (part[0])
-            ~ end (part[0])
- ~~~~~~~~~~~~ expression (part[0])
-          ~ begin (part[0]/stmt[0])
-           ~ end (part[0]/stmt[0])
-   ~~~~~~~~~ expression (part[0]/stmt[0])
-   ~~ expression (part[0]/stmt[0]/call)
-      ~~~ expression (part[0]/stmt[0]/args)
-      ~~~ expression (part[0]/stmt[0]/args/arg[0])
+~ begin (root)
+             ~ end (root)
+~~~~~~~~~~~~~~ expression (root)
+ ~~ begin (root -> parts -> 0)
+            ~ end (root -> parts -> 0)
+ ~~~~~~~~~~~~ expression (root -> parts -> 0)
+          ~ begin (root -> parts -> 0 -> stmts -> 0)
+           ~ end (root -> parts -> 0 -> stmts -> 0)
+   ~~~~~~~~~ expression (root -> parts -> 0 -> stmts -> 0)
+   ~~ expression (root -> parts -> 0 -> stmts -> 0 -> method_call)
+      ~~~ expression (root -> parts -> 0 -> stmts -> 0 -> args)
+      ~~~ expression (root -> parts -> 0 -> stmts -> 0 -> args -> arglist -> 0)
 --AST
 s(:dstr,
   s(:begin,

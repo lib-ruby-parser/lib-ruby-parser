@@ -1,13 +1,13 @@
 --INPUT
 def f &b; end
 --LOCATIONS
-~~~ keyword ()
-    ~ name ()
-          ~~~ end ()
-~~~~~~~~~~~~~ expression ()
-      ~~ expression (args)
-       ~ name (args/arg[0])
-      ~~ expression (args/arg[0])
+~~~ keyword (root)
+    ~ name (root)
+          ~~~ end (root)
+~~~~~~~~~~~~~ expression (root)
+      ~~ expression (root -> args)
+       ~ name (root -> args -> arglist -> 0)
+      ~~ expression (root -> args -> arglist -> 0)
 --AST
 s(:def, "f",
   s(:args,

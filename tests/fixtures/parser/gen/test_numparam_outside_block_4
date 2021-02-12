@@ -1,7 +1,7 @@
 --INPUT
 _1
 --LOCATIONS
-~~ selector ()
-~~ expression ()
+~~ selector (root)
+~~ expression (root)
 --AST
 s(:send, nil, "_1")

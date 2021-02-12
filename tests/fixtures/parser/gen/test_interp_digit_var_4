@@ -1,8 +1,8 @@
 --INPUT
  %q{#@1} 
 --LOCATIONS
- ~~~ begin ()
-       ~ end ()
- ~~~~~~~ expression ()
+ ~~~ begin (root)
+       ~ end (root)
+ ~~~~~~~ expression (root)
 --AST
 s(:str, "#@1")

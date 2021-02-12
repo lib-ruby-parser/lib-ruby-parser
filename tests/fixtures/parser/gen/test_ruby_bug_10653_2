@@ -1,20 +1,20 @@
 --INPUT
 false ? raise do end : tap do end
 --LOCATIONS
-                     ~ colon ()
-      ~ question ()
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression ()
-~~~~~ expression (cond)
-              ~~ begin (if_true)
-                 ~~~ end (if_true)
-        ~~~~~~~~~~~~ expression (if_true)
-        ~~~~~ selector (if_true/call)
-        ~~~~~ expression (if_true/call)
-                           ~~ begin (if_false)
-                              ~~~ end (if_false)
-                       ~~~~~~~~~~ expression (if_false)
-                       ~~~ selector (if_false/call)
-                       ~~~ expression (if_false/call)
+                     ~ colon (root)
+      ~ question (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~~~~~ expression (root -> cond)
+              ~~ begin (root -> if_true)
+                 ~~~ end (root -> if_true)
+        ~~~~~~~~~~~~ expression (root -> if_true)
+        ~~~~~ selector (root -> if_true -> method_call)
+        ~~~~~ expression (root -> if_true -> method_call)
+                           ~~ begin (root -> if_false)
+                              ~~~ end (root -> if_false)
+                       ~~~~~~~~~~ expression (root -> if_false)
+                       ~~~ selector (root -> if_false -> method_call)
+                       ~~~ expression (root -> if_false -> method_call)
 --AST
 s(:if,
   s(:false),
