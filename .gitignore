@@ -7,4 +7,5 @@ src/nodes/types
 src/nodes/node_enum_gen.rs
 src/traverse/visitor/visit_gen.rs
 tests/loc_matcher/loc_name_gen.rs
+src/reserved_words/list.rs
 flamegraph.svg
