@@ -100,12 +100,12 @@ impl ParseString for Lexer {
             space = true;
         }
         if (func & STR_FUNC_LIST) != 0 {
-            quote.func = quote.func & !STR_FUNC_LIST;
+            quote.func &= !STR_FUNC_LIST;
             space = true;
         }
         if c == term && quote.nest == 0 {
             if (func & STR_FUNC_QWORDS) != 0 {
-                quote.func = quote.func | STR_FUNC_TERM;
+                quote.func |= STR_FUNC_TERM;
                 self.buffer.pushback(&c); /* dispatch the term at tSTRING_END */
                 self.restore_strterm(quote);
                 return Self::tSPACE;
@@ -146,7 +146,7 @@ impl ParseString for Lexer {
             } else {
                 self.yyerror0(DiagnosticMessage::UnterminatedString);
             }
-            quote.func = quote.func | STR_FUNC_TERM;
+            quote.func |= STR_FUNC_TERM;
         }
 
         self.tokfix();

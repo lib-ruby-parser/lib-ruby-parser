@@ -83,11 +83,8 @@ impl ParseHeredoc for Lexer {
             }
             func |= str_dquote;
             loop {
-                if let Some(n) = self.multibyte_char_len(self.buffer.pcur - 1) {
-                    self.buffer.pcur += n - 1;
-                } else {
-                    return None;
-                }
+                let n = self.multibyte_char_len(self.buffer.pcur - 1);
+                self.buffer.pcur += n - 1;
                 c = self.nextc();
                 if c.is_eof() || !self.is_identchar() {
                     break;

@@ -42,6 +42,10 @@ impl Bytes {
         String::from_utf8(self.as_bytes().to_vec())
     }
 
+    pub fn into_string(self) -> Result<String, std::string::FromUtf8Error> {
+        String::from_utf8(self.raw)
+    }
+
     pub fn is_valid_utf8(&self) -> bool {
         std::str::from_utf8(&self.raw).is_ok()
     }

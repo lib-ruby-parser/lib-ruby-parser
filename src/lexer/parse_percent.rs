@@ -15,13 +15,11 @@ impl ParsePercent for Lexer {
     fn percent_unknown(&mut self, term: &MaybeByte) -> i32 {
         self.buffer.pushback(term);
         let len = self.multibyte_char_len(self.buffer.pcur);
-        if let Some(len) = len {
-            self.buffer.pcur += len;
-            self.yyerror1(
-                DiagnosticMessage::UnknownTypeOfPercentString,
-                self.current_loc().adjust_end(-1),
-            );
-        }
+        self.buffer.pcur += len;
+        self.yyerror1(
+            DiagnosticMessage::UnknownTypeOfPercentString,
+            self.current_loc().adjust_end(-1),
+        );
         Self::END_OF_INPUT
     }
 

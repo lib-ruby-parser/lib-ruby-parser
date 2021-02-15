@@ -44,10 +44,14 @@ impl Token {
 
     /// Converts Token to a string, replaces unknown chars to `U+FFFD`
     pub fn to_string_lossy(&self) -> String {
-        String::from_utf8_lossy(&self.token_value.raw).into_owned()
+        self.token_value.to_string_lossy()
     }
 
     pub fn to_string(&self) -> Result<String, std::string::FromUtf8Error> {
-        String::from_utf8(self.as_bytes().to_vec())
+        self.token_value.to_string()
+    }
+
+    pub fn into_string(self) -> Result<String, std::string::FromUtf8Error> {
+        self.token_value.into_string()
     }
 }

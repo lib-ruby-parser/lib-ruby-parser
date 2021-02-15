@@ -1185,9 +1185,8 @@ impl Lexer {
         }
     }
 
-    // parser_precise_mbclen
-    pub(crate) fn multibyte_char_len(&mut self, _ptr: usize) -> Option<usize> {
-        Some(1)
+    pub(crate) const fn multibyte_char_len(&self, _ptr: usize) -> usize {
+        1
     }
 
     pub(crate) fn is_label_suffix(&mut self, n: usize) -> bool {

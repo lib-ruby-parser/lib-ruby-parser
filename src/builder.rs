@@ -490,7 +490,7 @@ impl Builder {
         let end_l = self.loc(&end_t).resize(1);
         let expression_l =
             begin_l.join(&maybe_boxed_node_expr(&options).unwrap_or_else(|| self.loc(&end_t)));
-        match &options.as_ref().map(|node| &**node) {
+        match &options.as_deref() {
             Some(Node::RegOpt(RegOpt { options, .. })) => {
                 self.validate_static_regexp(&parts, options, &expression_l)
             }
@@ -3734,7 +3734,7 @@ impl Builder {
                             expression_l: hash.expression().clone(),
                         });
                     }
-                    _ => return,
+                    _ => {}
                 };
             }
 
@@ -3756,7 +3756,7 @@ pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Loc> {
 }
 
 pub(crate) fn value(token: Box<Token>) -> String {
-    token.to_string_lossy()
+    token.into_string().unwrap()
 }
 
 pub(crate) fn clone_value(token: &Token) -> String {

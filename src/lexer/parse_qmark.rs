@@ -54,11 +54,8 @@ impl ParseQmark for Lexer {
                 let start = self.buffer.pcur - 1;
                 let mut ptr = start;
                 loop {
-                    if let Some(n) = self.multibyte_char_len(ptr) {
-                        ptr += n;
-                    } else {
-                        return Err(());
-                    }
+                    let n = self.multibyte_char_len(ptr);
+                    ptr += n;
 
                     if !(ptr < self.buffer.pend && self.buffer.is_identchar(ptr, self.buffer.pend))
                     {
