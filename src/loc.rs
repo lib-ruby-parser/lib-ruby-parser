@@ -1,4 +1,4 @@
-use crate::source::buffer::Input;
+use crate::source::input::Input;
 use crate::Loc;
 use std::convert::TryInto;
 
@@ -9,9 +9,6 @@ impl Loc {
 
     pub fn validate(&self, input: &Input) {
         if cfg!(debug_assertions) {
-            if input.bytes.last().unwrap() != &100 {
-                panic!("creating a wrong loc")
-            }
             debug_assert!(
                 (self.begin < self.end) || (self.begin == self.end && self.end == input.len()),
                 "begin = {}, end = {}, input.len() = {}",
@@ -107,7 +104,7 @@ impl Loc {
     pub fn expand_to_line(&self, input: &Input) -> Option<(usize, Self)> {
         let (begin_line, _) = self.begin_line_col(input)?;
         let line_no = begin_line;
-        let line = &input.lines[line_no];
+        let line = input.line_at(line_no);
         Some((line_no, self.with(line.start, line.line_end())))
     }
 

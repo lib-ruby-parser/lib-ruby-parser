@@ -1,99 +1,7 @@
 use crate::maybe_byte::*;
-use crate::source::SourceLine;
-use crate::source::{decode_input, CustomDecoder, InputError};
+use crate::source::input::Input;
+use crate::source::{CustomDecoder, InputError};
 use std::convert::TryFrom;
-
-#[derive(Debug, Default)]
-pub struct Input {
-    pub name: String,
-    pub bytes: Vec<u8>,
-    pub lines: Vec<SourceLine>,
-}
-
-impl Input {
-    pub(crate) fn set_bytes(&mut self, bytes: Vec<u8>) {
-        let mut line = SourceLine {
-            start: 0,
-            end: 0,
-            ends_with_eof: true,
-        };
-        let mut lines: Vec<SourceLine> = vec![];
-
-        for (idx, c) in bytes.iter().enumerate() {
-            line.end = idx + 1;
-            if *c == b'\n' {
-                line.ends_with_eof = false;
-                lines.push(line);
-                line = SourceLine {
-                    start: idx + 1,
-                    end: 0,
-                    ends_with_eof: true,
-                }
-            }
-        }
-        line.end = bytes.len();
-        line.ends_with_eof = true;
-        lines.push(line);
-
-        self.bytes = bytes;
-        self.lines = lines;
-    }
-
-    pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
-        if let Some(c) = self.bytes.get(idx) {
-            Some(*c)
-        } else {
-            None
-        }
-    }
-
-    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&[u8]> {
-        if start <= end && end <= self.bytes.len() {
-            Some(&self.bytes[start..end])
-        } else {
-            None
-        }
-    }
-
-    pub fn line_col_for_pos(&self, mut pos: usize) -> Option<(usize, usize)> {
-        if pos == self.len() {
-            // EOF loc
-            let last_line = self.lines.last()?;
-            return Some((self.lines.len() - 1, last_line.len()));
-        }
-
-        for (lineno, line) in self.lines.iter().enumerate() {
-            if line.len() > pos {
-                return Some((lineno, pos));
-            } else {
-                pos -= line.len()
-            }
-        }
-
-        None
-    }
-
-    pub fn len(&self) -> usize {
-        self.bytes.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.bytes.is_empty()
-    }
-
-    // pub fn take_bytes
-}
-
-impl Clone for Input {
-    fn clone(&self) -> Self {
-        println!("Cloning input");
-        Self {
-            name: self.name.clone(),
-            bytes: self.bytes.clone(),
-            lines: self.lines.clone(),
-        }
-    }
-}
 
 #[derive(Debug, Default)]
 pub struct Buffer {
@@ -126,7 +34,6 @@ pub struct Buffer {
     pub(crate) ruby_sourcefile_string: Vec<char>,
 
     pub(crate) debug: bool,
-    pub(crate) decoder: Option<Box<dyn CustomDecoder>>,
 }
 
 impl Buffer {
@@ -134,16 +41,12 @@ impl Buffer {
     const CTRL_D_CHAR: char = 0x04 as char;
 
     pub fn new(name: &str, bytes: Vec<u8>, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
-        let mut input = Input {
-            name: name.to_owned(),
-            ..Default::default()
-        };
+        let mut input = Input::new(name, decoder);
 
         input.set_bytes(bytes);
 
         let mut this = Self {
             input,
-            decoder,
             ..Self::default()
         };
 
@@ -188,8 +91,8 @@ impl Buffer {
                 return MaybeByte::EndOfInput;
             }
         }
-        let mut c = match self.input.bytes.get(self.pcur) {
-            Some(c) => *c,
+        let mut c = match self.input.byte_at(self.pcur) {
+            Some(c) => c,
             None => return MaybeByte::EndOfInput,
         };
         self.pcur += 1;
@@ -218,7 +121,7 @@ impl Buffer {
         self.peek_n(c, 0)
     }
     pub(crate) fn peek_n(&self, c: u8, n: usize) -> bool {
-        !self.is_eol_n(n) && c == self.input.bytes[self.pcur + n]
+        !self.is_eol_n(n) && c == self.input.unchecked_byte_at(self.pcur + n)
     }
     pub(crate) fn peekc_n(&self, n: usize) -> MaybeByte {
         if self.is_eol_n(n) {
@@ -237,7 +140,7 @@ impl Buffer {
                 return Err(());
             }
 
-            if self.pend > self.pbeg && self.input.bytes[self.pend - 1] != b'\n' {
+            if self.pend > self.pbeg && self.input.unchecked_byte_at(self.pend - 1) != b'\n' {
                 self.eofp = true;
                 self.goto_eol();
                 return Err(());
@@ -256,7 +159,7 @@ impl Buffer {
         }
         // TODO: after here-document without terminator
 
-        let line = &self.input.lines[v];
+        let line = self.input.line_at(v);
 
         if self.heredoc_end > 0 {
             self.ruby_sourceline = self.heredoc_end;
@@ -274,7 +177,7 @@ impl Buffer {
     }
 
     pub(crate) fn getline(&mut self) -> Result<usize, ()> {
-        if self.line_count < self.input.lines.len() {
+        if self.line_count < self.input.lines_count() {
             self.line_count += 1;
             if self.debug {
                 println!("line_count = {}", self.line_count)
@@ -341,10 +244,10 @@ impl Buffer {
     pub(crate) fn is_looking_at_eol(&self) -> bool {
         let mut ptr = self.pcur;
         while ptr < self.pend {
-            let c = self.input.bytes.get(ptr);
+            let c = self.input.byte_at(ptr);
             ptr += 1;
             if let Some(c) = c {
-                let eol = *c == b'\n' || *c == b'#';
+                let eol = c == b'\n' || c == b'#';
                 if eol || !c.is_ascii_whitespace() {
                     return eol;
                 }
@@ -358,7 +261,7 @@ impl Buffer {
         let len = eos.len();
 
         if indent > 0 {
-            while let Some(c) = self.input.bytes.get(ptr) {
+            while let Some(c) = self.input.byte_at(ptr) {
                 if !c.is_ascii_whitespace() {
                     break;
                 }
@@ -399,23 +302,21 @@ impl Buffer {
                 self.lastline = prevline;
             }
         }
-        self.pbeg = self.input.lines[self.lastline].start;
-        self.pend = self.pbeg + self.input.lines[self.lastline].len();
+        self.pbeg = self.input.line_at(self.lastline).start;
+        self.pend = self.pbeg + self.input.line_at(self.lastline).len();
         self.pcur = self.pend;
         self.pushback(&MaybeByte::new(1));
         self.set_ptok(self.pcur);
     }
 
     pub(crate) fn is_identchar(&self, begin: usize, _end: usize) -> bool {
-        self.input.bytes[begin].is_ascii_alphanumeric()
-            || self.input.bytes[begin] == b'_'
-            || !self.input.bytes[begin].is_ascii()
+        let byte = self.input.unchecked_byte_at(begin);
+
+        byte.is_ascii_alphanumeric() || byte == b'_' || !byte.is_ascii()
     }
 
     pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
-        let new_input = decode_input(&self.input.bytes, encoding, &self.decoder)?;
-        self.input.set_bytes(new_input);
-        Ok(())
+        self.input.set_encoding(encoding)
     }
 }
 

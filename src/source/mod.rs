@@ -1,6 +1,7 @@
 pub mod buffer;
 mod comment;
 mod decoder;
+pub mod input;
 mod magic_comment;
 mod source_line;
 

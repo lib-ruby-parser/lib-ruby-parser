@@ -6728,7 +6728,7 @@ impl Parser {
 
         if let Some(token_rewriter) = &mut self.token_rewriter {
             let (rewritten_token, token_action, lex_state_action) =
-                token_rewriter.rewrite_token(token, &self.yylexer.buffer.input.bytes);
+                token_rewriter.rewrite_token(token, self.yylexer.buffer.input.as_bytes());
 
             match lex_state_action {
                 LexStateAction::Set(new_state) => self.yylexer.lex_state.set(new_state),

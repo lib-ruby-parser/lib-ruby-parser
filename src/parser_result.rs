@@ -1,4 +1,4 @@
-use crate::source::buffer::Input;
+use crate::source::input::Input;
 use crate::source::Comment;
 use crate::source::MagicComment;
 use crate::Diagnostic;
