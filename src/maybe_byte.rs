@@ -136,13 +136,13 @@ impl MaybeByte {
         if *self == b'\t' {
             return Some(b't');
         }
-        if *self == 0x0b as u8 {
+        if *self == 0x0b {
             return Some(b'v');
         }
         if *self == b'\r' {
             return Some(b'r');
         }
-        if *self == 0x0c as u8 {
+        if *self == 0x0c {
             return Some(b'f');
         }
         None

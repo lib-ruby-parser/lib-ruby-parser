@@ -1,6 +1,7 @@
 use crate::source::CustomDecoder;
 use crate::token_rewriter::TokenRewriter;
 
+#[derive(Debug)]
 /// Configuration of the parser
 pub struct ParserOptions {
     /// Name of the buffer. Used in all diagnostic messages

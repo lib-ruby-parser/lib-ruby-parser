@@ -1,10 +1,12 @@
 use crate::Token;
 
+#[derive(Debug)]
 pub enum RewriteAction {
     Drop,
     Keep,
 }
 
+#[derive(Debug)]
 pub enum LexStateAction {
     Set(i32),
     Keep,

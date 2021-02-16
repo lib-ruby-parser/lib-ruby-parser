@@ -294,12 +294,7 @@ impl ParseHeredoc for Lexer {
 
         self.heredoc_restore(&here);
         self.token_flush();
-        self.strterm = self.new_strterm(
-            func | STR_FUNC_TERM,
-            0 as u8,
-            Some(0 as u8),
-            Some(heredoc_end),
-        );
+        self.strterm = self.new_strterm(func | STR_FUNC_TERM, 0, Some(0), Some(heredoc_end));
         self.set_yylval_str(&str_);
         Self::tSTRING_CONTENT
     }

@@ -1,4 +1,9 @@
 #![forbid(unsafe_code)]
+#![warn(missing_debug_implementations)]
+#![warn(trivial_casts, trivial_numeric_casts)]
+#![warn(unused_qualifications)]
+#![warn(deprecated_in_future)]
+#![warn(unused_lifetimes)]
 
 mod loc;
 pub mod source;

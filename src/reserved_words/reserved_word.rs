@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct ReservedWord {
     pub(crate) name: &'static str,
     pub(crate) id: i32,

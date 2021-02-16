@@ -6,6 +6,7 @@ pub use visit_gen::Observer;
 
 use crate::Node;
 
+#[derive(Debug)]
 pub struct Visitor<T>
 where
     T: Observer,

@@ -4,6 +4,7 @@ pub use pattern::{Item as PatternItem, Pattern, PatternError};
 use crate::traverse::visitor::{Item as VisitorItem, Observer, Visitor};
 use crate::Node;
 
+#[derive(Debug)]
 pub struct Finder {
     looking_for: Pattern,
     current_path: Pattern,

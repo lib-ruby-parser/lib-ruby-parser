@@ -430,7 +430,7 @@ impl ParseString for Lexer {
             match self.buffer.byte_at(s).to_option() {
                 Some(c) if (c >= b'0' && c <= b'7') => {
                     result <<= 3;
-                    result |= ((c as u8) - b'0') as usize;
+                    result |= (c - b'0') as usize;
                 }
                 _ => break,
             }
