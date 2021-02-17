@@ -297,7 +297,9 @@ impl Builder {
     fn validate_sym_value(&self, value: &StringValue, loc: &Loc) {
         if !value.bytes.is_valid_utf8() {
             self.error(
-                DiagnosticMessage::InvalidSymbol("UTF-8".to_owned()),
+                DiagnosticMessage::InvalidSymbol {
+                    symbol: "UTF-8".to_owned(),
+                },
                 loc.clone(),
             )
         }
@@ -817,7 +819,9 @@ impl Builder {
 
         if parsed.is_err() || parsed.map(|n| n > Self::MAX_NTH_REF) == Ok(true) {
             self.warn(
-                DiagnosticMessage::NthRefIsTooBig(name.clone()),
+                DiagnosticMessage::NthRefIsTooBig {
+                    nth_ref: name.clone(),
+                },
                 expression_l.clone(),
             )
         }
@@ -831,7 +835,9 @@ impl Builder {
                     if let Some(current_arg) = self.current_arg_stack.top() {
                         if current_arg == name {
                             self.error(
-                                DiagnosticMessage::CircularArgumentReference(name.clone()),
+                                DiagnosticMessage::CircularArgumentReference {
+                                    arg_name: name.clone(),
+                                },
                                 expression_l.clone(),
                             );
                         }
@@ -1004,12 +1010,17 @@ impl Builder {
                 return Err(());
             }
             Node::BackRef(BackRef { expression_l, name }) => {
-                self.error(DiagnosticMessage::CantSetVariable(name), expression_l);
+                self.error(
+                    DiagnosticMessage::CantSetVariable { var_name: name },
+                    expression_l,
+                );
                 return Err(());
             }
             Node::NthRef(NthRef { expression_l, name }) => {
                 self.error(
-                    DiagnosticMessage::CantSetVariable(format!("${}", name)),
+                    DiagnosticMessage::CantSetVariable {
+                        var_name: format!("${}", name),
+                    },
                     expression_l,
                 );
                 return Err(());
@@ -1154,12 +1165,17 @@ impl Builder {
                 }));
             }
             Node::BackRef(BackRef { expression_l, name }) => {
-                self.error(DiagnosticMessage::CantSetVariable(name), expression_l);
+                self.error(
+                    DiagnosticMessage::CantSetVariable { var_name: name },
+                    expression_l,
+                );
                 return Err(());
             }
             Node::NthRef(NthRef { expression_l, name }) => {
                 self.error(
-                    DiagnosticMessage::CantSetVariable(format!("${}", name)),
+                    DiagnosticMessage::CantSetVariable {
+                        var_name: format!("${}", name),
+                    },
                     expression_l,
                 );
                 return Err(());
@@ -3434,7 +3450,9 @@ impl Builder {
 
         if assigning_to_numparam {
             self.error(
-                DiagnosticMessage::CantAssignToNumparam(name.to_owned()),
+                DiagnosticMessage::CantAssignToNumparam {
+                    numparam: name.to_owned(),
+                },
                 loc.clone(),
             );
             return Err(());
@@ -3446,7 +3464,9 @@ impl Builder {
         match name {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
                 self.error(
-                    DiagnosticMessage::ReservedForNumparam(name.to_owned()),
+                    DiagnosticMessage::ReservedForNumparam {
+                        numparam: name.to_owned(),
+                    },
                     loc.clone(),
                 );
                 Err(())
@@ -3549,7 +3569,9 @@ impl Builder {
             Ok(regex) => Some(regex),
             Err(err) => {
                 self.error(
-                    DiagnosticMessage::RegexError(err.description().to_owned()),
+                    DiagnosticMessage::RegexError {
+                        error: err.description().to_owned(),
+                    },
                     loc.clone(),
                 );
                 None

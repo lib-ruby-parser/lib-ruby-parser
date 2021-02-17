@@ -1,5 +1,6 @@
 use crate::maybe_byte::MaybeByte;
 
+/// State of the lexer
 #[derive(Clone)]
 pub struct LexState {
     value: i32,
@@ -18,6 +19,7 @@ impl LexState {
         (self.value & states) == states
     }
 
+    /// Sets state to given `value`
     pub fn set(&mut self, value: i32) {
         self.value = value
     }
@@ -52,24 +54,60 @@ impl Default for LexState {
     }
 }
 
+/// Mod with all known lex states
 pub mod lex_states {
+    /// EXPR_BEG state in MRI
     pub const EXPR_BEG: i32 = 1 << 0;
+
+    /// EXPR_END state in MRI
     pub const EXPR_END: i32 = 1 << 1;
+
+    /// EXPR_ENDARG state in MRI
     pub const EXPR_ENDARG: i32 = 1 << 2;
+
+    /// EXPR_ENDFN state in MRI
     pub const EXPR_ENDFN: i32 = 1 << 3;
+
+    /// EXPR_ARG state in MRI
     pub const EXPR_ARG: i32 = 1 << 4;
+
+    /// EXPR_CMDARG state in MRI
     pub const EXPR_CMDARG: i32 = 1 << 5;
+
+    /// EXPR_MID state in MRI
     pub const EXPR_MID: i32 = 1 << 6;
+
+    /// EXPR_FNAME state in MRI
     pub const EXPR_FNAME: i32 = 1 << 7;
+
+    /// EXPR_DOT state in MRI
     pub const EXPR_DOT: i32 = 1 << 8;
+
+    /// EXPR_CLASS state in MRI
     pub const EXPR_CLASS: i32 = 1 << 9;
+
+    /// EXPR_LABEL state in MRI
     pub const EXPR_LABEL: i32 = 1 << 10;
+
+    /// EXPR_LABELED state in MRI
     pub const EXPR_LABELED: i32 = 1 << 11;
+
+    /// EXPR_FITEM state in MRI
     pub const EXPR_FITEM: i32 = 1 << 12;
+
+    /// EXPR_VALUE state in MRI
     pub const EXPR_VALUE: i32 = EXPR_BEG;
+
+    /// EXPR_BEG_ANY state in MRI
     pub const EXPR_BEG_ANY: i32 = EXPR_BEG | EXPR_MID | EXPR_CLASS;
+
+    /// EXPR_ARG_ANY state in MRI
     pub const EXPR_ARG_ANY: i32 = EXPR_ARG | EXPR_CMDARG;
+
+    /// EXPR_END_ANY state in MRI
     pub const EXPR_END_ANY: i32 = EXPR_END | EXPR_ENDARG | EXPR_ENDFN;
+
+    /// EXPR_NONE state in MRI
     pub const EXPR_NONE: i32 = 0;
 }
 use lex_states::*;

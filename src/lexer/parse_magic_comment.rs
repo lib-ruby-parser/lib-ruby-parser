@@ -331,7 +331,9 @@ impl ParseMagicComment for Lexer {
                             Ok(_) => {}
                             Err(err) => {
                                 self.yyerror1(
-                                    DiagnosticMessage::EncodingError(err.to_string()),
+                                    DiagnosticMessage::EncodingError {
+                                        error: err.to_string(),
+                                    },
                                     self.loc(vbeg, vend),
                                 );
                                 return Err(());

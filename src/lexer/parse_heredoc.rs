@@ -327,14 +327,14 @@ impl ParseHeredoc for Lexer {
     fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32 {
         self.heredoc_restore(&here);
         self.compile_error(
-            DiagnosticMessage::UnterminatedHeredoc(
-                String::from_utf8_lossy(
+            DiagnosticMessage::UnterminatedHeredoc {
+                heredoc_id: String::from_utf8_lossy(
                     self.buffer
                         .substr_at(eos, eos + len)
                         .expect("failed to get heredoc id for comparison"),
                 )
                 .into_owned(),
-            ),
+            },
             self.current_loc(),
         );
         self.token_flush();

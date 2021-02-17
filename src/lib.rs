@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 #![warn(missing_debug_implementations)]
+#![warn(missing_docs)]
 #![warn(trivial_casts, trivial_numeric_casts)]
 #![warn(unused_qualifications)]
 #![warn(deprecated_in_future)]

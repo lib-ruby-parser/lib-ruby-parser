@@ -66,6 +66,9 @@ impl Input {
         }
     }
 
+    /// Returns (line, col) pair for a given byte offset.
+    ///
+    /// Returns None if given offset is out of range.
     pub fn line_col_for_pos(&self, mut pos: usize) -> Option<(usize, usize)> {
         if pos == self.len() {
             // EOF loc
@@ -84,28 +87,29 @@ impl Input {
         None
     }
 
-    pub fn len(&self) -> usize {
+    pub(crate) fn len(&self) -> usize {
         self.bytes.len()
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.bytes.is_empty()
-    }
+    // pub(crate) fn is_empty(&self) -> bool {
+    //     self.bytes.is_empty()
+    // }
 
-    pub fn line_at(&self, idx: usize) -> &SourceLine {
+    pub(crate) fn line_at(&self, idx: usize) -> &SourceLine {
         &self.lines[idx]
     }
 
-    pub fn lines_count(&self) -> usize {
+    pub(crate) fn lines_count(&self) -> usize {
         self.lines.len()
     }
 
-    pub fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
+    pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
         let new_input = decode_input(&self.bytes, encoding, &self.decoder)?;
         self.set_bytes(new_input);
         Ok(())
     }
 
+    /// Returns raw bytes after decoding
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
     }

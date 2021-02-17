@@ -107,7 +107,7 @@ impl ParseGvar for Lexer {
                         Some(name) => {
                             // The following line comes from MRI, but it seems to be a bug
                             // self.buffer.pushback(&c);
-                            self.compile_error(DiagnosticMessage::InvalidGvarName(name), self.current_loc());
+                            self.compile_error(DiagnosticMessage::InvalidGvarName { c: name }, self.current_loc());
                         }
                     }
                     return Self::tGVAR

@@ -40,12 +40,16 @@ impl ParseAtMark for Lexer {
             // self.buffer.pushback(&c);
             if result == Self::tIVAR {
                 self.compile_error(
-                    DiagnosticMessage::InvalidIvarName(c.expect("c is a digit")),
+                    DiagnosticMessage::InvalidIvarName {
+                        c: c.expect("c is a digit"),
+                    },
                     self.current_loc(),
                 );
             } else {
                 self.compile_error(
-                    DiagnosticMessage::InvalidCvarName(c.expect("c is a digit")),
+                    DiagnosticMessage::InvalidCvarName {
+                        c: c.expect("c is a digit"),
+                    },
                     self.current_loc(),
                 );
             }

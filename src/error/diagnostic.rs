@@ -5,12 +5,16 @@ use crate::{DiagnosticMessage, ErrorLevel};
 /// Diagnostic message that comes from the parser when there's an error or warning
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
+    /// Level of the diagnostic (error or warnings)
     pub level: ErrorLevel,
+    /// Message of the diagnostic
     pub message: DiagnosticMessage,
+    /// Location of the diagnostic
     pub loc: Loc,
 }
 
 impl Diagnostic {
+    /// Construncts an instance of `Diagnostic`
     pub fn new(level: ErrorLevel, message: DiagnosticMessage, loc: Loc) -> Self {
         Self {
             level,
@@ -19,10 +23,18 @@ impl Diagnostic {
         }
     }
 
+    /// Returns rendered message
     pub fn render_message(&self) -> String {
         self.message.render()
     }
 
+    /// Renders all data into a single String, produces an output like:
+    ///
+    /// ```text
+    /// (test.rb):1:5: error: unexpected END_OF_INPUT
+    /// (test.rb):1: foo++
+    /// (test.rb):1:      ^
+    /// ```
     pub fn render(&self, input: &Input) -> Option<String> {
         let (line_no, line_loc) = self.loc.expand_to_line(input)?;
         let line = line_loc.source(input)?;
@@ -56,10 +68,12 @@ impl Diagnostic {
         )
     }
 
+    /// Returns `true` if level of the diagnostic is `Warning`
     pub fn is_warning(&self) -> bool {
         matches!(self.level, ErrorLevel::Warning)
     }
 
+    /// Returns `true` if level of the diagnostic is `Error`
     pub fn is_error(&self) -> bool {
         matches!(self.level, ErrorLevel::Error)
     }

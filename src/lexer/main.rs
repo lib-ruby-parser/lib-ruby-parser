@@ -16,9 +16,13 @@ use crate::{error::Diagnostics, Bytes};
 use crate::{lex_states::*, LexState};
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 
+/// A struct responsible for converting a given input
+/// into a sequence of tokens
 #[derive(Debug, Default)]
 pub struct Lexer {
     pub(crate) buffer: Buffer,
+    /// Boolean field that controls printing
+    /// additional debug information to stdout
     pub debug: bool,
 
     pub(crate) lval: Option<Bytes>,
@@ -26,12 +30,17 @@ pub struct Lexer {
     pub(crate) lval_end: Option<usize>,
 
     pub(crate) strterm: Option<StrTerm>,
+    /// Current state of the lexer, used internally for testing
     pub lex_state: LexState,
     pub(crate) paren_nest: i32,
     pub(crate) lpar_beg: i32,
     pub(crate) brace_nest: i32,
 
+    /// Internal field, used to differentiate kDO_COND vs kDO,
+    /// exposed for internal testing
     pub cond: StackState,
+    /// Internal field, used to differentiate kDO_BLOCK vs kDO,
+    /// exposed for internal testing
     pub cmdarg: StackState,
 
     pub(crate) tokenbuf: TokenBuf,
@@ -44,6 +53,31 @@ pub struct Lexer {
     pub(crate) command_start: bool,
     pub(crate) token_seen: bool,
 
+    /// Stack of sets of variables in current scopes.
+    /// Each stack item represents locals in the scope.
+    ///
+    /// You can use it to pre-define some locals and parse
+    /// your input as if these locals exist.
+    ///
+    /// For example, you can parse the following code
+    ///
+    /// ```text
+    /// a = b + c
+    /// ```
+    ///
+    /// as
+    ///
+    /// ```text
+    /// Send(LocalVar(a), "+", LocalVar(b))
+    /// ```
+    ///
+    /// by declaring `a` and `b` as locals using
+    ///
+    /// ```text
+    /// parser.lexer.static_env.declare("a")
+    /// parser.lexer.static_env.declare("b")
+    /// parser.parse()
+    /// ```
     pub static_env: StaticEnvironment,
 
     pub(crate) diagnostics: Diagnostics,
@@ -58,6 +92,7 @@ impl Lexer {
     pub(crate) const LF_CHAR: u8 = 0x0c;
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
+    /// Constructs an instance of Lexer
     pub fn new(bytes: &[u8], name: &str, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
         Self {
             cond: StackState::new("cond"),
@@ -68,11 +103,19 @@ impl Lexer {
         }
     }
 
+    /// Enables printing additional debugging during lexing
     pub fn set_debug(&mut self, debug: bool) {
         self.debug = debug;
         self.buffer.debug = debug;
     }
 
+    /// Tokenizes given input until EOF
+    ///
+    /// Keep in mind that Lexer in Ruby is driven by Parser,
+    /// and so this method on its own can return a wrong sequence
+    /// of tokens. It's used internally to test simple inputs.
+    ///
+    /// If you need to get tokens better use ParserResult::tokens field
     pub fn tokenize_until_eof(&mut self) -> Vec<Token> {
         let mut tokens = vec![];
 
@@ -88,10 +131,6 @@ impl Lexer {
         }
 
         tokens
-    }
-
-    pub fn line_col_for_loc(&self, loc: usize) -> Option<(usize, usize)> {
-        self.buffer.input.line_col_for_pos(loc)
     }
 
     pub(crate) fn yylex(&mut self) -> Box<Token> {
@@ -1034,7 +1073,10 @@ impl Lexer {
 
                 Some(c) => {
                     if !self.is_identchar() {
-                        self.compile_error(DiagnosticMessage::InvalidChar(c), self.current_loc());
+                        self.compile_error(
+                            DiagnosticMessage::InvalidChar { c },
+                            self.current_loc(),
+                        );
                         self.token_flush();
                         continue 'retrying;
                     }
