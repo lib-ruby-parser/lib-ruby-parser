@@ -6,6 +6,12 @@
 #![warn(deprecated_in_future)]
 #![warn(unused_lifetimes)]
 
+/*!
+A Ruby parser written in Rust.
+
+Uses bison under the hood.
+*/
+
 mod loc;
 pub mod source;
 

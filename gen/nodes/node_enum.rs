@@ -15,6 +15,7 @@ impl<'a> NodeEnum<'a> {
 use crate::nodes::*;
 
 /// Generic combination of all known nodes.
+#[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {{
     {variants}
