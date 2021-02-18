@@ -19,36 +19,51 @@ impl<'a> Visitor<'a> {
 use crate::traverse::visitor::{{Item, Visit, Visitor}};
 use crate::Node;
 
+/// Trait that must be implement to observe actions
+/// that are performed by `Visitor` while it traverses given `Node`.
 pub trait Observer {{
     {observer_methods}
 
+    /// Caled when entering any `Node`
     #[allow(unused_variables)]
     fn on_node(&mut self, node: &Node) {{}}
+
+    /// Called when exiting any `Node`
     #[allow(unused_variables)]
     fn on_node_moving_up(&mut self, node: &Node) {{}}
 
+    /// Called when entering any optional `Node`
     #[allow(unused_variables)]
     fn on_option_node(&mut self, node: &Option<Box<Node>>) {{}}
+
+    /// Called when entering any `Vec<Node>`
     #[allow(unused_variables)]
     fn on_node_list(&mut self, nodes: &[Node]) {{}}
 
+    /// Called when entering any AST node,
+    /// `subitem` is different for different `Node` fields,
+    /// check documentation of `traverse::visitor::Item`
     #[allow(unused_variables)]
     fn on_subitem(&mut self, subitem: Item) {{}}
+
+    /// Called when exiting any AST node,
+    /// `subitem` is different for different `Node` fields,
+    /// check documentation of `traverse::visitor::Item`
     #[allow(unused_variables)]
     fn on_subitem_moving_up(&mut self, subitem: Item) {{}}
 }}
 
 impl<TObserver: Observer> Visit<&Node> for Visitor<TObserver> {{
     fn visit(&mut self, node: &Node, visit_as: Item) {{
-        self.handler.on_subitem(visit_as);
-        self.handler.on_node(node);
+        self.observer.on_subitem(visit_as);
+        self.observer.on_node(node);
 
         match node {{
             {match_branches}
         }}
 
-        self.handler.on_node_moving_up(&node);
-        self.handler.on_subitem_moving_up(visit_as);
+        self.observer.on_node_moving_up(&node);
+        self.observer.on_subitem_moving_up(visit_as);
     }}
 }}
 
@@ -59,7 +74,7 @@ where
     {visitor_methods}
 }}
 ",
-            observer_methods = self.observer_methods().join("\n    "),
+            observer_methods = self.observer_methods().join("\n\n    "),
             match_branches = self.match_branches().join("\n            "),
             visitor_methods = self.visitor_methods().join("\n\n    ")
         )
@@ -70,7 +85,8 @@ where
             .iter()
             .map(|node| {
                 format!(
-                    "#[allow(unused_variables)]
+                    "/// Invoked by a `Visitor` on entering into `{struct_name}` node.
+    #[allow(unused_variables)]
     fn on_{mid}(&mut self, node: &{struct_name}) {{}}",
                     mid = node.filename,
                     struct_name = node.struct_name
@@ -97,7 +113,7 @@ where
             .map(|node| {
                 format!(
                     "fn visit_{mid}(&mut self, node: &{struct_name}) {{
-        self.handler.on_{mid}(node);
+        self.observer.on_{mid}(node);
 
         {visit_children}
     }}",

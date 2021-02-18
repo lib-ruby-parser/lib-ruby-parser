@@ -1,10 +1,12 @@
 use crate::traverse::finder::PatternError;
 use crate::traverse::visitor::Item as VisitorItem;
 
+/// Finder item, used to specify part of the path you want to go in AST
 #[derive(Clone, Debug)]
 pub enum Item {
+    /// Represents a wildcard pattern item
     Any,
-    Node(String),
+    /// Represents a specific `visitor::Item` for matching
     VisitorItem(VisitorItem),
 }
 
@@ -12,9 +14,7 @@ impl PartialEq for Item {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Item::Any, _) | (_, Item::Any) => true,
-            (Item::Node(left), Item::Node(right)) => left.eq(right),
             (Item::VisitorItem(left), Item::VisitorItem(right)) => left.eq(right),
-            (_, _) => false,
         }
     }
 }
@@ -22,6 +22,7 @@ impl PartialEq for Item {
 impl Eq for Item {}
 
 impl Item {
+    /// Parses given string slice and constructs an `Item` (if possible)
     pub fn new(s: &str) -> Result<Self, PatternError> {
         match s {
             "any" => Ok(Self::Any),
@@ -29,7 +30,9 @@ impl Item {
                 let visitor_item = VisitorItem::from_string(visitor_item).unwrap();
                 Ok(Item::VisitorItem(visitor_item))
             }
-            node_name => Ok(Self::Node(node_name.to_owned())),
+            unknown => Err(PatternError {
+                pattern: unknown.to_owned(),
+            }),
         }
     }
 }

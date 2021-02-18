@@ -1,5 +1,8 @@
+/// An error that is returned when attempting to build
+/// a finder::Item from a string that can't be recognized
 #[derive(Debug)]
 pub struct PatternError {
+    /// Pattern that wasn't recognozed
     pub pattern: String,
 }
 

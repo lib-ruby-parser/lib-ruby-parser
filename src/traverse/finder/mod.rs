@@ -4,6 +4,7 @@ pub use pattern::{Item as PatternItem, Pattern, PatternError};
 use crate::traverse::visitor::{Item as VisitorItem, Observer, Visitor};
 use crate::Node;
 
+/// A struct to find sub-nodes in AST by by a given `Pattern`
 #[derive(Debug)]
 pub struct Finder {
     looking_for: Pattern,
@@ -12,17 +13,20 @@ pub struct Finder {
 }
 
 impl Finder {
+    /// Performs a search of a given pattern on a given AST.
+    ///
+    /// `looking_for` is a string slice that is used to construct a `Pattern`.
     pub fn run(looking_for: &str, root: &Node) -> Result<Option<Node>, PatternError> {
         let looking_for = Pattern::new(looking_for)?;
         let mut visitor = Visitor {
-            handler: Self {
+            observer: Self {
                 looking_for,
                 current_path: Pattern::empty(),
                 result: None,
             },
         };
         visitor.visit_root(&root);
-        Ok(visitor.handler.result)
+        Ok(visitor.observer.result)
     }
 }
 
