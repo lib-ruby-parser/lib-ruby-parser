@@ -1,6 +1,7 @@
 use crate::source::SourceLine;
 use crate::source::{decode_input, CustomDecoder, InputError};
 
+/// Representation of the source code.
 #[derive(Debug, Default)]
 pub struct Input {
     pub(crate) name: String,

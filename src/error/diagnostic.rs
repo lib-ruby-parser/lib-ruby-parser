@@ -1,4 +1,4 @@
-use crate::source::input::Input;
+use crate::source::Input;
 use crate::Loc;
 use crate::{DiagnosticMessage, ErrorLevel};
 

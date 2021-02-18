@@ -17,8 +17,8 @@ pub use error::PatternError;
 /// can find a node that represents constant `FIND_ME` in the following code:
 ///
 /// ```text
-//// def foo(a, b, c = FIND_ME)
-//// end
+/// def foo(a, b, c = FIND_ME)
+/// end
 /// ```
 ///
 /// It means:

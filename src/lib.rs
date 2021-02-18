@@ -13,6 +13,9 @@ Uses bison under the hood.
 */
 
 mod loc;
+
+/// Module with everything related to output of the Parser, but not related to AST,
+/// like `Comment`, `Input`, `CustomDecoder`
 pub mod source;
 
 mod lexer;
@@ -67,9 +70,11 @@ pub(crate) mod str_term;
 mod context;
 pub(crate) use context::{Context, ContextItem};
 
+/// Module with all known node types
 pub mod nodes;
 pub use nodes::Node;
 
+/// Module to perform recursive traversing
 pub mod traverse;
 
 mod string_value;
@@ -78,6 +83,7 @@ pub use string_value::StringValue;
 mod token;
 pub use token::Token;
 
+/// Module to perform token rewriting
 pub mod token_rewriter;
 
 mod bytes;

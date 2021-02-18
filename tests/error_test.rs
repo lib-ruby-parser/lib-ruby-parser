@@ -1,4 +1,4 @@
-use lib_ruby_parser::{source::input::Input, Diagnostic, DiagnosticMessage, ErrorLevel, Loc};
+use lib_ruby_parser::{source::Input, Diagnostic, DiagnosticMessage, ErrorLevel, Loc};
 
 #[test]
 fn it_renders() {

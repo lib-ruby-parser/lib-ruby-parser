@@ -56,7 +56,7 @@ pub struct ParserOptions {
     pub token_rewriter: Option<Box<dyn TokenRewriter>>,
 
     /// When set to true Parser records tokens.
-    /// When set to false `ParserResult.tokens` is guaranteed to be empty
+    /// When set to false `ParserResult.tokens` is guaranteed to be empty.
     /// If you don't need tokens better set it to false to speed up parsing.
     pub record_tokens: bool,
 }

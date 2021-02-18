@@ -6696,11 +6696,12 @@ impl Parser {
     }
 
     /// Parses given input and returns:
-    ///     1. AST
-    ///     2. tokens
-    ///     3. diagnostics
-    ///     4. coments
-    ///     5. magic comments
+    ///
+    /// 1. AST
+    /// 2. tokens
+    /// 3. diagnostics
+    /// 4. coments
+    /// 5. magic comments
     pub fn do_parse(mut self) -> ParserResult  {
         self.parse();
 

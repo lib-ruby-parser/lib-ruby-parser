@@ -1,5 +1,5 @@
-use crate::source::input::Input;
 use crate::source::Comment;
+use crate::source::Input;
 use crate::source::MagicComment;
 use crate::Diagnostic;
 use crate::Node;

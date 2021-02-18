@@ -13,11 +13,11 @@ use crate::Node;
 ///
 /// ```text
 /// struct MyObserver {
-///     pub numbers: Vec<crate::nodes::Int>,
+///     pub numbers: Vec<nodes::Int>,
 /// }
 ///
 /// impl Observer for MyObserver {
-///     fn on_int(&mut self, node: &crate::nodes::Int) {
+///     fn on_int(&mut self, node: &nodes::Int) {
 ///         self.numbers.push(node.clone())
 ///     }
 /// }

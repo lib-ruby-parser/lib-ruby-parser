@@ -115,7 +115,7 @@ impl Lexer {
     /// and so this method on its own can return a wrong sequence
     /// of tokens. It's used internally to test simple inputs.
     ///
-    /// If you need to get tokens better use ParserResult::tokens field
+    /// If you need to get tokens better use `ParserResult::tokens` field
     pub fn tokenize_until_eof(&mut self) -> Vec<Token> {
         let mut tokens = vec![];
 

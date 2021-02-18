@@ -1,4 +1,4 @@
-use lib_ruby_parser::{source::input::Input, Parser, ParserOptions, ParserResult, Token};
+use lib_ruby_parser::{source::Input, Parser, ParserOptions, ParserResult, Token};
 
 #[allow(dead_code)]
 pub fn lex(source: &[u8], filename: &str, debug: bool) -> (Vec<Token>, Input) {
