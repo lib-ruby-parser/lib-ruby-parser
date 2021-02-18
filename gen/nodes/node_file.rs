@@ -234,29 +234,25 @@ impl<'a> FieldWrapper<'a> {
 }
 
 struct Comment<'a> {
-    comment: &'a Option<String>,
+    comment: &'a str,
 }
 
 impl<'a> Comment<'a> {
-    fn new(comment: &'a Option<String>) -> Self {
+    fn new(comment: &'a str) -> Self {
         Self { comment }
     }
 
     fn to_string(&self, offset: usize) -> String {
         self.comment
-            .clone()
-            .map(|c| {
-                c.split("\n")
-                    .map(|l| {
-                        let mut l = l.to_owned();
-                        if !l.is_empty() {
-                            l = format!(" {}", l);
-                        }
-                        format!("{}///{}", " ".repeat(offset), l)
-                    })
-                    .collect::<Vec<_>>()
-                    .join("\n")
+            .split("\n")
+            .map(|l| {
+                let mut l = l.to_owned();
+                if !l.is_empty() {
+                    l = format!(" {}", l);
+                }
+                format!("{}///{}", " ".repeat(offset), l)
             })
-            .unwrap_or_default()
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 }

@@ -15,7 +15,7 @@ use reserved_words::ReservedWordsList;
 use visitor::Visitor;
 
 pub fn generate_nodes() {
-    let nodes = lib_ruby_parser_nodes::nodes().unwrap();
+    let nodes = lib_ruby_parser_nodes::nodes();
 
     std::fs::create_dir_all("src/nodes/types").unwrap();
 

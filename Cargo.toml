@@ -23,7 +23,7 @@ rebuild-grammar = ["lib-ruby-parser-nodes", "rust-bison-skeleton"]
 onig = {version = "6", optional = true}
 
 [build-dependencies]
-lib-ruby-parser-nodes = {version = "0.9.0", optional = true}
+lib-ruby-parser-nodes = {version = "0.10.0", optional = true}
 rust-bison-skeleton = {version = "0.19.0", optional = true}
 
 [dev-dependencies]
