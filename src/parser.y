@@ -11,6 +11,31 @@
     result: Option<Node>,
     builder: Builder,
     current_arg_stack: CurrentArgStack,
+    /// Stack of sets of variables in current scopes.
+    /// Each stack item represents locals in the scope.
+    ///
+    /// You can use it to pre-define some locals and parse
+    /// your input as if these locals exist.
+    ///
+    /// For example, you can parse the following code
+    ///
+    /// ```text
+    /// a = b + c
+    /// ```
+    ///
+    /// as
+    ///
+    /// ```text
+    /// Send(LocalVar(a), "+", LocalVar(b))
+    /// ```
+    ///
+    /// by declaring `a` and `b` as locals using
+    ///
+    /// ```text
+    /// parser.static_env.declare("a")
+    /// parser.static_env.declare("b")
+    /// parser.parse()
+    /// ```
     pub static_env: StaticEnvironment,
     context: ParserContext,
     last_token_type: i32,

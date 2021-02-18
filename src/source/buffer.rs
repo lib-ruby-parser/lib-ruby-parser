@@ -4,7 +4,7 @@ use crate::source::{CustomDecoder, InputError};
 use std::convert::TryFrom;
 
 #[derive(Debug, Default)]
-pub struct Buffer {
+pub(crate) struct Buffer {
     pub input: Input,
 
     pub(crate) line_count: usize,

@@ -1,9 +1,10 @@
-use lib_ruby_parser::{source::buffer::*, Diagnostic, DiagnosticMessage, ErrorLevel, Loc};
+use lib_ruby_parser::{source::input::Input, Diagnostic, DiagnosticMessage, ErrorLevel, Loc};
 
 #[test]
 fn it_renders() {
     let source = "line 1\nvery long line 2\n";
-    let buffer = Buffer::new("(test_render)", source.as_bytes().to_vec(), None);
+    let mut input = Input::new("(test_render)", None);
+    input.set_bytes(source.bytes().collect::<Vec<_>>());
 
     let error = Diagnostic::new(
         ErrorLevel::Warning,
@@ -12,9 +13,7 @@ fn it_renders() {
     );
 
     assert_eq!(
-        error
-            .render(&buffer.input)
-            .expect("failed to render diagnostic"),
+        error.render(&input).expect("failed to render diagnostic"),
         vec![
             "(test_render):2:1: warning: unexpected fraction part after numeric literal",
             "(test_render):2: very long line 2",

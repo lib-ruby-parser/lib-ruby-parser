@@ -1,3 +1,4 @@
+/// Representation of a reserved word in Ruby
 #[derive(Debug)]
 pub struct ReservedWord {
     pub(crate) name: &'static str,

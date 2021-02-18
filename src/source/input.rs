@@ -10,7 +10,8 @@ pub struct Input {
 }
 
 impl Input {
-    pub(crate) fn new(name: &str, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
+    /// Constructs a new input
+    pub fn new(name: &str, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
         Self {
             name: name.to_owned(),
             decoder,
@@ -18,7 +19,8 @@ impl Input {
         }
     }
 
-    pub(crate) fn set_bytes(&mut self, bytes: Vec<u8>) {
+    /// Populates `Input` with a given byte array
+    pub fn set_bytes(&mut self, bytes: Vec<u8>) {
         let mut line = SourceLine {
             start: 0,
             end: 0,
