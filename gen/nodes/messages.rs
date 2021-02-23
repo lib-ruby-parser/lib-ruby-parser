@@ -125,8 +125,7 @@ impl<'a> Field<'a> {
         use lib_ruby_parser_nodes::MessageFieldType as FieldType;
 
         match self.field.field_type {
-            FieldType::StaticStr => "&'static str",
-            FieldType::OwnedStr => "String",
+            FieldType::Str => "String",
             FieldType::Byte => "u8",
         }
     }
