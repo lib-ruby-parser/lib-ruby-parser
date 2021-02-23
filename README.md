@@ -38,7 +38,7 @@ TLDR; it's fast, it's precise, and it has a beautiful interface.
 Comparison with `Ripper`/`RubyVM::AST`:
 1. It's based on MRI's `parse.y`, and so it returns **exactly** the same sequence of tokens.
 2. It's been tested on top 300 gems (by total downlads, that's about 3M LOC), `rubyspec` and `ruby/ruby` repos and there's no difference with `Ripper.lex`.
-3. It's ~2-3 times faster than `Ripper` (with `jemalloc`), Ripper parses 3.9M LOC in 16-17s, `lib-ruby-parser` does it 8-9s. That's ~450K LOC/s. And these benchmarks include IO that is roughly the same in Ruby and Rust. Without IO (i.e. for example with mmaped file from tmpfs) the difference is even more noticeable, however it's not what you are going to do anyway. I think it's valid to include IO into benchmarks.
+3. It's ~3 times faster than `Ripper` (with `jemalloc`), Ripper parses 3.9M LOC in ~16s, `lib-ruby-parser` does it in ~6.5s. That's ~600K LOC/s. You can find some benchmarks in the `bench/` directory, they don't include IO and GC.
 4. It has a much, much better interface. AST is strongly typed and well documented.
 5. It doesn't throw away information about tokens. All nodes have information about their source locations.
 
@@ -143,12 +143,40 @@ $ cargo run --all-features --example parse -- --no-output --profile "<pattern>"
 
 ## Benchmarking
 
-A pretty big codebase could be generated using a `download.rb` script:
+A codebase of 3.9M LOCs can be generated using a `download.rb` script:
 
 ```sh
 $ ruby gems/download.rb
-$ cargo build --release --features onig,rebuild-grammar --example parse
-$ target/release/examples/parse --no-output --drop-tokens "gems/repos/**/*.rb"
+```
+
+Then, run a script that compares `Ripper` and `lib-ruby-parser` (attached results are from Feb 2021):
+
+```sh
+$ ./bench/compare.sh
+    Finished release [optimized] target(s) in 0.32s
+Running lib-ruby-parser
+Run 1:
+Time taken: 6.4411144390 (total files: 18018)
+Run 2:
+Time taken: 6.5622580500 (total files: 18018)
+Run 3:
+Time taken: 6.4716968660 (total files: 18018)
+Run 4:
+Time taken: 6.5001703130 (total files: 18018)
+Run 5:
+Time taken: 6.4996797840 (total files: 18018)
+--------
+Running MRI/ripper
+Run 1:
+Time taken: 20.741632999968715 (total files: 18017)
+Run 2:
+Time taken: 20.724869000026956 (total files: 18017)
+Run 3:
+Time taken: 20.90130200004205 (total files: 18017)
+Run 4:
+Time taken: 20.81395199999679 (total files: 18017)
+Run 5:
+Time taken: 20.601982000051066 (total files: 18017)
 ```
 
 ## Profile-guided optimization

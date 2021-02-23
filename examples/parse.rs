@@ -6,8 +6,6 @@ extern crate jemallocator;
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 use lib_ruby_parser::ParserResult;
-use std::fs;
-use std::path::Path;
 
 mod helpers;
 use helpers::*;
@@ -40,6 +38,9 @@ struct Args {
 
     #[clap(long, about = "Drop tokens info")]
     drop_tokens: bool,
+
+    #[clap(long, about = "Measure time spent on benchmarking")]
+    benchmark: bool,
 }
 
 fn print_diagnostics(result: &ParserResult) {
@@ -52,34 +53,64 @@ fn print_diagnostics(result: &ParserResult) {
     }
 }
 
-fn print_quite(_src: &str, result: &ParserResult) {
+fn print_quite(result: &ParserResult) {
     print_diagnostics(&result);
 }
 
-fn no_output(_: &str, _: &ParserResult) {}
+fn print_nothing(_: &ParserResult) {}
 
-fn print_locations(src: &str, result: &ParserResult) {
+fn print_locations(result: &ParserResult) {
+    let src = std::str::from_utf8(result.input.as_bytes()).unwrap_or_else(|_| "invalid-source");
     println!("{}", src);
     print_diagnostics(&result);
     if let Some(ast) = &result.ast {
         ast.print_with_locs()
     }
 }
-fn print_ast(_src: &str, result: &ParserResult) {
+fn print_ast(result: &ParserResult) {
     print_diagnostics(&result);
     if let Some(ast) = &result.ast {
         println!("{}", ast.inspect(0));
     }
 }
-fn print_full(_str: &str, result: &ParserResult) {
+fn print_full(result: &ParserResult) {
     println!("{:#?}", result)
+}
+
+struct InputFile {
+    filepath: String,
+    content: Vec<u8>,
+}
+
+impl From<&Args> for Option<Vec<InputFile>> {
+    fn from(args: &Args) -> Self {
+        let files = if let Some(code) = &args.code {
+            vec![InputFile {
+                filepath: "(eval)".to_string(),
+                content: code.as_bytes().to_vec(),
+            }]
+        } else if let Some(path) = &args.path {
+            glob::glob(&path)
+                .expect("invalid glob pattern")
+                .map(|f| f.unwrap().to_str().unwrap().to_owned())
+                .map(|filepath| InputFile {
+                    content: std::fs::read(&filepath).unwrap(),
+                    filepath,
+                })
+                .collect()
+        } else {
+            return None;
+        };
+
+        Some(files)
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Args = Args::parse();
 
-    let callback: &dyn Fn(&str, &ParserResult) = if args.no_output {
-        &no_output
+    let print_result: &dyn Fn(&ParserResult) = if args.no_output {
+        &print_nothing
     } else if args.quiet {
         &print_quite
     } else if args.locations {
@@ -90,27 +121,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &print_ast
     };
 
-    let profile = start_profiling(args.profile);
-    let debug = args.debug;
-    let drop_tokens = args.drop_tokens;
-
-    if let Some(code) = args.code {
-        let result = parse(code.as_bytes(), "(eval)", debug, drop_tokens);
-        callback(&code, &result);
-    } else if let Some(path) = args.path {
-        each_ruby_file(&path, &|entry| {
-            let code = fs::read(Path::new(entry))?;
-            let result = parse(&code, entry, debug, drop_tokens);
-            callback(&String::from_utf8_lossy(&code), &result);
-            Ok(())
-        })?;
-    } else {
+    let files = Option::<Vec<InputFile>>::from(&args).unwrap_or_else(|| {
         println!("Nothing to parse");
+        std::process::exit(1);
+    });
+
+    let profile = start_profiling(args.profile);
+    let benchmark = start_benchmarking(args.benchmark);
+
+    for file in files.iter() {
+        let result = parse(&file.content, &file.filepath, args.debug, args.drop_tokens);
+        print_result(&result);
     }
 
+    stop_benchmarking(args.benchmark, benchmark, files.len());
     stop_profiling(args.profile, profile)?;
-
-    println!("Done");
 
     Ok(())
 }

@@ -1,3 +1,4 @@
+mod benchmark;
 mod each_async_ruby_file;
 mod each_ruby_file;
 mod lex;
@@ -7,6 +8,7 @@ mod profile;
 mod ripper_lex;
 mod tokenize;
 
+pub use benchmark::{start_benchmarking, stop_benchmarking};
 pub use each_async_ruby_file::each_async_ruby_file;
 pub use each_ruby_file::each_ruby_file;
 pub use lex::lex;
