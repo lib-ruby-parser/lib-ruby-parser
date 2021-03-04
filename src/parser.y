@@ -5719,7 +5719,7 @@ keyword_variable: kNIL
                                             if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda {
                                                 let outer_scope_has_numparams = raw_max_numparam_stack
                                                     .pop()
-                                                    .expect("expected numparam stack to have element") > 0;
+                                                    .unwrap_or(0) > 0;
 
                                                 if outer_scope_has_numparams {
                                                     return self.yyerror(

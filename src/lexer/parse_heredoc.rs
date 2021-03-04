@@ -43,7 +43,7 @@ impl ParseHeredoc for Lexer {
             c = self.nextc();
             func = STR_FUNC_INDENT;
             offset += 1;
-            indent = std::i32::MAX;
+            indent = i32::MAX;
         }
 
         if c == b'\'' || c == b'"' || c == b'`' {
@@ -84,7 +84,10 @@ impl ParseHeredoc for Lexer {
             func |= str_dquote;
             loop {
                 let n = self.multibyte_char_len(self.buffer.pcur - 1);
-                self.buffer.pcur += n - 1;
+                match n {
+                    Some(n) => self.buffer.pcur += n - 1,
+                    None => return Some(Self::END_OF_INPUT),
+                }
                 c = self.nextc();
                 if c.is_eof() || !self.is_identchar() {
                     break;
@@ -318,10 +321,11 @@ impl ParseHeredoc for Lexer {
             .substr_at(end_starts_at, end)
             .expect("failed to get heredoc end");
 
-        let value =
-            String::from_utf8(value.to_vec()).expect("expected heredoc id to be valid in utf-8");
-
-        HeredocEnd { start, end, value }
+        HeredocEnd {
+            start,
+            end,
+            value: value.to_vec(),
+        }
     }
 
     fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32 {
@@ -347,7 +351,7 @@ impl ParseHeredoc for Lexer {
         let heredoc_end = self.compute_heredoc_end();
         self.lval_start = Some(heredoc_end.start);
         self.lval_end = Some(heredoc_end.end);
-        self.set_yylval_str(&TokenBuf::new(heredoc_end.value.as_bytes()));
+        self.set_yylval_str(&TokenBuf::new(&heredoc_end.value));
 
         self.heredoc_restore(&here);
         self.token_flush();

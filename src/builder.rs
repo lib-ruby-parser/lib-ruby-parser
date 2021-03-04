@@ -1,5 +1,6 @@
 #[cfg(feature = "onig")]
 use onig::{Regex, RegexOptions};
+
 use std::collections::HashMap;
 use std::convert::TryInto;
 
@@ -369,7 +370,7 @@ impl Builder {
         end_t: Box<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
-        if value(begin_t).starts_with("<<") {
+        if lossy_value(begin_t).starts_with("<<") {
             let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(&end_t));
             let heredoc_end_l = self.loc(&end_t);
             let expression_l = begin_l;
@@ -414,7 +415,12 @@ impl Builder {
                             idx_to_drop.push(idx);
                         }
                     }
-                    Node::Begin(_) => {}
+                    Node::Begin(_)
+                    | Node::Gvar(_)
+                    | Node::BackRef(_)
+                    | Node::NthRef(_)
+                    | Node::Ivar(_)
+                    | Node::Cvar(_) => {}
                     _ => unreachable!("unsupported heredoc child {}", part.str_type()),
                 }
             }
@@ -471,7 +477,8 @@ impl Builder {
             return None;
         }
         let expression_l = self.loc(&regexp_end_t).adjust_begin(1);
-        let mut options = value(regexp_end_t)[1..].chars().collect::<Vec<_>>();
+        let options = value(regexp_end_t);
+        let mut options = options.chars().skip(1).collect::<Vec<_>>();
         options.sort_unstable();
         options.dedup();
 
@@ -1763,7 +1770,7 @@ impl Builder {
                 recv: receiver.expect("csend node must have a receiver"),
                 args,
                 dot_l: dot_l.expect("csend node must have &."),
-                selector_l: selector_l.expect("csend node must have a method name"),
+                selector_l,
                 begin_l,
                 end_l,
                 operator_l: None,
@@ -1975,7 +1982,7 @@ impl Builder {
                 recv: receiver,
                 args: vec![],
                 dot_l,
-                selector_l,
+                selector_l: Some(selector_l),
                 begin_l: None,
                 end_l: None,
                 operator_l: None,
@@ -3480,14 +3487,14 @@ impl Builder {
     }
 
     pub(crate) fn check_lvar_name(&self, name: &str, loc: &Loc) -> Result<(), ()> {
-        let first = name
-            .chars()
+        let mut all_chars = name.chars();
+        let first = all_chars
             .next()
             .expect("local variable name can't be empty");
-        let rest = &name[1..];
+        let rest = all_chars.collect::<Vec<_>>();
 
         if (first.is_lowercase() || first == '_')
-            && rest.chars().all(|c| c.is_alphanumeric() || c == '_')
+            && rest.into_iter().all(|c| c.is_alphanumeric() || c == '_')
         {
             Ok(())
         } else {
@@ -3565,6 +3572,7 @@ impl Builder {
         }
 
         let bytes = onig::EncodedBytes::ascii(source.as_bytes());
+
         match Regex::with_options_and_encoding(bytes, reg_options, onig::Syntax::ruby()) {
             Ok(regex) => Some(regex),
             Err(err) => {
@@ -3779,6 +3787,10 @@ pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Loc> {
 
 pub(crate) fn value(token: Box<Token>) -> String {
     token.into_string().unwrap()
+}
+
+pub(crate) fn lossy_value(token: Box<Token>) -> String {
+    token.to_string_lossy()
 }
 
 pub(crate) fn clone_value(token: &Token) -> String {

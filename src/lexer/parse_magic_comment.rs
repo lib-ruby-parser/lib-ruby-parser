@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::source::{MagicComment, MagicCommentKind};
 use crate::DiagnosticMessage;
 use crate::Lexer;
@@ -175,12 +177,14 @@ impl ParseMagicComment for Lexer {
             len = end - beg - 3;
         }
 
+        let mut len: i32 = len.try_into().unwrap();
+
         while len > 0 {
             let n;
 
             loop {
                 let c = self.char_at(str_);
-                if len == 0 || c.is_eof() {
+                if !(len > 0 && c.is_some()) {
                     break;
                 }
 
@@ -201,7 +205,7 @@ impl ParseMagicComment for Lexer {
 
             beg = str_;
             loop {
-                if len == 0 {
+                if !(len > 0) {
                     break;
                 }
 
@@ -210,11 +214,12 @@ impl ParseMagicComment for Lexer {
                     // noop
                 } else {
                     if c.is_space() {
-                        break;
+                        // break from C switch;
+                    } else {
+                        str_ += 1;
+                        len -= 1;
+                        continue;
                     }
-                    str_ += 1;
-                    len -= 1;
-                    continue;
                 }
 
                 break;
@@ -315,18 +320,33 @@ impl ParseMagicComment for Lexer {
                     .expect("failed to get magic comment name")
                     .to_vec(),
             )
-            .expect("expected source to be encoded in utf-8");
+            .map_err(|_| ())?;
+
             let name_to_compare = name.replace("-", "_");
             for (name, kind) in MAGIC_COMMENTS.iter() {
                 if &name_to_compare == name {
                     if kind == &MagicCommentKind::Encoding {
-                        let encoding = String::from_utf8(
+                        let encoding = match String::from_utf8(
                             self.buffer
                                 .substr_at(vbeg, vend)
                                 .expect("bug: Can't be None")
                                 .to_vec(),
-                        )
-                        .unwrap();
+                        ) {
+                            Ok(encoding) => encoding,
+                            Err(err) => {
+                                self.yyerror1(
+                                    DiagnosticMessage::EncodingError {
+                                        error: format!(
+                                            "unknown encoding name: {}",
+                                            String::from_utf8_lossy(&err.as_bytes())
+                                        ),
+                                    },
+                                    self.loc(vbeg, vend),
+                                );
+
+                                return Err(());
+                            }
+                        };
                         match self.buffer.set_encoding(&encoding) {
                             Ok(_) => {}
                             Err(err) => {

@@ -222,3 +222,23 @@ The diff seems to be too small to use this feature.
 When both PGO and LTO are enabled building a `parse` example gives a bunch of LLVM errors about wrong types of functions (like `expected a Function or null`).
 
 If you know how to fix them, please open an issue.
+
+## Fuzz testing
+
+First, make sure to switch to nightly:
+
+```sh
+$ rustup default nightly
+```
+
+Then install `cargo-fuzz`:
+
+```sh
+$ cargo install cargo-fuzz
+```
+
+And run the fuzzer (change the number of `--jobs` as you need or remove it to run only 1 parallel process):
+
+```sh
+$ RUST_BACKTRACE=1 cargo fuzz run parse --jobs=8 -- -max_len=50
+```

@@ -2,11 +2,12 @@ use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::reserved_word;
 use crate::source::buffer::*;
+use crate::DiagnosticMessage;
 use crate::{lex_states::*, LexState};
 
 pub(crate) trait ParseIdent {
     fn is_identchar(&self) -> bool;
-    fn tokenize_ident(&mut self) -> String;
+    fn tokenize_ident(&mut self) -> Option<String>;
     fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32;
 }
 
@@ -25,12 +26,9 @@ impl ParseIdent for Lexer {
                 .is_identchar(self.buffer.pcur - 1, self.buffer.pend)
     }
 
-    fn tokenize_ident(&mut self) -> String {
+    fn tokenize_ident(&mut self) -> Option<String> {
         self.set_yylval_name();
-        match self.tokenbuf.borrow_string() {
-            Ok(s) => s.to_owned(),
-            Err(bytes) => unreachable!("locals can't have non-utf chars: {:?}", bytes),
-        }
+        self.tokenbuf.borrow_string().map(|s| s.to_owned()).ok()
     }
 
     fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32 {
@@ -125,7 +123,13 @@ impl ParseIdent for Lexer {
             self.lex_state.set(EXPR_END)
         }
 
-        ident = self.tokenize_ident();
+        ident = match self.tokenize_ident() {
+            Some(ident) => ident,
+            None => {
+                self.yyerror0(DiagnosticMessage::InvalidMultibyteChar);
+                return Self::END_OF_INPUT;
+            }
+        };
         if result == Self::tCONSTANT && is_var_name(&ident) {
             result = Self::tIDENTIFIER
         }

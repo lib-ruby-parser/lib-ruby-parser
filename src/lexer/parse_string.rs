@@ -83,7 +83,7 @@ impl ParseString for Lexer {
                 if let Some(heredoc_end) = quote.heredoc_end {
                     self.lval_start = Some(heredoc_end.start);
                     self.lval_end = Some(heredoc_end.end);
-                    self.set_yylval_str(&TokenBuf::new(heredoc_end.value.as_bytes()));
+                    self.set_yylval_str(&TokenBuf::new(&heredoc_end.value));
                 }
                 return Self::tSTRING_END;
             }
@@ -756,7 +756,7 @@ impl ParseString for Lexer {
             Some(b'x') => {
                 let c = self.tok_hex(&mut numlen);
                 if numlen == 0 {
-                    return MaybeByte::EndOfInput;
+                    return MaybeByte::new(0);
                 }
                 c
             }

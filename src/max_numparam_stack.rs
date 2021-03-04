@@ -36,7 +36,7 @@ impl MaxNumparamStack {
     }
 
     pub(crate) fn top(&self) -> i32 {
-        *self.stack.borrow().last().unwrap_or(&std::i32::MIN)
+        *self.stack.borrow().last().unwrap_or(&i32::MIN)
     }
 
     pub(crate) fn push(&self) {

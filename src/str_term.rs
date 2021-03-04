@@ -33,7 +33,7 @@ pub(crate) mod str_types {
 pub(crate) struct HeredocEnd {
     pub(crate) start: usize,
     pub(crate) end: usize,
-    pub(crate) value: String,
+    pub(crate) value: Vec<u8>,
 }
 
 #[derive(Debug, Clone, Default)]

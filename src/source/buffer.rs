@@ -310,7 +310,10 @@ impl Buffer {
     }
 
     pub(crate) fn is_identchar(&self, begin: usize, _end: usize) -> bool {
-        let byte = self.input.unchecked_byte_at(begin);
+        let byte = match self.input.byte_at(begin) {
+            Some(byte) => byte,
+            None => return false,
+        };
 
         byte.is_ascii_alphanumeric() || byte == b'_' || !byte.is_ascii()
     }

@@ -267,51 +267,51 @@ impl Lexer {
                         && !self.lex_state.is_some(EXPR_LABELED);
                     if cc || self.lex_state.is_all(EXPR_ARG | EXPR_LABELED) {
                         if !cc && self.in_kwarg {
-                            self.command_start = true;
-                            self.lex_state.set(EXPR_BEG);
-                            return Self::tNL;
+                            return self.normal_newline_leaf_label();
                         }
                         continue 'retrying;
                     }
 
                     loop {
+                        // while(1)
                         c = self.nextc();
 
-                        match c.to_option() {
-                            Some(b' ')
-                            | Some(b'\t')
-                            | Some(Self::LF_CHAR)
-                            | Some(b'\r')
-                            | Some(Self::VTAB_CHAR) => {
+                        // emulate ugly C switch with fall-through logic
+                        loop {
+                            if c == b' '
+                                || c == b'\t'
+                                || c == Self::LF_CHAR
+                                || c == b'\r'
+                                || c == Self::VTAB_CHAR
+                            {
                                 space_seen = true;
+                                break;
                             }
-                            Some(b'#') => {
+
+                            if c == b'#' {
                                 self.buffer.pushback(&c);
                                 continue 'retrying;
                             }
-                            Some(b'&') | Some(b'.') => {
+
+                            if c == b'&' || c == b'.' {
                                 if self.buffer.peek(b'.') == (c == b'&') {
                                     self.buffer.pushback(&c);
                                     continue 'retrying;
                                 }
-                                self.buffer.ruby_sourceline -= 1;
-                                self.buffer.nextline = self.buffer.lastline;
                             }
-                            None => {
+
+                            if c.is_eof() {
                                 // EOF no decrement
                                 self.buffer.eof_no_decrement();
-                                self.command_start = true;
-                                self.lex_state.set(EXPR_BEG);
-                                return Self::tNL;
+                                return self.normal_newline_leaf_label();
                             }
-                            _ => {
-                                self.buffer.ruby_sourceline -= 1;
-                                self.buffer.nextline = self.buffer.lastline;
-                                self.buffer.eof_no_decrement();
-                                self.command_start = true;
-                                self.lex_state.set(EXPR_BEG);
-                                return Self::tNL;
-                            }
+
+                            // default:
+                            self.buffer.ruby_sourceline -= 1;
+                            self.buffer.nextline = self.buffer.lastline;
+                            // -1 branch fallthrough
+                            self.buffer.eof_no_decrement();
+                            return self.normal_newline_leaf_label();
                         }
                     }
                 }
@@ -1091,6 +1091,12 @@ impl Lexer {
         self.parse_ident(&c, cmd_state)
     }
 
+    fn normal_newline_leaf_label(&mut self) -> i32 {
+        self.command_start = true;
+        self.lex_state.set(EXPR_BEG);
+        return Self::tNL;
+    }
+
     pub(crate) fn warn(&mut self, message: DiagnosticMessage, loc: Loc) {
         if self.debug {
             println!("WARNING: {}", message.render())
@@ -1218,17 +1224,49 @@ impl Lexer {
     }
 
     pub(crate) fn tokadd_mbchar(&mut self, c: &MaybeByte) -> Result<(), ()> {
+        let mut len = match self.multibyte_char_len(self.buffer.pcur - 1) {
+            Some(len) => len,
+            None => return Err(()),
+        };
+
         match c {
-            MaybeByte::EndOfInput => Err(()),
-            _ => {
-                self.tokadd(c);
-                Ok(())
-            }
+            MaybeByte::EndOfInput => return Err(()),
+            _ => self.tokadd(c),
         }
+
+        len -= 1;
+        self.buffer.pcur += len;
+        self.tokcopy(len);
+        Ok(())
     }
 
-    pub(crate) const fn multibyte_char_len(&self, _ptr: usize) -> usize {
-        1
+    fn _multibyte_char_len(&self, ptr: usize) -> Option<usize> {
+        let c1 = self.buffer.byte_at(ptr).to_option()?;
+
+        let len = if c1 & 0x80 == 0 {
+            1
+        } else if c1 & 0xE0 == 0xC0 {
+            2
+        } else if c1 & 0xF0 == 0xE0 {
+            3
+        } else if c1 & 0xF8 == 0xF0 {
+            4
+        } else {
+            // malformed
+            return None;
+        };
+
+        let bytes = self.buffer.substr_at(ptr, ptr + len)?;
+        std::str::from_utf8(bytes).ok()?;
+        Some(len)
+    }
+
+    pub(crate) fn multibyte_char_len(&mut self, ptr: usize) -> Option<usize> {
+        let result = self._multibyte_char_len(ptr);
+        if result.is_none() {
+            self.yyerror0(DiagnosticMessage::InvalidMultibyteChar);
+        }
+        result
     }
 
     pub(crate) fn is_label_suffix(&mut self, n: usize) -> bool {

@@ -16,6 +16,10 @@ impl MaybeByte {
         self == &MaybeByte::EndOfInput
     }
 
+    pub(crate) fn is_some(&self) -> bool {
+        self != &MaybeByte::EndOfInput
+    }
+
     pub(crate) fn expect(&self, msg: &str) -> u8 {
         self.to_option().expect(msg)
     }

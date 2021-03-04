@@ -97,6 +97,7 @@ regexp in parentheses or add a space after `/' operator"
                 .to_owned(),
             Self::UnterminatedUnicodeEscape => "unterminated Unicode escape".to_owned(),
             Self::EncodingError { error } => format!("encoding error: {}", error),
+            Self::InvalidMultibyteChar => "invalid multibyte char (UTF-8)".to_string(),
 
             // // Parser errors
             Self::ElseWithoutRescue => "else without rescue is useless".to_owned(),
