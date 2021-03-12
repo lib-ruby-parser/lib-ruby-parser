@@ -1,7 +1,11 @@
-use lib_ruby_parser::{Lexer, Token};
+use lib_ruby_parser::{debug_level, Lexer, Token};
 
 #[allow(dead_code)]
-pub fn tokenize(source: &[u8], filename: &str, debug: bool) -> Result<Vec<Token>, String> {
+pub fn tokenize(
+    source: &[u8],
+    filename: &str,
+    debug: debug_level::Type,
+) -> Result<Vec<Token>, String> {
     print!("tokenizing {} ... ", filename);
     let mut lexer = Lexer::new(source, filename, None);
     lexer.set_debug(debug);

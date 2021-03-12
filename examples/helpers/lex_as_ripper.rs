@@ -1,4 +1,4 @@
-use lib_ruby_parser::{token_name, DiagnosticMessage, ParserResult};
+use lib_ruby_parser::{debug_level, token_name, DiagnosticMessage, ParserResult};
 use std::fs;
 
 use super::*;
@@ -11,7 +11,7 @@ pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
         input,
         diagnostics,
         ..
-    } = parse(&source, filepath, false, false);
+    } = parse(&source, filepath, debug_level::NONE, false);
 
     let mut encoding_error: Option<String> = None;
     for diagnostic in diagnostics.iter() {

@@ -1,5 +1,6 @@
 use lib_ruby_parser::{
-    source::MagicComment, source::MagicCommentKind, Loc, Parser, ParserOptions, ParserResult,
+    debug_level, source::MagicComment, source::MagicCommentKind, Loc, Parser, ParserOptions,
+    ParserResult,
 };
 use std::fs;
 use std::panic;
@@ -203,7 +204,7 @@ fn test_file(fixture_path: &str) -> TestResult {
 
         let options = ParserOptions {
             buffer_name: format!("(test {})", fixture_path),
-            debug: false,
+            debug: debug_level::NONE,
             ..Default::default()
         };
         let parser = Parser::new(test_case.input.as_bytes(), options);
@@ -288,7 +289,7 @@ fn read_fixture(path: &str) -> Vec<u8> {
 fn parse(input: &[u8]) -> ParserResult {
     let options = ParserOptions {
         buffer_name: "(eval)".to_string(),
-        debug: false,
+        debug: debug_level::NONE,
         ..Default::default()
     };
     let parser = Parser::new(input, options);

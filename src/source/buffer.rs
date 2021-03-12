@@ -1,7 +1,9 @@
+use std::convert::TryFrom;
+
+use crate::debug_level;
 use crate::maybe_byte::*;
 use crate::source::input::Input;
 use crate::source::{CustomDecoder, InputError};
-use std::convert::TryFrom;
 
 #[derive(Debug, Default)]
 pub(crate) struct Buffer {
@@ -33,7 +35,7 @@ pub(crate) struct Buffer {
     pub(crate) ruby_sourcefile: Vec<char>, /* current source file */
     pub(crate) ruby_sourcefile_string: Vec<char>,
 
-    pub(crate) debug: bool,
+    pub debug: bool,
 }
 
 impl Buffer {
@@ -320,6 +322,10 @@ impl Buffer {
 
     pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
         self.input.set_encoding(encoding)
+    }
+
+    pub(crate) fn set_debug(&mut self, debug: debug_level::Type) {
+        self.debug = debug_level::is_debug_buffer(debug)
     }
 }
 

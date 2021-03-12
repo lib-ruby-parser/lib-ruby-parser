@@ -1,4 +1,5 @@
 mod benchmark;
+mod debug_level_from_string;
 mod each_async_ruby_file;
 mod each_ruby_file;
 mod lex;
@@ -9,6 +10,7 @@ mod ripper_lex;
 mod tokenize;
 
 pub use benchmark::{start_benchmarking, stop_benchmarking};
+pub use debug_level_from_string::debug_level_from_string;
 pub use each_async_ruby_file::each_async_ruby_file;
 pub use each_ruby_file::each_ruby_file;
 pub use lex::lex;

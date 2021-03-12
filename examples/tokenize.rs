@@ -19,8 +19,12 @@ struct Args {
     #[clap(short, long, about = "don't print anything except OK/Error per file")]
     quiet: bool,
 
-    #[clap(short, long, about = "print debug information")]
-    debug: bool,
+    #[clap(
+        short,
+        long,
+        about = "comma-separated list of debug levels (parser, lexer, buffer)"
+    )]
+    debug: Option<String>,
 }
 
 fn token_value(token: &Token) -> String {
@@ -62,7 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("]");
         }
     };
-    let debug = args.debug;
+    let debug = debug_level_from_string(&args.debug);
 
     if let Some(code) = args.code {
         let tokens = tokenize(code.as_bytes(), "(eval)", debug)?;

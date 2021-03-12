@@ -24,8 +24,12 @@ struct Args {
     #[clap(long, about = "don't print anything")]
     no_output: bool,
 
-    #[clap(short, long, about = "print debug information")]
-    debug: bool,
+    #[clap(
+        short,
+        long,
+        about = "comma-separated list of debug levels (parser, lexer, buffer)"
+    )]
+    debug: Option<String>,
 
     #[clap(short = 'L', long, about = "print locations")]
     locations: bool,
@@ -121,6 +125,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &print_ast
     };
 
+    let debug = debug_level_from_string(&args.debug);
+
     let files = Option::<Vec<InputFile>>::from(&args).unwrap_or_else(|| {
         println!("Nothing to parse");
         std::process::exit(1);
@@ -130,7 +136,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let benchmark = start_benchmarking(args.benchmark);
 
     for file in files.iter() {
-        let result = parse(&file.content, &file.filepath, args.debug, args.drop_tokens);
+        let result = parse(&file.content, &file.filepath, debug, args.drop_tokens);
         print_result(&result);
     }
 

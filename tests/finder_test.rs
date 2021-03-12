@@ -1,10 +1,10 @@
 use lib_ruby_parser::traverse::finder::Finder;
-use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
+use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
 
 fn find(src: &str, pattern: &str) -> Option<String> {
     let options = ParserOptions {
         buffer_name: "(find_test)".to_owned(),
-        debug: false,
+        debug: debug_level::NONE,
         ..Default::default()
     };
     let parser = Parser::new(src.as_bytes(), options);

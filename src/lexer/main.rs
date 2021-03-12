@@ -1,3 +1,4 @@
+use crate::debug_level;
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::parser::Loc;
@@ -104,9 +105,9 @@ impl Lexer {
     }
 
     /// Enables printing additional debugging during lexing
-    pub fn set_debug(&mut self, debug: bool) {
-        self.debug = debug;
-        self.buffer.debug = debug;
+    pub fn set_debug(&mut self, debug: debug_level::Type) {
+        self.debug = debug_level::is_debug_lexer(debug);
+        self.buffer.set_debug(debug);
     }
 
     /// Tokenizes given input until EOF

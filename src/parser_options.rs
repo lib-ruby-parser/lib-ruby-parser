@@ -1,17 +1,23 @@
+use crate::debug_level;
 use crate::source::CustomDecoder;
 use crate::token_rewriter::TokenRewriter;
 
-#[derive(Debug)]
 /// Configuration of the parser
+#[derive(Debug)]
 pub struct ParserOptions {
     /// Name of the buffer. Used in all diagnostic messages
     pub buffer_name: String,
 
-    /// Controls whether the parser should run in debug mode
+    /// Controls which debug information is printed during parsing
     ///
-    /// Debug mode forces parser/lexer to print additional information
-    /// while running (like bison actions)
-    pub debug: bool,
+    /// Can be:
+    ///
+    /// + lib_ruby_parser::debug_level::None
+    /// + lib_ruby_parser::debug_level::Parser
+    /// + lib_ruby_parser::debug_level::Lexer
+    /// + lib_ruby_parser::debug_level::Buffer
+    /// + or a combination of them (like `Lexer | Buffer`, these value is just a bitmask)
+    pub debug: debug_level::Type,
 
     /// Custom decoder that can be used if the source is encoded
     /// in unknown encoding. Only UTF-8 and ASCII-8BIT/BINARY are
@@ -20,7 +26,7 @@ pub struct ParserOptions {
     /// # Example
     /// ```rust
     /// use lib_ruby_parser::source::{InputError, CustomDecoder, RustFnBasedCustomDecoder};
-    /// use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
+    /// use lib_ruby_parser::{Parser, ParserOptions, ParserResult, debug_level};
     ///
     /// fn decode(encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError> {
     ///     if "US-ASCII" == encoding.to_uppercase() {
@@ -44,7 +50,7 @@ pub struct ParserOptions {
     /// };
     ///
     /// let decoder = RustFnBasedCustomDecoder::new(Box::new(decode_closure));
-    /// let options = ParserOptions { decoder: Some(Box::new(decoder)), debug: true, ..Default::default() };
+    /// let options = ParserOptions { decoder: Some(Box::new(decoder)), debug: debug_level::PARSER, ..Default::default() };
     /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options);
     /// let ParserResult { ast, input, .. } = parser.do_parse();
     ///
@@ -67,7 +73,7 @@ impl Default for ParserOptions {
     fn default() -> Self {
         Self {
             buffer_name: DEFAULT_BUFFER_NAME.to_owned(),
-            debug: false,
+            debug: debug_level::NONE,
             decoder: None,
             token_rewriter: None,
             record_tokens: true,

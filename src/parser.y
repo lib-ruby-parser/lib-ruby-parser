@@ -62,6 +62,7 @@
     use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
+    use crate::debug_level;
 }
 
 %code {
@@ -6675,7 +6676,7 @@ impl Parser {
         Self {
             yy_error_verbose: true,
             yynerrs: 0,
-            yydebug: debug,
+            yydebug: debug_level::is_debug_parser(debug),
             yyerrstatus_: 0,
             result: None,
 
@@ -6729,14 +6730,6 @@ impl Parser {
             magic_comments: self.yylexer.magic_comments,
             input: self.yylexer.buffer.input,
         }
-    }
-
-    /// Turns `self` and `yylexer` into debug mode
-    ///
-    /// Use it only for debugging to see bison/lexer debug info
-    pub fn set_debug(&mut self, debug: bool) {
-        self.yydebug = debug;
-        self.yylexer.set_debug(debug);
     }
 
     fn warn(&mut self, loc: &Loc, message: DiagnosticMessage) {
