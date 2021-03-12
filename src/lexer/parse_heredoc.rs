@@ -77,7 +77,7 @@ impl ParseHeredoc for Lexer {
             if !self.is_identchar() {
                 self.buffer.pushback(&c);
                 if (func & STR_FUNC_INDENT) != 0 {
-                    self.buffer.pushback(&if indent > 0 { '~' } else { '-' });
+                    self.buffer.pushback(if indent > 0 { b'~' } else { b'-' });
                 }
                 return None;
             }
@@ -263,7 +263,7 @@ impl ParseHeredoc for Lexer {
                     }
                 }
                 self.lval_end = Some(self.buffer.pcur + 1);
-                if c != '\n' {
+                if c != b'\n' {
                     if c == b'\\' {
                         self.buffer.heredoc_line_indent = -1
                     }
@@ -400,7 +400,7 @@ impl ParseHeredoc for Lexer {
             let w = (self.buffer.heredoc_line_indent / TAB_WIDTH) + 1;
             self.buffer.heredoc_line_indent = w * TAB_WIDTH;
             return true;
-        } else if *c != '\n' {
+        } else if *c != b'\n' {
             if self.buffer.heredoc_indent > self.buffer.heredoc_line_indent {
                 self.buffer.heredoc_indent = self.buffer.heredoc_line_indent
             }

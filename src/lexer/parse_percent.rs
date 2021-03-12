@@ -35,7 +35,7 @@ impl ParsePercent for Lexer {
             if !c.is_ascii() {
                 return self.percent_unknown(&term);
             }
-            *c = MaybeByte::new('Q');
+            *c = MaybeByte::new(b'Q');
         } else {
             term = self.nextc();
             if term.is_alnum() {

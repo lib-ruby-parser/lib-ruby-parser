@@ -157,15 +157,6 @@ pub(crate) trait MaybeByteNew<T> {
     fn new(c: T) -> Self;
 }
 
-impl MaybeByteNew<char> for MaybeByte {
-    fn new(c: char) -> Self {
-        if c.len_utf8() > 1 {
-            unreachable!("Can't construct MaybeByte from a multibyte char {:?}", c)
-        }
-        MaybeByte::Some(c as u8)
-    }
-}
-
 impl MaybeByteNew<u8> for MaybeByte {
     fn new(byte: u8) -> Self {
         MaybeByte::Some(byte)
@@ -176,18 +167,6 @@ impl PartialEq<u8> for MaybeByte {
     fn eq(&self, other: &u8) -> bool {
         match self.to_option() {
             Some(c) => c == *other,
-            _ => false,
-        }
-    }
-}
-
-impl PartialEq<char> for MaybeByte {
-    fn eq(&self, other: &char) -> bool {
-        if other.len_utf8() > 1 {
-            return false;
-        }
-        match self.to_option() {
-            Some(c) => c == *other as u8,
             _ => false,
         }
     }
@@ -209,19 +188,6 @@ impl PartialOrd<u8> for MaybeByte {
     fn partial_cmp(&self, other: &u8) -> Option<std::cmp::Ordering> {
         match self.to_option() {
             Some(c) => Some(c.cmp(other)),
-            _ => Some(std::cmp::Ordering::Less),
-        }
-    }
-}
-
-impl PartialOrd<char> for MaybeByte {
-    fn partial_cmp(&self, other: &char) -> Option<std::cmp::Ordering> {
-        if other.len_utf8() > 1 {
-            unreachable!("can't compare byte and multibyte char");
-        }
-
-        match self.to_option() {
-            Some(c) => Some(c.cmp(&(*other as u8))),
             _ => Some(std::cmp::Ordering::Less),
         }
     }

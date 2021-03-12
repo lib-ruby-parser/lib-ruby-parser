@@ -25,7 +25,7 @@ impl ParseGvar for Lexer {
                     self.tokadd(b'_');
                 } else {
                     self.buffer.pushback(&c);
-                    c = MaybeByte::new('_');
+                    c = MaybeByte::new(b'_');
                     self.tokadd(b'$');
                     self.tokadd(&c);
                     return Self::tGVAR;
@@ -59,7 +59,7 @@ impl ParseGvar for Lexer {
                     if self.tokadd_mbchar(&c).is_err() { return Self::END_OF_INPUT }
                 } else {
                     self.buffer.pushback(&c);
-                    self.buffer.pushback(&'-');
+                    self.buffer.pushback(b'-');
                     return Self::tCHAR;
                 }
                 return Self::tGVAR;

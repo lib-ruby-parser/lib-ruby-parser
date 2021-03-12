@@ -317,7 +317,7 @@ impl ParseString for Lexer {
                                     continue;
                                 }
                                 if c == term {
-                                    return Some(MaybeByte::new('\\'));
+                                    return Some(MaybeByte::new(b'\\'));
                                 }
                             }
                             self.tokadd(b'\\');
@@ -641,7 +641,7 @@ impl ParseString for Lexer {
                         return self.tokadd_escape_eof();
                     }
                     c = self.nextc();
-                    if c != '-' {
+                    if c != b'-' {
                         self.buffer.pushback(&c);
                         return self.tokadd_escape_eof();
                     }
@@ -664,7 +664,7 @@ impl ParseString for Lexer {
                         return self.tokadd_escape_eof();
                     }
                     c = self.nextc();
-                    if c != '-' {
+                    if c != b'-' {
                         self.buffer.pushback(&c);
                         return self.tokadd_escape_eof();
                     }
@@ -737,9 +737,9 @@ impl ParseString for Lexer {
         c = self.nextc();
         match c.to_option() {
             Some(b'\\') => c,
-            Some(b'n') => MaybeByte::new('\n'),
-            Some(b't') => MaybeByte::new('\t'),
-            Some(b'r') => MaybeByte::new('\r'),
+            Some(b'n') => MaybeByte::new(b'\n'),
+            Some(b't') => MaybeByte::new(b'\t'),
+            Some(b'r') => MaybeByte::new(b'\r'),
             Some(b'f') => MaybeByte::new(Self::LF_CHAR),
             Some(b'v') => MaybeByte::new(Self::VTAB_CHAR),
             Some(b'a') => MaybeByte::new(0x07_u8),
@@ -761,15 +761,15 @@ impl ParseString for Lexer {
                 c
             }
 
-            Some(b'b') => MaybeByte::new(0x08_u8),
-            Some(b's') => MaybeByte::new(' '),
+            Some(b'b') => MaybeByte::new(0x08),
+            Some(b's') => MaybeByte::new(b' '),
 
             Some(b'M') => {
                 if (flags & ESCAPE_META) != 0 {
                     return self.read_escape_eof();
                 }
                 c = self.nextc();
-                if c != '-' {
+                if c != b'-' {
                     return self.read_escape_eof();
                 }
                 c = self.nextc();
@@ -799,7 +799,7 @@ impl ParseString for Lexer {
                 if c == b'C' {
                     // C fallthrough
                     c = self.nextc();
-                    if c != '-' {
+                    if c != b'-' {
                         return self.read_escape_eof();
                     }
                 }

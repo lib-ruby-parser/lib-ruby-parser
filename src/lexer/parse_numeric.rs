@@ -113,7 +113,7 @@ impl ParseNumeric for Lexer {
                             }
                             continue;
                         }
-                        if c != '0' && c != '1' {
+                        if c != b'0' && c != b'1' {
                             break;
                         }
                         nondigit = None;
@@ -193,13 +193,13 @@ impl ParseNumeric for Lexer {
                     return self.no_digits();
                 }
             }
-            if c >= '0' && c <= '7' {
+            if c >= b'0' && c <= b'7' {
                 // octal
                 if let Some(result) = self.parse_octal(&mut c, &mut nondigit, start) {
                     return result;
                 }
             }
-            if c > '7' && c <= '9' {
+            if c > b'7' && c <= b'9' {
                 self.invalid_octal();
             } else if c == b'.' || c == b'e' || c == b'E' {
                 self.tokadd(b'0');
@@ -253,7 +253,7 @@ impl ParseNumeric for Lexer {
                     }
                     nondigit = Some(c.clone());
                     c = self.nextc();
-                    if c != '-' && c != '+' && !c.is_digit() {
+                    if c != b'-' && c != b'+' && !c.is_digit() {
                         self.buffer.pushback(&c);
                         nondigit = None;
                         return self.decode_num(c, nondigit, is_float, seen_e);
@@ -303,10 +303,10 @@ impl ParseNumeric for Lexer {
                 }
                 continue;
             }
-            if *c < '0' || *c > '9' {
+            if *c < b'0' || *c > b'9' {
                 break;
             }
-            if *c > '7' {
+            if *c > b'7' {
                 self.invalid_octal();
                 return None;
             }

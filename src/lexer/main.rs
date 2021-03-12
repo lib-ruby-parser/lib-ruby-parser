@@ -931,7 +931,7 @@ impl Lexer {
                 Some(b'~') => {
                     if self.lex_state.is_after_operator() {
                         c = self.nextc();
-                        if c != '@' {
+                        if c != b'@' {
                             self.buffer.pushback(&c);
                         }
                         self.lex_state.set(EXPR_ARG);

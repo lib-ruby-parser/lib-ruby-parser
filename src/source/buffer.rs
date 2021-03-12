@@ -39,8 +39,8 @@ pub(crate) struct Buffer {
 }
 
 impl Buffer {
-    const CTRL_Z_CHAR: char = 0x1a as char;
-    const CTRL_D_CHAR: char = 0x04 as char;
+    const CTRL_Z_CHAR: u8 = 0x1a;
+    const CTRL_D_CHAR: u8 = 0x04;
 
     pub fn new(name: &str, bytes: Vec<u8>, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
         let mut input = Input::new(name, decoder);
@@ -330,14 +330,11 @@ impl Buffer {
 }
 
 pub(crate) trait Pushback<T> {
-    fn pushback(&mut self, c: &T);
+    fn pushback(&mut self, c: T);
 }
 
-impl Pushback<Option<u8>> for Buffer {
-    fn pushback(&mut self, c: &Option<u8>) {
-        if c.is_none() {
-            return;
-        };
+impl Pushback<u8> for Buffer {
+    fn pushback(&mut self, c: u8) {
         self.pcur -= 1;
         if self.pcur > self.pbeg
             && self.byte_at(self.pcur) == b'\n'
@@ -351,14 +348,23 @@ impl Pushback<Option<u8>> for Buffer {
     }
 }
 
-impl Pushback<MaybeByte> for Buffer {
+impl Pushback<&Option<u8>> for Buffer {
+    fn pushback(&mut self, c: &Option<u8>) {
+        match c {
+            Some(c) => self.pushback(*c),
+            None => {}
+        }
+    }
+}
+
+impl Pushback<&MaybeByte> for Buffer {
     fn pushback(&mut self, c: &MaybeByte) {
         self.pushback(&c.to_option())
     }
 }
 
-impl Pushback<char> for Buffer {
-    fn pushback(&mut self, _c: &char) {
-        self.pushback(&Some(1))
+impl Pushback<&mut MaybeByte> for Buffer {
+    fn pushback(&mut self, c: &mut MaybeByte) {
+        self.pushback(&c.to_option())
     }
 }

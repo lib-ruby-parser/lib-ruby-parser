@@ -105,7 +105,7 @@ impl ParseMagicComment for Lexer {
                 break;
             }
             let c = self.char_at(str_);
-            if c != '=' && c != ':' {
+            if c != b'=' && c != b':' {
                 return;
             }
             sep = true;
@@ -141,9 +141,9 @@ impl ParseMagicComment for Lexer {
                     if i + 1 >= len {
                         return 0;
                     }
-                    if self.char_at(str_ + i + 1) != '-' {
+                    if self.char_at(str_ + i + 1) != b'-' {
                         i += 4;
-                    } else if self.char_at(str_ + i - 1) != '-' {
+                    } else if self.char_at(str_ + i - 1) != b'-' {
                         i += 2;
                     } else {
                         return str_ + i + 2;
@@ -241,7 +241,7 @@ impl ParseMagicComment for Lexer {
             if len == 0 {
                 break;
             }
-            if self.char_at(str_) != ':' {
+            if self.char_at(str_) != b':' {
                 if !indicator {
                     return Ok(false);
                 }
@@ -266,7 +266,7 @@ impl ParseMagicComment for Lexer {
                 loop {
                     let c = self.char_at(str_);
                     len -= 1;
-                    if !(len > 0 && c != '"') {
+                    if !(len > 0 && c != b'"') {
                         break;
                     }
 
@@ -287,7 +287,7 @@ impl ParseMagicComment for Lexer {
                 vbeg = str_;
                 loop {
                     let c = self.char_at(str_);
-                    if !(len > 0 && c != '"' && c != ';' && !c.is_space()) {
+                    if !(len > 0 && c != b'"' && c != b';' && !c.is_space()) {
                         break;
                     }
 
