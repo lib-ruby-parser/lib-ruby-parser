@@ -14,7 +14,7 @@ impl Input {
     /// Constructs a new input
     pub fn new(name: &str, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
         Self {
-            name: name.to_owned(),
+            name: name.to_string(),
             decoder,
             ..Default::default()
         }

@@ -171,16 +171,15 @@ impl<'a> NodeWrapper<'a> {
 
 fn field_name_to_variant(node: &Node, field: &Field) -> String {
     match (&node.str_type[..], &field.field_name[..]) {
-        (_, "statements") => return "Stmts".to_owned(),
-        (_, "call") => return "MethodCall".to_owned(),
-        (_, "default") => return "DefaultValue".to_owned(),
-        (_, "items") => return "MlhsItems".to_owned(),
-        ("when", "patterns") => return "Args".to_owned(),
-        ("undef", "names") => return "Args".to_owned(),
-        ("args", "args") => return "Arglist".to_owned(),
-        ("procarg0", "args") => return "Arglist".to_owned(),
-        ("rescue", "else_") => return "ElseBody".to_owned(),
-        // (_, "when_bodies") => return "WhenBodies".to_owned(),
+        (_, "statements") => return "Stmts".to_string(),
+        (_, "call") => return "MethodCall".to_string(),
+        (_, "default") => return "DefaultValue".to_string(),
+        (_, "items") => return "MlhsItems".to_string(),
+        ("when", "patterns") => return "Args".to_string(),
+        ("undef", "names") => return "Args".to_string(),
+        ("args", "args") => return "Arglist".to_string(),
+        ("procarg0", "args") => return "Arglist".to_string(),
+        ("rescue", "else_") => return "ElseBody".to_string(),
         _ => {}
     };
     capitalize_field_name(&field.field_name)

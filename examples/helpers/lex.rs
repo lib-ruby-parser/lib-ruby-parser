@@ -3,7 +3,7 @@ use lib_ruby_parser::{debug_level, source::Input, Parser, ParserOptions, ParserR
 #[allow(dead_code)]
 pub fn lex(source: &[u8], filename: &str, debug: debug_level::Type) -> (Vec<Token>, Input) {
     let options = ParserOptions {
-        buffer_name: filename.to_owned(),
+        buffer_name: filename.to_string(),
         debug,
         ..Default::default()
     };

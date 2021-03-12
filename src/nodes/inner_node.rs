@@ -51,7 +51,7 @@ impl InspectVec {
     }
 
     pub(crate) fn push_nil(&mut self) {
-        self.strings.push(", nil".to_owned());
+        self.strings.push(", nil".to_string());
     }
 
     pub(crate) fn push_u8(&mut self, n: &u8) {

@@ -36,7 +36,7 @@ impl VariablesStack {
             .borrow_mut()
             .last_mut()
             .expect("expected variables_stack to have at least 1 layer")
-            .insert(name.to_owned());
+            .insert(name.to_string());
     }
 
     pub(crate) fn is_declared(&self, name: &str) -> bool {

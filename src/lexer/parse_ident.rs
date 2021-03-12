@@ -28,7 +28,7 @@ impl ParseIdent for Lexer {
 
     fn tokenize_ident(&mut self) -> Option<String> {
         self.set_yylval_name();
-        self.tokenbuf.borrow_string().map(|s| s.to_owned()).ok()
+        self.tokenbuf.borrow_string().map(|s| s.to_string()).ok()
     }
 
     fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32 {

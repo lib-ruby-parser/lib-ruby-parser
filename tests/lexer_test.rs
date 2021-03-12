@@ -44,10 +44,10 @@ impl Fixture {
                 ("--STATE", _) => current_section = TestSection::State,
                 ("--INPUT", _) => current_section = TestSection::Input,
                 ("--TOKENS", _) => current_section = TestSection::Tokens,
-                (_, &TestSection::Vars) => vars = line.split(' ').map(|s| s.to_owned()).collect(),
-                (_, &TestSection::State) => state = Some(line.to_owned()),
-                (_, &TestSection::Input) => input.push(line.to_owned()),
-                (_, &TestSection::Tokens) => tokens.push(line.to_owned()),
+                (_, &TestSection::Vars) => vars = line.split(' ').map(|s| s.to_string()).collect(),
+                (_, &TestSection::State) => state = Some(line.to_string()),
+                (_, &TestSection::Input) => input.push(line.to_string()),
+                (_, &TestSection::Tokens) => tokens.push(line.to_string()),
                 (_, &TestSection::None) => {
                     panic!("empty state while parsing fixture on line {:#?}", line)
                 }

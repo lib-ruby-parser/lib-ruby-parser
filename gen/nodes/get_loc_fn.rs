@@ -77,7 +77,7 @@ impl LocName {{
             .iter()
             .map(|loc_name| {
                 let fallback = if loc_name.to_str() == "expression_l" {
-                    "".to_owned()
+                    "".to_string()
                 } else {
                     format!(
                         "other => panic!(\"node {{}} doesn't support {} loc\", other.str_type()),",

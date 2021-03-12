@@ -86,16 +86,16 @@ impl InnerNode for {struct_name} {{
 
     fn imports(&self) -> Vec<String> {
         let mut imports = vec![];
-        imports.push("use crate::nodes::InnerNode;".to_owned());
-        imports.push("use crate::nodes::InspectVec;".to_owned());
-        imports.push("use crate::Loc;".to_owned());
+        imports.push("use crate::nodes::InnerNode;".to_string());
+        imports.push("use crate::nodes::InspectVec;".to_string());
+        imports.push("use crate::Loc;".to_string());
         if self
             .node
             .fields
             .iter()
             .any(|f| f.field_type.has_reference_to_node())
         {
-            imports.push("use crate::Node;".to_owned());
+            imports.push("use crate::Node;".to_string());
         }
         if self
             .node
@@ -103,7 +103,7 @@ impl InnerNode for {struct_name} {{
             .iter()
             .any(|f| f.field_type == FieldType::StringValue)
         {
-            imports.push("use crate::StringValue;".to_owned());
+            imports.push("use crate::StringValue;".to_string());
         }
         imports
     }

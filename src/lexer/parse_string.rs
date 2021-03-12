@@ -207,7 +207,7 @@ impl ParseString for Lexer {
                         .tokenbuf
                         .borrow_string()
                         .expect("expected buffer to have only utf-8 chars")
-                        .to_owned(),
+                        .to_string(),
                 },
                 self.current_loc(),
             );

@@ -400,7 +400,7 @@ impl Item {
 
             unknown_pattern => {
                 return Err(ItemFromStringError {
-                    unknown_pattern: unknown_pattern.to_owned(),
+                    unknown_pattern: unknown_pattern.to_string(),
                 })
             }
         };

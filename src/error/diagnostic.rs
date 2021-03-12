@@ -49,7 +49,7 @@ impl Diagnostic {
             tildes = if self.loc.size() > 0 {
                 "~".repeat(self.loc.size() - 1)
             } else {
-                "".to_owned()
+                "".to_string()
             }
         );
 
@@ -64,7 +64,7 @@ impl Diagnostic {
                 highlight = highlight
             )
             .trim()
-            .to_owned(),
+            .to_string(),
         )
     }
 

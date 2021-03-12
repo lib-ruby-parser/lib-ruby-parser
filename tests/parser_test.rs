@@ -64,12 +64,12 @@ impl Fixture {
                     current_section = TestSection::SkipIfFeatureEnabled
                 }
 
-                (_, &TestSection::Input) => input.push(line.to_owned()),
-                (_, &TestSection::AST) => ast.push(line.to_owned()),
-                (_, &TestSection::Locations) => locs.push(line.to_owned()),
-                (_, &TestSection::Diagnostic) => diagnostics.push(line.to_owned()),
+                (_, &TestSection::Input) => input.push(line.to_string()),
+                (_, &TestSection::AST) => ast.push(line.to_string()),
+                (_, &TestSection::Locations) => locs.push(line.to_string()),
+                (_, &TestSection::Diagnostic) => diagnostics.push(line.to_string()),
                 (_, &TestSection::SkipIfFeatureEnabled) => {
-                    skip_if_feature_enabled = Some(line.to_owned())
+                    skip_if_feature_enabled = Some(line.to_string())
                 }
 
                 (_, &TestSection::None) => {
@@ -104,7 +104,7 @@ impl Fixture {
                     .ast
                     .as_ref()
                     .map(|node| node.inspect(0))
-                    .unwrap_or_else(|| "nil".to_owned());
+                    .unwrap_or_else(|| "nil".to_string());
 
                 if &actual_ast != expected_ast {
                     println!("{:?}", self.input);
@@ -122,7 +122,7 @@ impl Fixture {
                 let ast = if let Some(ast) = actual.ast.as_ref() {
                     ast
                 } else {
-                    return TestOutput::Failure("can't compare locs, ast is empty".to_owned());
+                    return TestOutput::Failure("can't compare locs, ast is empty".to_string());
                 };
 
                 for loc in locs {

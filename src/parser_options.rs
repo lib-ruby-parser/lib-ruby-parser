@@ -34,7 +34,7 @@ pub struct ParserOptions {
     ///         return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     ///     }
     ///     Err(InputError::DecodingError(
-    ///         "only us-ascii is supported".to_owned(),
+    ///         "only us-ascii is supported".to_string(),
     ///     ))
     /// }
     ///
@@ -45,7 +45,7 @@ pub struct ParserOptions {
     ///         return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     ///     }
     ///     Err(InputError::DecodingError(
-    ///         "only us-ascii is supported".to_owned(),
+    ///         "only us-ascii is supported".to_string(),
     ///     ))
     /// };
     ///
@@ -54,7 +54,7 @@ pub struct ParserOptions {
     /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options);
     /// let ParserResult { ast, input, .. } = parser.do_parse();
     ///
-    /// assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_owned())
+    /// assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_string())
     /// ```
     pub decoder: Option<Box<dyn CustomDecoder>>,
 
@@ -72,7 +72,7 @@ const DEFAULT_BUFFER_NAME: &str = "(eval)";
 impl Default for ParserOptions {
     fn default() -> Self {
         Self {
-            buffer_name: DEFAULT_BUFFER_NAME.to_owned(),
+            buffer_name: DEFAULT_BUFFER_NAME.to_string(),
             debug: debug_level::NONE,
             decoder: None,
             token_rewriter: None,

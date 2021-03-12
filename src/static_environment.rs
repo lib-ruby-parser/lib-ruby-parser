@@ -76,7 +76,7 @@ impl StaticEnvironment {
 
     /// Declares a new variable in the current scope
     pub fn declare(&self, name: &str) {
-        self.variables.borrow_mut().insert(name.to_owned());
+        self.variables.borrow_mut().insert(name.to_string());
     }
 
     /// Returns `true` if variable with a given `name` is declared in the current scope

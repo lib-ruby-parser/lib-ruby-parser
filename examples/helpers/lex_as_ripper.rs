@@ -5,7 +5,7 @@ use super::*;
 
 #[allow(dead_code)]
 pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
-    let source = fs::read(filepath).map_err(|_| "failed to read a file".to_owned())?;
+    let source = fs::read(filepath).map_err(|_| "failed to read a file".to_string())?;
     let ParserResult {
         mut tokens,
         input,
@@ -16,7 +16,7 @@ pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
     let mut encoding_error: Option<String> = None;
     for diagnostic in diagnostics.iter() {
         if let DiagnosticMessage::EncodingError { error } = &diagnostic.message {
-            encoding_error = Some(error.to_owned())
+            encoding_error = Some(error.clone())
         }
     }
     if let Some(encoding_error) = encoding_error {
@@ -60,8 +60,7 @@ pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
             "tUPLUS" => "tPLUS",
             "tXSTRING_BEG" | "tBACK_REF2" => "tBACKTICK",
             other => other,
-        }
-        .to_owned();
+        };
 
         let (line, col) = input
             .line_col_for_pos(token.loc.begin)

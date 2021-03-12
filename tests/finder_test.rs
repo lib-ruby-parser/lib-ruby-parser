@@ -3,7 +3,7 @@ use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
 
 fn find(src: &str, pattern: &str) -> Option<String> {
     let options = ParserOptions {
-        buffer_name: "(find_test)".to_owned(),
+        buffer_name: "(find_test)".to_string(),
         debug: debug_level::NONE,
         ..Default::default()
     };
@@ -20,7 +20,7 @@ fn it_finds() {
     let src = "[1,2,3].each { |a| puts a + 1; 42 }";
     let pattern = "root -> body -> stmts -> 0 -> args -> 0";
 
-    assert_eq!(Some("a + 1".to_owned()), find(src, pattern))
+    assert_eq!(Some("a + 1".to_string()), find(src, pattern))
 }
 
 #[test]

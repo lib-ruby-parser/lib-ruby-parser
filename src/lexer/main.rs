@@ -99,7 +99,7 @@ impl Lexer {
             cond: StackState::new("cond"),
             cmdarg: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
-            buffer: Buffer::new(name, bytes.to_owned(), decoder),
+            buffer: Buffer::new(name, bytes.to_vec(), decoder),
             ..Self::default()
         }
     }
@@ -1120,8 +1120,8 @@ impl Lexer {
         {
             self.warn(
                 DiagnosticMessage::AmbiguousOperator {
-                    operator: op.to_owned(),
-                    interpreted_as: syn.to_owned(),
+                    operator: op.to_string(),
+                    interpreted_as: syn.to_string(),
                 },
                 self.current_loc(),
             );

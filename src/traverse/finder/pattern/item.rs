@@ -31,7 +31,7 @@ impl Item {
                 Ok(Item::VisitorItem(visitor_item))
             }
             unknown => Err(PatternError {
-                pattern: unknown.to_owned(),
+                pattern: unknown.to_string(),
             }),
         }
     }

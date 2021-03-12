@@ -8,7 +8,7 @@ pub fn parse(
     drop_tokens: bool,
 ) -> ParserResult {
     let options = ParserOptions {
-        buffer_name: filename.to_owned(),
+        buffer_name: filename.to_string(),
         debug,
         record_tokens: !drop_tokens,
         ..Default::default()

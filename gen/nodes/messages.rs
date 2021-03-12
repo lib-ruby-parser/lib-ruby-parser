@@ -83,7 +83,7 @@ impl<'a> Message<'a> {
 
     fn fields(&self) -> String {
         if self.message.fields.is_empty() {
-            return "".to_owned();
+            return "".to_string();
         }
 
         let fields = self

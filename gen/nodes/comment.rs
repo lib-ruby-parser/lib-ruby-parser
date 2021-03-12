@@ -11,7 +11,7 @@ impl<'a> Comment<'a> {
         self.comment
             .split("\n")
             .map(|l| {
-                let mut l = l.to_owned();
+                let mut l = l.to_string();
                 if !l.is_empty() {
                     l = format!(" {}", l);
                 }

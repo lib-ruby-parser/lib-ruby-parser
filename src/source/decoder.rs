@@ -90,7 +90,7 @@ pub fn decode_input(
             if let Some(f) = &decoder {
                 f.decode(enc, input)
             } else {
-                Err(InputError::UnsupportedEncoding(enc.to_owned()))
+                Err(InputError::UnsupportedEncoding(enc.to_string()))
             }
         }
     }

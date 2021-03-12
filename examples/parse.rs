@@ -96,7 +96,7 @@ impl From<&Args> for Option<Vec<InputFile>> {
         } else if let Some(path) = &args.path {
             glob::glob(&path)
                 .expect("invalid glob pattern")
-                .map(|f| f.unwrap().to_str().unwrap().to_owned())
+                .map(|f| f.unwrap().to_str().unwrap().to_string())
                 .map(|filepath| InputFile {
                     content: std::fs::read(&filepath).unwrap(),
                     filepath,

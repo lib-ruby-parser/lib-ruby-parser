@@ -299,7 +299,7 @@ impl Builder {
         if !value.bytes.is_valid_utf8() {
             self.error(
                 DiagnosticMessage::InvalidSymbol {
-                    symbol: "UTF-8".to_owned(),
+                    symbol: "UTF-8".to_string(),
                 },
                 loc.clone(),
             )
@@ -821,7 +821,7 @@ impl Builder {
 
     pub(crate) fn nth_ref(&self, token: Box<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
-        let name = value(token)[1..].to_owned();
+        let name = value(token)[1..].to_string();
         let parsed = name.parse::<usize>();
 
         if parsed.is_err() || parsed.map(|n| n > Self::MAX_NTH_REF) == Ok(true) {
@@ -1748,7 +1748,7 @@ impl Builder {
         let begin_l = self.maybe_loc(&lparen_t);
         let end_l = self.maybe_loc(&rparen_t);
 
-        let method_name = maybe_value(selector_t).unwrap_or_else(|| "call".to_owned());
+        let method_name = maybe_value(selector_t).unwrap_or_else(|| "call".to_string());
 
         self.rewrite_hash_args_to_kwargs(&mut args);
 
@@ -2145,7 +2145,7 @@ impl Builder {
 
             Ok(Box::new(Node::Send(Send {
                 recv: Some(self.check_condition(receiver)),
-                method_name: "!".to_owned(),
+                method_name: "!".to_string(),
                 args: vec![],
                 selector_l: Some(selector_l),
                 dot_l: None,
@@ -2167,7 +2167,7 @@ impl Builder {
             let expression_l = nil_node.expression().join(&selector_l);
             Ok(Box::new(Node::Send(Send {
                 recv: Some(Box::new(nil_node)),
-                method_name: "!".to_owned(),
+                method_name: "!".to_string(),
                 args: vec![],
                 selector_l: Some(selector_l),
                 dot_l: None,
@@ -3430,7 +3430,7 @@ impl Builder {
 
         match that_arg {
             None => {
-                map.insert(this_name.to_owned(), this_arg);
+                map.insert(this_name.clone(), this_arg);
             }
             Some(that_arg) => {
                 let that_name = match self.arg_name(*that_arg) {
@@ -3458,7 +3458,7 @@ impl Builder {
         if assigning_to_numparam {
             self.error(
                 DiagnosticMessage::CantAssignToNumparam {
-                    numparam: name.to_owned(),
+                    numparam: name.to_string(),
                 },
                 loc.clone(),
             );
@@ -3472,7 +3472,7 @@ impl Builder {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
                 self.error(
                     DiagnosticMessage::ReservedForNumparam {
-                        numparam: name.to_owned(),
+                        numparam: name.to_string(),
                     },
                     loc.clone(),
                 );
@@ -3578,7 +3578,7 @@ impl Builder {
             Err(err) => {
                 self.error(
                     DiagnosticMessage::RegexError {
-                        error: err.description().to_owned(),
+                        error: err.description().to_string(),
                     },
                     loc.clone(),
                 );
@@ -3615,7 +3615,7 @@ impl Builder {
             let mut result: Vec<String> = vec![];
 
             regex.foreach_name(|name, _| {
-                result.push(name.to_owned());
+                result.push(name.to_string());
                 true
             });
 

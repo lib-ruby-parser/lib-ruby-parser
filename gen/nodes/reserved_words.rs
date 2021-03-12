@@ -337,7 +337,7 @@ impl ReservedWordsList {
             .map(|len| {
                 let words = self.inner.get(&len);
                 if let Some(words) = words {
-                    let mut words = words.to_owned();
+                    let mut words = words.clone();
                     words.sort_by(|x, y| x.name.cmp(y.name));
                     return words;
                 }
