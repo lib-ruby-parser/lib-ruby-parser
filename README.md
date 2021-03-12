@@ -13,12 +13,12 @@
 Basic usage:
 
 ```rust
-use lib_ruby_parser::{Parser, ParserOptions};
+use lib_ruby_parser::{Parser, ParserOptions, debug_level};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let options = ParserOptions {
-        buffer_name: "(eval)".to_owned(),
-        debug: true,
+        buffer_name: "(eval)".to_string(),
+        debug: debug_level::PARSER,
         ..Default::default()
     };
     let mut parser = Parser::new(b"2 + 2", options)?;
@@ -60,7 +60,7 @@ It's possible to pass a `decoder` function in `ParserOptions` that takes a recog
 
 ```rust
 use lib_ruby_parser::source::{InputError, CustomDecoder, RustFnBasedCustomDecoder};
-use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
+use lib_ruby_parser::{Parser, ParserOptions, ParserResult, debug_level};
 
 fn decode(encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError> {
     if "US-ASCII" == encoding.to_uppercase() {
@@ -84,7 +84,7 @@ let decode_closure = |encoding: &str, input: &[u8]| -> Result<Vec<u8>, InputErro
 };
 
 let decoder = RustFnBasedCustomDecoder::new(Box::new(decode_closure));
-let options = ParserOptions { decoder: Some(Box::new(decoder)), debug: true, ..Default::default() };
+let options = ParserOptions { decoder: Some(Box::new(decoder)), debug: debug_level::NONE, ..Default::default() };
 let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options);
 let ParserResult { ast, input, .. } = parser.do_parse();
 assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_owned())
@@ -153,30 +153,30 @@ Then, run a script that compares `Ripper` and `lib-ruby-parser` (attached result
 
 ```sh
 $ ./bench/compare.sh
-    Finished release [optimized] target(s) in 0.32s
+    Finished release [optimized] target(s) in 0.08s
 Running lib-ruby-parser
 Run 1:
-Time taken: 6.4411144390 (total files: 18018)
+Time taken: 6.9259099850 (total files: 18018)
 Run 2:
-Time taken: 6.5622580500 (total files: 18018)
+Time taken: 6.9513776890 (total files: 18018)
 Run 3:
-Time taken: 6.4716968660 (total files: 18018)
+Time taken: 6.8753601400 (total files: 18018)
 Run 4:
-Time taken: 6.5001703130 (total files: 18018)
+Time taken: 6.9588531290 (total files: 18018)
 Run 5:
-Time taken: 6.4996797840 (total files: 18018)
+Time taken: 6.8223984890 (total files: 18018)
 --------
 Running MRI/ripper
 Run 1:
-Time taken: 20.741632999968715 (total files: 18017)
+Time taken: 22.4108530000085 (total files: 18017)
 Run 2:
-Time taken: 20.724869000026956 (total files: 18017)
+Time taken: 21.238974999985658 (total files: 18017)
 Run 3:
-Time taken: 20.90130200004205 (total files: 18017)
+Time taken: 20.937565999978688 (total files: 18017)
 Run 4:
-Time taken: 20.81395199999679 (total files: 18017)
+Time taken: 20.862804999982473 (total files: 18017)
 Run 5:
-Time taken: 20.601982000051066 (total files: 18017)
+Time taken: 20.898615999962203 (total files: 18017)
 ```
 
 ## Profile-guided optimization
