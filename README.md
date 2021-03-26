@@ -2,10 +2,11 @@
 
 [![test](https://github.com/lib-ruby-parser/lib-ruby-parser/workflows/test/badge.svg?branch=master)](https://github.com/lib-ruby-parser/lib-ruby-parser/actions?query=workflow%3Atest)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
-![Crates.io](https://img.shields.io/crates/v/lib-ruby-parser)
+[![Crates.io](https://img.shields.io/badge/crates.io-v3.0.0--8-orange)](https://crates.io/crates/lib-ruby-parser/3.0.0-8)
 [![codecov](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser/branch/master/graph/badge.svg)](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 [![dependency status](https://deps.rs/repo/github/lib-ruby-parser/lib-ruby-parser/status.svg)](https://deps.rs/repo/github/lib-ruby-parser/lib-ruby-parser)
+[![Docs](https://img.shields.io/docsrs/lib-ruby-parser/3.0.0-8)](https://docs.rs/lib-ruby-parser/3.0.0-8)
 
 
 `lib-ruby-parser` is a Ruby parser written in Rust.
@@ -48,9 +49,17 @@ Comparison with [whitequark/parser](https://github.com/whitequark/parser):
 3. However, AST is strongly typed, and so if something is nullable it's explicitly defined and documented.
 4. What's important, it doesn't depend on Ruby
 
-## Versioning
+## Grammar versioning
 
 `lib-ruby-parser` follows MRI/master. There are no plans to support multiple versions like it's done in `whitequark/parser`.
+
+## Library versioning
+
+**Important**
+
+Both MRI and Rust use SemVer, and so we are limited in componenents of the version name. For example, for MRI `3.0.0` we can't have versions of `lib-ruby-parser` like `3.0.0.1`, `3.0.0.2` etc, it's invalid according to strict SemVer.
+
+Because of that, we use the format `RUBYVERSION-RELEASENUMBER` (e.g. `3.0.0-1`, `3.1.0-42` etc), so better manually specify the latest version of `lib-ruby-parser` in your `Cargo.toml`. In our case `3.0.0-100` is greater than `3.0.0`, but according to SemVer it's not (because `-N` suffix is an indicator of the pre-release version)
 
 ## Encodings
 
