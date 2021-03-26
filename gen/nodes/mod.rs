@@ -17,7 +17,7 @@ use node_mod::NodeMod;
 use reserved_words::ReservedWordsList;
 use visitor::Visitor;
 
-pub fn generate_nodes() {
+pub(crate) fn generate_nodes() {
     let nodes = lib_ruby_parser_nodes::nodes();
     let messages = lib_ruby_parser_nodes::messages();
 

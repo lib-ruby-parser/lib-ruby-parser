@@ -1,15 +1,15 @@
 use lib_ruby_parser_nodes::{Field, FieldType, Node};
 
-pub struct Visitor<'a> {
+pub(crate) struct Visitor<'a> {
     nodes: &'a [Node],
 }
 
 impl<'a> Visitor<'a> {
-    pub fn new(nodes: &'a [Node]) -> Self {
+    pub(crate) fn new(nodes: &'a [Node]) -> Self {
         Self { nodes }
     }
 
-    pub fn write(&self) {
+    pub(crate) fn write(&self) {
         std::fs::write("src/traverse/visitor/visit_gen.rs", self.contents()).unwrap()
     }
 
@@ -131,11 +131,11 @@ struct NodeWrapper<'a> {
 }
 
 impl<'a> NodeWrapper<'a> {
-    pub fn new(node: &'a Node) -> Self {
+    pub(crate) fn new(node: &'a Node) -> Self {
         Self { node }
     }
 
-    pub fn visit_children(&self) -> Vec<String> {
+    pub(crate) fn visit_children(&self) -> Vec<String> {
         self.node
             .fields
             .iter()

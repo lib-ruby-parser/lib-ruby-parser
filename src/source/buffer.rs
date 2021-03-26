@@ -7,7 +7,7 @@ use crate::source::{CustomDecoder, InputError};
 
 #[derive(Debug, Default)]
 pub(crate) struct Buffer {
-    pub input: Input,
+    pub(crate) input: Input,
 
     pub(crate) line_count: usize,
     pub(crate) prevline: Option<usize>, // index
@@ -35,14 +35,14 @@ pub(crate) struct Buffer {
     pub(crate) ruby_sourcefile: Vec<char>, /* current source file */
     pub(crate) ruby_sourcefile_string: Vec<char>,
 
-    pub debug: bool,
+    pub(crate) debug: bool,
 }
 
 impl Buffer {
     const CTRL_Z_CHAR: u8 = 0x1a;
     const CTRL_D_CHAR: u8 = 0x04;
 
-    pub fn new(name: &str, bytes: Vec<u8>, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
+    pub(crate) fn new(name: &str, bytes: Vec<u8>, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
         let mut input = Input::new(name, decoder);
 
         input.set_bytes(bytes);

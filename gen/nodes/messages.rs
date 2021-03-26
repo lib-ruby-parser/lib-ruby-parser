@@ -1,15 +1,15 @@
 use super::comment::Comment;
 
-pub struct Messages<'a> {
+pub(crate) struct Messages<'a> {
     registry: &'a lib_ruby_parser_nodes::Messages,
 }
 
 impl<'a> Messages<'a> {
-    pub fn new(registry: &'a lib_ruby_parser_nodes::Messages) -> Self {
+    pub(crate) fn new(registry: &'a lib_ruby_parser_nodes::Messages) -> Self {
         Self { registry }
     }
 
-    pub fn write(&self) {
+    pub(crate) fn write(&self) {
         std::fs::write("src/error/message_gen.rs", self.contents()).unwrap();
     }
 

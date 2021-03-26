@@ -111,7 +111,7 @@ fn test(fixture_path: &str) -> TestResult {
         if test_case.cmdarg {
             lexer.cmdarg.push(true)
         }
-        lexer.debug = false;
+        lexer.set_debug(lib_ruby_parser::debug_level::NONE);
         let tokens = lexer.tokenize_until_eof();
         let tokens = tokens
             .iter()

@@ -132,16 +132,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     });
 
-    let profile = start_profiling(args.profile);
-    let benchmark = start_benchmarking(args.benchmark);
+    let profile = profiling::start(args.profile);
+    let benchmark = benchmarking::start(args.benchmark);
 
     for file in files.iter() {
         let result = parse(&file.content, &file.filepath, debug, args.drop_tokens);
         print_result(&result);
     }
 
-    stop_benchmarking(args.benchmark, benchmark, files.len());
-    stop_profiling(args.profile, profile)?;
+    benchmarking::stop(args.benchmark, benchmark, files.len());
+    profiling::stop(args.profile, profile)?;
 
     Ok(())
 }

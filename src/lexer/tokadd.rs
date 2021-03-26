@@ -1,7 +1,7 @@
 use crate::lexer::*;
 use crate::maybe_byte::*;
 
-pub trait TokAdd<T> {
+pub(crate) trait TokAdd<T> {
     fn tokadd(&mut self, c: T);
 }
 

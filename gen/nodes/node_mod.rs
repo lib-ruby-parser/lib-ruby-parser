@@ -1,15 +1,15 @@
 use lib_ruby_parser_nodes::Node;
 
-pub struct NodeMod<'a> {
+pub(crate) struct NodeMod<'a> {
     nodes: &'a [Node],
 }
 
 impl<'a> NodeMod<'a> {
-    pub fn new(nodes: &'a [Node]) -> Self {
+    pub(crate) fn new(nodes: &'a [Node]) -> Self {
         Self { nodes }
     }
 
-    pub fn write(&self) {
+    pub(crate) fn write(&self) {
         let contents = self
             .nodes
             .iter()

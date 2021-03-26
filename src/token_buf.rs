@@ -6,13 +6,13 @@ pub(crate) struct TokenBuf {
 }
 
 impl TokenBuf {
-    pub fn new(bytes: &[u8]) -> Self {
+    pub(crate) fn new(bytes: &[u8]) -> Self {
         Self {
             bytes: Bytes::new(bytes.to_vec()),
         }
     }
 
-    pub fn take(&mut self) -> Self {
+    pub(crate) fn take(&mut self) -> Self {
         std::mem::take(self)
     }
 

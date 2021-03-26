@@ -1,13 +1,13 @@
-pub struct Comment<'a> {
+pub(crate) struct Comment<'a> {
     comment: &'a str,
 }
 
 impl<'a> Comment<'a> {
-    pub fn new(comment: &'a str) -> Self {
+    pub(crate) fn new(comment: &'a str) -> Self {
         Self { comment }
     }
 
-    pub fn to_string(&self, offset: usize) -> String {
+    pub(crate) fn to_string(&self, offset: usize) -> String {
         self.comment
             .split("\n")
             .map(|l| {

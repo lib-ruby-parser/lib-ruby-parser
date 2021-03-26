@@ -24,7 +24,7 @@ pub struct Lexer {
     pub(crate) buffer: Buffer,
     /// Boolean field that controls printing
     /// additional debug information to stdout
-    pub debug: bool,
+    pub(crate) debug: bool,
 
     pub(crate) lval: Option<Bytes>,
     pub(crate) lval_start: Option<usize>,

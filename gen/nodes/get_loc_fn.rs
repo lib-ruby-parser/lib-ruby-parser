@@ -42,16 +42,16 @@ const LOC_NAMES: &[&'static LocName] = &[
     &LocName::HeredocEnd,
 ];
 
-pub struct GetLocFn<'a> {
+pub(crate) struct GetLocFn<'a> {
     nodes: &'a [Node],
 }
 
 impl<'a> GetLocFn<'a> {
-    pub fn new(nodes: &'a [Node]) -> Self {
+    pub(crate) fn new(nodes: &'a [Node]) -> Self {
         Self { nodes }
     }
 
-    pub fn write(&self) {
+    pub(crate) fn write(&self) {
         std::fs::write("tests/loc_matcher/loc_name_gen.rs", self.contents()).unwrap();
     }
 
@@ -61,7 +61,7 @@ impl<'a> GetLocFn<'a> {
 use lib_ruby_parser::{{Loc, Node}};
 
 impl LocName {{
-    pub fn get(&self, node: &Node) -> Option<Loc> {{
+    pub(crate) fn get(&self, node: &Node) -> Option<Loc> {{
         match self {{
             {loc_branches}
         }}
@@ -100,7 +100,7 @@ impl LocName {{
 }
 
 impl LocName {
-    pub fn match_nodes(&self, nodes: &[Node]) -> Vec<String> {
+    pub(crate) fn match_nodes(&self, nodes: &[Node]) -> Vec<String> {
         nodes
             .iter()
             .filter_map(|node| {

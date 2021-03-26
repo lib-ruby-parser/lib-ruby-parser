@@ -6,7 +6,7 @@ const PARSER_RS: &str = "src/parser.rs";
 const PARSER_FEATURES_Y: &str = "src/parser.features.y";
 const PARSER_FEATURES_RS: &str = "src/parser.features.rs";
 
-pub fn generate_parser_y() {
+pub(crate) fn generate_parser_y() {
     println!("cargo:rerun-if-changed={}", PARSER_Y);
 
     apply_features();
@@ -24,11 +24,11 @@ struct Features {
 }
 
 impl Features {
-    pub fn is_enabled(&self, f: &str) -> bool {
+    pub(crate) fn is_enabled(&self, f: &str) -> bool {
         self.enabled.contains(&f)
     }
 
-    pub fn is_disabled(&self, f: &str) -> bool {
+    pub(crate) fn is_disabled(&self, f: &str) -> bool {
         self.disabled.contains(&f)
     }
 }

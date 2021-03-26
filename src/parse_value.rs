@@ -544,80 +544,82 @@ pub(crate) enum ParseValue {
 }
 
 impl ParseValue {
-    pub fn from_token(token: Box<Token>) -> Self {
+    pub(crate) fn from_token(token: Box<Token>) -> Self {
         Self::Token(token)
     }
 
-    pub fn new_superclass(value: Superclass) -> Self {
+    pub(crate) fn new_superclass(value: Superclass) -> Self {
         Self::Superclass(Box::new(value))
     }
-    pub fn new_opt_ensure(value: Option<Ensure>) -> Self {
+    pub(crate) fn new_opt_ensure(value: Option<Ensure>) -> Self {
         Self::OptEnsure(Box::new(value))
     }
-    pub fn new_opt_else(value: Option<Else>) -> Self {
+    pub(crate) fn new_opt_else(value: Option<Else>) -> Self {
         Self::OptElse(Box::new(value))
     }
-    pub fn new_exc_var(value: ExcVar) -> Self {
+    pub(crate) fn new_exc_var(value: ExcVar) -> Self {
         Self::ExcVar(Box::new(value))
     }
-    pub fn new_if_tail(value: IfTail) -> Self {
+    pub(crate) fn new_if_tail(value: IfTail) -> Self {
         Self::IfTail(Box::new(value))
     }
-    pub fn new_expr_value_do(value: ExprValueDo) -> Self {
+    pub(crate) fn new_expr_value_do(value: ExprValueDo) -> Self {
         Self::ExprValueDo(Box::new(value))
     }
-    pub fn new_p_kw_label(value: PKwLabel) -> Self {
+    pub(crate) fn new_p_kw_label(value: PKwLabel) -> Self {
         Self::PKwLabel(Box::new(value))
     }
-    pub fn new_brace_body(value: BraceBody) -> Self {
+    pub(crate) fn new_brace_body(value: BraceBody) -> Self {
         Self::BraceBody(Box::new(value))
     }
-    pub fn new_cmd_brace_block(value: CmdBraceBlock) -> Self {
+    pub(crate) fn new_cmd_brace_block(value: CmdBraceBlock) -> Self {
         Self::CmdBraceBlock(Box::new(value))
     }
-    pub fn new_paren_args(value: ParenArgs) -> Self {
+    pub(crate) fn new_paren_args(value: ParenArgs) -> Self {
         Self::ParenArgs(Box::new(value))
     }
-    pub fn new_opt_paren_args(value: OptParenArgs) -> Self {
+    pub(crate) fn new_opt_paren_args(value: OptParenArgs) -> Self {
         Self::OptParenArgs(Box::new(value))
     }
-    pub fn new_lambda_body(value: LambdaBody) -> Self {
+    pub(crate) fn new_lambda_body(value: LambdaBody) -> Self {
         Self::LambdaBody(Box::new(value))
     }
-    pub fn new_do_block(value: DoBlock) -> Self {
+    pub(crate) fn new_do_block(value: DoBlock) -> Self {
         Self::DoBlock(Box::new(value))
     }
-    pub fn new_brace_block(value: BraceBlock) -> Self {
+    pub(crate) fn new_brace_block(value: BraceBlock) -> Self {
         Self::BraceBlock(Box::new(value))
     }
-    pub fn new_defs_head(value: DefsHead) -> Self {
+    pub(crate) fn new_defs_head(value: DefsHead) -> Self {
         Self::DefsHead(Box::new(value))
     }
-    pub fn new_defn_head(value: DefnHead) -> Self {
+    pub(crate) fn new_defn_head(value: DefnHead) -> Self {
         Self::DefnHead(Box::new(value))
     }
-    pub fn new_begin_block(value: BeginBlock) -> Self {
+    pub(crate) fn new_begin_block(value: BeginBlock) -> Self {
         Self::BeginBlock(Box::new(value))
     }
-    pub fn new_cases(value: Cases) -> Self {
+    pub(crate) fn new_cases(value: Cases) -> Self {
         Self::Cases(Box::new(value))
     }
-    pub fn new_case_body(value: CaseBody) -> Self {
+    pub(crate) fn new_case_body(value: CaseBody) -> Self {
         Self::CaseBody(Box::new(value))
     }
-    pub fn new_p_cases(value: PCases) -> Self {
+    pub(crate) fn new_p_cases(value: PCases) -> Self {
         Self::PCases(Box::new(value))
     }
-    pub fn new_p_case_body(value: PCaseBody) -> Self {
+    pub(crate) fn new_p_case_body(value: PCaseBody) -> Self {
         Self::PCaseBody(Box::new(value))
     }
-    pub fn new_do_body(value: DoBody) -> Self {
+    pub(crate) fn new_do_body(value: DoBody) -> Self {
         Self::DoBody(Box::new(value))
     }
-    pub fn new_p_top_expr(value: PTopExpr) -> Self {
+    pub(crate) fn new_p_top_expr(value: PTopExpr) -> Self {
         Self::PTopExpr(Box::new(value))
     }
-    pub fn new_match_pattern_with_trailing_comma(value: MatchPatternWithTrailingComma) -> Self {
+    pub(crate) fn new_match_pattern_with_trailing_comma(
+        value: MatchPatternWithTrailingComma,
+    ) -> Self {
         Self::MatchPatternWithTrailingComma(Box::new(value))
     }
 }

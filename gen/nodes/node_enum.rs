@@ -1,15 +1,15 @@
 use lib_ruby_parser_nodes::Node;
 
-pub struct NodeEnum<'a> {
+pub(crate) struct NodeEnum<'a> {
     nodes: &'a [Node],
 }
 
 impl<'a> NodeEnum<'a> {
-    pub fn new(nodes: &'a [Node]) -> Self {
+    pub(crate) fn new(nodes: &'a [Node]) -> Self {
         Self { nodes }
     }
 
-    pub fn write(&self) {
+    pub(crate) fn write(&self) {
         let contents = format!(
             "use crate::nodes::InnerNode;
 use crate::nodes::*;

@@ -116,4 +116,9 @@ impl Input {
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
     }
+
+    /// Converts itself into owned vector of bytes
+    pub fn into_bytes(self) -> Vec<u8> {
+        self.bytes
+    }
 }

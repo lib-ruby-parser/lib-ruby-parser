@@ -1,21 +1,33 @@
-mod benchmark;
-mod debug_level_from_string;
-mod each_async_ruby_file;
-mod each_ruby_file;
-mod lex;
-mod lex_as_ripper;
-mod parse;
-mod profile;
-mod ripper_lex;
-mod tokenize;
+pub(crate) mod benchmarking;
 
-pub use benchmark::{start_benchmarking, stop_benchmarking};
-pub use debug_level_from_string::debug_level_from_string;
-pub use each_async_ruby_file::each_async_ruby_file;
-pub use each_ruby_file::each_ruby_file;
-pub use lex::lex;
-pub use lex_as_ripper::lex_as_ripper;
-pub use parse::parse;
-pub use profile::{start_profiling, stop_profiling};
-pub use ripper_lex::ripper_lex;
-pub use tokenize::tokenize;
+mod debug_level_from_string;
+#[allow(unused_imports)]
+pub(crate) use debug_level_from_string::debug_level_from_string;
+
+mod each_ruby_file;
+pub(crate) use each_ruby_file::each_ruby_file;
+
+mod each_async_ruby_file;
+#[allow(unused_imports)]
+pub(crate) use each_async_ruby_file::each_async_ruby_file;
+
+mod lex;
+#[allow(unused_imports)]
+pub(crate) use lex::lex;
+
+mod lex_as_ripper;
+#[allow(unused_imports)]
+pub(crate) use lex_as_ripper::lex_as_ripper;
+
+mod parse;
+pub(crate) use parse::parse;
+
+pub(crate) mod profiling;
+
+mod ripper_lex;
+#[allow(unused_imports)]
+pub(crate) use ripper_lex::ripper_lex;
+
+mod tokenize;
+#[allow(unused_imports)]
+pub(crate) use tokenize::tokenize;

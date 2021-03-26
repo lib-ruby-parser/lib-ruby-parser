@@ -2,7 +2,7 @@
 #[derive(Debug, Clone, PartialEq)]
 pub struct Bytes {
     /// Raw vector of bytes
-    pub raw: Vec<u8>,
+    pub(crate) raw: Vec<u8>,
 }
 
 impl Default for Bytes {

@@ -1,16 +1,16 @@
 use super::comment::Comment;
 use lib_ruby_parser_nodes::{Field, FieldType, Node};
 
-pub struct NodeFile<'a> {
+pub(crate) struct NodeFile<'a> {
     node: &'a Node,
 }
 
 impl<'a> NodeFile<'a> {
-    pub fn new(node: &'a Node) -> Self {
+    pub(crate) fn new(node: &'a Node) -> Self {
         Self { node }
     }
 
-    pub fn write(&self) {
+    pub(crate) fn write(&self) {
         std::fs::write(
             &format!("src/nodes/types/{}.rs", self.node.filename),
             self.contents(),
@@ -114,11 +114,11 @@ struct FieldWrapper<'a> {
 }
 
 impl<'a> FieldWrapper<'a> {
-    pub fn new(field: &'a Field) -> Self {
+    pub(crate) fn new(field: &'a Field) -> Self {
         Self { field }
     }
 
-    pub fn declaration(&self) -> String {
+    pub(crate) fn declaration(&self) -> String {
         format!(
             "{comment}
     pub {field_name}: {field_type},",
@@ -128,7 +128,7 @@ impl<'a> FieldWrapper<'a> {
         )
     }
 
-    pub fn str_field_type(&self) -> &'static str {
+    pub(crate) fn str_field_type(&self) -> &'static str {
         match self.field.field_type {
             FieldType::Node => "Box<Node>",
             FieldType::Nodes => "Vec<Node>",

@@ -312,12 +312,12 @@ const RESERVED_WORDS: &[ReservedWord] = &[
     },
 ];
 
-pub struct ReservedWordsList {
+pub(crate) struct ReservedWordsList {
     inner: HashMap<usize, Vec<ReservedWord>>,
 }
 
 impl ReservedWordsList {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         let mut inner = HashMap::<usize, Vec<ReservedWord>>::new();
 
         for reserved_word in RESERVED_WORDS.iter() {
@@ -346,7 +346,7 @@ impl ReservedWordsList {
             .collect::<Vec<_>>()
     }
 
-    pub fn write(&self) {
+    pub(crate) fn write(&self) {
         std::fs::write("src/reserved_words/list.rs", self.contents()).unwrap();
     }
 
