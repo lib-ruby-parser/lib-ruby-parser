@@ -25,13 +25,11 @@ use std::fmt;
 impl fmt::Debug for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&format!(
-            "[{}, {:?}, {}...{}, {:?} -> {:?}]",
+            "[{}, {:?}, {}...{}]",
             token_name(self.token_type),
             self.token_value.to_string_lossy(),
             self.loc.begin,
             self.loc.end,
-            self.lex_state_before,
-            self.lex_state_after
         ))
     }
 }
