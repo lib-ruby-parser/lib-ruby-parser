@@ -201,23 +201,33 @@ impl Builder {
         parts: Vec<Node>,
         end_t: Option<Box<Token>>,
     ) -> Box<Node> {
-        let result = match self.string_map(&begin_t, &parts, &end_t) {
-            StringMap::CollectionMap((begin_l, end_l, expression_l)) => Node::Str(Str {
+        if self.is_heredoc(&begin_t) {
+            let HeredocMap {
+                heredoc_body_l,
+                heredoc_end_l,
+                expression_l,
+            } = self.heredoc_map(&begin_t, &parts, &end_t);
+
+            Box::new(Node::Heredoc(Heredoc {
+                parts,
+                heredoc_body_l,
+                heredoc_end_l,
+                expression_l,
+            }))
+        } else {
+            let CollectionMap {
+                begin_l,
+                end_l,
+                expression_l,
+            } = self.collection_map(&begin_t, &parts, &end_t);
+
+            Box::new(Node::Str(Str {
                 value,
                 begin_l,
                 end_l,
                 expression_l,
-            }),
-            StringMap::HeredocMap((heredoc_body_l, heredoc_end_l, expression_l)) => {
-                Node::Heredoc(Heredoc {
-                    parts,
-                    heredoc_body_l,
-                    heredoc_end_l,
-                    expression_l,
-                })
-            }
-        };
-        Box::new(result)
+            }))
+        }
     }
 
     pub(crate) fn string_internal(&self, string_t: Box<Token>) -> Box<Node> {
@@ -252,23 +262,33 @@ impl Builder {
             _ => {}
         };
 
-        let result = match self.string_map(&begin_t, &parts, &end_t) {
-            StringMap::CollectionMap((begin_l, end_l, expression_l)) => Node::Dstr(Dstr {
+        if self.is_heredoc(&begin_t) {
+            let HeredocMap {
+                heredoc_body_l,
+                heredoc_end_l,
+                expression_l,
+            } = self.heredoc_map(&begin_t, &parts, &end_t);
+
+            Box::new(Node::Heredoc(Heredoc {
+                parts,
+                heredoc_body_l,
+                heredoc_end_l,
+                expression_l,
+            }))
+        } else {
+            let CollectionMap {
+                begin_l,
+                end_l,
+                expression_l,
+            } = self.collection_map(&begin_t, &parts, &end_t);
+
+            Box::new(Node::Dstr(Dstr {
                 parts,
                 begin_l,
                 end_l,
                 expression_l,
-            }),
-            StringMap::HeredocMap((heredoc_body_l, heredoc_end_l, expression_l)) => {
-                Node::Heredoc(Heredoc {
-                    parts,
-                    heredoc_body_l,
-                    heredoc_end_l,
-                    expression_l,
-                })
-            }
-        };
-        Box::new(result)
+            }))
+        }
     }
 
     pub(crate) fn character(&self, char_t: Box<Token>) -> Box<Node> {
@@ -338,8 +358,11 @@ impl Builder {
         end_t: Box<Token>,
     ) -> Box<Node> {
         if let [Node::Str(Str { value, .. })] = &parts[..] {
-            let (begin_l, end_l, expression_l) =
-                self.collection_map(&Some(begin_t), &[], &Some(end_t));
+            let CollectionMap {
+                begin_l,
+                end_l,
+                expression_l,
+            } = self.collection_map(&Some(begin_t), &[], &Some(end_t));
 
             self.validate_sym_value(value, &expression_l);
 
@@ -351,8 +374,11 @@ impl Builder {
             }));
         }
 
-        let (begin_l, end_l, expression_l) =
-            self.collection_map(&Some(begin_t), &parts, &Some(end_t));
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(&Some(begin_t), &parts, &Some(end_t));
         Box::new(Node::Dsym(Dsym {
             parts,
             begin_l,
@@ -523,7 +549,12 @@ impl Builder {
         elements: Vec<Node>,
         end_t: Option<Box<Token>>,
     ) -> Box<Node> {
-        let (begin_l, end_l, expression_l) = self.collection_map(&begin_t, &elements, &end_t);
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(&begin_t, &elements, &end_t);
+
         Box::new(Node::Array(Array {
             elements,
             begin_l,
@@ -557,7 +588,12 @@ impl Builder {
             _ => {}
         }
 
-        let (begin_l, end_l, expression_l) = self.collection_map(&None, &parts, &None);
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(&None, &parts, &None);
+
         Box::new(Node::Dstr(Dstr {
             parts,
             begin_l,
@@ -718,7 +754,12 @@ impl Builder {
         pairs: Vec<Node>,
         end_t: Option<Box<Token>>,
     ) -> Box<Node> {
-        let (begin_l, end_l, expression_l) = self.collection_map(&begin_t, &pairs, &end_t);
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(&begin_t, &pairs, &end_t);
+
         Box::new(Node::Hash(Hash {
             pairs,
             begin_l,
@@ -1224,7 +1265,12 @@ impl Builder {
         items: Vec<Node>,
         end_t: Option<Box<Token>>,
     ) -> Box<Node> {
-        let (begin_l, end_l, expression_l) = self.collection_map(&begin_t, &items, &end_t);
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(&begin_t, &items, &end_t);
+
         Box::new(Node::Mlhs(Mlhs {
             items,
             begin_l,
@@ -1491,7 +1537,12 @@ impl Builder {
             return None;
         }
 
-        let (begin_l, end_l, expression_l) = self.collection_map(&begin_t, &args, &end_t);
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(&begin_t, &args, &end_t);
+
         Some(Box::new(Node::Args(Args {
             args,
             begin_l,
@@ -2155,7 +2206,12 @@ impl Builder {
                 expression_l,
             })))
         } else {
-            let (begin_l, end_l, expression_l) = self.collection_map(&begin_t, &[], &end_t);
+            let CollectionMap {
+                begin_l,
+                end_l,
+                expression_l,
+            } = self.collection_map(&begin_t, &[], &end_t);
+
             let nil_node = Node::Begin(Begin {
                 statements: vec![],
                 begin_l,
@@ -2678,7 +2734,12 @@ impl Builder {
             } else {
                 vec![]
             };
-            let (begin_l, end_l, expression_l) = self.collection_map(&Some(else_t), &parts, &None);
+            let CollectionMap {
+                begin_l,
+                end_l,
+                expression_l,
+            } = self.collection_map(&Some(else_t), &parts, &None);
+
             statements.push(Node::Begin(Begin {
                 statements: parts,
                 begin_l,
@@ -2686,7 +2747,12 @@ impl Builder {
                 expression_l,
             }));
 
-            let (begin_l, end_l, expression_l) = self.collection_map(&None, &statements, &None);
+            let CollectionMap {
+                begin_l,
+                end_l,
+                expression_l,
+            } = self.collection_map(&None, &statements, &None);
+
             result = Some(Box::new(Node::Begin(Begin {
                 statements,
                 begin_l,
@@ -2731,7 +2797,12 @@ impl Builder {
             [] => None,
             [_] => statements.pop().map(Box::new),
             _ => {
-                let (begin_l, end_l, expression_l) = self.collection_map(&None, &statements, &None);
+                let CollectionMap {
+                    begin_l,
+                    end_l,
+                    expression_l,
+                } = self.collection_map(&None, &statements, &None);
+
                 Some(Box::new(Node::Begin(Begin {
                     statements,
                     begin_l,
@@ -3085,7 +3156,12 @@ impl Builder {
         kwargs: Vec<Node>,
         rbrace_t: Option<Box<Token>>,
     ) -> Box<Node> {
-        let (begin_l, end_l, expression_l) = self.collection_map(&lbrace_t, &kwargs, &rbrace_t);
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(&lbrace_t, &kwargs, &rbrace_t);
+
         Box::new(Node::HashPattern(HashPattern {
             elements: kwargs,
             begin_l,
@@ -3101,7 +3177,12 @@ impl Builder {
         trailing_comma: Option<Box<Token>>,
         rbrack_t: Option<Box<Token>>,
     ) -> Box<Node> {
-        let (begin_l, end_l, expression_l) = self.collection_map(&lbrack_t, &elements, &rbrack_t);
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(&lbrack_t, &elements, &rbrack_t);
+
         let expression_l = expression_l.maybe_join(&self.maybe_loc(&trailing_comma));
 
         if elements.is_empty() {
@@ -3136,7 +3217,12 @@ impl Builder {
         elements: Vec<Node>,
         rbrack_t: Option<Box<Token>>,
     ) -> Box<Node> {
-        let (begin_l, end_l, expression_l) = self.collection_map(&lbrack_t, &elements, &rbrack_t);
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(&lbrack_t, &elements, &rbrack_t);
+
         Box::new(Node::FindPattern(FindPattern {
             elements,
             begin_l,
@@ -3642,40 +3728,55 @@ impl Builder {
         begin_t: &Option<Box<Token>>,
         parts: &[Node],
         end_t: &Option<Box<Token>>,
-    ) -> (Option<Loc>, Option<Loc>, Loc) {
+    ) -> CollectionMap {
         let begin_l = self.maybe_loc(begin_t);
         let end_l = self.maybe_loc(end_t);
 
-        let expr_l = collection_expr(&parts);
-        let expr_l = join_maybe_locs(&expr_l, &begin_l);
-        let expr_l = join_maybe_locs(&expr_l, &end_l);
-        let expr_l = expr_l.unwrap_or_else(|| {
+        let expression_l = collection_expr(&parts);
+        let expression_l = join_maybe_locs(&expression_l, &begin_l);
+        let expression_l = join_maybe_locs(&expression_l, &end_l);
+        let expression_l = expression_l.unwrap_or_else(|| {
             unreachable!("empty collection without begin_t/end_t, can't build source map")
         });
 
-        (begin_l, end_l, expr_l)
+        CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        }
     }
 
-    pub(crate) fn string_map(
+    pub(crate) fn is_heredoc(&self, begin_t: &Option<Box<Token>>) -> bool {
+        if let Some(begin_t) = begin_t {
+            if clone_value(&begin_t).starts_with("<<") {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub(crate) fn heredoc_map(
         &self,
         begin_t: &Option<Box<Token>>,
         parts: &[Node],
         end_t: &Option<Box<Token>>,
-    ) -> StringMap {
-        if let Some(begin_t) = begin_t {
-            if clone_value(&begin_t).starts_with("<<") {
-                let end_t = end_t
-                    .as_ref()
-                    .unwrap_or_else(|| unreachable!("heredoc must have end_t"));
-                let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(end_t));
-                let expression_l = self.loc(begin_t);
-                let heredoc_end_l = self.loc(end_t);
+    ) -> HeredocMap {
+        let begin_t = begin_t
+            .as_ref()
+            .unwrap_or_else(|| unreachable!("bug: begin_t must be Some"));
+        let end_t = end_t
+            .as_ref()
+            .unwrap_or_else(|| unreachable!("heredoc must have end_t"));
 
-                return StringMap::HeredocMap((heredoc_body_l, heredoc_end_l, expression_l));
-            }
+        let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(end_t));
+        let expression_l = self.loc(begin_t);
+        let heredoc_end_l = self.loc(end_t);
+
+        HeredocMap {
+            heredoc_body_l,
+            heredoc_end_l,
+            expression_l,
         }
-
-        StringMap::CollectionMap(self.collection_map(begin_t, parts, end_t))
     }
 
     pub(crate) fn error(&self, message: DiagnosticMessage, loc: Loc) {
@@ -3818,9 +3919,16 @@ pub(crate) fn join_maybe_locs(lhs: &Option<Loc>, rhs: &Option<Loc>) -> Option<Lo
     }
 }
 
-pub(crate) enum StringMap {
-    CollectionMap((Option<Loc>, Option<Loc>, Loc)),
-    HeredocMap((Loc, Loc, Loc)),
+pub(crate) struct CollectionMap {
+    begin_l: Option<Loc>,
+    end_l: Option<Loc>,
+    expression_l: Loc,
+}
+
+pub(crate) struct HeredocMap {
+    heredoc_body_l: Loc,
+    heredoc_end_l: Loc,
+    expression_l: Loc,
 }
 
 fn first<T>(vec: Vec<T>) -> T {
