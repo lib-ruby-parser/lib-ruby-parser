@@ -20,7 +20,6 @@ enum TestSection {
     AST,
     Locations,
     Diagnostic,
-    SkipIfFeatureEnabled,
 }
 
 #[derive(Debug)]
@@ -29,7 +28,6 @@ struct Fixture {
     ast: Option<String>,
     locs: Option<Vec<String>>,
     diagnostics: Option<Vec<String>>,
-    skip_if_feature_enabled: Option<String>,
 }
 
 fn none_if_empty<T: PartialEq<&'static str>>(v: Vec<T>) -> Option<Vec<T>> {
@@ -49,7 +47,6 @@ impl Fixture {
         let mut ast: Vec<String> = vec![];
         let mut locs: Vec<String> = vec![];
         let mut diagnostics: Vec<String> = vec![];
-        let mut skip_if_feature_enabled: Option<String> = None;
         let mut current_section = TestSection::None;
 
         for line in content.lines() {
@@ -60,17 +57,11 @@ impl Fixture {
                 (b"--AST", _) => current_section = TestSection::AST,
                 (b"--LOCATIONS", _) => current_section = TestSection::Locations,
                 (b"--DIAGNOSTIC", _) => current_section = TestSection::Diagnostic,
-                (b"--SKIP-IF-FEATURE-ENABLED", _) => {
-                    current_section = TestSection::SkipIfFeatureEnabled
-                }
 
                 (_, &TestSection::Input) => input.push(line.to_string()),
                 (_, &TestSection::AST) => ast.push(line.to_string()),
                 (_, &TestSection::Locations) => locs.push(line.to_string()),
                 (_, &TestSection::Diagnostic) => diagnostics.push(line.to_string()),
-                (_, &TestSection::SkipIfFeatureEnabled) => {
-                    skip_if_feature_enabled = Some(line.to_string())
-                }
 
                 (_, &TestSection::None) => {
                     panic!("empty state while parsing fixture on line {:#?}", line)
@@ -93,7 +84,6 @@ impl Fixture {
             ast,
             locs,
             diagnostics,
-            skip_if_feature_enabled,
         }
     }
 
@@ -180,27 +170,11 @@ enum TestOutput {
 enum TestResult {
     Segfault,
     Some(TestOutput),
-    Skip,
 }
 
 fn test_file(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = Fixture::new(fixture_path);
-
-        match &test_case.skip_if_feature_enabled {
-            Some(feature) if feature == "lsp-error-recovery" => {
-                if cfg!(feature = "lsp-error-recovery") {
-                    return TestResult::Skip;
-                }
-            }
-            Some(unknown) => {
-                return TestResult::Some(TestOutput::Failure(format!(
-                    "unknown --SKIP-IF-ENABLED feature {:?}",
-                    unknown
-                )));
-            }
-            _ => {}
-        }
 
         let options = ParserOptions {
             buffer_name: format!("(test {})", fixture_path),
@@ -234,7 +208,6 @@ fn test_dir(dir: &str) {
     let mut passed: usize = 0;
     let mut failed: usize = 0;
     let mut segfaults: usize = 0;
-    let mut skipped: usize = 0;
 
     for filename in files_under_dir(dir) {
         eprint!("test {} ... ", filename);
@@ -251,16 +224,12 @@ fn test_dir(dir: &str) {
                 eprintln!("Err:\n{}\n", output);
                 failed += 1;
             }
-            TestResult::Skip => {
-                eprintln!("Skip");
-                skipped += 1;
-            }
         }
     }
 
     eprintln!(
-        "{} tests passed, {} failed, {} segfaults, {} skipped",
-        passed, failed, segfaults, skipped
+        "{} tests passed, {} failed, {} segfaults",
+        passed, failed, segfaults
     );
 
     assert_eq!(
