@@ -38,5 +38,10 @@ jobs:
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
           bison --version
 
+      - name: check escaping
+        run: |
+          cargo run --features ${{ matrix.features }} --example check_escaping
+          cargo run --features ${{ matrix.features }} --example tokenize -- -e "'string'"
+
       - name: Run tests
         run: cargo test --features ${{ matrix.features }} -- --nocapture
