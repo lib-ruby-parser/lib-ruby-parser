@@ -16,7 +16,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rust: [stable, beta, nightly]
+        rust:
+          - stable
+          - beta
+          # - nightly
         features: ["onig,rebuild-grammar"]
 
     steps:
@@ -37,11 +40,6 @@ jobs:
           brew install bison
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
           bison --version
-
-      - name: check escaping
-        run: |
-          cargo run --features ${{ matrix.features }} --example check_escaping
-          cargo run --features ${{ matrix.features }} --example tokenize -- -e "'string'"
 
       - name: Run tests
         run: cargo test --features ${{ matrix.features }} -- --nocapture
