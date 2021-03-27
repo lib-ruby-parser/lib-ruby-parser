@@ -2,11 +2,11 @@
 
 [![test](https://github.com/lib-ruby-parser/lib-ruby-parser/workflows/test/badge.svg?branch=master)](https://github.com/lib-ruby-parser/lib-ruby-parser/actions?query=workflow%3Atest)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
-[![Crates.io](https://img.shields.io/badge/crates.io-v3.0.0--8-orange)](https://crates.io/crates/lib-ruby-parser/3.0.0-8)
+[![Crates.io](https://img.shields.io/badge/crates.io-v3.0.0--9-orange)](https://crates.io/crates/lib-ruby-parser/3.0.0-9)
 [![codecov](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser/branch/master/graph/badge.svg)](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 [![dependency status](https://deps.rs/repo/github/lib-ruby-parser/lib-ruby-parser/status.svg)](https://deps.rs/repo/github/lib-ruby-parser/lib-ruby-parser)
-[![Docs](https://img.shields.io/docsrs/lib-ruby-parser/3.0.0-8)](https://docs.rs/lib-ruby-parser/3.0.0-8)
+[![Docs](https://img.shields.io/docsrs/lib-ruby-parser/3.0.0-9)](https://docs.rs/lib-ruby-parser/3.0.0-9)
 
 
 `lib-ruby-parser` is a Ruby parser written in Rust.
