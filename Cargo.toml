@@ -37,6 +37,3 @@ lto = true
 
 [profile.test]
 debug-assertions = true
-
-[[example]]
-name = "parse"
