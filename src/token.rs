@@ -69,4 +69,8 @@ impl Token {
     pub fn into_string(self) -> Result<String, std::string::FromUtf8Error> {
         self.token_value.into_string()
     }
+
+    pub(crate) fn get_loc(&self) -> Loc {
+        self.loc.clone()
+    }
 }
