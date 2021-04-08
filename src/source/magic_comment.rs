@@ -1,3 +1,4 @@
+use crate::containers::Ptr;
 use crate::Loc;
 
 /// An enum of all magic comment kinds
@@ -28,7 +29,7 @@ pub struct MagicComment {
     /// # encoding: utf-8
     ///   ~~~~~~~~
     /// ```
-    pub key_l: Loc,
+    pub key_l: Ptr<Loc>,
 
     /// Location of the "value":
     ///
@@ -36,12 +37,12 @@ pub struct MagicComment {
     /// # encoding: utf-8
     ///             ~~~~~
     /// ```
-    pub value_l: Loc,
+    pub value_l: Ptr<Loc>,
 }
 
 impl MagicComment {
     /// Constructor
-    pub fn new(kind: MagicCommentKind, key_l: Loc, value_l: Loc) -> Self {
+    pub fn new(kind: MagicCommentKind, key_l: Ptr<Loc>, value_l: Ptr<Loc>) -> Self {
         Self {
             kind,
             key_l,

@@ -1,3 +1,4 @@
+use crate::containers::Ptr;
 use crate::debug_level;
 use crate::lexer::*;
 use crate::maybe_byte::*;
@@ -134,7 +135,7 @@ impl Lexer {
         tokens
     }
 
-    pub(crate) fn yylex(&mut self) -> Box<Token> {
+    pub(crate) fn yylex(&mut self) -> Ptr<Token> {
         let lex_state_before = self.lex_state.clone();
         self.lval = None;
 
@@ -159,10 +160,10 @@ impl Lexer {
             end = begin + 1;
         }
 
-        let token = Box::new(Token {
+        let token = Ptr::new(Token {
             token_type,
             token_value,
-            loc: Loc { begin, end },
+            loc: Loc::new(begin, end),
             lex_state_before,
             lex_state_after: self.lex_state.clone(),
         });
@@ -1098,7 +1099,7 @@ impl Lexer {
         return Self::tNL;
     }
 
-    pub(crate) fn warn(&mut self, message: DiagnosticMessage, loc: Loc) {
+    pub(crate) fn warn(&mut self, message: DiagnosticMessage, loc: Ptr<Loc>) {
         if self.debug {
             println!("WARNING: {}", message.render())
         }
@@ -1129,7 +1130,7 @@ impl Lexer {
         token_type
     }
 
-    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage, loc: Loc) {
+    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage, loc: Ptr<Loc>) {
         if self.debug {
             println!("Compile error: {}", message.render())
         }
@@ -1153,15 +1154,15 @@ impl Lexer {
         )))
     }
 
-    pub(crate) fn loc(&self, begin_pos: usize, end_pos: usize) -> Loc {
+    pub(crate) fn loc(&self, begin_pos: usize, end_pos: usize) -> Ptr<Loc> {
         Loc::new(begin_pos, end_pos)
     }
 
-    pub(crate) fn current_loc(&self) -> Loc {
+    pub(crate) fn current_loc(&self) -> Ptr<Loc> {
         self.loc(self.buffer.ptok, self.buffer.pcur)
     }
 
-    pub(crate) fn arg_ambiguous(&mut self, c: u8, loc: Loc) -> bool {
+    pub(crate) fn arg_ambiguous(&mut self, c: u8, loc: Ptr<Loc>) -> bool {
         if c == b'/' {
             self.warn(DiagnosticMessage::AmbiguousRegexp, loc);
         } else {
@@ -1185,7 +1186,7 @@ impl Lexer {
         self.yyerror1(message, self.current_loc());
     }
 
-    pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) {
+    pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage, loc: Ptr<Loc>) {
         if self.debug {
             println!("yyerror0: {}", message.render())
         }
