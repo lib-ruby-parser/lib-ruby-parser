@@ -1,6 +1,6 @@
-mod list;
-mod maybe_ptr;
-mod ptr;
+pub(crate) mod list;
+pub(crate) mod maybe_ptr;
+pub(crate) mod ptr;
 
 #[cfg(not(feature = "c-structures"))]
 pub use list::rust::List;

@@ -1,3 +1,4 @@
+use crate::containers::Ptr;
 use crate::source::input::Input;
 use crate::Loc;
 
@@ -29,7 +30,7 @@ pub enum CommentType {
 #[derive(Debug, Clone)]
 pub struct Comment {
     /// Location of the comment (starts with `#` and ends with the last char)
-    pub location: Loc,
+    pub location: Ptr<Loc>,
 
     /// Kind of the comment
     pub kind: CommentType,
@@ -37,7 +38,7 @@ pub struct Comment {
 
 impl Comment {
     /// Constructs a new comment by `Loc` and `Input`
-    pub fn new(location: Loc, input: &Input) -> Self {
+    pub fn new(location: Ptr<Loc>, input: &Input) -> Self {
         let kind = match location.source(input) {
             Some(source) => {
                 if source.starts_with('#') {

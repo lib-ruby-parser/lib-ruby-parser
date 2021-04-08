@@ -1,3 +1,4 @@
+use crate::containers::Ptr;
 use crate::source::Input;
 use crate::Loc;
 use crate::{DiagnosticMessage, ErrorLevel};
@@ -10,12 +11,12 @@ pub struct Diagnostic {
     /// Message of the diagnostic
     pub message: DiagnosticMessage,
     /// Location of the diagnostic
-    pub loc: Loc,
+    pub loc: Ptr<Loc>,
 }
 
 impl Diagnostic {
     /// Construncts an instance of `Diagnostic`
-    pub fn new(level: ErrorLevel, message: DiagnosticMessage, loc: Loc) -> Self {
+    pub fn new(level: ErrorLevel, message: DiagnosticMessage, loc: Ptr<Loc>) -> Self {
         Self {
             level,
             message,

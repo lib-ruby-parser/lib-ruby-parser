@@ -4,6 +4,11 @@ use onig::{Regex, RegexOptions};
 use std::collections::HashMap;
 use std::convert::TryInto;
 
+use crate::containers::{
+    maybe_ptr::{MaybePtrNone, MaybePtrSome},
+    ptr::ToMaybePtr,
+    MaybePtr, Ptr,
+};
 use crate::error::Diagnostics;
 use crate::nodes::*;
 use crate::LexState;
@@ -321,7 +326,7 @@ impl Builder {
                 DiagnosticMessage::InvalidSymbol {
                     symbol: "UTF-8".to_string(),
                 },
-                loc.clone(),
+                loc,
             )
         }
     }
@@ -713,10 +718,7 @@ impl Builder {
     ) -> Box<Node> {
         let end_l = self.loc(&end_t);
 
-        let quote_loc = Loc {
-            begin: end_l.end - 2,
-            end: end_l.end - 1,
-        };
+        let quote_loc = Loc::new(end_l.end - 2, end_l.end - 1);
 
         let colon_l = end_l.with_begin(end_l.end - 1);
 
@@ -870,7 +872,7 @@ impl Builder {
                 DiagnosticMessage::NthRefIsTooBig {
                     nth_ref: name.clone(),
                 },
-                expression_l.clone(),
+                &expression_l,
             )
         }
 
@@ -886,7 +888,7 @@ impl Builder {
                                 DiagnosticMessage::CircularArgumentReference {
                                     arg_name: name.clone(),
                                 },
-                                expression_l.clone(),
+                                &expression_l,
                             );
                         }
                     }
@@ -1001,7 +1003,7 @@ impl Builder {
                 name_l,
             }) => {
                 if !self.context.is_dynamic_const_definition_allowed() {
-                    self.error(DiagnosticMessage::DynamicConstantAssignment, expression_l);
+                    self.error(DiagnosticMessage::DynamicConstantAssignment, &expression_l);
                     return Err(());
                 }
                 Node::Casgn(Casgn {
@@ -1030,37 +1032,37 @@ impl Builder {
             }
 
             Node::Self_(Self_ { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToSelf, expression_l);
+                self.error(DiagnosticMessage::CantAssignToSelf, &expression_l);
                 return Err(());
             }
             Node::Nil(Nil { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToNil, expression_l);
+                self.error(DiagnosticMessage::CantAssignToNil, &expression_l);
                 return Err(());
             }
             Node::True(True { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToTrue, expression_l);
+                self.error(DiagnosticMessage::CantAssignToTrue, &expression_l);
                 return Err(());
             }
             Node::False(False { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToFalse, expression_l);
+                self.error(DiagnosticMessage::CantAssignToFalse, &expression_l);
                 return Err(());
             }
             Node::File(File { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToFile, expression_l);
+                self.error(DiagnosticMessage::CantAssignToFile, &expression_l);
                 return Err(());
             }
             Node::Line(Line { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToLine, expression_l);
+                self.error(DiagnosticMessage::CantAssignToLine, &expression_l);
                 return Err(());
             }
             Node::Encoding(Encoding { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToEncoding, expression_l);
+                self.error(DiagnosticMessage::CantAssignToEncoding, &expression_l);
                 return Err(());
             }
             Node::BackRef(BackRef { expression_l, name }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable { var_name: name },
-                    expression_l,
+                    &expression_l,
                 );
                 return Err(());
             }
@@ -1069,7 +1071,7 @@ impl Builder {
                     DiagnosticMessage::CantSetVariable {
                         var_name: format!("${}", name),
                     },
-                    expression_l,
+                    &expression_l,
                 );
                 return Err(());
             }
@@ -1215,7 +1217,7 @@ impl Builder {
             Node::BackRef(BackRef { expression_l, name }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable { var_name: name },
-                    expression_l,
+                    &expression_l,
                 );
                 return Err(());
             }
@@ -1224,7 +1226,7 @@ impl Builder {
                     DiagnosticMessage::CantSetVariable {
                         var_name: format!("${}", name),
                     },
-                    expression_l,
+                    &expression_l,
                 );
                 return Err(());
             }
@@ -1851,10 +1853,7 @@ impl Builder {
                 match last_arg {
                     Node::BlockPass(BlockPass { expression_l, .. })
                     | Node::ForwardedArgs(ForwardedArgs { expression_l, .. }) => {
-                        self.error(
-                            DiagnosticMessage::BlockAndBlockArgGiven,
-                            expression_l.clone(),
-                        );
+                        self.error(DiagnosticMessage::BlockAndBlockArgGiven, &expression_l);
                         Err(())
                     }
                     _ => Ok(()),
@@ -1866,7 +1865,7 @@ impl Builder {
 
         match &*method_call {
             Node::Yield(Yield { keyword_l, .. }) => {
-                self.error(DiagnosticMessage::BlockGivenToYield, keyword_l.clone());
+                self.error(DiagnosticMessage::BlockGivenToYield, &keyword_l);
                 return Err(());
             }
             Node::Send(Send { args, .. }) | Node::CSend(CSend { args, .. }) => {
@@ -2186,7 +2185,7 @@ impl Builder {
             let begin_l = self.loc(&not_t);
             let end_l = self
                 .maybe_loc(&end_t)
-                .unwrap_or_else(|| receiver.expression().clone());
+                .unwrap_or_else(|| Ptr::new(receiver.expression().clone()));
 
             let expression_l = begin_l.join(&end_l);
 
@@ -2530,7 +2529,7 @@ impl Builder {
 
         if type_ == KeywordCmd::Yield && !args.is_empty() {
             if let Some(Node::BlockPass(_)) = args.last() {
-                self.error(DiagnosticMessage::BlockGivenToYield, keyword_l);
+                self.error(DiagnosticMessage::BlockGivenToYield, &keyword_l);
                 return Err(());
             }
         }
@@ -2994,7 +2993,7 @@ impl Builder {
 
         let expression_l = maybe_boxed_node_expr(&body)
             .or_else(|| maybe_boxed_node_expr(&guard))
-            .unwrap_or_else(|| pattern.expression().clone())
+            .unwrap_or_else(|| Ptr::new(pattern.expression().clone()))
             .join(&keyword_l);
 
         Box::new(Node::InPattern(InPattern {
@@ -3069,7 +3068,7 @@ impl Builder {
         if strings.len() != 1 {
             self.error(
                 DiagnosticMessage::SymbolLiteralWithInterpolation,
-                self.loc(&begin_t).join(&self.loc(&end_t)),
+                &self.loc(&begin_t).join(&self.loc(&end_t)),
             );
             return Err(());
         }
@@ -3121,7 +3120,7 @@ impl Builder {
             _ => {
                 self.error(
                     DiagnosticMessage::SymbolLiteralWithInterpolation,
-                    self.loc(&begin_t).join(&self.loc(&end_t)),
+                    &self.loc(&begin_t).join(&self.loc(&end_t)),
                 );
                 return Err(());
             }
@@ -3324,7 +3323,10 @@ impl Builder {
                 match self.static_string(&parts) {
                     Some(var_name) => self.check_duplicate_pattern_key(&var_name, &label_loc)?,
                     _ => {
-                        self.error(DiagnosticMessage::SymbolLiteralWithInterpolation, label_loc);
+                        self.error(
+                            DiagnosticMessage::SymbolLiteralWithInterpolation,
+                            &label_loc,
+                        );
                         return Err(());
                     }
                 }
@@ -3526,7 +3528,7 @@ impl Builder {
                 if self.arg_name_collides(this_name, that_name) {
                     self.error(
                         DiagnosticMessage::DuplicatedArgumentName,
-                        self.arg_name_loc(this_arg).clone(),
+                        &self.arg_name_loc(this_arg),
                     )
                 }
             }
@@ -3546,7 +3548,7 @@ impl Builder {
                 DiagnosticMessage::CantAssignToNumparam {
                     numparam: name.to_string(),
                 },
-                loc.clone(),
+                loc,
             );
             return Err(());
         }
@@ -3560,7 +3562,7 @@ impl Builder {
                     DiagnosticMessage::ReservedForNumparam {
                         numparam: name.to_string(),
                     },
-                    loc.clone(),
+                    loc,
                 );
                 Err(())
             }
@@ -3584,10 +3586,7 @@ impl Builder {
         {
             Ok(())
         } else {
-            self.error(
-                DiagnosticMessage::KeyMustBeValidAsLocalVariable,
-                loc.clone(),
-            );
+            self.error(DiagnosticMessage::KeyMustBeValidAsLocalVariable, loc);
             Err(())
         }
     }
@@ -3598,7 +3597,7 @@ impl Builder {
         }
 
         if self.pattern_variables.is_declared(name) {
-            self.error(DiagnosticMessage::DuplicateVariableName, loc.clone());
+            self.error(DiagnosticMessage::DuplicateVariableName, loc);
             return Err(());
         }
 
@@ -3608,7 +3607,7 @@ impl Builder {
 
     pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: &Loc) -> Result<(), ()> {
         if self.pattern_hash_keys.is_declared(name) {
-            self.error(DiagnosticMessage::DuplicateKeyName, loc.clone());
+            self.error(DiagnosticMessage::DuplicateKeyName, loc);
             return Err(());
         }
 
@@ -3666,7 +3665,7 @@ impl Builder {
                     DiagnosticMessage::RegexError {
                         error: err.description().to_string(),
                     },
-                    loc.clone(),
+                    loc,
                 );
                 None
             }
@@ -3715,12 +3714,15 @@ impl Builder {
         None
     }
 
-    pub(crate) fn loc(&self, token: &Token) -> Loc {
+    pub(crate) fn loc(&self, token: &Token) -> Ptr<Loc> {
         token.loc.clone()
     }
 
-    pub(crate) fn maybe_loc(&self, token: &Option<Box<Token>>) -> Option<Loc> {
-        token.as_ref().map(|t| self.loc(t))
+    pub(crate) fn maybe_loc(&self, token: &Option<Box<Token>>) -> MaybePtr<Loc> {
+        match token {
+            Some(token) => self.loc(token).to_maybe_ptr(),
+            None => MaybePtr::none(),
+        }
     }
 
     pub(crate) fn collection_map(
@@ -3779,21 +3781,27 @@ impl Builder {
         }
     }
 
-    pub(crate) fn error(&self, message: DiagnosticMessage, loc: Loc) {
-        self.diagnostics
-            .emit(Diagnostic::new(ErrorLevel::Error, message, loc))
+    pub(crate) fn error(&self, message: DiagnosticMessage, loc: &Loc) {
+        self.diagnostics.emit(Diagnostic::new(
+            ErrorLevel::Error,
+            message,
+            Box::new(loc.clone()),
+        ))
     }
 
-    pub(crate) fn warn(&self, message: DiagnosticMessage, loc: Loc) {
-        self.diagnostics
-            .emit(Diagnostic::new(ErrorLevel::Warning, message, loc))
+    pub(crate) fn warn(&self, message: DiagnosticMessage, loc: &Loc) {
+        self.diagnostics.emit(Diagnostic::new(
+            ErrorLevel::Warning,
+            message,
+            Ptr::new(loc.clone()),
+        ))
     }
 
     pub(crate) fn value_expr(&self, node: &Node) -> Result<(), ()> {
         if let Some(void_node) = self.void_value(node) {
             self.error(
                 DiagnosticMessage::VoidValueExpression,
-                void_node.expression().clone(),
+                void_node.expression(),
             );
             Err(())
         } else {
@@ -3862,7 +3870,7 @@ impl Builder {
                     Node::Hash(hash) if hash.begin_l.is_none() && hash.end_l.is_none() => {
                         *last = Node::Kwargs(Kwargs {
                             pairs: std::mem::take(&mut hash.pairs),
-                            expression_l: hash.expression().clone(),
+                            expression_l: Box::new(hash.expression().clone()),
                         });
                     }
                     _ => {}
@@ -3874,15 +3882,21 @@ impl Builder {
     }
 }
 
-pub(crate) fn maybe_node_expr(node: &Option<&Node>) -> Option<Loc> {
-    node.map(|node| node.expression().clone())
+pub(crate) fn maybe_node_expr(node: &Option<&Node>) -> MaybePtr<Loc> {
+    match node {
+        Some(node) => MaybePtr::some(node.expression().clone()),
+        None => MaybePtr::none(),
+    }
 }
 
-pub(crate) fn maybe_boxed_node_expr(node: &Option<Box<Node>>) -> Option<Loc> {
-    node.as_ref().map(|node| node.expression().clone())
+pub(crate) fn maybe_boxed_node_expr(node: &Option<Box<Node>>) -> MaybePtr<Loc> {
+    match node {
+        Some(node) => MaybePtr::some(node.expression().clone()),
+        None => MaybePtr::none(),
+    }
 }
 
-pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Loc> {
+pub(crate) fn collection_expr(nodes: &[Node]) -> MaybePtr<Loc> {
     join_maybe_exprs(&nodes.first(), &nodes.last())
 }
 
@@ -3902,15 +3916,15 @@ pub(crate) fn maybe_value(token: Option<Box<Token>>) -> Option<String> {
     token.map(value)
 }
 
-pub(crate) fn join_exprs(lhs: &Node, rhs: &Node) -> Loc {
+pub(crate) fn join_exprs(lhs: &Node, rhs: &Node) -> Ptr<Loc> {
     lhs.expression().join(rhs.expression())
 }
 
-pub(crate) fn join_maybe_exprs(lhs: &Option<&Node>, rhs: &Option<&Node>) -> Option<Loc> {
+pub(crate) fn join_maybe_exprs(lhs: &Option<&Node>, rhs: &Option<&Node>) -> MaybePtr<Loc> {
     join_maybe_locs(&maybe_node_expr(&lhs), &maybe_node_expr(&rhs))
 }
 
-pub(crate) fn join_maybe_locs(lhs: &Option<Loc>, rhs: &Option<Loc>) -> Option<Loc> {
+pub(crate) fn join_maybe_locs(lhs: &MaybePtr<Loc>, rhs: &MaybePtr<Loc>) -> MaybePtr<Loc> {
     match (lhs, rhs) {
         (None, None) => None,
         (None, Some(rhs)) => Some(rhs.clone()),
@@ -3920,15 +3934,15 @@ pub(crate) fn join_maybe_locs(lhs: &Option<Loc>, rhs: &Option<Loc>) -> Option<Lo
 }
 
 pub(crate) struct CollectionMap {
-    begin_l: Option<Loc>,
-    end_l: Option<Loc>,
-    expression_l: Loc,
+    begin_l: MaybePtr<Loc>,
+    end_l: MaybePtr<Loc>,
+    expression_l: Ptr<Loc>,
 }
 
 pub(crate) struct HeredocMap {
-    heredoc_body_l: Loc,
-    heredoc_end_l: Loc,
-    expression_l: Loc,
+    heredoc_body_l: Ptr<Loc>,
+    heredoc_end_l: Ptr<Loc>,
+    expression_l: Ptr<Loc>,
 }
 
 fn first<T>(vec: Vec<T>) -> T {

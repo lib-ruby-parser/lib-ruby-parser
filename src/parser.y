@@ -6727,7 +6727,7 @@ impl Parser {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Warning,
             message,
-            loc.clone(),
+            Box::new(loc.clone()),
         );
         self.diagnostics.emit(diagnostic);
     }
@@ -6798,7 +6798,7 @@ impl Parser {
     }
 
     fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) -> Result<i32, ()> {
-        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc);
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, Box::new(loc));
         self.diagnostics.emit(diagnostic);
         Err(())
     }
@@ -6808,7 +6808,7 @@ impl Parser {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,
             DiagnosticMessage::UnexpectedToken { token_name: Lexer::TOKEN_NAMES[id].to_owned() },
-            ctx.location().clone(),
+            Box::new(ctx.location().clone()),
         );
         self.diagnostics.emit(diagnostic);
     }

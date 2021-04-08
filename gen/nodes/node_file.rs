@@ -97,15 +97,26 @@ impl InnerNode for {struct_name} {{
         {
             imports.push("use crate::Node;".to_string());
         }
-        if self
-            .node
-            .fields
-            .iter()
-            .any(|f| f.field_type == FieldType::StringValue)
-        {
+        if self.has_field_with_type(FieldType::StringValue) {
             imports.push("use crate::StringValue;".to_string());
         }
+        if self.has_field_with_type(FieldType::MaybeNode)
+            || self.has_field_with_type(FieldType::RegexOptions)
+            || self.has_field_with_type(FieldType::MaybeLoc)
+        {
+            imports.push("use crate::containers::MaybePtr;".to_string());
+        }
+        if self.has_field_with_type(FieldType::Node) || self.has_field_with_type(FieldType::Loc) {
+            imports.push("use crate::containers::Ptr;".to_string());
+        }
+        if self.has_field_with_type(FieldType::Nodes) {
+            imports.push("use crate::containers::List;".to_string());
+        }
         imports
+    }
+
+    fn has_field_with_type(&self, field_type: FieldType) -> bool {
+        self.node.fields.iter().any(|f| f.field_type == field_type)
     }
 }
 
@@ -130,11 +141,11 @@ impl<'a> FieldWrapper<'a> {
 
     pub(crate) fn str_field_type(&self) -> &'static str {
         match self.field.field_type {
-            FieldType::Node => "Box<Node>",
-            FieldType::Nodes => "Vec<Node>",
-            FieldType::MaybeNode => "Option<Box<Node>>",
-            FieldType::Loc => "Loc",
-            FieldType::MaybeLoc => "Option<Loc>",
+            FieldType::Node => "Ptr<Node>",
+            FieldType::Nodes => "List<Node>",
+            FieldType::MaybeNode => "MaybePtr<Node>",
+            FieldType::Loc => "Ptr<Loc>",
+            FieldType::MaybeLoc => "MaybePtr<Loc>",
             FieldType::Str => "String",
             FieldType::MaybeStr => "Option<String>",
             FieldType::Chars => "Vec<char>",
@@ -142,7 +153,7 @@ impl<'a> FieldWrapper<'a> {
             FieldType::U8 => "u8",
             FieldType::Usize => "usize",
             FieldType::RawString => "String",
-            FieldType::RegexOptions => "Option<Box<Node>>",
+            FieldType::RegexOptions => "MaybePtr<Node>",
         }
     }
 
