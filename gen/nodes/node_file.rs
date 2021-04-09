@@ -202,7 +202,7 @@ impl<'a> FieldWrapper<'a> {
                 offset = offset,
                 field_name = self.field.field_name
             )),
-            FieldType::MaybeNode => Some(format!(
+            FieldType::MaybeNode | FieldType::RegexOptions => Some(format!(
                 "{offset}self.{field_name}.as_ref().map(|node| node.inner_ref().print_with_locs());",
                 offset = offset,
                 field_name = self.field.field_name
@@ -234,13 +234,6 @@ impl<'a> FieldWrapper<'a> {
             FieldType::U8 => None,
             FieldType::Usize => None,
             FieldType::RawString => None,
-            FieldType::RegexOptions => Some(format!(
-                "{offset}if let Some(node) = &self.{field_name} {{
-{offset}    node.inner_ref().print_with_locs();
-{offset}}}",
-                offset = offset,
-                field_name = self.field.field_name
-            )),
         }
     }
 }

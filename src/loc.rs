@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use crate::containers::Ptr;
+use crate::containers::{MaybePtr, Ptr};
 use crate::source::Input;
 use crate::Loc;
 
@@ -73,8 +73,8 @@ impl Loc {
         )
     }
 
-    pub(crate) fn maybe_join(&self, other: &Option<Box<Self>>) -> Ptr<Self> {
-        match other {
+    pub(crate) fn maybe_join(&self, other: &MaybePtr<Self>) -> Ptr<Self> {
+        match other.as_ref() {
             Some(other) => self.join(other),
             None => Ptr::new(self.clone()),
         }

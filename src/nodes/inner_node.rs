@@ -1,3 +1,4 @@
+use crate::containers::{List, MaybePtr, Ptr};
 use crate::Loc;
 use crate::Node;
 use crate::StringValue;
@@ -63,14 +64,14 @@ impl InspectVec {
             .push(format!(",\n{}", node.inspect(self.indent + 1)))
     }
 
-    pub(crate) fn push_maybe_node(&mut self, node: &Option<Box<Node>>) {
-        if let Some(node) = node {
+    pub(crate) fn push_maybe_node(&mut self, node: &MaybePtr<Node>) {
+        if let Some(node) = node.as_ref() {
             self.push_node(node)
         }
     }
 
-    pub(crate) fn push_regex_options(&mut self, node: &Option<Box<Node>>) {
-        if let Some(node) = node {
+    pub(crate) fn push_regex_options(&mut self, node: &MaybePtr<Node>) {
+        if let Some(node) = node.as_ref() {
             self.push_node(node)
         } else {
             self.strings.push(format!(
@@ -81,16 +82,16 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_maybe_node_or_nil(&mut self, node: &Option<Box<Node>>) {
-        if let Some(node) = node {
+    pub(crate) fn push_maybe_node_or_nil(&mut self, node: &MaybePtr<Node>) {
+        if let Some(node) = node.as_ref() {
             self.push_node(node)
         } else {
             self.push_nil()
         }
     }
 
-    pub(crate) fn push_nodes(&mut self, nodes: &[Node]) {
-        for node in nodes {
+    pub(crate) fn push_nodes(&mut self, nodes: &List<Node>) {
+        for node in nodes.iter() {
             self.push_node(node)
         }
     }
