@@ -1,11 +1,11 @@
 #[cfg(not(feature = "c-structures"))]
-pub mod rust {
+pub(crate) mod rust {
     /// Rust-compatible list
     pub type List<T> = Vec<T>;
 }
 
 #[cfg(feature = "c-structures")]
-pub mod c {
+pub(crate) mod c {
     /// C-compatible list
     #[derive(Debug)]
     #[repr(C)]
@@ -20,7 +20,15 @@ pub mod c {
         T: PartialEq,
     {
         fn eq(&self, other: &Self) -> bool {
-            todo!()
+            if self.len != other.len {
+                return false;
+            }
+            for i in 0..self.len {
+                if self[i] != other[i] {
+                    return false;
+                }
+            }
+            true
         }
     }
 
@@ -29,12 +37,6 @@ pub mod c {
         T: Clone,
     {
         fn clone(&self) -> Self {
-            todo!()
-        }
-    }
-
-    impl<T> List<T> {
-        pub fn iter(&self) -> std::slice::Iter<'_, T> {
             todo!()
         }
     }
@@ -52,26 +54,59 @@ pub mod c {
     }
 
     impl<T> List<T> {
+        /// Equivalent of Vec::new
         pub fn new() -> Self {
-            todo!()
+            Self {
+                ptr: std::ptr::null_mut(),
+                len: 0,
+                capacity: 0,
+            }
         }
 
+        /// Equivalent of Vec::is_empty
         pub fn is_empty(&self) -> bool {
+            self.len == 0
+        }
+
+        /// Equivalent of Vec::iter
+        pub fn iter(&self) -> std::slice::Iter<'_, T> {
             todo!()
         }
 
+        /// Equivalent of Vec::with_capacity
         pub fn with_capacity(capacity: usize) -> Self {
-            todo!()
+            let layout = std::alloc::Layout::array::<T>(capacity).unwrap();
+            let ptr = unsafe { std::alloc::System.alloc(layout) } as *mut T;
+            Self {
+                ptr,
+                len: 0,
+                capacity,
+            }
         }
 
+        fn grow(&mut self) {
+            self.capacity *= 2;
+            let layout = std::alloc::Layout::array::<T>(self.capacity).unwrap();
+            self.ptr = unsafe { std::alloc::System.alloc(layout) } as *mut T;
+        }
+
+        /// Equivalent of Vec::push
         pub fn push(&mut self, item: T) {
-            todo!()
+            if self.len == self.capacity {
+                self.grow()
+            }
+            unsafe {
+                let end = self.ptr.add(self.len);
+                end.write(item);
+            }
         }
 
+        /// Equivalent of Vec::last
         pub fn last(&self) -> Option<&T> {
             todo!()
         }
 
+        /// Equivalent of Vec::remove
         pub fn remove(&mut self, index: usize) -> T {
             todo!()
         }
@@ -105,6 +140,8 @@ pub mod c {
             todo!()
         }
     }
+
+    use std::alloc::GlobalAlloc;
 
     use super::TakeFirst;
     impl<T> TakeFirst<T> for List<T> {

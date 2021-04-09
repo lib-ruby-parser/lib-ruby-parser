@@ -1,4 +1,3 @@
-#![forbid(unsafe_code)]
 #![warn(missing_debug_implementations)]
 #![warn(missing_docs)]
 #![warn(trivial_casts, trivial_numeric_casts)]
@@ -19,6 +18,8 @@ mod loc;
 pub mod source;
 
 mod lexer;
+use std::ops::Deref;
+
 pub use lexer::Lexer;
 
 mod static_environment;
@@ -94,3 +95,14 @@ pub mod debug_level;
 
 /// Module with generic containers
 pub mod containers;
+
+impl Token {
+    fn new() -> Self {
+        todo!()
+    }
+}
+
+fn foo() {
+    let token = Box::new(Token::new());
+    let token = unsafe { *token };
+}

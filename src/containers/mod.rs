@@ -1,5 +1,10 @@
+/// Module with List container
 pub mod list;
+
+/// Module with MaybePtr container
 pub mod maybe_ptr;
+
+/// Module with Ptr container
 pub mod ptr;
 
 #[cfg(not(feature = "c-structures"))]

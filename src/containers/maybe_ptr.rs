@@ -1,5 +1,5 @@
 #[cfg(not(feature = "c-structures"))]
-pub mod rust {
+pub(crate) mod rust {
     /// Rust-compatible nullable pointer
     pub type MaybePtr<T> = Option<Box<T>>;
 
@@ -25,7 +25,7 @@ pub mod rust {
 }
 
 #[cfg(feature = "c-structures")]
-pub mod c {
+pub(crate) mod c {
     use std::ops::Deref;
 
     /// C-compatible nullable pointer
@@ -40,7 +40,7 @@ pub mod c {
         T: PartialEq,
     {
         fn eq(&self, other: &Self) -> bool {
-            todo!()
+            PartialEq::eq(&**self, &**other)
         }
     }
 
@@ -58,6 +58,12 @@ pub mod c {
 
         fn deref(&self) -> &Self::Target {
             todo!()
+            // if self.ptr.is_null() {
+            //     &None
+            // } else {
+            //     let value = unsafe { *self.ptr };
+            //     &Some(value)
+            // }
         }
     }
 
@@ -85,10 +91,12 @@ pub mod c {
     }
 
     impl<T> MaybePtr<T> {
+        /// Constructs a pointer with a given raw pointer
         pub fn new(ptr: *mut T) -> Self {
             Self { ptr }
         }
 
+        /// Equivalent of Option::or_else
         pub fn or_else<F>(self, f: F) -> Self
         where
             F: FnOnce() -> Self,
@@ -96,10 +104,12 @@ pub mod c {
             todo!()
         }
 
+        /// Equivalent of Option::expect
         pub fn expect(message: &str) -> crate::containers::Ptr<T> {
             todo!()
         }
 
+        /// Equivalent of Option::map
         pub fn map<Return, F>(self, f: F) -> Return
         where
             F: FnOnce(T) -> Return,
@@ -120,8 +130,11 @@ pub mod c {
     }
 
     impl<T> From<Option<Box<T>>> for MaybePtr<T> {
-        fn from(_: Option<Box<T>>) -> Self {
-            todo!()
+        fn from(maybe_boxed: Option<Box<T>>) -> Self {
+            match maybe_boxed {
+                Some(boxed) => Self::some(*boxed),
+                None => Self::none(),
+            }
         }
     }
 
