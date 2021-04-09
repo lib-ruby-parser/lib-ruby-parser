@@ -1,5 +1,5 @@
 #[cfg(not(feature = "c-structures"))]
-pub mod rust {
+pub(crate) mod rust {
     /// Rust-compatible not-null pointer
     pub type Ptr<T> = Box<T>;
 
@@ -15,7 +15,7 @@ pub mod rust {
 }
 
 #[cfg(feature = "c-structures")]
-pub mod c {
+pub(crate) mod c {
     use std::ops::Deref;
 
     /// C-compatible not-null pointer
@@ -30,7 +30,7 @@ pub mod c {
         T: PartialEq,
     {
         fn eq(&self, other: &Self) -> bool {
-            todo!()
+            PartialEq::eq(&**self, &**other)
         }
     }
 
@@ -39,7 +39,8 @@ pub mod c {
         T: Clone,
     {
         fn clone(&self) -> Self {
-            todo!()
+            let value = self.as_ref().clone();
+            Self::new(value)
         }
     }
 
@@ -47,13 +48,13 @@ pub mod c {
         type Target = T;
 
         fn deref(&self) -> &Self::Target {
-            todo!()
+            unsafe { &*self.ptr }
         }
     }
 
     impl<T> AsRef<T> for Ptr<T> {
         fn as_ref(&self) -> &T {
-            todo!()
+            unsafe { &*self.ptr }
         }
     }
 
@@ -68,6 +69,7 @@ pub mod c {
     }
 
     impl<T> Ptr<T> {
+        /// Constructs a pointer with a given value
         pub fn new(t: T) -> Self {
             let ptr = Box::into_raw(Box::new(t));
             Self { ptr }
@@ -75,18 +77,19 @@ pub mod c {
     }
 
     impl<T> From<Box<T>> for Ptr<T> {
-        fn from(_: Box<T>) -> Self {
-            todo!()
+        fn from(boxed: Box<T>) -> Self {
+            let value = *boxed;
+            Self::new(value)
         }
     }
 
     use super::UnwrapPtr;
-    impl<T> UnwrapPtr<T> for Ptr<T> {
+    impl<T: Sized> UnwrapPtr<T> for Ptr<T> {
         fn unwrap_ptr(self) -> T
         where
             Self: Sized,
         {
-            todo!()
+            unsafe { self.ptr.read() }
         }
     }
 }
@@ -99,7 +102,7 @@ pub trait IntoMaybePtr<T> {
         Self: Sized;
 }
 
-pub(crate) trait UnwrapPtr<T> {
+pub(crate) trait UnwrapPtr<T: Sized> {
     fn unwrap_ptr(self) -> T
     where
         Self: Sized;

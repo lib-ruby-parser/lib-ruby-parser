@@ -1,4 +1,4 @@
-use crate::containers::{List, MaybePtr, Ptr};
+use crate::containers::{List, MaybePtr};
 use crate::Loc;
 use crate::Node;
 use crate::StringValue;

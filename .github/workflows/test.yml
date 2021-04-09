@@ -20,7 +20,9 @@ jobs:
           - stable
           - beta
           # - nightly
-        features: ["onig,rebuild-grammar"]
+        build:
+          - { features: "onig,rebuild-grammar",              rustflags: "-F unsafe_code" }
+          - { features: "onig,rebuild-grammar,c-structures", rustflags: ""               }
 
     steps:
       - name: checkout
@@ -42,4 +44,6 @@ jobs:
           bison --version
 
       - name: Run tests
-        run: cargo test --features ${{ matrix.features }} -- --nocapture
+        env:
+          - RUSTFLAGS: ${{ matrix.build.rustflags }}
+        run: cargo test --features ${{ matrix.build.features }} -- --nocapture
