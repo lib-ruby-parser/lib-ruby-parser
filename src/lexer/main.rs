@@ -1,4 +1,4 @@
-use crate::containers::Ptr;
+use crate::containers::{ptr::UnwrapPtr, Ptr};
 use crate::debug_level;
 use crate::lexer::*;
 use crate::maybe_byte::*;
@@ -122,7 +122,7 @@ impl Lexer {
         let mut tokens = vec![];
 
         loop {
-            let token = *self.yylex();
+            let token = self.yylex().unwrap_ptr();
             match token {
                 Token {
                     token_type: Self::END_OF_INPUT,

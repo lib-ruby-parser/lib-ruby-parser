@@ -7,7 +7,7 @@ use std::convert::TryInto;
 use crate::containers::{
     list::TakeFirst,
     maybe_ptr::{IntoPtr, IntoPtrOrElse, MaybePtrNone, MaybePtrSome},
-    ptr::IntoMaybePtr,
+    ptr::{IntoMaybePtr, UnwrapPtr},
     List, MaybePtr, Ptr,
 };
 use crate::error::Diagnostics;
@@ -53,8 +53,8 @@ pub(crate) enum LogicalOp {
 
 #[derive(Debug, Clone)]
 pub(crate) enum PKwLabel {
-    PlainLabel(Box<Token>),
-    QuotedLabel((Box<Token>, Vec<Node>, Box<Token>)),
+    PlainLabel(Ptr<Token>),
+    QuotedLabel((Ptr<Token>, Vec<Node>, Ptr<Token>)),
 }
 
 #[derive(Debug, Clone)]
@@ -101,19 +101,19 @@ impl Builder {
 
     // Singletons
 
-    pub(crate) fn nil(&self, nil_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn nil(&self, nil_t: Ptr<Token>) -> Box<Node> {
         Box::new(Node::Nil(Nil {
             expression_l: self.loc(&nil_t),
         }))
     }
 
-    pub(crate) fn true_(&self, true_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn true_(&self, true_t: Ptr<Token>) -> Box<Node> {
         Box::new(Node::True(True {
             expression_l: self.loc(&true_t),
         }))
     }
 
-    pub(crate) fn false_(&self, false_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn false_(&self, false_t: Ptr<Token>) -> Box<Node> {
         Box::new(Node::False(False {
             expression_l: self.loc(&false_t),
         }))
@@ -121,7 +121,7 @@ impl Builder {
 
     // Numerics
 
-    pub(crate) fn integer(&self, integer_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn integer(&self, integer_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&integer_t);
         Box::new(Node::Int(Int {
             value: value(integer_t),
@@ -130,7 +130,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn float(&self, float_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn float(&self, float_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&float_t);
         Box::new(Node::Float(Float {
             value: value(float_t),
@@ -139,7 +139,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn rational(&self, rational_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn rational(&self, rational_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&rational_t);
         Box::new(Node::Rational(Rational {
             value: value(rational_t),
@@ -148,7 +148,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn complex(&self, complex_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn complex(&self, complex_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&complex_t);
         Box::new(Node::Complex(Complex {
             value: value(complex_t),
@@ -157,7 +157,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn unary_num(&self, unary_t: Box<Token>, mut numeric: Box<Node>) -> Box<Node> {
+    pub(crate) fn unary_num(&self, unary_t: Ptr<Token>, mut numeric: Box<Node>) -> Box<Node> {
         let new_operator_l = self.loc(&unary_t);
         let sign = value(unary_t);
 
@@ -192,7 +192,7 @@ impl Builder {
         numeric
     }
 
-    pub(crate) fn __line__(&self, line_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn __line__(&self, line_t: Ptr<Token>) -> Box<Node> {
         Box::new(Node::Line(Line {
             expression_l: self.loc(&line_t),
         }))
@@ -202,10 +202,10 @@ impl Builder {
 
     pub(crate) fn str_node(
         &self,
-        begin_t: Option<Box<Token>>,
+        begin_t: Option<Ptr<Token>>,
         value: StringValue,
         parts: Vec<Node>,
-        end_t: Option<Box<Token>>,
+        end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         if self.is_heredoc(&begin_t) {
             let HeredocMap {
@@ -236,7 +236,7 @@ impl Builder {
         }
     }
 
-    pub(crate) fn string_internal(&self, string_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn string_internal(&self, string_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&string_t);
         let value = StringValue::new(string_t);
         Box::new(Node::Str(Str {
@@ -249,9 +249,9 @@ impl Builder {
 
     pub(crate) fn string_compose(
         &self,
-        begin_t: Option<Box<Token>>,
+        begin_t: Option<Ptr<Token>>,
         parts: Vec<Node>,
-        end_t: Option<Box<Token>>,
+        end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         match &parts[..] {
             [] => return self.str_node(begin_t, StringValue::empty(), parts, end_t),
@@ -297,7 +297,7 @@ impl Builder {
         }
     }
 
-    pub(crate) fn character(&self, char_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn character(&self, char_t: Ptr<Token>) -> Box<Node> {
         let str_loc = self.loc(&char_t);
 
         let begin_l = str_loc.with_end(str_loc.begin + 1).into_maybe_ptr();
@@ -313,7 +313,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn __file__(&self, file_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn __file__(&self, file_t: Ptr<Token>) -> Box<Node> {
         Box::new(Node::File(File {
             expression_l: self.loc(&file_t),
         }))
@@ -332,7 +332,7 @@ impl Builder {
         }
     }
 
-    pub(crate) fn symbol(&self, start_t: Box<Token>, value_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn symbol(&self, start_t: Ptr<Token>, value_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&start_t).join(&self.loc(&value_t));
         let begin_l = self.loc(&start_t).into_maybe_ptr();
         let value = StringValue::new(value_t);
@@ -345,7 +345,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn symbol_internal(&self, symbol_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn symbol_internal(&self, symbol_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&symbol_t);
         let value = StringValue::new(symbol_t);
         self.validate_sym_value(&value, &expression_l);
@@ -359,9 +359,9 @@ impl Builder {
 
     pub(crate) fn symbol_compose(
         &self,
-        begin_t: Box<Token>,
+        begin_t: Ptr<Token>,
         parts: Vec<Node>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         if let [Node::Str(Str { value, .. })] = &parts[..] {
             let CollectionMap {
@@ -397,9 +397,9 @@ impl Builder {
 
     pub(crate) fn xstring_compose(
         &self,
-        begin_t: Box<Token>,
+        begin_t: Ptr<Token>,
         parts: Vec<Node>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
         if lossy_value(begin_t).starts_with("<<") {
@@ -504,7 +504,7 @@ impl Builder {
 
     // Regular expressions
 
-    pub(crate) fn regexp_options(&self, regexp_end_t: Box<Token>) -> Option<Box<Node>> {
+    pub(crate) fn regexp_options(&self, regexp_end_t: Ptr<Token>) -> Option<Box<Node>> {
         if regexp_end_t.loc.end - regexp_end_t.loc.begin == 1 {
             // no regexp options, only trailing "/"
             return None;
@@ -523,9 +523,9 @@ impl Builder {
 
     pub(crate) fn regexp_compose(
         &self,
-        begin_t: Box<Token>,
+        begin_t: Ptr<Token>,
         parts: Vec<Node>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
         options: Option<Box<Node>>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
@@ -552,9 +552,9 @@ impl Builder {
 
     pub(crate) fn array(
         &self,
-        begin_t: Option<Box<Token>>,
+        begin_t: Option<Ptr<Token>>,
         elements: Vec<Node>,
-        end_t: Option<Box<Token>>,
+        end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
             begin_l,
@@ -570,7 +570,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn splat(&self, star_t: Box<Token>, value: Option<Box<Node>>) -> Box<Node> {
+    pub(crate) fn splat(&self, star_t: Ptr<Token>, value: Option<Box<Node>>) -> Box<Node> {
         let operator_l = self.loc(&star_t);
         let expression_l = operator_l.maybe_join(&maybe_boxed_node_expr(&value));
 
@@ -611,9 +611,9 @@ impl Builder {
 
     pub(crate) fn words_compose(
         &self,
-        begin_t: Box<Token>,
+        begin_t: Ptr<Token>,
         elements: Vec<Node>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
         let end_l = self.loc(&end_t);
@@ -628,9 +628,9 @@ impl Builder {
 
     pub(crate) fn symbols_compose(
         &self,
-        begin_t: Box<Token>,
+        begin_t: Ptr<Token>,
         parts: Vec<Node>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let parts = parts
             .into_iter()
@@ -677,7 +677,7 @@ impl Builder {
 
     // Hashes
 
-    pub(crate) fn pair(&self, key: Box<Node>, assoc_t: Box<Token>, value: Box<Node>) -> Box<Node> {
+    pub(crate) fn pair(&self, key: Box<Node>, assoc_t: Ptr<Token>, value: Box<Node>) -> Box<Node> {
         let operator_l = self.loc(&assoc_t);
         let expression_l = join_exprs(&key, &value);
 
@@ -689,7 +689,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn pair_keyword(&self, key_t: Box<Token>, value: Box<Node>) -> Box<Node> {
+    pub(crate) fn pair_keyword(&self, key_t: Ptr<Token>, value: Box<Node>) -> Box<Node> {
         let key_loc = self.loc(&key_t);
         let key_l = key_loc.adjust_end(-1);
         let colon_l = key_loc.with_begin(key_loc.end - 1);
@@ -713,9 +713,9 @@ impl Builder {
 
     pub(crate) fn pair_quoted(
         &self,
-        begin_t: Box<Token>,
+        begin_t: Ptr<Token>,
         parts: Vec<Node>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
         value: Box<Node>,
     ) -> Box<Node> {
         let end_l = self.loc(&end_t);
@@ -724,7 +724,8 @@ impl Builder {
 
         let colon_l = end_l.with_begin(end_l.end - 1);
 
-        let end_t: Box<Token> = Box::new(Token {
+        let end_t = end_t.unwrap_ptr();
+        let end_t: Ptr<Token> = Ptr::new(Token {
             token_type: end_t.token_type,
             token_value: end_t.token_value,
             loc: quote_loc,
@@ -741,7 +742,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn kwsplat(&self, dstar_t: Box<Token>, value: Box<Node>) -> Box<Node> {
+    pub(crate) fn kwsplat(&self, dstar_t: Ptr<Token>, value: Box<Node>) -> Box<Node> {
         let operator_l = self.loc(&dstar_t);
         let expression_l = value.expression().join(&operator_l);
 
@@ -754,9 +755,9 @@ impl Builder {
 
     pub(crate) fn associate(
         &self,
-        begin_t: Option<Box<Token>>,
+        begin_t: Option<Ptr<Token>>,
         pairs: Vec<Node>,
-        end_t: Option<Box<Token>>,
+        end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
             begin_l,
@@ -777,7 +778,7 @@ impl Builder {
     pub(crate) fn range_inclusive(
         &self,
         left: Option<Box<Node>>,
-        dot2_t: Box<Token>,
+        dot2_t: Ptr<Token>,
         right: Option<Box<Node>>,
     ) -> Box<Node> {
         let operator_l = self.loc(&dot2_t);
@@ -796,7 +797,7 @@ impl Builder {
     pub(crate) fn range_exclusive(
         &self,
         left: Option<Box<Node>>,
-        dot3_t: Box<Token>,
+        dot3_t: Ptr<Token>,
         right: Option<Box<Node>>,
     ) -> Box<Node> {
         let operator_l = self.loc(&dot3_t);
@@ -816,13 +817,13 @@ impl Builder {
     // Access
     //
 
-    pub(crate) fn self_(&self, token: Box<Token>) -> Box<Node> {
+    pub(crate) fn self_(&self, token: Ptr<Token>) -> Box<Node> {
         Box::new(Node::Self_(Self_ {
             expression_l: self.loc(&token),
         }))
     }
 
-    pub(crate) fn lvar(&self, token: Box<Token>) -> Box<Node> {
+    pub(crate) fn lvar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         Box::new(Node::Lvar(Lvar {
             name: value(token),
@@ -830,7 +831,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn ivar(&self, token: Box<Token>) -> Box<Node> {
+    pub(crate) fn ivar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         Box::new(Node::Ivar(Ivar {
             name: value(token),
@@ -838,7 +839,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn gvar(&self, token: Box<Token>) -> Box<Node> {
+    pub(crate) fn gvar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         Box::new(Node::Gvar(Gvar {
             name: value(token),
@@ -846,7 +847,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn cvar(&self, token: Box<Token>) -> Box<Node> {
+    pub(crate) fn cvar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         Box::new(Node::Cvar(Cvar {
             name: value(token),
@@ -854,7 +855,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn back_ref(&self, token: Box<Token>) -> Box<Node> {
+    pub(crate) fn back_ref(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         Box::new(Node::BackRef(BackRef {
             name: value(token),
@@ -864,7 +865,7 @@ impl Builder {
 
     const MAX_NTH_REF: usize = 0b111111111111111111111111111111;
 
-    pub(crate) fn nth_ref(&self, token: Box<Token>) -> Box<Node> {
+    pub(crate) fn nth_ref(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         let name = value(token)[1..].to_string();
         let parsed = name.parse::<usize>();
@@ -914,7 +915,7 @@ impl Builder {
         }
     }
 
-    pub(crate) fn const_(&self, name_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn const_(&self, name_t: Ptr<Token>) -> Box<Node> {
         let name_l = self.loc(&name_t);
         let expression_l = name_l.clone();
 
@@ -927,7 +928,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn const_global(&self, t_colon3: Box<Token>, name_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn const_global(&self, t_colon3: Ptr<Token>, name_t: Ptr<Token>) -> Box<Node> {
         let scope = Node::Cbase(Cbase {
             expression_l: self.loc(&t_colon3),
         });
@@ -948,8 +949,8 @@ impl Builder {
     pub(crate) fn const_fetch(
         &self,
         scope: Box<Node>,
-        t_colon2: Box<Token>,
-        name_t: Box<Token>,
+        t_colon2: Ptr<Token>,
+        name_t: Ptr<Token>,
     ) -> Box<Node> {
         let scope: Ptr<Node> = scope.into();
         let name_l = self.loc(&name_t);
@@ -965,7 +966,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn __encoding__(&self, encoding_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn __encoding__(&self, encoding_t: Ptr<Token>) -> Box<Node> {
         Box::new(Node::Encoding(Encoding {
             expression_l: self.loc(&encoding_t),
         }))
@@ -1108,7 +1109,7 @@ impl Builder {
     pub(crate) fn assign(
         &self,
         mut lhs: Box<Node>,
-        eql_t: Box<Token>,
+        eql_t: Ptr<Token>,
         new_rhs: Box<Node>,
     ) -> Box<Node> {
         let op_l = self.loc(&eql_t).into_maybe_ptr();
@@ -1172,7 +1173,7 @@ impl Builder {
                 *operator_l = op_l;
                 if args.is_empty() {
                     let mut new_args = List::with_capacity(1);
-                    new_args.push(*new_rhs);
+                    new_args.push(new_rhs.unwrap_ptr());
                     *args = new_args;
                 } else {
                     unreachable!("can't assign to method call with args")
@@ -1187,7 +1188,7 @@ impl Builder {
     pub(crate) fn op_assign(
         &self,
         mut lhs: Box<Node>,
-        op_t: Box<Token>,
+        op_t: Ptr<Token>,
         rhs: Box<Node>,
     ) -> Result<Box<Node>, ()> {
         let operator_l = self.loc(&op_t);
@@ -1269,9 +1270,9 @@ impl Builder {
 
     pub(crate) fn multi_lhs(
         &self,
-        begin_t: Option<Box<Token>>,
+        begin_t: Option<Ptr<Token>>,
         items: Vec<Node>,
-        end_t: Option<Box<Token>>,
+        end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
             begin_l,
@@ -1290,7 +1291,7 @@ impl Builder {
     pub(crate) fn multi_assign(
         &self,
         lhs: Box<Node>,
-        eql_t: Box<Token>,
+        eql_t: Ptr<Token>,
         rhs: Box<Node>,
     ) -> Box<Node> {
         let operator_l = self.loc(&eql_t);
@@ -1310,12 +1311,12 @@ impl Builder {
 
     pub(crate) fn def_class(
         &self,
-        class_t: Box<Token>,
+        class_t: Ptr<Token>,
         name: Box<Node>,
-        lt_t: Option<Box<Token>>,
+        lt_t: Option<Ptr<Token>>,
         superclass: Option<Box<Node>>,
         body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let keyword_l = self.loc(&class_t);
         let end_l = self.loc(&end_t);
@@ -1335,11 +1336,11 @@ impl Builder {
 
     pub(crate) fn def_sclass(
         &self,
-        class_t: Box<Token>,
-        lshift_t: Box<Token>,
+        class_t: Ptr<Token>,
+        lshift_t: Ptr<Token>,
         expr: Box<Node>,
         body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let keyword_l = self.loc(&class_t);
         let end_l = self.loc(&end_t);
@@ -1358,10 +1359,10 @@ impl Builder {
 
     pub(crate) fn def_module(
         &self,
-        module_t: Box<Token>,
+        module_t: Ptr<Token>,
         name: Box<Node>,
         body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let keyword_l = self.loc(&module_t);
         let end_l = self.loc(&end_t);
@@ -1382,11 +1383,11 @@ impl Builder {
 
     pub(crate) fn def_method(
         &self,
-        def_t: Box<Token>,
-        name_t: Box<Token>,
+        def_t: Ptr<Token>,
+        name_t: Ptr<Token>,
         args: Option<Box<Node>>,
         body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let keyword_l = self.loc(&def_t);
@@ -1410,10 +1411,10 @@ impl Builder {
 
     pub(crate) fn def_endless_method(
         &self,
-        def_t: Box<Token>,
-        name_t: Box<Token>,
+        def_t: Ptr<Token>,
+        name_t: Ptr<Token>,
         args: Option<Box<Node>>,
-        assignment_t: Box<Token>,
+        assignment_t: Ptr<Token>,
         body: Option<Box<Node>>,
     ) -> Result<Box<Node>, ()> {
         let body_l = maybe_boxed_node_expr(&body)
@@ -1441,13 +1442,13 @@ impl Builder {
 
     pub(crate) fn def_singleton(
         &self,
-        def_t: Box<Token>,
+        def_t: Ptr<Token>,
         definee: Box<Node>,
-        dot_t: Box<Token>,
-        name_t: Box<Token>,
+        dot_t: Ptr<Token>,
+        name_t: Ptr<Token>,
         args: Option<Box<Node>>,
         body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Result<Box<Node>, ()> {
         let keyword_l = self.loc(&def_t);
         let operator_l = self.loc(&dot_t);
@@ -1474,12 +1475,12 @@ impl Builder {
 
     pub(crate) fn def_endless_singleton(
         &self,
-        def_t: Box<Token>,
+        def_t: Ptr<Token>,
         definee: Box<Node>,
-        dot_t: Box<Token>,
-        name_t: Box<Token>,
+        dot_t: Ptr<Token>,
+        name_t: Ptr<Token>,
         args: Option<Box<Node>>,
-        assignment_t: Box<Token>,
+        assignment_t: Ptr<Token>,
         body: Option<Box<Node>>,
     ) -> Result<Box<Node>, ()> {
         let body_l = maybe_boxed_node_expr(&body)
@@ -1508,7 +1509,7 @@ impl Builder {
         })))
     }
 
-    pub(crate) fn undef_method(&self, undef_t: Box<Token>, names: Vec<Node>) -> Box<Node> {
+    pub(crate) fn undef_method(&self, undef_t: Ptr<Token>, names: Vec<Node>) -> Box<Node> {
         let keyword_l = self.loc(&undef_t);
         let expression_l = keyword_l.maybe_join(&collection_expr(&names));
         Box::new(Node::Undef(Undef {
@@ -1518,7 +1519,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn alias(&self, alias_t: Box<Token>, to: Box<Node>, from: Box<Node>) -> Box<Node> {
+    pub(crate) fn alias(&self, alias_t: Ptr<Token>, to: Box<Node>, from: Box<Node>) -> Box<Node> {
         let keyword_l = self.loc(&alias_t);
         let expression_l = keyword_l.join(from.expression());
         Box::new(Node::Alias(Alias {
@@ -1535,9 +1536,9 @@ impl Builder {
 
     pub(crate) fn args(
         &self,
-        begin_t: Option<Box<Token>>,
+        begin_t: Option<Ptr<Token>>,
         args: Vec<Node>,
-        end_t: Option<Box<Token>>,
+        end_t: Option<Ptr<Token>>,
     ) -> Option<Box<Node>> {
         self.check_duplicate_args(&args, &mut HashMap::new());
 
@@ -1561,9 +1562,9 @@ impl Builder {
 
     pub(crate) fn forward_only_args(
         &self,
-        begin_t: Box<Token>,
-        dots_t: Box<Token>,
-        end_t: Box<Token>,
+        begin_t: Ptr<Token>,
+        dots_t: Ptr<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let args = vec![*self.forward_arg(dots_t)];
         let begin_l = self.loc(&begin_t);
@@ -1577,13 +1578,13 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn forward_arg(&self, dots_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn forward_arg(&self, dots_t: Ptr<Token>) -> Box<Node> {
         Box::new(Node::ForwardArg(ForwardArg {
             expression_l: self.loc(&dots_t),
         }))
     }
 
-    pub(crate) fn arg(&self, name_t: Box<Token>) -> Result<Box<Node>, ()> {
+    pub(crate) fn arg(&self, name_t: Ptr<Token>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let name = value(name_t);
 
@@ -1597,8 +1598,8 @@ impl Builder {
 
     pub(crate) fn optarg(
         &self,
-        name_t: Box<Token>,
-        eql_t: Box<Token>,
+        name_t: Ptr<Token>,
+        eql_t: Ptr<Token>,
         default: Box<Node>,
     ) -> Result<Box<Node>, ()> {
         let operator_l = self.loc(&eql_t);
@@ -1619,8 +1620,8 @@ impl Builder {
 
     pub(crate) fn restarg(
         &self,
-        star_t: Box<Token>,
-        name_t: Option<Box<Token>>,
+        star_t: Ptr<Token>,
+        name_t: Option<Ptr<Token>>,
     ) -> Result<Box<Node>, ()> {
         let (name, name_l) = match name_t {
             Some(name_t) => {
@@ -1643,7 +1644,7 @@ impl Builder {
         })))
     }
 
-    pub(crate) fn kwarg(&self, name_t: Box<Token>) -> Result<Box<Node>, ()> {
+    pub(crate) fn kwarg(&self, name_t: Ptr<Token>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let name = value(name_t);
         self.check_reserved_for_numparam(&name, &name_l)?;
@@ -1658,7 +1659,7 @@ impl Builder {
         })))
     }
 
-    pub(crate) fn kwoptarg(&self, name_t: Box<Token>, default: Box<Node>) -> Result<Box<Node>, ()> {
+    pub(crate) fn kwoptarg(&self, name_t: Ptr<Token>, default: Box<Node>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let name = value(name_t);
         self.check_reserved_for_numparam(&name, &name_l)?;
@@ -1677,8 +1678,8 @@ impl Builder {
 
     pub(crate) fn kwrestarg(
         &self,
-        dstar_t: Box<Token>,
-        name_t: Option<Box<Token>>,
+        dstar_t: Ptr<Token>,
+        name_t: Option<Ptr<Token>>,
     ) -> Result<Box<Node>, ()> {
         let (name, name_l) = match name_t {
             Some(name_t) => {
@@ -1701,7 +1702,7 @@ impl Builder {
         })))
     }
 
-    pub(crate) fn kwnilarg(&self, dstar_t: Box<Token>, nil_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn kwnilarg(&self, dstar_t: Ptr<Token>, nil_t: Ptr<Token>) -> Box<Node> {
         let dstar_l = self.loc(&dstar_t);
         let nil_l = self.loc(&nil_t);
         let expression_l = dstar_l.join(&nil_l);
@@ -1711,7 +1712,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn shadowarg(&self, name_t: Box<Token>) -> Result<Box<Node>, ()> {
+    pub(crate) fn shadowarg(&self, name_t: Ptr<Token>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let name = value(name_t);
         self.check_reserved_for_numparam(&name, &name_l)?;
@@ -1724,8 +1725,8 @@ impl Builder {
 
     pub(crate) fn blockarg(
         &self,
-        amper_t: Box<Token>,
-        name_t: Box<Token>,
+        amper_t: Ptr<Token>,
+        name_t: Ptr<Token>,
     ) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let name = value(name_t);
@@ -1773,14 +1774,14 @@ impl Builder {
     // Method calls
     //
 
-    fn call_type_for_dot(&self, dot_t: &Option<Box<Token>>) -> MethodCallType {
+    fn call_type_for_dot(&self, dot_t: &Option<Ptr<Token>>) -> MethodCallType {
         match dot_t {
             Some(token) if token.token_type == Lexer::tANDDOT => MethodCallType::CSend,
             _ => MethodCallType::Send,
         }
     }
 
-    pub(crate) fn forwarded_args(&self, dots_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn forwarded_args(&self, dots_t: Ptr<Token>) -> Box<Node> {
         Box::new(Node::ForwardedArgs(ForwardedArgs {
             expression_l: self.loc(&dots_t),
         }))
@@ -1789,11 +1790,11 @@ impl Builder {
     pub(crate) fn call_method(
         &self,
         receiver: Option<Box<Node>>,
-        dot_t: Option<Box<Token>>,
-        selector_t: Option<Box<Token>>,
-        lparen_t: Option<Box<Token>>,
+        dot_t: Option<Ptr<Token>>,
+        selector_t: Option<Ptr<Token>>,
+        lparen_t: Option<Ptr<Token>>,
         mut args: Vec<Node>,
-        rparen_t: Option<Box<Token>>,
+        rparen_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let begin_l = maybe_boxed_node_expr(&receiver)
             .or_else(|| self.maybe_loc(&selector_t))
@@ -1842,7 +1843,7 @@ impl Builder {
         }
     }
 
-    pub(crate) fn call_lambda(&self, lambda_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn call_lambda(&self, lambda_t: Ptr<Token>) -> Box<Node> {
         Box::new(Node::Lambda(Lambda {
             expression_l: self.loc(&lambda_t),
         }))
@@ -1851,10 +1852,10 @@ impl Builder {
     pub(crate) fn block(
         &self,
         method_call: Box<Node>,
-        begin_t: Box<Token>,
+        begin_t: Ptr<Token>,
         block_args: ArgsType,
         body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Result<Box<Node>, ()> {
         let block_body = body;
 
@@ -2007,7 +2008,7 @@ impl Builder {
 
         Ok(Box::new(result))
     }
-    pub(crate) fn block_pass(&self, amper_t: Box<Token>, value: Box<Node>) -> Box<Node> {
+    pub(crate) fn block_pass(&self, amper_t: Ptr<Token>, value: Box<Node>) -> Box<Node> {
         let amper_l = self.loc(&amper_t);
         let expression_l = value.expression().join(&amper_l);
 
@@ -2021,8 +2022,8 @@ impl Builder {
     pub(crate) fn attr_asgn(
         &self,
         receiver: Box<Node>,
-        dot_t: Box<Token>,
-        selector_t: Box<Token>,
+        dot_t: Ptr<Token>,
+        selector_t: Ptr<Token>,
     ) -> Box<Node> {
         let dot_l = self.loc(&dot_t);
         let selector_l = self.loc(&selector_t);
@@ -2061,9 +2062,9 @@ impl Builder {
     pub(crate) fn index(
         &self,
         recv: Box<Node>,
-        lbrack_t: Box<Token>,
+        lbrack_t: Ptr<Token>,
         mut indexes: Vec<Node>,
-        rbrack_t: Box<Token>,
+        rbrack_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&lbrack_t);
         let end_l = self.loc(&rbrack_t);
@@ -2083,9 +2084,9 @@ impl Builder {
     pub(crate) fn index_asgn(
         &self,
         recv: Box<Node>,
-        lbrack_t: Box<Token>,
+        lbrack_t: Ptr<Token>,
         indexes: Vec<Node>,
-        rbrack_t: Box<Token>,
+        rbrack_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&lbrack_t);
         let end_l = self.loc(&rbrack_t);
@@ -2105,7 +2106,7 @@ impl Builder {
     pub(crate) fn binary_op(
         &self,
         receiver: Box<Node>,
-        operator_t: Box<Token>,
+        operator_t: Ptr<Token>,
         arg: Box<Node>,
     ) -> Result<Box<Node>, ()> {
         self.value_expr(&receiver)?;
@@ -2134,7 +2135,7 @@ impl Builder {
     pub(crate) fn match_op(
         &self,
         receiver: Box<Node>,
-        match_t: Box<Token>,
+        match_t: Ptr<Token>,
         arg: Box<Node>,
     ) -> Result<Box<Node>, ()> {
         self.value_expr(&receiver)?;
@@ -2176,7 +2177,7 @@ impl Builder {
         Ok(Box::new(result))
     }
 
-    pub(crate) fn unary_op(&self, op_t: Box<Token>, receiver: Box<Node>) -> Result<Box<Node>, ()> {
+    pub(crate) fn unary_op(&self, op_t: Ptr<Token>, receiver: Box<Node>) -> Result<Box<Node>, ()> {
         self.value_expr(&receiver)?;
 
         let selector_l = self.loc(&op_t);
@@ -2199,10 +2200,10 @@ impl Builder {
 
     pub(crate) fn not_op(
         &self,
-        not_t: Box<Token>,
-        begin_t: Option<Box<Token>>,
+        not_t: Ptr<Token>,
+        begin_t: Option<Ptr<Token>>,
         receiver: Option<Box<Node>>,
-        end_t: Option<Box<Token>>,
+        end_t: Option<Ptr<Token>>,
     ) -> Result<Box<Node>, ()> {
         if let Some(receiver) = receiver {
             self.value_expr(&receiver)?;
@@ -2269,7 +2270,7 @@ impl Builder {
         &self,
         type_: LogicalOp,
         lhs: Box<Node>,
-        op_t: Box<Token>,
+        op_t: Ptr<Token>,
         rhs: Box<Node>,
     ) -> Result<Box<Node>, ()> {
         self.value_expr(&lhs)?;
@@ -2300,13 +2301,13 @@ impl Builder {
 
     pub(crate) fn condition(
         &self,
-        cond_t: Box<Token>,
+        cond_t: Ptr<Token>,
         cond: Box<Node>,
-        then_t: Box<Token>,
+        then_t: Ptr<Token>,
         if_true: Option<Box<Node>>,
-        else_t: Option<Box<Token>>,
+        else_t: Option<Ptr<Token>>,
         if_false: Option<Box<Node>>,
-        end_t: Option<Box<Token>>,
+        end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let end_l = self
             .maybe_loc(&end_t)
@@ -2337,7 +2338,7 @@ impl Builder {
         &self,
         if_true: Option<Box<Node>>,
         if_false: Option<Box<Node>>,
-        cond_t: Box<Token>,
+        cond_t: Ptr<Token>,
         cond: Box<Node>,
     ) -> Box<Node> {
         let pre = match (&if_true, &if_false) {
@@ -2362,9 +2363,9 @@ impl Builder {
     pub(crate) fn ternary(
         &self,
         cond: Box<Node>,
-        question_t: Box<Token>,
+        question_t: Ptr<Token>,
         if_true: Box<Node>,
-        colon_t: Box<Token>,
+        colon_t: Ptr<Token>,
         if_false: Box<Node>,
     ) -> Box<Node> {
         let expression_l = join_exprs(&cond, &if_false);
@@ -2385,9 +2386,9 @@ impl Builder {
 
     pub(crate) fn when(
         &self,
-        when_t: Box<Token>,
+        when_t: Ptr<Token>,
         patterns: Vec<Node>,
-        then_t: Box<Token>,
+        then_t: Ptr<Token>,
         body: Option<Box<Node>>,
     ) -> Box<Node> {
         let begin_l = self.loc(&then_t);
@@ -2409,12 +2410,12 @@ impl Builder {
 
     pub(crate) fn case(
         &self,
-        case_t: Box<Token>,
+        case_t: Ptr<Token>,
         expr: Option<Box<Node>>,
         when_bodies: Vec<Node>,
-        else_t: Option<Box<Token>>,
+        else_t: Option<Ptr<Token>>,
         else_body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let keyword_l = self.loc(&case_t);
         let else_l = self.maybe_loc(&else_t);
@@ -2437,11 +2438,11 @@ impl Builder {
     pub(crate) fn loop_(
         &self,
         loop_type: LoopType,
-        keyword_t: Box<Token>,
+        keyword_t: Ptr<Token>,
         cond: Box<Node>,
-        do_t: Box<Token>,
+        do_t: Ptr<Token>,
         body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let keyword_l = self.loc(&keyword_t);
         let begin_l = self.loc(&do_t);
@@ -2474,7 +2475,7 @@ impl Builder {
         &self,
         loop_type: LoopType,
         body: Box<Node>,
-        keyword_t: Box<Token>,
+        keyword_t: Ptr<Token>,
         cond: Box<Node>,
     ) -> Box<Node> {
         let expression_l = body.expression().join(&cond.expression());
@@ -2516,13 +2517,13 @@ impl Builder {
 
     pub(crate) fn for_(
         &self,
-        for_t: Box<Token>,
+        for_t: Ptr<Token>,
         iterator: Box<Node>,
-        in_t: Box<Token>,
+        in_t: Ptr<Token>,
         iteratee: Box<Node>,
-        do_t: Box<Token>,
+        do_t: Ptr<Token>,
         body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let keyword_l = self.loc(&for_t);
         let operator_l = self.loc(&in_t);
@@ -2547,10 +2548,10 @@ impl Builder {
     pub(crate) fn keyword_cmd(
         &self,
         type_: KeywordCmd,
-        keyword_t: Box<Token>,
-        lparen_t: Option<Box<Token>>,
+        keyword_t: Ptr<Token>,
+        lparen_t: Option<Ptr<Token>>,
         mut args: Vec<Node>,
-        rparen_t: Option<Box<Token>>,
+        rparen_t: Option<Ptr<Token>>,
     ) -> Result<Box<Node>, ()> {
         let keyword_l = self.loc(&keyword_t);
 
@@ -2627,10 +2628,10 @@ impl Builder {
 
     pub(crate) fn preexe(
         &self,
-        preexe_t: Box<Token>,
-        lbrace_t: Box<Token>,
+        preexe_t: Ptr<Token>,
+        lbrace_t: Ptr<Token>,
         body: Option<Box<Node>>,
-        rbrace_t: Box<Token>,
+        rbrace_t: Ptr<Token>,
     ) -> Box<Node> {
         let keyword_l = self.loc(&preexe_t);
         let begin_l = self.loc(&lbrace_t);
@@ -2647,10 +2648,10 @@ impl Builder {
     }
     pub(crate) fn postexe(
         &self,
-        postexe_t: Box<Token>,
-        lbrace_t: Box<Token>,
+        postexe_t: Ptr<Token>,
+        lbrace_t: Ptr<Token>,
         body: Option<Box<Node>>,
-        rbrace_t: Box<Token>,
+        rbrace_t: Ptr<Token>,
     ) -> Box<Node> {
         let keyword_l = self.loc(&postexe_t);
         let begin_l = self.loc(&lbrace_t);
@@ -2670,11 +2671,11 @@ impl Builder {
 
     pub(crate) fn rescue_body(
         &self,
-        rescue_t: Box<Token>,
+        rescue_t: Ptr<Token>,
         exc_list: Option<Box<Node>>,
-        assoc_t: Option<Box<Token>>,
+        assoc_t: Option<Ptr<Token>>,
         exc_var: Option<Box<Node>>,
-        then_t: Option<Box<Token>>,
+        then_t: Option<Ptr<Token>>,
         body: Option<Box<Node>>,
     ) -> Box<Node> {
         let end_l = maybe_boxed_node_expr(&body)
@@ -2703,8 +2704,8 @@ impl Builder {
         &self,
         compound_stmt: Option<Box<Node>>,
         rescue_bodies: Vec<Node>,
-        else_: Option<(Box<Token>, Option<Box<Node>>)>,
-        ensure: Option<(Box<Token>, Option<Box<Node>>)>,
+        else_: Option<(Ptr<Token>, Option<Box<Node>>)>,
+        ensure: Option<(Ptr<Token>, Option<Box<Node>>)>,
     ) -> Option<Box<Node>> {
         let mut result: Option<Box<Node>>;
 
@@ -2844,9 +2845,9 @@ impl Builder {
 
     pub(crate) fn begin(
         &self,
-        begin_t: Box<Token>,
+        begin_t: Ptr<Token>,
         body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let new_begin_l = self.loc(&begin_t);
         let new_end_l = self.loc(&end_t);
@@ -2905,9 +2906,9 @@ impl Builder {
 
     pub(crate) fn begin_keyword(
         &self,
-        begin_t: Box<Token>,
+        begin_t: Ptr<Token>,
         body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
         let end_l = self.loc(&end_t);
@@ -2954,12 +2955,12 @@ impl Builder {
 
     pub(crate) fn case_match(
         &self,
-        case_t: Box<Token>,
+        case_t: Ptr<Token>,
         expr: Box<Node>,
         in_bodies: Vec<Node>,
-        else_t: Option<Box<Token>>,
+        else_t: Option<Ptr<Token>>,
         else_body: Option<Box<Node>>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Box<Node> {
         let else_body = match (&else_t, &else_body) {
             (Some(else_t), None) => Some(Box::new(Node::EmptyElse(EmptyElse {
@@ -2987,7 +2988,7 @@ impl Builder {
     pub(crate) fn match_pattern(
         &self,
         value: Box<Node>,
-        assoc_t: Box<Token>,
+        assoc_t: Ptr<Token>,
         pattern: Box<Node>,
     ) -> Box<Node> {
         let operator_l = self.loc(&assoc_t);
@@ -3004,7 +3005,7 @@ impl Builder {
     pub(crate) fn match_pattern_p(
         &self,
         value: Box<Node>,
-        in_t: Box<Token>,
+        in_t: Ptr<Token>,
         pattern: Box<Node>,
     ) -> Box<Node> {
         let operator_l = self.loc(&in_t);
@@ -3020,10 +3021,10 @@ impl Builder {
 
     pub(crate) fn in_pattern(
         &self,
-        in_t: Box<Token>,
+        in_t: Ptr<Token>,
         pattern: Box<Node>,
         guard: Option<Box<Node>>,
-        then_t: Box<Token>,
+        then_t: Ptr<Token>,
         body: Option<Box<Node>>,
     ) -> Box<Node> {
         let keyword_l = self.loc(&in_t);
@@ -3044,7 +3045,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn if_guard(&self, if_t: Box<Token>, cond: Box<Node>) -> Box<Node> {
+    pub(crate) fn if_guard(&self, if_t: Ptr<Token>, cond: Box<Node>) -> Box<Node> {
         let keyword_l = self.loc(&if_t);
         let expression_l = keyword_l.join(cond.expression());
 
@@ -3054,7 +3055,7 @@ impl Builder {
             expression_l,
         }))
     }
-    pub(crate) fn unless_guard(&self, unless_t: Box<Token>, cond: Box<Node>) -> Box<Node> {
+    pub(crate) fn unless_guard(&self, unless_t: Ptr<Token>, cond: Box<Node>) -> Box<Node> {
         let keyword_l = self.loc(&unless_t);
         let expression_l = keyword_l.join(cond.expression());
 
@@ -3065,7 +3066,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn match_var(&self, name_t: Box<Token>) -> Result<Box<Node>, ()> {
+    pub(crate) fn match_var(&self, name_t: Ptr<Token>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let expression_l = name_l.clone();
         let name = value(name_t);
@@ -3081,7 +3082,7 @@ impl Builder {
         })))
     }
 
-    pub(crate) fn match_hash_var(&self, name_t: Box<Token>) -> Result<Box<Node>, ()> {
+    pub(crate) fn match_hash_var(&self, name_t: Ptr<Token>) -> Result<Box<Node>, ()> {
         let expression_l = self.loc(&name_t);
         let name_l = expression_l.adjust_end(-1);
 
@@ -3099,9 +3100,9 @@ impl Builder {
     }
     pub(crate) fn match_hash_var_from_str(
         &self,
-        begin_t: Box<Token>,
+        begin_t: Ptr<Token>,
         mut strings: List<Node>,
-        end_t: Box<Token>,
+        end_t: Ptr<Token>,
     ) -> Result<Box<Node>, ()> {
         if strings.len() != 1 {
             self.error(
@@ -3169,8 +3170,8 @@ impl Builder {
 
     pub(crate) fn match_rest(
         &self,
-        star_t: Box<Token>,
-        name_t: Option<Box<Token>>,
+        star_t: Ptr<Token>,
+        name_t: Option<Ptr<Token>>,
     ) -> Result<Box<Node>, ()> {
         let name = match name_t {
             None => None,
@@ -3189,9 +3190,9 @@ impl Builder {
 
     pub(crate) fn hash_pattern(
         &self,
-        lbrace_t: Option<Box<Token>>,
+        lbrace_t: Option<Ptr<Token>>,
         kwargs: Vec<Node>,
-        rbrace_t: Option<Box<Token>>,
+        rbrace_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
             begin_l,
@@ -3209,10 +3210,10 @@ impl Builder {
 
     pub(crate) fn array_pattern(
         &self,
-        lbrack_t: Option<Box<Token>>,
+        lbrack_t: Option<Ptr<Token>>,
         elements: Vec<Node>,
-        trailing_comma: Option<Box<Token>>,
-        rbrack_t: Option<Box<Token>>,
+        trailing_comma: Option<Ptr<Token>>,
+        rbrack_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
             begin_l,
@@ -3250,9 +3251,9 @@ impl Builder {
 
     pub(crate) fn find_pattern(
         &self,
-        lbrack_t: Option<Box<Token>>,
+        lbrack_t: Option<Ptr<Token>>,
         elements: Vec<Node>,
-        rbrack_t: Option<Box<Token>>,
+        rbrack_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
             begin_l,
@@ -3271,9 +3272,9 @@ impl Builder {
     pub(crate) fn const_pattern(
         &self,
         const_: Box<Node>,
-        ldelim_t: Box<Token>,
+        ldelim_t: Ptr<Token>,
         pattern: Box<Node>,
-        rdelim_t: Box<Token>,
+        rdelim_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&ldelim_t);
         let end_l = self.loc(&rdelim_t);
@@ -3288,7 +3289,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn pin(&self, pin_t: Box<Token>, var: Box<Node>) -> Box<Node> {
+    pub(crate) fn pin(&self, pin_t: Ptr<Token>, var: Box<Node>) -> Box<Node> {
         let operator_l = self.loc(&pin_t);
         let expression_l = var.expression().join(&operator_l);
 
@@ -3302,7 +3303,7 @@ impl Builder {
     pub(crate) fn match_alt(
         &self,
         lhs: Box<Node>,
-        pipe_t: Box<Token>,
+        pipe_t: Ptr<Token>,
         rhs: Box<Node>,
     ) -> Box<Node> {
         let operator_l = self.loc(&pipe_t);
@@ -3319,7 +3320,7 @@ impl Builder {
     pub(crate) fn match_as(
         &self,
         value: Box<Node>,
-        assoc_t: Box<Token>,
+        assoc_t: Ptr<Token>,
         as_: Box<Node>,
     ) -> Box<Node> {
         let operator_l = self.loc(&assoc_t);
@@ -3333,7 +3334,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn match_nil_pattern(&self, dstar_t: Box<Token>, nil_t: Box<Token>) -> Box<Node> {
+    pub(crate) fn match_nil_pattern(&self, dstar_t: Ptr<Token>, nil_t: Ptr<Token>) -> Box<Node> {
         let operator_l = self.loc(&dstar_t);
         let name_l = self.loc(&nil_t);
         let expression_l = operator_l.join(&name_l);
@@ -3389,7 +3390,7 @@ impl Builder {
     //
 
     pub(crate) fn check_condition(&self, cond: Ptr<Node>) -> Ptr<Node> {
-        match *cond {
+        match cond.unwrap_ptr() {
             Node::Begin(Begin {
                 statements,
                 begin_l,
@@ -3399,7 +3400,7 @@ impl Builder {
             }) => {
                 if statements.len() == 1 {
                     let stmt = statements.take_first();
-                    let stmt = *self.check_condition(Ptr::new(stmt));
+                    let stmt = self.check_condition(Ptr::new(stmt)).unwrap_ptr();
                     Ptr::new(Node::Begin(Begin {
                         statements: {
                             let mut statements = List::with_capacity(1);
@@ -3475,7 +3476,7 @@ impl Builder {
                 expression_l: inner.expression_l.clone(),
                 re: Ptr::new(Node::Regexp(inner)),
             })),
-            _ => cond,
+            other => Ptr::new(other),
         }
     }
 
@@ -3760,7 +3761,7 @@ impl Builder {
         token.loc.clone()
     }
 
-    pub(crate) fn maybe_loc(&self, token: &Option<Box<Token>>) -> MaybePtr<Loc> {
+    pub(crate) fn maybe_loc(&self, token: &Option<Ptr<Token>>) -> MaybePtr<Loc> {
         match token {
             Some(token) => self.loc(token).into_maybe_ptr(),
             None => MaybePtr::none(),
@@ -3769,9 +3770,9 @@ impl Builder {
 
     pub(crate) fn collection_map(
         &self,
-        begin_t: &Option<Box<Token>>,
+        begin_t: &Option<Ptr<Token>>,
         parts: &[Node],
-        end_t: &Option<Box<Token>>,
+        end_t: &Option<Ptr<Token>>,
     ) -> CollectionMap {
         let begin_l = self.maybe_loc(begin_t);
         let end_l = self.maybe_loc(end_t);
@@ -3790,7 +3791,7 @@ impl Builder {
         }
     }
 
-    pub(crate) fn is_heredoc(&self, begin_t: &Option<Box<Token>>) -> bool {
+    pub(crate) fn is_heredoc(&self, begin_t: &Option<Ptr<Token>>) -> bool {
         if let Some(begin_t) = begin_t {
             if clone_value(&begin_t).starts_with("<<") {
                 return true;
@@ -3801,19 +3802,16 @@ impl Builder {
 
     pub(crate) fn heredoc_map(
         &self,
-        begin_t: &Option<Box<Token>>,
+        begin_t: &Option<Ptr<Token>>,
         parts: &[Node],
-        end_t: &Option<Box<Token>>,
+        end_t: &Option<Ptr<Token>>,
     ) -> HeredocMap {
-        let begin_t: MaybePtr<Token> = begin_t.clone().into();
-        let begin_t = begin_t.into_ptr_or_else(|| unreachable!("bug: begin_t must be Some"));
+        let begin_t = begin_t.as_deref().expect("bug: begin_t must be Some");
+        let end_t = end_t.as_deref().expect("heredoc must have end_t");
 
-        let end_t: MaybePtr<Token> = end_t.clone().into();
-        let end_t = end_t.into_ptr_or_else(|| unreachable!("heredoc must have end_t"));
-
-        let heredoc_body_l = collection_expr(&parts).into_ptr_or_else(|| self.loc(&end_t));
-        let expression_l = self.loc(&begin_t);
-        let heredoc_end_l = self.loc(&end_t);
+        let heredoc_body_l = collection_expr(&parts).into_ptr_or_else(|| self.loc(end_t));
+        let expression_l = self.loc(begin_t);
+        let heredoc_end_l = self.loc(end_t);
 
         HeredocMap {
             heredoc_body_l,
@@ -3942,11 +3940,11 @@ pub(crate) fn collection_expr(nodes: &[Node]) -> MaybePtr<Loc> {
     join_maybe_exprs(&nodes.first(), &nodes.last())
 }
 
-pub(crate) fn value(token: Box<Token>) -> String {
-    token.into_string().unwrap()
+pub(crate) fn value(token: Ptr<Token>) -> String {
+    token.unwrap_ptr().into_string().unwrap()
 }
 
-pub(crate) fn lossy_value(token: Box<Token>) -> String {
+pub(crate) fn lossy_value(token: Ptr<Token>) -> String {
     token.to_string_lossy()
 }
 
@@ -3954,7 +3952,7 @@ pub(crate) fn clone_value(token: &Token) -> String {
     token.to_string_lossy()
 }
 
-pub(crate) fn maybe_value(token: Option<Box<Token>>) -> Option<String> {
+pub(crate) fn maybe_value(token: Option<Ptr<Token>>) -> Option<String> {
     token.map(value)
 }
 

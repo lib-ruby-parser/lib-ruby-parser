@@ -1,4 +1,7 @@
-use crate::{Bytes, Token};
+use crate::{
+    containers::{ptr::UnwrapPtr, Ptr},
+    Bytes, Token,
+};
 
 /// Representation of the value of the string literal
 ///
@@ -13,9 +16,9 @@ pub struct StringValue {
 }
 
 impl StringValue {
-    pub(crate) fn new(token: Box<Token>) -> Self {
+    pub(crate) fn new(token: Ptr<Token>) -> Self {
         Self {
-            bytes: token.token_value,
+            bytes: token.unwrap_ptr().token_value,
         }
     }
 

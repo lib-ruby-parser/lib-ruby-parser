@@ -45,6 +45,12 @@ pub mod c {
         }
     }
 
+    impl<T> From<List<T>> for Vec<T> {
+        fn from(_: List<T>) -> Self {
+            todo!()
+        }
+    }
+
     impl<T> List<T> {
         pub fn new() -> Self {
             todo!()
