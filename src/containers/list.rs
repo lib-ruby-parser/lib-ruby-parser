@@ -86,6 +86,12 @@ pub mod c {
         }
     }
 
+    impl<T> std::ops::DerefMut for List<T> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            todo!()
+        }
+    }
+
     impl<T, I: std::slice::SliceIndex<[T]>> std::ops::Index<I> for List<T> {
         type Output = I::Output;
 

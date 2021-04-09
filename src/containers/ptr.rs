@@ -91,7 +91,9 @@ pub mod c {
     }
 }
 
-pub(crate) trait IntoMaybePtr<T> {
+/// Unwraps the pointer and returns stack value
+pub trait IntoMaybePtr<T> {
+    /// Unwraps the pointer and returns stack value
     fn into_maybe_ptr(self) -> crate::containers::MaybePtr<T>
     where
         Self: Sized;
