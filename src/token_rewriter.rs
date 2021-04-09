@@ -1,4 +1,4 @@
-use crate::Token;
+use crate::{containers::Ptr, Token};
 
 /// Enum of what token rewriter should do with a token.
 #[derive(Debug)]
@@ -27,7 +27,7 @@ pub trait TokenRewriter: std::fmt::Debug {
     /// Returns a triplet of `(<new token>, <change token action>, <change lexer.state action>)`
     fn rewrite_token(
         &mut self,
-        token: Box<Token>,
+        token: Ptr<Token>,
         input: &[u8],
-    ) -> (Box<Token>, RewriteAction, LexStateAction);
+    ) -> (Ptr<Token>, RewriteAction, LexStateAction);
 }

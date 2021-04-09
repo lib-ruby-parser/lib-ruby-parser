@@ -63,7 +63,7 @@
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
     use crate::debug_level;
-    use crate::containers::{Ptr};
+    use crate::containers::{Ptr, ptr::UnwrapPtr};
 }
 
 %code {
@@ -1283,7 +1283,7 @@
                 | tLPAREN mlhs_inner rparen
                     {
                         let mlhs_items: Vec<Node> = match $<Node>2 {
-                            Node::Mlhs(mlhs) => mlhs.items,
+                            Node::Mlhs(mlhs) => mlhs.items.into(),
                             other => unreachable!("unsupported mlhs item {:?}", other)
                         };
 
@@ -6758,7 +6758,7 @@ impl Parser {
         self.last_token_type = token.token_type;
 
         if self.record_tokens {
-            self.tokens.push(*token.clone());
+            self.tokens.push(token.clone().unwrap_ptr());
         }
 
         token

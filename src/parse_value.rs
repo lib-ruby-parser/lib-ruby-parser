@@ -1,4 +1,5 @@
 use crate::builder::{ArgsType, PKwLabel};
+use crate::containers::Ptr;
 use crate::str_term::StrTerm;
 use crate::Node;
 use crate::Token;
@@ -25,7 +26,7 @@ pub(crate) mod BoxedNode {
 }
 
 impl Token {
-    pub(crate) fn from(value: ParseValue) -> Box<Token> {
+    pub(crate) fn from(value: ParseValue) -> Ptr<Token> {
         match value {
             ParseValue::Token(value) => value,
             other => unreachable!("expected Token, got {:?}", other),
@@ -83,7 +84,7 @@ pub(crate) mod Num {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Superclass {
-    pub(crate) lt_t: Option<Box<Token>>,
+    pub(crate) lt_t: Option<Ptr<Token>>,
     pub(crate) value: Option<Box<Node>>,
 }
 impl Superclass {
@@ -97,7 +98,7 @@ impl Superclass {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Ensure {
-    pub(crate) ensure_t: Box<Token>,
+    pub(crate) ensure_t: Ptr<Token>,
     pub(crate) body: Option<Box<Node>>,
 }
 #[allow(non_snake_case)]
@@ -114,7 +115,7 @@ pub(crate) mod OptEnsure {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Else {
-    pub(crate) else_t: Box<Token>,
+    pub(crate) else_t: Ptr<Token>,
     pub(crate) body: Option<Box<Node>>,
 }
 #[allow(non_snake_case)]
@@ -131,7 +132,7 @@ pub(crate) mod OptElse {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ExcVar {
-    pub(crate) assoc_t: Option<Box<Token>>,
+    pub(crate) assoc_t: Option<Ptr<Token>>,
     pub(crate) exc_var: Option<Box<Node>>,
 }
 impl ExcVar {
@@ -145,7 +146,7 @@ impl ExcVar {
 
 #[derive(Debug, Clone)]
 pub(crate) struct IfTail {
-    pub(crate) keyword_t: Option<Box<Token>>,
+    pub(crate) keyword_t: Option<Ptr<Token>>,
     pub(crate) body: Option<Box<Node>>,
 }
 impl IfTail {
@@ -160,7 +161,7 @@ impl IfTail {
 #[derive(Debug, Clone)]
 pub(crate) struct ExprValueDo {
     pub(crate) value: Box<Node>,
-    pub(crate) do_t: Box<Token>,
+    pub(crate) do_t: Ptr<Token>,
 }
 impl ExprValueDo {
     pub(crate) fn from(value: ParseValue) -> ExprValueDo {
@@ -196,10 +197,10 @@ impl BraceBody {
 
 #[derive(Debug, Clone)]
 pub(crate) struct CmdBraceBlock {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: Ptr<Token>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: Ptr<Token>,
 }
 impl CmdBraceBlock {
     pub(crate) fn from(value: ParseValue) -> CmdBraceBlock {
@@ -212,9 +213,9 @@ impl CmdBraceBlock {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ParenArgs {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: Ptr<Token>,
     pub(crate) args: Vec<Node>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: Ptr<Token>,
 }
 impl ParenArgs {
     pub(crate) fn from(value: ParseValue) -> ParenArgs {
@@ -227,9 +228,9 @@ impl ParenArgs {
 
 #[derive(Debug, Clone)]
 pub(crate) struct OptParenArgs {
-    pub(crate) begin_t: Option<Box<Token>>,
+    pub(crate) begin_t: Option<Ptr<Token>>,
     pub(crate) args: Vec<Node>,
-    pub(crate) end_t: Option<Box<Token>>,
+    pub(crate) end_t: Option<Ptr<Token>>,
 }
 impl OptParenArgs {
     pub(crate) fn from(value: ParseValue) -> OptParenArgs {
@@ -242,9 +243,9 @@ impl OptParenArgs {
 
 #[derive(Debug, Clone)]
 pub(crate) struct BeginBlock {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: Ptr<Token>,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: Ptr<Token>,
 }
 impl BeginBlock {
     pub(crate) fn from(value: ParseValue) -> BeginBlock {
@@ -257,9 +258,9 @@ impl BeginBlock {
 
 #[derive(Debug, Clone)]
 pub(crate) struct LambdaBody {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: Ptr<Token>,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: Ptr<Token>,
 }
 impl LambdaBody {
     pub(crate) fn from(value: ParseValue) -> LambdaBody {
@@ -272,10 +273,10 @@ impl LambdaBody {
 
 #[derive(Debug, Clone)]
 pub(crate) struct DoBlock {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: Ptr<Token>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: Ptr<Token>,
 }
 impl DoBlock {
     pub(crate) fn from(value: ParseValue) -> DoBlock {
@@ -288,10 +289,10 @@ impl DoBlock {
 
 #[derive(Debug, Clone)]
 pub(crate) struct BraceBlock {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: Ptr<Token>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: Ptr<Token>,
 }
 impl BraceBlock {
     pub(crate) fn from(value: ParseValue) -> BraceBlock {
@@ -304,10 +305,10 @@ impl BraceBlock {
 
 #[derive(Debug, Clone)]
 pub(crate) struct DefsHead {
-    pub(crate) def_t: Box<Token>,
+    pub(crate) def_t: Ptr<Token>,
     pub(crate) definee: Box<Node>,
-    pub(crate) dot_t: Box<Token>,
-    pub(crate) name_t: Box<Token>,
+    pub(crate) dot_t: Ptr<Token>,
+    pub(crate) name_t: Ptr<Token>,
 }
 impl DefsHead {
     pub(crate) fn from(value: ParseValue) -> DefsHead {
@@ -320,8 +321,8 @@ impl DefsHead {
 
 #[derive(Debug, Clone)]
 pub(crate) struct DefnHead {
-    pub(crate) def_t: Box<Token>,
-    pub(crate) name_t: Box<Token>,
+    pub(crate) def_t: Ptr<Token>,
+    pub(crate) name_t: Ptr<Token>,
 }
 impl DefnHead {
     pub(crate) fn from(value: ParseValue) -> DefnHead {
@@ -443,7 +444,7 @@ impl PTopExpr {
 #[derive(Debug, Clone)]
 pub(crate) struct MatchPatternWithTrailingComma {
     pub(crate) elements: Vec<Node>,
-    pub(crate) trailing_comma: Option<Box<Token>>,
+    pub(crate) trailing_comma: Option<Ptr<Token>>,
 }
 impl MatchPatternWithTrailingComma {
     pub(crate) fn from(value: ParseValue) -> MatchPatternWithTrailingComma {
@@ -459,7 +460,7 @@ pub(crate) enum ParseValue {
     Stolen,
     Uninitialized,
     None,
-    Token(Box<Token>),
+    Token(Ptr<Token>),
     TokenList(Vec<Token>),
     Node(Box<Node>),
     NodeList(Vec<Node>),
@@ -544,7 +545,7 @@ pub(crate) enum ParseValue {
 }
 
 impl ParseValue {
-    pub(crate) fn from_token(token: Box<Token>) -> Self {
+    pub(crate) fn from_token(token: Ptr<Token>) -> Self {
         Self::Token(token)
     }
 

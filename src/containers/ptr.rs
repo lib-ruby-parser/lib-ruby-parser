@@ -79,10 +79,26 @@ pub mod c {
             todo!()
         }
     }
+
+    use super::UnwrapPtr;
+    impl<T> UnwrapPtr<T> for Ptr<T> {
+        fn unwrap_ptr(self) -> T
+        where
+            Self: Sized,
+        {
+            todo!()
+        }
+    }
 }
 
 pub(crate) trait IntoMaybePtr<T> {
     fn into_maybe_ptr(self) -> crate::containers::MaybePtr<T>
+    where
+        Self: Sized;
+}
+
+pub(crate) trait UnwrapPtr<T> {
+    fn unwrap_ptr(self) -> T
     where
         Self: Sized;
 }

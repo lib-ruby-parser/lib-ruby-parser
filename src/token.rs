@@ -1,4 +1,7 @@
-use crate::{containers::Ptr, token_name, Bytes, LexState, Loc};
+use crate::{
+    containers::{ptr::UnwrapPtr, Ptr},
+    token_name, Bytes, LexState, Loc,
+};
 
 /// A token that is emitted by a lexer and consumed by a parser
 #[derive(Clone)]
@@ -71,6 +74,6 @@ impl Token {
     }
 
     pub(crate) fn get_loc(&self) -> Loc {
-        *self.loc.clone()
+        self.loc.clone().unwrap_ptr()
     }
 }
