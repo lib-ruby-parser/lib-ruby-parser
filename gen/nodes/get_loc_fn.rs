@@ -58,7 +58,7 @@ impl<'a> GetLocFn<'a> {
     fn contents(&self) -> String {
         format!(
             "use super::LocName;
-use lib_ruby_parser::{{Loc, Node, containers::MaybePtr}};
+use lib_ruby_parser::{{Loc, Node, containers::{{MaybePtr, ptr::IntoMaybePtr}}}};
 
 impl LocName {{
     pub(crate) fn get(&self, node: &Node) -> MaybePtr<Loc> {{
@@ -107,7 +107,7 @@ impl LocName {
                 let field = node.fields.iter().find(|f| f.field_name == self.to_str())?;
                 match field.field_type {
                     FieldType::Loc => Some(format!(
-                        "Node::{struct_name}(inner) => Some(inner.{loc_name}.clone()),",
+                        "Node::{struct_name}(inner) => inner.{loc_name}.clone().into_maybe_ptr(),",
                         struct_name = node.struct_name,
                         loc_name = self.to_str()
                     )),

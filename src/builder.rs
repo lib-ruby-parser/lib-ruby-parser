@@ -437,7 +437,7 @@ impl Builder {
             .try_into()
             .expect("dedent_level must be positive");
 
-        let dedent_heredoc_parts = |parts: &mut Vec<Node>| {
+        let dedent_heredoc_parts = |parts: &mut List<Node>| {
             let mut idx_to_drop = vec![];
             for (idx, part) in parts.iter_mut().enumerate() {
                 match part {
@@ -461,16 +461,15 @@ impl Builder {
             }
         };
 
-        todo!()
-        // match node {
-        //     Node::Heredoc(heredoc) => {
-        //         dedent_heredoc_parts(&mut heredoc.parts);
-        //     }
-        //     Node::XHeredoc(heredoc) => {
-        //         dedent_heredoc_parts(&mut heredoc.parts);
-        //     }
-        //     other => unreachable!("unsupported heredoc_dedent argument {}", other.str_type()),
-        // }
+        match node {
+            Node::Heredoc(heredoc) => {
+                dedent_heredoc_parts(&mut heredoc.parts);
+            }
+            Node::XHeredoc(heredoc) => {
+                dedent_heredoc_parts(&mut heredoc.parts);
+            }
+            other => unreachable!("unsupported heredoc_dedent argument {}", other.str_type()),
+        }
     }
 
     const TAB_WIDTH: usize = 8;

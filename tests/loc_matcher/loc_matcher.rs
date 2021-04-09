@@ -77,7 +77,7 @@ impl LocMatcher {
 
     pub fn test(&self, root: &Node) -> Result<(), String> {
         match Finder::run(&self.pattern, root).unwrap() {
-            Some(node) => match self.loc_name.get(&node) {
+            Some(node) => match self.loc_name.get(&node).as_ref() {
                 Some(loc) => {
                     if loc.begin != self.begin {
                         return Err(format!(
