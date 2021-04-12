@@ -1,3 +1,4 @@
+use crate::containers::LocPtr;
 use crate::Loc;
 
 #[cfg(not(feature = "c-structures"))]
@@ -38,13 +39,18 @@ pub(crate) mod rust {
 
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
-    use super::Loc;
+    use super::{Loc, LocPtr};
 
     /// C-compatible nullable pointer
-    #[derive(Debug)]
     #[repr(C)]
     pub struct MaybeLocPtr {
         ptr: *mut Loc,
+    }
+
+    impl std::fmt::Debug for MaybeLocPtr {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            std::fmt::Debug::fmt(&self.as_option(), f)
+        }
     }
 
     impl PartialEq for MaybeLocPtr {
@@ -55,7 +61,10 @@ pub(crate) mod c {
 
     impl Clone for MaybeLocPtr {
         fn clone(&self) -> Self {
-            todo!()
+            match self.as_option() {
+                Some(loc) => Self::some(loc.clone()),
+                None => Self::none(),
+            }
         }
     }
 
@@ -78,47 +87,81 @@ pub(crate) mod c {
 
     impl MaybeLocPtr {
         /// Constructs a pointer with a given raw pointer
-        pub fn new(ptr: *mut Loc) -> Self {
+        pub fn from_raw(ptr: *mut Loc) -> Self {
             Self { ptr }
         }
 
+        /// Unwraps into raw pointer, consumes self
+        pub fn into_raw(mut self) -> *mut Loc {
+            let ptr = self.ptr;
+            self.ptr = std::ptr::null_mut();
+            ptr
+        }
+
         /// Equivalent of Option::or_else
-        pub fn or_else<F>(self, _f: F) -> Self
+        pub fn or_else<F>(self, f: F) -> Self
         where
             F: FnOnce() -> Self,
         {
-            todo!()
+            if self.ptr.is_null() {
+                f()
+            } else {
+                self
+            }
         }
 
         /// Equivalent of Option::unwrap
-        pub fn unwrap(self) -> crate::containers::LocPtr {
-            todo!()
+        pub fn unwrap(self) -> LocPtr {
+            let ptr = self.into_raw();
+            if ptr.is_null() {
+                panic!("failed to unwrap null MaybeLocPtr")
+            } else {
+                LocPtr::from_raw(ptr)
+            }
         }
 
         /// Equivalent of Option::unwrap_or_else
-        pub fn unwrap_or_else<F>(self, _f: F) -> crate::containers::LocPtr
+        pub fn unwrap_or_else<F>(self, f: F) -> LocPtr
         where
-            F: FnOnce() -> crate::containers::LocPtr,
+            F: FnOnce() -> LocPtr,
         {
-            todo!()
+            let ptr = self.into_raw();
+            if ptr.is_null() {
+                f()
+            } else {
+                LocPtr::from_raw(ptr)
+            }
         }
 
         /// Equivalent of Option::expect
-        pub fn expect(self, _message: &str) -> crate::containers::LocPtr {
-            todo!()
+        pub fn expect(self, message: &str) -> LocPtr {
+            let ptr = self.into_raw();
+            if ptr.is_null() {
+                panic!("{}", message)
+            } else {
+                LocPtr::from_raw(ptr)
+            }
         }
 
         /// Equivalent of Option::map
-        pub fn map<F>(self, _f: F) -> Self
+        pub fn map<F>(self, f: F) -> Self
         where
-            F: FnOnce(crate::containers::LocPtr) -> crate::containers::LocPtr,
+            F: FnOnce(LocPtr) -> LocPtr,
         {
-            todo!()
+            if self.ptr.is_null() {
+                self
+            } else {
+                let ptr = self.into_raw();
+                let ptr = LocPtr::from_raw(ptr);
+                let ptr = f(ptr);
+                let ptr = ptr.into_raw();
+                Self::from_raw(ptr)
+            }
         }
 
         /// Equivalent of Option::is_none
         pub fn is_none(&self) -> bool {
-            todo!()
+            self.ptr.is_null()
         }
     }
 

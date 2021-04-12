@@ -16,12 +16,20 @@ pub(crate) mod rust {
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
     /// C-compatible list
-    #[derive(Debug)]
     #[repr(C)]
     pub struct List<T> {
         ptr: *mut T,
         len: usize,
         capacity: usize,
+    }
+
+    impl<T> std::fmt::Debug for List<T>
+    where
+        T: std::fmt::Debug,
+    {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            std::fmt::Debug::fmt(&**self, f)
+        }
     }
 
     impl<T> PartialEq for List<T>
@@ -46,19 +54,30 @@ pub(crate) mod c {
         T: Clone,
     {
         fn clone(&self) -> Self {
-            todo!()
+            let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<_>>();
+            Self::from(copied)
         }
     }
 
-    impl<T> From<Vec<T>> for List<T> {
-        fn from(_: Vec<T>) -> Self {
-            todo!()
+    impl<T> From<Vec<T>> for List<T>
+    where
+        T: Clone,
+    {
+        fn from(mut vec: Vec<T>) -> Self {
+            let ptr = vec.as_mut_ptr();
+            let len = vec.len();
+            let capacity = vec.capacity();
+            std::mem::forget(vec);
+            Self { ptr, len, capacity }
         }
     }
 
-    impl<T> From<List<T>> for Vec<T> {
-        fn from(_: List<T>) -> Self {
-            todo!()
+    impl<T> From<List<T>> for Vec<T>
+    where
+        T: Clone,
+    {
+        fn from(list: List<T>) -> Self {
+            unsafe { Vec::from_raw_parts(list.ptr, list.len, list.capacity) }
         }
     }
 
@@ -79,7 +98,7 @@ pub(crate) mod c {
 
         /// Equivalent of Vec::iter
         pub fn iter(&self) -> std::slice::Iter<'_, T> {
-            todo!()
+            self.as_ref().iter()
         }
 
         /// Equivalent of Vec::with_capacity
@@ -94,7 +113,11 @@ pub(crate) mod c {
         }
 
         fn grow(&mut self) {
-            self.capacity *= 2;
+            if self.capacity == 0 {
+                self.capacity = 1;
+            } else {
+                self.capacity *= 2;
+            }
             let layout = std::alloc::Layout::array::<T>(self.capacity).unwrap();
             self.ptr = unsafe { std::alloc::System.alloc(layout) } as *mut T;
         }
@@ -107,17 +130,22 @@ pub(crate) mod c {
             unsafe {
                 let end = self.ptr.add(self.len);
                 end.write(item);
+                self.len += 1;
             }
         }
 
-        /// Equivalent of Vec::last
-        pub fn last(&self) -> Option<&T> {
-            todo!()
-        }
-
         /// Equivalent of Vec::remove
-        pub fn remove(&mut self, _index: usize) -> T {
-            todo!()
+        pub fn remove(&mut self, index: usize) -> T {
+            if index > self.len {
+                panic!("can't remove index {}, len is {}", index, self.len)
+            }
+            unsafe {
+                let ptr = self.ptr.add(index);
+                let result = ptr.read();
+                std::ptr::copy(ptr.offset(1), ptr, self.len - index - 1);
+                self.len -= 1;
+                result
+            }
         }
     }
 
@@ -125,14 +153,13 @@ pub(crate) mod c {
         type Target = [T];
 
         fn deref(&self) -> &[T] {
-            // unsafe { slice::from_raw_parts(self.as_ptr(), self.len) }
-            todo!()
+            unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
         }
     }
 
     impl<T> std::ops::DerefMut for List<T> {
         fn deref_mut(&mut self) -> &mut Self::Target {
-            todo!()
+            unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
         }
     }
 
@@ -146,7 +173,7 @@ pub(crate) mod c {
 
     impl<T> Default for List<T> {
         fn default() -> Self {
-            todo!()
+            Self::new()
         }
     }
 
@@ -154,8 +181,14 @@ pub(crate) mod c {
 
     use super::TakeFirst;
     impl<T> TakeFirst<T> for List<T> {
-        fn take_first(self) -> T {
-            todo!()
+        fn take_first(mut self) -> T {
+            if self.is_empty() {
+                panic!("can't get the first item from an empty list")
+            } else {
+                let result = unsafe { self.ptr.read() };
+                self.ptr = unsafe { self.ptr.add(std::mem::size_of::<T>()) };
+                result
+            }
         }
     }
 }

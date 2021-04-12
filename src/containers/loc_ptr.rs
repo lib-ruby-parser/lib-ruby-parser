@@ -35,10 +35,15 @@ pub(crate) mod c {
     use std::ops::Deref;
 
     /// C-compatible not-null Loc pointer
-    #[derive(Debug)]
     #[repr(C)]
     pub struct LocPtr {
         ptr: *mut Loc,
+    }
+
+    impl std::fmt::Debug for LocPtr {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            std::fmt::Debug::fmt(&**self, f)
+        }
     }
 
     impl PartialEq for LocPtr {
@@ -73,6 +78,18 @@ pub(crate) mod c {
         pub fn new(loc: Loc) -> Self {
             let ptr = Box::into_raw(Box::new(loc));
             Self { ptr }
+        }
+
+        /// Constructs LocPtr from a raw pointer
+        pub fn from_raw(ptr: *mut Loc) -> Self {
+            Self { ptr }
+        }
+
+        /// Returns a raw pointer, consumes self
+        pub fn into_raw(mut self) -> *mut Loc {
+            let ptr = self.ptr;
+            self.ptr = std::ptr::null_mut();
+            ptr
         }
     }
 
