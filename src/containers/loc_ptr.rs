@@ -1,3 +1,4 @@
+use crate::containers::MaybeLocPtr;
 use crate::Loc;
 
 #[cfg(not(feature = "c-structures"))]
@@ -31,7 +32,7 @@ pub(crate) mod rust {
 
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
-    use super::Loc;
+    use super::{Loc, MaybeLocPtr};
     use std::ops::Deref;
 
     /// C-compatible not-null Loc pointer
@@ -40,9 +41,21 @@ pub(crate) mod c {
         ptr: *mut Loc,
     }
 
+    impl Drop for LocPtr {
+        fn drop(&mut self) {
+            if self.ptr.is_null() {
+                return;
+            }
+
+            drop(unsafe { Box::from_raw(self.ptr) });
+            self.ptr = std::ptr::null_mut();
+        }
+    }
+
     impl std::fmt::Debug for LocPtr {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            std::fmt::Debug::fmt(&**self, f)
+            // std::fmt::Debug::fmt(&**self, f)
+            f.debug_struct("LocPtr").field("ptr", &self.ptr).finish()
         }
     }
 
@@ -95,16 +108,16 @@ pub(crate) mod c {
 
     use super::IntoMaybeLocPtr;
     impl IntoMaybeLocPtr for LocPtr {
-        fn into_maybe_ptr(self) -> crate::containers::MaybeLocPtr {
+        fn into_maybe_ptr(self) -> MaybeLocPtr {
             use crate::containers::maybe_loc_ptr::MaybeLocPtrSome;
-            crate::containers::MaybeLocPtr::some(self.unptr())
+            MaybeLocPtr::some(self.unptr())
         }
     }
 
     use super::UnPtr;
     impl UnPtr for LocPtr {
         fn unptr(self) -> Loc {
-            unsafe { self.ptr.read() }
+            *unsafe { Box::from_raw(self.into_raw()) }
         }
     }
 
@@ -127,7 +140,7 @@ pub trait LocPtrNew {
 /// Unwraps the pointer and returns stack value
 pub trait IntoMaybeLocPtr {
     /// Unwraps the pointer and returns stack value
-    fn into_maybe_ptr(self) -> crate::containers::MaybeLocPtr
+    fn into_maybe_ptr(self) -> MaybeLocPtr
     where
         Self: Sized;
 }

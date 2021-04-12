@@ -44,6 +44,17 @@ pub(crate) mod c {
         ptr: *mut T,
     }
 
+    impl<T> Drop for MaybePtr<T> {
+        fn drop(&mut self) {
+            if self.ptr.is_null() {
+                return;
+            }
+
+            drop(unsafe { Box::from_raw(self.ptr) });
+            self.ptr = std::ptr::null_mut();
+        }
+    }
+
     impl<T> std::fmt::Debug for MaybePtr<T>
     where
         T: std::fmt::Debug,
@@ -55,7 +66,7 @@ pub(crate) mod c {
 
     impl<T> PartialEq for MaybePtr<T>
     where
-        T: PartialEq,
+        T: PartialEq + std::fmt::Debug,
     {
         fn eq(&self, other: &Self) -> bool {
             PartialEq::eq(&self.as_option(), &other.as_option())
@@ -64,7 +75,7 @@ pub(crate) mod c {
 
     impl<T> Clone for MaybePtr<T>
     where
-        T: Clone,
+        T: Clone + std::fmt::Debug,
     {
         fn clone(&self) -> Self {
             match self.as_option() {
@@ -117,7 +128,10 @@ pub(crate) mod c {
         }
 
         /// Equivalent of Option::expect
-        pub fn expect(self, message: &str) -> Ptr<T> {
+        pub fn expect(self, message: &str) -> Ptr<T>
+        where
+            T: std::fmt::Debug,
+        {
             let ptr = self.into_raw();
             if ptr.is_null() {
                 panic!("MaybePtr::expect failed {:?}", message)
@@ -129,6 +143,7 @@ pub(crate) mod c {
         /// Equivalent of Option::map
         pub fn map<F>(self, f: F) -> Self
         where
+            T: std::fmt::Debug,
             F: FnOnce(Ptr<T>) -> Ptr<T>,
         {
             if self.ptr.is_null() {
