@@ -36,7 +36,6 @@ pub(crate) mod c {
             if self.ptr.is_null() {
                 return;
             }
-            println!("drop(Ptr {:?})", self);
 
             drop(unsafe { Box::from_raw(self.ptr) });
             self.ptr = std::ptr::null_mut();
@@ -48,8 +47,7 @@ pub(crate) mod c {
         T: std::fmt::Debug,
     {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            // std::fmt::Debug::fmt(&**self, f)
-            f.debug_struct("Ptr").field("ptr", &self.ptr).finish()
+            std::fmt::Debug::fmt(&**self, f)
         }
     }
 
@@ -103,7 +101,6 @@ pub(crate) mod c {
         /// Constructs a pointer from a given raw pointer
         pub fn from_raw(ptr: *mut T) -> Self {
             debug_assert!(!ptr.is_null());
-            println!("Ptr::from_raw({:?} == {:?})", ptr, unsafe { &*ptr });
             Self { ptr }
         }
 
