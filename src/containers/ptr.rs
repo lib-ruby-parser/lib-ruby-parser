@@ -5,11 +5,15 @@ pub(crate) mod rust {
 
     use super::IntoMaybePtr;
     impl<T> IntoMaybePtr<T> for Ptr<T> {
-        fn into_maybe_ptr(self) -> crate::containers::MaybePtr<T>
-        where
-            Self: Sized,
-        {
+        fn into_maybe_ptr(self) -> crate::containers::MaybePtr<T> {
             Some(self)
+        }
+    }
+
+    use super::UnPtr;
+    impl<T> UnPtr<T> for Ptr<T> {
+        fn unptr(self) -> T {
+            *self
         }
     }
 }

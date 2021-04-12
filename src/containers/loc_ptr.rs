@@ -6,6 +6,27 @@ pub(crate) mod rust {
 
     /// Rust-compatible not-null Loc pointer (technically not a pointer, but it mimics it)
     pub type LocPtr = Loc;
+
+    use super::IntoMaybeLocPtr;
+    impl IntoMaybeLocPtr for LocPtr {
+        fn into_maybe_ptr(self) -> crate::containers::MaybeLocPtr {
+            Some(self)
+        }
+    }
+
+    use super::UnPtr;
+    impl UnPtr for LocPtr {
+        fn unptr(self) -> Loc {
+            self
+        }
+    }
+
+    use super::LocPtrNew;
+    impl LocPtrNew for LocPtr {
+        fn new_ptr(loc: Loc) -> Self {
+            loc
+        }
+    }
 }
 
 #[cfg(feature = "c-structures")]
@@ -74,6 +95,14 @@ pub(crate) mod c {
             todo!()
         }
     }
+}
+
+/// Constructs a LocPtr from Loc
+pub trait LocPtrNew {
+    /// Constructs a LocPtr from Loc
+    fn new_ptr(loc: Loc) -> Self
+    where
+        Self: Sized;
 }
 
 /// Unwraps the pointer and returns stack value

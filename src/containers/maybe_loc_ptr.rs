@@ -5,17 +5,17 @@ pub(crate) mod rust {
     use super::Loc;
 
     /// Rust-compatible nullable pointer
-    pub type MaybeLocPtr = Option;
+    pub type MaybeLocPtr = Option<Loc>;
 
     use super::MaybeLocPtrSome;
-    impl MaybeLocPtrSome for MaybePtr {
+    impl MaybeLocPtrSome for MaybeLocPtr {
         fn some(loc: Loc) -> Self {
             Some(loc)
         }
     }
 
     use super::MaybeLocPtrNone;
-    impl MaybeLocPtrNone for MaybePtr {
+    impl MaybeLocPtrNone for MaybeLocPtr {
         fn none() -> Self {
             None
         }
@@ -105,8 +105,8 @@ pub(crate) mod c {
         }
     }
 
-    use super::IntoLocPtrOrElse;
-    impl IntoLocPtrOrElse for MaybeLocPtr {
+    use super::IOrElse;
+    impl IOrElse for MaybeLocPtr {
         fn into_ptr_or_else<F>(self, _f: F) -> crate::containers::LocPtr
         where
             F: FnOnce() -> crate::containers::LocPtr,
@@ -124,8 +124,8 @@ pub(crate) mod c {
     //     }
     // }
 
-    use super::IntoLocPtr;
-    impl IntoLocPtr for MaybeLocPtr {
+    use super::I;
+    impl I for MaybeLocPtr {
         fn into_ptr(self, _message: &str) -> crate::containers::LocPtr {
             todo!()
         }
@@ -144,13 +144,6 @@ pub(crate) trait MaybeLocPtrNone {
         Self: Sized;
 }
 
-pub(crate) trait IntoLocPtrOrElse {
-    fn into_ptr_or_else<F>(self, f: F) -> crate::containers::LocPtr
-    where
-        F: FnOnce() -> crate::containers::LocPtr,
-        Self: Sized;
-}
-
-pub(crate) trait IntoLocPtr {
+pub(crate) trait I {
     fn into_ptr(self, message: &str) -> crate::containers::LocPtr;
 }
