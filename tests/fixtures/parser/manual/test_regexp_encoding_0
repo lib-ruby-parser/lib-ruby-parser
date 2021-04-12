@@ -17,3 +17,5 @@ s(:match_with_lvasgn,
     s(:str, "\\xa8"),
     s(:regopt, "n")),
   s(:str, ""))
+--DEPENDS-ON-FEATURES
+onig
