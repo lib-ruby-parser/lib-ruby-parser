@@ -711,6 +711,12 @@ IGNORE = [
   'test_marg_combinations_8',
   'test_marg_combinations_9',
   'test_range_endless_1',
+
+  # These tests depend on Onigurarma, and so they were imported manually
+  'test_regex_error_0',
+  'test_regex_error_1',
+  'test_regexp_encoding_0',
+  'test_lvar_injecting_match_0',
 ]
 
 Minitest.after_run do
