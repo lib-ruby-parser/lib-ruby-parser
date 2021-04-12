@@ -20,3 +20,5 @@ s(:begin,
       s(:regopt)),
     s(:str, "bar")),
   s(:lvar, "match"))
+--DEPENDS-ON-FEATURES
+onig

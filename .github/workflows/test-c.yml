@@ -12,7 +12,7 @@ env:
 
 jobs:
   test:
-    name: test c interop layer
+    name: ${{ matrix.rustflags }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -49,4 +49,4 @@ jobs:
       - name: run tests
         env:
           RUSTFLAGS: ${{ matrix.rustflags }}
-        run: cargo test --features c-structures --tests -- --nocapture
+        run: cargo test --features "c-structures" --tests -- --nocapture

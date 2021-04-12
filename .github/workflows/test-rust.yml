@@ -12,15 +12,15 @@ env:
 
 jobs:
   test:
-    name: run tests
+    name: test on ${{ matrix.build.rust }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        rust:
-          - stable
-          - beta
-          - nightly
+        build:
+          - { rust: stable,  features: "onig" }
+          - { rust: beta,    features: "onig" }
+          - { rust: nightly, features: ""     } # nightly currently fails with onig
 
     steps:
       - name: checkout
@@ -30,7 +30,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: ${{ matrix.rust }}
+          toolchain: ${{ matrix.build.rust }}
           override: true
 
       - name: install bison
@@ -46,4 +46,4 @@ jobs:
         run: cargo build --features rebuild-grammar
 
       - name: run tests
-        run: cargo test --features onig -- --nocapture
+        run: cargo test --features ${{ matrix.build.features }} -- --nocapture

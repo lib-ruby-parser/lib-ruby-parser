@@ -20,6 +20,7 @@ enum TestSection {
     AST,
     Locations,
     Diagnostic,
+    DependsOnFeature,
 }
 
 #[derive(Debug)]
@@ -28,6 +29,7 @@ struct Fixture {
     ast: Option<String>,
     locs: Option<Vec<String>>,
     diagnostics: Option<Vec<String>>,
+    depends_on_features: Option<Vec<String>>,
 }
 
 fn none_if_empty<T: PartialEq<&'static str>>(v: Vec<T>) -> Option<Vec<T>> {
@@ -47,6 +49,7 @@ impl Fixture {
         let mut ast: Vec<String> = vec![];
         let mut locs: Vec<String> = vec![];
         let mut diagnostics: Vec<String> = vec![];
+        let mut depends_on_features: Vec<String> = vec![];
         let mut current_section = TestSection::None;
 
         for line in content.lines() {
@@ -57,11 +60,13 @@ impl Fixture {
                 (b"--AST", _) => current_section = TestSection::AST,
                 (b"--LOCATIONS", _) => current_section = TestSection::Locations,
                 (b"--DIAGNOSTIC", _) => current_section = TestSection::Diagnostic,
+                (b"--DEPENDS-ON-FEATURES", _) => current_section = TestSection::DependsOnFeature,
 
                 (_, &TestSection::Input) => input.push(line.to_string()),
                 (_, &TestSection::AST) => ast.push(line.to_string()),
                 (_, &TestSection::Locations) => locs.push(line.to_string()),
                 (_, &TestSection::Diagnostic) => diagnostics.push(line.to_string()),
+                (_, &TestSection::DependsOnFeature) => depends_on_features.push(line.to_string()),
 
                 (_, &TestSection::None) => {
                     panic!("empty state while parsing fixture on line {:#?}", line)
@@ -73,6 +78,7 @@ impl Fixture {
         let ast = none_if_empty(ast).map(|lines| lines.join("\n"));
         let locs = none_if_empty(locs);
         let diagnostics = none_if_empty(diagnostics);
+        let depends_on_features = none_if_empty(depends_on_features);
 
         match (&ast, &locs, &diagnostics) {
             (None, None, None) => panic!("empty test"),
@@ -84,6 +90,7 @@ impl Fixture {
             ast,
             locs,
             diagnostics,
+            depends_on_features,
         }
     }
 
@@ -170,11 +177,27 @@ enum TestOutput {
 enum TestResult {
     Segfault,
     Some(TestOutput),
+    Skip,
 }
 
 fn test_file(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = Fixture::new(fixture_path);
+
+        if let Some(depends_on_features) = &test_case.depends_on_features {
+            for feature in depends_on_features.iter() {
+                match &feature[..] {
+                    "onig" => {
+                        if cfg!(feature = "onig") {
+                            // ok, keep going
+                        } else {
+                            return TestResult::Skip;
+                        }
+                    }
+                    unsupported => panic!("Unsupported feature {:?}", unsupported),
+                }
+            }
+        }
 
         let options = ParserOptions {
             buffer_name: format!("(test {})", fixture_path),
@@ -206,6 +229,7 @@ fn test_dir(dir: &str) {
     eprintln!("Running parser tests {}\n", dir);
 
     let mut passed: usize = 0;
+    let mut skipped: usize = 0;
     let mut failed: usize = 0;
     let mut segfaults: usize = 0;
 
@@ -215,6 +239,10 @@ fn test_dir(dir: &str) {
             TestResult::Segfault => {
                 eprintln!("SEG");
                 segfaults += 1;
+            }
+            TestResult::Skip => {
+                eprintln!("SKIP");
+                skipped += 1;
             }
             TestResult::Some(TestOutput::Pass) => {
                 eprintln!("OK");
@@ -228,8 +256,8 @@ fn test_dir(dir: &str) {
     }
 
     eprintln!(
-        "{} tests passed, {} failed, {} segfaults",
-        passed, failed, segfaults
+        "{} tests passed, {} skipped, {} failed, {} segfaults",
+        passed, skipped, failed, segfaults
     );
 
     assert_eq!(

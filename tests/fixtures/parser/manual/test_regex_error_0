@@ -2,3 +2,5 @@
 /?/
 --DIAGNOSTIC
 ~~~ (error) target of repeat operator is not specified
+--DEPENDS-ON-FEATURES
+onig
