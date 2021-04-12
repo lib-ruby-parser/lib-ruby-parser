@@ -8,33 +8,30 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-F unsafe_code"
 
 jobs:
   test:
-    name: run tests
+    name: test c interop layer
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        rust:
-          - stable
-          - beta
-          # - nightly
-        build:
-          - { features: "onig,rebuild-grammar",              rustflags: "-F unsafe_code" }
-          - { features: "onig,rebuild-grammar,c-structures", rustflags: ""               }
+        rustflags:
+          - "-Zsanitizer=address"
+          - "-Zsanitizer=hwaddress"
+          - "-Zsanitizer=leak"
+          - "-Zsanitizer=memory"
 
     steps:
       - name: checkout
         uses: actions/checkout@v2
-        with:
-          submodules: true
 
       - name: install rust
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: ${{ matrix.rust }}
+          toolchain: nightly
           override: true
 
       - name: install bison
@@ -43,7 +40,10 @@ jobs:
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
           bison --version
 
-      - name: Run tests
+      - name: codegen
+        run: cargo build --features rebuild-grammar
+
+      - name: run tests
         env:
-          - RUSTFLAGS: ${{ matrix.build.rustflags }}
-        run: cargo test --features ${{ matrix.build.features }} -- --nocapture
+          RUSTFLAGS: ${{ matrix.rustflags }}
+        run: cargo test --features c-structures -- --nocapture
