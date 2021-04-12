@@ -8,7 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-F unsafe_code"
 
 jobs:
   test:
@@ -49,4 +48,4 @@ jobs:
       - name: run tests
         env:
           RUSTFLAGS: ${{ matrix.rustflags }}
-        run: cargo test --features "c-structures" --tests -- --nocapture
+        run: cargo test --features c-structures --test parser_test -- --nocapture
