@@ -91,42 +91,24 @@ pub(crate) mod c {
             todo!()
         }
 
-        /// Equivalent of Option::expect
-        pub fn expect(_message: &str) -> crate::containers::LocPtr {
-            todo!()
-        }
-
-        /// Equivalent of Option::map
-        pub fn map<Return, F>(self, _f: F) -> Return
-        where
-            F: FnOnce(Loc) -> Return,
-        {
-            todo!()
-        }
-    }
-
-    use super::IOrElse;
-    impl IOrElse for MaybeLocPtr {
-        fn into_ptr_or_else<F>(self, _f: F) -> crate::containers::LocPtr
+        /// Equivalent of Option::unwrap_or_else
+        pub fn unwrap_or_else<F>(self, _f: F) -> crate::containers::LocPtr
         where
             F: FnOnce() -> crate::containers::LocPtr,
         {
             todo!()
         }
-    }
 
-    // impl From<Option<Box>> for MaybeLocPtr {
-    //     fn from(maybe_boxed: Option<Box>) -> Self {
-    //         match maybe_boxed {
-    //             Some(boxed) => Self::some(*boxed),
-    //             None => Self::none(),
-    //         }
-    //     }
-    // }
+        /// Equivalent of Option::expect
+        pub fn expect(self, _message: &str) -> crate::containers::LocPtr {
+            todo!()
+        }
 
-    use super::I;
-    impl I for MaybeLocPtr {
-        fn into_ptr(self, _message: &str) -> crate::containers::LocPtr {
+        /// Equivalent of Option::map
+        pub fn map<F>(self, _f: F) -> Self
+        where
+            F: FnOnce(crate::containers::LocPtr) -> crate::containers::LocPtr,
+        {
             todo!()
         }
     }
@@ -142,8 +124,4 @@ pub(crate) trait MaybeLocPtrNone {
     fn none() -> Self
     where
         Self: Sized;
-}
-
-pub(crate) trait I {
-    fn into_ptr(self, message: &str) -> crate::containers::LocPtr;
 }

@@ -3733,6 +3733,7 @@ impl Builder {
         }) = node
         {
             let mut re_options: &[char] = &[];
+            let options: Option<Box<Node>> = options.clone().into();
             if let Some(options) = options.as_ref() {
                 if let Node::RegOpt(RegOpt { options, .. }) = options.as_ref() {
                     re_options = options;

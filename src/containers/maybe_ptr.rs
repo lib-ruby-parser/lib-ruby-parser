@@ -110,9 +110,9 @@ pub(crate) mod c {
         }
 
         /// Equivalent of Option::map
-        pub fn map<Return, F>(self, _f: F) -> Return
+        pub fn map<F>(self, _f: F) -> Self
         where
-            F: FnOnce(T) -> Return,
+            F: FnOnce(crate::containers::Ptr<T>) -> crate::containers::Ptr<T>,
         {
             todo!()
         }
@@ -134,6 +134,12 @@ pub(crate) mod c {
                 Some(boxed) => Self::some(*boxed),
                 None => Self::none(),
             }
+        }
+    }
+
+    impl<T> From<MaybePtr<T>> for Option<Box<T>> {
+        fn from(_: MaybePtr<T>) -> Self {
+            todo!()
         }
     }
 

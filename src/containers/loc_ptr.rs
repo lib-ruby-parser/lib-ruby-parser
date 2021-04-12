@@ -78,21 +78,23 @@ pub(crate) mod c {
 
     use super::IntoMaybeLocPtr;
     impl IntoMaybeLocPtr for LocPtr {
-        fn into_maybe_ptr(self) -> crate::containers::MaybeLocPtr
-        where
-            Self: Sized,
-        {
-            todo!()
+        fn into_maybe_ptr(self) -> crate::containers::MaybeLocPtr {
+            use crate::containers::maybe_loc_ptr::MaybeLocPtrSome;
+            crate::containers::MaybeLocPtr::some(self.unptr())
         }
     }
 
     use super::UnPtr;
     impl UnPtr for LocPtr {
-        fn unptr(self) -> Loc
-        where
-            Self: Sized,
-        {
-            todo!()
+        fn unptr(self) -> Loc {
+            unsafe { self.ptr.read() }
+        }
+    }
+
+    use super::LocPtrNew;
+    impl LocPtrNew for LocPtr {
+        fn new_ptr(loc: Loc) -> Self {
+            Self::new(loc)
         }
     }
 }
