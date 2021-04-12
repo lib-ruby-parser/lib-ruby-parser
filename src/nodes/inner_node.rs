@@ -1,4 +1,4 @@
-use crate::containers::{List, MaybePtr};
+use crate::containers::{maybe_ptr::AsOption, List, MaybePtr};
 use crate::Loc;
 use crate::Node;
 use crate::StringValue;
@@ -65,13 +65,13 @@ impl InspectVec {
     }
 
     pub(crate) fn push_maybe_node(&mut self, node: &MaybePtr<Node>) {
-        if let Some(node) = node.as_ref() {
+        if let Some(node) = node.as_option() {
             self.push_node(node)
         }
     }
 
     pub(crate) fn push_regex_options(&mut self, node: &MaybePtr<Node>) {
-        if let Some(node) = node.as_ref() {
+        if let Some(node) = node.as_option() {
             self.push_node(node)
         } else {
             self.strings.push(format!(
@@ -83,7 +83,7 @@ impl InspectVec {
     }
 
     pub(crate) fn push_maybe_node_or_nil(&mut self, node: &MaybePtr<Node>) {
-        if let Some(node) = node.as_ref() {
+        if let Some(node) = node.as_option() {
             self.push_node(node)
         } else {
             self.push_nil()

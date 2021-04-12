@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use crate::containers::{loc_ptr::LocPtrNew, LocPtr, MaybeLocPtr};
+use crate::containers::{loc_ptr::LocPtrNew, maybe_loc_ptr::AsLocOption, LocPtr, MaybeLocPtr};
 use crate::source::Input;
 use crate::Loc;
 
@@ -78,7 +78,7 @@ impl Loc {
     }
 
     pub(crate) fn maybe_join(&self, other: &MaybeLocPtr) -> LocPtr {
-        match other.as_ref() {
+        match other.as_option() {
             Some(other) => self.join(other),
             None => self.clone().ptr(),
         }

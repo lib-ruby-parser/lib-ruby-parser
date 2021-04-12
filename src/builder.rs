@@ -7,8 +7,8 @@ use std::convert::TryInto;
 use crate::containers::{
     list::TakeFirst,
     loc_ptr::IntoMaybeLocPtr,
-    maybe_loc_ptr::{MaybeLocPtrNone, MaybeLocPtrSome},
-    maybe_ptr::{MaybePtrNone, MaybePtrSome},
+    maybe_loc_ptr::{AsLocOption, MaybeLocPtrNone, MaybeLocPtrSome},
+    maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},
     ptr::{IntoMaybePtr, UnPtr},
     List, LocPtr, MaybeLocPtr, MaybePtr, Ptr,
 };
@@ -3127,7 +3127,7 @@ impl Builder {
 
                 self.static_env.declare(&name);
 
-                if let Some(begin_l) = begin_l.as_ref() {
+                if let Some(begin_l) = begin_l.as_option() {
                     let begin_d: i32 = begin_l
                         .size()
                         .try_into()
@@ -3135,7 +3135,7 @@ impl Builder {
                     name_l = name_l.adjust_begin(begin_d)
                 }
 
-                if let Some(end_l) = end_l.as_ref() {
+                if let Some(end_l) = end_l.as_option() {
                     let end_d: i32 = end_l
                         .size()
                         .try_into()
@@ -3541,7 +3541,7 @@ impl Builder {
                 name_l,
                 expression_l,
                 ..
-            }) => name_l.as_ref().unwrap_or(&expression_l),
+            }) => name_l.as_option().unwrap_or(&expression_l),
 
             _ => unreachable!("unsupported arg {:?}", node),
         }
@@ -3868,8 +3868,8 @@ impl Builder {
 
         let check_maybe_condition =
             |if_true: &'a MaybePtr<Node>, if_false: &'a MaybePtr<Node>| match (
-                if_true.as_ref(),
-                if_false.as_ref(),
+                if_true.as_option(),
+                if_false.as_option(),
             ) {
                 (None, None) | (None, Some(_)) | (Some(_), None) => None,
                 (Some(if_true), Some(if_false)) => check_condition(&*if_true, &*if_false),
@@ -3966,7 +3966,7 @@ pub(crate) fn join_maybe_exprs(lhs: &Option<&Node>, rhs: &Option<&Node>) -> Mayb
 }
 
 pub(crate) fn join_maybe_locs(lhs: &MaybeLocPtr, rhs: &MaybeLocPtr) -> MaybeLocPtr {
-    match (lhs.as_ref(), rhs.as_ref()) {
+    match (lhs.as_option(), rhs.as_option()) {
         (None, None) => MaybeLocPtr::none(),
         (None, Some(rhs)) => MaybeLocPtr::some(rhs.clone()),
         (Some(lhs), None) => MaybeLocPtr::some(lhs.clone()),
