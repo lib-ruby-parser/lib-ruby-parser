@@ -1,7 +1,6 @@
 use std::env;
 
-mod helpers;
-use helpers::*;
+use lib_ruby_parser_helpers::*;
 
 fn print_usage() -> ! {
     println!(

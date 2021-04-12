@@ -1,6 +1,5 @@
 use lib_ruby_parser::{debug_level, Lexer, Token};
 
-#[allow(dead_code)]
 pub fn tokenize(
     source: &[u8],
     filename: &str,

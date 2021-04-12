@@ -1,5 +1,3 @@
-use crate::containers::Ptr;
-
 #[cfg(not(feature = "c-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible nullable pointer
@@ -36,7 +34,7 @@ pub(crate) mod rust {
 
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
-    use super::Ptr;
+    use crate::containers::Ptr;
 
     /// C-compatible nullable pointer
     #[repr(C)]

@@ -1,9 +1,8 @@
 use lib_ruby_parser::{debug_level, token_name, DiagnosticMessage, ParserResult};
 use std::fs;
 
-use super::*;
+use crate::parse;
 
-#[allow(dead_code)]
 pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
     let source = fs::read(filepath).map_err(|_| "failed to read a file".to_string())?;
     let ParserResult {

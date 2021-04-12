@@ -1,6 +1,5 @@
 use lib_ruby_parser::debug_level;
 
-#[allow(dead_code)]
 pub fn debug_level_from_string(s: &Option<String>) -> debug_level::Type {
     match s {
         Some(s) => {
