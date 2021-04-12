@@ -1,3 +1,5 @@
+use crate::containers::Ptr;
+
 #[cfg(not(feature = "c-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible nullable pointer
@@ -5,20 +7,14 @@ pub(crate) mod rust {
 
     use super::MaybePtrSome;
     impl<T> MaybePtrSome<T> for MaybePtr<T> {
-        fn some(value: T) -> Self
-        where
-            Self: Sized,
-        {
+        fn some(value: T) -> Self {
             Some(Box::new(value))
         }
     }
 
     use super::MaybePtrNone;
     impl<T> MaybePtrNone<T> for MaybePtr<T> {
-        fn none() -> Self
-        where
-            Self: Sized,
-        {
+        fn none() -> Self {
             None
         }
     }
@@ -40,11 +36,21 @@ pub(crate) mod rust {
 
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
+    use super::Ptr;
+
     /// C-compatible nullable pointer
-    #[derive(Debug)]
     #[repr(C)]
     pub struct MaybePtr<T> {
         ptr: *mut T,
+    }
+
+    impl<T> std::fmt::Debug for MaybePtr<T>
+    where
+        T: std::fmt::Debug,
+    {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            std::fmt::Debug::fmt(&self.as_option(), f)
+        }
     }
 
     impl<T> PartialEq for MaybePtr<T>
@@ -61,16 +67,16 @@ pub(crate) mod c {
         T: Clone,
     {
         fn clone(&self) -> Self {
-            todo!()
+            match self.as_option() {
+                Some(value) => Self::some(value.clone()),
+                None => Self::none(),
+            }
         }
     }
 
     use super::MaybePtrSome;
     impl<T> MaybePtrSome<T> for MaybePtr<T> {
-        fn some(value: T) -> Self
-        where
-            Self: Sized,
-        {
+        fn some(value: T) -> Self {
             let ptr = Box::into_raw(Box::new(value));
             Self { ptr }
         }
@@ -78,10 +84,7 @@ pub(crate) mod c {
 
     use super::MaybePtrNone;
     impl<T> MaybePtrNone<T> for MaybePtr<T> {
-        fn none() -> Self
-        where
-            Self: Sized,
-        {
+        fn none() -> Self {
             Self {
                 ptr: std::ptr::null_mut(),
             }
@@ -90,61 +93,90 @@ pub(crate) mod c {
 
     impl<T> MaybePtr<T> {
         /// Constructs a pointer with a given raw pointer
-        pub fn new(ptr: *mut T) -> Self {
+        pub fn from_raw(ptr: *mut T) -> Self {
             Self { ptr }
         }
 
+        /// Converts self into raw pointer
+        pub fn into_raw(mut self) -> *mut T {
+            let ptr = self.ptr;
+            self.ptr = std::ptr::null_mut();
+            ptr
+        }
+
         /// Equivalent of Option::or_else
-        pub fn or_else<F>(self, _f: F) -> Self
+        pub fn or_else<F>(self, f: F) -> Self
         where
             F: FnOnce() -> Self,
         {
-            todo!()
+            if self.ptr.is_null() {
+                f()
+            } else {
+                self
+            }
         }
 
         /// Equivalent of Option::expect
-        pub fn expect(self, _message: &str) -> crate::containers::Ptr<T> {
-            todo!()
+        pub fn expect(self, message: &str) -> Ptr<T> {
+            let ptr = self.into_raw();
+            if ptr.is_null() {
+                panic!("MaybePtr::expect failed {:?}", message)
+            } else {
+                Ptr::from_raw(ptr)
+            }
         }
 
         /// Equivalent of Option::map
-        pub fn map<F>(self, _f: F) -> Self
+        pub fn map<F>(self, f: F) -> Self
         where
-            F: FnOnce(crate::containers::Ptr<T>) -> crate::containers::Ptr<T>,
+            F: FnOnce(Ptr<T>) -> Ptr<T>,
         {
-            todo!()
+            if self.ptr.is_null() {
+                self
+            } else {
+                let ptr = self.into_raw();
+                let ptr = Ptr::from_raw(ptr);
+                let ptr = f(ptr);
+                let ptr = ptr.into_raw();
+                Self::from_raw(ptr)
+            }
         }
     }
 
     impl<T> From<Option<Box<T>>> for MaybePtr<T> {
         fn from(maybe_boxed: Option<Box<T>>) -> Self {
             match maybe_boxed {
-                Some(boxed) => Self::some(*boxed),
+                Some(boxed) => Self::from_raw(Box::into_raw(boxed)),
                 None => Self::none(),
             }
         }
     }
 
     impl<T> From<MaybePtr<T>> for Option<Box<T>> {
-        fn from(_: MaybePtr<T>) -> Self {
-            todo!()
+        fn from(ptr: MaybePtr<T>) -> Self {
+            let ptr = ptr.into_raw();
+            if ptr.is_null() {
+                None
+            } else {
+                Some(unsafe { Box::from_raw(ptr) })
+            }
         }
     }
 
     use super::AsOption;
     impl<T> AsOption<T> for MaybePtr<T> {
         fn as_option(&self) -> Option<&T> {
-            todo!()
+            unsafe { self.ptr.as_ref() }
         }
     }
 
     use super::IntoOption;
-    impl<T> IntoOption<T> for MaybePtr<T> {
-        fn into_option(self) -> Option<T>
-        where
-            Self: Sized,
-        {
-            todo!()
+    impl<T> IntoOption<T> for MaybePtr<T>
+    where
+        T: Clone,
+    {
+        fn into_option(self) -> Option<T> {
+            self.as_option().map(|t| t.clone())
         }
     }
 }
