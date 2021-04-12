@@ -5,8 +5,7 @@ use lib_ruby_parser::{token_name, Token};
 use std::fs;
 use std::path::Path;
 
-mod helpers;
-use helpers::*;
+use lib_ruby_parser_helpers::*;
 
 #[derive(Debug, Clap)]
 struct Args {

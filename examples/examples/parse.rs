@@ -6,9 +6,7 @@ extern crate jemallocator;
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 use lib_ruby_parser::ParserResult;
-
-mod helpers;
-use helpers::*;
+use lib_ruby_parser_helpers::*;
 
 #[derive(Debug, Clap)]
 struct Args {

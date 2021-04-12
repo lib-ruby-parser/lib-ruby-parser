@@ -1,6 +1,5 @@
 use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
 
-#[allow(dead_code)]
 pub fn parse(
     source: &[u8],
     filename: &str,

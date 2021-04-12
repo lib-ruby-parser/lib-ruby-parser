@@ -1,4 +1,3 @@
-use crate::containers::LocPtr;
 use crate::Loc;
 
 #[cfg(not(feature = "c-structures"))]
@@ -39,7 +38,8 @@ pub(crate) mod rust {
 
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
-    use super::{Loc, LocPtr};
+    use super::Loc;
+    use crate::containers::LocPtr;
 
     /// C-compatible nullable pointer
     #[repr(C)]

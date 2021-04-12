@@ -1,6 +1,5 @@
 use std::process::Command;
 
-#[allow(dead_code)]
 pub fn ripper_lex(filepath: &str) -> Result<String, &'static str> {
     let out = Command::new("ruby")
         .args(&["examples/helpers/ripper_lex.rb", filepath])

@@ -5,7 +5,7 @@ use std::thread;
 
 use std::env;
 
-use super::each_ruby_file;
+use crate::each_ruby_file;
 
 trait FnBox {
     fn call_box(self: Box<Self>);
@@ -97,7 +97,6 @@ impl Drop for Pool {
     }
 }
 
-#[allow(dead_code)]
 pub fn each_async_ruby_file<F>(path: &str, cb: &'static F) -> Result<(), Box<dyn std::error::Error>>
 where
     F: Fn(&str) + Send + Sync,
