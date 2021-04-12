@@ -47,6 +47,17 @@ pub(crate) mod c {
         ptr: *mut Loc,
     }
 
+    impl Drop for MaybeLocPtr {
+        fn drop(&mut self) {
+            if self.ptr.is_null() {
+                return;
+            }
+
+            drop(unsafe { Box::from_raw(self.ptr) });
+            self.ptr = std::ptr::null_mut();
+        }
+    }
+
     impl std::fmt::Debug for MaybeLocPtr {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             std::fmt::Debug::fmt(&self.as_option(), f)

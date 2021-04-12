@@ -4,7 +4,7 @@ pub(crate) mod rust {
     pub type List<T> = Vec<T>;
 
     use super::TakeFirst;
-    impl<T> TakeFirst<T> for List<T> {
+    impl<T: Clone> TakeFirst<T> for List<T> {
         fn take_first(self) -> T {
             self.into_iter()
                 .next()
@@ -23,6 +23,33 @@ pub(crate) mod c {
         capacity: usize,
     }
 
+    impl<T> Drop for List<T> {
+        fn drop(&mut self) {
+            if self.ptr.is_null() {
+                return;
+            }
+
+            if self.len != 0 {
+                unsafe {
+                    // propagate Drop on items
+                    std::ptr::drop_in_place(std::ptr::slice_from_raw_parts_mut(self.ptr, self.len));
+                }
+            }
+
+            if self.capacity != 0 {
+                unsafe {
+                    // free memory
+                    let layout = std::alloc::Layout::array::<T>(self.capacity).unwrap();
+                    std::alloc::System.dealloc(self.ptr as *mut u8, layout);
+                }
+            }
+
+            self.ptr = std::ptr::null_mut();
+            self.len = 0;
+            self.capacity = 0;
+        }
+    }
+
     impl<T> std::fmt::Debug for List<T>
     where
         T: std::fmt::Debug,
@@ -37,15 +64,7 @@ pub(crate) mod c {
         T: PartialEq,
     {
         fn eq(&self, other: &Self) -> bool {
-            if self.len != other.len {
-                return false;
-            }
-            for i in 0..self.len {
-                if self[i] != other[i] {
-                    return false;
-                }
-            }
-            true
+            self.as_ref() == other.as_ref()
         }
     }
 
@@ -76,8 +95,14 @@ pub(crate) mod c {
     where
         T: Clone,
     {
-        fn from(list: List<T>) -> Self {
-            unsafe { Vec::from_raw_parts(list.ptr, list.len, list.capacity) }
+        fn from(mut list: List<T>) -> Self {
+            let ptr = list.ptr;
+            let len = list.len;
+            let capacity = list.capacity;
+            list.ptr = std::ptr::null_mut();
+            list.len = 0;
+            list.capacity = 0;
+            unsafe { Vec::from_raw_parts(ptr, len, capacity) }
         }
     }
 
@@ -113,11 +138,7 @@ pub(crate) mod c {
         }
 
         fn grow(&mut self) {
-            if self.capacity == 0 {
-                self.capacity = 1;
-            } else {
-                self.capacity *= 2;
-            }
+            self.capacity *= 1;
             let layout = std::alloc::Layout::array::<T>(self.capacity).unwrap();
             self.ptr = unsafe { std::alloc::System.alloc(layout) } as *mut T;
         }
@@ -180,19 +201,44 @@ pub(crate) mod c {
     use std::alloc::GlobalAlloc;
 
     use super::TakeFirst;
-    impl<T> TakeFirst<T> for List<T> {
-        fn take_first(mut self) -> T {
+    impl<T: Clone> TakeFirst<T> for List<T> {
+        fn take_first(self) -> T {
             if self.is_empty() {
                 panic!("can't get the first item from an empty list")
             } else {
-                let result = unsafe { self.ptr.read() };
-                self.ptr = unsafe { self.ptr.add(std::mem::size_of::<T>()) };
-                result
+                unsafe { self.ptr.as_ref() }.unwrap().clone()
             }
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::List as GenericList;
+        type List = GenericList<usize>;
+
+        #[test]
+        fn test_new() {
+            let list = List::new();
+            assert_eq!(list.len, 0);
+            assert_eq!(list.capacity, 0);
+        }
+
+        #[test]
+        fn test_with_capacity() {
+            let list = List::with_capacity(20);
+            assert_eq!(list.len, 0);
+            assert_eq!(list.capacity, 20);
+        }
+
+        #[test]
+        fn test_push() {
+            let mut list = List::new();
+            list.push(40);
+            assert_eq!(list.as_ref(), &[40]);
         }
     }
 }
 
-pub(crate) trait TakeFirst<T> {
+pub(crate) trait TakeFirst<T: Clone> {
     fn take_first(self) -> T;
 }
