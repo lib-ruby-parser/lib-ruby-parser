@@ -18,9 +18,12 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - { rust: stable,  features: "onig" }
-          - { rust: beta,    features: "onig" }
-          - { rust: nightly, features: ""     } # nightly currently fails with onig
+          - { rust: stable,  cargoargs: "--features onig" }
+          - { rust: beta,    cargoargs: "--features onig" }
+          # nightly is somewhat broken:
+          # 1. there's a bug with string escaping
+          # 2. it fails to compile onig
+          - { rust: nightly, cargoargs: "--test parser_test" }
 
     steps:
       - name: checkout
@@ -46,4 +49,4 @@ jobs:
         run: cargo build --features rebuild-grammar
 
       - name: run tests
-        run: cargo test --features ${{ matrix.build.features }} -- --nocapture
+        run: cargo test ${{ matrix.build.cargoargs }} -- --nocapture
