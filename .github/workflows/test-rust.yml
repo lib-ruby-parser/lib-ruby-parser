@@ -35,9 +35,12 @@ jobs:
 
       - name: install bison
         run: |
+          brew update
           brew install bison
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
-          bison --version
+
+      - name: show bison version
+        run: bison --version
 
       - name: codegen
         run: cargo build --features rebuild-grammar

@@ -36,10 +36,11 @@ jobs:
 
       - name: install bison
         run: |
-          sudo apt-get update
-          sudo apt-get install bison
+          brew update
+          brew install bison
+          echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
 
-      - name: print bison version
+      - name: show bison version
         run: bison --version
 
       - name: codegen
