@@ -1,13 +1,17 @@
 use std::convert::TryInto;
 
-use crate::containers::{LocPtr, MaybeLocPtr};
+use crate::containers::{loc_ptr::LocPtrNew, LocPtr, MaybeLocPtr};
 use crate::source::Input;
 use crate::Loc;
 
 impl Loc {
     /// Constructs a new Loc struct
     pub fn new(begin: usize, end: usize) -> LocPtr {
-        LocPtr::new(Self { begin, end })
+        Self { begin, end }.ptr()
+    }
+
+    pub(crate) fn ptr(self) -> LocPtr {
+        LocPtr::new_ptr(self)
     }
 
     /// Returns `begin` field of the `Loc`
@@ -76,7 +80,7 @@ impl Loc {
     pub(crate) fn maybe_join(&self, other: &MaybeLocPtr) -> LocPtr {
         match other.as_ref() {
             Some(other) => self.join(other),
-            None => LocPtr::new(self.clone()),
+            None => self.clone().ptr(),
         }
     }
 

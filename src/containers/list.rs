@@ -2,6 +2,15 @@
 pub(crate) mod rust {
     /// Rust-compatible list
     pub type List<T> = Vec<T>;
+
+    use super::TakeFirst;
+    impl<T> TakeFirst<T> for List<T> {
+        fn take_first(self) -> T {
+            self.into_iter()
+                .next()
+                .expect("expected at least 1 element")
+        }
+    }
 }
 
 #[cfg(feature = "c-structures")]

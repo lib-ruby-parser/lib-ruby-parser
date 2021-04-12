@@ -7,7 +7,7 @@ use std::convert::TryInto;
 use crate::containers::{
     list::TakeFirst,
     loc_ptr::IntoMaybeLocPtr,
-    maybe_loc_ptr::{IntoLocPtr, IntoLocPtrOrElse, MaybeLocPtrNone, MaybeLocPtrSome},
+    maybe_loc_ptr::{MaybeLocPtrNone, MaybeLocPtrSome},
     maybe_ptr::{MaybePtrNone, MaybePtrSome},
     ptr::{IntoMaybePtr, UnPtr},
     List, LocPtr, MaybeLocPtr, MaybePtr, Ptr,
@@ -405,7 +405,7 @@ impl Builder {
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
         if lossy_value(begin_t).starts_with("<<") {
-            let heredoc_body_l = collection_expr(&parts).into_ptr_or_else(|| self.loc(&end_t));
+            let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(&end_t));
             let heredoc_end_l = self.loc(&end_t);
             let expression_l = begin_l;
 
@@ -532,7 +532,7 @@ impl Builder {
         let begin_l = self.loc(&begin_t);
         let end_l = self.loc(&end_t).resize(1);
         let expression_l =
-            begin_l.join(&maybe_boxed_node_expr(&options).into_ptr_or_else(|| self.loc(&end_t)));
+            begin_l.join(&maybe_boxed_node_expr(&options).unwrap_or_else(|| self.loc(&end_t)));
         match &options.as_deref() {
             Some(Node::RegOpt(RegOpt { options, .. })) => {
                 self.validate_static_regexp(&parts, options, &expression_l)
@@ -1419,7 +1419,7 @@ impl Builder {
         body: Option<Box<Node>>,
     ) -> Result<Box<Node>, ()> {
         let body_l = maybe_boxed_node_expr(&body)
-            .into_ptr_or_else(|| unreachable!("endless method always has a body"));
+            .unwrap_or_else(|| unreachable!("endless method always has a body"));
 
         let keyword_l = self.loc(&def_t);
         let expression_l = keyword_l.join(&body_l);
@@ -1485,7 +1485,7 @@ impl Builder {
         body: Option<Box<Node>>,
     ) -> Result<Box<Node>, ()> {
         let body_l = maybe_boxed_node_expr(&body)
-            .into_ptr_or_else(|| unreachable!("endless method always has body"));
+            .unwrap_or_else(|| unreachable!("endless method always has body"));
 
         let keyword_l = self.loc(&def_t);
         let operator_l = self.loc(&dot_t);
@@ -1799,12 +1799,12 @@ impl Builder {
     ) -> Box<Node> {
         let begin_l = maybe_boxed_node_expr(&receiver)
             .or_else(|| self.maybe_loc(&selector_t))
-            .into_ptr_or_else(|| unreachable!("can't compute begin_l"));
+            .unwrap_or_else(|| unreachable!("can't compute begin_l"));
         let end_l = self
             .maybe_loc(&rparen_t)
             .or_else(|| maybe_node_expr(&args.last()))
             .or_else(|| self.maybe_loc(&selector_t))
-            .into_ptr_or_else(|| unreachable!("can't compute end_l"));
+            .unwrap_or_else(|| unreachable!("can't compute end_l"));
 
         let expression_l = begin_l.join(&end_l);
 
@@ -1834,7 +1834,7 @@ impl Builder {
                 method_name,
                 recv: receiver.expect("csend node must have a receiver").into(),
                 args: args.into(),
-                dot_l: dot_l.into_ptr("csend node must have &."),
+                dot_l: dot_l.expect("csend node must have &."),
                 selector_l,
                 begin_l,
                 end_l,
@@ -2212,7 +2212,7 @@ impl Builder {
             let begin_l = self.loc(&not_t);
             let end_l = self
                 .maybe_loc(&end_t)
-                .into_ptr_or_else(|| LocPtr::new(receiver.expression().clone()));
+                .unwrap_or_else(|| receiver.expression().clone().ptr());
 
             let expression_l = begin_l.join(&end_l);
 
@@ -2315,7 +2315,7 @@ impl Builder {
             .or_else(|| maybe_boxed_node_expr(&if_false))
             .or_else(|| self.maybe_loc(&else_t))
             .or_else(|| maybe_boxed_node_expr(&if_true))
-            .into_ptr_or_else(|| self.loc(&then_t));
+            .unwrap_or_else(|| self.loc(&then_t));
 
         let expression_l = self.loc(&cond_t).join(&end_l);
         let keyword_l = self.loc(&cond_t);
@@ -2396,7 +2396,7 @@ impl Builder {
 
         let expr_end_l = maybe_boxed_node_expr(&body)
             .or_else(|| maybe_node_expr(&patterns.last()))
-            .into_ptr_or_else(|| self.loc(&when_t));
+            .unwrap_or_else(|| self.loc(&when_t));
         let when_l = self.loc(&when_t);
         let expression_l = when_l.join(&expr_end_l);
 
@@ -2576,7 +2576,7 @@ impl Builder {
         let expr_end_l = end_l
             .clone()
             .or_else(|| maybe_node_expr(&args.last()))
-            .into_ptr_or_else(|| keyword_l.clone());
+            .unwrap_or_else(|| keyword_l.clone());
 
         let expression_l = keyword_l.join(&expr_end_l);
 
@@ -2683,7 +2683,7 @@ impl Builder {
             .or_else(|| self.maybe_loc(&then_t))
             .or_else(|| maybe_boxed_node_expr(&exc_var))
             .or_else(|| maybe_boxed_node_expr(&exc_list))
-            .into_ptr_or_else(|| self.loc(&rescue_t));
+            .unwrap_or_else(|| self.loc(&rescue_t));
 
         let expression_l = self.loc(&rescue_t).join(&end_l);
         let keyword_l = self.loc(&rescue_t);
@@ -2714,9 +2714,9 @@ impl Builder {
             if let Some((else_t, else_)) = else_ {
                 let begin_l = maybe_boxed_node_expr(&compound_stmt)
                     .or_else(|| maybe_node_expr(&rescue_bodies.first()))
-                    .into_ptr_or_else(|| unreachable!("can't compute begin_l"));
+                    .unwrap_or_else(|| unreachable!("can't compute begin_l"));
 
-                let end_l = maybe_boxed_node_expr(&else_).into_ptr_or_else(|| self.loc(&else_t));
+                let end_l = maybe_boxed_node_expr(&else_).unwrap_or_else(|| self.loc(&else_t));
 
                 let expression_l = begin_l.join(&end_l);
                 let else_l = self.loc(&else_t);
@@ -2731,10 +2731,10 @@ impl Builder {
             } else {
                 let begin_l = maybe_boxed_node_expr(&compound_stmt)
                     .or_else(|| maybe_node_expr(&rescue_bodies.first()))
-                    .into_ptr_or_else(|| unreachable!("can't compute begin_l"));
+                    .unwrap_or_else(|| unreachable!("can't compute begin_l"));
 
                 let end_l = maybe_node_expr(&rescue_bodies.last())
-                    .into_ptr_or_else(|| unreachable!("can't compute end_l"));
+                    .unwrap_or_else(|| unreachable!("can't compute end_l"));
 
                 let expression_l = begin_l.join(&end_l);
                 let else_l = self.maybe_loc(&None);
@@ -2801,10 +2801,9 @@ impl Builder {
             };
             let keyword_l = self.loc(&ensure_t);
 
-            let begin_l = maybe_boxed_node_expr(&result).into_ptr_or_else(|| self.loc(&ensure_t));
+            let begin_l = maybe_boxed_node_expr(&result).unwrap_or_else(|| self.loc(&ensure_t));
 
-            let end_l =
-                maybe_node_expr(&ensure_body.last()).into_ptr_or_else(|| self.loc(&ensure_t));
+            let end_l = maybe_node_expr(&ensure_body.last()).unwrap_or_else(|| self.loc(&ensure_t));
 
             let expression_l = begin_l.join(&end_l);
 
@@ -3033,7 +3032,7 @@ impl Builder {
 
         let expression_l = maybe_boxed_node_expr(&body)
             .or_else(|| maybe_boxed_node_expr(&guard))
-            .into_ptr_or_else(|| LocPtr::new(pattern.expression().clone()))
+            .unwrap_or_else(|| pattern.expression().clone().ptr())
             .join(&keyword_l);
 
         Box::new(Node::InPattern(InPattern {
@@ -3457,8 +3456,8 @@ impl Builder {
                 operator_l,
                 expression_l,
             }) => Ptr::new(Node::IFlipFlop(IFlipFlop {
-                left: left.map(|node| self.check_condition(Ptr::new(node)).into_maybe_ptr()),
-                right: right.map(|node| self.check_condition(Ptr::new(node)).into_maybe_ptr()),
+                left: left.map(|node| self.check_condition(node)),
+                right: right.map(|node| self.check_condition(node)),
                 operator_l,
                 expression_l,
             })),
@@ -3468,8 +3467,8 @@ impl Builder {
                 operator_l,
                 expression_l,
             }) => Ptr::new(Node::EFlipFlop(EFlipFlop {
-                left: left.map(|node| self.check_condition(Ptr::new(node)).into_maybe_ptr()),
-                right: right.map(|node| self.check_condition(Ptr::new(node)).into_maybe_ptr()),
+                left: left.map(|node| self.check_condition(node)),
+                right: right.map(|node| self.check_condition(node)),
                 operator_l,
                 expression_l,
             })),
@@ -3735,7 +3734,7 @@ impl Builder {
         {
             let mut re_options: &[char] = &[];
             if let Some(options) = options.as_ref() {
-                if let Node::RegOpt(RegOpt { options, .. }) = &*options {
+                if let Node::RegOpt(RegOpt { options, .. }) = options.as_ref() {
                     re_options = options;
                 }
             };
@@ -3781,7 +3780,7 @@ impl Builder {
         let expression_l = collection_expr(&parts);
         let expression_l = join_maybe_locs(&expression_l, &begin_l);
         let expression_l = join_maybe_locs(&expression_l, &end_l);
-        let expression_l = expression_l.into_ptr_or_else(|| {
+        let expression_l = expression_l.unwrap_or_else(|| {
             unreachable!("empty collection without begin_t/end_t, can't build source map")
         });
 
@@ -3810,7 +3809,7 @@ impl Builder {
         let begin_t = begin_t.as_deref().expect("bug: begin_t must be Some");
         let end_t = end_t.as_deref().expect("heredoc must have end_t");
 
-        let heredoc_body_l = collection_expr(&parts).into_ptr_or_else(|| self.loc(end_t));
+        let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(end_t));
         let expression_l = self.loc(begin_t);
         let heredoc_end_l = self.loc(end_t);
 
@@ -3825,7 +3824,7 @@ impl Builder {
         self.diagnostics.emit(Diagnostic::new(
             ErrorLevel::Error,
             message,
-            LocPtr::new(loc.clone()),
+            loc.clone().ptr(),
         ))
     }
 
@@ -3833,7 +3832,7 @@ impl Builder {
         self.diagnostics.emit(Diagnostic::new(
             ErrorLevel::Warning,
             message,
-            LocPtr::new(loc.clone()),
+            loc.clone().ptr(),
         ))
     }
 
@@ -3911,7 +3910,7 @@ impl Builder {
                     Node::Hash(hash) if hash.begin_l.is_none() && hash.end_l.is_none() => {
                         *last = Node::Kwargs(Kwargs {
                             pairs: std::mem::take(&mut hash.pairs),
-                            expression_l: LocPtr::new(hash.expression().clone()),
+                            expression_l: hash.expression().clone().ptr(),
                         });
                     }
                     _ => {}

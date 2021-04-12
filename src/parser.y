@@ -63,7 +63,7 @@
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
     use crate::debug_level;
-    use crate::containers::{Ptr, ptr::UnPtr, LocPtr};
+    use crate::containers::{Ptr, ptr::UnPtr};
 }
 
 %code {
@@ -6728,7 +6728,7 @@ impl Parser {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Warning,
             message,
-            LocPtr::new(loc.clone()),
+            loc.clone().ptr(),
         );
         self.diagnostics.emit(diagnostic);
     }
@@ -6799,7 +6799,7 @@ impl Parser {
     }
 
     fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) -> Result<i32, ()> {
-        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, LocPtr::new(loc));
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc.ptr());
         self.diagnostics.emit(diagnostic);
         Err(())
     }
@@ -6809,7 +6809,7 @@ impl Parser {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,
             DiagnosticMessage::UnexpectedToken { token_name: Lexer::TOKEN_NAMES[id].to_owned() },
-            LocPtr::new(ctx.location().clone()),
+            ctx.location().clone().ptr(),
         );
         self.diagnostics.emit(diagnostic);
     }
