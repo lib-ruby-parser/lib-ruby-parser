@@ -1,0 +1,46 @@
+name: test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-F unsafe_code"
+
+jobs:
+  test:
+    name: run tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+
+      - name: install bison
+        run: |
+          brew install bison
+          echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
+          bison --version
+
+      - name: codegen
+        run: cargo build --features rebuild-grammar
+
+      - name: run tests
+        run: cargo test --features onig -- --nocapture
