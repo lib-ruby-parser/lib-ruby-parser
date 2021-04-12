@@ -20,12 +20,25 @@ pub(crate) mod rust {
             None
         }
     }
+
+    use super::AsLocOption;
+    impl AsLocOption for MaybeLocPtr {
+        fn as_option(&self) -> Option<&Loc> {
+            self.as_ref()
+        }
+    }
+
+    use super::IntoLocOption;
+    impl IntoLocOption for MaybeLocPtr {
+        fn into_option(self) -> Option<Loc> {
+            self
+        }
+    }
 }
 
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
     use super::Loc;
-    use std::ops::Deref;
 
     /// C-compatible nullable pointer
     #[derive(Debug)]
@@ -36,27 +49,13 @@ pub(crate) mod c {
 
     impl PartialEq for MaybeLocPtr {
         fn eq(&self, other: &Self) -> bool {
-            PartialEq::eq(&**self, &**other)
+            PartialEq::eq(&self.as_option(), &other.as_option())
         }
     }
 
     impl Clone for MaybeLocPtr {
         fn clone(&self) -> Self {
             todo!()
-        }
-    }
-
-    impl Deref for MaybeLocPtr {
-        type Target = Option<Loc>;
-
-        fn deref(&self) -> &Self::Target {
-            todo!()
-            // if self.ptr.is_null() {
-            //     &None
-            // } else {
-            //     let value = unsafe { *self.ptr };
-            //     &Some(value)
-            // }
         }
     }
 
@@ -91,6 +90,11 @@ pub(crate) mod c {
             todo!()
         }
 
+        /// Equivalent of Option::unwrap
+        pub fn unwrap(self) -> crate::containers::LocPtr {
+            todo!()
+        }
+
         /// Equivalent of Option::unwrap_or_else
         pub fn unwrap_or_else<F>(self, _f: F) -> crate::containers::LocPtr
         where
@@ -111,6 +115,30 @@ pub(crate) mod c {
         {
             todo!()
         }
+
+        /// Equivalent of Option::is_none
+        pub fn is_none(&self) -> bool {
+            todo!()
+        }
+    }
+
+    use super::AsLocOption;
+    impl AsLocOption for MaybeLocPtr {
+        fn as_option(&self) -> Option<&Loc> {
+            unsafe { self.ptr.as_ref() }
+        }
+    }
+
+    use super::IntoLocOption;
+    impl IntoLocOption for MaybeLocPtr {
+        fn into_option(self) -> Option<Loc> {
+            if self.ptr.is_null() {
+                None
+            } else {
+                use crate::containers::loc_ptr::UnPtr;
+                Some(self.unwrap().unptr())
+            }
+        }
     }
 }
 
@@ -122,6 +150,18 @@ pub(crate) trait MaybeLocPtrSome {
 
 pub(crate) trait MaybeLocPtrNone {
     fn none() -> Self
+    where
+        Self: Sized;
+}
+
+/// Trait for converting &MaybeLocPtr into Option<&Loc>
+pub trait AsLocOption {
+    /// Converts &MaybeLocPtr into Option<&Loc>
+    fn as_option(&self) -> Option<&Loc>;
+}
+
+pub(crate) trait IntoLocOption {
+    fn into_option(self) -> Option<Loc>
     where
         Self: Sized;
 }

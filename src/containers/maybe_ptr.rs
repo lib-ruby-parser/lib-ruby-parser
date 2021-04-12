@@ -22,12 +22,24 @@ pub(crate) mod rust {
             None
         }
     }
+
+    use super::AsOption;
+    impl<T> AsOption<T> for MaybePtr<T> {
+        fn as_option(&self) -> Option<&T> {
+            self.as_ref().map(|t| &**t)
+        }
+    }
+
+    use super::IntoOption;
+    impl<T> IntoOption<T> for MaybePtr<T> {
+        fn into_option(self) -> Option<T> {
+            self.map(|t| *t)
+        }
+    }
 }
 
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
-    use std::ops::Deref;
-
     /// C-compatible nullable pointer
     #[derive(Debug)]
     #[repr(C)]
@@ -40,7 +52,7 @@ pub(crate) mod c {
         T: PartialEq,
     {
         fn eq(&self, other: &Self) -> bool {
-            PartialEq::eq(&**self, &**other)
+            PartialEq::eq(&self.as_option(), &other.as_option())
         }
     }
 
@@ -50,20 +62,6 @@ pub(crate) mod c {
     {
         fn clone(&self) -> Self {
             todo!()
-        }
-    }
-
-    impl<T> Deref for MaybePtr<T> {
-        type Target = Option<T>;
-
-        fn deref(&self) -> &Self::Target {
-            todo!()
-            // if self.ptr.is_null() {
-            //     &None
-            // } else {
-            //     let value = unsafe { *self.ptr };
-            //     &Some(value)
-            // }
         }
     }
 
@@ -118,16 +116,6 @@ pub(crate) mod c {
         }
     }
 
-    // impl<T> MaybePtr<T> {
-    //     fn unwrap_or_else<F>(self, _f: F) -> crate::containers::Ptr<T>
-    //     where
-    //         F: FnOnce() -> crate::containers::Ptr<T>,
-    //         Self: Sized,
-    //     {
-    //         todo!()
-    //     }
-    // }
-
     impl<T> From<Option<Box<T>>> for MaybePtr<T> {
         fn from(maybe_boxed: Option<Box<T>>) -> Self {
             match maybe_boxed {
@@ -143,12 +131,22 @@ pub(crate) mod c {
         }
     }
 
-    // use super::IntoPtr;
-    // impl<T> MaybePtr<T> {
-    //     fn expect(self, _message: &str) -> crate::containers::Ptr<T> {
-    //         todo!()
-    //     }
-    // }
+    use super::AsOption;
+    impl<T> AsOption<T> for MaybePtr<T> {
+        fn as_option(&self) -> Option<&T> {
+            todo!()
+        }
+    }
+
+    use super::IntoOption;
+    impl<T> IntoOption<T> for MaybePtr<T> {
+        fn into_option(self) -> Option<T>
+        where
+            Self: Sized,
+        {
+            todo!()
+        }
+    }
 }
 
 pub(crate) trait MaybePtrSome<T> {
@@ -163,6 +161,14 @@ pub(crate) trait MaybePtrNone<T> {
         Self: Sized;
 }
 
-// pub(crate) trait IntoPtr<T> {
-//     fn into_ptr(self, message: &str) -> crate::containers::Ptr<T>;
-// }
+/// Trait for converting &Ptr<T> into Option<&T>
+pub trait AsOption<T> {
+    /// Converts &Ptr<T> into Option<&T>
+    fn as_option(&self) -> Option<&T>;
+}
+
+pub(crate) trait IntoOption<T> {
+    fn into_option(self) -> Option<T>
+    where
+        Self: Sized;
+}

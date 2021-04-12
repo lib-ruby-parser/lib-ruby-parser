@@ -5,7 +5,7 @@ mod visit_gen;
 pub use visit_gen::Observer;
 
 use crate::{
-    containers::{List, MaybePtr, Ptr},
+    containers::{maybe_ptr::AsOption, List, MaybePtr, Ptr},
     Node,
 };
 
@@ -79,7 +79,7 @@ impl<TObserver: Observer> Visit<&Ptr<Node>> for Visitor<TObserver> {
 
 impl<TObserver: Observer> Visit<&MaybePtr<Node>> for Visitor<TObserver> {
     fn visit(&mut self, node: &MaybePtr<Node>, visit_as: Item) {
-        if let Some(node) = node.as_ref() {
+        if let Some(node) = node.as_option() {
             self.visit(node, visit_as);
         }
     }

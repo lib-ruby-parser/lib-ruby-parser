@@ -117,6 +117,14 @@ impl InnerNode for {struct_name} {{
         if self.has_field_with_type(FieldType::MaybeLoc) {
             imports.push("use crate::containers::MaybeLocPtr;".to_string())
         }
+        if self.has_field_with_type(FieldType::MaybeNode)
+            || self.has_field_with_type(FieldType::RegexOptions)
+        {
+            imports.push("use crate::containers::maybe_ptr::AsOption;".to_string());
+        }
+        if self.has_field_with_type(FieldType::MaybeLoc) {
+            imports.push("use crate::containers::maybe_loc_ptr::AsLocOption;".to_string());
+        }
         imports
     }
 
@@ -208,7 +216,7 @@ impl<'a> FieldWrapper<'a> {
                 field_name = self.field.field_name
             )),
             FieldType::MaybeNode | FieldType::RegexOptions => Some(format!(
-                "{offset}self.{field_name}.as_ref().map(|node| node.inner_ref().print_with_locs());",
+                "{offset}self.{field_name}.as_option().map(|node| node.inner_ref().print_with_locs());",
                 offset = offset,
                 field_name = self.field.field_name
             )),
@@ -223,7 +231,7 @@ impl<'a> FieldWrapper<'a> {
                     .expect("expected loc field to end with _l")
             )),
             FieldType::MaybeLoc => Some(format!(
-                "{offset}self.{field_name}.as_ref().map(|loc| loc.print(\"{printable_field_name}\"));",
+                "{offset}self.{field_name}.as_option().map(|loc| loc.print(\"{printable_field_name}\"));",
                 offset = offset,
                 field_name = self.field.field_name,
                 printable_field_name = self
