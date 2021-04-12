@@ -36,9 +36,11 @@ jobs:
 
       - name: install bison
         run: |
-          brew install bison
-          echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
-          bison --version
+          sudo apt-get update
+          sudo apt-get install bison
+
+      - name: print bison version
+        run: bison --version
 
       - name: codegen
         run: cargo build --features rebuild-grammar
@@ -46,4 +48,4 @@ jobs:
       - name: run tests
         env:
           RUSTFLAGS: ${{ matrix.rustflags }}
-        run: cargo test --features c-structures -- --nocapture
+        run: cargo test --features c-structures --tests -- --nocapture
