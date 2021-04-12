@@ -105,7 +105,7 @@ pub(crate) mod c {
         }
 
         /// Equivalent of Option::expect
-        pub fn expect(_message: &str) -> crate::containers::Ptr<T> {
+        pub fn expect(self, _message: &str) -> crate::containers::Ptr<T> {
             todo!()
         }
 
@@ -118,16 +118,15 @@ pub(crate) mod c {
         }
     }
 
-    use super::IntoPtrOrElse;
-    impl<T> IntoPtrOrElse<T> for MaybePtr<T> {
-        fn into_ptr_or_else<F>(self, _f: F) -> crate::containers::Ptr<T>
-        where
-            F: FnOnce() -> crate::containers::Ptr<T>,
-            Self: Sized,
-        {
-            todo!()
-        }
-    }
+    // impl<T> MaybePtr<T> {
+    //     fn unwrap_or_else<F>(self, _f: F) -> crate::containers::Ptr<T>
+    //     where
+    //         F: FnOnce() -> crate::containers::Ptr<T>,
+    //         Self: Sized,
+    //     {
+    //         todo!()
+    //     }
+    // }
 
     impl<T> From<Option<Box<T>>> for MaybePtr<T> {
         fn from(maybe_boxed: Option<Box<T>>) -> Self {
@@ -138,12 +137,12 @@ pub(crate) mod c {
         }
     }
 
-    use super::IntoPtr;
-    impl<T> IntoPtr<T> for MaybePtr<T> {
-        fn into_ptr(self, _message: &str) -> crate::containers::Ptr<T> {
-            todo!()
-        }
-    }
+    // use super::IntoPtr;
+    // impl<T> MaybePtr<T> {
+    //     fn expect(self, _message: &str) -> crate::containers::Ptr<T> {
+    //         todo!()
+    //     }
+    // }
 }
 
 pub(crate) trait MaybePtrSome<T> {
@@ -158,13 +157,6 @@ pub(crate) trait MaybePtrNone<T> {
         Self: Sized;
 }
 
-pub(crate) trait IntoPtrOrElse<T> {
-    fn into_ptr_or_else<F>(self, f: F) -> crate::containers::Ptr<T>
-    where
-        F: FnOnce() -> crate::containers::Ptr<T>,
-        Self: Sized;
-}
-
-pub(crate) trait IntoPtr<T> {
-    fn into_ptr(self, message: &str) -> crate::containers::Ptr<T>;
-}
+// pub(crate) trait IntoPtr<T> {
+//     fn into_ptr(self, message: &str) -> crate::containers::Ptr<T>;
+// }

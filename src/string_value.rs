@@ -1,5 +1,5 @@
 use crate::{
-    containers::{ptr::UnwrapPtr, Ptr},
+    containers::{ptr::UnPtr, Ptr},
     Bytes, Token,
 };
 
@@ -18,7 +18,7 @@ pub struct StringValue {
 impl StringValue {
     pub(crate) fn new(token: Ptr<Token>) -> Self {
         Self {
-            bytes: token.unwrap_ptr().token_value,
+            bytes: token.unptr().token_value,
         }
     }
 

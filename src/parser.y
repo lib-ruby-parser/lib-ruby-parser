@@ -63,7 +63,7 @@
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
     use crate::debug_level;
-    use crate::containers::{Ptr, ptr::UnwrapPtr, LocPtr};
+    use crate::containers::{Ptr, ptr::UnPtr, LocPtr};
 }
 
 %code {
@@ -6758,7 +6758,7 @@ impl Parser {
         self.last_token_type = token.token_type;
 
         if self.record_tokens {
-            self.tokens.push(token.clone().unwrap_ptr());
+            self.tokens.push(token.clone().unptr());
         }
 
         token

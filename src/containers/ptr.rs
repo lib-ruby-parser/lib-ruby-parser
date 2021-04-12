@@ -83,9 +83,9 @@ pub(crate) mod c {
         }
     }
 
-    use super::UnwrapPtr;
-    impl<T: Sized> UnwrapPtr<T> for Ptr<T> {
-        fn unwrap_ptr(self) -> T
+    use super::UnPtr;
+    impl<T: Sized> UnPtr<T> for Ptr<T> {
+        fn unptr(self) -> T
         where
             Self: Sized,
         {
@@ -102,8 +102,8 @@ pub trait IntoMaybePtr<T> {
         Self: Sized;
 }
 
-pub(crate) trait UnwrapPtr<T: Sized> {
-    fn unwrap_ptr(self) -> T
+pub(crate) trait UnPtr<T: Sized> {
+    fn unptr(self) -> T
     where
         Self: Sized;
 }

@@ -1,5 +1,5 @@
 use crate::{
-    containers::{loc_ptr::UnwrapLocPtr, LocPtr},
+    containers::{loc_ptr::UnPtr, LocPtr},
     token_name, Bytes, LexState, Loc,
 };
 
@@ -74,6 +74,6 @@ impl Token {
     }
 
     pub(crate) fn get_loc(&self) -> Loc {
-        self.loc.clone().unwrap_ptr()
+        self.loc.clone().unptr()
     }
 }
