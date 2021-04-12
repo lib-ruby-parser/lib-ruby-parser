@@ -138,7 +138,11 @@ pub(crate) mod c {
         }
 
         fn grow(&mut self) {
-            self.capacity *= 1;
+            if self.capacity == 0 {
+                self.capacity += 1;
+            } else {
+                self.capacity *= 2;
+            }
             let layout = std::alloc::Layout::array::<T>(self.capacity).unwrap();
             self.ptr = unsafe { std::alloc::System.alloc(layout) } as *mut T;
         }
