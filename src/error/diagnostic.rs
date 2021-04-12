@@ -1,6 +1,5 @@
-use crate::containers::Ptr;
+use crate::containers::LocPtr;
 use crate::source::Input;
-use crate::Loc;
 use crate::{DiagnosticMessage, ErrorLevel};
 
 /// Diagnostic message that comes from the parser when there's an error or warning
@@ -11,12 +10,12 @@ pub struct Diagnostic {
     /// Message of the diagnostic
     pub message: DiagnosticMessage,
     /// Location of the diagnostic
-    pub loc: Ptr<Loc>,
+    pub loc: LocPtr,
 }
 
 impl Diagnostic {
     /// Construncts an instance of `Diagnostic`
-    pub fn new(level: ErrorLevel, message: DiagnosticMessage, loc: Ptr<Loc>) -> Self {
+    pub fn new(level: ErrorLevel, message: DiagnosticMessage, loc: LocPtr) -> Self {
         Self {
             level,
             message,

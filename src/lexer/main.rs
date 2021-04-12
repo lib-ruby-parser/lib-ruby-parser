@@ -1,4 +1,4 @@
-use crate::containers::{ptr::UnwrapPtr, Ptr};
+use crate::containers::{ptr::UnwrapPtr, LocPtr, Ptr};
 use crate::debug_level;
 use crate::lexer::*;
 use crate::maybe_byte::*;
@@ -1099,7 +1099,7 @@ impl Lexer {
         return Self::tNL;
     }
 
-    pub(crate) fn warn(&mut self, message: DiagnosticMessage, loc: Ptr<Loc>) {
+    pub(crate) fn warn(&mut self, message: DiagnosticMessage, loc: LocPtr) {
         if self.debug {
             println!("WARNING: {}", message.render())
         }
@@ -1130,7 +1130,7 @@ impl Lexer {
         token_type
     }
 
-    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage, loc: Ptr<Loc>) {
+    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage, loc: LocPtr) {
         if self.debug {
             println!("Compile error: {}", message.render())
         }
@@ -1154,15 +1154,15 @@ impl Lexer {
         )))
     }
 
-    pub(crate) fn loc(&self, begin_pos: usize, end_pos: usize) -> Ptr<Loc> {
+    pub(crate) fn loc(&self, begin_pos: usize, end_pos: usize) -> LocPtr {
         Loc::new(begin_pos, end_pos)
     }
 
-    pub(crate) fn current_loc(&self) -> Ptr<Loc> {
+    pub(crate) fn current_loc(&self) -> LocPtr {
         self.loc(self.buffer.ptok, self.buffer.pcur)
     }
 
-    pub(crate) fn arg_ambiguous(&mut self, c: u8, loc: Ptr<Loc>) -> bool {
+    pub(crate) fn arg_ambiguous(&mut self, c: u8, loc: LocPtr) -> bool {
         if c == b'/' {
             self.warn(DiagnosticMessage::AmbiguousRegexp, loc);
         } else {
@@ -1186,7 +1186,7 @@ impl Lexer {
         self.yyerror1(message, self.current_loc());
     }
 
-    pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage, loc: Ptr<Loc>) {
+    pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage, loc: LocPtr) {
         if self.debug {
             println!("yyerror0: {}", message.render())
         }

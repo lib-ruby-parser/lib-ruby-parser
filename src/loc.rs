@@ -1,22 +1,22 @@
 use std::convert::TryInto;
 
-use crate::containers::{MaybePtr, Ptr};
+use crate::containers::{LocPtr, MaybeLocPtr};
 use crate::source::Input;
 use crate::Loc;
 
 impl Loc {
     /// Constructs a new Loc struct
-    pub fn new(begin: usize, end: usize) -> Ptr<Self> {
-        Ptr::new(Self { begin, end })
+    pub fn new(begin: usize, end: usize) -> LocPtr {
+        LocPtr::new(Self { begin, end })
     }
 
     /// Returns `begin` field of the `Loc`
-    pub fn begin(&self) -> Ptr<Self> {
+    pub fn begin(&self) -> LocPtr {
         self.with_begin(self.begin).with_end(self.begin)
     }
 
     /// Returns `end` field of the `Loc`
-    pub fn end(&self) -> Ptr<Self> {
+    pub fn end(&self) -> LocPtr {
         self.with_begin(self.end).with_end(self.end)
     }
 
@@ -26,17 +26,17 @@ impl Loc {
     }
 
     /// Returns a new `Loc` with given `begin` and current `end`
-    pub fn with_begin(&self, begin: usize) -> Ptr<Self> {
+    pub fn with_begin(&self, begin: usize) -> LocPtr {
         Self::new(begin, self.end)
     }
 
     /// Returns a new `Loc` with given `end` and current `begin`
-    pub fn with_end(&self, end: usize) -> Ptr<Self> {
+    pub fn with_end(&self, end: usize) -> LocPtr {
         Self::new(self.begin, end)
     }
 
     /// Adds given `delta` to `begin`
-    pub fn adjust_begin(&self, delta: i32) -> Ptr<Self> {
+    pub fn adjust_begin(&self, delta: i32) -> LocPtr {
         let begin: i32 = self
             .begin
             .try_into()
@@ -48,7 +48,7 @@ impl Loc {
     }
 
     /// Adds given `delta` to `end`
-    pub fn adjust_end(&self, d: i32) -> Ptr<Self> {
+    pub fn adjust_end(&self, d: i32) -> LocPtr {
         let end: i32 = self
             .end
             .try_into()
@@ -61,22 +61,22 @@ impl Loc {
 
     /// Returns a new `Loc` with the same `begin`, but adjusted `end`,
     /// so that its size is equal to given `new_size`
-    pub fn resize(&self, new_size: usize) -> Ptr<Self> {
+    pub fn resize(&self, new_size: usize) -> LocPtr {
         self.with_end(self.begin + new_size)
     }
 
     /// Joins two `Loc`s by choosing `min(begin)` + `max(end)`
-    pub fn join(&self, other: &Self) -> Ptr<Self> {
+    pub fn join(&self, other: &Self) -> LocPtr {
         Self::new(
             std::cmp::min(self.begin, other.begin),
             std::cmp::max(self.end, other.end),
         )
     }
 
-    pub(crate) fn maybe_join(&self, other: &MaybePtr<Self>) -> Ptr<Self> {
+    pub(crate) fn maybe_join(&self, other: &MaybeLocPtr) -> LocPtr {
         match other.as_ref() {
             Some(other) => self.join(other),
-            None => Ptr::new(self.clone()),
+            None => LocPtr::new(self.clone()),
         }
     }
 
@@ -94,7 +94,7 @@ impl Loc {
         input.line_col_for_pos(self.end)
     }
 
-    pub(crate) fn expand_to_line(&self, input: &Input) -> Option<(usize, Ptr<Self>)> {
+    pub(crate) fn expand_to_line(&self, input: &Input) -> Option<(usize, LocPtr)> {
         let (begin_line, _) = self.begin_line_col(input)?;
         let line_no = begin_line;
         let line = input.line_at(line_no);

@@ -1,5 +1,5 @@
 use crate::{
-    containers::{ptr::UnwrapPtr, Ptr},
+    containers::{loc_ptr::UnwrapLocPtr, LocPtr},
     token_name, Bytes, LexState, Loc,
 };
 
@@ -15,7 +15,7 @@ pub struct Token {
     pub token_value: Bytes,
 
     /// Location of the token
-    pub loc: Ptr<Loc>,
+    pub loc: LocPtr,
 
     /// Lex state **before** reading the token
     pub lex_state_before: LexState,

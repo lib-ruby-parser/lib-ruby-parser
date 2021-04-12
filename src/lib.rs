@@ -18,7 +18,6 @@ mod loc;
 pub mod source;
 
 mod lexer;
-use std::ops::Deref;
 
 pub use lexer::Lexer;
 
@@ -95,14 +94,3 @@ pub mod debug_level;
 
 /// Module with generic containers
 pub mod containers;
-
-impl Token {
-    fn new() -> Self {
-        todo!()
-    }
-}
-
-fn foo() {
-    let token = Box::new(Token::new());
-    let token = unsafe { *token };
-}
