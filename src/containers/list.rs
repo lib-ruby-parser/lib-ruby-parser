@@ -107,7 +107,7 @@ pub(crate) mod c {
         }
 
         /// Equivalent of Vec::remove
-        pub fn remove(&mut self, index: usize) -> T {
+        pub fn remove(&mut self, _index: usize) -> T {
             todo!()
         }
     }

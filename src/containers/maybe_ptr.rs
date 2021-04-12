@@ -97,7 +97,7 @@ pub(crate) mod c {
         }
 
         /// Equivalent of Option::or_else
-        pub fn or_else<F>(self, f: F) -> Self
+        pub fn or_else<F>(self, _f: F) -> Self
         where
             F: FnOnce() -> Self,
         {
@@ -105,12 +105,12 @@ pub(crate) mod c {
         }
 
         /// Equivalent of Option::expect
-        pub fn expect(message: &str) -> crate::containers::Ptr<T> {
+        pub fn expect(_message: &str) -> crate::containers::Ptr<T> {
             todo!()
         }
 
         /// Equivalent of Option::map
-        pub fn map<Return, F>(self, f: F) -> Return
+        pub fn map<Return, F>(self, _f: F) -> Return
         where
             F: FnOnce(T) -> Return,
         {
@@ -120,7 +120,7 @@ pub(crate) mod c {
 
     use super::IntoPtrOrElse;
     impl<T> IntoPtrOrElse<T> for MaybePtr<T> {
-        fn into_ptr_or_else<F>(self, f: F) -> crate::containers::Ptr<T>
+        fn into_ptr_or_else<F>(self, _f: F) -> crate::containers::Ptr<T>
         where
             F: FnOnce() -> crate::containers::Ptr<T>,
             Self: Sized,
@@ -140,7 +140,7 @@ pub(crate) mod c {
 
     use super::IntoPtr;
     impl<T> IntoPtr<T> for MaybePtr<T> {
-        fn into_ptr(self, message: &str) -> crate::containers::Ptr<T> {
+        fn into_ptr(self, _message: &str) -> crate::containers::Ptr<T> {
             todo!()
         }
     }
