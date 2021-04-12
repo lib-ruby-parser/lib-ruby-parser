@@ -8,8 +8,8 @@ use crate::containers::{
     list::TakeFirst,
     loc_ptr::IntoMaybeLocPtr,
     maybe_loc_ptr::{IntoLocPtr, IntoLocPtrOrElse, MaybeLocPtrNone, MaybeLocPtrSome},
-    maybe_ptr::{IntoPtr, MaybePtrNone, MaybePtrSome},
-    ptr::{IntoMaybePtr, UnwrapPtr},
+    maybe_ptr::{MaybePtrNone, MaybePtrSome},
+    ptr::{IntoMaybePtr, UnPtr},
     List, LocPtr, MaybeLocPtr, MaybePtr, Ptr,
 };
 use crate::error::Diagnostics;
@@ -725,7 +725,7 @@ impl Builder {
 
         let colon_l = end_l.with_begin(end_l.end - 1);
 
-        let end_t = end_t.unwrap_ptr();
+        let end_t = end_t.unptr();
         let end_t: Ptr<Token> = Ptr::new(Token {
             token_type: end_t.token_type,
             token_value: end_t.token_value,
@@ -1174,7 +1174,7 @@ impl Builder {
                 *operator_l = op_l;
                 if args.is_empty() {
                     let mut new_args = List::with_capacity(1);
-                    new_args.push(new_rhs.unwrap_ptr());
+                    new_args.push(new_rhs.unptr());
                     *args = new_args;
                 } else {
                     unreachable!("can't assign to method call with args")
@@ -1910,7 +1910,7 @@ impl Builder {
                 ArgsType::Numargs(numargs) => Node::Numblock(Numblock {
                     call: Ptr::new(actual_send),
                     numargs,
-                    body: block_body.into_ptr("numblock always has body"),
+                    body: block_body.expect("numblock always has body"),
                     begin_l,
                     end_l,
                     expression_l,
@@ -1948,7 +1948,7 @@ impl Builder {
                         call: method_call.into(),
                         body: {
                             let block_body: MaybePtr<Node> = block_body.into();
-                            block_body.into_ptr("numblock always has body")
+                            block_body.expect("numblock always has body")
                         },
                         begin_l,
                         end_l,
@@ -3391,7 +3391,7 @@ impl Builder {
     //
 
     pub(crate) fn check_condition(&self, cond: Ptr<Node>) -> Ptr<Node> {
-        match cond.unwrap_ptr() {
+        match cond.unptr() {
             Node::Begin(Begin {
                 statements,
                 begin_l,
@@ -3401,7 +3401,7 @@ impl Builder {
             }) => {
                 if statements.len() == 1 {
                     let stmt = statements.take_first();
-                    let stmt = self.check_condition(Ptr::new(stmt)).unwrap_ptr();
+                    let stmt = self.check_condition(Ptr::new(stmt)).unptr();
                     Ptr::new(Node::Begin(Begin {
                         statements: {
                             let mut statements = List::with_capacity(1);
@@ -3942,7 +3942,7 @@ pub(crate) fn collection_expr(nodes: &[Node]) -> MaybeLocPtr {
 }
 
 pub(crate) fn value(token: Ptr<Token>) -> String {
-    token.unwrap_ptr().into_string().unwrap()
+    token.unptr().into_string().unwrap()
 }
 
 pub(crate) fn lossy_value(token: Ptr<Token>) -> String {

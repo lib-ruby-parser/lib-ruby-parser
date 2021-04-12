@@ -65,9 +65,9 @@ pub(crate) mod c {
         }
     }
 
-    use super::UnwrapLocPtr;
-    impl UnwrapLocPtr for LocPtr {
-        fn unwrap_ptr(self) -> Loc
+    use super::UnPtr;
+    impl UnPtr for LocPtr {
+        fn unptr(self) -> Loc
         where
             Self: Sized,
         {
@@ -84,8 +84,8 @@ pub trait IntoMaybeLocPtr {
         Self: Sized;
 }
 
-pub(crate) trait UnwrapLocPtr {
-    fn unwrap_ptr(self) -> Loc
+pub(crate) trait UnPtr {
+    fn unptr(self) -> Loc
     where
         Self: Sized;
 }
