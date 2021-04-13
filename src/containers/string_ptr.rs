@@ -1,14 +1,12 @@
 #[cfg(not(feature = "c-structures"))]
 pub(crate) mod rust {
-    pub type StringPtr = std::string::String;
+    pub type StringPtr = String;
 }
 
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
-    use std::convert::TryFrom;
+    use super::StringPtrAsString;
     use std::ops::Deref;
-
-    type Utf8Error = std::string::FromUtf8Error;
 
     /// C-compatible String container
     #[repr(C)]
@@ -19,7 +17,7 @@ pub(crate) mod c {
 
     impl std::fmt::Debug for StringPtr {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            std::fmt::Debug::fmt(&**self, f)
+            std::fmt::Debug::fmt(self.as_str(), f)
         }
     }
 
@@ -40,19 +38,9 @@ pub(crate) mod c {
     }
 
     impl StringPtr {
-        /// Converts self to Rust String (by copying). Invalid chars are replaced with ? char
-        pub fn to_string_lossy(&self) -> String {
-            String::from_utf8_lossy(self.as_ref()).into_owned()
-        }
-
-        /// Converts self to Rust String (by copying). Returns Err if there are utf-8 invalid bytes
-        pub fn to_string(&self) -> Result<String, Utf8Error> {
-            String::from_utf8(self.to_vec())
-        }
-
         /// Performs uppercase on self. Returns Err if stored byte array is invalid in UTF-8
-        pub fn to_uppercase(&self) -> Result<Self, Utf8Error> {
-            Ok(Self::from(self.to_string()?.to_uppercase()))
+        pub fn to_uppercase(&self) -> Self {
+            Self::from(self.as_str().to_uppercase())
         }
     }
 
@@ -61,6 +49,18 @@ pub(crate) mod c {
 
         fn deref(&self) -> &Self::Target {
             unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
+        }
+    }
+
+    impl StringPtrAsString for StringPtr {
+        fn into_string(self) -> String {
+            let bytes = unsafe { Vec::from_raw_parts(self.ptr, self.len, self.len) };
+            String::from_utf8(bytes).unwrap()
+        }
+
+        fn as_str(&self) -> &str {
+            let bytes = self.deref();
+            std::str::from_utf8(bytes).unwrap()
         }
     }
 
@@ -97,11 +97,9 @@ pub(crate) mod c {
         }
     }
 
-    impl TryFrom<StringPtr> for String {
-        type Error = std::string::FromUtf8Error;
-
-        fn try_from(value: StringPtr) -> Result<Self, Self::Error> {
-            String::from_utf8(value.to_vec())
+    impl From<StringPtr> for String {
+        fn from(value: StringPtr) -> Self {
+            String::from_utf8(value.to_vec()).unwrap()
         }
     }
 
@@ -110,4 +108,18 @@ pub(crate) mod c {
             self.as_ref() == other.as_bytes()
         }
     }
+
+    impl PartialEq<StringPtr> for StringPtr {
+        fn eq(&self, other: &StringPtr) -> bool {
+            self.deref() == other.deref()
+        }
+    }
+}
+
+pub(crate) trait StringPtrAsString {
+    fn into_string(self) -> String
+    where
+        Self: Sized;
+
+    fn as_str(&self) -> &str;
 }

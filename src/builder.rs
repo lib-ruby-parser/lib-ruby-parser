@@ -9,8 +9,10 @@ use crate::containers::{
     loc_ptr::IntoMaybeLocPtr,
     maybe_loc_ptr::{AsLocOption, MaybeLocPtrNone, MaybeLocPtrSome},
     maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},
+    maybe_string_ptr::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome},
     ptr::{IntoMaybePtr, UnPtr},
-    List, LocPtr, MaybeLocPtr, MaybePtr, Ptr,
+    string_ptr::StringPtrAsString,
+    List, LocPtr, MaybeLocPtr, MaybePtr, MaybeStringPtr, Ptr, StringPtr,
 };
 use crate::error::Diagnostics;
 use crate::nodes::*;
@@ -126,7 +128,7 @@ impl Builder {
     pub(crate) fn integer(&self, integer_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&integer_t);
         Box::new(Node::Int(Int {
-            value: value(integer_t),
+            value: value(integer_t).into(),
             expression_l,
             operator_l: MaybeLocPtr::none(),
         }))
@@ -135,7 +137,7 @@ impl Builder {
     pub(crate) fn float(&self, float_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&float_t);
         Box::new(Node::Float(Float {
-            value: value(float_t),
+            value: value(float_t).into(),
             expression_l,
             operator_l: MaybeLocPtr::none(),
         }))
@@ -144,7 +146,7 @@ impl Builder {
     pub(crate) fn rational(&self, rational_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&rational_t);
         Box::new(Node::Rational(Rational {
-            value: value(rational_t),
+            value: value(rational_t).into(),
             expression_l,
             operator_l: MaybeLocPtr::none(),
         }))
@@ -153,7 +155,7 @@ impl Builder {
     pub(crate) fn complex(&self, complex_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&complex_t);
         Box::new(Node::Complex(Complex {
-            value: value(complex_t),
+            value: value(complex_t).into(),
             expression_l,
             operator_l: MaybeLocPtr::none(),
         }))
@@ -184,7 +186,7 @@ impl Builder {
                 expression_l,
                 operator_l,
             }) => {
-                *value = sign + value;
+                *value = (sign + value.as_str()).into();
                 *expression_l = new_operator_l.join(expression_l);
                 *operator_l = new_operator_l.into_maybe_ptr();
             }
@@ -515,9 +517,14 @@ impl Builder {
         let mut options = options.chars().skip(1).collect::<Vec<_>>();
         options.sort_unstable();
         options.dedup();
+        let options = if options.is_empty() {
+            MaybeStringPtr::some(options.into_iter().collect::<String>())
+        } else {
+            MaybeStringPtr::none()
+        };
 
         Some(Box::new(Node::RegOpt(RegOpt {
-            options,
+            options: options.into(),
             expression_l,
         })))
     }
@@ -537,7 +544,7 @@ impl Builder {
             Some(Node::RegOpt(RegOpt { options, .. })) => {
                 self.validate_static_regexp(&parts, options, &expression_l)
             }
-            None => self.validate_static_regexp(&parts, &[], &expression_l),
+            None => self.validate_static_regexp(&parts, &MaybeStringPtr::none(), &expression_l),
             _ => unreachable!("must be Option<RegOpt>"),
         };
         Box::new(Node::Regexp(Regexp {
@@ -827,7 +834,7 @@ impl Builder {
     pub(crate) fn lvar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         Box::new(Node::Lvar(Lvar {
-            name: value(token),
+            name: value(token).into(),
             expression_l,
         }))
     }
@@ -835,7 +842,7 @@ impl Builder {
     pub(crate) fn ivar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         Box::new(Node::Ivar(Ivar {
-            name: value(token),
+            name: value(token).into(),
             expression_l,
         }))
     }
@@ -843,7 +850,7 @@ impl Builder {
     pub(crate) fn gvar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         Box::new(Node::Gvar(Gvar {
-            name: value(token),
+            name: value(token).into(),
             expression_l,
         }))
     }
@@ -851,7 +858,7 @@ impl Builder {
     pub(crate) fn cvar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         Box::new(Node::Cvar(Cvar {
-            name: value(token),
+            name: value(token).into(),
             expression_l,
         }))
     }
@@ -859,7 +866,7 @@ impl Builder {
     pub(crate) fn back_ref(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
         Box::new(Node::BackRef(BackRef {
-            name: value(token),
+            name: value(token).into(),
             expression_l,
         }))
     }
@@ -880,17 +887,21 @@ impl Builder {
             )
         }
 
-        Box::new(Node::NthRef(NthRef { name, expression_l }))
+        Box::new(Node::NthRef(NthRef {
+            name: name.into(),
+            expression_l,
+        }))
     }
     pub(crate) fn accessible(&self, node: Box<Node>) -> Box<Node> {
         match *node {
             Node::Lvar(Lvar { name, expression_l }) => {
-                if self.static_env.is_declared(&name) {
+                let name_s = name.as_str();
+                if self.static_env.is_declared(name_s) {
                     if let Some(current_arg) = self.current_arg_stack.top() {
-                        if current_arg == name {
+                        if current_arg == name_s {
                             self.error(
                                 DiagnosticMessage::CircularArgumentReference {
-                                    arg_name: name.clone(),
+                                    arg_name: name_s.to_string(),
                                 },
                                 &expression_l,
                             );
@@ -922,7 +933,7 @@ impl Builder {
 
         Box::new(Node::Const(Const {
             scope: MaybePtr::none(),
-            name: value(name_t),
+            name: value(name_t).into(),
             double_colon_l: MaybeLocPtr::none(),
             name_l,
             expression_l,
@@ -940,7 +951,7 @@ impl Builder {
 
         Box::new(Node::Const(Const {
             scope: MaybePtr::some(scope),
-            name: value(name_t),
+            name: value(name_t).into(),
             double_colon_l: double_colon_l.into_maybe_ptr(),
             name_l,
             expression_l,
@@ -960,7 +971,7 @@ impl Builder {
 
         Box::new(Node::Const(Const {
             scope: scope.into_maybe_ptr(),
-            name: value(name_t),
+            name: value(name_t).into(),
             double_colon_l: double_colon_l.into_maybe_ptr(),
             name_l,
             expression_l,
@@ -1022,10 +1033,11 @@ impl Builder {
                 })
             }
             Node::Lvar(Lvar { name, expression_l }) => {
-                self.check_assignment_to_numparam(&name, &expression_l)?;
-                self.check_reserved_for_numparam(&name, &expression_l)?;
+                let name_s = name.as_str();
+                self.check_assignment_to_numparam(name_s, &expression_l)?;
+                self.check_reserved_for_numparam(name_s, &expression_l)?;
 
-                self.static_env.declare(&name);
+                self.static_env.declare(name_s);
 
                 Node::Lvasgn(Lvasgn {
                     name,
@@ -1066,7 +1078,9 @@ impl Builder {
             }
             Node::BackRef(BackRef { expression_l, name }) => {
                 self.error(
-                    DiagnosticMessage::CantSetVariable { var_name: name },
+                    DiagnosticMessage::CantSetVariable {
+                        var_name: name.as_str().to_string(),
+                    },
                     &expression_l,
                 );
                 return Err(());
@@ -1074,7 +1088,7 @@ impl Builder {
             Node::NthRef(NthRef { expression_l, name }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: format!("${}", name),
+                        var_name: format!("${}", name.as_str()),
                     },
                     &expression_l,
                 );
@@ -1224,7 +1238,9 @@ impl Builder {
             }
             Node::BackRef(BackRef { expression_l, name }) => {
                 self.error(
-                    DiagnosticMessage::CantSetVariable { var_name: name },
+                    DiagnosticMessage::CantSetVariable {
+                        var_name: name.as_str().to_string(),
+                    },
                     &expression_l,
                 );
                 return Err(());
@@ -1232,7 +1248,7 @@ impl Builder {
             Node::NthRef(NthRef { expression_l, name }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: format!("${}", name),
+                        var_name: format!("${}", name.as_str()),
                     },
                     &expression_l,
                 );
@@ -1260,7 +1276,7 @@ impl Builder {
             _ => Node::OpAsgn(OpAsgn {
                 recv,
                 value,
-                operator,
+                operator: operator.into(),
                 operator_l,
                 expression_l,
             }),
@@ -1399,7 +1415,7 @@ impl Builder {
         self.check_reserved_for_numparam(&name, &name_l)?;
 
         Ok(Box::new(Node::Def(Def {
-            name,
+            name: name.into(),
             args: args.into(),
             body: body.into(),
             keyword_l,
@@ -1430,7 +1446,7 @@ impl Builder {
         self.check_reserved_for_numparam(&name, &name_l)?;
 
         Ok(Box::new(Node::Def(Def {
-            name,
+            name: name.into(),
             args: args.into(),
             body: body.into(),
             keyword_l,
@@ -1462,7 +1478,7 @@ impl Builder {
 
         Ok(Box::new(Node::Defs(Defs {
             definee: definee.into(),
-            name,
+            name: name.into(),
             args: args.into(),
             body: body.into(),
             keyword_l,
@@ -1498,7 +1514,7 @@ impl Builder {
 
         Ok(Box::new(Node::Defs(Defs {
             definee: definee.into(),
-            name,
+            name: name.into(),
             args: args.into(),
             body: body.into(),
             keyword_l,
@@ -1592,7 +1608,7 @@ impl Builder {
         self.check_reserved_for_numparam(&name, &name_l)?;
 
         Ok(Box::new(Node::Arg(Arg {
-            name,
+            name: name.into(),
             expression_l: name_l,
         })))
     }
@@ -1611,7 +1627,7 @@ impl Builder {
         self.check_reserved_for_numparam(&name, &name_l)?;
 
         Ok(Box::new(Node::Optarg(Optarg {
-            name,
+            name: name.into(),
             default: default.into(),
             name_l,
             operator_l,
@@ -1638,7 +1654,7 @@ impl Builder {
         let expression_l = operator_l.maybe_join(&name_l);
 
         Ok(Box::new(Node::Restarg(Restarg {
-            name,
+            name: name.into(),
             operator_l,
             name_l,
             expression_l,
@@ -1654,7 +1670,7 @@ impl Builder {
         let name_l = expression_l.adjust_end(-1);
 
         Ok(Box::new(Node::Kwarg(Kwarg {
-            name,
+            name: name.into(),
             name_l,
             expression_l,
         })))
@@ -1670,7 +1686,7 @@ impl Builder {
         let expression_l = default.expression().join(&label_l);
 
         Ok(Box::new(Node::Kwoptarg(Kwoptarg {
-            name,
+            name: name.into(),
             default: default.into(),
             name_l,
             expression_l,
@@ -1696,7 +1712,7 @@ impl Builder {
         let expression_l = operator_l.maybe_join(&name_l);
 
         Ok(Box::new(Node::Kwrestarg(Kwrestarg {
-            name,
+            name: name.into(),
             operator_l,
             name_l,
             expression_l,
@@ -1719,7 +1735,7 @@ impl Builder {
         self.check_reserved_for_numparam(&name, &name_l)?;
 
         Ok(Box::new(Node::Shadowarg(Shadowarg {
-            name,
+            name: name.into(),
             expression_l: name_l,
         })))
     }
@@ -1737,7 +1753,7 @@ impl Builder {
         let expression_l = operator_l.join(&name_l);
 
         Ok(Box::new(Node::Blockarg(Blockarg {
-            name,
+            name: name.into(),
             operator_l,
             name_l,
             expression_l,
@@ -1819,7 +1835,7 @@ impl Builder {
 
         match self.call_type_for_dot(&dot_t) {
             MethodCallType::Send => Box::new(Node::Send(Send {
-                method_name,
+                method_name: method_name.into(),
                 recv: receiver.into(),
                 args: args.into(),
                 dot_l,
@@ -1831,7 +1847,7 @@ impl Builder {
             })),
 
             MethodCallType::CSend => Box::new(Node::CSend(CSend {
-                method_name,
+                method_name: method_name.into(),
                 recv: receiver.expect("csend node must have a receiver").into(),
                 args: args.into(),
                 dot_l: dot_l.expect("csend node must have &."),
@@ -2035,7 +2051,7 @@ impl Builder {
 
         match self.call_type_for_dot(&Some(dot_t)) {
             MethodCallType::Send => Box::new(Node::Send(Send {
-                method_name,
+                method_name: method_name.into(),
                 recv: receiver.into_maybe_ptr(),
                 args: List::new(),
                 dot_l: dot_l.into_maybe_ptr(),
@@ -2047,7 +2063,7 @@ impl Builder {
             })),
 
             MethodCallType::CSend => Box::new(Node::CSend(CSend {
-                method_name,
+                method_name: method_name.into(),
                 recv: receiver,
                 args: List::new(),
                 dot_l,
@@ -2118,7 +2134,7 @@ impl Builder {
 
         Ok(Box::new(Node::Send(Send {
             recv: Some(receiver).into(),
-            method_name: value(operator_t),
+            method_name: value(operator_t).into(),
             args: {
                 let mut args = List::with_capacity(1);
                 args.push(*arg);
@@ -2160,7 +2176,7 @@ impl Builder {
             }
             None => Node::Send(Send {
                 recv: Some(receiver).into(),
-                method_name: String::from("=~"),
+                method_name: StringPtr::from("=~"),
                 args: {
                     let mut args = List::with_capacity(1);
                     args.push(*arg);
@@ -2185,10 +2201,10 @@ impl Builder {
         let expression_l = receiver.expression().join(&selector_l);
 
         let op = value(op_t);
-        let method = if op == "+" || op == "-" { op + "@" } else { op };
+        let method_name = if op == "+" || op == "-" { op + "@" } else { op };
         Ok(Box::new(Node::Send(Send {
             recv: Some(receiver).into(),
-            method_name: method,
+            method_name: method_name.into(),
             args: List::new(),
             dot_l: MaybeLocPtr::none(),
             selector_l: selector_l.into_maybe_ptr(),
@@ -2222,7 +2238,7 @@ impl Builder {
 
             Ok(Box::new(Node::Send(Send {
                 recv: self.check_condition(receiver.into()).into_maybe_ptr(),
-                method_name: "!".to_string(),
+                method_name: StringPtr::from("!"),
                 args: List::new(),
                 selector_l: selector_l.into_maybe_ptr(),
                 dot_l: MaybeLocPtr::none(),
@@ -2249,7 +2265,7 @@ impl Builder {
             let expression_l = nil_node.expression().join(&selector_l);
             Ok(Box::new(Node::Send(Send {
                 recv: MaybePtr::some(nil_node),
-                method_name: "!".to_string(),
+                method_name: StringPtr::from("!"),
                 args: List::new(),
                 selector_l: selector_l.into_maybe_ptr(),
                 dot_l: MaybeLocPtr::none(),
@@ -3076,7 +3092,7 @@ impl Builder {
         self.static_env.declare(&name);
 
         Ok(Box::new(Node::MatchVar(MatchVar {
-            name,
+            name: name.into(),
             name_l,
             expression_l,
         })))
@@ -3093,7 +3109,7 @@ impl Builder {
         self.static_env.declare(&name);
 
         Ok(Box::new(Node::MatchVar(MatchVar {
-            name,
+            name: name.into(),
             name_l,
             expression_l,
         })))
@@ -3148,7 +3164,7 @@ impl Builder {
                     .join(&expression_l)
                     .join(&self.loc(&end_t));
                 Box::new(Node::MatchVar(MatchVar {
-                    name,
+                    name: name.into(),
                     name_l,
                     expression_l,
                 }))
@@ -3509,16 +3525,16 @@ impl Builder {
         }
     }
 
-    fn arg_name<'a>(&self, node: &'a Node) -> Option<&'a String> {
+    fn arg_name<'a>(&self, node: &'a Node) -> Option<&'a str> {
         match node {
             Node::Arg(Arg { name, .. })
             | Node::Optarg(Optarg { name, .. })
             | Node::Kwarg(Kwarg { name, .. })
             | Node::Kwoptarg(Kwoptarg { name, .. })
             | Node::Shadowarg(Shadowarg { name, .. })
-            | Node::Blockarg(Blockarg { name, .. }) => Some(name),
+            | Node::Blockarg(Blockarg { name, .. }) => Some(name.as_str()),
             Node::Restarg(Restarg { name, .. }) | Node::Kwrestarg(Kwrestarg { name, .. }) => {
-                name.as_ref()
+                name.as_str()
             }
             _ => unreachable!("unsupported arg {:?}", node),
         }
@@ -3561,7 +3577,7 @@ impl Builder {
 
         match that_arg {
             None => {
-                map.insert(this_name.clone(), this_arg);
+                map.insert(this_name.to_string(), this_arg);
             }
             Some(that_arg) => {
                 let that_name = match self.arg_name(*that_arg) {
@@ -3716,12 +3732,23 @@ impl Builder {
     }
 
     #[cfg(feature = "onig")]
-    pub(crate) fn validate_static_regexp(&self, parts: &[Node], options: &[char], loc: &Loc) {
+    pub(crate) fn validate_static_regexp(
+        &self,
+        parts: &[Node],
+        options: &MaybeStringPtr,
+        loc: &Loc,
+    ) {
         self.build_static_regexp(parts, options, loc);
     }
 
     #[cfg(not(feature = "onig"))]
-    pub(crate) fn validate_static_regexp(&self, _parts: &[Node], _options: &[char], _loc: &Loc) {}
+    pub(crate) fn validate_static_regexp(
+        &self,
+        _parts: &[Node],
+        _options: &MaybeStringPtr,
+        _loc: &Loc,
+    ) {
+    }
 
     #[cfg(feature = "onig")]
     pub(crate) fn static_regexp_captures(&self, node: &Node) -> Option<Vec<String>> {

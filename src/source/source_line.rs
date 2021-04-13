@@ -1,4 +1,5 @@
 #[derive(Debug, Clone, Default)]
+#[repr(C)]
 pub struct SourceLine {
     pub start: usize,
     pub end: usize,

@@ -1,9 +1,10 @@
-use crate::containers::LocPtr;
+use crate::containers::{string_ptr::StringPtrAsString, LocPtr};
 use crate::source::Input;
 use crate::{DiagnosticMessage, ErrorLevel};
 
 /// Diagnostic message that comes from the parser when there's an error or warning
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct Diagnostic {
     /// Level of the diagnostic (error or warnings)
     pub level: ErrorLevel,
@@ -45,7 +46,7 @@ impl Diagnostic {
         let filename = &input.name;
         let (_, start_col) = self.loc.begin_line_col(input)?;
 
-        let prefix = format!("{}:{}", filename.to_string_lossy(), line_no + 1);
+        let prefix = format!("{}:{}", filename.as_str(), line_no + 1);
         let highlight = format!(
             "{indent}^{tildes}",
             indent = " ".repeat(start_col),

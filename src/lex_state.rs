@@ -2,6 +2,7 @@ use crate::maybe_byte::MaybeByte;
 
 /// State of the lexer
 #[derive(Clone)]
+#[repr(C)]
 pub struct LexState {
     value: i32,
 }

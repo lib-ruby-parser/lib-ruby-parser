@@ -1,5 +1,6 @@
-#[derive(Clone, PartialEq)]
 /// Error level of the diagnostic message
+#[derive(Clone, PartialEq)]
+#[repr(C)]
 pub enum ErrorLevel {
     /// Warning level
     Warning,

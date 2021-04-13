@@ -25,7 +25,7 @@ pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
     tokens.sort_by(|a, b| a.loc.begin.cmp(&b.loc.begin));
 
     let mut output = String::from("");
-    for token in tokens {
+    for token in tokens.iter() {
         if token_name(token.token_type) == "EOF" {
             continue;
         }

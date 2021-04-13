@@ -63,7 +63,7 @@
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
     use crate::debug_level;
-    use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::{MaybePtrNone}, StringPtr};
+    use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::{MaybePtrNone}, StringPtr, string_ptr::StringPtrAsString};
     use crate::source::CustomDecoder;
 }
 
@@ -5690,7 +5690,7 @@ keyword_variable: kNIL
                     {
                         let node = $<BoxedNode>1;
                         if let Node::Lvar(node) = &*node {
-                            let name = &node.name;
+                            let name = node.name.as_str();
                             match name.as_bytes()[..] {
                                 [b'_', n] if n >= b'1' && n <= b'9' => {
                                     if !self.static_env.is_declared(&name) && self.context.is_in_dynamic_block() {

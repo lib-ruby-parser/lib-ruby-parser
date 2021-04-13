@@ -1,10 +1,11 @@
 use crate::{
-    containers::{loc_ptr::UnPtr, LocPtr},
+    containers::{loc_ptr::UnPtr, List, LocPtr},
     token_name, Bytes, LexState, Loc,
 };
 
 /// A token that is emitted by a lexer and consumed by a parser
 #[derive(Clone)]
+#[repr(C)]
 pub struct Token {
     /// Numeric representation of the token type,
     /// e.g. 42 (for example) for tINTEGER
@@ -49,7 +50,7 @@ impl Token {
     }
 
     /// Consumes a token and returns an owned byte array of the token value
-    pub fn into_bytes(self) -> Vec<u8> {
+    pub fn into_bytes(self) -> List<u8> {
         self.token_value.raw
     }
 

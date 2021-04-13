@@ -126,6 +126,16 @@ impl InnerNode for {struct_name} {{
         if self.has_field_with_type(FieldType::MaybeLoc) {
             imports.push("use crate::containers::maybe_loc_ptr::AsLocOption;".to_string());
         }
+        if self.has_field_with_type(FieldType::Str)
+            || self.has_field_with_type(FieldType::RawString)
+        {
+            imports.push("use crate::containers::StringPtr;".to_string());
+        }
+        if self.has_field_with_type(FieldType::MaybeStr)
+            || self.has_field_with_type(FieldType::Chars)
+        {
+            imports.push("use crate::containers::MaybeStringPtr;".to_string());
+        }
         imports
     }
 
@@ -160,13 +170,13 @@ impl<'a> FieldWrapper<'a> {
             FieldType::MaybeNode => "MaybePtr<Node>",
             FieldType::Loc => "LocPtr",
             FieldType::MaybeLoc => "MaybeLocPtr",
-            FieldType::Str => "String",
-            FieldType::MaybeStr => "Option<String>",
-            FieldType::Chars => "Vec<char>",
+            FieldType::Str => "StringPtr",
+            FieldType::MaybeStr => "MaybeStringPtr",
+            FieldType::Chars => "MaybeStringPtr",
             FieldType::StringValue => "StringValue",
             FieldType::U8 => "u8",
             FieldType::Usize => "usize",
-            FieldType::RawString => "String",
+            FieldType::RawString => "StringPtr",
             FieldType::RegexOptions => "MaybePtr<Node>",
         }
     }

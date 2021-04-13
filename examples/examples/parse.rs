@@ -5,7 +5,7 @@ extern crate jemallocator;
 #[global_allocator]
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-use lib_ruby_parser::ParserResult;
+use lib_ruby_parser::{containers::maybe_ptr::AsOption, ParserResult};
 use lib_ruby_parser_helpers::*;
 
 #[derive(Debug, Clap)]
@@ -65,13 +65,13 @@ fn print_locations(result: &ParserResult) {
     let src = std::str::from_utf8(result.input.as_bytes()).unwrap_or_else(|_| "invalid-source");
     println!("{}", src);
     print_diagnostics(&result);
-    if let Some(ast) = &result.ast {
+    if let Some(ast) = result.ast.as_option() {
         ast.print_with_locs()
     }
 }
 fn print_ast(result: &ParserResult) {
     print_diagnostics(&result);
-    if let Some(ast) = &result.ast {
+    if let Some(ast) = result.ast.as_option() {
         println!("{}", ast.inspect(0));
     }
 }
