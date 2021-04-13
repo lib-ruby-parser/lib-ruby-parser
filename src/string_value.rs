@@ -10,6 +10,7 @@ use crate::{
 /// Instead, they are emitted as byte arrays that (if you want)
 /// can be converted to a string.
 #[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
 pub struct StringValue {
     /// Byte array, can be converted to a string
     pub bytes: Bytes,
