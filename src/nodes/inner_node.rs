@@ -1,4 +1,7 @@
-use crate::containers::{maybe_ptr::AsOption, List, MaybePtr};
+use crate::containers::{
+    maybe_ptr::AsOption, maybe_string_ptr::MaybeStringPtrAsStringOption,
+    string_ptr::StringPtrAsString, List, MaybePtr, MaybeStringPtr, StringPtr,
+};
 use crate::Loc;
 use crate::Node;
 use crate::StringValue;
@@ -37,16 +40,16 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_str(&mut self, string: &str) {
+    pub(crate) fn push_str(&mut self, string: &StringPtr) {
         self.strings.push(format!(", {:?}", string));
     }
 
-    pub(crate) fn push_raw_str(&mut self, string: &str) {
-        self.strings.push(format!(", {}", string));
+    pub(crate) fn push_raw_str(&mut self, string: &StringPtr) {
+        self.strings.push(format!(", {}", string.as_str()));
     }
 
-    pub(crate) fn push_maybe_str(&mut self, string: &Option<String>) {
-        if let Some(string) = string {
+    pub(crate) fn push_maybe_str(&mut self, string: &MaybeStringPtr) {
+        if let Some(string) = string.as_str() {
             self.strings.push(format!(", {:?}", string));
         }
     }
@@ -96,14 +99,16 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_chars(&mut self, chars: &[char]) {
-        for c in chars {
-            self.push_str(&format!("{}", c));
+    pub(crate) fn push_chars(&mut self, chars: &MaybeStringPtr) {
+        if let Some(chars) = chars.as_str() {
+            for c in chars.chars() {
+                self.push_str(&StringPtr::from(format!("{}", c)));
+            }
         }
     }
 
     pub(crate) fn push_string_value(&mut self, s: &StringValue) {
-        self.push_str(&s.bytes.to_string_lossy())
+        self.push_str(&StringPtr::from(s.bytes.to_string_lossy()))
     }
 
     pub(crate) fn strings(&mut self) -> Vec<String> {

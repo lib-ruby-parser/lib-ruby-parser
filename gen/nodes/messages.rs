@@ -17,6 +17,7 @@ impl<'a> Messages<'a> {
         format!(
             "/// Enum of all possible diagnostic message (both warnings and errors)
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub enum DiagnosticMessage {{
     {sections}
 }}

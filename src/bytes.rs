@@ -1,25 +1,28 @@
+use crate::containers::List;
+
 /// Representation of a byte sequence
 #[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
 pub struct Bytes {
     /// Raw vector of bytes
-    pub(crate) raw: Vec<u8>,
+    pub(crate) raw: List<u8>,
 }
 
 impl Default for Bytes {
     fn default() -> Self {
-        Self { raw: vec![] }
+        Self { raw: List::new() }
     }
 }
 
 impl Bytes {
     /// Constructs an instance of `Bytes` with a given byte vector
     pub fn new(raw: Vec<u8>) -> Self {
-        Self { raw }
+        Self { raw: raw.into() }
     }
 
     /// Constructs an empty instance of `Bytes`
     pub fn empty() -> Self {
-        Self { raw: vec![] }
+        Self { raw: List::new() }
     }
 
     /// Returns a slice of the byte sequence
@@ -34,7 +37,7 @@ impl Bytes {
 
     /// Consumes itself and converts it into a vector of bytes
     pub fn into_bytes(self) -> Vec<u8> {
-        self.raw
+        self.raw.into()
     }
 
     /// Converts byte sequence to a string slice, returns error if there are invalid UTF-8 chars
@@ -54,7 +57,7 @@ impl Bytes {
 
     /// Consumes itself and convrters it into a string, returns error if there are invalid UTF-8 chars
     pub fn into_string(self) -> Result<String, std::string::FromUtf8Error> {
-        String::from_utf8(self.raw)
+        String::from_utf8(self.raw.into())
     }
 
     /// Returns `true` if `self` represents a valid UTF-8 string
@@ -70,6 +73,10 @@ impl Bytes {
     /// Returns length of the byte sequence
     pub fn len(&self) -> usize {
         self.raw.len()
+    }
+
+    pub(crate) fn clear(&mut self) {
+        self.raw = List::new()
     }
 }
 

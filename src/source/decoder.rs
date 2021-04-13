@@ -1,6 +1,8 @@
 use std::error::Error;
 
-use crate::containers::{maybe_ptr::AsOption, List, MaybePtr, StringPtr};
+use crate::containers::{
+    maybe_ptr::AsOption, string_ptr::StringPtrAsString, List, MaybePtr, StringPtr,
+};
 
 /// Decoder is what is used if input source has encoding
 /// that is not supported out of the box.
@@ -70,22 +72,16 @@ pub fn decode_input(
     enc: StringPtr,
     decoder: MaybePtr<CustomDecoder>,
 ) -> CustomDecoderResult {
-    let enc = match enc.to_uppercase() {
-        Ok(value) => value,
-        Err(_) => {
-            return CustomDecoderResult::Err(InputError::UnsupportedEncoding(StringPtr::from(
-                "encoding name is invalid",
-            )));
+    match enc.to_uppercase().as_str() {
+        "UTF-8" | "ASCII-8BIT" | "BINARY" => {
+            return DecoderResult::Ok(input.into());
         }
-    };
-
-    if enc == "UTF-8" || enc == "ASCII-8BIT" || enc == "BINARY" {
-        return DecoderResult::Ok(input.into());
-    }
-
-    if let Some(f) = decoder.as_option() {
-        f(enc, input)
-    } else {
-        DecoderResult::Err(InputError::UnsupportedEncoding(enc))
+        _ => {
+            if let Some(f) = decoder.as_option() {
+                f(enc, input)
+            } else {
+                DecoderResult::Err(InputError::UnsupportedEncoding(enc))
+            }
+        }
     }
 }

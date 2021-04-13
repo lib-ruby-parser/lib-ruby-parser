@@ -29,10 +29,10 @@ impl TokenBuf {
     pub(crate) fn prepend(&mut self, part: &[u8]) {
         let mut tmp = part.to_vec();
         tmp.extend(self.bytes.raw.iter());
-        self.bytes.raw = tmp;
+        self.bytes.raw = tmp.into();
     }
 
-    pub(crate) fn borrow_string(&self) -> Result<&str, &Vec<u8>> {
+    pub(crate) fn borrow_string(&self) -> Result<&str, &[u8]> {
         match std::str::from_utf8(&self.bytes.raw) {
             Ok(s) => Ok(s),
             Err(_) => Err(&self.bytes.raw),
@@ -44,12 +44,12 @@ impl TokenBuf {
     }
 
     pub(crate) fn clear(&mut self) {
-        self.bytes.raw.clear()
+        self.bytes.clear()
     }
 }
 
 impl PartialEq<str> for TokenBuf {
     fn eq(&self, other: &str) -> bool {
-        other.as_bytes() == self.bytes.raw
+        other.as_bytes() == self.bytes.raw.as_ref()
     }
 }

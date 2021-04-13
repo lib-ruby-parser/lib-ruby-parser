@@ -128,12 +128,12 @@ impl From<ForeignParserOptions> for ParserOptions {
     }
 }
 
-// /// Test
-// #[no_mangle]
-// pub extern "C" fn parse(
-//     input: containers::List<u8>,
-//     options: ForeignParserOptions,
-// ) -> ParserResult {
-//     let options = ParserOptions::from(options);
-//     Parser::new(input, options).do_parse()
-// }
+/// Test
+#[no_mangle]
+pub extern "C" fn parse(
+    input: containers::List<u8>,
+    options: ForeignParserOptions,
+) -> ParserResult {
+    let options = ParserOptions::from(options);
+    Parser::new(input, options).do_parse()
+}
