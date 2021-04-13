@@ -1,3 +1,4 @@
+use crate::containers::{List, MaybePtr, String};
 use crate::source::SourceLine;
 use crate::source::{decode_input, CustomDecoder, InputError};
 
@@ -5,29 +6,33 @@ use crate::source::{decode_input, CustomDecoder, InputError};
 #[derive(Debug, Default)]
 pub struct Input {
     pub(crate) name: String,
-    bytes: Vec<u8>,
-    lines: Vec<SourceLine>,
-    decoder: Option<Box<dyn CustomDecoder>>,
+    bytes: List<u8>,
+    lines: List<SourceLine>,
+    decoder: MaybePtr<CustomDecoder>,
 }
 
 impl Input {
     /// Constructs a new input
-    pub fn new(name: &str, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
+    pub fn new<Name, Decoder>(name: Name, decoder: Decoder) -> Self
+    where
+        Name: Into<String>,
+        Decoder: Into<MaybePtr<CustomDecoder>>,
+    {
         Self {
-            name: name.to_string(),
-            decoder,
+            name: name.into(),
+            decoder: decoder.into(),
             ..Default::default()
         }
     }
 
     /// Populates `Input` with a given byte array
-    pub fn set_bytes(&mut self, bytes: Vec<u8>) {
+    pub fn set_bytes(&mut self, bytes: List<u8>) {
         let mut line = SourceLine {
             start: 0,
             end: 0,
             ends_with_eof: true,
         };
-        let mut lines: Vec<SourceLine> = vec![];
+        let mut lines = List::<SourceLine>::new();
 
         for (idx, c) in bytes.iter().enumerate() {
             line.end = idx + 1;
@@ -107,7 +112,12 @@ impl Input {
     }
 
     pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
-        let new_input = decode_input(&self.bytes, encoding, &self.decoder)?;
+        let new_input = decode_input(
+            self.bytes.take(),
+            String::from(encoding),
+            self.decoder.take(),
+        )
+        .to_result()?;
         self.set_bytes(new_input);
         Ok(())
     }
@@ -118,7 +128,7 @@ impl Input {
     }
 
     /// Converts itself into owned vector of bytes
-    pub fn into_bytes(self) -> Vec<u8> {
+    pub fn into_bytes(self) -> List<u8> {
         self.bytes
     }
 }

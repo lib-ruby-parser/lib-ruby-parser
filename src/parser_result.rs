@@ -1,3 +1,4 @@
+use crate::containers::{List, MaybePtr};
 use crate::source::Comment;
 use crate::source::Input;
 use crate::source::MagicComment;
@@ -7,24 +8,25 @@ use crate::Token;
 
 /// Combination of all data that `Parser` can give you
 #[derive(Debug)]
+#[repr(C)]
 pub struct ParserResult {
     /// Abstract Syntax Tree that was constructed from you code.
     /// Contains `None` if the code gives no AST nodes
-    pub ast: Option<Node>,
+    pub ast: MaybePtr<Node>,
 
     /// List of tokens returned by a Lexer and consumed by a Parser.
     /// Empty unless ParserOptions::record_tokens is set to true.
-    pub tokens: Vec<Token>,
+    pub tokens: List<Token>,
 
     /// List of all diagnostics (errors and warings) that have been
     /// recorded during lexing and parsing
-    pub diagnostics: Vec<Diagnostic>,
+    pub diagnostics: List<Diagnostic>,
 
     /// List of comments extracted from the source code.
-    pub comments: Vec<Comment>,
+    pub comments: List<Comment>,
 
     /// List of magic comments extracted from the source code.
-    pub magic_comments: Vec<MagicComment>,
+    pub magic_comments: List<MagicComment>,
 
     /// Input that was used for parsing.
     ///

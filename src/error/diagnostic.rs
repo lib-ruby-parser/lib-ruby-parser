@@ -36,13 +36,16 @@ impl Diagnostic {
     /// (test.rb):1:      ^
     /// ```
     pub fn render(&self, input: &Input) -> Option<String> {
-        let (line_no, line_loc) = self.loc.expand_to_line(input)?;
+        println!("input = {:?}", input);
+        let x = self.loc.expand_to_line(input);
+        println!("x = {:?}", x);
+        let (line_no, line_loc) = x?;
         let line = line_loc.source(input)?;
 
         let filename = &input.name;
         let (_, start_col) = self.loc.begin_line_col(input)?;
 
-        let prefix = format!("{}:{}", filename, line_no + 1);
+        let prefix = format!("{}:{}", filename.to_string_lossy(), line_no + 1);
         let highlight = format!(
             "{indent}^{tildes}",
             indent = " ".repeat(start_col),
@@ -79,18 +82,19 @@ impl Diagnostic {
     }
 }
 
+use crate::containers::List;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 #[derive(Debug, Default, Clone)]
 pub(crate) struct Diagnostics {
-    list: Rc<RefCell<Vec<Diagnostic>>>,
+    list: Rc<RefCell<List<Diagnostic>>>,
 }
 
 impl Diagnostics {
     pub(crate) fn new() -> Self {
         Self {
-            list: Rc::new(RefCell::new(vec![])),
+            list: Rc::new(RefCell::new(List::new())),
         }
     }
 
@@ -98,7 +102,7 @@ impl Diagnostics {
         self.list.borrow_mut().push(diagnostic)
     }
 
-    pub(crate) fn take_inner(self) -> Vec<Diagnostic> {
-        self.list.replace(vec![])
+    pub(crate) fn take_inner(self) -> List<Diagnostic> {
+        self.list.replace(List::new())
     }
 }

@@ -154,6 +154,11 @@ pub(crate) mod c {
                 Self::from_raw(ptr)
             }
         }
+
+        /// Helper for swapping &mut self with Self::default()
+        pub fn take(&mut self) -> Self {
+            std::mem::take(self)
+        }
     }
 
     impl<T> From<Option<Box<T>>> for MaybePtr<T> {
@@ -190,6 +195,12 @@ pub(crate) mod c {
     {
         fn into_option(self) -> Option<T> {
             self.as_option().map(|t| t.clone())
+        }
+    }
+
+    impl<T> Default for MaybePtr<T> {
+        fn default() -> Self {
+            Self::none()
         }
     }
 }
