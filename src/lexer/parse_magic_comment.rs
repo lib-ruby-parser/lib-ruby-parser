@@ -339,7 +339,8 @@ impl ParseMagicComment for Lexer {
                                         error: format!(
                                             "unknown encoding name: {}",
                                             String::from_utf8_lossy(&err.as_bytes())
-                                        ),
+                                        )
+                                        .into(),
                                     },
                                     self.loc(vbeg, vend),
                                 );
@@ -352,7 +353,7 @@ impl ParseMagicComment for Lexer {
                             Err(err) => {
                                 self.yyerror1(
                                     DiagnosticMessage::EncodingError {
-                                        error: err.to_string(),
+                                        error: err.to_string().into(),
                                     },
                                     self.loc(vbeg, vend),
                                 );

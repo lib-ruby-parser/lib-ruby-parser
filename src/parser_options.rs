@@ -39,7 +39,7 @@ pub struct ParserOptions {
     ///     ))
     /// }
     ///
-    /// let options = ParserOptions { decoder: Some(decode), debug: debug_level::PARSER, ..Default::default() };
+    /// let options = ParserOptions { decoder: Some(Box::new(decode)), debug: debug_level::PARSER, ..Default::default() };
     /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3".to_vec(), options);
     /// let ParserResult { ast, input, .. } = parser.do_parse();
     ///

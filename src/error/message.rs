@@ -28,7 +28,10 @@ impl DiagnosticMessage {
             Self::InvalidEscapeCharacter => "Invalid escape character syntax".to_string(),
             Self::InvalidHexEscape => "invalid hex escape".to_string(),
             Self::UnterminatedHeredoc { heredoc_id } => {
-                format!("can't find string \"{}\" anywhere before EOF", heredoc_id)
+                format!(
+                    "can't find string \"{}\" anywhere before EOF",
+                    heredoc_id.as_str()
+                )
             }
             Self::UnterminatedHeredocId => "unterminated here document identifier".to_string(),
             Self::SlashRAtMiddleOfLine => {
@@ -55,10 +58,11 @@ an argument list, not a decomposed argument"
             } => format!(
                 "`{}' after local variable or \
 literal is interpreted as binary operator even though it seems like {}",
-                operator, interpreted_as
+                operator.as_str(),
+                interpreted_as.as_str()
             ),
             Self::InvalidCharacterSyntax { suggestion } => {
-                format!("invalid character syntax; use {}", suggestion)
+                format!("invalid character syntax; use {}", suggestion.as_str())
             }
             Self::InvalidOctalDigit => "Invalid octal digit".to_string(),
             Self::TrailingCharInNumber { c } => format!("trailing `{}' in number", *c as char),
@@ -85,18 +89,18 @@ literal is interpreted as binary operator even though it seems like {}",
                 format!("`@@{}' is not allowed as a class variable name", *c as char)
             }
             Self::UnknownRegexOptions { options } => {
-                format!("unknown regexp options - {}", options)
+                format!("unknown regexp options - {}", options.as_str())
             }
             Self::AmbiguousTernaryOperator { condition } => format!(
                 "`?' just followed by `{}' is interpreted as \
 a conditional operator, put a space after `?'",
-                condition
+                condition.as_str()
             ),
             Self::AmbiguousRegexp => "ambiguity between regexp and two divisions: wrap \
 regexp in parentheses or add a space after `/' operator"
                 .to_string(),
             Self::UnterminatedUnicodeEscape => "unterminated Unicode escape".to_string(),
-            Self::EncodingError { error } => format!("encoding error: {}", error),
+            Self::EncodingError { error } => format!("encoding error: {}", error.as_str()),
             Self::InvalidMultibyteChar => "invalid multibyte char (UTF-8)".to_string(),
 
             // // Parser errors
@@ -110,7 +114,7 @@ regexp in parentheses or add a space after `/' operator"
             Self::EndlessSetterDefinition => {
                 "setter method cannot be defined in an endless method definition".to_string()
             }
-            Self::UnexpectedToken { token_name } => format!("unexpected {}", token_name),
+            Self::UnexpectedToken { token_name } => format!("unexpected {}", token_name.as_str()),
             Self::ClassDefinitionInMethodBody => "class definition in method body".to_string(),
             Self::ModuleDefinitionInMethodBody => "module definition in method body".to_string(),
             Self::InvalidReturnInClassOrModuleBody => {
@@ -121,22 +125,25 @@ regexp in parentheses or add a space after `/' operator"
             Self::GvarArgument => "formal argument cannot be a global variable".to_string(),
             Self::CvarArgument => "formal argument cannot be a class variable".to_string(),
             Self::NoSuchLocalVariable { var_name } => {
-                format!("{}: no such local variable", var_name)
+                format!("{}: no such local variable", var_name.as_str())
             }
             Self::OrdinaryParamDefined => "ordinary parameter is defined".to_string(),
             Self::NumparamUsed => "numbered parameter is already used".to_string(),
             Self::TokAtEolWithoutExpression { token_name } => {
-                format!("`{}' at the end of line without an expression", token_name)
+                format!(
+                    "`{}' at the end of line without an expression",
+                    token_name.as_str()
+                )
             }
 
             // Parser warnings
             Self::EndInMethod => "END in method; use at_exit".to_string(),
             Self::ComparisonAfterComparison { comparison } => {
-                format!("comparison '{}' after comparison", comparison)
+                format!("comparison '{}' after comparison", comparison.as_str())
             }
             // // Builder errors
             Self::CircularArgumentReference { arg_name } => {
-                format!("circular argument reference - {}", arg_name)
+                format!("circular argument reference - {}", arg_name.as_str())
             }
             Self::DynamicConstantAssignment => "dynamic constant assignment".to_string(),
             Self::CantAssignToSelf => "Can't change the value of self".to_string(),
@@ -147,16 +154,18 @@ regexp in parentheses or add a space after `/' operator"
             Self::CantAssignToLine => "Can't assign to __LINE__".to_string(),
             Self::CantAssignToEncoding => "Can't assign to __ENCODING__".to_string(),
             Self::CantAssignToNumparam { numparam } => {
-                format!("Can't assign to numbered parameter {}", numparam)
+                format!("Can't assign to numbered parameter {}", numparam.as_str())
             }
-            Self::CantSetVariable { var_name } => format!("Can't set variable {}", var_name),
+            Self::CantSetVariable { var_name } => {
+                format!("Can't set variable {}", var_name.as_str())
+            }
             Self::BlockGivenToYield => "block given to yield".to_string(),
             Self::BlockAndBlockArgGiven => "both block arg and actual block given".to_string(),
             Self::SymbolLiteralWithInterpolation => {
                 "symbol literal with interpolation is not allowed".to_string()
             }
             Self::ReservedForNumparam { numparam } => {
-                format!("{} is reserved for numbered parameter", numparam)
+                format!("{} is reserved for numbered parameter", numparam.as_str())
             }
             Self::KeyMustBeValidAsLocalVariable => {
                 "key must be valid as local variables".to_string()
@@ -165,11 +174,16 @@ regexp in parentheses or add a space after `/' operator"
             Self::DuplicateKeyName => "duplicated key name".to_string(),
             Self::SingletonLiteral => "can't define singleton method for literals".to_string(),
             Self::NthRefIsTooBig { nth_ref } => {
-                format!("`{}' is too big for a number variable, always nil", nth_ref)
+                format!(
+                    "`{}' is too big for a number variable, always nil",
+                    nth_ref.as_str()
+                )
             }
             Self::DuplicatedArgumentName => "duplicated argument name".to_string(),
-            Self::RegexError { error } => error.to_string(),
-            Self::InvalidSymbol { symbol } => format!("invalid symbol in encoding {}", symbol),
+            Self::RegexError { error } => error.as_str().to_string(),
+            Self::InvalidSymbol { symbol } => {
+                format!("invalid symbol in encoding {}", symbol.as_str())
+            }
             Self::VoidValueExpression => "void value expression".to_string(),
         }
     }

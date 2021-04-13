@@ -25,6 +25,8 @@ use crate::containers::{maybe_ptr::AsOption, List, MaybePtr, StringPtr};
 /// and returns `Ok(decoded)` vector of bytes or `Err(error)` that will be returned
 /// in the `ParserResult::diagnostics` vector.
 pub type CustomDecoder = fn(StringPtr, List<u8>) -> CustomDecoderResult;
+
+/// Result that is returned from decoding function
 pub type CustomDecoderResult = DecoderResult<List<u8>, InputError>;
 
 #[repr(C)]

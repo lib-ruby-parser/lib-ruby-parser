@@ -337,7 +337,8 @@ impl ParseHeredoc for Lexer {
                         .substr_at(eos, eos + len)
                         .expect("failed to get heredoc id for comparison"),
                 )
-                .into_owned(),
+                .into_owned()
+                .into(),
             },
             self.current_loc(),
         );

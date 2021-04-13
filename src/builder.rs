@@ -328,7 +328,7 @@ impl Builder {
         if !value.bytes.is_valid_utf8() {
             self.error(
                 DiagnosticMessage::InvalidSymbol {
-                    symbol: "UTF-8".to_string(),
+                    symbol: "UTF-8".into(),
                 },
                 loc,
             )
@@ -880,7 +880,7 @@ impl Builder {
         if parsed.is_err() || parsed.map(|n| n > Self::MAX_NTH_REF) == Ok(true) {
             self.warn(
                 DiagnosticMessage::NthRefIsTooBig {
-                    nth_ref: name.clone(),
+                    nth_ref: name.clone().into(),
                 },
                 &expression_l,
             )
@@ -900,7 +900,7 @@ impl Builder {
                         if current_arg == name_s {
                             self.error(
                                 DiagnosticMessage::CircularArgumentReference {
-                                    arg_name: name_s.to_string(),
+                                    arg_name: name.clone(),
                                 },
                                 &expression_l,
                             );
@@ -1078,7 +1078,7 @@ impl Builder {
             Node::BackRef(BackRef { expression_l, name }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: name.as_str().to_string(),
+                        var_name: name.clone(),
                     },
                     &expression_l,
                 );
@@ -1087,7 +1087,7 @@ impl Builder {
             Node::NthRef(NthRef { expression_l, name }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: format!("${}", name.as_str()),
+                        var_name: format!("${}", name.as_str()).into(),
                     },
                     &expression_l,
                 );
@@ -1238,7 +1238,7 @@ impl Builder {
             Node::BackRef(BackRef { expression_l, name }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: name.as_str().to_string(),
+                        var_name: name.clone(),
                     },
                     &expression_l,
                 );
@@ -1247,7 +1247,7 @@ impl Builder {
             Node::NthRef(NthRef { expression_l, name }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: format!("${}", name.as_str()),
+                        var_name: format!("${}", name.as_str()).into(),
                     },
                     &expression_l,
                 );
@@ -3604,7 +3604,7 @@ impl Builder {
         if assigning_to_numparam {
             self.error(
                 DiagnosticMessage::CantAssignToNumparam {
-                    numparam: name.to_string(),
+                    numparam: name.into(),
                 },
                 loc,
             );
@@ -3618,7 +3618,7 @@ impl Builder {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
                 self.error(
                     DiagnosticMessage::ReservedForNumparam {
-                        numparam: name.to_string(),
+                        numparam: name.into(),
                     },
                     loc,
                 );

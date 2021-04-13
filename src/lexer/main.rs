@@ -1126,8 +1126,8 @@ impl Lexer {
         {
             self.warn(
                 DiagnosticMessage::AmbiguousOperator {
-                    operator: op.to_string(),
-                    interpreted_as: syn.to_string(),
+                    operator: op.into(),
+                    interpreted_as: syn.into(),
                 },
                 self.current_loc(),
             );
