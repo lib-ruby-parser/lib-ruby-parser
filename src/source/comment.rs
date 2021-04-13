@@ -3,6 +3,7 @@ use crate::source::input::Input;
 
 /// Enum of all possible comment types
 #[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
 pub enum CommentType {
     /// Inline comment like
     ///
@@ -27,6 +28,7 @@ pub enum CommentType {
 
 /// A struct that represents a comment in Ruby
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct Comment {
     /// Location of the comment (starts with `#` and ends with the last char)
     pub location: LocPtr,

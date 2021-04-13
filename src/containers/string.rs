@@ -12,6 +12,7 @@ pub(crate) mod c {
     type Utf8Error = std::string::FromUtf8Error;
 
     /// C-compatible String container
+    #[repr(C)]
     pub struct String {
         ptr: *mut u8,
         len: usize,

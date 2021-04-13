@@ -24,6 +24,7 @@ impl<'a> NodeFile<'a> {
 
 {comment}
 #[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
 pub struct {struct_name} {{
 {fields_declaration}
 }}
