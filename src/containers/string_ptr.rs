@@ -15,6 +15,17 @@ pub(crate) mod c {
         len: usize,
     }
 
+    impl Drop for StringPtr {
+        fn drop(&mut self) {
+            if self.ptr.is_null() || self.len == 0 {
+                return;
+            }
+
+            drop(unsafe { Box::from_raw(self.ptr) });
+            self.ptr = std::ptr::null_mut();
+        }
+    }
+
     impl std::fmt::Debug for StringPtr {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             std::fmt::Debug::fmt(self.as_str(), f)
@@ -26,6 +37,7 @@ pub(crate) mod c {
             let mut vec = Vec::with_capacity(self.len);
             unsafe {
                 std::ptr::copy(self.ptr, vec.as_mut_ptr(), self.len);
+                vec.set_len(self.len);
             }
             Self::from(vec)
         }
@@ -42,6 +54,13 @@ pub(crate) mod c {
         pub fn to_uppercase(&self) -> Self {
             Self::from(self.as_str().to_uppercase())
         }
+
+        /// Takes a raw pointer
+        pub fn take(mut self) -> *mut u8 {
+            let ptr = self.ptr;
+            self.ptr = std::ptr::null_mut();
+            ptr
+        }
     }
 
     impl Deref for StringPtr {
@@ -54,7 +73,9 @@ pub(crate) mod c {
 
     impl StringPtrAsString for StringPtr {
         fn into_string(self) -> String {
-            let bytes = unsafe { Vec::from_raw_parts(self.ptr, self.len, self.len) };
+            let len = self.len;
+            let ptr = self.take();
+            let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
             String::from_utf8(bytes).unwrap()
         }
 
@@ -112,6 +133,43 @@ pub(crate) mod c {
     impl PartialEq<StringPtr> for StringPtr {
         fn eq(&self, other: &StringPtr) -> bool {
             self.deref() == other.deref()
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::{StringPtr, StringPtrAsString};
+
+        #[test]
+        fn test_new() {
+            let s = StringPtr::from("foo");
+            assert_eq!(s, "foo")
+        }
+
+        #[test]
+        fn test_clone() {
+            let s = StringPtr::from("foo");
+            let s2 = s.clone();
+            assert_eq!(s2, "foo")
+        }
+
+        #[test]
+        fn test_deref() {
+            let s = StringPtr::from("foo");
+            let s_ref = s.as_ref();
+            assert_eq!(s_ref, b"foo")
+        }
+
+        #[test]
+        fn test_into_string() {
+            let s = StringPtr::from("foo");
+            assert_eq!(s.into_string(), String::from("foo"))
+        }
+
+        #[test]
+        fn test_empty() {
+            let s = StringPtr::from("");
+            assert_eq!(s.as_str(), "")
         }
     }
 }
