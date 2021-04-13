@@ -162,15 +162,31 @@ pub(crate) mod c {
         }
 
         fn grow(&mut self) {
-            if self.capacity == 0 {
-                self.capacity = 1;
+            let prev_capacity = self.capacity;
+            let prev_layout = std::alloc::Layout::array::<T>(prev_capacity).unwrap();
+            let prev_ptr = self.ptr;
+
+            let new_capacity = if prev_capacity == 0 {
+                1
             } else {
-                self.capacity *= 2;
-            }
-            let layout = std::alloc::Layout::array::<T>(self.capacity).unwrap();
-            let new_ptr = unsafe { std::alloc::System.alloc(layout) } as *mut T;
-            unsafe { std::ptr::copy(self.ptr, new_ptr, self.len) };
+                prev_capacity * 2
+            };
+            let new_layout = std::alloc::Layout::array::<T>(new_capacity).unwrap();
+            let new_ptr;
+
+            unsafe {
+                // allocate space for new data
+                new_ptr = std::alloc::System.alloc(new_layout) as *mut T;
+
+                // copy data
+                std::ptr::copy(prev_ptr, new_ptr, self.len);
+
+                // free old data
+                std::alloc::System.dealloc(prev_ptr as *mut u8, prev_layout);
+            };
+
             self.ptr = new_ptr;
+            self.capacity = new_capacity;
         }
 
         /// Equivalent of Vec::push
@@ -251,7 +267,7 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod tests {
-        use super::List as GenericList;
+        use super::{List as GenericList, TakeFirst};
         type List = GenericList<usize>;
 
         #[test]
@@ -277,6 +293,20 @@ pub(crate) mod c {
                 vec.push(i);
             }
             assert_eq!(list.as_ref(), &vec);
+        }
+
+        #[test]
+        fn test_take_first() {
+            let mut list = List::new();
+            list.push(10);
+            list.push(20);
+            assert_eq!(list.take_first(), 10)
+        }
+
+        #[test]
+        fn test_from_vec() {
+            let list = List::from(vec![1, 2, 3]);
+            assert_eq!(list.as_ref(), &[1, 2, 3])
         }
     }
 }

@@ -518,9 +518,9 @@ impl Builder {
         options.sort_unstable();
         options.dedup();
         let options = if options.is_empty() {
-            MaybeStringPtr::some(options.into_iter().collect::<String>())
-        } else {
             MaybeStringPtr::none()
+        } else {
+            MaybeStringPtr::some(options.into_iter().collect::<String>())
         };
 
         Some(Box::new(Node::RegOpt(RegOpt {

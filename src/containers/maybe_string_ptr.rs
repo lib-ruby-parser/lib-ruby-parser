@@ -16,6 +16,17 @@ pub(crate) mod c {
         len: usize,
     }
 
+    impl Drop for MaybeStringPtr {
+        fn drop(&mut self) {
+            if self.ptr.is_null() {
+                return;
+            }
+
+            drop(unsafe { Box::from_raw(self.ptr) });
+            self.ptr = std::ptr::null_mut();
+        }
+    }
+
     impl std::fmt::Debug for MaybeStringPtr {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             std::fmt::Debug::fmt(&self.as_str(), f)
@@ -62,7 +73,7 @@ pub(crate) mod c {
             if ptr.is_null() {
                 None
             } else {
-                let bytes = unsafe { std::slice::from_raw_parts(ptr, len) }.to_vec();
+                let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
                 Some(String::from_utf8(bytes).unwrap())
             }
         }
@@ -112,6 +123,37 @@ pub(crate) mod c {
     impl PartialEq<MaybeStringPtr> for MaybeStringPtr {
         fn eq(&self, other: &MaybeStringPtr) -> bool {
             self.as_str() == other.as_str()
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::{
+            MaybeStringPtr, MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome,
+        };
+
+        #[test]
+        fn test_some() {
+            let s = MaybeStringPtr::some("foo");
+            assert_eq!(s.as_str(), Some("foo"))
+        }
+
+        #[test]
+        fn test_none() {
+            let s = MaybeStringPtr::none();
+            assert_eq!(s.as_str(), None)
+        }
+
+        #[test]
+        fn test_into_string() {
+            let s = MaybeStringPtr::some("foo");
+            assert_eq!(s.into_string(), Some(String::from("foo")))
+        }
+
+        #[test]
+        fn test_as_str() {
+            let s = MaybeStringPtr::some("foo");
+            assert_eq!(s.as_str(), Some("foo"))
         }
     }
 }
