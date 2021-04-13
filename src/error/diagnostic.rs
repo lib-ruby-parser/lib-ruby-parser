@@ -1,4 +1,4 @@
-use crate::containers::{string_ptr::StringPtrAsString, LocPtr};
+use crate::containers::LocPtr;
 use crate::source::Input;
 use crate::{DiagnosticMessage, ErrorLevel};
 
@@ -37,10 +37,7 @@ impl Diagnostic {
     /// (test.rb):1:      ^
     /// ```
     pub fn render(&self, input: &Input) -> Option<String> {
-        println!("input = {:?}", input);
-        let x = self.loc.expand_to_line(input);
-        println!("x = {:?}", x);
-        let (line_no, line_loc) = x?;
+        let (line_no, line_loc) = self.loc.expand_to_line(input)?;
         let line = line_loc.source(input)?;
 
         let filename = &input.name;

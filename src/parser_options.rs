@@ -26,33 +26,21 @@ pub struct ParserOptions {
     ///
     /// # Example
     /// ```rust
-    /// use lib_ruby_parser::source::{InputError, CustomDecoder, RustFnBasedCustomDecoder};
+    /// use lib_ruby_parser::source::{InputError, CustomDecoder, CustomDecoderResult};
     /// use lib_ruby_parser::{Parser, ParserOptions, ParserResult, debug_level};
     ///
-    /// fn decode(encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError> {
+    /// fn decode(encoding: String, input: Vec<u8>) -> CustomDecoderResult {
     ///     if "US-ASCII" == encoding.to_uppercase() {
     ///         // reencode and return Ok(result)
-    ///         return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
+    ///         return CustomDecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     ///     }
-    ///     Err(InputError::DecodingError(
+    ///     CustomDecoderResult::Err(InputError::DecodingError(
     ///         "only us-ascii is supported".to_string(),
     ///     ))
     /// }
     ///
-    /// // Or
-    /// let decode_closure = |encoding: &str, input: &[u8]| -> Result<Vec<u8>, InputError> {
-    ///     if "US-ASCII" == encoding.to_uppercase() {
-    ///         // reencode and return Ok(result)
-    ///         return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
-    ///     }
-    ///     Err(InputError::DecodingError(
-    ///         "only us-ascii is supported".to_string(),
-    ///     ))
-    /// };
-    ///
-    /// let decoder = RustFnBasedCustomDecoder::new(Box::new(decode_closure));
-    /// let options = ParserOptions { decoder: Some(Box::new(decoder)), debug: debug_level::PARSER, ..Default::default() };
-    /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options);
+    /// let options = ParserOptions { decoder: Some(decode), debug: debug_level::PARSER, ..Default::default() };
+    /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3".to_vec(), options);
     /// let ParserResult { ast, input, .. } = parser.do_parse();
     ///
     /// assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_string())

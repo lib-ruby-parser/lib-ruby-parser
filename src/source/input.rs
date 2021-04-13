@@ -114,7 +114,7 @@ impl Input {
 
     pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
         let new_input = decode_input(
-            self.bytes.take(),
+            std::mem::take(&mut self.bytes),
             StringPtr::from(encoding),
             self.decoder.take(),
         )

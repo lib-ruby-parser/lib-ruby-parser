@@ -63,7 +63,7 @@
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
     use crate::debug_level;
-    use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::{MaybePtrNone}, StringPtr, string_ptr::StringPtrAsString};
+    use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::{MaybePtrNone}, StringPtr};
     use crate::source::CustomDecoder;
 }
 

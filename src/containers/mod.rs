@@ -28,6 +28,8 @@ pub use maybe_loc_ptr::rust::MaybeLocPtr;
 #[cfg(not(feature = "c-structures"))]
 pub use maybe_ptr::rust::MaybePtr;
 #[cfg(not(feature = "c-structures"))]
+pub use maybe_string_ptr::rust::MaybeStringPtr;
+#[cfg(not(feature = "c-structures"))]
 pub use ptr::rust::Ptr;
 #[cfg(not(feature = "c-structures"))]
 pub use string_ptr::rust::StringPtr;

@@ -11,7 +11,6 @@ use crate::containers::{
     maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},
     maybe_string_ptr::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome},
     ptr::{IntoMaybePtr, UnPtr},
-    string_ptr::StringPtrAsString,
     List, LocPtr, MaybeLocPtr, MaybePtr, MaybeStringPtr, Ptr, StringPtr,
 };
 use crate::error::Diagnostics;

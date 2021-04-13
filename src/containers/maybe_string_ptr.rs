@@ -1,15 +1,43 @@
-use crate::containers::StringPtr;
-
 #[cfg(not(feature = "c-structures"))]
 pub(crate) mod rust {
+    /// Rust-compatible nullable string container
     pub type MaybeStringPtr = Option<String>;
+
+    use super::MaybeStringPtrSome;
+    impl MaybeStringPtrSome for MaybeStringPtr {
+        fn some<T>(value: T) -> Self
+        where
+            T: Into<String>,
+        {
+            Some(value.into())
+        }
+    }
+
+    use super::MaybeStringPtrNone;
+    impl MaybeStringPtrNone for MaybeStringPtr {
+        fn none() -> Self {
+            None
+        }
+    }
+
+    use super::MaybeStringPtrAsStringOption;
+    impl MaybeStringPtrAsStringOption for MaybeStringPtr {
+        fn into_string(self) -> Option<String> {
+            self
+        }
+
+        fn as_str(&self) -> Option<&str> {
+            self.as_ref().map(|s| s.as_str())
+        }
+    }
 }
 
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
-    use super::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome, StringPtr};
+    use super::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome};
+    use crate::containers::StringPtr;
 
-    /// C-compatible String container
+    /// C-compatible nullable String container
     #[repr(C)]
     pub struct MaybeStringPtr {
         ptr: *mut u8,

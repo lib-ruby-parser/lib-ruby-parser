@@ -1,8 +1,6 @@
 use std::error::Error;
 
-use crate::containers::{
-    maybe_ptr::AsOption, string_ptr::StringPtrAsString, List, MaybePtr, StringPtr,
-};
+use crate::containers::{maybe_ptr::AsOption, List, MaybePtr, StringPtr};
 
 /// Decoder is what is used if input source has encoding
 /// that is not supported out of the box.
