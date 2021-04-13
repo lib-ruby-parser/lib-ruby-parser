@@ -95,8 +95,8 @@ fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = Fixture::new(fixture_path);
         let mut lexer = Lexer::new(
-            &test_case.input.as_bytes().to_vec(),
-            &format!("(test {})", fixture_path),
+            test_case.input.as_str(),
+            format!("(test {})", fixture_path),
             None,
         );
         for var in test_case.vars {

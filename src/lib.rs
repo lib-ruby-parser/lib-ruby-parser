@@ -94,3 +94,46 @@ pub mod debug_level;
 
 /// Module with generic containers
 pub mod containers;
+
+/// Foreign parser options, can be casted to Rust ParserOptions
+#[derive(Debug)]
+#[repr(C)]
+pub struct ForeignParserOptions {
+    buffer_name: containers::List<u8>,
+    debug: debug_level::Type,
+    decoder: *const fn(
+        input: containers::List<u8>,
+        encoding: containers::List<u8>,
+    ) -> containers::List<u8>,
+    token_rewriter: *const fn() -> *mut u8,
+    record_tokens: bool,
+}
+
+impl From<ForeignParserOptions> for ParserOptions {
+    fn from(options: ForeignParserOptions) -> Self {
+        let ForeignParserOptions {
+            buffer_name, debug, ..
+        } = options;
+
+        use containers::maybe_ptr::MaybePtrNone;
+
+        ParserOptions {
+            buffer_name: String::from_utf8(buffer_name.into())
+                .expect("Failed to convert buffer_name into UTF-8 string"),
+            debug,
+            decoder: containers::MaybePtr::none(),
+            token_rewriter: None,
+            record_tokens: true,
+        }
+    }
+}
+
+/// Test
+#[no_mangle]
+pub extern "C" fn parse(
+    input: containers::List<u8>,
+    options: ForeignParserOptions,
+) -> ParserResult {
+    let options = ParserOptions::from(options);
+    Parser::new(input, options).do_parse()
+}

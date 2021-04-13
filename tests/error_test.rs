@@ -1,10 +1,12 @@
-use lib_ruby_parser::{source::Input, Diagnostic, DiagnosticMessage, ErrorLevel, Loc};
+use lib_ruby_parser::{
+    containers::List, source::Input, Diagnostic, DiagnosticMessage, ErrorLevel, Loc,
+};
 
 #[test]
 fn it_renders() {
     let source = "line 1\nvery long line 2\n";
     let mut input = Input::new("(test_render)", None);
-    input.set_bytes(source.bytes().collect::<Vec<_>>());
+    input.set_bytes(List::from(source));
 
     let error = Diagnostic::new(
         ErrorLevel::Warning,

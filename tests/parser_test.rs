@@ -1,6 +1,6 @@
 use lib_ruby_parser::{
-    debug_level, source::MagicComment, source::MagicCommentKind, Loc, Parser, ParserOptions,
-    ParserResult,
+    containers::maybe_ptr::AsOption, debug_level, source::MagicComment, source::MagicCommentKind,
+    Loc, Parser, ParserOptions, ParserResult,
 };
 use std::fs;
 use std::panic;
@@ -99,7 +99,7 @@ impl Fixture {
             Some(expected_ast) => {
                 let actual_ast = actual
                     .ast
-                    .as_ref()
+                    .as_option()
                     .map(|node| node.inspect(0))
                     .unwrap_or_else(|| "nil".to_string());
 
@@ -116,7 +116,7 @@ impl Fixture {
 
         match &self.locs {
             Some(locs) => {
-                let ast = if let Some(ast) = actual.ast.as_ref() {
+                let ast = if let Some(ast) = actual.ast.as_option() {
                     ast
                 } else {
                     return TestOutput::Failure("can't compare locs, ast is empty".to_string());
@@ -204,7 +204,7 @@ fn test_file(fixture_path: &str) -> TestResult {
             debug: debug_level::NONE,
             ..Default::default()
         };
-        let parser = Parser::new(test_case.input.as_bytes(), options);
+        let parser = Parser::new(&test_case.input, options);
 
         parser.static_env.declare("foo");
         parser.static_env.declare("bar");
@@ -296,9 +296,9 @@ fn parse(input: &[u8]) -> ParserResult {
 #[test]
 fn test_magic_comment() {
     let result = parse(&read_fixture("tests/fixtures/magic_comments.rb"));
-
+    let magic_comments: Vec<MagicComment> = result.magic_comments.into();
     assert_eq!(
-        result.magic_comments,
+        magic_comments,
         vec![
             MagicComment {
                 kind: MagicCommentKind::Encoding,

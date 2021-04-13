@@ -1,3 +1,4 @@
+use crate::containers::{maybe_ptr::MaybePtrNone, MaybePtr};
 use crate::debug_level;
 use crate::source::CustomDecoder;
 use crate::token_rewriter::TokenRewriter;
@@ -56,7 +57,7 @@ pub struct ParserOptions {
     ///
     /// assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_string())
     /// ```
-    pub decoder: Option<Box<dyn CustomDecoder>>,
+    pub decoder: MaybePtr<CustomDecoder>,
 
     /// Optional token rewriter, see TokenRewriter API
     pub token_rewriter: Option<Box<dyn TokenRewriter>>,
@@ -74,7 +75,7 @@ impl Default for ParserOptions {
         Self {
             buffer_name: DEFAULT_BUFFER_NAME.to_string(),
             debug: debug_level::NONE,
-            decoder: None,
+            decoder: MaybePtr::none(),
             token_rewriter: None,
             record_tokens: true,
         }

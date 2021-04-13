@@ -106,6 +106,30 @@ pub(crate) mod c {
         }
     }
 
+    impl From<String> for List<u8> {
+        fn from(s: String) -> Self {
+            Self::from(s.into_bytes())
+        }
+    }
+
+    impl From<&str> for List<u8> {
+        fn from(s: &str) -> Self {
+            List::from(s.to_string())
+        }
+    }
+
+    impl From<&String> for List<u8> {
+        fn from(s: &String) -> Self {
+            List::from(s.clone())
+        }
+    }
+
+    impl From<&[u8]> for List<u8> {
+        fn from(bytes: &[u8]) -> Self {
+            Self::from(bytes.to_vec())
+        }
+    }
+
     impl<T> List<T> {
         /// Equivalent of Vec::new
         pub fn new() -> Self {
@@ -139,16 +163,21 @@ pub(crate) mod c {
 
         fn grow(&mut self) {
             if self.capacity == 0 {
-                self.capacity += 1;
+                self.capacity = 1;
             } else {
                 self.capacity *= 2;
             }
             let layout = std::alloc::Layout::array::<T>(self.capacity).unwrap();
-            self.ptr = unsafe { std::alloc::System.alloc(layout) } as *mut T;
+            let new_ptr = unsafe { std::alloc::System.alloc(layout) } as *mut T;
+            unsafe { std::ptr::copy(self.ptr, new_ptr, self.len) };
+            self.ptr = new_ptr;
         }
 
         /// Equivalent of Vec::push
-        pub fn push(&mut self, item: T) {
+        pub fn push(&mut self, item: T)
+        where
+            T: std::fmt::Debug,
+        {
             if self.len == self.capacity {
                 self.grow()
             }
@@ -171,6 +200,11 @@ pub(crate) mod c {
                 self.len -= 1;
                 result
             }
+        }
+
+        /// Helper for swapping &mut self with Self::default()
+        pub fn take(&mut self) -> Self {
+            std::mem::take(self)
         }
     }
 
@@ -237,8 +271,12 @@ pub(crate) mod c {
         #[test]
         fn test_push() {
             let mut list = List::new();
-            list.push(40);
-            assert_eq!(list.as_ref(), &[40]);
+            let mut vec = vec![];
+            for i in 1..20 {
+                list.push(i);
+                vec.push(i);
+            }
+            assert_eq!(list.as_ref(), &vec);
         }
     }
 }

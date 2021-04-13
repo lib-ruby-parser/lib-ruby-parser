@@ -1,4 +1,4 @@
-use crate::containers::{ptr::UnPtr, LocPtr, Ptr};
+use crate::containers::{ptr::UnPtr, List, LocPtr, MaybePtr, Ptr, String};
 use crate::debug_level;
 use crate::lexer::*;
 use crate::maybe_byte::*;
@@ -83,8 +83,8 @@ pub struct Lexer {
     pub static_env: StaticEnvironment,
 
     pub(crate) diagnostics: Diagnostics,
-    pub(crate) comments: Vec<Comment>,
-    pub(crate) magic_comments: Vec<MagicComment>,
+    pub(crate) comments: List<Comment>,
+    pub(crate) magic_comments: List<MagicComment>,
 }
 
 impl Lexer {
@@ -95,12 +95,17 @@ impl Lexer {
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
     /// Constructs an instance of Lexer
-    pub fn new(bytes: &[u8], name: &str, decoder: Option<Box<dyn CustomDecoder>>) -> Self {
+    pub fn new<Bytes, Name, Decoder>(bytes: Bytes, name: Name, decoder: Decoder) -> Self
+    where
+        Bytes: Into<List<u8>>,
+        Name: Into<String>,
+        Decoder: Into<MaybePtr<CustomDecoder>>,
+    {
         Self {
             cond: StackState::new("cond"),
             cmdarg: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
-            buffer: Buffer::new(name, bytes.to_vec(), decoder),
+            buffer: Buffer::new(name.into(), bytes.into(), decoder.into()),
             ..Self::default()
         }
     }

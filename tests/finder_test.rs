@@ -7,7 +7,7 @@ fn find(src: &str, pattern: &str) -> Option<String> {
         debug: debug_level::NONE,
         ..Default::default()
     };
-    let parser = Parser::new(src.as_bytes(), options);
+    let parser = Parser::new(src, options);
 
     let ParserResult { ast, input, .. } = parser.do_parse();
     let ast = ast.expect("expected AST to be Some");

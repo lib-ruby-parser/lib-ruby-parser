@@ -17,6 +17,7 @@ use crate::nodes::*;
 /// Generic combination of all known nodes.
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
 pub enum Node {{
     {variants}
 }}

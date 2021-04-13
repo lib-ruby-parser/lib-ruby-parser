@@ -1,7 +1,7 @@
 use std::error::Error;
 
-/// A trait to implement custom decoder.
-///
+use crate::containers::{maybe_ptr::AsOption, List, MaybePtr, String};
+
 /// Decoder is what is used if input source has encoding
 /// that is not supported out of the box.
 ///
@@ -18,49 +18,35 @@ use std::error::Error;
 ///
 /// you need to provide a decoder that converts this byte sequence
 /// into UTF-8 bytes.
-pub trait CustomDecoder: std::fmt::Debug {
-    /// Decoding function
-    ///
-    /// Takes encoding name and initial input as arguments
-    /// and returns `Ok(decoded)` vector of bytes or `Err(error)` that will be returned
-    /// in the `ParserResult::diagnostics` vector.
-    fn decode(&self, encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError>;
-}
-
-type DecodeFn = Box<dyn Fn(&str, &[u8]) -> Result<Vec<u8>, InputError>>;
-
-/// Default decoder implementation that is based on **your**
-/// Rust function or Rust closure.
 ///
-/// Bindings to other languages implement their own structures,
-/// this is why this struct has a prefix `Rust`.
-pub struct RustFnBasedCustomDecoder {
-    pub(crate) f: DecodeFn,
+/// Decoding function
+///
+/// Takes encoding name and initial input as arguments
+/// and returns `Ok(decoded)` vector of bytes or `Err(error)` that will be returned
+/// in the `ParserResult::diagnostics` vector.
+pub type CustomDecoder = fn(String, List<u8>) -> CustomDecoderResult;
+pub type CustomDecoderResult = DecoderResult<List<u8>, InputError>;
+
+#[repr(C)]
+#[derive(Debug)]
+pub enum DecoderResult<T, E> {
+    Ok(T),
+    Err(E),
 }
 
-impl RustFnBasedCustomDecoder {
-    /// Constructs a new decoder based on a function of closure.
-    pub fn new(f: DecodeFn) -> Self {
-        Self { f }
-    }
-}
-
-impl CustomDecoder for RustFnBasedCustomDecoder {
-    fn decode(&self, encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError> {
-        let f = &self.f;
-        f(encoding, input)
-    }
-}
-
-impl std::fmt::Debug for RustFnBasedCustomDecoder {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("RustFnBasedCustomDecoder").finish()
+impl<T, E> DecoderResult<T, E> {
+    pub(crate) fn to_result(self) -> Result<T, E> {
+        match self {
+            DecoderResult::Ok(value) => Ok(value),
+            DecoderResult::Err(err) => Err(err),
+        }
     }
 }
 
 /// An enum with all possible kinds of errors that can be returned
 /// from a decoder
 #[derive(Debug)]
+#[repr(C)]
 pub enum InputError {
     /// Emitted when no custom decoder provided but input has custom encoding.
     ///
@@ -80,18 +66,26 @@ impl std::fmt::Display for InputError {
 impl Error for InputError {}
 
 pub fn decode_input(
-    input: &[u8],
-    enc: &str,
-    decoder: &Option<Box<dyn CustomDecoder>>,
-) -> Result<Vec<u8>, InputError> {
-    match &enc.to_uppercase()[..] {
-        "UTF-8" | "ASCII-8BIT" | "BINARY" => Ok(input.to_vec()),
-        enc => {
-            if let Some(f) = &decoder {
-                f.decode(enc, input)
-            } else {
-                Err(InputError::UnsupportedEncoding(enc.to_string()))
-            }
+    input: List<u8>,
+    enc: String,
+    decoder: MaybePtr<CustomDecoder>,
+) -> CustomDecoderResult {
+    let enc = match enc.to_uppercase() {
+        Ok(value) => value,
+        Err(_) => {
+            return CustomDecoderResult::Err(InputError::UnsupportedEncoding(String::from(
+                "encoding name is invalid",
+            )));
         }
+    };
+
+    if enc == "UTF-8" || enc == "ASCII-8BIT" || enc == "BINARY" {
+        return DecoderResult::Ok(input.into());
+    }
+
+    if let Some(f) = decoder.as_option() {
+        f(enc, input)
+    } else {
+        DecoderResult::Err(InputError::UnsupportedEncoding(enc))
     }
 }

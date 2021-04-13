@@ -8,7 +8,7 @@
 %define parse.trace
 
 %code parser_fields {
-    result: Option<Node>,
+    result: MaybePtr<Node>,
     builder: Builder,
     current_arg_stack: CurrentArgStack,
     /// Stack of sets of variables in current scopes.
@@ -42,7 +42,7 @@
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
-    tokens: Vec<Token>,
+    tokens: List<Token>,
     diagnostics: Diagnostics,
     token_rewriter: Option<Box<dyn TokenRewriter>>,
     record_tokens: bool,
@@ -63,7 +63,8 @@
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
     use crate::debug_level;
-    use crate::containers::{Ptr, ptr::UnPtr};
+    use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::{MaybePtrNone}, String as ParserString};
+    use crate::source::CustomDecoder;
 }
 
 %code {
@@ -346,7 +347,8 @@
                     }
                   top_compstmt
                     {
-                        self.result = $<MaybeNode>2;
+                        let top_compstmt = $<MaybeNode>2;
+                        self.result = top_compstmt.map(Box::new).into();
                         $$ = Value::None;
 
                         self.current_arg_stack.pop();
@@ -6630,7 +6632,10 @@ impl Parser {
     /// Constructs a parser with given `input` and `options`.
     ///
     /// Returns an error if given `input` is invalid.
-    pub fn new(input: &[u8], options: ParserOptions) -> Self {
+    pub fn new<TInput>(input: TInput, options: ParserOptions) -> Self
+    where
+        TInput: Into<List<u8>>
+    {
         let ParserOptions {
             buffer_name,
             debug,
@@ -6647,7 +6652,11 @@ impl Parser {
         let static_env = StaticEnvironment::new();
         let diagnostics = Diagnostics::new();
 
-        let mut lexer = Lexer::new(input, &buffer_name, decoder);
+        let input: List<u8> = input.into();
+        let buffer_name: ParserString = buffer_name.into();
+        let decoder: MaybePtr<CustomDecoder> = decoder.into();
+
+        let mut lexer = Lexer::new(input, buffer_name, decoder);
         lexer.context = context.clone();
         lexer.static_env = static_env.clone();
         lexer.diagnostics = diagnostics.clone();
@@ -6670,7 +6679,7 @@ impl Parser {
             yynerrs: 0,
             yydebug: debug_level::is_debug_parser(debug),
             yyerrstatus_: 0,
-            result: None,
+            result: MaybePtr::none(),
 
             builder,
             context,
@@ -6680,7 +6689,7 @@ impl Parser {
             pattern_hash_keys,
             static_env,
             last_token_type,
-            tokens: vec![],
+            tokens: List::new(),
             diagnostics,
             yylexer: lexer,
             token_rewriter,
