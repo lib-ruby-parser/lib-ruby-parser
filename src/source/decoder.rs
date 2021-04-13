@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use crate::containers::{maybe_ptr::AsOption, List, MaybePtr, String};
+use crate::containers::{maybe_ptr::AsOption, List, MaybePtr, StringPtr};
 
 /// Decoder is what is used if input source has encoding
 /// that is not supported out of the box.
@@ -24,7 +24,7 @@ use crate::containers::{maybe_ptr::AsOption, List, MaybePtr, String};
 /// Takes encoding name and initial input as arguments
 /// and returns `Ok(decoded)` vector of bytes or `Err(error)` that will be returned
 /// in the `ParserResult::diagnostics` vector.
-pub type CustomDecoder = fn(String, List<u8>) -> CustomDecoderResult;
+pub type CustomDecoder = fn(StringPtr, List<u8>) -> CustomDecoderResult;
 pub type CustomDecoderResult = DecoderResult<List<u8>, InputError>;
 
 #[repr(C)]
@@ -51,10 +51,10 @@ pub enum InputError {
     /// Emitted when no custom decoder provided but input has custom encoding.
     ///
     /// You can return this error from your custom decoder if you don't support given encoding.
-    UnsupportedEncoding(String),
+    UnsupportedEncoding(StringPtr),
 
     /// Generic error that can be emitted from a custom decoder
-    DecodingError(String),
+    DecodingError(StringPtr),
 }
 
 impl std::fmt::Display for InputError {
@@ -67,13 +67,13 @@ impl Error for InputError {}
 
 pub fn decode_input(
     input: List<u8>,
-    enc: String,
+    enc: StringPtr,
     decoder: MaybePtr<CustomDecoder>,
 ) -> CustomDecoderResult {
     let enc = match enc.to_uppercase() {
         Ok(value) => value,
         Err(_) => {
-            return CustomDecoderResult::Err(InputError::UnsupportedEncoding(String::from(
+            return CustomDecoderResult::Err(InputError::UnsupportedEncoding(StringPtr::from(
                 "encoding name is invalid",
             )));
         }

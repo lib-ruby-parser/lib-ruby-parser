@@ -14,7 +14,7 @@ pub mod loc_ptr;
 pub mod maybe_loc_ptr;
 
 /// Module with String container
-pub mod string;
+pub mod string_ptr;
 
 #[cfg(not(feature = "c-structures"))]
 pub use list::rust::List;
@@ -27,7 +27,7 @@ pub use maybe_ptr::rust::MaybePtr;
 #[cfg(not(feature = "c-structures"))]
 pub use ptr::rust::Ptr;
 #[cfg(not(feature = "c-structures"))]
-pub use string::rust::String;
+pub use string_ptr::rust::String;
 
 #[cfg(feature = "c-structures")]
 pub use list::c::List;
@@ -40,4 +40,4 @@ pub use maybe_ptr::c::MaybePtr;
 #[cfg(feature = "c-structures")]
 pub use ptr::c::Ptr;
 #[cfg(feature = "c-structures")]
-pub use string::c::String;
+pub use string_ptr::c::StringPtr;

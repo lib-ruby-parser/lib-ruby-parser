@@ -1,4 +1,4 @@
-use crate::containers::{ptr::UnPtr, List, LocPtr, MaybePtr, Ptr, String};
+use crate::containers::{ptr::UnPtr, List, LocPtr, MaybePtr, Ptr, StringPtr};
 use crate::debug_level;
 use crate::lexer::*;
 use crate::maybe_byte::*;
@@ -98,7 +98,7 @@ impl Lexer {
     pub fn new<Bytes, Name, Decoder>(bytes: Bytes, name: Name, decoder: Decoder) -> Self
     where
         Bytes: Into<List<u8>>,
-        Name: Into<String>,
+        Name: Into<StringPtr>,
         Decoder: Into<MaybePtr<CustomDecoder>>,
     {
         Self {

@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 
-use crate::containers::{List, MaybePtr, String};
+use crate::containers::{List, MaybePtr, StringPtr};
 use crate::debug_level;
 use crate::maybe_byte::*;
 use crate::source::input::Input;
@@ -43,7 +43,7 @@ impl Buffer {
     const CTRL_Z_CHAR: u8 = 0x1a;
     const CTRL_D_CHAR: u8 = 0x04;
 
-    pub(crate) fn new(name: String, bytes: List<u8>, decoder: MaybePtr<CustomDecoder>) -> Self {
+    pub(crate) fn new(name: StringPtr, bytes: List<u8>, decoder: MaybePtr<CustomDecoder>) -> Self {
         let mut input = Input::new(name, decoder);
 
         input.set_bytes(bytes);
