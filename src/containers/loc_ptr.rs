@@ -54,8 +54,7 @@ pub(crate) mod c {
 
     impl std::fmt::Debug for LocPtr {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            // std::fmt::Debug::fmt(&**self, f)
-            f.debug_struct("LocPtr").field("ptr", &self.ptr).finish()
+            std::fmt::Debug::fmt(&**self, f)
         }
     }
 

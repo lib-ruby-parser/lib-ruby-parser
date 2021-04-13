@@ -1,4 +1,4 @@
-use crate::containers::{List, MaybePtr, StringPtr};
+use crate::containers::{list::AsSharedList, List, MaybePtr, SharedList, StringPtr};
 use crate::source::SourceLine;
 use crate::source::{decode_input, CustomDecoder, InputError};
 
@@ -124,8 +124,8 @@ impl Input {
     }
 
     /// Returns raw bytes after decoding
-    pub fn as_bytes(&self) -> &[u8] {
-        &self.bytes
+    pub fn as_shared_bytes(&self) -> SharedList<u8> {
+        self.bytes.shared()
     }
 
     /// Converts itself into owned vector of bytes
