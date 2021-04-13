@@ -15,7 +15,9 @@ impl<'a> Messages<'a> {
 
     fn contents(&self) -> String {
         format!(
-            "/// Enum of all possible diagnostic message (both warnings and errors)
+            "use crate::containers::StringPtr;
+
+/// Enum of all possible diagnostic message (both warnings and errors)
 #[derive(Debug, Clone)]
 #[repr(C)]
 pub enum DiagnosticMessage {{
@@ -126,7 +128,7 @@ impl<'a> Field<'a> {
         use lib_ruby_parser_nodes::MessageFieldType as FieldType;
 
         match self.field.field_type {
-            FieldType::Str => "String",
+            FieldType::Str => "StringPtr",
             FieldType::Byte => "u8",
         }
     }

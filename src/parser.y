@@ -2344,7 +2344,7 @@
                         let op_t = $<Token>2;
                         self.warn(
                             &@2,
-                            DiagnosticMessage::ComparisonAfterComparison { comparison: clone_value(&op_t) }
+                            DiagnosticMessage::ComparisonAfterComparison { comparison: clone_value(&op_t).into() }
                         );
                         $$ = Value::Node(
                             self.builder.binary_op(
@@ -2434,7 +2434,7 @@
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(&@4, DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3".to_owned() });
+                            return self.yyerror(&@4, DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3".into() });
                         }
 
                         let mut args = $<NodeList>2;
@@ -2451,7 +2451,7 @@
                 | tLPAREN2 args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(&@2, DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3".to_owned() });
+                            return self.yyerror(&@2, DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3".into() });
                         }
 
                         $$ = Value::new_paren_args(
@@ -5130,7 +5130,7 @@ opt_block_args_tail:
                         let name = clone_value(&ident_t);
 
                         if !self.static_env.is_declared(&name) {
-                            return self.yyerror(&@2, DiagnosticMessage::NoSuchLocalVariable { var_name: name });
+                            return self.yyerror(&@2, DiagnosticMessage::NoSuchLocalVariable { var_name: name.into() });
                         }
 
                         let lvar = self.builder.accessible(self.builder.lvar(ident_t));
@@ -6817,7 +6817,7 @@ impl Parser {
         let id: usize = ctx.token().code().try_into().expect("failed to convert token code into i32, is it too big?");
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,
-            DiagnosticMessage::UnexpectedToken { token_name: Lexer::TOKEN_NAMES[id].to_owned() },
+            DiagnosticMessage::UnexpectedToken { token_name: Lexer::TOKEN_NAMES[id].into() },
             ctx.location().clone().ptr(),
         );
         self.diagnostics.emit(diagnostic);
@@ -6825,7 +6825,7 @@ impl Parser {
 
     fn warn_eol(&mut self, loc: &Loc, tok: &str) {
         if self.yylexer.buffer.is_looking_at_eol() {
-            self.warn(loc, DiagnosticMessage::TokAtEolWithoutExpression { token_name: tok.to_owned() });
+            self.warn(loc, DiagnosticMessage::TokAtEolWithoutExpression { token_name: tok.into() });
         }
     }
 

@@ -70,7 +70,8 @@ impl ParseQmark for Lexer {
                         condition: String::from_utf8_lossy(
                             self.buffer.substr_at(start, ptr).unwrap(),
                         )
-                        .into_owned(),
+                        .into_owned()
+                        .into(),
                     },
                     self.loc(start - 1, start),
                 )
