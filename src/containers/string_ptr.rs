@@ -1,14 +1,14 @@
 #[cfg(not(feature = "c-structures"))]
 pub(crate) mod rust {
+    /// Rust-compatible not nullable String container
     pub type StringPtr = String;
 }
 
 #[cfg(feature = "c-structures")]
 pub(crate) mod c {
-    use super::StringPtrAsString;
     use std::ops::Deref;
 
-    /// C-compatible String container
+    /// C-compatible not nullable String container
     #[repr(C)]
     pub struct StringPtr {
         ptr: *mut u8,
@@ -61,6 +61,12 @@ pub(crate) mod c {
             self.ptr = std::ptr::null_mut();
             ptr
         }
+
+        /// Equivalent of String::as_str()
+        pub fn as_str(&self) -> &str {
+            let bytes = self.deref();
+            std::str::from_utf8(bytes).unwrap()
+        }
     }
 
     impl Deref for StringPtr {
@@ -68,20 +74,6 @@ pub(crate) mod c {
 
         fn deref(&self) -> &Self::Target {
             unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
-        }
-    }
-
-    impl StringPtrAsString for StringPtr {
-        fn into_string(self) -> String {
-            let len = self.len;
-            let ptr = self.take();
-            let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
-            String::from_utf8(bytes).unwrap()
-        }
-
-        fn as_str(&self) -> &str {
-            let bytes = self.deref();
-            std::str::from_utf8(bytes).unwrap()
         }
     }
 
@@ -138,7 +130,7 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod tests {
-        use super::{StringPtr, StringPtrAsString};
+        use super::StringPtr;
 
         #[test]
         fn test_new() {
@@ -161,23 +153,9 @@ pub(crate) mod c {
         }
 
         #[test]
-        fn test_into_string() {
-            let s = StringPtr::from("foo");
-            assert_eq!(s.into_string(), String::from("foo"))
-        }
-
-        #[test]
         fn test_empty() {
             let s = StringPtr::from("");
             assert_eq!(s.as_str(), "")
         }
     }
-}
-
-pub(crate) trait StringPtrAsString {
-    fn into_string(self) -> String
-    where
-        Self: Sized;
-
-    fn as_str(&self) -> &str;
 }

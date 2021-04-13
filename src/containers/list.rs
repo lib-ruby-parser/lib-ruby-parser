@@ -68,6 +68,15 @@ pub(crate) mod c {
         }
     }
 
+    impl<T> PartialEq<&[T]> for List<T>
+    where
+        T: PartialEq,
+    {
+        fn eq(&self, other: &&[T]) -> bool {
+            self.as_ref() == *other
+        }
+    }
+
     impl<T> Clone for List<T>
     where
         T: Clone,

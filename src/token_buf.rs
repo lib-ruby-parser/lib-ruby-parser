@@ -50,6 +50,6 @@ impl TokenBuf {
 
 impl PartialEq<str> for TokenBuf {
     fn eq(&self, other: &str) -> bool {
-        other.as_bytes() == self.bytes.raw.as_ref()
+        self.bytes.raw == other.as_bytes()
     }
 }
