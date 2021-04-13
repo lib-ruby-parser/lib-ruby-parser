@@ -44,7 +44,7 @@
     pattern_hash_keys: VariablesStack,
     tokens: List<Token>,
     diagnostics: Diagnostics,
-    token_rewriter: Option<Box<dyn TokenRewriter>>,
+    token_rewriter: TokenRewriter,
     record_tokens: bool,
 }
 
@@ -63,7 +63,7 @@
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
     use crate::debug_level;
-    use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::{MaybePtrNone}, StringPtr};
+    use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::MaybePtrNone, StringPtr};
     use crate::source::CustomDecoder;
 }
 
@@ -6749,9 +6749,9 @@ impl Parser {
     fn next_token(&mut self) -> Ptr<Token> {
         let mut token = self.yylex();
 
-        if let Some(token_rewriter) = &mut self.token_rewriter {
+        if let Some(token_rewriter) = self.token_rewriter.as_option() {
             let (rewritten_token, token_action, lex_state_action) =
-                token_rewriter.rewrite_token(token, self.yylexer.buffer.input.as_bytes());
+                token_rewriter(token, self.yylexer.buffer.input.as_shared_bytes());
 
             match lex_state_action {
                 LexStateAction::Set(new_state) => self.yylexer.lex_state.set(new_state),

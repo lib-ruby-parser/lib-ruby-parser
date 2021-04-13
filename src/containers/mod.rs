@@ -19,6 +19,9 @@ pub mod string_ptr;
 /// Module with MaybeStringPtr container
 pub mod maybe_string_ptr;
 
+/// Module with SharedList container
+pub mod shared_list;
+
 #[cfg(not(feature = "c-structures"))]
 pub use list::rust::List;
 #[cfg(not(feature = "c-structures"))]
@@ -31,6 +34,8 @@ pub use maybe_ptr::rust::MaybePtr;
 pub use maybe_string_ptr::rust::MaybeStringPtr;
 #[cfg(not(feature = "c-structures"))]
 pub use ptr::rust::Ptr;
+#[cfg(not(feature = "c-structures"))]
+pub use shared_list::rust::SharedList;
 #[cfg(not(feature = "c-structures"))]
 pub use string_ptr::rust::StringPtr;
 
@@ -46,5 +51,7 @@ pub use maybe_ptr::c::MaybePtr;
 pub use maybe_string_ptr::c::MaybeStringPtr;
 #[cfg(feature = "c-structures")]
 pub use ptr::c::Ptr;
+#[cfg(feature = "c-structures")]
+pub use shared_list::c::SharedList;
 #[cfg(feature = "c-structures")]
 pub use string_ptr::c::StringPtr;

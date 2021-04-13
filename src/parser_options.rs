@@ -48,7 +48,29 @@ pub struct ParserOptions {
     pub decoder: MaybePtr<CustomDecoder>,
 
     /// Optional token rewriter, see TokenRewriter API
-    pub token_rewriter: Option<Box<dyn TokenRewriter>>,
+    ///
+    /// # Example
+    /// ```
+    /// use lib_ruby_parser::{Parser, Token, Node, nodes::*, ParserOptions, ParserResult, token_rewriter::*, Bytes};
+    /// fn rewrite_foo_to_bar(mut token: Box<Token>, input: &[u8]) -> (Box<Token>, RewriteAction, LexStateAction) {
+    ///     // simply rewrite all tokens "foo" to "bar"
+    ///     if token.to_string_lossy() == "foo" {
+    ///         token.token_value = Bytes::new(b"bar".to_vec());
+    ///     }
+    ///
+    ///     // return token + keep it + keep lexer's state
+    ///     (token, RewriteAction::Keep, LexStateAction::Keep)
+    /// }
+    /// let options = ParserOptions { token_rewriter: TokenRewriter::new(rewrite_foo_to_bar), ..Default::default() };
+    /// let ParserResult { ast, .. } = Parser::new(b"foo = 1".to_vec(), options).do_parse();
+    ///
+    /// let lvar_name = match *ast.unwrap() {
+    ///   Node::Lvasgn(Lvasgn { name, ..  }) => name,
+    ///   other => panic!("expected lvasgn node, got {:?}", other)
+    /// };
+    /// assert_eq!(lvar_name, String::from("bar"));
+    /// ```
+    pub token_rewriter: TokenRewriter,
 
     /// When set to true Parser records tokens.
     /// When set to false `ParserResult.tokens` is guaranteed to be empty.
@@ -64,7 +86,7 @@ impl Default for ParserOptions {
             buffer_name: DEFAULT_BUFFER_NAME.to_string(),
             debug: debug_level::NONE,
             decoder: MaybePtr::none(),
-            token_rewriter: None,
+            token_rewriter: TokenRewriter::none(),
             record_tokens: true,
         }
     }

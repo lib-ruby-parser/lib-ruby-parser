@@ -1,3 +1,5 @@
+use crate::containers::SharedList;
+
 #[cfg(not(feature = "c-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible list
@@ -9,6 +11,13 @@ pub(crate) mod rust {
             self.into_iter()
                 .next()
                 .expect("expected at least 1 element")
+        }
+    }
+
+    use super::{AsSharedList, SharedList};
+    impl<T> AsSharedList<T> for List<T> {
+        fn shared(&self) -> SharedList<T> {
+            &self
         }
     }
 }
@@ -274,6 +283,13 @@ pub(crate) mod c {
         }
     }
 
+    use super::{AsSharedList, SharedList};
+    impl<T> AsSharedList<T> for List<T> {
+        fn shared(&self) -> SharedList<T> {
+            SharedList::from_raw(self.ptr, self.len)
+        }
+    }
+
     #[cfg(test)]
     mod tests {
         use super::{List as GenericList, TakeFirst};
@@ -322,4 +338,8 @@ pub(crate) mod c {
 
 pub(crate) trait TakeFirst<T: Clone> {
     fn take_first(self) -> T;
+}
+
+pub(crate) trait AsSharedList<T> {
+    fn shared(&self) -> SharedList<T>;
 }
