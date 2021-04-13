@@ -2,6 +2,7 @@ use crate::containers::LocPtr;
 
 /// An enum of all magic comment kinds
 #[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
 pub enum MagicCommentKind {
     /// `# encoding: ... comment`
     Encoding,
@@ -18,6 +19,7 @@ pub enum MagicCommentKind {
 
 /// Representation of a magic comment in Ruby
 #[derive(Debug, Clone, PartialEq)]
+#[repr(C)]
 pub struct MagicComment {
     /// Kind of a magic comment
     pub kind: MagicCommentKind,

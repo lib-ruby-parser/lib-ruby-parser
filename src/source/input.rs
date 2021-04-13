@@ -4,6 +4,7 @@ use crate::source::{decode_input, CustomDecoder, InputError};
 
 /// Representation of the source code.
 #[derive(Debug, Default)]
+#[repr(C)]
 pub struct Input {
     pub(crate) name: String,
     bytes: List<u8>,
