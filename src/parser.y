@@ -63,7 +63,7 @@
     use crate::error::Diagnostics;
     use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
     use crate::debug_level;
-    use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::{MaybePtrNone}, String as ParserString};
+    use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::{MaybePtrNone}, StringPtr};
     use crate::source::CustomDecoder;
 }
 
@@ -6653,7 +6653,7 @@ impl Parser {
         let diagnostics = Diagnostics::new();
 
         let input: List<u8> = input.into();
-        let buffer_name: ParserString = buffer_name.into();
+        let buffer_name: StringPtr = buffer_name.into();
         let decoder: MaybePtr<CustomDecoder> = decoder.into();
 
         let mut lexer = Lexer::new(input, buffer_name, decoder);

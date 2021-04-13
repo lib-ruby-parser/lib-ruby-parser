@@ -1,4 +1,4 @@
-use crate::containers::{List, MaybePtr, String};
+use crate::containers::{List, MaybePtr, StringPtr};
 use crate::source::SourceLine;
 use crate::source::{decode_input, CustomDecoder, InputError};
 
@@ -6,7 +6,7 @@ use crate::source::{decode_input, CustomDecoder, InputError};
 #[derive(Debug, Default)]
 #[repr(C)]
 pub struct Input {
-    pub(crate) name: String,
+    pub(crate) name: StringPtr,
     bytes: List<u8>,
     lines: List<SourceLine>,
     decoder: MaybePtr<CustomDecoder>,
@@ -16,7 +16,7 @@ impl Input {
     /// Constructs a new input
     pub fn new<Name, Decoder>(name: Name, decoder: Decoder) -> Self
     where
-        Name: Into<String>,
+        Name: Into<StringPtr>,
         Decoder: Into<MaybePtr<CustomDecoder>>,
     {
         Self {
@@ -115,7 +115,7 @@ impl Input {
     pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
         let new_input = decode_input(
             self.bytes.take(),
-            String::from(encoding),
+            StringPtr::from(encoding),
             self.decoder.take(),
         )
         .to_result()?;
