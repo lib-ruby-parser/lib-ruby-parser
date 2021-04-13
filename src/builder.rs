@@ -3704,14 +3704,16 @@ impl Builder {
     pub(crate) fn build_static_regexp(
         &self,
         parts: &[Node],
-        options: &[char],
+        options: &MaybeStringPtr,
         loc: &Loc,
     ) -> Option<Regex> {
         let source = self.static_string(&parts)?;
         let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
         reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
-        if options.contains(&'x') {
-            reg_options |= RegexOptions::REGEX_OPTION_EXTEND;
+        if let Some(options_s) = options.as_str() {
+            if options_s.as_bytes().contains(&b'x') {
+                reg_options |= RegexOptions::REGEX_OPTION_EXTEND;
+            }
         }
 
         let bytes = onig::EncodedBytes::ascii(source.as_bytes());
@@ -3721,7 +3723,7 @@ impl Builder {
             Err(err) => {
                 self.error(
                     DiagnosticMessage::RegexError {
-                        error: err.description().to_string(),
+                        error: err.description().into(),
                     },
                     loc,
                 );
@@ -3758,7 +3760,7 @@ impl Builder {
             ..
         }) = node
         {
-            let mut re_options: &[char] = &[];
+            let mut re_options = &MaybeStringPtr::none();
             let options: Option<Box<Node>> = options.clone().into();
             if let Some(options) = options.as_ref() {
                 if let Node::RegOpt(RegOpt { options, .. }) = options.as_ref() {
