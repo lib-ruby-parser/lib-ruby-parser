@@ -43,6 +43,9 @@ struct Args {
 
     #[clap(long, about = "Measure time spent on benchmarking")]
     benchmark: bool,
+
+    #[clap(long, about = "Prints information about executable")]
+    print_info: bool,
 }
 
 fn print_diagnostics(result: &ParserResult) {
@@ -62,7 +65,8 @@ fn print_quite(result: &ParserResult) {
 fn print_nothing(_: &ParserResult) {}
 
 fn print_locations(result: &ParserResult) {
-    let src = std::str::from_utf8(result.input.as_bytes()).unwrap_or_else(|_| "invalid-source");
+    let src = result.input.as_shared_bytes();
+    let src = std::str::from_utf8(src.as_ref()).unwrap_or_else(|_| "invalid-source");
     println!("{}", src);
     print_diagnostics(&result);
     if let Some(ast) = result.ast.as_option() {
@@ -110,6 +114,18 @@ impl From<&Args> for Option<Vec<InputFile>> {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Args = Args::parse();
+
+    if args.print_info {
+        if cfg!(feature = "onig") {
+            println!("Using 'onig' feature")
+        }
+        if cfg!(feature = "c-structures") {
+            println!("Using 'c-structures' feature")
+        } else {
+            println!("Using Rust structures")
+        }
+        std::process::exit(0);
+    }
 
     let print_result: &dyn Fn(&ParserResult) = if args.no_output {
         &print_nothing

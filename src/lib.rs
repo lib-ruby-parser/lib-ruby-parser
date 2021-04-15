@@ -1,3 +1,4 @@
+#![cfg_attr(feature = "c-structures", feature(allocator_api, slice_ptr_get))]
 #![warn(missing_debug_implementations)]
 #![warn(missing_docs)]
 #![warn(trivial_casts, trivial_numeric_casts)]

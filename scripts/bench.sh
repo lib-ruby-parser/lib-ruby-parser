@@ -4,12 +4,12 @@ REPEAT=5
 export WORKDIR=$PWD
 
 function prepare_lib_ruby_parser {
-    cd $WORKDIR/examples && cargo build --release --example parse
+    cd $WORKDIR/examples && \
+        cargo build --release --example parse --features onig && \
+        target/release/examples/parse --print-info
 }
 
 function run_lib_ruby_parser {
-    echo "Running lib-ruby-parser"
-
     for (( x = 1; x <= REPEAT; x += 1));
     do
         echo "Run $x:"
@@ -30,7 +30,7 @@ function run_ripper {
 }
 
 prepare_lib_ruby_parser
-
+echo "Running lib-ruby-parser"
 run_lib_ruby_parser
 
 echo "--------"

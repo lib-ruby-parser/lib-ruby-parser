@@ -15,7 +15,7 @@ pub fn lex_as_ripper(filepath: &str) -> Result<String, String> {
     let mut encoding_error: Option<String> = None;
     for diagnostic in diagnostics.iter() {
         if let DiagnosticMessage::EncodingError { error } = &diagnostic.message {
-            encoding_error = Some(error.clone())
+            encoding_error = Some(error.as_str().to_string())
         }
     }
     if let Some(encoding_error) = encoding_error {

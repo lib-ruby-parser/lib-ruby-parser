@@ -49,7 +49,8 @@ pub(crate) mod c {
                 unsafe {
                     // free memory
                     let layout = std::alloc::Layout::array::<T>(self.capacity).unwrap();
-                    std::alloc::System.dealloc(self.ptr as *mut u8, layout);
+                    std::alloc::Global
+                        .deallocate(std::ptr::NonNull::new(self.ptr as *mut u8).unwrap(), layout);
                 }
             }
 
@@ -171,7 +172,7 @@ pub(crate) mod c {
         /// Equivalent of Vec::with_capacity
         pub fn with_capacity(capacity: usize) -> Self {
             let layout = std::alloc::Layout::array::<T>(capacity).unwrap();
-            let ptr = unsafe { std::alloc::System.alloc(layout) } as *mut T;
+            let ptr = std::alloc::Global.allocate(layout).unwrap().as_mut_ptr() as *mut T;
             Self {
                 ptr,
                 len: 0,
@@ -192,26 +193,31 @@ pub(crate) mod c {
             let new_layout = std::alloc::Layout::array::<T>(new_capacity).unwrap();
             let new_ptr;
 
-            unsafe {
-                // allocate space for new data
-                new_ptr = std::alloc::System.alloc(new_layout) as *mut T;
+            // allocate space for new data
+            new_ptr = std::alloc::Global
+                .allocate(new_layout)
+                .unwrap()
+                .as_mut_ptr() as *mut T;
 
-                // copy data
-                std::ptr::copy(prev_ptr, new_ptr, self.len);
+            if self.len > 0 {
+                unsafe {
+                    // copy data
+                    std::ptr::copy(prev_ptr, new_ptr, self.len);
 
-                // free old data
-                std::alloc::System.dealloc(prev_ptr as *mut u8, prev_layout);
-            };
+                    // free old data
+                    std::alloc::Global.deallocate(
+                        std::ptr::NonNull::new(prev_ptr as *mut u8).unwrap(),
+                        prev_layout,
+                    );
+                };
+            }
 
             self.ptr = new_ptr;
             self.capacity = new_capacity;
         }
 
         /// Equivalent of Vec::push
-        pub fn push(&mut self, item: T)
-        where
-            T: std::fmt::Debug,
-        {
+        pub fn push(&mut self, item: T) {
             if self.len == self.capacity {
                 self.grow()
             }
@@ -270,7 +276,7 @@ pub(crate) mod c {
         }
     }
 
-    use std::alloc::GlobalAlloc;
+    use std::alloc::Allocator;
 
     use super::TakeFirst;
     impl<T: Clone> TakeFirst<T> for List<T> {
