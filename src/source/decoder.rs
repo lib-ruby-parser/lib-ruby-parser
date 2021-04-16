@@ -27,20 +27,21 @@ use crate::containers::{maybe_ptr::AsOption, List, MaybePtr, StringPtr};
 pub type CustomDecoder = fn(StringPtr, List<u8>) -> CustomDecoderResult;
 
 /// Result that is returned from decoding function
-pub type CustomDecoderResult = DecoderResult<List<u8>, InputError>;
-
 #[repr(C)]
 #[derive(Debug)]
-pub enum DecoderResult<T, E> {
-    Ok(T),
-    Err(E),
+pub enum CustomDecoderResult {
+    /// Ok + decoded bytes
+    Ok(List<u8>),
+
+    /// Err + reason
+    Err(InputError),
 }
 
-impl<T, E> DecoderResult<T, E> {
-    pub(crate) fn to_result(self) -> Result<T, E> {
+impl CustomDecoderResult {
+    pub(crate) fn to_result(self) -> Result<List<u8>, InputError> {
         match self {
-            DecoderResult::Ok(value) => Ok(value),
-            DecoderResult::Err(err) => Err(err),
+            Self::Ok(value) => Ok(value),
+            Self::Err(err) => Err(err),
         }
     }
 }
@@ -74,13 +75,13 @@ pub fn decode_input(
 ) -> CustomDecoderResult {
     match enc.to_uppercase().as_str() {
         "UTF-8" | "ASCII-8BIT" | "BINARY" => {
-            return DecoderResult::Ok(input.into());
+            return CustomDecoderResult::Ok(input.into());
         }
         _ => {
             if let Some(f) = decoder.as_option() {
                 f(enc, input)
             } else {
-                DecoderResult::Err(InputError::UnsupportedEncoding(enc))
+                CustomDecoderResult::Err(InputError::UnsupportedEncoding(enc))
             }
         }
     }
