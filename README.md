@@ -2,11 +2,11 @@
 
 [![test](https://github.com/lib-ruby-parser/lib-ruby-parser/workflows/test/badge.svg?branch=master)](https://github.com/lib-ruby-parser/lib-ruby-parser/actions?query=workflow%3Atest)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
-[![Crates.io](https://img.shields.io/badge/crates.io-v3.0.0--9-orange)](https://crates.io/crates/lib-ruby-parser/3.0.0-9)
+[![Crates.io](https://img.shields.io/crates/v/lib-ruby-parser?color=orange)](https://crates.io/crates/lib-ruby-parser)
 [![codecov](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser/branch/master/graph/badge.svg)](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 [![dependency status](https://deps.rs/repo/github/lib-ruby-parser/lib-ruby-parser/status.svg)](https://deps.rs/repo/github/lib-ruby-parser/lib-ruby-parser)
-[![Docs](https://img.shields.io/docsrs/lib-ruby-parser/3.0.0-9)](https://docs.rs/lib-ruby-parser/3.0.0-9)
+[![Docs](https://img.shields.io/docsrs/lib-ruby-parser)](https://docs.rs/lib-ruby-parser)
 
 
 `lib-ruby-parser` is a Ruby parser written in Rust.
@@ -55,11 +55,9 @@ Comparison with [whitequark/parser](https://github.com/whitequark/parser):
 
 ## Library versioning
 
-**Important**
-
-Both MRI and Rust use SemVer, and so we are limited in componenents of the version name. For example, for MRI `3.0.0` we can't have versions of `lib-ruby-parser` like `3.0.0.1`, `3.0.0.2` etc, it's invalid according to strict SemVer.
-
-Because of that, we use the format `RUBYVERSION-RELEASENUMBER` (e.g. `3.0.0-1`, `3.1.0-42` etc), so better manually specify the latest version of `lib-ruby-parser` in your `Cargo.toml`. In our case `3.0.0-100` is greater than `3.0.0`, but according to SemVer it's not (because `-N` suffix is an indicator of the pre-release version)
+| Ruby version | lib-ruby-parser version |
+|--------------|-------------------------|
+| 3.0.0        | 3.0.0+                  |
 
 ## Encodings
 
@@ -68,35 +66,24 @@ By default `lib-ruby-parser` can only parse source files encoded in `UTF-8` or `
 It's possible to pass a `decoder` function in `ParserOptions` that takes a recognized (by the library) encoding and a byte array. It must return a UTF-8 encoded byte array or an error:
 
 ```rust
-use lib_ruby_parser::source::{InputError, CustomDecoder, RustFnBasedCustomDecoder};
+use lib_ruby_parser::source::{InputError, CustomDecoder, CustomDecoderResult};
 use lib_ruby_parser::{Parser, ParserOptions, ParserResult, debug_level};
 
-fn decode(encoding: &str, input: &[u8]) -> Result<Vec<u8>, InputError> {
+fn decode(encoding: String, input: Vec<u8>) -> CustomDecoderResult {
     if "US-ASCII" == encoding.to_uppercase() {
         // reencode and return Ok(result)
-        return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
+        return CustomDecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     }
-    Err(InputError::DecodingError(
-        "only us-ascii is supported".to_owned(),
+    CustomDecoderResult::Err(InputError::DecodingError(
+        "only us-ascii is supported".to_string(),
     ))
 }
 
-// Or
-let decode_closure = |encoding: &str, input: &[u8]| -> Result<Vec<u8>, InputError> {
-    if "US-ASCII" == encoding.to_uppercase() {
-        // reencode and return Ok(result)
-        return Ok(b"# encoding: us-ascii\ndecoded".to_vec());
-    }
-    Err(InputError::DecodingError(
-        "only us-ascii is supported".to_owned(),
-    ))
-};
-
-let decoder = RustFnBasedCustomDecoder::new(Box::new(decode_closure));
-let options = ParserOptions { decoder: Some(Box::new(decoder)), debug: debug_level::NONE, ..Default::default() };
-let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3", options);
+let options = ParserOptions { decoder: Some(Box::new(decode)), debug: debug_level::PARSER, ..Default::default() };
+let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3".to_vec(), options);
 let ParserResult { ast, input, .. } = parser.do_parse();
-assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_owned())
+
+assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_string())
 ```
 
 ## Invalid string values
