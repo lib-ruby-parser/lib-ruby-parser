@@ -1,7 +1,7 @@
-VERSION_LINE_RE = /\Aversion = "(\d)\.(\d)\.(\d)-(\d+)"\z/
+VERSION_LINE_RE = /\Aversion = "(\d)\.(\d)\.(\d)"\z/
 
 cargo_toml = File.read('Cargo.toml')
-major, minor, patch, releaseno =
+major, minor, patch =
     cargo_toml
     .split("\n")
     .map { |line| line.match(VERSION_LINE_RE) }
@@ -10,39 +10,31 @@ major, minor, patch, releaseno =
     .captures
     .map(&:to_i)
 
-Version = Struct.new(:major, :minor, :patch, :releaseno) do
+Version = Struct.new(:major, :minor, :patch) do
     def next_version
         major = self.major
         minor = self.minor
         patch = self.patch
-        releaseno = self.releaseno
 
         case ARGV[0]
         when 'major'
             major += 1
-            minor = patch = releaseno = 0
+            minor = patch = 0
         when 'minor'
             minor += 1
-            patch = releaseno = 0
+            patch = 0
         when 'patch'
             patch += 1
-            releaseno = 0
-        when 'releaseno'
-            releaseno += 1
         else
-            puts "Unknown ARGV[0] #{ARGV[0].inspect}, expected: major/minor/patch/releaseno"
+            puts "Unknown ARGV[0] #{ARGV[0].inspect}, expected: major/minor/patch"
             exit 1
         end
 
-        Version.new(major, minor, patch, releaseno)
+        Version.new(major, minor, patch)
     end
 
     def to_s
-        "#{major}.#{minor}.#{patch}-#{releaseno}"
-    end
-
-    def to_s_dashed
-        "#{major}.#{minor}.#{patch}--#{releaseno}"
+        "#{major}.#{minor}.#{patch}"
     end
 
     def rewrite_in_text(text)
@@ -51,9 +43,8 @@ Version = Struct.new(:major, :minor, :patch, :releaseno) do
 
         {
             current_version.to_s => next_version.to_s,
-            current_version.to_s_dashed => next_version.to_s_dashed,
         }.each do |pattern, replacement|
-            text = text.gsub(pattern,replacement)
+            text = text.gsub(pattern, replacement)
         end
 
         text
@@ -64,18 +55,21 @@ Version = Struct.new(:major, :minor, :patch, :releaseno) do
     end
 end
 
-version = Version.new(major, minor, patch, releaseno)
+version = Version.new(major, minor, patch)
 
 puts "current version = #{version.to_s}"
 puts "next version = #{version.next_version.to_s}"
 
-puts "[+] Updating Cargo.toml"
-version.rewrite_in_file('Cargo.toml')
+FILES = [
+    'Cargo.toml'
+]
 
-puts "[+] Updating README.md"
-version.rewrite_in_file('README.md')
+FILES.each do |file|
+    puts "[+] Updating #{file}"
+    version.rewrite_in_file(file)
+end
 
-`git add Cargo.toml README.md`
+`git add #{FILES.join(' ')}`
 `git commit -m "bump v#{version.next_version.to_s}"`
 `git tag v#{version.next_version.to_s}`
 
