@@ -1,5 +1,5 @@
-use crate::containers::LocPtr;
-use crate::source::Input;
+use crate::containers::Loc;
+use crate::source::DecodedInput;
 use crate::{DiagnosticMessage, ErrorLevel};
 
 /// Diagnostic message that comes from the parser when there's an error or warning
@@ -11,12 +11,12 @@ pub struct Diagnostic {
     /// Message of the diagnostic
     pub message: DiagnosticMessage,
     /// Location of the diagnostic
-    pub loc: LocPtr,
+    pub loc: Loc,
 }
 
 impl Diagnostic {
     /// Construncts an instance of `Diagnostic`
-    pub fn new(level: ErrorLevel, message: DiagnosticMessage, loc: LocPtr) -> Self {
+    pub fn new(level: ErrorLevel, message: DiagnosticMessage, loc: Loc) -> Self {
         Self {
             level,
             message,
@@ -36,7 +36,7 @@ impl Diagnostic {
     /// (test.rb):1: foo++
     /// (test.rb):1:      ^
     /// ```
-    pub fn render(&self, input: &Input) -> Option<String> {
+    pub fn render(&self, input: &DecodedInput) -> Option<String> {
         let (line_no, line_loc) = self.loc.expand_to_line(input)?;
         let line = line_loc.source(input)?;
 

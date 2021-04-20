@@ -1,8 +1,8 @@
 use lib_ruby_parser::{
-    containers::List, debug_level, source::Input, Parser, ParserOptions, ParserResult, Token,
+    containers::List, debug_level, source::DecodedInput, Parser, ParserOptions, ParserResult, Token,
 };
 
-pub fn lex(source: &[u8], filename: &str, debug: debug_level::Type) -> (List<Token>, Input) {
+pub fn lex(source: &[u8], filename: &str, debug: debug_level::Type) -> (List<Token>, DecodedInput) {
     let options = ParserOptions {
         buffer_name: filename.to_string(),
         debug,

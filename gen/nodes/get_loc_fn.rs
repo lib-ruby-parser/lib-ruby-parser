@@ -58,10 +58,10 @@ impl<'a> GetLocFn<'a> {
     fn contents(&self) -> String {
         format!(
             "use super::LocName;
-use lib_ruby_parser::{{Node, containers::{{MaybeLocPtr, loc_ptr::IntoMaybeLocPtr}}}};
+use lib_ruby_parser::{{Node, containers::{{MaybeLoc, loc::IntoMaybeLoc}}}};
 
 impl LocName {{
-    pub(crate) fn get(&self, node: &Node) -> MaybeLocPtr {{
+    pub(crate) fn get(&self, node: &Node) -> MaybeLoc {{
         match self {{
             {loc_branches}
         }}

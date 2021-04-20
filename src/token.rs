@@ -1,7 +1,4 @@
-use crate::{
-    containers::{loc_ptr::UnPtr, List, LocPtr},
-    token_name, Bytes, LexState, Loc,
-};
+use crate::{containers::List, token_name, Bytes, LexState, Loc};
 
 /// A token that is emitted by a lexer and consumed by a parser
 #[derive(Clone)]
@@ -16,7 +13,7 @@ pub struct Token {
     pub token_value: Bytes,
 
     /// Location of the token
-    pub loc: LocPtr,
+    pub loc: Loc,
 
     /// Lex state **before** reading the token
     pub lex_state_before: LexState,
@@ -75,6 +72,6 @@ impl Token {
     }
 
     pub(crate) fn get_loc(&self) -> Loc {
-        self.loc.clone().unptr()
+        self.loc.clone()
     }
 }

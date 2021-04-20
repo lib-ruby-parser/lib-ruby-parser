@@ -1,62 +1,37 @@
-use crate::containers::{list::AsSharedList, List, MaybePtr, SharedList, StringPtr};
+use crate::containers::{List, SharedList, StringPtr};
 use crate::source::SourceLine;
-use crate::source::{decode_input, CustomDecoder, InputError};
+use crate::source::{decode_input, CustomDecoder, DecodedInput, InputError};
 
 /// Representation of the source code.
 #[derive(Debug, Default)]
 #[repr(C)]
 pub struct Input {
-    pub(crate) name: StringPtr,
-    bytes: List<u8>,
-    lines: List<SourceLine>,
-    decoder: MaybePtr<CustomDecoder>,
+    pub(crate) decoded: DecodedInput,
+    decoder: CustomDecoder,
 }
 
 impl Input {
     /// Constructs a new input
-    pub fn new<Name, Decoder>(name: Name, decoder: Decoder) -> Self
+    pub fn new<Name>(name: Name, decoder: CustomDecoder) -> Self
     where
         Name: Into<StringPtr>,
-        Decoder: Into<MaybePtr<CustomDecoder>>,
     {
         Self {
-            name: name.into(),
-            decoder: decoder.into(),
-            ..Default::default()
+            decoded: DecodedInput {
+                name: name.into(),
+                ..Default::default()
+            },
+            decoder,
         }
     }
 
     /// Populates `Input` with a given byte array
     pub fn set_bytes(&mut self, bytes: List<u8>) {
-        let mut line = SourceLine {
-            start: 0,
-            end: 0,
-            ends_with_eof: true,
-        };
-        let mut lines = List::<SourceLine>::new();
-
-        for (idx, c) in bytes.iter().enumerate() {
-            line.end = idx + 1;
-            if *c == b'\n' {
-                line.ends_with_eof = false;
-                lines.push(line);
-                line = SourceLine {
-                    start: idx + 1,
-                    end: 0,
-                    ends_with_eof: true,
-                }
-            }
-        }
-        line.end = bytes.len();
-        line.ends_with_eof = true;
-        lines.push(line);
-
-        self.bytes = bytes;
-        self.lines = lines;
+        self.decoded.set_bytes(bytes)
     }
 
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
-        if let Some(c) = self.bytes.get(idx) {
+        if let Some(c) = self.decoded.bytes.get(idx) {
             Some(*c)
         } else {
             None
@@ -64,57 +39,39 @@ impl Input {
     }
 
     pub(crate) fn unchecked_byte_at(&self, idx: usize) -> u8 {
-        self.bytes[idx]
+        self.decoded.bytes[idx]
     }
 
     pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&[u8]> {
-        if start <= end && end <= self.bytes.len() {
-            Some(&self.bytes[start..end])
-        } else {
-            None
-        }
+        self.decoded.substr_at(start, end)
     }
 
     /// Returns (line, col) pair for a given byte offset.
     ///
     /// Returns None if given offset is out of range.
-    pub fn line_col_for_pos(&self, mut pos: usize) -> Option<(usize, usize)> {
-        if pos == self.len() {
-            // EOF loc
-            let last_line = self.lines.last()?;
-            return Some((self.lines.len() - 1, last_line.len()));
-        }
-
-        for (lineno, line) in self.lines.iter().enumerate() {
-            if line.len() > pos {
-                return Some((lineno, pos));
-            } else {
-                pos -= line.len()
-            }
-        }
-
-        None
+    pub fn line_col_for_pos(&self, pos: usize) -> Option<(usize, usize)> {
+        self.decoded.line_col_for_pos(pos)
     }
 
     pub(crate) fn len(&self) -> usize {
-        self.bytes.len()
+        self.decoded.len()
     }
 
     // pub(crate) fn is_empty(&self) -> bool {
-    //     self.bytes.is_empty()
+    //     self.decoded.bytes.is_empty()
     // }
 
     pub(crate) fn line_at(&self, idx: usize) -> &SourceLine {
-        &self.lines[idx]
+        &self.decoded.line_at(idx)
     }
 
     pub(crate) fn lines_count(&self) -> usize {
-        self.lines.len()
+        self.decoded.lines.len()
     }
 
     pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
         let new_input = decode_input(
-            std::mem::take(&mut self.bytes),
+            std::mem::take(&mut self.decoded.bytes),
             StringPtr::from(encoding),
             self.decoder.take(),
         )
@@ -125,11 +82,11 @@ impl Input {
 
     /// Returns raw bytes after decoding
     pub fn as_shared_bytes(&self) -> SharedList<u8> {
-        self.bytes.shared()
+        self.decoded.as_shared_bytes()
     }
 
     /// Converts itself into owned vector of bytes
     pub fn into_bytes(self) -> List<u8> {
-        self.bytes
+        self.decoded.into_bytes()
     }
 }

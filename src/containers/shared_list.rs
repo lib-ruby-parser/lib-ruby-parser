@@ -9,6 +9,7 @@ pub(crate) mod c {
     use std::ops::Deref;
 
     /// C-compatible shared list
+    #[repr(C)]
     pub struct SharedList<T> {
         ptr: *mut T,
         len: usize,

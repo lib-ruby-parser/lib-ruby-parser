@@ -1,5 +1,5 @@
 use super::LocName;
-use lib_ruby_parser::containers::maybe_loc_ptr::AsLocOption;
+use lib_ruby_parser::containers::maybe_loc::AsLocOption;
 use lib_ruby_parser::traverse::finder::Finder;
 use lib_ruby_parser::Node;
 

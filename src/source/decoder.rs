@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use crate::containers::{maybe_ptr::AsOption, List, MaybePtr, StringPtr};
+use crate::containers::{List, StringPtr};
 
 /// Decoder is what is used if input source has encoding
 /// that is not supported out of the box.
@@ -24,7 +24,52 @@ use crate::containers::{maybe_ptr::AsOption, List, MaybePtr, StringPtr};
 /// Takes encoding name and initial input as arguments
 /// and returns `Ok(decoded)` vector of bytes or `Err(error)` that will be returned
 /// in the `ParserResult::diagnostics` vector.
-pub type CustomDecoder = fn(StringPtr, List<u8>) -> CustomDecoderResult;
+pub type CustomDecoderFn = dyn Fn(StringPtr, List<u8>) -> CustomDecoderResult;
+
+/// Custom decoder, a wrapper around a function
+pub struct CustomDecoder {
+    f: Option<Box<CustomDecoderFn>>,
+}
+
+impl CustomDecoder {
+    /// Constructs a rewriter based on a given function
+    pub fn new(f: Box<CustomDecoderFn>) -> Self {
+        Self { f: Some(f) }
+    }
+
+    /// Constructs a no-op token rewriter that has no side effect. Default value.
+    pub fn none() -> Self {
+        Self { f: None }
+    }
+
+    /// Returns an optional reference to a function that rewrite tokens
+    pub fn as_option(&self) -> Option<&CustomDecoderFn> {
+        if let Some(f) = &self.f {
+            let f = &**f;
+            Some(f)
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn take(&mut self) -> Self {
+        Self { f: self.f.take() }
+    }
+}
+
+impl std::fmt::Debug for CustomDecoder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CustomDecoder")
+            .field("f", &self.as_option().map(|_| "function"))
+            .finish()
+    }
+}
+
+impl Default for CustomDecoder {
+    fn default() -> Self {
+        Self::none()
+    }
+}
 
 /// Result that is returned from decoding function
 #[repr(C)]
@@ -71,7 +116,7 @@ impl Error for InputError {}
 pub fn decode_input(
     input: List<u8>,
     enc: StringPtr,
-    decoder: MaybePtr<CustomDecoder>,
+    decoder: CustomDecoder,
 ) -> CustomDecoderResult {
     match enc.to_uppercase().as_str() {
         "UTF-8" | "ASCII-8BIT" | "BINARY" => {

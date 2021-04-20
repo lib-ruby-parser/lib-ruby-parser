@@ -61,10 +61,9 @@
     use crate::Node;
     use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
     use crate::error::Diagnostics;
-    use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter};
+    use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult};
     use crate::debug_level;
     use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::MaybePtrNone, StringPtr};
-    use crate::source::CustomDecoder;
 }
 
 %code {
@@ -6654,7 +6653,6 @@ impl Parser {
 
         let input: List<u8> = input.into();
         let buffer_name: StringPtr = buffer_name.into();
-        let decoder: MaybePtr<CustomDecoder> = decoder.into();
 
         let mut lexer = Lexer::new(input, buffer_name, decoder);
         lexer.context = context.clone();
@@ -6713,7 +6711,7 @@ impl Parser {
             diagnostics: self.diagnostics.take_inner(),
             comments: self.yylexer.comments,
             magic_comments: self.yylexer.magic_comments,
-            input: self.yylexer.buffer.input,
+            input: self.yylexer.buffer.input.decoded,
         }
     }
 
@@ -6729,7 +6727,7 @@ impl Parser {
             diagnostics: self.diagnostics.take_inner(),
             comments: self.yylexer.comments,
             magic_comments: self.yylexer.magic_comments,
-            input: self.yylexer.buffer.input,
+            input: self.yylexer.buffer.input.decoded,
         }
     }
 
@@ -6737,7 +6735,7 @@ impl Parser {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Warning,
             message,
-            loc.clone().ptr(),
+            loc.clone(),
         );
         self.diagnostics.emit(diagnostic);
     }
@@ -6750,7 +6748,7 @@ impl Parser {
         let mut token = self.yylex();
 
         if let Some(token_rewriter) = self.token_rewriter.as_option() {
-            let (rewritten_token, token_action, lex_state_action) =
+            let TokenRewriterResult { rewritten_token, token_action, lex_state_action } =
                 token_rewriter(token, self.yylexer.buffer.input.as_shared_bytes());
 
             match lex_state_action {
@@ -6808,7 +6806,7 @@ impl Parser {
     }
 
     fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) -> Result<i32, ()> {
-        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc.ptr());
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc);
         self.diagnostics.emit(diagnostic);
         Err(())
     }
@@ -6818,7 +6816,7 @@ impl Parser {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,
             DiagnosticMessage::UnexpectedToken { token_name: Lexer::TOKEN_NAMES[id].into() },
-            ctx.location().clone().ptr(),
+            ctx.location().clone(),
         );
         self.diagnostics.emit(diagnostic);
     }

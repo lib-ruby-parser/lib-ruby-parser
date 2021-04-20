@@ -1,4 +1,3 @@
-use crate::containers::{maybe_ptr::MaybePtrNone, MaybePtr};
 use crate::debug_level;
 use crate::source::CustomDecoder;
 use crate::token_rewriter::TokenRewriter;
@@ -39,29 +38,31 @@ pub struct ParserOptions {
     ///     ))
     /// }
     ///
-    /// let options = ParserOptions { decoder: Some(Box::new(decode)), debug: debug_level::PARSER, ..Default::default() };
+    /// let decoder = CustomDecoder::new(Box::new(decode));
+    /// let options = ParserOptions { decoder, debug: debug_level::PARSER, ..Default::default() };
     /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3".to_vec(), options);
     /// let ParserResult { ast, input, .. } = parser.do_parse();
     ///
     /// assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_string())
     /// ```
-    pub decoder: MaybePtr<CustomDecoder>,
+    pub decoder: CustomDecoder,
 
     /// Optional token rewriter, see TokenRewriter API
     ///
     /// # Example
     /// ```
     /// use lib_ruby_parser::{Parser, Token, Node, nodes::*, ParserOptions, ParserResult, token_rewriter::*, Bytes};
-    /// fn rewrite_foo_to_bar(mut token: Box<Token>, input: &[u8]) -> (Box<Token>, RewriteAction, LexStateAction) {
+    /// fn rewrite_foo_to_bar(mut token: Box<Token>, input: &[u8]) -> TokenRewriterResult {
     ///     // simply rewrite all tokens "foo" to "bar"
     ///     if token.to_string_lossy() == "foo" {
     ///         token.token_value = Bytes::new(b"bar".to_vec());
     ///     }
     ///
     ///     // return token + keep it + keep lexer's state
-    ///     (token, RewriteAction::Keep, LexStateAction::Keep)
+    ///     TokenRewriterResult { rewritten_token: token, token_action: RewriteAction::Keep, lex_state_action: LexStateAction::Keep }
     /// }
-    /// let options = ParserOptions { token_rewriter: TokenRewriter::new(rewrite_foo_to_bar), ..Default::default() };
+    /// let token_rewriter = TokenRewriter::new(Box::new(rewrite_foo_to_bar));
+    /// let options = ParserOptions { token_rewriter, ..Default::default() };
     /// let ParserResult { ast, .. } = Parser::new(b"foo = 1".to_vec(), options).do_parse();
     ///
     /// let lvar_name = match *ast.unwrap() {
@@ -85,7 +86,7 @@ impl Default for ParserOptions {
         Self {
             buffer_name: DEFAULT_BUFFER_NAME.to_string(),
             debug: debug_level::NONE,
-            decoder: MaybePtr::none(),
+            decoder: CustomDecoder::none(),
             token_rewriter: TokenRewriter::none(),
             record_tokens: true,
         }

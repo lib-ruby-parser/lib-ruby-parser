@@ -1,6 +1,6 @@
 use crate::containers::{List, MaybePtr};
 use crate::source::Comment;
-use crate::source::Input;
+use crate::source::DecodedInput;
 use crate::source::MagicComment;
 use crate::Diagnostic;
 use crate::Node;
@@ -37,5 +37,5 @@ pub struct ParserResult {
     ///
     /// Pass **this** data to `Loc::source`, otherwise you'll get
     /// incorrect source ranges.
-    pub input: Input,
+    pub input: DecodedInput,
 }

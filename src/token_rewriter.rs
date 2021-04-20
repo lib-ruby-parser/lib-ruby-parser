@@ -1,13 +1,11 @@
 use crate::{
-    containers::{
-        maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},
-        MaybePtr, Ptr, SharedList,
-    },
+    containers::{Ptr, SharedList},
     Token,
 };
 
 /// Enum of what token rewriter should do with a token.
 #[derive(Debug)]
+#[repr(C)]
 pub enum RewriteAction {
     /// Means "drop the token", i.e. don't return it to a parser
     Drop,
@@ -18,6 +16,7 @@ pub enum RewriteAction {
 
 /// Enum of what token rewriter should do with the state of the lexer
 #[derive(Debug)]
+#[repr(C)]
 pub enum LexStateAction {
     /// Means "set the state to X"
     Set(i32),
@@ -27,42 +26,52 @@ pub enum LexStateAction {
 }
 
 /// Output of the token rewriter
-pub type TokenRewriterResult = (Ptr<Token>, RewriteAction, LexStateAction);
+#[derive(Debug)]
+#[repr(C)]
+pub struct TokenRewriterResult {
+    /// Rewritten token. Can be input token if no rewriting expected
+    pub rewritten_token: Ptr<Token>,
+
+    /// Action to be applied on a token (keep or drop)
+    pub token_action: RewriteAction,
+
+    /// Action to be applied on lexer's state (keep as is or change)
+    pub lex_state_action: LexStateAction,
+}
 
 /// Token rewriter function
-pub type TokenRewriterFn = fn(Ptr<Token>, SharedList<u8>) -> TokenRewriterResult;
+pub type TokenRewriterFn = dyn Fn(Ptr<Token>, SharedList<u8>) -> TokenRewriterResult;
 
 /// Token rewriter struct, can be used to rewrite tokens on the fly
-#[repr(C)]
 pub struct TokenRewriter {
-    f: MaybePtr<TokenRewriterFn>,
+    f: Option<Box<TokenRewriterFn>>,
 }
 
 impl TokenRewriter {
     /// Constructs a rewriter based on a given function
-    pub fn new(f: TokenRewriterFn) -> Self {
-        Self {
-            f: MaybePtr::some(f),
-        }
+    pub fn new(f: Box<TokenRewriterFn>) -> Self {
+        Self { f: Some(f) }
     }
 
     /// Constructs a no-op token rewriter that has no side effect. Default value.
     pub fn none() -> Self {
-        Self {
-            f: MaybePtr::none(),
-        }
+        Self { f: None }
     }
 
     /// Returns an optional reference to a function that rewrite tokens
     pub fn as_option(&self) -> Option<&TokenRewriterFn> {
-        self.f.as_option()
+        if let Some(f) = &self.f {
+            Some(&**f)
+        } else {
+            None
+        }
     }
 }
 
 impl std::fmt::Debug for TokenRewriter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("TokenRewriter")
-            .field("f", &self.f.as_option().map(|_| "function"))
+            .field("f", &self.as_option().map(|_| "function"))
             .finish()
     }
 }

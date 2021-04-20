@@ -1,12 +1,12 @@
 #!/bin/bash
 
+set -eu
+
 REPEAT=5
 export WORKDIR=$PWD
 
 function prepare_lib_ruby_parser {
-    cd $WORKDIR/examples && \
-        cargo build --release --example parse --features onig && \
-        target/release/examples/parse --print-info
+    cd $WORKDIR/examples && cargo build --release --example parse --features onig
 }
 
 function run_lib_ruby_parser {

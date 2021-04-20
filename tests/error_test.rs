@@ -1,11 +1,11 @@
 use lib_ruby_parser::{
-    containers::List, source::Input, Diagnostic, DiagnosticMessage, ErrorLevel, Loc,
+    containers::List, source::DecodedInput, Diagnostic, DiagnosticMessage, ErrorLevel, Loc,
 };
 
 #[test]
 fn it_renders() {
     let source = "line 1\nvery long line 2\n";
-    let mut input = Input::new("(test_render)", None);
+    let mut input = DecodedInput::new("(test_render)");
     input.set_bytes(List::from(source));
 
     let error = Diagnostic::new(

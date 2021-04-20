@@ -1,4 +1,4 @@
-use crate::containers::LocPtr;
+use crate::containers::Loc;
 
 /// An enum of all magic comment kinds
 #[derive(Debug, Clone, PartialEq)]
@@ -30,7 +30,7 @@ pub struct MagicComment {
     /// # encoding: utf-8
     ///   ~~~~~~~~
     /// ```
-    pub key_l: LocPtr,
+    pub key_l: Loc,
 
     /// Location of the "value":
     ///
@@ -38,12 +38,12 @@ pub struct MagicComment {
     /// # encoding: utf-8
     ///             ~~~~~
     /// ```
-    pub value_l: LocPtr,
+    pub value_l: Loc,
 }
 
 impl MagicComment {
     /// Constructor
-    pub fn new(kind: MagicCommentKind, key_l: LocPtr, value_l: LocPtr) -> Self {
+    pub fn new(kind: MagicCommentKind, key_l: Loc, value_l: Loc) -> Self {
         Self {
             kind,
             key_l,

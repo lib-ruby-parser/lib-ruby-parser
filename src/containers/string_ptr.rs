@@ -11,8 +11,11 @@ pub(crate) mod c {
     /// C-compatible not nullable String container
     #[repr(C)]
     pub struct StringPtr {
-        ptr: *mut u8,
-        len: usize,
+        /// Raw ponter
+        pub ptr: *mut u8,
+
+        /// Length
+        pub len: usize,
     }
 
     impl Drop for StringPtr {
@@ -125,6 +128,13 @@ pub(crate) mod c {
     impl PartialEq<StringPtr> for StringPtr {
         fn eq(&self, other: &StringPtr) -> bool {
             self.deref() == other.deref()
+        }
+    }
+
+    use crate::containers::List;
+    impl From<StringPtr> for List<u8> {
+        fn from(s: StringPtr) -> Self {
+            List::from(s.to_vec())
         }
     }
 
