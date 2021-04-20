@@ -48,4 +48,7 @@ jobs:
       - name: run tests
         env:
           RUSTFLAGS: ${{ matrix.rustflags }}
-        run: cargo test --features c-structures --test parser_test -- --nocapture
+          ASAN_OPTIONS: detect_leaks=1
+        run: |
+          cargo test --features c-structures --test parser_test -- --nocapture
+          cargo test --features c-structures -- containers --nocapture
