@@ -6,9 +6,16 @@ use crate::{
     ParserOptions, Token,
 };
 
-type ForeignCustomDecoderFn = extern "C" fn(StringPtr, List<u8>) -> CustomDecoderResult;
+use std::ffi::c_void;
 
-extern "C" fn dummy_decode(_encoding: StringPtr, input: List<u8>) -> CustomDecoderResult {
+type ForeignCustomDecoderFn =
+    extern "C" fn(StringPtr, List<u8>, *mut c_void) -> CustomDecoderResult;
+
+extern "C" fn dummy_decode(
+    _encoding: StringPtr,
+    input: List<u8>,
+    _state: *mut c_void,
+) -> CustomDecoderResult {
     CustomDecoderResult::Ok(input)
 }
 
@@ -16,35 +23,52 @@ extern "C" fn dummy_decode(_encoding: StringPtr, input: List<u8>) -> CustomDecod
 #[repr(C)]
 #[derive(Debug)]
 pub struct ForeignCustomDecoder {
-    f: ForeignCustomDecoderFn,
-    dummy: bool,
+    /// Foreign function that does decoding
+    pub f: ForeignCustomDecoderFn,
+
+    /// Indicator that decoder is dummy
+    pub dummy: bool,
+
+    /// Shared state that is passed to external function
+    pub state: *mut c_void,
 }
 
 impl ForeignCustomDecoder {
     /// Constructs a custom decoder with a given foreign function
     pub fn new(f: ForeignCustomDecoderFn) -> Self {
-        Self { f, dummy: false }
+        Self {
+            f,
+            dummy: false,
+            state: std::ptr::null_mut(),
+        }
     }
 
     fn none() -> Self {
         Self {
             f: dummy_decode,
             dummy: true,
+            state: std::ptr::null_mut(),
         }
     }
 
-    fn as_option(&self) -> Option<ForeignCustomDecoderFn> {
+    fn call(&self, encoding: StringPtr, input: List<u8>) -> CustomDecoderResult {
         if self.dummy {
-            None
+            panic!("Can't run dummy decoder")
         } else {
-            Some(self.f)
+            let f = self.f;
+            f(encoding, input, self.state)
         }
     }
 }
 
-type ForeignTokenRewriterFn = extern "C" fn(Ptr<Token>, SharedList<u8>) -> TokenRewriterResult;
+type ForeignTokenRewriterFn =
+    extern "C" fn(Ptr<Token>, SharedList<u8>, *mut c_void) -> TokenRewriterResult;
 
-extern "C" fn dummy_rewrite(_token: Ptr<Token>, _input: SharedList<u8>) -> TokenRewriterResult {
+extern "C" fn dummy_rewrite(
+    _token: Ptr<Token>,
+    _input: SharedList<u8>,
+    _state: *mut c_void,
+) -> TokenRewriterResult {
     unreachable!()
 }
 
@@ -52,28 +76,40 @@ extern "C" fn dummy_rewrite(_token: Ptr<Token>, _input: SharedList<u8>) -> Token
 #[repr(C)]
 #[derive(Debug)]
 pub struct ForeignTokenRewriter {
-    f: ForeignTokenRewriterFn,
-    dummy: bool,
+    /// External function that rewrites tokens
+    pub f: ForeignTokenRewriterFn,
+
+    /// Indicator that token rewriter is dummy
+    pub dummy: bool,
+
+    /// Shared state that is passed to external function
+    pub state: *mut c_void,
 }
 
 impl ForeignTokenRewriter {
     /// Constructs a token rewriter with a given foreign function
     pub fn new(f: ForeignTokenRewriterFn) -> Self {
-        Self { f, dummy: false }
+        Self {
+            f,
+            dummy: false,
+            state: std::ptr::null_mut(),
+        }
     }
 
     fn none() -> Self {
         Self {
             f: dummy_rewrite,
             dummy: true,
+            state: std::ptr::null_mut(),
         }
     }
 
-    fn as_option(&self) -> Option<ForeignTokenRewriterFn> {
+    fn call(&self, token: Ptr<Token>, input: SharedList<u8>) -> TokenRewriterResult {
         if self.dummy {
-            None
+            panic!("Can't run dummy token rewriter")
         } else {
-            Some(self.f)
+            let f = self.f;
+            f(token, input, self.state)
         }
     }
 }
@@ -120,19 +156,20 @@ impl From<ForeignParserOptions> for ParserOptions {
             record_tokens,
         } = options;
 
-        let decoder = if let Some(decoder) = decoder.as_option() {
-            let rust_decode = move |encoding: StringPtr, input: List<u8>| decoder(encoding, input);
-            CustomDecoder::new(Box::new(rust_decode))
-        } else {
+        let decoder = if decoder.dummy {
             CustomDecoder::none()
+        } else {
+            CustomDecoder::new(Box::new(move |encoding: StringPtr, input: List<u8>| {
+                decoder.call(encoding, input)
+            }))
         };
 
-        let token_rewriter = if let Some(token_rewriter) = token_rewriter.as_option() {
-            let rust_rewrite =
-                move |token: Ptr<Token>, input: SharedList<u8>| token_rewriter(token, input);
-            TokenRewriter::new(Box::new(rust_rewrite))
-        } else {
+        let token_rewriter = if token_rewriter.dummy {
             TokenRewriter::none()
+        } else {
+            TokenRewriter::new(Box::new(move |token: Ptr<Token>, input: SharedList<u8>| {
+                token_rewriter.call(token, input)
+            }))
         };
 
         ParserOptions {
