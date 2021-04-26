@@ -3,7 +3,7 @@ use std::ffi::c_void;
 pub type Deleter = extern "C" fn(*mut c_void);
 
 pub trait GetDeleter {
-    fn get_deleter(&self) -> Deleter;
+    fn get_deleter() -> Deleter;
 }
 
 extern "C" fn lib_ruby_parser_containers_ptr_delete_token(ptr: *mut c_void) {
@@ -11,7 +11,7 @@ extern "C" fn lib_ruby_parser_containers_ptr_delete_token(ptr: *mut c_void) {
 }
 
 impl GetDeleter for crate::Token {
-    fn get_deleter(&self) -> Deleter {
+    fn get_deleter() -> Deleter {
         lib_ruby_parser_containers_ptr_delete_token
     }
 }
@@ -21,7 +21,7 @@ extern "C" fn lib_ruby_parser_containers_ptr_delete_node(ptr: *mut c_void) {
 }
 
 impl GetDeleter for crate::Node {
-    fn get_deleter(&self) -> Deleter {
+    fn get_deleter() -> Deleter {
         lib_ruby_parser_containers_ptr_delete_node
     }
 }
