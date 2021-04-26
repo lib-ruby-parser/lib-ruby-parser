@@ -1,4 +1,4 @@
-#[cfg(not(feature = "c-structures"))]
+#[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible nullable string container
     pub type MaybeStringPtr = Option<String>;
@@ -32,7 +32,7 @@ pub(crate) mod rust {
     }
 }
 
-#[cfg(feature = "c-structures")]
+#[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
     use super::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome};
     use crate::containers::StringPtr;

@@ -1,6 +1,6 @@
 use crate::containers::SharedList;
 
-#[cfg(not(feature = "c-structures"))]
+#[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible list
     pub type List<T> = Vec<T>;
@@ -22,14 +22,19 @@ pub(crate) mod rust {
     }
 }
 
-#[cfg(feature = "c-structures")]
+#[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
     /// C-compatible list
     #[repr(C)]
     pub struct List<T> {
-        ptr: *mut T,
-        len: usize,
-        capacity: usize,
+        /// pointer to raw data
+        pub ptr: *mut T,
+
+        /// length of the list
+        pub len: usize,
+
+        /// capacity of the list
+        pub capacity: usize,
     }
 
     impl<T> Drop for List<T> {

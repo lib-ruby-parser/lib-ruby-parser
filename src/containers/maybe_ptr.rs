@@ -1,4 +1,4 @@
-#[cfg(not(feature = "c-structures"))]
+#[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible nullable pointer
     pub type MaybePtr<T> = Option<Box<T>>;
@@ -32,8 +32,9 @@ pub(crate) mod rust {
     }
 }
 
-#[cfg(feature = "c-structures")]
+#[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
+    use crate::containers::deleter::GetDeleter;
     use crate::containers::Ptr;
 
     /// C-compatible nullable pointer
@@ -128,7 +129,7 @@ pub(crate) mod c {
         /// Equivalent of Option::expect
         pub fn expect(self, message: &str) -> Ptr<T>
         where
-            T: std::fmt::Debug,
+            T: std::fmt::Debug + GetDeleter,
         {
             let ptr = self.into_raw();
             if ptr.is_null() {
@@ -141,7 +142,7 @@ pub(crate) mod c {
         /// Equivalent of Option::map
         pub fn map<F>(self, f: F) -> Self
         where
-            T: std::fmt::Debug,
+            T: std::fmt::Debug + GetDeleter,
             F: FnOnce(Ptr<T>) -> Ptr<T>,
         {
             if self.ptr.is_null() {

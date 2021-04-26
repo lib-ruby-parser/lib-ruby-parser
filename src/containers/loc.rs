@@ -1,7 +1,7 @@
 use crate::containers::MaybeLoc;
 use crate::Loc;
 
-#[cfg(not(feature = "c-structures"))]
+#[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible not-null Loc pointer (technically not a pointer, but it mimics it)
     pub type Loc = super::Loc;
@@ -28,7 +28,7 @@ pub(crate) mod rust {
     // }
 }
 
-#[cfg(feature = "c-structures")]
+#[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
     use super::MaybeLoc;
 

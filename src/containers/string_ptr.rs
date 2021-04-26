@@ -1,10 +1,10 @@
-#[cfg(not(feature = "c-structures"))]
+#[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible not nullable String container
     pub type StringPtr = String;
 }
 
-#[cfg(feature = "c-structures")]
+#[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
     use std::ops::Deref;
 

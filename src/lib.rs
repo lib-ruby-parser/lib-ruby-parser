@@ -1,4 +1,7 @@
-#![cfg_attr(feature = "c-structures", feature(allocator_api, slice_ptr_get))]
+#![cfg_attr(
+    feature = "compile-with-external-structures",
+    feature(allocator_api, slice_ptr_get)
+)]
 #![warn(missing_debug_implementations)]
 #![warn(missing_docs)]
 #![warn(trivial_casts, trivial_numeric_casts)]
@@ -97,5 +100,5 @@ pub mod debug_level;
 pub mod containers;
 
 /// Module with C-compatible API
-#[cfg(feature = "c-structures")]
+#[cfg(feature = "compile-with-external-structures")]
 pub mod c_parse;

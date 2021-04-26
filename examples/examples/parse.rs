@@ -119,8 +119,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if cfg!(feature = "onig") {
             println!("Using 'onig' feature")
         }
-        if cfg!(feature = "c-structures") {
-            println!("Using 'c-structures' feature")
+        if cfg!(feature = "compile-with-external-structures") {
+            println!("Using 'compile-with-external-structures' feature")
         } else {
             println!("Using Rust structures")
         }
