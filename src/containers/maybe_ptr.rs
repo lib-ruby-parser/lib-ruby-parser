@@ -264,7 +264,12 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod test {
-        use super::{AsOption, GetDeleter, MaybePtr, MaybePtrNone, MaybePtrSome};
+        use super::{AsOption, GetDeleter, MaybePtr, MaybePtrBlob, MaybePtrNone, MaybePtrSome};
+
+        #[test]
+        fn test_size() {
+            assert_eq!(std::mem::size_of::<MaybePtrBlob>(), 8);
+        }
 
         #[derive(Debug, PartialEq)]
         struct Foo {

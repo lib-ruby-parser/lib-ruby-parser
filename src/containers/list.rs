@@ -24,6 +24,13 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
+    #[repr(C)]
+    struct ListBlob {
+        a: u64,
+        b: u64,
+        c: u64,
+    }
+
     /// C-compatible list
     #[repr(C)]
     pub struct List<T> {
@@ -303,8 +310,13 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod tests {
-        use super::{List as GenericList, TakeFirst};
+        use super::{List as GenericList, ListBlob, TakeFirst};
         type List = GenericList<usize>;
+
+        #[test]
+        fn test_size() {
+            assert_eq!(std::mem::size_of::<ListBlob>(), 24);
+        }
 
         #[test]
         fn test_new() {
