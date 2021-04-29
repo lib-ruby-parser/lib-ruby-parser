@@ -315,6 +315,7 @@ pub(crate) mod c {
 
         #[test]
         fn test_size() {
+            println!("{:?}", std::mem::size_of::<crate::Node>());
             assert_eq!(std::mem::size_of::<ListBlob>(), 24);
         }
 
