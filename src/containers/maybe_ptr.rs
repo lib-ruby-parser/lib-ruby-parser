@@ -41,12 +41,12 @@ pub(crate) mod c {
     use super::{Deleter, GetDeleter};
     use crate::containers::Ptr;
 
-    type MaybePtrBlob = u64;
+    type Blob = u64;
 
     /// C-compatible nullable pointer
     #[repr(C)]
     pub struct MaybePtr<T: GetDeleter> {
-        ptr_blob: MaybePtrBlob,
+        ptr_blob: Blob,
         _t: std::marker::PhantomData<T>,
     }
 
@@ -121,12 +121,10 @@ pub(crate) mod c {
     }
 
     extern "C" {
-        fn lib_ruby_parser_containers_make_maybe_ptr_blob(ptr: *mut c_void) -> MaybePtrBlob;
-        fn lib_ruby_parser_containers_free_maybe_ptr_blob(blob: MaybePtrBlob, deleter: Deleter);
-        fn lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(
-            blob: MaybePtrBlob,
-        ) -> *mut c_void;
-        fn lib_ruby_parser_containers_null_maybe_ptr_blob() -> MaybePtrBlob;
+        fn lib_ruby_parser_containers_make_maybe_ptr_blob(ptr: *mut c_void) -> Blob;
+        fn lib_ruby_parser_containers_free_maybe_ptr_blob(blob: Blob, deleter: Deleter);
+        fn lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(blob: Blob) -> *mut c_void;
+        fn lib_ruby_parser_containers_null_maybe_ptr_blob() -> Blob;
     }
 
     impl<T> MaybePtr<T>
@@ -264,11 +262,11 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod test {
-        use super::{AsOption, GetDeleter, MaybePtr, MaybePtrBlob, MaybePtrNone, MaybePtrSome};
+        use super::{AsOption, Blob, GetDeleter, MaybePtr, MaybePtrNone, MaybePtrSome};
 
         #[test]
         fn test_size() {
-            assert_eq!(std::mem::size_of::<MaybePtrBlob>(), 8);
+            assert_eq!(std::mem::size_of::<Blob>(), 8);
         }
 
         #[derive(Debug, PartialEq)]
