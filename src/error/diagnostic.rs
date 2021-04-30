@@ -80,7 +80,7 @@ impl Diagnostic {
     }
 }
 
-use crate::containers::List;
+use crate::containers::{list::CppVector, List};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -102,5 +102,14 @@ impl Diagnostics {
 
     pub(crate) fn take_inner(self) -> List<Diagnostic> {
         self.list.replace(List::new())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Diagnostic;
+    #[test]
+    fn test_size() {
+        assert_eq!(std::mem::size_of::<Diagnostic>(), 64);
     }
 }

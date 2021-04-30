@@ -51,3 +51,12 @@ impl MagicComment {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::MagicComment;
+    #[test]
+    fn test_size() {
+        assert_eq!(std::mem::size_of::<MagicComment>(), 40);
+    }
+}

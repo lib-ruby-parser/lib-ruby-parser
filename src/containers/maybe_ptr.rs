@@ -1,4 +1,4 @@
-use crate::containers::deleter::{Deleter, GetDeleter};
+use crate::containers::get_drop_fn::{DropPtrFn, GetDropFn};
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
@@ -38,19 +38,19 @@ pub(crate) mod rust {
 pub(crate) mod c {
     use std::ffi::c_void;
 
-    use super::{Deleter, GetDeleter};
+    use super::{DropPtrFn, GetDropFn};
     use crate::containers::Ptr;
 
     type Blob = u64;
 
     /// C-compatible nullable pointer
     #[repr(C)]
-    pub struct MaybePtr<T: GetDeleter> {
+    pub struct MaybePtr<T: GetDropFn> {
         ptr_blob: Blob,
         _t: std::marker::PhantomData<T>,
     }
 
-    impl<T: GetDeleter> Drop for MaybePtr<T> {
+    impl<T: GetDropFn> Drop for MaybePtr<T> {
         fn drop(&mut self) {
             let ptr = unsafe {
                 lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(self.ptr_blob) as *mut T
@@ -62,7 +62,7 @@ pub(crate) mod c {
             // 1. propagate Drop
             unsafe { std::ptr::drop_in_place(ptr) };
             // 2. call free on allocated data
-            let deleter = T::get_deleter();
+            let deleter = T::get_drop_ptr_fn();
             unsafe { lib_ruby_parser_containers_free_maybe_ptr_blob(self.ptr_blob, deleter) };
             // 3. nullify ptr_blob
             self.ptr_blob = unsafe { lib_ruby_parser_containers_null_maybe_ptr_blob() };
@@ -71,7 +71,7 @@ pub(crate) mod c {
 
     impl<T> std::fmt::Debug for MaybePtr<T>
     where
-        T: std::fmt::Debug + GetDeleter,
+        T: std::fmt::Debug + GetDropFn,
     {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             std::fmt::Debug::fmt(&self.as_option(), f)
@@ -80,7 +80,7 @@ pub(crate) mod c {
 
     impl<T> PartialEq for MaybePtr<T>
     where
-        T: PartialEq + GetDeleter,
+        T: PartialEq + GetDropFn,
     {
         fn eq(&self, other: &Self) -> bool {
             PartialEq::eq(&self.as_option(), &other.as_option())
@@ -89,7 +89,7 @@ pub(crate) mod c {
 
     impl<T> Clone for MaybePtr<T>
     where
-        T: Clone + GetDeleter,
+        T: Clone + GetDropFn,
     {
         fn clone(&self) -> Self {
             match self.as_option() {
@@ -102,7 +102,7 @@ pub(crate) mod c {
     use super::MaybePtrSome;
     impl<T> MaybePtrSome<T> for MaybePtr<T>
     where
-        T: GetDeleter,
+        T: GetDropFn,
     {
         fn some(value: T) -> Self {
             let ptr = Box::into_raw(Box::new(value));
@@ -113,7 +113,7 @@ pub(crate) mod c {
     use super::MaybePtrNone;
     impl<T> MaybePtrNone<T> for MaybePtr<T>
     where
-        T: GetDeleter,
+        T: GetDropFn,
     {
         fn none() -> Self {
             Self::from_raw(std::ptr::null_mut())
@@ -122,14 +122,14 @@ pub(crate) mod c {
 
     extern "C" {
         fn lib_ruby_parser_containers_make_maybe_ptr_blob(ptr: *mut c_void) -> Blob;
-        fn lib_ruby_parser_containers_free_maybe_ptr_blob(blob: Blob, deleter: Deleter);
+        fn lib_ruby_parser_containers_free_maybe_ptr_blob(blob: Blob, deleter: DropPtrFn);
         fn lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(blob: Blob) -> *mut c_void;
         fn lib_ruby_parser_containers_null_maybe_ptr_blob() -> Blob;
     }
 
     impl<T> MaybePtr<T>
     where
-        T: GetDeleter,
+        T: GetDropFn,
     {
         /// Constructs a pointer with a given raw pointer
         pub fn from_raw(ptr: *mut T) -> Self {
@@ -172,7 +172,7 @@ pub(crate) mod c {
         /// Equivalent of Option::expect
         pub fn expect(self, message: &str) -> Ptr<T>
         where
-            T: std::fmt::Debug + GetDeleter,
+            T: std::fmt::Debug + GetDropFn,
         {
             let ptr = self.into_raw();
             if ptr.is_null() {
@@ -185,7 +185,7 @@ pub(crate) mod c {
         /// Equivalent of Option::map
         pub fn map<F>(self, f: F) -> Self
         where
-            T: std::fmt::Debug + GetDeleter,
+            T: std::fmt::Debug + GetDropFn,
             F: FnOnce(Ptr<T>) -> Ptr<T>,
         {
             if self.as_ptr().is_null() {
@@ -207,7 +207,7 @@ pub(crate) mod c {
 
     impl<T> From<Option<Box<T>>> for MaybePtr<T>
     where
-        T: GetDeleter,
+        T: GetDropFn,
     {
         fn from(maybe_boxed: Option<Box<T>>) -> Self {
             match maybe_boxed {
@@ -219,7 +219,7 @@ pub(crate) mod c {
 
     impl<T> From<MaybePtr<T>> for Option<Box<T>>
     where
-        T: GetDeleter,
+        T: GetDropFn,
     {
         fn from(ptr: MaybePtr<T>) -> Self {
             let ptr = ptr.into_raw();
@@ -234,7 +234,7 @@ pub(crate) mod c {
     use super::AsOption;
     impl<T> AsOption<T> for MaybePtr<T>
     where
-        T: GetDeleter,
+        T: GetDropFn,
     {
         fn as_option(&self) -> Option<&T> {
             unsafe { self.as_ptr().as_ref() }
@@ -244,7 +244,7 @@ pub(crate) mod c {
     use super::IntoOption;
     impl<T> IntoOption<T> for MaybePtr<T>
     where
-        T: Clone + GetDeleter,
+        T: Clone + GetDropFn,
     {
         fn into_option(self) -> Option<T> {
             self.as_option().map(|t| t.clone())
@@ -253,7 +253,7 @@ pub(crate) mod c {
 
     impl<T> Default for MaybePtr<T>
     where
-        T: GetDeleter,
+        T: GetDropFn,
     {
         fn default() -> Self {
             Self::none()
@@ -262,7 +262,7 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod test {
-        use super::{AsOption, Blob, GetDeleter, MaybePtr, MaybePtrNone, MaybePtrSome};
+        use super::{AsOption, Blob, GetDropFn, MaybePtr, MaybePtrNone, MaybePtrSome};
 
         #[test]
         fn test_size() {
@@ -278,9 +278,17 @@ pub(crate) mod c {
             drop(unsafe { Box::from_raw(ptr) })
         }
 
-        impl GetDeleter for Foo {
-            fn get_deleter() -> crate::containers::deleter::Deleter {
+        impl GetDropFn for Foo {
+            fn get_drop_ptr_fn() -> crate::containers::get_drop_fn::DropPtrFn {
                 lib_ruby_parser_containers_maybe_ptr_free_foo
+            }
+
+            fn get_drop_in_place_fn() -> crate::containers::get_drop_fn::DropInPlaceFn {
+                unreachable!()
+            }
+
+            fn get_drop_list_blob_fn() -> crate::containers::get_drop_fn::DropListBlobFn {
+                unreachable!()
             }
         }
 

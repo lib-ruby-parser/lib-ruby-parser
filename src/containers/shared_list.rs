@@ -11,7 +11,7 @@ pub(crate) mod c {
     /// C-compatible shared list
     #[repr(C)]
     pub struct SharedList<T> {
-        ptr: *mut T,
+        ptr: *const T,
         len: usize,
     }
 
@@ -33,7 +33,7 @@ pub(crate) mod c {
     }
 
     impl<T> SharedList<T> {
-        pub(crate) fn from_raw(ptr: *mut T, len: usize) -> Self {
+        pub(crate) fn from_raw(ptr: *const T, len: usize) -> Self {
             Self { ptr, len }
         }
     }

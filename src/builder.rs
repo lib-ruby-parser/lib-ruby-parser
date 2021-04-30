@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 
 use crate::containers::{
-    list::TakeFirst,
+    list::{CppVector, TakeFirst},
     loc::IntoMaybeLoc,
     maybe_loc::{AsLocOption, MaybeLocNone, MaybeLocSome},
     maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},

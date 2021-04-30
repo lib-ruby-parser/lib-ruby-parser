@@ -1,4 +1,4 @@
-use crate::containers::deleter::GetDeleter;
+use crate::containers::get_drop_fn::GetDropFn;
 use crate::containers::MaybePtr;
 
 #[cfg(not(feature = "compile-with-external-structures"))]
@@ -25,7 +25,7 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
-    use super::{GetDeleter, MaybePtr};
+    use super::{GetDropFn, MaybePtr};
     // use crate::containers::deleter::{Deleter, GetDeleter};
     use std::ffi::c_void;
     use std::ops::Deref;
@@ -34,12 +34,12 @@ pub(crate) mod c {
 
     /// C-compatible not-null pointer
     #[repr(C)]
-    pub struct Ptr<T: GetDeleter> {
+    pub struct Ptr<T: GetDropFn> {
         blob: PtrBlob,
         _t: std::marker::PhantomData<T>,
     }
 
-    impl<T: GetDeleter> Drop for Ptr<T> {
+    impl<T: GetDropFn> Drop for Ptr<T> {
         fn drop(&mut self) {
             let ptr =
                 unsafe { lib_ruby_parser_containers_raw_ptr_from_ptr_blob(self.blob) as *mut T };
@@ -50,7 +50,7 @@ pub(crate) mod c {
             // 1. propagate Drop
             unsafe { std::ptr::drop_in_place(ptr) };
             // 2. call free on allocated data
-            let deleter = T::get_deleter();
+            let deleter = T::get_drop_ptr_fn();
             unsafe { lib_ruby_parser_containers_free_ptr_blob(self.blob, deleter) };
             // 3. nullify blob
             self.blob = unsafe { lib_ruby_parser_containers_null_ptr_blob() };
@@ -59,7 +59,7 @@ pub(crate) mod c {
 
     impl<T> std::fmt::Debug for Ptr<T>
     where
-        T: std::fmt::Debug + GetDeleter,
+        T: std::fmt::Debug + GetDropFn,
     {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             std::fmt::Debug::fmt(&**self, f)
@@ -68,7 +68,7 @@ pub(crate) mod c {
 
     impl<T> PartialEq for Ptr<T>
     where
-        T: PartialEq + GetDeleter,
+        T: PartialEq + GetDropFn,
     {
         fn eq(&self, other: &Self) -> bool {
             PartialEq::eq(self.as_ref(), other.as_ref())
@@ -77,7 +77,7 @@ pub(crate) mod c {
 
     impl<T> Clone for Ptr<T>
     where
-        T: Clone + GetDeleter,
+        T: Clone + GetDropFn,
     {
         fn clone(&self) -> Self {
             let value = self.as_ref().clone();
@@ -85,7 +85,7 @@ pub(crate) mod c {
         }
     }
 
-    impl<T: GetDeleter> Deref for Ptr<T> {
+    impl<T: GetDropFn> Deref for Ptr<T> {
         type Target = T;
 
         fn deref(&self) -> &Self::Target {
@@ -93,28 +93,28 @@ pub(crate) mod c {
         }
     }
 
-    impl<T: GetDeleter> AsRef<T> for Ptr<T> {
+    impl<T: GetDropFn> AsRef<T> for Ptr<T> {
         fn as_ref(&self) -> &T {
             unsafe { self.as_ptr().as_ref().unwrap() }
         }
     }
 
     use super::IntoMaybePtr;
-    impl<T: GetDeleter> IntoMaybePtr<T> for Ptr<T> {
+    impl<T: GetDropFn> IntoMaybePtr<T> for Ptr<T> {
         fn into_maybe_ptr(self) -> MaybePtr<T> {
             MaybePtr::from_raw(self.into_raw())
         }
     }
 
-    use crate::containers::deleter::Deleter;
+    use crate::containers::get_drop_fn::DropPtrFn;
     extern "C" {
         fn lib_ruby_parser_containers_make_ptr_blob(ptr: *mut c_void) -> PtrBlob;
-        fn lib_ruby_parser_containers_free_ptr_blob(ptr: PtrBlob, deleter: Deleter);
+        fn lib_ruby_parser_containers_free_ptr_blob(ptr: PtrBlob, deleter: DropPtrFn);
         fn lib_ruby_parser_containers_raw_ptr_from_ptr_blob(ptr: PtrBlob) -> *mut c_void;
         fn lib_ruby_parser_containers_null_ptr_blob() -> PtrBlob;
     }
 
-    impl<T: GetDeleter> Ptr<T> {
+    impl<T: GetDropFn> Ptr<T> {
         /// Constructs a pointer with a given value
         pub fn new(t: T) -> Self {
             let ptr = Box::into_raw(Box::new(t));
@@ -145,14 +145,14 @@ pub(crate) mod c {
         }
     }
 
-    impl<T: GetDeleter> From<Box<T>> for Ptr<T> {
+    impl<T: GetDropFn> From<Box<T>> for Ptr<T> {
         fn from(boxed: Box<T>) -> Self {
             Self::from_raw(Box::into_raw(boxed))
         }
     }
 
     use super::UnPtr;
-    impl<T: Sized + GetDeleter> UnPtr<T> for Ptr<T> {
+    impl<T: Sized + GetDropFn> UnPtr<T> for Ptr<T> {
         fn unptr(self) -> T {
             *unsafe { Box::from_raw(self.into_raw()) }
         }
@@ -160,7 +160,7 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod tests {
-        use super::{Deleter, GetDeleter, Ptr, PtrBlob, UnPtr};
+        use super::{DropPtrFn, GetDropFn, Ptr, PtrBlob, UnPtr};
 
         #[derive(Debug, PartialEq)]
         struct Foo {
@@ -174,9 +174,17 @@ pub(crate) mod c {
             drop(unsafe { Box::from_raw(ptr as *mut Foo) })
         }
 
-        impl GetDeleter for Foo {
-            fn get_deleter() -> Deleter {
+        impl GetDropFn for Foo {
+            fn get_drop_ptr_fn() -> DropPtrFn {
                 lib_ruby_parser_containers_ptr_delete_foo
+            }
+
+            fn get_drop_in_place_fn() -> crate::containers::get_drop_fn::DropInPlaceFn {
+                unreachable!()
+            }
+
+            fn get_drop_list_blob_fn() -> crate::containers::get_drop_fn::DropListBlobFn {
+                unreachable!()
             }
         }
 
@@ -201,7 +209,7 @@ pub(crate) mod c {
 }
 
 /// Unwraps the pointer and returns stack value
-pub trait IntoMaybePtr<T: GetDeleter> {
+pub trait IntoMaybePtr<T: GetDropFn> {
     /// Unwraps the pointer and returns stack value
     fn into_maybe_ptr(self) -> MaybePtr<T>
     where

@@ -1,4 +1,4 @@
-use crate::containers::List;
+use crate::containers::{list::CppVector, List};
 
 /// Representation of a byte sequence
 #[derive(Debug, Clone, PartialEq)]

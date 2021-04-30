@@ -24,8 +24,14 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
+    use super::CppVector;
+    use crate::containers::get_drop_fn::{DropInPlaceFn, GetDropFn};
+    use std::ffi::c_void;
+
+    /// List blob
     #[repr(C)]
-    struct ListBlob {
+    #[derive(Debug, Copy, Clone)]
+    pub struct ListBlob {
         a: u64,
         b: u64,
         c: u64,
@@ -33,48 +39,59 @@ pub(crate) mod c {
 
     /// C-compatible list
     #[repr(C)]
-    pub struct List<T> {
-        /// pointer to raw data
-        pub ptr: *mut T,
-
-        /// length of the list
-        pub len: usize,
-
-        /// capacity of the list
-        pub capacity: usize,
+    pub struct List<T>
+    where
+        T: GetDropFn,
+    {
+        blob: ListBlob,
+        _t: std::marker::PhantomData<T>,
     }
 
-    impl<T> Drop for List<T> {
+    impl<T> Drop for List<T>
+    where
+        T: GetDropFn,
+    {
         fn drop(&mut self) {
-            if self.ptr.is_null() {
-                return;
-            }
-
-            if self.len != 0 {
-                unsafe {
-                    // propagate Drop on items
-                    std::ptr::drop_in_place(std::ptr::slice_from_raw_parts_mut(self.ptr, self.len));
-                }
-            }
-
-            if self.capacity != 0 {
-                unsafe {
-                    // free memory
-                    let layout = std::alloc::Layout::array::<T>(self.capacity).unwrap();
-                    std::alloc::Global
-                        .deallocate(std::ptr::NonNull::new(self.ptr as *mut u8).unwrap(), layout);
-                }
-            }
-
-            self.ptr = std::ptr::null_mut();
-            self.len = 0;
-            self.capacity = 0;
+            let drop_item_in_place = T::get_drop_in_place_fn();
+            let drop_list_blob = T::get_drop_list_blob_fn();
+            unsafe { drop_list_blob(self.blob, drop_item_in_place) }
         }
     }
 
+    // impl<T> Drop for List<T> {
+    //     fn drop(&mut self) {
+    // if self.as_ptr().is_null() {
+    //     return;
+    // }
+
+    // if self.len() != 0 {
+    //     unsafe {
+    //         // propagate Drop on items
+    //         std::ptr::drop_in_place(std::ptr::slice_from_raw_parts_mut(
+    //             self.as_ptr(),
+    //             self.len(),
+    //         ));
+    //     }
+    // }
+
+    // if self.capacity() != 0 {
+    //     unsafe {
+    //         // free memory
+    //         let layout = std::alloc::Layout::array::<T>(self.capacity()).unwrap();
+    //         std::alloc::Global
+    //             .deallocate(std::ptr::NonNull::new(self.ptr as *mut u8).unwrap(), layout);
+    //     }
+    // }
+
+    // self.ptr = std::ptr::null_mut();
+    // self.len = 0;
+    // self.capacity() = 0;
+    //     }
+    // }
+
     impl<T> std::fmt::Debug for List<T>
     where
-        T: std::fmt::Debug,
+        T: std::fmt::Debug + GetDropFn,
     {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             std::fmt::Debug::fmt(&**self, f)
@@ -83,7 +100,7 @@ pub(crate) mod c {
 
     impl<T> PartialEq for List<T>
     where
-        T: PartialEq,
+        T: PartialEq + GetDropFn,
     {
         fn eq(&self, other: &Self) -> bool {
             self.as_ref() == other.as_ref()
@@ -92,48 +109,10 @@ pub(crate) mod c {
 
     impl<T> PartialEq<&[T]> for List<T>
     where
-        T: PartialEq,
+        T: PartialEq + GetDropFn,
     {
         fn eq(&self, other: &&[T]) -> bool {
             self.as_ref() == *other
-        }
-    }
-
-    impl<T> Clone for List<T>
-    where
-        T: Clone,
-    {
-        fn clone(&self) -> Self {
-            let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<_>>();
-            Self::from(copied)
-        }
-    }
-
-    impl<T> From<Vec<T>> for List<T>
-    where
-        T: Clone,
-    {
-        fn from(mut vec: Vec<T>) -> Self {
-            let ptr = vec.as_mut_ptr();
-            let len = vec.len();
-            let capacity = vec.capacity();
-            std::mem::forget(vec);
-            Self { ptr, len, capacity }
-        }
-    }
-
-    impl<T> From<List<T>> for Vec<T>
-    where
-        T: Clone,
-    {
-        fn from(mut list: List<T>) -> Self {
-            let ptr = list.ptr;
-            let len = list.len;
-            let capacity = list.capacity;
-            list.ptr = std::ptr::null_mut();
-            list.len = 0;
-            list.capacity = 0;
-            unsafe { Vec::from_raw_parts(ptr, len, capacity) }
         }
     }
 
@@ -161,120 +140,71 @@ pub(crate) mod c {
         }
     }
 
-    impl<T> List<T> {
+    extern "C" {
+        fn lib_ruby_parser_containers_list_as_ptr(blob: ListBlob) -> *mut c_void;
+        fn lib_ruby_parser_containers_list_len(blob: ListBlob) -> u64;
+        fn lib_ruby_parser_containers_list_capacity(blob: ListBlob) -> u64;
+    }
+
+    impl<T> List<T>
+    where
+        T: GetDropFn,
+    {
         /// Equivalent of Vec::new
-        pub fn new() -> Self {
-            Self {
-                ptr: std::ptr::null_mut(),
-                len: 0,
-                capacity: 0,
-            }
+        // pub fn new() -> Self {
+        //     todo!()
+        // }
+
+        fn as_ptr(&self) -> *mut T {
+            unsafe { lib_ruby_parser_containers_list_as_ptr(self.blob) as *mut T }
+        }
+
+        /// Equivalent of Vec::len
+        pub fn len(&self) -> usize {
+            unsafe { lib_ruby_parser_containers_list_len(self.blob) as usize }
+        }
+
+        /// Equivalent of Vec::capacity
+        pub fn capacity(&self) -> usize {
+            unsafe { lib_ruby_parser_containers_list_capacity(self.blob) as usize }
         }
 
         /// Equivalent of Vec::is_empty
         pub fn is_empty(&self) -> bool {
-            self.len == 0
+            self.len() == 0
         }
 
         /// Equivalent of Vec::iter
         pub fn iter(&self) -> std::slice::Iter<'_, T> {
             self.as_ref().iter()
         }
-
-        /// Equivalent of Vec::with_capacity
-        pub fn with_capacity(capacity: usize) -> Self {
-            let layout = std::alloc::Layout::array::<T>(capacity).unwrap();
-            let ptr = std::alloc::Global.allocate(layout).unwrap().as_mut_ptr() as *mut T;
-            Self {
-                ptr,
-                len: 0,
-                capacity,
-            }
-        }
-
-        fn grow(&mut self) {
-            let prev_capacity = self.capacity;
-            let prev_layout = std::alloc::Layout::array::<T>(prev_capacity).unwrap();
-            let prev_ptr = self.ptr;
-
-            let new_capacity = if prev_capacity == 0 {
-                1
-            } else {
-                prev_capacity * 2
-            };
-            let new_layout = std::alloc::Layout::array::<T>(new_capacity).unwrap();
-            let new_ptr;
-
-            // allocate space for new data
-            new_ptr = std::alloc::Global
-                .allocate(new_layout)
-                .unwrap()
-                .as_mut_ptr() as *mut T;
-
-            if self.len > 0 {
-                unsafe {
-                    // copy data
-                    std::ptr::copy(prev_ptr, new_ptr, self.len);
-
-                    // free old data
-                    std::alloc::Global.deallocate(
-                        std::ptr::NonNull::new(prev_ptr as *mut u8).unwrap(),
-                        prev_layout,
-                    );
-                };
-            }
-
-            self.ptr = new_ptr;
-            self.capacity = new_capacity;
-        }
-
-        /// Equivalent of Vec::push
-        pub fn push(&mut self, item: T) {
-            if self.len == self.capacity {
-                self.grow()
-            }
-            unsafe {
-                let end = self.ptr.add(self.len);
-                end.write(item);
-                self.len += 1;
-            }
-        }
-
-        /// Equivalent of Vec::remove
-        pub fn remove(&mut self, index: usize) -> T {
-            if index > self.len {
-                panic!("can't remove index {}, len is {}", index, self.len)
-            }
-            unsafe {
-                let ptr = self.ptr.add(index);
-                let result = ptr.read();
-                std::ptr::copy(ptr.offset(1), ptr, self.len - index - 1);
-                self.len -= 1;
-                result
-            }
-        }
-
-        /// Helper for swapping &mut self with Self::default()
-        pub fn take(&mut self) -> Self {
-            std::mem::take(self)
-        }
     }
 
-    impl<T> std::ops::Deref for List<T> {
+    impl<T> std::ops::Deref for List<T>
+    where
+        T: GetDropFn,
+    {
         type Target = [T];
 
         fn deref(&self) -> &[T] {
-            unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
+            unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
         }
     }
 
-    impl<T> std::ops::DerefMut for List<T> {
+    impl<T> std::ops::DerefMut for List<T>
+    where
+        T: GetDropFn,
+    {
         fn deref_mut(&mut self) -> &mut Self::Target {
-            unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
+            unsafe { std::slice::from_raw_parts_mut(self.as_ptr(), self.len()) }
         }
     }
 
-    impl<T, I: std::slice::SliceIndex<[T]>> std::ops::Index<I> for List<T> {
+    impl<T, I> std::ops::Index<I> for List<T>
+    where
+        T: GetDropFn,
+        I: std::slice::SliceIndex<[T]>,
+    {
         type Output = I::Output;
 
         fn index(&self, index: I) -> &Self::Output {
@@ -282,36 +212,188 @@ pub(crate) mod c {
         }
     }
 
-    impl<T> Default for List<T> {
-        fn default() -> Self {
-            Self::new()
-        }
-    }
-
-    use std::alloc::Allocator;
-
     use super::TakeFirst;
-    impl<T: Clone> TakeFirst<T> for List<T> {
+    impl<T> TakeFirst<T> for List<T>
+    where
+        T: Clone + GetDropFn,
+    {
         fn take_first(self) -> T {
             if self.is_empty() {
                 panic!("can't get the first item from an empty list")
             } else {
-                unsafe { self.ptr.as_ref() }.unwrap().clone()
+                unsafe { self.as_ptr().as_ref() }.unwrap().clone()
             }
         }
     }
 
     use super::{AsSharedList, SharedList};
-    impl<T> AsSharedList<T> for List<T> {
+    impl<T> AsSharedList<T> for List<T>
+    where
+        T: GetDropFn,
+    {
         fn shared(&self) -> SharedList<T> {
-            SharedList::from_raw(self.ptr, self.len)
+            SharedList::from_raw(self.as_ptr(), self.len())
         }
     }
 
+    macro_rules! cpp_vector_impl_for {
+        ($t:ty, $new:ident, $with_capacity:ident, $from_raw:ident, $shrink_to_fit:ident, $push:ident, $remove:ident) => {
+            extern "C" {
+                fn $new() -> ListBlob;
+                fn $with_capacity(capacity: u64) -> ListBlob;
+                fn $from_raw(ptr: *mut $t, size: u64) -> ListBlob;
+                fn $shrink_to_fit(blob: ListBlob);
+                fn $push(blob: ListBlob, item: $t);
+                fn $remove(blob: ListBlob, index: u64) -> $t;
+            }
+
+            impl CppVector<$t> for List<$t> {
+                fn new() -> Self {
+                    let blob = unsafe { $new() };
+                    Self {
+                        blob,
+                        _t: std::marker::PhantomData,
+                    }
+                }
+
+                fn with_capacity(capacity: usize) -> Self {
+                    let blob = unsafe { $with_capacity(capacity as u64) };
+                    Self {
+                        blob,
+                        _t: std::marker::PhantomData,
+                    }
+                }
+
+                fn from_raw(ptr: *mut $t, size: usize) -> Self {
+                    let blob = unsafe { $from_raw(ptr, size as u64) };
+                    Self {
+                        blob,
+                        _t: std::marker::PhantomData,
+                    }
+                }
+
+                fn push(&mut self, item: $t) {
+                    unsafe { $push(self.blob, item) }
+                }
+
+                fn remove(&mut self, index: usize) -> $t {
+                    unsafe { $remove(self.blob, index as u64) }
+                }
+            }
+
+            impl Default for List<$t> {
+                fn default() -> Self {
+                    Self::new()
+                }
+            }
+
+            impl From<Vec<$t>> for List<$t> {
+                fn from(mut vec: Vec<$t>) -> Self {
+                    vec.shrink_to_fit();
+                    let ptr = vec.as_mut_ptr();
+                    let len = vec.len();
+                    std::mem::forget(vec);
+                    Self::from_raw(ptr, len)
+                }
+            }
+
+            impl Clone for List<$t> {
+                fn clone(&self) -> Self {
+                    let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<_>>();
+                    Self::from(copied)
+                }
+            }
+
+            impl From<List<$t>> for Vec<$t> {
+                fn from(mut list: List<$t>) -> Self {
+                    unsafe { $shrink_to_fit(list.blob) };
+                    let ptr = list.as_ptr();
+                    let len = list.len();
+                    list.blob = unsafe { $new() };
+                    // let ptr = list.ptr;
+                    // let len = list.len;
+                    // let capacity = list.capacity;
+                    // list.ptr = std::ptr::null_mut();
+                    // list.len = 0;
+                    // list.capacity = 0;
+                    unsafe { Vec::from_raw_parts(ptr, len, len) }
+                }
+            }
+
+            // impl Drop for List<$t> {
+            //     fn drop(&mut self) {}
+            // }
+        };
+    }
+
+    cpp_vector_impl_for!(
+        crate::Node,
+        lib_ruby_parser_containers_node_list_blob_new,
+        lib_ruby_parser_containers_node_list_blob_with_capacity,
+        lib_ruby_parser_containers_node_list_blob_from_raw,
+        lib_ruby_parser_containers_node_list_blob_shrink_to_fit,
+        lib_ruby_parser_containers_node_list_blob_push,
+        lib_ruby_parser_containers_node_list_blob_remove
+    );
+    cpp_vector_impl_for!(
+        crate::Diagnostic,
+        lib_ruby_parser_containers_diagnostic_list_blob_new,
+        lib_ruby_parser_containers_diagnostic_list_blob_with_capacity,
+        lib_ruby_parser_containers_diagnostic_list_blob_from_raw,
+        lib_ruby_parser_containers_diagnostic_list_blob_shrink_to_fit,
+        lib_ruby_parser_containers_diagnostic_list_blob_push,
+        lib_ruby_parser_containers_diagnostic_list_blob_remove
+    );
+    cpp_vector_impl_for!(
+        crate::source::Comment,
+        lib_ruby_parser_containers_comment_list_blob_new,
+        lib_ruby_parser_containers_comment_list_blob_with_capacity,
+        lib_ruby_parser_containers_comment_list_blob_from_raw,
+        lib_ruby_parser_containers_comment_list_blob_shrink_to_fit,
+        lib_ruby_parser_containers_comment_list_blob_push,
+        lib_ruby_parser_containers_comment_list_blob_remove
+    );
+    cpp_vector_impl_for!(
+        crate::source::MagicComment,
+        lib_ruby_parser_containers_magic_comment_list_blob_new,
+        lib_ruby_parser_containers_magic_comment_list_blob_with_capacity,
+        lib_ruby_parser_containers_magic_comment_list_blob_from_raw,
+        lib_ruby_parser_containers_magic_comment_list_blob_shrink_to_fit,
+        lib_ruby_parser_containers_magic_comment_list_blob_push,
+        lib_ruby_parser_containers_magic_comment_list_blob_remove
+    );
+    cpp_vector_impl_for!(
+        crate::Token,
+        lib_ruby_parser_containers_token_list_blob_new,
+        lib_ruby_parser_containers_token_list_blob_with_capacity,
+        lib_ruby_parser_containers_token_list_blob_from_raw,
+        lib_ruby_parser_containers_token_list_blob_shrink_to_fit,
+        lib_ruby_parser_containers_token_list_blob_push,
+        lib_ruby_parser_containers_token_list_blob_remove
+    );
+    cpp_vector_impl_for!(
+        crate::source::SourceLine,
+        lib_ruby_parser_containers_source_line_list_blob_new,
+        lib_ruby_parser_containers_source_line_list_blob_with_capacity,
+        lib_ruby_parser_containers_source_line_list_blob_from_raw,
+        lib_ruby_parser_containers_source_line_list_blob_shrink_to_fit,
+        lib_ruby_parser_containers_source_line_list_blob_push,
+        lib_ruby_parser_containers_source_line_list_blob_remove
+    );
+    cpp_vector_impl_for!(
+        u8,
+        lib_ruby_parser_containers_byte_list_blob_new,
+        lib_ruby_parser_containers_byte_list_blob_with_capacity,
+        lib_ruby_parser_containers_byte_list_blob_from_raw,
+        lib_ruby_parser_containers_byte_list_blob_shrink_to_fit,
+        lib_ruby_parser_containers_byte_list_blob_push,
+        lib_ruby_parser_containers_byte_list_blob_remove
+    );
+
     #[cfg(test)]
     mod tests {
-        use super::{List as GenericList, ListBlob, TakeFirst};
-        type List = GenericList<usize>;
+        use super::{CppVector, List as GenericList, ListBlob, TakeFirst};
+        type List = GenericList<u8>;
 
         #[test]
         fn test_size() {
@@ -322,15 +404,15 @@ pub(crate) mod c {
         #[test]
         fn test_new() {
             let list = List::new();
-            assert_eq!(list.len, 0);
-            assert_eq!(list.capacity, 0);
+            assert_eq!(list.len(), 0);
+            assert_eq!(list.capacity(), 0);
         }
 
         #[test]
         fn test_with_capacity() {
             let list = List::with_capacity(20);
-            assert_eq!(list.len, 0);
-            assert_eq!(list.capacity, 20);
+            assert_eq!(list.len(), 0);
+            assert_eq!(list.capacity(), 20);
         }
 
         #[test]
@@ -360,10 +442,20 @@ pub(crate) mod c {
     }
 }
 
+pub type ListBlob = c::ListBlob;
+
 pub(crate) trait TakeFirst<T: Clone> {
     fn take_first(self) -> T;
 }
 
 pub(crate) trait AsSharedList<T> {
     fn shared(&self) -> SharedList<T>;
+}
+
+pub(crate) trait CppVector<T> {
+    fn new() -> Self;
+    fn with_capacity(capacity: usize) -> Self;
+    fn from_raw(ptr: *mut T, size: usize) -> Self;
+    fn push(&mut self, item: T);
+    fn remove(&mut self, index: usize) -> T;
 }

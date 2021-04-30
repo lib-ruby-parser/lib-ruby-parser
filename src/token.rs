@@ -75,3 +75,12 @@ impl Token {
         self.loc.clone()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Token;
+    #[test]
+    fn test_size() {
+        assert_eq!(std::mem::size_of::<Token>(), 56);
+    }
+}

@@ -55,3 +55,12 @@ impl Comment {
         Self { location, kind }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Comment;
+    #[test]
+    fn test_size() {
+        assert_eq!(std::mem::size_of::<Comment>(), 24);
+    }
+}

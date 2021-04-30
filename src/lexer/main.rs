@@ -1,4 +1,4 @@
-use crate::containers::{ptr::UnPtr, List, Ptr, StringPtr};
+use crate::containers::{list::CppVector, ptr::UnPtr, List, Ptr, StringPtr};
 use crate::debug_level;
 use crate::lexer::*;
 use crate::maybe_byte::*;

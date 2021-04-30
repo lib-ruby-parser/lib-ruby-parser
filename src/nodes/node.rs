@@ -26,3 +26,12 @@ impl Node {
         self.inner_ref().print_with_locs()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Node;
+    #[test]
+    fn test_size() {
+        assert_eq!(std::mem::size_of::<Node>(), 192);
+    }
+}

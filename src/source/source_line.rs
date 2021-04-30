@@ -19,3 +19,12 @@ impl SourceLine {
         result
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::SourceLine;
+    #[test]
+    fn test_size() {
+        assert_eq!(std::mem::size_of::<SourceLine>(), 24);
+    }
+}
