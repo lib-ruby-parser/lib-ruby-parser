@@ -60,6 +60,12 @@ define_deleter_impl!(
     lib_ruby_parser_containers_comment_list_blob_free
 );
 define_deleter_impl!(
+    u64,
+    lib_ruby_parser_containers_drop_ptr_u64,
+    lib_ruby_parser_containers_drop_in_place_u64,
+    lib_ruby_parser_containers_u64_list_blob_free
+);
+define_deleter_impl!(
     crate::Diagnostic,
     lib_ruby_parser_containers_drop_ptr_diagnostic,
     lib_ruby_parser_containers_drop_in_place_diagnostic,

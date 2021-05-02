@@ -3,7 +3,7 @@ use crate::source::DecodedInput;
 use crate::{DiagnosticMessage, ErrorLevel};
 
 /// Diagnostic message that comes from the parser when there's an error or warning
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Diagnostic {
     /// Level of the diagnostic (error or warnings)

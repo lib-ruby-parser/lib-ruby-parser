@@ -25,8 +25,7 @@ pub(crate) mod rust {
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
     use super::CppVector;
-    use crate::containers::get_drop_fn::{DropInPlaceFn, GetDropFn};
-    use std::ffi::c_void;
+    use crate::containers::get_drop_fn::GetDropFn;
 
     /// List blob
     #[repr(C)]
@@ -58,64 +57,6 @@ pub(crate) mod c {
         }
     }
 
-    // impl<T> Drop for List<T> {
-    //     fn drop(&mut self) {
-    // if self.as_ptr().is_null() {
-    //     return;
-    // }
-
-    // if self.len() != 0 {
-    //     unsafe {
-    //         // propagate Drop on items
-    //         std::ptr::drop_in_place(std::ptr::slice_from_raw_parts_mut(
-    //             self.as_ptr(),
-    //             self.len(),
-    //         ));
-    //     }
-    // }
-
-    // if self.capacity() != 0 {
-    //     unsafe {
-    //         // free memory
-    //         let layout = std::alloc::Layout::array::<T>(self.capacity()).unwrap();
-    //         std::alloc::Global
-    //             .deallocate(std::ptr::NonNull::new(self.ptr as *mut u8).unwrap(), layout);
-    //     }
-    // }
-
-    // self.ptr = std::ptr::null_mut();
-    // self.len = 0;
-    // self.capacity() = 0;
-    //     }
-    // }
-
-    impl<T> std::fmt::Debug for List<T>
-    where
-        T: std::fmt::Debug + GetDropFn,
-    {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            std::fmt::Debug::fmt(&**self, f)
-        }
-    }
-
-    impl<T> PartialEq for List<T>
-    where
-        T: PartialEq + GetDropFn,
-    {
-        fn eq(&self, other: &Self) -> bool {
-            self.as_ref() == other.as_ref()
-        }
-    }
-
-    impl<T> PartialEq<&[T]> for List<T>
-    where
-        T: PartialEq + GetDropFn,
-    {
-        fn eq(&self, other: &&[T]) -> bool {
-            self.as_ref() == *other
-        }
-    }
-
     impl From<String> for List<u8> {
         fn from(s: String) -> Self {
             Self::from(s.into_bytes())
@@ -140,111 +81,32 @@ pub(crate) mod c {
         }
     }
 
-    extern "C" {
-        fn lib_ruby_parser_containers_list_as_ptr(blob: ListBlob) -> *mut c_void;
-        fn lib_ruby_parser_containers_list_len(blob: ListBlob) -> u64;
-        fn lib_ruby_parser_containers_list_capacity(blob: ListBlob) -> u64;
-    }
-
-    impl<T> List<T>
-    where
-        T: GetDropFn,
-    {
-        /// Equivalent of Vec::new
-        // pub fn new() -> Self {
-        //     todo!()
-        // }
-
-        fn as_ptr(&self) -> *mut T {
-            unsafe { lib_ruby_parser_containers_list_as_ptr(self.blob) as *mut T }
-        }
-
-        /// Equivalent of Vec::len
-        pub fn len(&self) -> usize {
-            unsafe { lib_ruby_parser_containers_list_len(self.blob) as usize }
-        }
-
-        /// Equivalent of Vec::capacity
-        pub fn capacity(&self) -> usize {
-            unsafe { lib_ruby_parser_containers_list_capacity(self.blob) as usize }
-        }
-
-        /// Equivalent of Vec::is_empty
-        pub fn is_empty(&self) -> bool {
-            self.len() == 0
-        }
-
-        /// Equivalent of Vec::iter
-        pub fn iter(&self) -> std::slice::Iter<'_, T> {
-            self.as_ref().iter()
-        }
-    }
-
-    impl<T> std::ops::Deref for List<T>
-    where
-        T: GetDropFn,
-    {
-        type Target = [T];
-
-        fn deref(&self) -> &[T] {
-            unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
-        }
-    }
-
-    impl<T> std::ops::DerefMut for List<T>
-    where
-        T: GetDropFn,
-    {
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            unsafe { std::slice::from_raw_parts_mut(self.as_ptr(), self.len()) }
-        }
-    }
-
-    impl<T, I> std::ops::Index<I> for List<T>
-    where
-        T: GetDropFn,
-        I: std::slice::SliceIndex<[T]>,
-    {
-        type Output = I::Output;
-
-        fn index(&self, index: I) -> &Self::Output {
-            std::ops::Index::index(&**self, index)
-        }
-    }
-
     use super::TakeFirst;
-    impl<T> TakeFirst<T> for List<T>
-    where
-        T: Clone + GetDropFn,
-    {
-        fn take_first(self) -> T {
-            if self.is_empty() {
-                panic!("can't get the first item from an empty list")
-            } else {
-                unsafe { self.as_ptr().as_ref() }.unwrap().clone()
-            }
-        }
-    }
-
     use super::{AsSharedList, SharedList};
-    impl<T> AsSharedList<T> for List<T>
-    where
-        T: GetDropFn,
-    {
-        fn shared(&self) -> SharedList<T> {
-            SharedList::from_raw(self.as_ptr(), self.len())
-        }
-    }
 
     macro_rules! cpp_vector_impl_for {
-        ($t:ty, $new:ident, $with_capacity:ident, $from_raw:ident, $shrink_to_fit:ident, $push:ident, $remove:ident) => {
+        (
+            $t:ty,
+            $new:ident,
+            $with_capacity:ident,
+            $from_raw:ident,
+            $shrink_to_fit:ident,
+            $push:ident,
+            $remove:ident,
+            $as_ptr:ident,
+            $len:ident,
+            $capacity:ident
+        ) => {
             extern "C" {
                 fn $new() -> ListBlob;
                 fn $with_capacity(capacity: u64) -> ListBlob;
                 fn $from_raw(ptr: *mut $t, size: u64) -> ListBlob;
                 fn $shrink_to_fit(blob: ListBlob);
-                fn $push(blob: ListBlob, item: $t);
+                fn $push(blob: ListBlob, item: $t) -> ListBlob;
                 fn $remove(blob: ListBlob, index: u64) -> $t;
+                fn $as_ptr(blob: ListBlob) -> *mut $t;
+                fn $len(blob: ListBlob) -> u64;
+                fn $capacity(blob: ListBlob) -> u64;
             }
 
             impl CppVector<$t> for List<$t> {
@@ -273,11 +135,30 @@ pub(crate) mod c {
                 }
 
                 fn push(&mut self, item: $t) {
-                    unsafe { $push(self.blob, item) }
+                    self.blob = unsafe { $push(self.blob, item) };
                 }
 
                 fn remove(&mut self, index: usize) -> $t {
                     unsafe { $remove(self.blob, index as u64) }
+                }
+
+                fn as_ptr(&self) -> *mut $t {
+                    unsafe { $as_ptr(self.blob) }
+                }
+
+                fn len(&self) -> usize {
+                    unsafe { $len(self.blob) as usize }
+                }
+
+                fn capacity(&self) -> usize {
+                    unsafe { $capacity(self.blob) as usize }
+                }
+            }
+
+            impl List<$t> {
+                /// Equivalent of Vec::iter
+                fn iter(&self) -> std::slice::Iter<'_, $t> {
+                    self.as_ref().iter()
                 }
             }
 
@@ -320,6 +201,67 @@ pub(crate) mod c {
                 }
             }
 
+            impl std::ops::Deref for List<$t> {
+                type Target = [$t];
+
+                fn deref(&self) -> &[$t] {
+                    unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
+                }
+            }
+
+            impl std::ops::DerefMut for List<$t> {
+                fn deref_mut(&mut self) -> &mut Self::Target {
+                    unsafe { std::slice::from_raw_parts_mut(self.as_ptr(), self.len()) }
+                }
+            }
+
+            impl std::fmt::Debug for List<$t> {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    std::fmt::Debug::fmt(&**self, f)
+                }
+            }
+
+            impl PartialEq for List<$t> {
+                fn eq(&self, other: &Self) -> bool {
+                    self.as_ref() == other.as_ref()
+                }
+            }
+
+            impl Eq for List<$t> {}
+
+            impl PartialEq<&[$t]> for List<$t> {
+                fn eq(&self, other: &&[$t]) -> bool {
+                    self.as_ref() == *other
+                }
+            }
+
+            impl<I> std::ops::Index<I> for List<$t>
+            where
+                I: std::slice::SliceIndex<[$t]>,
+            {
+                type Output = I::Output;
+
+                fn index(&self, index: I) -> &Self::Output {
+                    std::ops::Index::index(&**self, index)
+                }
+            }
+
+            impl TakeFirst<$t> for List<$t> {
+                fn take_first(self) -> $t {
+                    if self.is_empty() {
+                        panic!("can't get the first item from an empty list")
+                    } else {
+                        unsafe { self.as_ptr().as_ref() }.unwrap().clone()
+                    }
+                }
+            }
+
+            impl AsSharedList<$t> for List<$t> {
+                fn shared(&self) -> SharedList<$t> {
+                    SharedList::from_raw(self.as_ptr(), self.len())
+                }
+            }
+
             // impl Drop for List<$t> {
             //     fn drop(&mut self) {}
             // }
@@ -333,7 +275,10 @@ pub(crate) mod c {
         lib_ruby_parser_containers_node_list_blob_from_raw,
         lib_ruby_parser_containers_node_list_blob_shrink_to_fit,
         lib_ruby_parser_containers_node_list_blob_push,
-        lib_ruby_parser_containers_node_list_blob_remove
+        lib_ruby_parser_containers_node_list_blob_remove,
+        lib_ruby_parser_containers_node_list_blob_as_ptr,
+        lib_ruby_parser_containers_node_list_blob_len,
+        lib_ruby_parser_containers_node_list_blob_capacity
     );
     cpp_vector_impl_for!(
         crate::Diagnostic,
@@ -342,7 +287,10 @@ pub(crate) mod c {
         lib_ruby_parser_containers_diagnostic_list_blob_from_raw,
         lib_ruby_parser_containers_diagnostic_list_blob_shrink_to_fit,
         lib_ruby_parser_containers_diagnostic_list_blob_push,
-        lib_ruby_parser_containers_diagnostic_list_blob_remove
+        lib_ruby_parser_containers_diagnostic_list_blob_remove,
+        lib_ruby_parser_containers_diagnostic_list_blob_as_ptr,
+        lib_ruby_parser_containers_diagnostic_list_blob_len,
+        lib_ruby_parser_containers_diagnostic_list_blob_capacity
     );
     cpp_vector_impl_for!(
         crate::source::Comment,
@@ -351,7 +299,10 @@ pub(crate) mod c {
         lib_ruby_parser_containers_comment_list_blob_from_raw,
         lib_ruby_parser_containers_comment_list_blob_shrink_to_fit,
         lib_ruby_parser_containers_comment_list_blob_push,
-        lib_ruby_parser_containers_comment_list_blob_remove
+        lib_ruby_parser_containers_comment_list_blob_remove,
+        lib_ruby_parser_containers_comment_list_blob_as_ptr,
+        lib_ruby_parser_containers_comment_list_blob_len,
+        lib_ruby_parser_containers_comment_list_blob_capacity
     );
     cpp_vector_impl_for!(
         crate::source::MagicComment,
@@ -360,7 +311,10 @@ pub(crate) mod c {
         lib_ruby_parser_containers_magic_comment_list_blob_from_raw,
         lib_ruby_parser_containers_magic_comment_list_blob_shrink_to_fit,
         lib_ruby_parser_containers_magic_comment_list_blob_push,
-        lib_ruby_parser_containers_magic_comment_list_blob_remove
+        lib_ruby_parser_containers_magic_comment_list_blob_remove,
+        lib_ruby_parser_containers_magic_comment_list_blob_as_ptr,
+        lib_ruby_parser_containers_magic_comment_list_blob_len,
+        lib_ruby_parser_containers_magic_comment_list_blob_capacity
     );
     cpp_vector_impl_for!(
         crate::Token,
@@ -369,7 +323,10 @@ pub(crate) mod c {
         lib_ruby_parser_containers_token_list_blob_from_raw,
         lib_ruby_parser_containers_token_list_blob_shrink_to_fit,
         lib_ruby_parser_containers_token_list_blob_push,
-        lib_ruby_parser_containers_token_list_blob_remove
+        lib_ruby_parser_containers_token_list_blob_remove,
+        lib_ruby_parser_containers_token_list_blob_as_ptr,
+        lib_ruby_parser_containers_token_list_blob_len,
+        lib_ruby_parser_containers_token_list_blob_capacity
     );
     cpp_vector_impl_for!(
         crate::source::SourceLine,
@@ -378,7 +335,10 @@ pub(crate) mod c {
         lib_ruby_parser_containers_source_line_list_blob_from_raw,
         lib_ruby_parser_containers_source_line_list_blob_shrink_to_fit,
         lib_ruby_parser_containers_source_line_list_blob_push,
-        lib_ruby_parser_containers_source_line_list_blob_remove
+        lib_ruby_parser_containers_source_line_list_blob_remove,
+        lib_ruby_parser_containers_source_line_list_blob_as_ptr,
+        lib_ruby_parser_containers_source_line_list_blob_len,
+        lib_ruby_parser_containers_source_line_list_blob_capacity
     );
     cpp_vector_impl_for!(
         u8,
@@ -387,17 +347,31 @@ pub(crate) mod c {
         lib_ruby_parser_containers_byte_list_blob_from_raw,
         lib_ruby_parser_containers_byte_list_blob_shrink_to_fit,
         lib_ruby_parser_containers_byte_list_blob_push,
-        lib_ruby_parser_containers_byte_list_blob_remove
+        lib_ruby_parser_containers_byte_list_blob_remove,
+        lib_ruby_parser_containers_byte_list_blob_as_ptr,
+        lib_ruby_parser_containers_byte_list_blob_len,
+        lib_ruby_parser_containers_byte_list_blob_capacity
+    );
+    cpp_vector_impl_for!(
+        u64,
+        lib_ruby_parser_containers_u64_list_blob_new,
+        lib_ruby_parser_containers_u64_list_blob_with_capacity,
+        lib_ruby_parser_containers_u64_list_blob_from_raw,
+        lib_ruby_parser_containers_u64_list_blob_shrink_to_fit,
+        lib_ruby_parser_containers_u64_list_blob_push,
+        lib_ruby_parser_containers_u64_list_blob_remove,
+        lib_ruby_parser_containers_u64_list_blob_as_ptr,
+        lib_ruby_parser_containers_u64_list_blob_len,
+        lib_ruby_parser_containers_u64_list_blob_capacity
     );
 
     #[cfg(test)]
     mod tests {
         use super::{CppVector, List as GenericList, ListBlob, TakeFirst};
-        type List = GenericList<u8>;
+        type List = GenericList<u64>;
 
         #[test]
         fn test_size() {
-            println!("{:?}", std::mem::size_of::<crate::Node>());
             assert_eq!(std::mem::size_of::<ListBlob>(), 24);
         }
 
@@ -442,7 +416,7 @@ pub(crate) mod c {
     }
 }
 
-pub type ListBlob = c::ListBlob;
+pub(crate) type ListBlob = c::ListBlob;
 
 pub(crate) trait TakeFirst<T: Clone> {
     fn take_first(self) -> T;
@@ -458,4 +432,12 @@ pub(crate) trait CppVector<T> {
     fn from_raw(ptr: *mut T, size: usize) -> Self;
     fn push(&mut self, item: T);
     fn remove(&mut self, index: usize) -> T;
+    fn as_ptr(&self) -> *mut T;
+    fn len(&self) -> usize;
+    fn capacity(&self) -> usize;
+
+    /// Equivalent of Vec::is_empty
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 }

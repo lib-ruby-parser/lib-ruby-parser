@@ -125,11 +125,13 @@ pub(crate) mod c {
         }
     }
 
-    impl PartialEq<StringPtr> for StringPtr {
+    impl PartialEq for StringPtr {
         fn eq(&self, other: &StringPtr) -> bool {
             self.deref() == other.deref()
         }
     }
+
+    impl Eq for StringPtr {}
 
     use crate::containers::List;
     impl From<StringPtr> for List<u8> {

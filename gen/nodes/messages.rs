@@ -18,7 +18,7 @@ impl<'a> Messages<'a> {
             "use crate::containers::StringPtr;
 
 /// Enum of all possible diagnostic message (both warnings and errors)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub enum DiagnosticMessage {{
     {sections}

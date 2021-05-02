@@ -1,7 +1,7 @@
 use crate::{containers::List, token_name, Bytes, LexState, Loc};
 
 /// A token that is emitted by a lexer and consumed by a parser
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Token {
     /// Numeric representation of the token type,

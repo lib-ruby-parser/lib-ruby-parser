@@ -1,7 +1,7 @@
 use crate::containers::{list::CppVector, List};
 
 /// Representation of a byte sequence
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Bytes {
     /// Raw vector of bytes

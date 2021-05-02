@@ -2,7 +2,7 @@ use crate::containers::Loc;
 use crate::source::DecodedInput;
 
 /// Enum of all possible comment types
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub enum CommentType {
     /// Inline comment like
@@ -27,7 +27,7 @@ pub enum CommentType {
 }
 
 /// A struct that represents a comment in Ruby
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Comment {
     /// Location of the comment (starts with `#` and ends with the last char)
