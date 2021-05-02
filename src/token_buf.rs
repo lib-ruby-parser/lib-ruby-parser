@@ -1,4 +1,3 @@
-use crate::containers::list::CppVector;
 use crate::Bytes;
 
 #[derive(Debug, Clone, Default)]

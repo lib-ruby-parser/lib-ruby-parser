@@ -1,4 +1,4 @@
-use crate::containers::{list::CppVector, List};
+use crate::containers::List;
 
 /// Representation of a byte sequence
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -10,7 +10,9 @@ pub struct Bytes {
 
 impl Default for Bytes {
     fn default() -> Self {
-        Self { raw: List::new() }
+        Self {
+            raw: List::<u8>::new(),
+        }
     }
 }
 
@@ -22,7 +24,9 @@ impl Bytes {
 
     /// Constructs an empty instance of `Bytes`
     pub fn empty() -> Self {
-        Self { raw: List::new() }
+        Self {
+            raw: List::<u8>::new(),
+        }
     }
 
     /// Returns a slice of the byte sequence
@@ -76,7 +80,7 @@ impl Bytes {
     }
 
     pub(crate) fn clear(&mut self) {
-        self.raw = List::new()
+        self.raw = List::<u8>::new()
     }
 }
 

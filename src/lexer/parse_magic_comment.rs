@@ -1,6 +1,5 @@
 use std::convert::TryInto;
 
-use crate::containers::list::CppVector;
 use crate::source::{MagicComment, MagicCommentKind};
 use crate::DiagnosticMessage;
 use crate::Lexer;

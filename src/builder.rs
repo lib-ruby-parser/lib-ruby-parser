@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 
 use crate::containers::{
-    list::{CppVector, TakeFirst},
+    list::TakeFirst,
     loc::IntoMaybeLoc,
     maybe_loc::{AsLocOption, MaybeLocNone, MaybeLocSome},
     maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},
@@ -912,7 +912,7 @@ impl Builder {
                     Box::new(Node::Send(Send {
                         recv: MaybePtr::none(),
                         method_name: name,
-                        args: List::new(),
+                        args: List::<Node>::new(),
                         dot_l: MaybeLoc::none(),
                         selector_l: expression_l.clone().into_maybe_ptr(),
                         begin_l: MaybeLoc::none(),
@@ -1186,7 +1186,7 @@ impl Builder {
                 *expression_l = expr_l;
                 *operator_l = op_l;
                 if args.is_empty() {
-                    let mut new_args: List<Node> = List::with_capacity(1);
+                    let mut new_args = List::<Node>::with_capacity(1);
                     new_args.push(new_rhs.unptr());
                     *args = new_args;
                 } else {
@@ -1775,7 +1775,7 @@ impl Builder {
             Node::Arg(arg) => Box::new(Node::Procarg0(Procarg0 {
                 expression_l: arg.expression_l.clone(),
                 args: {
-                    let mut args: List<Node> = List::with_capacity(1);
+                    let mut args = List::<Node>::with_capacity(1);
                     args.push(Node::Arg(arg));
                     args
                 },
@@ -2052,7 +2052,7 @@ impl Builder {
             MethodCallType::Send => Box::new(Node::Send(Send {
                 method_name: method_name.into(),
                 recv: receiver.into_maybe_ptr(),
-                args: List::new(),
+                args: List::<Node>::new(),
                 dot_l: dot_l.into_maybe_ptr(),
                 selector_l: selector_l.into_maybe_ptr(),
                 begin_l: MaybeLoc::none(),
@@ -2064,7 +2064,7 @@ impl Builder {
             MethodCallType::CSend => Box::new(Node::CSend(CSend {
                 method_name: method_name.into(),
                 recv: receiver,
-                args: List::new(),
+                args: List::<Node>::new(),
                 dot_l,
                 selector_l: selector_l.into_maybe_ptr(),
                 begin_l: MaybeLoc::none(),
@@ -2135,7 +2135,7 @@ impl Builder {
             recv: Some(receiver).into(),
             method_name: value(operator_t).into(),
             args: {
-                let mut args: List<Node> = List::with_capacity(1);
+                let mut args = List::<Node>::with_capacity(1);
                 args.push(*arg);
                 args
             },
@@ -2177,7 +2177,7 @@ impl Builder {
                 recv: Some(receiver).into(),
                 method_name: StringPtr::from("=~"),
                 args: {
-                    let mut args: List<Node> = List::with_capacity(1);
+                    let mut args = List::<Node>::with_capacity(1);
                     args.push(*arg);
                     args
                 },
@@ -2204,7 +2204,7 @@ impl Builder {
         Ok(Box::new(Node::Send(Send {
             recv: Some(receiver).into(),
             method_name: method_name.into(),
-            args: List::new(),
+            args: List::<Node>::new(),
             dot_l: MaybeLoc::none(),
             selector_l: selector_l.into_maybe_ptr(),
             begin_l: MaybeLoc::none(),
@@ -2238,7 +2238,7 @@ impl Builder {
             Ok(Box::new(Node::Send(Send {
                 recv: self.check_condition(receiver.into()).into_maybe_ptr(),
                 method_name: StringPtr::from("!"),
-                args: List::new(),
+                args: List::<Node>::new(),
                 selector_l: selector_l.into_maybe_ptr(),
                 dot_l: MaybeLoc::none(),
                 begin_l,
@@ -2254,7 +2254,7 @@ impl Builder {
             } = self.collection_map(&begin_t, &[], &end_t);
 
             let nil_node = Node::Begin(Begin {
-                statements: List::new(),
+                statements: List::<Node>::new(),
                 begin_l,
                 end_l,
                 expression_l,
@@ -2265,7 +2265,7 @@ impl Builder {
             Ok(Box::new(Node::Send(Send {
                 recv: MaybePtr::some(nil_node),
                 method_name: StringPtr::from("!"),
-                args: List::new(),
+                args: List::<Node>::new(),
                 selector_l: selector_l.into_maybe_ptr(),
                 dot_l: MaybeLoc::none(),
                 begin_l: MaybeLoc::none(),
@@ -2773,11 +2773,11 @@ impl Builder {
                 _ => {}
             }
             let parts = if let Some(else_) = else_ {
-                let mut parts: List<Node> = List::with_capacity(1);
+                let mut parts = List::<Node>::with_capacity(1);
                 parts.push(*else_);
                 parts
             } else {
-                List::new()
+                List::<Node>::new()
             };
             let CollectionMap {
                 begin_l,
@@ -2898,7 +2898,7 @@ impl Builder {
                     body
                 }
                 _ => {
-                    let mut statements: List<Node> = List::new();
+                    let mut statements = List::<Node>::new();
                     statements.push(*body);
                     Box::new(Node::Begin(Begin {
                         statements,
@@ -2911,7 +2911,7 @@ impl Builder {
         } else {
             // A nil expression: `()'.
             Box::new(Node::Begin(Begin {
-                statements: List::new(),
+                statements: List::<Node>::new(),
                 begin_l: new_begin_l,
                 end_l: new_end_l,
                 expression_l: new_expression_l,
@@ -2936,7 +2936,7 @@ impl Builder {
             None => {
                 // A nil expression: `begin end'.
                 Box::new(Node::KwBegin(KwBegin {
-                    statements: List::new(),
+                    statements: List::<Node>::new(),
                     begin_l,
                     end_l,
                     expression_l,
@@ -2952,7 +2952,7 @@ impl Builder {
                 }))
             }
             Some(node) => {
-                let mut statements: List<Node> = List::new();
+                let mut statements = List::<Node>::new();
                 statements.push(node);
                 Box::new(Node::KwBegin(KwBegin {
                     statements,
@@ -3240,7 +3240,7 @@ impl Builder {
 
         if elements.is_empty() {
             return Box::new(Node::ArrayPattern(ArrayPattern {
-                elements: List::new(),
+                elements: List::<Node>::new(),
                 begin_l,
                 end_l,
                 expression_l,
@@ -3418,7 +3418,7 @@ impl Builder {
                     let stmt = self.check_condition(Ptr::new(stmt)).unptr();
                     Ptr::new(Node::Begin(Begin {
                         statements: {
-                            let mut statements: List<Node> = List::with_capacity(1);
+                            let mut statements = List::<Node>::with_capacity(1);
                             statements.push(stmt);
                             statements
                         },

@@ -24,7 +24,6 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
-    use super::CppVector;
     use crate::containers::get_drop_fn::GetDropFn;
 
     /// List blob
@@ -109,8 +108,9 @@ pub(crate) mod c {
                 fn $capacity(blob: ListBlob) -> u64;
             }
 
-            impl CppVector<$t> for List<$t> {
-                fn new() -> Self {
+            impl List<$t> {
+                /// Equivalent of Vec::new
+                pub fn new() -> Self {
                     let blob = unsafe { $new() };
                     Self {
                         blob,
@@ -118,7 +118,8 @@ pub(crate) mod c {
                     }
                 }
 
-                fn with_capacity(capacity: usize) -> Self {
+                /// Equivalent of Vec::with_capacity
+                pub fn with_capacity(capacity: usize) -> Self {
                     let blob = unsafe { $with_capacity(capacity as u64) };
                     Self {
                         blob,
@@ -126,7 +127,7 @@ pub(crate) mod c {
                     }
                 }
 
-                fn from_raw(ptr: *mut $t, size: usize) -> Self {
+                pub(crate) fn from_raw(ptr: *mut $t, size: usize) -> Self {
                     let blob = unsafe { $from_raw(ptr, size as u64) };
                     Self {
                         blob,
@@ -134,23 +135,27 @@ pub(crate) mod c {
                     }
                 }
 
-                fn push(&mut self, item: $t) {
+                /// Equivalent of Vec::push
+                pub fn push(&mut self, item: $t) {
                     self.blob = unsafe { $push(self.blob, item) };
                 }
 
-                fn remove(&mut self, index: usize) -> $t {
+                /// Equivalent of Vec::rmeove
+                pub fn remove(&mut self, index: usize) -> $t {
                     unsafe { $remove(self.blob, index as u64) }
                 }
 
-                fn as_ptr(&self) -> *mut $t {
+                pub(crate) fn as_ptr(&self) -> *mut $t {
                     unsafe { $as_ptr(self.blob) }
                 }
 
-                fn len(&self) -> usize {
+                /// Equivalent of Vec::len
+                pub fn len(&self) -> usize {
                     unsafe { $len(self.blob) as usize }
                 }
 
-                fn capacity(&self) -> usize {
+                /// Equivalent of Vec::capacity
+                pub fn capacity(&self) -> usize {
                     unsafe { $capacity(self.blob) as usize }
                 }
             }
@@ -358,7 +363,7 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod tests {
-        use super::{CppVector, List as GenericList, ListBlob, TakeFirst};
+        use super::{List as GenericList, ListBlob, TakeFirst};
         type List = GenericList<u64>;
 
         #[test]
@@ -415,20 +420,4 @@ pub(crate) trait TakeFirst<T: Clone> {
 
 pub(crate) trait AsSharedList<T> {
     fn shared(&self) -> SharedList<T>;
-}
-
-pub(crate) trait CppVector<T> {
-    fn new() -> Self;
-    fn with_capacity(capacity: usize) -> Self;
-    fn from_raw(ptr: *mut T, size: usize) -> Self;
-    fn push(&mut self, item: T);
-    fn remove(&mut self, index: usize) -> T;
-    fn as_ptr(&self) -> *mut T;
-    fn len(&self) -> usize;
-    fn capacity(&self) -> usize;
-
-    /// Equivalent of Vec::is_empty
-    fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
 }

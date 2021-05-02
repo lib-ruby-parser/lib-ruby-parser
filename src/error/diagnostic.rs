@@ -80,7 +80,7 @@ impl Diagnostic {
     }
 }
 
-use crate::containers::{list::CppVector, List};
+use crate::containers::List;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -92,7 +92,7 @@ pub(crate) struct Diagnostics {
 impl Diagnostics {
     pub(crate) fn new() -> Self {
         Self {
-            list: Rc::new(RefCell::new(List::new())),
+            list: Rc::new(RefCell::new(List::<Diagnostic>::new())),
         }
     }
 
@@ -101,7 +101,7 @@ impl Diagnostics {
     }
 
     pub(crate) fn take_inner(self) -> List<Diagnostic> {
-        self.list.replace(List::new())
+        self.list.replace(List::<Diagnostic>::new())
     }
 }
 
