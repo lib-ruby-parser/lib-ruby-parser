@@ -157,6 +157,7 @@ pub(crate) mod c {
 
             impl List<$t> {
                 /// Equivalent of Vec::iter
+                #[allow(dead_code)]
                 fn iter(&self) -> std::slice::Iter<'_, $t> {
                     self.as_ref().iter()
                 }
@@ -191,12 +192,6 @@ pub(crate) mod c {
                     let ptr = list.as_ptr();
                     let len = list.len();
                     list.blob = unsafe { $new() };
-                    // let ptr = list.ptr;
-                    // let len = list.len;
-                    // let capacity = list.capacity;
-                    // list.ptr = std::ptr::null_mut();
-                    // list.len = 0;
-                    // list.capacity = 0;
                     unsafe { Vec::from_raw_parts(ptr, len, len) }
                 }
             }
@@ -261,10 +256,6 @@ pub(crate) mod c {
                     SharedList::from_raw(self.as_ptr(), self.len())
                 }
             }
-
-            // impl Drop for List<$t> {
-            //     fn drop(&mut self) {}
-            // }
         };
     }
 

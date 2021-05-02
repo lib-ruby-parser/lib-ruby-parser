@@ -121,6 +121,7 @@ extern "C" MAYBE_PTR_BLOB::blob_t lib_ruby_parser_containers_null_maybe_ptr_blob
     extern "C" LIST_BLOB_##Item::blob_t lib_ruby_parser_containers_##prefix##_list_blob_from_raw(Item *ptr, uint64_t size)             \
     {                                                                                                                                  \
         auto vec = std::vector<Item>(ptr, ptr + size);                                                                                 \
+        free(ptr);                                                                                                                     \
         return lib_ruby_parser_containers_##prefix##_pack_blob(std::move(vec));                                                        \
     }                                                                                                                                  \
                                                                                                                                        \
