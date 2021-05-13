@@ -11,8 +11,8 @@ pub(crate) mod c {
     /// C-compatible shared list
     #[repr(C)]
     pub struct SharedList<T> {
-        ptr: *const T,
-        len: usize,
+        pub(crate) ptr: *const T,
+        pub(crate) len: usize,
     }
 
     impl<T> std::fmt::Debug for SharedList<T>

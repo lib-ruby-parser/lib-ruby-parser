@@ -50,7 +50,7 @@ pub(crate) mod c {
         T: GetDropFn,
     {
         fn drop(&mut self) {
-            let drop_item_in_place = T::get_drop_in_place_fn();
+            let drop_item_in_place = T::get_drop_ptr_in_place_fn();
             let drop_list_blob = T::get_drop_list_blob_fn();
             unsafe { drop_list_blob(self.blob, drop_item_in_place) }
         }
@@ -83,7 +83,7 @@ pub(crate) mod c {
     use super::TakeFirst;
     use super::{AsSharedList, SharedList};
 
-    macro_rules! cpp_vector_impl_for {
+    macro_rules! gen_list_impl_for {
         (
             $t:ty,
             $new:ident,
@@ -96,13 +96,21 @@ pub(crate) mod c {
             $len:ident,
             $capacity:ident
         ) => {
+            use super::{AsSharedList, List, ListBlob, SharedList, TakeFirst};
+
+            #[repr(C)]
+            struct RemoveResult {
+                new_blob: ListBlob,
+                removed_item: $t,
+            }
+
             extern "C" {
                 fn $new() -> ListBlob;
                 fn $with_capacity(capacity: u64) -> ListBlob;
                 fn $from_raw(ptr: *mut $t, size: u64) -> ListBlob;
-                fn $shrink_to_fit(blob: ListBlob);
+                fn $shrink_to_fit(blob: ListBlob) -> ListBlob;
                 fn $push(blob: ListBlob, item: $t) -> ListBlob;
-                fn $remove(blob: ListBlob, index: u64) -> $t;
+                fn $remove(blob: ListBlob, index: u64) -> RemoveResult;
                 fn $as_ptr(blob: ListBlob) -> *mut $t;
                 fn $len(blob: ListBlob) -> u64;
                 fn $capacity(blob: ListBlob) -> u64;
@@ -135,6 +143,10 @@ pub(crate) mod c {
                     }
                 }
 
+                pub(crate) fn shrink_to_fit(&mut self) {
+                    self.blob = unsafe { $shrink_to_fit(self.blob) };
+                }
+
                 /// Equivalent of Vec::push
                 pub fn push(&mut self, item: $t) {
                     self.blob = unsafe { $push(self.blob, item) };
@@ -142,7 +154,12 @@ pub(crate) mod c {
 
                 /// Equivalent of Vec::rmeove
                 pub fn remove(&mut self, index: usize) -> $t {
-                    unsafe { $remove(self.blob, index as u64) }
+                    let RemoveResult {
+                        new_blob,
+                        removed_item,
+                    } = unsafe { $remove(self.blob, index as u64) };
+                    self.blob = new_blob;
+                    removed_item
                 }
 
                 pub(crate) fn as_ptr(&self) -> *mut $t {
@@ -193,7 +210,7 @@ pub(crate) mod c {
 
             impl From<List<$t>> for Vec<$t> {
                 fn from(mut list: List<$t>) -> Self {
-                    unsafe { $shrink_to_fit(list.blob) };
+                    list.shrink_to_fit();
                     let ptr = list.as_ptr();
                     let len = list.len();
                     list.blob = unsafe { $new() };
@@ -261,153 +278,396 @@ pub(crate) mod c {
                     SharedList::from_raw(self.as_ptr(), self.len())
                 }
             }
+
+            #[cfg(test)]
+            mod tests {
+                use super::{make_one, AsSharedList, List as GenericList, TakeFirst};
+                use std::ops::{Deref, DerefMut};
+                type List = GenericList<$t>;
+
+                #[test]
+                fn test_new() {
+                    let _ = List::new();
+                }
+
+                #[test]
+                fn test_with_capacity() {
+                    let _ = List::with_capacity(10);
+                }
+
+                fn list_with_items(n: usize) -> List {
+                    let mut list = List::new();
+                    for _ in 0..n {
+                        list.push(make_one());
+                    }
+                    list
+                }
+
+                fn vec_with_items(n: usize) -> Vec<$t> {
+                    let mut list = vec![];
+                    for _ in 0..n {
+                        list.push(make_one());
+                    }
+                    list
+                }
+
+                #[test]
+                fn test_from_raw() {
+                    let mut vec = vec_with_items(20);
+                    let ptr = vec.as_mut_ptr();
+                    let len = vec.len();
+                    std::mem::forget(vec);
+
+                    let list = List::from_raw(ptr, len);
+                    assert_eq!(list.len(), 20);
+                }
+
+                #[test]
+                fn test_push() {
+                    let mut list = List::new();
+                    list.push(make_one());
+                }
+
+                #[test]
+                fn test_remove() {
+                    let mut list = list_with_items(2);
+
+                    list.remove(0);
+                    assert_eq!(list.len(), 1);
+
+                    list.remove(0);
+                    assert_eq!(list.len(), 0);
+                }
+
+                #[test]
+                fn test_as_ptr() {
+                    let mut list = List::new();
+                    assert_eq!(list.as_ptr(), std::ptr::null_mut());
+
+                    list.push(make_one());
+                    assert_eq!(unsafe { &*list.as_ptr() }, &make_one());
+                }
+
+                #[test]
+                fn test_len() {
+                    let list = list_with_items(10);
+                    assert_eq!(list.len(), 10);
+                }
+
+                #[test]
+                fn test_capacity() {
+                    let list = List::with_capacity(10);
+                    assert_eq!(list.capacity(), 10);
+                }
+
+                #[test]
+                fn test_iter() {
+                    let list = list_with_items(20);
+                    let mut iterated = vec![];
+                    for i in list.iter() {
+                        iterated.push(i.clone());
+                    }
+
+                    assert_eq!(iterated.len(), 20);
+                }
+
+                #[test]
+                fn test_default() {
+                    let list = List::default();
+                    assert_eq!(list.len(), 0);
+                    assert_eq!(list.len(), 0);
+                    assert_eq!(list.as_ptr(), std::ptr::null_mut());
+                }
+
+                #[test]
+                fn test_list_from_vec() {
+                    let list = List::from(vec_with_items(10));
+                    assert_eq!(list.len(), 10);
+                }
+
+                #[test]
+                fn test_clone() {
+                    let mut list = List::new();
+                    assert_eq!(list.clone().len(), 0);
+
+                    list.push(make_one());
+                    list.push(make_one());
+                    assert_eq!(list.clone().len(), 2);
+                }
+
+                #[test]
+                fn test_vec_from_list() {
+                    assert_eq!(Vec::from(list_with_items(20)), vec_with_items(20));
+                }
+
+                #[test]
+                fn test_deref() {
+                    let mut list = List::new();
+                    let mut vec = vec![];
+                    assert_eq!(list.deref(), &vec);
+
+                    list.push(make_one());
+                    vec.push(make_one());
+                    assert_eq!(list.deref(), &vec);
+                }
+
+                #[test]
+                fn test_deref_mut() {
+                    let mut list = List::new();
+                    let mut vec = vec![];
+                    assert_eq!(list.deref_mut(), &vec);
+
+                    list.push(make_one());
+                    vec.push(make_one());
+                    assert_eq!(list.deref_mut(), &vec);
+                }
+
+                #[test]
+                fn test_fmt() {
+                    let mut list = List::new();
+                    list.push(make_one());
+
+                    let vec = vec![make_one()];
+                    let slice = &vec;
+                    assert_eq!(format!("{:?}", list), format!("{:?}", slice));
+                }
+
+                #[test]
+                fn test_eq_list_list() {
+                    assert_eq!(list_with_items(10), list_with_items(10));
+                    assert_ne!(list_with_items(10), list_with_items(20));
+                }
+
+                #[test]
+                fn test_eq_slice_list() {
+                    let list = list_with_items(0);
+                    let vec = vec_with_items(0);
+                    let slice: &[$t] = &vec;
+                    assert_eq!(list, slice);
+
+                    let list = list_with_items(20);
+                    let vec = vec_with_items(20);
+                    let slice: &[$t] = &vec;
+                    assert_eq!(list, slice);
+                }
+
+                #[test]
+                fn test_index() {
+                    let mut list = List::new();
+                    list.push(make_one());
+
+                    assert_eq!(list[0], make_one());
+                }
+
+                #[test]
+                fn test_take_first() {
+                    let mut list = List::new();
+                    list.push(make_one());
+
+                    assert_eq!(list.take_first(), make_one());
+                }
+
+                #[test]
+                fn test_shared() {
+                    let mut list = List::new();
+                    list.push(make_one());
+                    let shared = list.shared();
+
+                    assert_eq!(shared.ptr, list.as_ptr());
+                    assert_eq!(shared.len, list.len());
+                }
+
+                #[test]
+                fn test_vec_item() {
+                    vec_with_items(10).truncate(5)
+                }
+            }
         };
     }
 
-    cpp_vector_impl_for!(
-        crate::Node,
-        lib_ruby_parser_containers_node_list_blob_new,
-        lib_ruby_parser_containers_node_list_blob_with_capacity,
-        lib_ruby_parser_containers_node_list_blob_from_raw,
-        lib_ruby_parser_containers_node_list_blob_shrink_to_fit,
-        lib_ruby_parser_containers_node_list_blob_push,
-        lib_ruby_parser_containers_node_list_blob_remove,
-        lib_ruby_parser_containers_node_list_blob_as_ptr,
-        lib_ruby_parser_containers_node_list_blob_len,
-        lib_ruby_parser_containers_node_list_blob_capacity
-    );
-    cpp_vector_impl_for!(
-        crate::Diagnostic,
-        lib_ruby_parser_containers_diagnostic_list_blob_new,
-        lib_ruby_parser_containers_diagnostic_list_blob_with_capacity,
-        lib_ruby_parser_containers_diagnostic_list_blob_from_raw,
-        lib_ruby_parser_containers_diagnostic_list_blob_shrink_to_fit,
-        lib_ruby_parser_containers_diagnostic_list_blob_push,
-        lib_ruby_parser_containers_diagnostic_list_blob_remove,
-        lib_ruby_parser_containers_diagnostic_list_blob_as_ptr,
-        lib_ruby_parser_containers_diagnostic_list_blob_len,
-        lib_ruby_parser_containers_diagnostic_list_blob_capacity
-    );
-    cpp_vector_impl_for!(
-        crate::source::Comment,
-        lib_ruby_parser_containers_comment_list_blob_new,
-        lib_ruby_parser_containers_comment_list_blob_with_capacity,
-        lib_ruby_parser_containers_comment_list_blob_from_raw,
-        lib_ruby_parser_containers_comment_list_blob_shrink_to_fit,
-        lib_ruby_parser_containers_comment_list_blob_push,
-        lib_ruby_parser_containers_comment_list_blob_remove,
-        lib_ruby_parser_containers_comment_list_blob_as_ptr,
-        lib_ruby_parser_containers_comment_list_blob_len,
-        lib_ruby_parser_containers_comment_list_blob_capacity
-    );
-    cpp_vector_impl_for!(
-        crate::source::MagicComment,
-        lib_ruby_parser_containers_magic_comment_list_blob_new,
-        lib_ruby_parser_containers_magic_comment_list_blob_with_capacity,
-        lib_ruby_parser_containers_magic_comment_list_blob_from_raw,
-        lib_ruby_parser_containers_magic_comment_list_blob_shrink_to_fit,
-        lib_ruby_parser_containers_magic_comment_list_blob_push,
-        lib_ruby_parser_containers_magic_comment_list_blob_remove,
-        lib_ruby_parser_containers_magic_comment_list_blob_as_ptr,
-        lib_ruby_parser_containers_magic_comment_list_blob_len,
-        lib_ruby_parser_containers_magic_comment_list_blob_capacity
-    );
-    cpp_vector_impl_for!(
-        crate::Token,
-        lib_ruby_parser_containers_token_list_blob_new,
-        lib_ruby_parser_containers_token_list_blob_with_capacity,
-        lib_ruby_parser_containers_token_list_blob_from_raw,
-        lib_ruby_parser_containers_token_list_blob_shrink_to_fit,
-        lib_ruby_parser_containers_token_list_blob_push,
-        lib_ruby_parser_containers_token_list_blob_remove,
-        lib_ruby_parser_containers_token_list_blob_as_ptr,
-        lib_ruby_parser_containers_token_list_blob_len,
-        lib_ruby_parser_containers_token_list_blob_capacity
-    );
-    cpp_vector_impl_for!(
-        crate::source::SourceLine,
-        lib_ruby_parser_containers_source_line_list_blob_new,
-        lib_ruby_parser_containers_source_line_list_blob_with_capacity,
-        lib_ruby_parser_containers_source_line_list_blob_from_raw,
-        lib_ruby_parser_containers_source_line_list_blob_shrink_to_fit,
-        lib_ruby_parser_containers_source_line_list_blob_push,
-        lib_ruby_parser_containers_source_line_list_blob_remove,
-        lib_ruby_parser_containers_source_line_list_blob_as_ptr,
-        lib_ruby_parser_containers_source_line_list_blob_len,
-        lib_ruby_parser_containers_source_line_list_blob_capacity
-    );
-    cpp_vector_impl_for!(
-        u8,
-        lib_ruby_parser_containers_byte_list_blob_new,
-        lib_ruby_parser_containers_byte_list_blob_with_capacity,
-        lib_ruby_parser_containers_byte_list_blob_from_raw,
-        lib_ruby_parser_containers_byte_list_blob_shrink_to_fit,
-        lib_ruby_parser_containers_byte_list_blob_push,
-        lib_ruby_parser_containers_byte_list_blob_remove,
-        lib_ruby_parser_containers_byte_list_blob_as_ptr,
-        lib_ruby_parser_containers_byte_list_blob_len,
-        lib_ruby_parser_containers_byte_list_blob_capacity
-    );
-    cpp_vector_impl_for!(
-        u64,
-        lib_ruby_parser_containers_u64_list_blob_new,
-        lib_ruby_parser_containers_u64_list_blob_with_capacity,
-        lib_ruby_parser_containers_u64_list_blob_from_raw,
-        lib_ruby_parser_containers_u64_list_blob_shrink_to_fit,
-        lib_ruby_parser_containers_u64_list_blob_push,
-        lib_ruby_parser_containers_u64_list_blob_remove,
-        lib_ruby_parser_containers_u64_list_blob_as_ptr,
-        lib_ruby_parser_containers_u64_list_blob_len,
-        lib_ruby_parser_containers_u64_list_blob_capacity
-    );
+    mod of_nodes {
+        #[cfg(test)]
+        fn make_one() -> crate::Node {
+            crate::Node::True(crate::nodes::True {
+                expression_l: crate::Loc::default(),
+            })
+        }
+
+        gen_list_impl_for!(
+            crate::Node,
+            lib_ruby_parser_containers_node_list_blob_new,
+            lib_ruby_parser_containers_node_list_blob_with_capacity,
+            lib_ruby_parser_containers_node_list_blob_from_raw,
+            lib_ruby_parser_containers_node_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_node_list_blob_push,
+            lib_ruby_parser_containers_node_list_blob_remove,
+            lib_ruby_parser_containers_node_list_blob_as_ptr,
+            lib_ruby_parser_containers_node_list_blob_len,
+            lib_ruby_parser_containers_node_list_blob_capacity
+        );
+    }
+    mod of_diagnostics {
+        #[cfg(test)]
+        fn make_one() -> crate::Diagnostic {
+            crate::Diagnostic {
+                level: crate::ErrorLevel::Warning,
+                message: crate::DiagnosticMessage::AliasNthRef,
+                loc: crate::Loc::default(),
+            }
+        }
+
+        gen_list_impl_for!(
+            crate::Diagnostic,
+            lib_ruby_parser_containers_diagnostic_list_blob_new,
+            lib_ruby_parser_containers_diagnostic_list_blob_with_capacity,
+            lib_ruby_parser_containers_diagnostic_list_blob_from_raw,
+            lib_ruby_parser_containers_diagnostic_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_diagnostic_list_blob_push,
+            lib_ruby_parser_containers_diagnostic_list_blob_remove,
+            lib_ruby_parser_containers_diagnostic_list_blob_as_ptr,
+            lib_ruby_parser_containers_diagnostic_list_blob_len,
+            lib_ruby_parser_containers_diagnostic_list_blob_capacity
+        );
+    }
+    mod of_comments {
+        #[cfg(test)]
+        fn make_one() -> crate::source::Comment {
+            crate::source::Comment {
+                location: crate::Loc::default(),
+                kind: crate::source::CommentType::Inline,
+            }
+        }
+
+        gen_list_impl_for!(
+            crate::source::Comment,
+            lib_ruby_parser_containers_comment_list_blob_new,
+            lib_ruby_parser_containers_comment_list_blob_with_capacity,
+            lib_ruby_parser_containers_comment_list_blob_from_raw,
+            lib_ruby_parser_containers_comment_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_comment_list_blob_push,
+            lib_ruby_parser_containers_comment_list_blob_remove,
+            lib_ruby_parser_containers_comment_list_blob_as_ptr,
+            lib_ruby_parser_containers_comment_list_blob_len,
+            lib_ruby_parser_containers_comment_list_blob_capacity
+        );
+    }
+    mod of_magic_comments {
+        #[cfg(test)]
+        fn make_one() -> crate::source::MagicComment {
+            crate::source::MagicComment {
+                kind: crate::source::MagicCommentKind::Encoding,
+                key_l: crate::Loc::default(),
+                value_l: crate::Loc::default(),
+            }
+        }
+
+        gen_list_impl_for!(
+            crate::source::MagicComment,
+            lib_ruby_parser_containers_magic_comment_list_blob_new,
+            lib_ruby_parser_containers_magic_comment_list_blob_with_capacity,
+            lib_ruby_parser_containers_magic_comment_list_blob_from_raw,
+            lib_ruby_parser_containers_magic_comment_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_magic_comment_list_blob_push,
+            lib_ruby_parser_containers_magic_comment_list_blob_remove,
+            lib_ruby_parser_containers_magic_comment_list_blob_as_ptr,
+            lib_ruby_parser_containers_magic_comment_list_blob_len,
+            lib_ruby_parser_containers_magic_comment_list_blob_capacity
+        );
+    }
+    mod of_tokens {
+        #[cfg(test)]
+        fn make_one() -> crate::Token {
+            crate::Token {
+                token_type: crate::Lexer::tINTEGER,
+                token_value: crate::Bytes::empty(),
+                loc: crate::Loc::default(),
+                lex_state_before: crate::LexState::default(),
+                lex_state_after: crate::LexState::default(),
+            }
+        }
+
+        gen_list_impl_for!(
+            crate::Token,
+            lib_ruby_parser_containers_token_list_blob_new,
+            lib_ruby_parser_containers_token_list_blob_with_capacity,
+            lib_ruby_parser_containers_token_list_blob_from_raw,
+            lib_ruby_parser_containers_token_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_token_list_blob_push,
+            lib_ruby_parser_containers_token_list_blob_remove,
+            lib_ruby_parser_containers_token_list_blob_as_ptr,
+            lib_ruby_parser_containers_token_list_blob_len,
+            lib_ruby_parser_containers_token_list_blob_capacity
+        );
+    }
+    mod of_source_lines {
+        #[cfg(test)]
+        fn make_one() -> crate::source::SourceLine {
+            crate::source::SourceLine {
+                start: 1,
+                end: 2,
+                ends_with_eof: false,
+            }
+        }
+
+        gen_list_impl_for!(
+            crate::source::SourceLine,
+            lib_ruby_parser_containers_source_line_list_blob_new,
+            lib_ruby_parser_containers_source_line_list_blob_with_capacity,
+            lib_ruby_parser_containers_source_line_list_blob_from_raw,
+            lib_ruby_parser_containers_source_line_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_source_line_list_blob_push,
+            lib_ruby_parser_containers_source_line_list_blob_remove,
+            lib_ruby_parser_containers_source_line_list_blob_as_ptr,
+            lib_ruby_parser_containers_source_line_list_blob_len,
+            lib_ruby_parser_containers_source_line_list_blob_capacity
+        );
+    }
+    mod of_u8 {
+        #[cfg(test)]
+        fn make_one() -> u8 {
+            42
+        }
+
+        gen_list_impl_for!(
+            u8,
+            lib_ruby_parser_containers_byte_list_blob_new,
+            lib_ruby_parser_containers_byte_list_blob_with_capacity,
+            lib_ruby_parser_containers_byte_list_blob_from_raw,
+            lib_ruby_parser_containers_byte_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_byte_list_blob_push,
+            lib_ruby_parser_containers_byte_list_blob_remove,
+            lib_ruby_parser_containers_byte_list_blob_as_ptr,
+            lib_ruby_parser_containers_byte_list_blob_len,
+            lib_ruby_parser_containers_byte_list_blob_capacity
+        );
+    }
+    mod of_u64 {
+        #[cfg(test)]
+        fn make_one() -> u64 {
+            42
+        }
+
+        gen_list_impl_for!(
+            u64,
+            lib_ruby_parser_containers_u64_list_blob_new,
+            lib_ruby_parser_containers_u64_list_blob_with_capacity,
+            lib_ruby_parser_containers_u64_list_blob_from_raw,
+            lib_ruby_parser_containers_u64_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_u64_list_blob_push,
+            lib_ruby_parser_containers_u64_list_blob_remove,
+            lib_ruby_parser_containers_u64_list_blob_as_ptr,
+            lib_ruby_parser_containers_u64_list_blob_len,
+            lib_ruby_parser_containers_u64_list_blob_capacity
+        );
+    }
 
     #[cfg(test)]
     mod tests {
-        use super::{List as GenericList, ListBlob, TakeFirst};
-        type List = GenericList<u64>;
+        use super::ListBlob;
 
         #[test]
         fn test_size() {
             assert_eq!(std::mem::size_of::<ListBlob>(), 24);
-        }
-
-        #[test]
-        fn test_new() {
-            let list = List::new();
-            assert_eq!(list.len(), 0);
-            assert_eq!(list.capacity(), 0);
-        }
-
-        #[test]
-        fn test_with_capacity() {
-            let list = List::with_capacity(20);
-            assert_eq!(list.len(), 0);
-            assert_eq!(list.capacity(), 20);
-        }
-
-        #[test]
-        fn test_push() {
-            let mut list = List::new();
-            let mut vec = vec![];
-            for i in 1..20 {
-                list.push(i);
-                vec.push(i);
-            }
-            assert_eq!(list.as_ref(), &vec);
-        }
-
-        #[test]
-        fn test_take_first() {
-            let mut list = List::new();
-            list.push(10);
-            list.push(20);
-            assert_eq!(list.take_first(), 10)
-        }
-
-        #[test]
-        fn test_from_vec() {
-            let list = List::from(vec![1, 2, 3]);
-            assert_eq!(list.as_ref(), &[1, 2, 3])
         }
     }
 }

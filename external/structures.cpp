@@ -1,206 +1,320 @@
 #include <iostream>
+#include <sstream>
 #include <memory>
 #include <string>
 #include <vector>
 #include <cstdint>
 
 extern "C" typedef void(Drop)(void *);
+typedef int DUMMY;
+typedef uint8_t BYTE;
 
-template <int N>
-struct BlobData
-{
-    // N bytes
-    uint8_t data[N];
-};
-
-template <typename Value>
-union Blob
-{
-    typedef Value value_t;
-    typedef BlobData<sizeof(Value)> blob_t;
-
-    _Static_assert(sizeof(value_t) == sizeof(blob_t));
-
-    value_t as_value;
-    blob_t as_blob;
-
-    ~Blob() {}
-};
+#define DECLARE_BLOB(BLOB_DATA, BLOB_UNION, VALUE)                      \
+    extern "C"                                                          \
+    {                                                                   \
+        struct BLOB_DATA                                                \
+        {                                                               \
+            BYTE data[sizeof(VALUE)];                                   \
+        };                                                              \
+    }                                                                   \
+                                                                        \
+    BLOB_DATA make_##BLOB_DATA(BYTE start)                              \
+    {                                                                   \
+        BLOB_DATA blob_data;                                            \
+        BYTE value = start;                                             \
+        for (size_t i = 0; i < sizeof(VALUE); i++)                      \
+        {                                                               \
+            blob_data.data[i] = value;                                  \
+            value++;                                                    \
+        }                                                               \
+        return blob_data;                                               \
+    }                                                                   \
+                                                                        \
+    std::string BLOB_DATA##_to_string(BLOB_DATA blob_data)              \
+    {                                                                   \
+        std::stringstream ss;                                           \
+        std::string output;                                             \
+        ss << "BlobData<" << sizeof(VALUE) << ">(";                     \
+        for (size_t i = 0; i < sizeof(VALUE); i++)                      \
+        {                                                               \
+            if (i != 0)                                                 \
+            {                                                           \
+                ss << ",";                                              \
+            }                                                           \
+            ss << std::hex << (int)(blob_data.data[i]) << std::dec;     \
+        }                                                               \
+        ss << ";; 0 = " << std::hex << 0 << ", 1 = " << 1 << std::dec;  \
+        ss << ")";                                                      \
+        return ss.str();                                                \
+    }                                                                   \
+                                                                        \
+    extern "C"                                                          \
+    {                                                                   \
+        union BLOB_UNION                                                \
+        {                                                               \
+            typedef VALUE value_t;                                      \
+            typedef BLOB_DATA blob_t;                                   \
+                                                                        \
+            _Static_assert(sizeof(value_t) == sizeof(blob_t));          \
+                                                                        \
+            value_t as_value;                                           \
+            blob_t as_blob;                                             \
+                                                                        \
+            ~BLOB_UNION()                                               \
+            {                                                           \
+            }                                                           \
+                                                                        \
+            std::string to_string()                                     \
+            {                                                           \
+                std::stringstream ss;                                   \
+                ss << "Blob(" << BLOB_DATA##_to_string(as_blob) << ")"; \
+                return ss.str();                                        \
+            }                                                           \
+        };                                                              \
+    }
 
 // Ptr<T>
-typedef std::unique_ptr<int> Ptr;
-typedef Blob<Ptr> PTR_BLOB;
+typedef std::unique_ptr<DUMMY> Ptr;
+DECLARE_BLOB(PTR_BLOB_DATA, PTR_BLOB_UNION, Ptr);
 
-extern "C" PTR_BLOB::blob_t lib_ruby_parser_containers_make_ptr_blob(void *ptr)
+extern "C" PTR_BLOB_DATA lib_ruby_parser_containers_make_ptr_blob(void *ptr)
 {
-    PTR_BLOB u = {.as_value = std::unique_ptr<int>((int *)ptr)};
-    PTR_BLOB::blob_t result = u.as_blob;
+    PTR_BLOB_UNION u = {.as_value = std::unique_ptr<DUMMY>((DUMMY *)ptr)};
+    PTR_BLOB_DATA result = u.as_blob;
     u.as_value.release(); // prevent running destructor
     return result;
 }
 
-extern "C" void lib_ruby_parser_containers_free_ptr_blob(PTR_BLOB::blob_t blob, Drop drop)
+extern "C" void lib_ruby_parser_containers_free_ptr_blob(PTR_BLOB_DATA blob, Drop drop_ptr_in_place)
 {
-    PTR_BLOB u = {.as_blob = blob};
+    PTR_BLOB_UNION u = {.as_blob = blob};
     void *raw = u.as_value.release();
-    drop(raw);
+    if (raw)
+    {
+        drop_ptr_in_place(raw);
+        free(raw);
+    }
 }
 
-extern "C" void *lib_ruby_parser_containers_raw_ptr_from_ptr_blob(PTR_BLOB::blob_t blob)
+extern "C" void *lib_ruby_parser_containers_raw_ptr_from_ptr_blob(PTR_BLOB_DATA blob)
 {
-    PTR_BLOB u = {.as_blob = blob};
+    PTR_BLOB_UNION u = {.as_blob = blob};
     return u.as_value.release();
 }
 
-extern "C" PTR_BLOB::blob_t lib_ruby_parser_containers_null_ptr_blob()
+extern "C" PTR_BLOB_DATA lib_ruby_parser_containers_null_ptr_blob()
 {
-    PTR_BLOB u = {.as_value = std::unique_ptr<int>(nullptr)};
+    PTR_BLOB_UNION u = {.as_value = std::unique_ptr<DUMMY>(nullptr)};
     return u.as_blob;
 }
 
 // MaybePtr<T>
-typedef std::unique_ptr<int> MaybePtr;
-typedef Blob<MaybePtr> MAYBE_PTR_BLOB;
+typedef std::unique_ptr<DUMMY> MaybePtr;
+DECLARE_BLOB(MAYBE_PTR_BLOB_DATA, MAYBE_PTR_BLOB_UNION, MaybePtr);
 
-extern "C" MAYBE_PTR_BLOB::blob_t lib_ruby_parser_containers_make_maybe_ptr_blob(void *ptr)
+extern "C" MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_make_maybe_ptr_blob(void *ptr)
 {
-    MAYBE_PTR_BLOB u = {.as_value = std::unique_ptr<int>((int *)ptr)};
-    MAYBE_PTR_BLOB::blob_t result = u.as_blob;
+    MAYBE_PTR_BLOB_UNION u = {.as_value = std::unique_ptr<DUMMY>((DUMMY *)ptr)};
+    MAYBE_PTR_BLOB_DATA result = u.as_blob;
     u.as_value.release(); // prevent running destructor
     return result;
 }
 
-extern "C" void lib_ruby_parser_containers_free_maybe_ptr_blob(MAYBE_PTR_BLOB::blob_t blob, Drop drop)
+extern "C" void lib_ruby_parser_containers_free_maybe_ptr_blob(MAYBE_PTR_BLOB_DATA blob, Drop drop_ptr_in_place)
 {
-    MAYBE_PTR_BLOB u = {.as_blob = blob};
+    MAYBE_PTR_BLOB_UNION u = {.as_blob = blob};
     void *raw = u.as_value.release();
-    drop(raw);
+    if (raw)
+    {
+        drop_ptr_in_place(raw);
+        free(raw);
+    }
 }
 
-extern "C" void *lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(MAYBE_PTR_BLOB::blob_t blob)
+extern "C" void *lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(MAYBE_PTR_BLOB_DATA blob)
 {
-    MAYBE_PTR_BLOB u = {.as_blob = blob};
+    MAYBE_PTR_BLOB_UNION u = {.as_blob = blob};
     return u.as_value.get();
 }
 
-extern "C" MAYBE_PTR_BLOB::blob_t lib_ruby_parser_containers_null_maybe_ptr_blob()
+extern "C" MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob()
 {
-    MAYBE_PTR_BLOB u = {.as_value = std::unique_ptr<int>(nullptr)};
+    MAYBE_PTR_BLOB_UNION u = {.as_value = std::unique_ptr<DUMMY>(nullptr)};
     return u.as_blob;
 }
 
 // List<T>
 
-#define generate_list_impl(Item, prefix)                                                                                               \
-    typedef Blob<std::vector<Item>> LIST_BLOB_##Item;                                                                                  \
-                                                                                                                                       \
-    std::vector<Item> lib_ruby_parser_containers_##prefix##_unpack_blob(LIST_BLOB_##Item::blob_t blob)                                 \
-    {                                                                                                                                  \
-        LIST_BLOB_##Item u = {.as_blob = blob};                                                                                        \
-        return std::move(u.as_value);                                                                                                  \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    LIST_BLOB_##Item::blob_t lib_ruby_parser_containers_##prefix##_pack_blob(std::vector<Item> vec)                                    \
-    {                                                                                                                                  \
-        LIST_BLOB_##Item u = {.as_value = std::move(vec)};                                                                             \
-        return u.as_blob;                                                                                                              \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    extern "C" LIST_BLOB_##Item::blob_t lib_ruby_parser_containers_##prefix##_list_blob_new()                                          \
-    {                                                                                                                                  \
-        return lib_ruby_parser_containers_##prefix##_pack_blob(std::vector<Item>());                                                   \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    extern "C" LIST_BLOB_##Item::blob_t lib_ruby_parser_containers_##prefix##_list_blob_with_capacity(uint64_t capacity)               \
-    {                                                                                                                                  \
-        std::vector<Item> vec;                                                                                                         \
-        vec.reserve(capacity);                                                                                                         \
-        return lib_ruby_parser_containers_##prefix##_pack_blob(std::move(vec));                                                        \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    extern "C" LIST_BLOB_##Item::blob_t lib_ruby_parser_containers_##prefix##_list_blob_from_raw(Item *ptr, uint64_t size)             \
-    {                                                                                                                                  \
-        auto vec = std::vector<Item>(ptr, ptr + size);                                                                                 \
-        free(ptr);                                                                                                                     \
-        return lib_ruby_parser_containers_##prefix##_pack_blob(std::move(vec));                                                        \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    extern "C" LIST_BLOB_##Item::blob_t lib_ruby_parser_containers_##prefix##_list_blob_push(LIST_BLOB_##Item::blob_t blob, Item item) \
-    {                                                                                                                                  \
-        std::vector<Item> vec = lib_ruby_parser_containers_##prefix##_unpack_blob(blob);                                               \
-        vec.push_back(item);                                                                                                           \
-        return lib_ruby_parser_containers_##prefix##_pack_blob(std::move(vec));                                                        \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    extern "C" Item lib_ruby_parser_containers_##prefix##_list_blob_remove(LIST_BLOB_##Item::blob_t blob, uint64_t index)              \
-    {                                                                                                                                  \
-        std::vector<Item> vec = lib_ruby_parser_containers_##prefix##_unpack_blob(blob);                                               \
-        Item item = std::move(vec[index]);                                                                                             \
-        vec.erase(vec.begin() + index);                                                                                                \
-        lib_ruby_parser_containers_##prefix##_pack_blob(std::move(vec));                                                               \
-        return item;                                                                                                                   \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    extern "C" void lib_ruby_parser_containers_##prefix##_list_blob_shrink_to_fit(LIST_BLOB_##Item::blob_t blob)                       \
-    {                                                                                                                                  \
-        std::vector<Item> vec = lib_ruby_parser_containers_##prefix##_unpack_blob(blob);                                               \
-        vec.shrink_to_fit();                                                                                                           \
-        lib_ruby_parser_containers_##prefix##_pack_blob(std::move(vec));                                                               \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    extern "C" Item *lib_ruby_parser_containers_##prefix##_list_blob_as_ptr(LIST_BLOB_##Item::blob_t blob)                             \
-    {                                                                                                                                  \
-        std::vector<Item> vec = lib_ruby_parser_containers_##prefix##_unpack_blob(blob);                                               \
-        auto result = vec.data();                                                                                                      \
-        lib_ruby_parser_containers_##prefix##_pack_blob(std::move(vec));                                                               \
-        return result;                                                                                                                 \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    extern "C" uint64_t lib_ruby_parser_containers_##prefix##_list_blob_len(LIST_BLOB_##Item::blob_t blob)                             \
-    {                                                                                                                                  \
-        std::vector<Item> vec = lib_ruby_parser_containers_##prefix##_unpack_blob(blob);                                               \
-        auto result = vec.size();                                                                                                      \
-        lib_ruby_parser_containers_##prefix##_pack_blob(std::move(vec));                                                               \
-        return result;                                                                                                                 \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    extern "C" uint64_t lib_ruby_parser_containers_##prefix##_list_blob_capacity(LIST_BLOB_##Item::blob_t blob)                        \
-    {                                                                                                                                  \
-        std::vector<Item> vec = lib_ruby_parser_containers_##prefix##_unpack_blob(blob);                                               \
-        auto result = vec.capacity();                                                                                                  \
-        lib_ruby_parser_containers_##prefix##_pack_blob(std::move(vec));                                                               \
-        return result;                                                                                                                 \
-    }                                                                                                                                  \
-                                                                                                                                       \
-    extern "C" void lib_ruby_parser_containers_##prefix##_list_blob_free(LIST_BLOB_##Item::blob_t blob, Drop drop_item_in_place)       \
-    {                                                                                                                                  \
-        std::vector<Item> vec = lib_ruby_parser_containers_##prefix##_unpack_blob(blob);                                               \
-        for (size_t i = 0; i < vec.size(); i++)                                                                                        \
-        {                                                                                                                              \
-            drop_item_in_place(&vec.data()[i]);                                                                                        \
-        }                                                                                                                              \
+#define DECLARE_BLOB_FOR_LIST_OF(ITEM_BLOB_DATA, ITEM_BLOB_UNION, PREFIX)                                                                                        \
+    DECLARE_BLOB(LIST_OF_##ITEM_BLOB_DATA, LIST_OF_##ITEM_BLOB_UNION, std::vector<ITEM_BLOB_DATA>);                                                              \
+                                                                                                                                                                 \
+    std::vector<ITEM_BLOB_DATA> lib_ruby_parser_containers_##PREFIX##_unpack_blob(LIST_OF_##ITEM_BLOB_DATA blob)                                                 \
+    {                                                                                                                                                            \
+        LIST_OF_##ITEM_BLOB_UNION u = {.as_blob = blob};                                                                                                         \
+        return std::move(u.as_value);                                                                                                                            \
+    }                                                                                                                                                            \
+                                                                                                                                                                 \
+    LIST_OF_##ITEM_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_pack_blob(std::vector<ITEM_BLOB_DATA> vec)                                                    \
+    {                                                                                                                                                            \
+        LIST_OF_##ITEM_BLOB_UNION u = {.as_value = std::move(vec)};                                                                                              \
+        return u.as_blob;                                                                                                                                        \
+    }                                                                                                                                                            \
+                                                                                                                                                                 \
+    extern "C"                                                                                                                                                   \
+    {                                                                                                                                                            \
+        LIST_OF_##ITEM_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_list_blob_new()                                                                           \
+        {                                                                                                                                                        \
+            return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::vector<ITEM_BLOB_DATA>());                                                               \
+        }                                                                                                                                                        \
+                                                                                                                                                                 \
+        LIST_OF_##ITEM_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_list_blob_with_capacity(uint64_t capacity)                                                \
+        {                                                                                                                                                        \
+            std::vector<ITEM_BLOB_DATA> vec;                                                                                                                     \
+            vec.reserve(capacity);                                                                                                                               \
+            return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                                              \
+        }                                                                                                                                                        \
+                                                                                                                                                                 \
+        LIST_OF_##ITEM_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_list_blob_from_raw(ITEM_BLOB_DATA *ptr, uint64_t size)                                    \
+        {                                                                                                                                                        \
+            if (size > 0)                                                                                                                                        \
+            {                                                                                                                                                    \
+                auto vec = std::vector<ITEM_BLOB_DATA>(ptr, ptr + size);                                                                                         \
+                free(ptr);                                                                                                                                       \
+                return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                                          \
+            }                                                                                                                                                    \
+            else                                                                                                                                                 \
+            {                                                                                                                                                    \
+                return lib_ruby_parser_containers_##PREFIX##_list_blob_new();                                                                                    \
+            }                                                                                                                                                    \
+        }                                                                                                                                                        \
+                                                                                                                                                                 \
+        LIST_OF_##ITEM_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_list_blob_push(LIST_OF_##ITEM_BLOB_DATA blob, ITEM_BLOB_DATA item)                        \
+        {                                                                                                                                                        \
+            std::vector<ITEM_BLOB_DATA> vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                           \
+            vec.push_back(item);                                                                                                                                 \
+                                                                                                                                                                 \
+            {                                                                                                                                                    \
+                auto x = vec;                                                                                                                                    \
+            }                                                                                                                                                    \
+            return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                                              \
+        }                                                                                                                                                        \
+                                                                                                                                                                 \
+        typedef struct                                                                                                                                           \
+        {                                                                                                                                                        \
+            LIST_OF_##ITEM_BLOB_DATA new_blob;                                                                                                                   \
+            ITEM_BLOB_DATA removed_item;                                                                                                                         \
+        } LIB_RUBY_PARSER_LIST_BLOB_##PREFIX##_REMOVE_RESULT;                                                                                                    \
+                                                                                                                                                                 \
+        LIB_RUBY_PARSER_LIST_BLOB_##PREFIX##_REMOVE_RESULT lib_ruby_parser_containers_##PREFIX##_list_blob_remove(LIST_OF_##ITEM_BLOB_DATA blob, uint64_t index) \
+        {                                                                                                                                                        \
+            std::vector<ITEM_BLOB_DATA> vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                           \
+            ITEM_BLOB_DATA item = std::move(vec[index]);                                                                                                         \
+            vec.erase(vec.begin() + index);                                                                                                                      \
+            LIB_RUBY_PARSER_LIST_BLOB_##PREFIX##_REMOVE_RESULT result = {                                                                                        \
+                .new_blob = lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec)),                                                                     \
+                .removed_item = item};                                                                                                                           \
+                                                                                                                                                                 \
+            return result;                                                                                                                                       \
+        }                                                                                                                                                        \
+                                                                                                                                                                 \
+        LIST_OF_##ITEM_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_list_blob_shrink_to_fit(LIST_OF_##ITEM_BLOB_DATA blob)                                    \
+        {                                                                                                                                                        \
+            std::vector<ITEM_BLOB_DATA> vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                           \
+            vec.shrink_to_fit();                                                                                                                                 \
+            return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                                              \
+        }                                                                                                                                                        \
+                                                                                                                                                                 \
+        ITEM_BLOB_DATA *lib_ruby_parser_containers_##PREFIX##_list_blob_as_ptr(LIST_OF_##ITEM_BLOB_DATA blob)                                                    \
+        {                                                                                                                                                        \
+            std::vector<ITEM_BLOB_DATA> vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                           \
+            auto result = vec.data();                                                                                                                            \
+            lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                                                     \
+            return result;                                                                                                                                       \
+        }                                                                                                                                                        \
+                                                                                                                                                                 \
+        uint64_t lib_ruby_parser_containers_##PREFIX##_list_blob_len(LIST_OF_##ITEM_BLOB_DATA blob)                                                              \
+        {                                                                                                                                                        \
+            std::vector<ITEM_BLOB_DATA> vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                           \
+            auto result = vec.size();                                                                                                                            \
+            lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                                                     \
+            return result;                                                                                                                                       \
+        }                                                                                                                                                        \
+                                                                                                                                                                 \
+        uint64_t lib_ruby_parser_containers_##PREFIX##_list_blob_capacity(LIST_OF_##ITEM_BLOB_DATA blob)                                                         \
+        {                                                                                                                                                        \
+            std::vector<ITEM_BLOB_DATA> vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                           \
+            auto result = vec.capacity();                                                                                                                        \
+            lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                                                     \
+            return result;                                                                                                                                       \
+        }                                                                                                                                                        \
+                                                                                                                                                                 \
+        void lib_ruby_parser_containers_##PREFIX##_list_blob_free(LIST_OF_##ITEM_BLOB_DATA blob, Drop drop_ptr_in_place)                                         \
+        {                                                                                                                                                        \
+            std::vector<ITEM_BLOB_DATA> vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                           \
+            for (size_t i = 0; i < vec.size(); i++)                                                                                                              \
+            {                                                                                                                                                    \
+                drop_ptr_in_place(&vec[i]);                                                                                                                      \
+            }                                                                                                                                                    \
+        }                                                                                                                                                        \
     }
 
-typedef BlobData<192> Node;
-generate_list_impl(Node, node);
+struct NodeStruct
+{
+    BYTE data[192];
+};
+DECLARE_BLOB(NODE_BLOB_DATA, NODE_BLOB_UNION, NodeStruct);
+DECLARE_BLOB_FOR_LIST_OF(NODE_BLOB_DATA, NODE_BLOB_UNION, node);
 
-typedef BlobData<64> Diagnostic;
-generate_list_impl(Diagnostic, diagnostic);
+struct DiagnosticStruct
+{
+    BYTE data[64];
+};
+DECLARE_BLOB(DIAGNOSTIC_BLOB_DATA, DIAGNOSTIC_BLOB_UNION, DiagnosticStruct);
+DECLARE_BLOB_FOR_LIST_OF(DIAGNOSTIC_BLOB_DATA, DIAGNOSTIC_BLOB_UNION, diagnostic);
 
-typedef BlobData<24> Comment;
-generate_list_impl(Comment, comment);
+struct ComentStruct
+{
+    BYTE data[24];
+};
+DECLARE_BLOB(COMMENT_BLOB_DATA, COMMENT_BLOB_UNION, ComentStruct);
+DECLARE_BLOB_FOR_LIST_OF(COMMENT_BLOB_DATA, COMMENT_BLOB_UNION, comment);
 
-typedef BlobData<40> MagicComment;
-generate_list_impl(MagicComment, magic_comment);
+struct MagicCommentStruct
+{
+    BYTE data[40];
+};
+DECLARE_BLOB(MAGIC_COMMENT_BLOB_DATA, MAGIC_COMMENT_BLOB_UNION, MagicCommentStruct);
+DECLARE_BLOB_FOR_LIST_OF(MAGIC_COMMENT_BLOB_DATA, MAGIC_COMMENT_BLOB_UNION, magic_comment);
 
-typedef BlobData<56> Token;
-generate_list_impl(Token, token);
+struct TokenStruct
+{
+    BYTE data[56];
+};
+DECLARE_BLOB(TOKEN_BLOB_DATA, TOKEN_BLOB_UNION, TokenStruct);
+DECLARE_BLOB_FOR_LIST_OF(TOKEN_BLOB_DATA, TOKEN_BLOB_UNION, token);
 
-typedef BlobData<24> SourceLine;
-generate_list_impl(SourceLine, source_line);
+struct SourceLineStruct
+{
+    BYTE data[24];
+};
+DECLARE_BLOB(SOURCE_LINE_BLOB_DATA, SOURCE_LINE_BLOB_UNION, SourceLineStruct);
+DECLARE_BLOB_FOR_LIST_OF(SOURCE_LINE_BLOB_DATA, SOURCE_LINE_BLOB_UNION, source_line);
 
-typedef BlobData<1> Byte;
-generate_list_impl(Byte, byte);
+struct ByteStruct
+{
+    BYTE data[1];
+};
+DECLARE_BLOB(BYTE_BLOB_DATA, BYTE_BLOB_UNION, ByteStruct);
+DECLARE_BLOB_FOR_LIST_OF(BYTE_BLOB_DATA, BYTE_BLOB_UNION, byte);
 
-typedef BlobData<8> U64;
-generate_list_impl(U64, u64);
+struct U64Struct
+{
+    uint64_t data;
+    friend std::ostream &operator<<(std::ostream &os, const U64Struct &u64)
+    {
+        os << u64.data;
+        return os;
+    }
+};
+DECLARE_BLOB(U64_BLOB_DATA, U64_BLOB_UNION, U64Struct);
+DECLARE_BLOB_FOR_LIST_OF(U64_BLOB_DATA, U64_BLOB_UNION, u64);

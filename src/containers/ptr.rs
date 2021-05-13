@@ -41,19 +41,8 @@ pub(crate) mod c {
 
     impl<T: GetDropFn> Drop for Ptr<T> {
         fn drop(&mut self) {
-            let ptr =
-                unsafe { lib_ruby_parser_containers_raw_ptr_from_ptr_blob(self.blob) as *mut T };
-            if ptr.is_null() {
-                return;
-            }
-
-            // 1. propagate Drop
-            unsafe { std::ptr::drop_in_place(ptr) };
-            // 2. call free on allocated data
-            let deleter = T::get_drop_ptr_fn();
-            unsafe { lib_ruby_parser_containers_free_ptr_blob(self.blob, deleter) };
-            // 3. nullify blob
-            self.blob = unsafe { lib_ruby_parser_containers_null_ptr_blob() };
+            let drop_item_in_place = T::get_drop_ptr_in_place_fn();
+            unsafe { lib_ruby_parser_containers_free_ptr_blob(self.blob, drop_item_in_place) }
         }
     }
 
@@ -122,7 +111,7 @@ pub(crate) mod c {
         }
 
         /// Constructs a pointer from a given raw pointer
-        pub fn from_raw(ptr: *mut T) -> Self {
+        pub(crate) fn from_raw(ptr: *mut T) -> Self {
             debug_assert!(!ptr.is_null());
             let blob = unsafe { lib_ruby_parser_containers_make_ptr_blob(ptr as *mut c_void) };
             Self {
@@ -132,7 +121,7 @@ pub(crate) mod c {
         }
 
         /// Converts self into raw pointer
-        pub fn into_raw(mut self) -> *mut T {
+        pub(crate) fn into_raw(mut self) -> *mut T {
             let ptr =
                 unsafe { lib_ruby_parser_containers_raw_ptr_from_ptr_blob(self.blob) } as *mut T;
             self.blob = unsafe { lib_ruby_parser_containers_null_ptr_blob() };
@@ -140,7 +129,7 @@ pub(crate) mod c {
         }
 
         /// Returns borrowed raw pointer stored in Ptr
-        pub fn as_ptr(&self) -> *const T {
+        pub(crate) fn as_ptr(&self) -> *const T {
             unsafe { lib_ruby_parser_containers_raw_ptr_from_ptr_blob(self.blob) as *const T }
         }
     }
@@ -164,23 +153,20 @@ pub(crate) mod c {
 
         #[derive(Debug, PartialEq)]
         struct Foo {
-            bar: i32,
+            bar: Vec<i32>,
         }
 
-        extern "C" fn lib_ruby_parser_containers_ptr_delete_foo(ptr: *mut std::ffi::c_void) {
-            println!("Running foreign Foo deleter on {:?}", unsafe {
-                &*(ptr as *mut Foo)
-            });
-            drop(unsafe { Box::from_raw(ptr as *mut Foo) })
+        extern "C" fn drop_in_place_foo(ptr: *mut std::ffi::c_void) {
+            unsafe { std::ptr::drop_in_place(ptr as *mut Foo) }
         }
 
         impl GetDropFn for Foo {
             fn get_drop_ptr_fn() -> DropPtrFn {
-                lib_ruby_parser_containers_ptr_delete_foo
+                unreachable!()
             }
 
-            fn get_drop_in_place_fn() -> crate::containers::get_drop_fn::DropInPlaceFn {
-                unreachable!()
+            fn get_drop_ptr_in_place_fn() -> crate::containers::get_drop_fn::DropInPlaceFn {
+                drop_in_place_foo
             }
 
             fn get_drop_list_blob_fn() -> crate::containers::get_drop_fn::DropListBlobFn {
@@ -195,15 +181,15 @@ pub(crate) mod c {
 
         #[test]
         fn test_ptr() {
-            let ptr = Ptr::from_raw(Box::leak(Box::new(Foo { bar: 42 })));
+            let ptr = Ptr::from_raw(Box::leak(Box::new(Foo { bar: vec![42] })));
 
-            assert_eq!(ptr.as_ref(), &Foo { bar: 42 });
+            assert_eq!(ptr.as_ref(), &Foo { bar: vec![42] });
         }
 
         #[test]
         fn test_unptr() {
-            let ptr = Ptr::from_raw(Box::leak(Box::new(Foo { bar: 42 })));
-            assert_eq!(ptr.unptr(), Foo { bar: 42 })
+            let ptr = Ptr::from_raw(Box::leak(Box::new(Foo { bar: vec![42] })));
+            assert_eq!(ptr.unptr(), Foo { bar: vec![42] })
         }
     }
 }
