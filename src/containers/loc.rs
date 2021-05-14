@@ -3,12 +3,13 @@ use crate::Loc;
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
+    use super::{IntoMaybeLoc, MaybeLoc};
+
     /// Rust-compatible not-null Loc pointer (technically not a pointer, but it mimics it)
     pub type Loc = super::Loc;
 
-    use super::IntoMaybeLoc;
     impl IntoMaybeLoc for Loc {
-        fn into_maybe_ptr(self) -> crate::containers::MaybeLoc {
+        fn into_maybe_ptr(self) -> MaybeLoc {
             Some(self)
         }
     }
@@ -16,12 +17,11 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
-    use super::MaybeLoc;
+    use super::{IntoMaybeLoc, MaybeLoc};
 
     /// C-compatible not-null Loc pointer
     pub type Loc = super::Loc;
 
-    use super::IntoMaybeLoc;
     impl IntoMaybeLoc for Loc {
         fn into_maybe_ptr(self) -> MaybeLoc {
             use crate::containers::maybe_loc::MaybeLocSome;
