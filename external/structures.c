@@ -78,3 +78,20 @@ MAYBE_PTR_BLOB lib_ruby_parser_containers_null_maybe_ptr_blob()
     MAYBE_PTR_BLOB_UNION u = {.as_ptr = NULL};
     return u.as_blob;
 }
+
+// List<T>
+typedef struct
+{
+    uint8_t data[64];
+} LIST_BLOB;
+
+#ifdef PRINT_SIZES
+#include <stdio.h>
+int main()
+{
+    printf("LIB_RUBY_PARSER_PTR_SIZE = %lu\n", sizeof(PTR_BLOB));
+    printf("LIB_RUBY_PARSER_MAYBE_PTR_SIZE = %lu\n", sizeof(MAYBE_PTR_BLOB));
+    printf("LIB_RUBY_PARSER_LIST_SIZE = TBD\n");
+    printf("LIB_RUBY_PARSER_STRING_PTR_SIZE = TBD\n");
+}
+#endif
