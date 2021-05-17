@@ -22,6 +22,7 @@ struct Fixture {
     state: Option<String>,
     input: String,
     tokens: String,
+    disable_if_nightly: bool,
 }
 impl Fixture {
     fn new(path: &str) -> Self {
@@ -35,6 +36,7 @@ impl Fixture {
         let mut current_section = TestSection::None;
         let mut cond = false;
         let mut cmdarg = false;
+        let mut disable_if_nightly = false;
 
         for line in content.lines() {
             match (line, &current_section) {
@@ -44,6 +46,7 @@ impl Fixture {
                 ("--STATE", _) => current_section = TestSection::State,
                 ("--INPUT", _) => current_section = TestSection::Input,
                 ("--TOKENS", _) => current_section = TestSection::Tokens,
+                ("--DISABLE-IF-NIGHTLY", _) => disable_if_nightly = true,
                 (_, &TestSection::Vars) => vars = line.split(' ').map(|s| s.to_string()).collect(),
                 (_, &TestSection::State) => state = Some(line.to_string()),
                 (_, &TestSection::Input) => input.push(line.to_string()),
@@ -64,6 +67,7 @@ impl Fixture {
             state,
             input,
             tokens,
+            disable_if_nightly,
         }
     }
 }
@@ -71,6 +75,7 @@ impl Fixture {
 enum TestResult {
     Segfault,
     Pass,
+    Skip,
     Failure(String),
 }
 
@@ -94,6 +99,15 @@ fn lex_state(state: &str) -> Result<i32, &'static str> {
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = Fixture::new(fixture_path);
+
+        if test_case.disable_if_nightly {
+            if cfg!(feature = "nightly-features") {
+                return TestResult::Skip;
+            } else {
+                // ok, keep going
+            }
+        }
+
         let mut lexer = Lexer::new(
             test_case.input.as_str(),
             format!("(test {})", fixture_path),
@@ -128,9 +142,9 @@ fn test(fixture_path: &str) -> TestResult {
             .join("\n");
 
         if tokens == test_case.tokens {
-            Ok(())
+            TestResult::Pass
         } else {
-            Err(format!(
+            TestResult::Failure(format!(
                 "actual:\n{}\nexpected:\n{}\n",
                 tokens, test_case.tokens
             ))
@@ -138,9 +152,8 @@ fn test(fixture_path: &str) -> TestResult {
     });
 
     match result {
+        Ok(test_result) => test_result,
         Err(_) => TestResult::Segfault,
-        Ok(Err(output)) => TestResult::Failure(output),
-        Ok(Ok(_)) => TestResult::Pass,
     }
 }
 
@@ -150,6 +163,7 @@ fn test_dir(dir: &str) {
     let mut passed: usize = 0;
     let mut failed: usize = 0;
     let mut segfaults: usize = 0;
+    let mut skipped: usize = 0;
 
     for filename in files_under_dir(dir) {
         eprint!("test {} ... ", filename);
@@ -166,12 +180,16 @@ fn test_dir(dir: &str) {
                 eprintln!("Err:\n{}\n", output);
                 failed += 1;
             }
+            TestResult::Skip => {
+                eprintln!("Skip");
+                skipped += 1;
+            }
         }
     }
 
     eprintln!(
-        "{} tests passed, {} failed, {} segfaults",
-        passed, failed, segfaults
+        "{} tests passed, {} failed, {} segfaults, {} skipped",
+        passed, failed, segfaults, skipped
     );
 
     assert_eq!(
@@ -186,4 +204,9 @@ fn test_dir(dir: &str) {
 #[test]
 fn test_gen() {
     test_dir("tests/fixtures/lexer/gen")
+}
+
+#[test]
+fn test_manual() {
+    test_dir("tests/fixtures/lexer/manual")
 }
