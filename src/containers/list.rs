@@ -20,6 +20,17 @@ pub(crate) mod rust {
             &self
         }
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::List as GenericList;
+        type List = GenericList<u8>;
+
+        #[test]
+        fn test_size() {
+            assert_eq!(std::mem::size_of::<List>(), 24);
+        }
+    }
 }
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -286,6 +297,11 @@ pub(crate) mod c {
                 type List = GenericList<$t>;
 
                 #[test]
+                fn test_size() {
+                    assert_eq!(std::mem::size_of::<List>(), 24);
+                }
+
+                #[test]
                 fn test_new() {
                     let _ = List::new();
                 }
@@ -324,7 +340,7 @@ pub(crate) mod c {
 
                 #[test]
                 fn test_push() {
-                    let mut list = List::new();
+                    let mut list = List::with_capacity(10);
                     list.push(make_one());
                 }
 

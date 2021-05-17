@@ -110,6 +110,6 @@ mod tests {
     use super::Diagnostic;
     #[test]
     fn test_size() {
-        assert_eq!(std::mem::size_of::<Diagnostic>(), 64);
+        assert_eq!(std::mem::size_of::<Diagnostic>(), 48);
     }
 }

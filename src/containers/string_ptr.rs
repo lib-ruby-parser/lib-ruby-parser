@@ -8,24 +8,33 @@ pub(crate) mod rust {
 pub(crate) mod c {
     use std::ops::Deref;
 
-    /// C-compatible not nullable String container
+    /// List blob
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct StringBlob {
+        a: u64,
+    }
+
+    /// C-compatible list
     #[repr(C)]
     pub struct StringPtr {
-        /// Raw ponter
-        pub ptr: *mut u8,
+        blob: StringBlob,
+    }
 
-        /// Length
-        pub len: usize,
+    extern "C" {
+        fn lib_ruby_parser_containers_free_string_blob(blob: StringBlob);
+        fn lib_ruby_parser_containers_clone_string_blob(blob: StringBlob) -> StringBlob;
+        fn lib_ruby_parser_containers_raw_ptr_from_string_blob(blob: StringBlob) -> *const i8;
+        fn lib_ruby_parser_containers_string_blob_len(blob: StringBlob) -> u64;
+        fn lib_ruby_parser_containers_string_blob_from_raw_ptr(
+            ptr: *const i8,
+            len: u64,
+        ) -> StringBlob;
     }
 
     impl Drop for StringPtr {
         fn drop(&mut self) {
-            if self.ptr.is_null() || self.len == 0 {
-                return;
-            }
-
-            drop(unsafe { Box::from_raw(self.ptr) });
-            self.ptr = std::ptr::null_mut();
+            unsafe { lib_ruby_parser_containers_free_string_blob(self.blob) }
         }
     }
 
@@ -37,12 +46,9 @@ pub(crate) mod c {
 
     impl Clone for StringPtr {
         fn clone(&self) -> Self {
-            let mut vec = Vec::with_capacity(self.len);
-            unsafe {
-                std::ptr::copy(self.ptr, vec.as_mut_ptr(), self.len);
-                vec.set_len(self.len);
+            Self {
+                blob: unsafe { lib_ruby_parser_containers_clone_string_blob(self.blob) },
             }
-            Self::from(vec)
         }
     }
 
@@ -58,17 +64,19 @@ pub(crate) mod c {
             Self::from(self.as_str().to_uppercase())
         }
 
-        /// Takes a raw pointer
-        pub fn take(mut self) -> *mut u8 {
-            let ptr = self.ptr;
-            self.ptr = std::ptr::null_mut();
-            ptr
-        }
-
         /// Equivalent of String::as_str()
         pub fn as_str(&self) -> &str {
             let bytes = self.deref();
             std::str::from_utf8(bytes).unwrap()
+        }
+
+        /// Equivalent of String::len
+        pub fn len(&self) -> usize {
+            unsafe { lib_ruby_parser_containers_string_blob_len(self.blob) as usize }
+        }
+
+        pub(crate) fn as_ptr(&self) -> *const i8 {
+            unsafe { lib_ruby_parser_containers_raw_ptr_from_string_blob(self.blob) }
         }
     }
 
@@ -76,7 +84,9 @@ pub(crate) mod c {
         type Target = [u8];
 
         fn deref(&self) -> &Self::Target {
-            unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
+            let ptr = self.as_ptr();
+            let len = self.len();
+            unsafe { std::slice::from_raw_parts(ptr as *const u8, len) }
         }
     }
 
@@ -100,10 +110,16 @@ pub(crate) mod c {
 
     impl From<Vec<u8>> for StringPtr {
         fn from(mut bytes: Vec<u8>) -> Self {
-            let ptr = bytes.as_mut_ptr();
-            let len = bytes.len();
-            std::mem::forget(bytes);
-            Self { ptr, len }
+            bytes.shrink_to_fit();
+            let len = bytes.len() as u64;
+            let ptr = if len == 0 {
+                std::ptr::null_mut()
+            } else {
+                bytes.as_ptr() as *const i8
+            };
+
+            let blob = unsafe { lib_ruby_parser_containers_string_blob_from_raw_ptr(ptr, len) };
+            Self { blob }
         }
     }
 
@@ -143,31 +159,71 @@ pub(crate) mod c {
     #[cfg(test)]
     mod tests {
         use super::StringPtr;
+        use std::ops::Deref;
+
+        const SHORT_STR: &str = "a";
+        const LONG_STR: &str = "aaaaaaaaaaaaaaaaaaaaaaaaa";
 
         #[test]
         fn test_new() {
-            let s = StringPtr::from("foo");
-            assert_eq!(s, "foo")
+            let short = StringPtr::from(SHORT_STR);
+            assert_eq!(short, SHORT_STR);
+
+            let long = StringPtr::from(LONG_STR);
+            assert_eq!(long, LONG_STR)
+        }
+
+        #[test]
+        fn test_len() {
+            let short = String::from(SHORT_STR);
+            assert_eq!(short.len(), 1);
+
+            let long = String::from(LONG_STR);
+            assert_eq!(long.len(), 25);
+        }
+
+        #[test]
+        fn test_as_ptr() {
+            let short = StringPtr::from(SHORT_STR);
+            assert_eq!(short.as_ptr(), short.as_ptr());
+            assert_ne!(short.as_ptr(), std::ptr::null_mut());
+
+            let long = StringPtr::from(LONG_STR);
+            assert_eq!(long.as_ptr(), long.as_ptr());
+            assert_ne!(long.as_ptr(), std::ptr::null_mut());
         }
 
         #[test]
         fn test_clone() {
-            let s = StringPtr::from("foo");
-            let s2 = s.clone();
-            assert_eq!(s2, "foo")
+            let short = StringPtr::from(SHORT_STR);
+            assert_eq!(short.clone(), SHORT_STR);
+            assert_ne!(short.as_ptr(), short.clone().as_ptr());
+
+            let long = StringPtr::from(LONG_STR);
+            assert_eq!(long.clone(), LONG_STR);
+            assert_ne!(long.as_ptr(), long.clone().as_ptr());
         }
 
         #[test]
         fn test_deref() {
-            let s = StringPtr::from("foo");
-            let s_ref = s.as_ref();
-            assert_eq!(s_ref, b"foo")
+            let short = StringPtr::from(SHORT_STR);
+            let short_ref = short.deref();
+            assert_eq!(short_ref, SHORT_STR.as_bytes());
+
+            let long = StringPtr::from(LONG_STR);
+            let long_ref = long.deref();
+            assert_eq!(long_ref, LONG_STR.as_bytes());
         }
 
         #[test]
         fn test_empty() {
-            let s = StringPtr::from("");
-            assert_eq!(s.as_str(), "")
+            let empty = StringPtr::from("");
+            assert_eq!(empty.len(), 0);
+            assert_eq!(empty.as_ptr(), std::ptr::null_mut());
+            assert_eq!(empty.as_str(), "");
+
+            let empty_ref = empty.deref();
+            assert_eq!(empty_ref, &[]);
         }
     }
 }

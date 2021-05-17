@@ -43,6 +43,7 @@ pub(crate) mod c {
         fn drop(&mut self) {
             let drop_item_in_place = T::get_drop_ptr_in_place_fn();
             unsafe { lib_ruby_parser_containers_free_ptr_blob(self.blob, drop_item_in_place) }
+            self.blob = unsafe { lib_ruby_parser_containers_null_ptr_blob() };
         }
     }
 

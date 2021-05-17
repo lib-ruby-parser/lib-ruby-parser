@@ -53,7 +53,10 @@ pub(crate) mod c {
     impl<T: GetDropFn> Drop for MaybePtr<T> {
         fn drop(&mut self) {
             let drop_item_in_place = T::get_drop_ptr_in_place_fn();
-            unsafe { lib_ruby_parser_containers_free_maybe_ptr_blob(self.blob, drop_item_in_place) }
+            unsafe {
+                lib_ruby_parser_containers_free_maybe_ptr_blob(self.blob, drop_item_in_place)
+            };
+            self.blob = unsafe { lib_ruby_parser_containers_null_maybe_ptr_blob() };
         }
     }
 
