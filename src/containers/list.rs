@@ -1,4 +1,4 @@
-use crate::containers::SharedList;
+use crate::containers::SharedByteList;
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
@@ -91,7 +91,7 @@ pub(crate) mod c {
     }
 
     use super::TakeFirst;
-    use super::{AsSharedList, SharedList};
+    use super::{AsSharedList, SharedByteList};
 
     macro_rules! gen_list_impl_for {
         (
@@ -106,7 +106,7 @@ pub(crate) mod c {
             $len:ident,
             $capacity:ident
         ) => {
-            use super::{AsSharedList, List, ListBlob, SharedList, TakeFirst};
+            use super::{List, ListBlob, TakeFirst};
 
             #[repr(C)]
             struct RemoveResult {
@@ -283,15 +283,9 @@ pub(crate) mod c {
                 }
             }
 
-            impl AsSharedList<$t> for List<$t> {
-                fn shared(&self) -> SharedList<$t> {
-                    SharedList::from_raw(self.as_ptr(), self.len())
-                }
-            }
-
             #[cfg(test)]
             mod tests {
-                use super::{make_one, AsSharedList, List as GenericList, TakeFirst};
+                use super::{make_one, List as GenericList, TakeFirst};
                 use std::ops::{Deref, DerefMut};
                 type List = GenericList<$t>;
 
@@ -483,16 +477,6 @@ pub(crate) mod c {
                 }
 
                 #[test]
-                fn test_shared() {
-                    let mut list = List::new();
-                    list.push(make_one());
-                    let shared = list.shared();
-
-                    assert_eq!(shared.ptr, list.as_ptr());
-                    assert_eq!(shared.len, list.len());
-                }
-
-                #[test]
                 fn test_vec_item() {
                     vec_with_items(10).truncate(5)
                 }
@@ -655,6 +639,14 @@ pub(crate) mod c {
             lib_ruby_parser_containers_byte_list_blob_len,
             lib_ruby_parser_containers_byte_list_blob_capacity
         );
+
+        use super::{AsSharedList, SharedByteList};
+
+        impl AsSharedList for List<u8> {
+            fn shared(&self) -> SharedByteList {
+                SharedByteList::from_raw(self.as_ptr(), self.len())
+            }
+        }
     }
     mod of_u64 {
         #[cfg(test)]
@@ -693,6 +685,6 @@ pub(crate) trait TakeFirst<T: Clone> {
     fn take_first(self) -> T;
 }
 
-pub(crate) trait AsSharedList<T> {
-    fn shared(&self) -> SharedList<T>;
+pub(crate) trait AsSharedList {
+    fn shared(&self) -> SharedByteList;
 }

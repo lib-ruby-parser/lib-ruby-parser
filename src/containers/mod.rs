@@ -19,8 +19,8 @@ pub mod string_ptr;
 /// Module with MaybeStringPtr container
 pub mod maybe_string_ptr;
 
-/// Module with SharedList container
-pub mod shared_list;
+/// Module with SharedByteList container
+pub mod shared_byte_list;
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod get_drop_fn;
@@ -40,7 +40,7 @@ pub use maybe_string_ptr::rust::MaybeStringPtr;
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub use ptr::rust::Ptr;
 #[cfg(not(feature = "compile-with-external-structures"))]
-pub use shared_list::rust::SharedList;
+pub use shared_byte_list::rust::SharedByteList;
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub use string_ptr::rust::StringPtr;
 
@@ -57,6 +57,6 @@ pub use maybe_string_ptr::c::MaybeStringPtr;
 #[cfg(feature = "compile-with-external-structures")]
 pub use ptr::c::Ptr;
 #[cfg(feature = "compile-with-external-structures")]
-pub use shared_list::c::SharedList;
+pub use shared_byte_list::c::SharedByteList;
 #[cfg(feature = "compile-with-external-structures")]
 pub use string_ptr::c::StringPtr;

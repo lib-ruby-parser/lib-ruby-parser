@@ -1,4 +1,4 @@
-use crate::containers::{list::AsSharedList, List, SharedList, StringPtr};
+use crate::containers::{list::AsSharedList, List, SharedByteList, StringPtr};
 use crate::source::SourceLine;
 
 /// Decoded input
@@ -94,7 +94,7 @@ impl DecodedInput {
     }
 
     /// Returns raw bytes after decoding
-    pub fn as_shared_bytes(&self) -> SharedList<u8> {
+    pub fn as_shared_bytes(&self) -> SharedByteList {
         self.bytes.shared()
     }
 

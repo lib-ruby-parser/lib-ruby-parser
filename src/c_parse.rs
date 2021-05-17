@@ -1,5 +1,5 @@
 use crate::{
-    containers::{List, Ptr, SharedList, StringPtr},
+    containers::{List, Ptr, SharedByteList, StringPtr},
     debug_level,
     source::{CustomDecoder, CustomDecoderResult},
     token_rewriter::{TokenRewriter, TokenRewriterResult},
@@ -62,11 +62,11 @@ impl ForeignCustomDecoder {
 }
 
 type ForeignTokenRewriterFn =
-    extern "C" fn(Ptr<Token>, SharedList<u8>, *mut c_void) -> TokenRewriterResult;
+    extern "C" fn(Ptr<Token>, SharedByteList, *mut c_void) -> TokenRewriterResult;
 
 extern "C" fn dummy_rewrite(
     _token: Ptr<Token>,
-    _input: SharedList<u8>,
+    _input: SharedByteList,
     _state: *mut c_void,
 ) -> TokenRewriterResult {
     unreachable!()
@@ -104,7 +104,7 @@ impl ForeignTokenRewriter {
         }
     }
 
-    fn call(&self, token: Ptr<Token>, input: SharedList<u8>) -> TokenRewriterResult {
+    fn call(&self, token: Ptr<Token>, input: SharedByteList) -> TokenRewriterResult {
         if self.dummy {
             panic!("Can't run dummy token rewriter")
         } else {
@@ -167,7 +167,7 @@ impl From<ForeignParserOptions> for ParserOptions {
         let token_rewriter = if token_rewriter.dummy {
             TokenRewriter::none()
         } else {
-            TokenRewriter::new(Box::new(move |token: Ptr<Token>, input: SharedList<u8>| {
+            TokenRewriter::new(Box::new(move |token: Ptr<Token>, input: SharedByteList| {
                 token_rewriter.call(token, input)
             }))
         };

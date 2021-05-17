@@ -23,5 +23,6 @@ export LIB_RUBY_PARSER_PTR_SIZE=8
 export LIB_RUBY_PARSER_MAYBE_PTR_SIZE=8
 export LIB_RUBY_PARSER_LIST_SIZE=24
 export LIB_RUBY_PARSER_STRING_PTR_SIZE=8
+export LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE=16
 cargo test --features "compile-with-external-structures,link-external-cpp-structures,nightly-features" --test parser_test
 cargo test --features "compile-with-external-structures,link-external-cpp-structures,nightly-features" --lib -- containers

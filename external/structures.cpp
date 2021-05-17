@@ -371,6 +371,41 @@ extern "C"
     }
 }
 
+// SharedList<T>
+typedef std::string_view SHARED_BYTE_LIST;
+_Static_assert(sizeof(SHARED_BYTE_LIST) == 16);
+DECLARE_BLOB(SHARED_BYTE_LIST_BLOB_DATA, SHARED_BYTE_LIST_BLOB_UNION, SHARED_BYTE_LIST);
+
+extern "C"
+{
+    SHARED_BYTE_LIST_BLOB_DATA lib_ruby_parser_containers_shared_byte_list_blob_from_raw(const char *ptr, uint64_t len) noexcept
+    {
+        SHARED_BYTE_LIST byte_list(ptr, len);
+        SHARED_BYTE_LIST_BLOB_UNION u = {.as_value = byte_list};
+        return u.as_blob;
+    }
+
+    const char *lib_ruby_parser_containers_shared_byte_list_blob_as_ptr(SHARED_BYTE_LIST_BLOB_DATA blob) noexcept
+    {
+        SHARED_BYTE_LIST_BLOB_UNION u = {.as_blob = blob};
+        if (u.as_value.length() == 0)
+        {
+            return nullptr;
+        }
+        else
+        {
+
+            return u.as_value.begin();
+        }
+    }
+    uint64_t lib_ruby_parser_containers_shared_byte_list_blob_len(SHARED_BYTE_LIST_BLOB_DATA blob) noexcept
+    {
+        SHARED_BYTE_LIST_BLOB_UNION u = {.as_blob = blob};
+        return u.as_value.length();
+    }
+}
+
+// print-sizes
 #ifdef PRINT_SIZES
 int main()
 {
@@ -378,5 +413,6 @@ int main()
     std::cout << "LIB_RUBY_PARSER_MAYBE_PTR_SIZE = " << sizeof(MAYBE_PTR_BLOB_DATA) << "\n";
     std::cout << "LIB_RUBY_PARSER_LIST_SIZE = " << sizeof(LIST_OF_U64_BLOB_DATA) << "\n";
     std::cout << "LIB_RUBY_PARSER_STRING_PTR_SIZE = " << sizeof(STRING_PTR_BLOB_DATA) << "\n";
+    std::cout << "LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE = " << sizeof(SHARED_BYTE_LIST_BLOB_DATA) << "\n";
 }
 #endif

@@ -1,5 +1,5 @@
 use crate::{
-    containers::{Ptr, SharedList},
+    containers::{Ptr, SharedByteList},
     Token,
 };
 
@@ -40,7 +40,7 @@ pub struct TokenRewriterResult {
 }
 
 /// Token rewriter function
-pub type TokenRewriterFn = dyn Fn(Ptr<Token>, SharedList<u8>) -> TokenRewriterResult;
+pub type TokenRewriterFn = dyn Fn(Ptr<Token>, SharedByteList) -> TokenRewriterResult;
 
 /// Token rewriter struct, can be used to rewrite tokens on the fly
 pub struct TokenRewriter {
