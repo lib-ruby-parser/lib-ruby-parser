@@ -22,7 +22,10 @@ pub mod maybe_string_ptr;
 /// Module with SharedList container
 pub mod shared_list;
 
+#[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod get_drop_fn;
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) mod size;
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub use list::rust::List;

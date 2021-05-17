@@ -108,8 +108,10 @@ impl Diagnostics {
 #[cfg(test)]
 mod tests {
     use super::Diagnostic;
+
+    #[cfg(feature = "compile-with-external-structures")]
     #[test]
     fn test_size() {
-        assert_eq!(std::mem::size_of::<Diagnostic>(), 48);
+        assert_eq!(std::mem::size_of::<Diagnostic>(), 40);
     }
 }

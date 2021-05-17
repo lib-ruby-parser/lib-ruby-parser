@@ -79,6 +79,8 @@ impl Token {
 #[cfg(test)]
 mod tests {
     use super::Token;
+
+    #[cfg(feature = "compile-with-external-structures")]
     #[test]
     fn test_size() {
         assert_eq!(std::mem::size_of::<Token>(), 56);

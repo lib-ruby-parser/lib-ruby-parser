@@ -6,13 +6,13 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
+    use crate::containers::size::STRING_PTR_SIZE;
     use std::ops::Deref;
 
-    /// List blob
     #[repr(C)]
-    #[derive(Debug, Copy, Clone)]
+    #[derive(Debug, Clone, Copy)]
     pub struct StringBlob {
-        a: u64,
+        blob: [u8; STRING_PTR_SIZE],
     }
 
     /// C-compatible list

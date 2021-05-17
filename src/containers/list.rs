@@ -37,13 +37,12 @@ pub(crate) mod rust {
 pub(crate) mod c {
     use crate::containers::get_drop_fn::GetDropFn;
 
-    /// List blob
+    use crate::containers::size::LIST_SIZE;
+
     #[repr(C)]
-    #[derive(Debug, Copy, Clone)]
+    #[derive(Debug, Clone, Copy)]
     pub struct ListBlob {
-        a: u64,
-        b: u64,
-        c: u64,
+        blob: [u8; LIST_SIZE],
     }
 
     /// C-compatible list

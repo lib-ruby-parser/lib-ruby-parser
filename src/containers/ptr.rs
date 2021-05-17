@@ -30,7 +30,13 @@ pub(crate) mod c {
     use std::ffi::c_void;
     use std::ops::Deref;
 
-    type PtrBlob = u64;
+    use crate::containers::size::PTR_SIZE;
+
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub(crate) struct PtrBlob {
+        blob: [u8; PTR_SIZE],
+    }
 
     /// C-compatible not-null pointer
     #[repr(C)]
@@ -150,7 +156,7 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod tests {
-        use super::{DropPtrFn, GetDropFn, Ptr, PtrBlob, UnPtr};
+        use super::{DropPtrFn, GetDropFn, Ptr, PtrBlob, UnPtr, PTR_SIZE};
 
         #[derive(Debug, PartialEq)]
         struct Foo {
@@ -177,7 +183,7 @@ pub(crate) mod c {
 
         #[test]
         fn test_size() {
-            assert_eq!(std::mem::size_of::<PtrBlob>(), 8);
+            assert_eq!(std::mem::size_of::<PtrBlob>(), PTR_SIZE);
         }
 
         #[test]
