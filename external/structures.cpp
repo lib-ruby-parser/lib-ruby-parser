@@ -121,9 +121,9 @@ extern "C" MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob() 
         return std::move(u.as_value);                                                                                                           \
     }                                                                                                                                           \
                                                                                                                                                 \
-    VALUE##List_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_pack_blob(VALUE##List vec) noexcept                                             \
+    VALUE##List_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_pack_blob(VALUE##List list) noexcept                                            \
     {                                                                                                                                           \
-        VALUE##List_BLOB_UNION u = {.as_value = std::move(vec)};                                                                                \
+        VALUE##List_BLOB_UNION u = {.as_value = std::move(list)};                                                                               \
         return u.as_blob;                                                                                                                       \
     }                                                                                                                                           \
                                                                                                                                                 \
@@ -136,18 +136,18 @@ extern "C" MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob() 
                                                                                                                                                 \
         VALUE##List_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_list_blob_with_capacity(uint64_t capacity) noexcept                         \
         {                                                                                                                                       \
-            VALUE##List vec;                                                                                                                    \
-            vec.reserve(capacity);                                                                                                              \
-            return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                             \
+            VALUE##List list;                                                                                                                   \
+            list.reserve(capacity);                                                                                                             \
+            return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(list));                                                            \
         }                                                                                                                                       \
                                                                                                                                                 \
         VALUE##List_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_list_blob_from_raw(VALUE##_BLOB_DATA *ptr, uint64_t size) noexcept          \
         {                                                                                                                                       \
             if (size > 0)                                                                                                                       \
             {                                                                                                                                   \
-                auto vec = VALUE##List(ptr, ptr + size);                                                                                        \
+                auto list = VALUE##List(ptr, ptr + size);                                                                                       \
                 free(ptr);                                                                                                                      \
-                return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                         \
+                return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(list));                                                        \
             }                                                                                                                                   \
             else                                                                                                                                \
             {                                                                                                                                   \
@@ -157,9 +157,9 @@ extern "C" MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob() 
                                                                                                                                                 \
         VALUE##List_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_list_blob_push(VALUE##List_BLOB_DATA blob, VALUE##_BLOB_DATA item) noexcept \
         {                                                                                                                                       \
-            VALUE##List vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                          \
-            vec.push_back(item);                                                                                                                \
-            return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                             \
+            VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                         \
+            list.push_back(item);                                                                                                               \
+            return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(list));                                                            \
         }                                                                                                                                       \
                                                                                                                                                 \
         typedef struct                                                                                                                          \
@@ -170,11 +170,11 @@ extern "C" MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob() 
                                                                                                                                                 \
         VALUE##List_REMOVE_RESULT lib_ruby_parser_containers_##PREFIX##_list_blob_remove(VALUE##List_BLOB_DATA blob, uint64_t index) noexcept   \
         {                                                                                                                                       \
-            VALUE##List vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                          \
-            VALUE##_BLOB_DATA item = std::move(vec[index]);                                                                                     \
-            vec.erase(vec.begin() + index);                                                                                                     \
+            VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                         \
+            VALUE##_BLOB_DATA item = std::move(list[index]);                                                                                    \
+            list.erase(list.begin() + index);                                                                                                   \
             VALUE##List_REMOVE_RESULT result = {                                                                                                \
-                .new_blob = lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec)),                                                    \
+                .new_blob = lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(list)),                                                   \
                 .removed_item = item};                                                                                                          \
                                                                                                                                                 \
             return result;                                                                                                                      \
@@ -182,42 +182,42 @@ extern "C" MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob() 
                                                                                                                                                 \
         VALUE##List_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_list_blob_shrink_to_fit(VALUE##List_BLOB_DATA blob) noexcept                \
         {                                                                                                                                       \
-            VALUE##List vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                          \
-            vec.shrink_to_fit();                                                                                                                \
-            return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                             \
+            VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                         \
+            list.shrink_to_fit();                                                                                                               \
+            return lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(list));                                                            \
         }                                                                                                                                       \
                                                                                                                                                 \
         VALUE##_BLOB_DATA *lib_ruby_parser_containers_##PREFIX##_list_blob_as_ptr(VALUE##List_BLOB_DATA blob) noexcept                          \
         {                                                                                                                                       \
-            VALUE##List vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                          \
-            auto result = vec.data();                                                                                                           \
-            lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                                    \
+            VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                         \
+            auto result = list.data();                                                                                                          \
+            lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(list));                                                                   \
             return result;                                                                                                                      \
         }                                                                                                                                       \
                                                                                                                                                 \
         uint64_t lib_ruby_parser_containers_##PREFIX##_list_blob_len(VALUE##List_BLOB_DATA blob) noexcept                                       \
         {                                                                                                                                       \
-            VALUE##List vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                          \
-            auto result = vec.size();                                                                                                           \
-            lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                                    \
+            VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                         \
+            auto result = list.size();                                                                                                          \
+            lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(list));                                                                   \
             return result;                                                                                                                      \
         }                                                                                                                                       \
                                                                                                                                                 \
         uint64_t lib_ruby_parser_containers_##PREFIX##_list_blob_capacity(VALUE##List_BLOB_DATA blob) noexcept                                  \
         {                                                                                                                                       \
-            VALUE##List vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                          \
-            auto result = vec.capacity();                                                                                                       \
-            lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(vec));                                                                    \
+            VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                         \
+            auto result = list.capacity();                                                                                                      \
+            lib_ruby_parser_containers_##PREFIX##_pack_blob(std::move(list));                                                                   \
             return result;                                                                                                                      \
         }                                                                                                                                       \
                                                                                                                                                 \
         void lib_ruby_parser_containers_##PREFIX##_list_blob_free(                                                                              \
             VALUE##List_BLOB_DATA blob, Drop drop_ptr_in_place) noexcept                                                                        \
         {                                                                                                                                       \
-            VALUE##List vec = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                          \
-            for (size_t i = 0; i < vec.size(); i++)                                                                                             \
+            VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                         \
+            for (size_t i = 0; i < list.size(); i++)                                                                                            \
             {                                                                                                                                   \
-                drop_ptr_in_place(&vec[i]);                                                                                                     \
+                drop_ptr_in_place(&list[i]);                                                                                                    \
             }                                                                                                                                   \
         }                                                                                                                                       \
     }
