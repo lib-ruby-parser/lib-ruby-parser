@@ -648,25 +648,6 @@ pub(crate) mod c {
             }
         }
     }
-    mod of_u64 {
-        #[cfg(test)]
-        fn make_one() -> u64 {
-            42
-        }
-
-        gen_list_impl_for!(
-            u64,
-            lib_ruby_parser_containers_u64_list_blob_new,
-            lib_ruby_parser_containers_u64_list_blob_with_capacity,
-            lib_ruby_parser_containers_u64_list_blob_from_raw,
-            lib_ruby_parser_containers_u64_list_blob_shrink_to_fit,
-            lib_ruby_parser_containers_u64_list_blob_push,
-            lib_ruby_parser_containers_u64_list_blob_remove,
-            lib_ruby_parser_containers_u64_list_blob_as_ptr,
-            lib_ruby_parser_containers_u64_list_blob_len,
-            lib_ruby_parser_containers_u64_list_blob_capacity
-        );
-    }
 
     #[cfg(test)]
     mod tests {
