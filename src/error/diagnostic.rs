@@ -107,17 +107,17 @@ impl Diagnostics {
 
 #[cfg(test)]
 mod tests {
-    use super::Diagnostic;
-
     #[cfg(feature = "link-external-c-structures")]
     #[test]
     fn test_size_c() {
+        use super::Diagnostic;
         assert_eq!(std::mem::size_of::<Diagnostic>(), 56);
     }
 
     #[cfg(feature = "link-external-cpp-structures")]
     #[test]
     fn test_size_cpp() {
+        use super::Diagnostic;
         assert_eq!(std::mem::size_of::<Diagnostic>(), 40);
     }
 }

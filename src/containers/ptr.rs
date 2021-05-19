@@ -27,8 +27,8 @@ pub(crate) mod c {
     use super::{GetDropFn, MaybePtr};
 
     // use crate::containers::deleter::{Deleter, GetDeleter};
-    use std::ffi::c_void;
     use std::ops::Deref;
+    use std::{ffi::c_void, ops::DerefMut};
 
     use crate::containers::size::PTR_SIZE;
 
@@ -89,6 +89,12 @@ pub(crate) mod c {
         }
     }
 
+    impl<T: GetDropFn> DerefMut for Ptr<T> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            unsafe { &mut *self.as_ptr() }
+        }
+    }
+
     impl<T: GetDropFn> AsRef<T> for Ptr<T> {
         fn as_ref(&self) -> &T {
             unsafe { self.as_ptr().as_ref().unwrap() }
@@ -136,8 +142,8 @@ pub(crate) mod c {
         }
 
         /// Returns borrowed raw pointer stored in Ptr
-        pub(crate) fn as_ptr(&self) -> *const T {
-            unsafe { lib_ruby_parser_containers_raw_ptr_from_ptr_blob(self.blob) as *const T }
+        pub(crate) fn as_ptr(&self) -> *mut T {
+            unsafe { lib_ruby_parser_containers_raw_ptr_from_ptr_blob(self.blob) as *mut T }
         }
     }
 

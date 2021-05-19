@@ -197,6 +197,16 @@ pub(crate) mod c {
         pub fn take(&mut self) -> Self {
             std::mem::take(self)
         }
+
+        /// Equivalent of Option::unwrap
+        pub fn unwrap(self) -> Ptr<T> {
+            if self.as_ptr().is_null() {
+                panic!("unwrapping MaybePtr::None");
+            } else {
+                let ptr = self.into_raw();
+                Ptr::from_raw(ptr)
+            }
+        }
     }
 
     impl<T> From<Option<Box<T>>> for MaybePtr<T>

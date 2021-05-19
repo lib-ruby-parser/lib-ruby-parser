@@ -141,6 +141,18 @@ pub(crate) mod c {
         }
     }
 
+    impl PartialEq<StringPtr> for &str {
+        fn eq(&self, other: &StringPtr) -> bool {
+            self.as_bytes() == other.as_ref()
+        }
+    }
+
+    impl PartialEq<String> for StringPtr {
+        fn eq(&self, other: &String) -> bool {
+            self.as_ref() == other.as_bytes()
+        }
+    }
+
     impl PartialEq for StringPtr {
         fn eq(&self, other: &StringPtr) -> bool {
             self.deref() == other.deref()

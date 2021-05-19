@@ -211,6 +211,18 @@ pub(crate) mod c {
                 }
             }
 
+            impl<const N: usize> From<[$t; N]> for List<$t> {
+                fn from(array: [$t; N]) -> Self {
+                    Self::from(Vec::<$t>::from(array))
+                }
+            }
+
+            impl<const N: usize> From<&[$t; N]> for List<$t> {
+                fn from(array: &[$t; N]) -> Self {
+                    Self::from(Vec::<$t>::from(array.to_owned()))
+                }
+            }
+
             impl Clone for List<$t> {
                 fn clone(&self) -> Self {
                     let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<$t>>();
