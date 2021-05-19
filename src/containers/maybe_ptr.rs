@@ -1,5 +1,3 @@
-use crate::containers::get_drop_fn::{DropPtrFn, GetDropFn};
-
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible nullable pointer
@@ -38,7 +36,7 @@ pub(crate) mod rust {
 pub(crate) mod c {
     use std::ffi::c_void;
 
-    use super::{DropPtrFn, GetDropFn};
+    use crate::containers::get_drop_fn::{DropPtrFn, GetDropFn};
     use crate::containers::Ptr;
 
     use crate::containers::size::MAYBE_PTR_SIZE;

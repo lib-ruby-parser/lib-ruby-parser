@@ -30,8 +30,16 @@ impl Node {
 #[cfg(test)]
 mod tests {
     use super::Node;
+
+    #[cfg(feature = "link-external-c-structures")]
     #[test]
-    fn test_size() {
+    fn test_size_c() {
+        assert_eq!(std::mem::size_of::<Node>(), 192);
+    }
+
+    #[cfg(feature = "link-external-cpp-structures")]
+    #[test]
+    fn test_size_cpp() {
         assert_eq!(std::mem::size_of::<Node>(), 184);
     }
 }

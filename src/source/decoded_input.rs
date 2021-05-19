@@ -1,4 +1,4 @@
-use crate::containers::{list::AsSharedList, List, SharedByteList, StringPtr};
+use crate::containers::{list::AsSharedByteList, List, SharedByteList, StringPtr};
 use crate::source::SourceLine;
 
 /// Decoded input

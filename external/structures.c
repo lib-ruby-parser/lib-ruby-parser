@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 typedef void(Drop)(void *);
 typedef int DUMMY;
@@ -122,7 +123,6 @@ MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob()
         if (size > 0)                                                                                                              \
         {                                                                                                                          \
             VALUE##List list = {.ptr = ptr, .size = size, .capacity = size};                                                       \
-            free(ptr);                                                                                                             \
             return lib_ruby_parser_containers_##PREFIX##_pack_blob(list);                                                          \
         }                                                                                                                          \
         else                                                                                                                       \
@@ -136,8 +136,17 @@ MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob()
         VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                \
         if (list.size + 1 > list.capacity)                                                                                         \
         {                                                                                                                          \
-            list.capacity *= 2;                                                                                                    \
-            list.ptr = malloc(sizeof(VALUE) * list.capacity);                                                                      \
+            if (list.capacity == 0)                                                                                                \
+            {                                                                                                                      \
+                list.capacity += 1;                                                                                                \
+            }                                                                                                                      \
+            else                                                                                                                   \
+            {                                                                                                                      \
+                list.capacity *= 2;                                                                                                \
+            }                                                                                                                      \
+            VALUE##_BLOB_DATA *new_ptr = malloc(sizeof(VALUE) * list.capacity);                                                    \
+            memcpy(new_ptr, list.ptr, sizeof(VALUE) * list.size);                                                                  \
+            list.ptr = new_ptr;                                                                                                    \
         }                                                                                                                          \
         list.ptr[list.size] = item;                                                                                                \
         list.size++;                                                                                                               \
@@ -154,7 +163,7 @@ MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob()
     {                                                                                                                              \
         VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                \
         VALUE##_BLOB_DATA item = list.ptr[index];                                                                                  \
-        memcpy(list.ptr + index, list.ptr + index + 1, list.size - index - 1);                                                     \
+        memcpy(list.ptr + index, list.ptr + index + 1, sizeof(VALUE) * (list.size - index - 1));                                   \
         list.size--;                                                                                                               \
         VALUE##List_REMOVE_RESULT result = {                                                                                       \
             .new_blob = lib_ruby_parser_containers_##PREFIX##_pack_blob(list),                                                     \
@@ -166,11 +175,20 @@ MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob()
     VALUE##List_BLOB_DATA lib_ruby_parser_containers_##PREFIX##_list_blob_shrink_to_fit(VALUE##List_BLOB_DATA blob)                \
     {                                                                                                                              \
         VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                \
-        uint64_t new_len = list.capacity;                                                                                          \
-        VALUE##List new_list = {.ptr = malloc(sizeof(VALUE) * new_len), .size = new_len, .capacity = new_len};                     \
-        memcpy(new_list.ptr, list.ptr, new_len);                                                                                   \
-        free(list.ptr);                                                                                                            \
-        return lib_ruby_parser_containers_##PREFIX##_pack_blob(new_list);                                                          \
+                                                                                                                                   \
+        uint64_t new_size = list.size;                                                                                             \
+        uint64_t new_capacity = list.size;                                                                                         \
+                                                                                                                                   \
+        VALUE##_BLOB_DATA *new_ptr = malloc(sizeof(VALUE) * new_capacity);                                                         \
+        memcpy(new_ptr, list.ptr, sizeof(VALUE) * new_size);                                                                       \
+                                                                                                                                   \
+        VALUE##_BLOB_DATA *old_ptr = list.ptr;                                                                                     \
+        list.ptr = new_ptr;                                                                                                        \
+        list.size = new_size;                                                                                                      \
+        list.capacity = new_capacity;                                                                                              \
+        free(old_ptr);                                                                                                             \
+                                                                                                                                   \
+        return lib_ruby_parser_containers_##PREFIX##_pack_blob(list);                                                              \
     }                                                                                                                              \
                                                                                                                                    \
     VALUE##_BLOB_DATA *lib_ruby_parser_containers_##PREFIX##_list_blob_as_ptr(VALUE##List_BLOB_DATA blob)                          \
@@ -199,18 +217,19 @@ MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob()
         {                                                                                                                          \
             drop_ptr_in_place(&list.ptr[i]);                                                                                       \
         }                                                                                                                          \
+        free(list.ptr);                                                                                                            \
     }
 
 typedef struct
 {
-    BYTE data[184];
+    BYTE data[192];
 } NodeStruct;
 DECLARE_BLOB_FOR(NodeStruct);
 DECLARE_BLOB_FOR_LIST_OF(NodeStruct, node);
 
 typedef struct
 {
-    BYTE data[40];
+    BYTE data[56];
 } DiagnosticStruct;
 DECLARE_BLOB_FOR(DiagnosticStruct);
 DECLARE_BLOB_FOR_LIST_OF(DiagnosticStruct, diagnostic);
@@ -249,6 +268,88 @@ typedef struct
 } ByteStruct;
 DECLARE_BLOB_FOR(ByteStruct);
 DECLARE_BLOB_FOR_LIST_OF(ByteStruct, byte);
+
+typedef struct
+{
+    char *ptr;
+    uint64_t size;
+} STRING_PTR;
+_Static_assert(sizeof(STRING_PTR) == 16, "sizeof(STRING_PTR) != 16");
+DECLARE_BLOB_FOR(STRING_PTR);
+
+void lib_ruby_parser_containers_free_string_blob(STRING_PTR_BLOB_DATA blob)
+{
+    STRING_PTR_BLOB_UNION u = {.as_blob = blob};
+    free(u.as_value.ptr);
+}
+STRING_PTR_BLOB_DATA lib_ruby_parser_containers_clone_string_blob(STRING_PTR_BLOB_DATA blob)
+{
+    STRING_PTR_BLOB_UNION u = {.as_blob = blob};
+    STRING_PTR string_ptr = u.as_value;
+    STRING_PTR string_ptr_copy = {.ptr = malloc(string_ptr.size), .size = string_ptr.size};
+    memcpy(string_ptr_copy.ptr, string_ptr.ptr, string_ptr.size);
+    STRING_PTR_BLOB_UNION u_result = {.as_value = string_ptr_copy};
+    return u_result.as_blob;
+}
+const uint8_t *lib_ruby_parser_containers_raw_ptr_from_string_blob(STRING_PTR_BLOB_DATA blob)
+{
+    STRING_PTR_BLOB_UNION u = {.as_blob = blob};
+    if (u.as_value.size == 0)
+    {
+        return NULL;
+    }
+    else
+    {
+        return (const uint8_t *)u.as_value.ptr;
+    }
+}
+uint64_t lib_ruby_parser_containers_string_blob_len(STRING_PTR_BLOB_DATA blob)
+{
+    STRING_PTR_BLOB_UNION u = {.as_blob = blob};
+    return u.as_value.size;
+}
+STRING_PTR_BLOB_DATA lib_ruby_parser_containers_string_blob_from_raw_ptr(const char *ptr, uint64_t size)
+{
+    STRING_PTR string_ptr = {.ptr = malloc(size), .size = size};
+    memcpy(string_ptr.ptr, ptr, size);
+    STRING_PTR_BLOB_UNION u = {.as_value = string_ptr};
+    return u.as_blob;
+}
+
+// SharedByteList
+typedef struct
+{
+    char *ptr;
+    uint64_t size;
+} SHARED_BYTE_LIST;
+_Static_assert(sizeof(SHARED_BYTE_LIST) == 16, "sizeof(SHARED_BYTE_LIST) != 16");
+DECLARE_BLOB_FOR(SHARED_BYTE_LIST);
+
+SHARED_BYTE_LIST_BLOB_DATA lib_ruby_parser_containers_shared_byte_list_blob_from_raw(const char *ptr, uint64_t size)
+{
+    SHARED_BYTE_LIST shared_byte_list = {.ptr = (char *)ptr, .size = size};
+    SHARED_BYTE_LIST_BLOB_UNION u = {.as_value = shared_byte_list};
+    return u.as_blob;
+}
+
+const char *lib_ruby_parser_containers_shared_byte_list_blob_as_ptr(SHARED_BYTE_LIST_BLOB_DATA blob)
+{
+    SHARED_BYTE_LIST_BLOB_UNION u = {.as_blob = blob};
+    if (u.as_value.size == 0)
+    {
+        return NULL;
+    }
+    else
+    {
+
+        return u.as_value.ptr;
+    }
+}
+uint64_t lib_ruby_parser_containers_shared_byte_list_blob_len(SHARED_BYTE_LIST_BLOB_DATA blob)
+{
+    SHARED_BYTE_LIST_BLOB_UNION u = {.as_blob = blob};
+    return u.as_value.size;
+}
 
 // print-sizes
 

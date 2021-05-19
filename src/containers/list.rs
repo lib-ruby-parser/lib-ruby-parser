@@ -14,9 +14,9 @@ pub(crate) mod rust {
         }
     }
 
-    use super::{AsSharedList, SharedList};
-    impl<T> AsSharedList<T> for List<T> {
-        fn shared(&self) -> SharedList<T> {
+    use super::{AsSharedByteList, SharedByteList};
+    impl AsSharedByteList for List<u8> {
+        fn shared(&self) -> SharedByteList {
             &self
         }
     }
@@ -91,7 +91,7 @@ pub(crate) mod c {
     }
 
     use super::TakeFirst;
-    use super::{AsSharedList, SharedByteList};
+    use super::{AsSharedByteList, SharedByteList};
 
     macro_rules! gen_list_impl_for {
         (
@@ -213,8 +213,13 @@ pub(crate) mod c {
 
             impl Clone for List<$t> {
                 fn clone(&self) -> Self {
-                    let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<_>>();
-                    Self::from(copied)
+                    let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<$t>>();
+                    let copy = Self::from(copied);
+                    drop(copy);
+
+                    let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<$t>>();
+                    let copy = Self::from(copied);
+                    copy
                 }
             }
 
@@ -339,13 +344,13 @@ pub(crate) mod c {
 
                 #[test]
                 fn test_remove() {
-                    let mut list = list_with_items(2);
+                    let mut list = list_with_items(10);
 
-                    list.remove(0);
-                    assert_eq!(list.len(), 1);
+                    assert_eq!(list.remove(0), make_one());
+                    assert_eq!(list.len(), 9);
 
-                    list.remove(0);
-                    assert_eq!(list.len(), 0);
+                    assert_eq!(list.remove(3), make_one());
+                    assert_eq!(list.len(), 8);
                 }
 
                 #[test]
@@ -397,16 +402,21 @@ pub(crate) mod c {
                 #[test]
                 fn test_clone() {
                     let mut list = List::new();
-                    assert_eq!(list.clone().len(), 0);
+                    // assert_eq!(list.clone().len(), 0);
 
                     list.push(make_one());
                     list.push(make_one());
-                    assert_eq!(list.clone().len(), 2);
+                    let copy = list.clone();
+                    assert_eq!(copy.len(), 2);
+                    drop(copy);
+                    drop(list);
                 }
 
                 #[test]
                 fn test_vec_from_list() {
-                    assert_eq!(Vec::from(list_with_items(20)), vec_with_items(20));
+                    let mut list = list_with_items(1);
+                    list.shrink_to_fit();
+                    assert_eq!(Vec::from(list_with_items(1)), vec_with_items(1));
                 }
 
                 #[test]
@@ -640,9 +650,9 @@ pub(crate) mod c {
             lib_ruby_parser_containers_byte_list_blob_capacity
         );
 
-        use super::{AsSharedList, SharedByteList};
+        use super::{AsSharedByteList, SharedByteList};
 
-        impl AsSharedList for List<u8> {
+        impl AsSharedByteList for List<u8> {
             fn shared(&self) -> SharedByteList {
                 SharedByteList::from_raw(self.as_ptr(), self.len())
             }
@@ -660,12 +670,10 @@ pub(crate) mod c {
     }
 }
 
-pub(crate) type ListBlob = c::ListBlob;
-
 pub(crate) trait TakeFirst<T: Clone> {
     fn take_first(self) -> T;
 }
 
-pub(crate) trait AsSharedList {
+pub(crate) trait AsSharedByteList {
     fn shared(&self) -> SharedByteList;
 }

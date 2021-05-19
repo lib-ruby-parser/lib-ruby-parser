@@ -73,7 +73,7 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod tests {
-        use crate::containers::{list::AsSharedList, List};
+        use crate::containers::{list::AsSharedByteList, List};
         use std::ops::Deref;
 
         type ByteList = List<u8>;
