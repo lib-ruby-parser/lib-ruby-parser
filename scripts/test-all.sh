@@ -9,7 +9,7 @@ cargo test --features "onig"
 
 rustup default nightly
 
-# export ASAN_OPTIONS=detect_leaks=1
+export ASAN_OPTIONS=detect_leaks=1
 export RUSTFLAGS=-Zsanitizer=address
 
 cargo clean

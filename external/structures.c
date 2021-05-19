@@ -35,9 +35,13 @@ PTR_BLOB_DATA lib_ruby_parser_containers_make_ptr_blob(void *ptr)
 
 void lib_ruby_parser_containers_free_ptr_blob(PTR_BLOB_DATA blob, Drop drop)
 {
-    (void)drop;
     PTR_BLOB_UNION u = {.as_blob = blob};
-    free(u.as_value);
+    PTR ptr = u.as_value;
+    if (ptr != NULL)
+    {
+        drop(u.as_value);
+        free(u.as_value);
+    }
 }
 
 void *lib_ruby_parser_containers_raw_ptr_from_ptr_blob(PTR_BLOB_DATA blob)
@@ -65,9 +69,13 @@ MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_make_maybe_ptr_blob(void *ptr)
 
 void lib_ruby_parser_containers_free_maybe_ptr_blob(MAYBE_PTR_BLOB_DATA blob, Drop drop)
 {
-    (void)drop;
     MAYBE_PTR_BLOB_UNION u = {.as_blob = blob};
-    free(u.as_value);
+    MAYBE_PTR maybe_ptr = u.as_value;
+    if (maybe_ptr != NULL)
+    {
+        drop(maybe_ptr);
+        free(maybe_ptr);
+    }
 }
 
 void *lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(MAYBE_PTR_BLOB_DATA blob)
@@ -144,9 +152,11 @@ MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob()
             {                                                                                                                      \
                 list.capacity *= 2;                                                                                                \
             }                                                                                                                      \
+            VALUE##_BLOB_DATA *old_ptr = list.ptr;                                                                                 \
             VALUE##_BLOB_DATA *new_ptr = malloc(sizeof(VALUE) * list.capacity);                                                    \
-            memcpy(new_ptr, list.ptr, sizeof(VALUE) * list.size);                                                                  \
+            memcpy(new_ptr, old_ptr, sizeof(VALUE) * list.size);                                                                   \
             list.ptr = new_ptr;                                                                                                    \
+            free(old_ptr);                                                                                                         \
         }                                                                                                                          \
         list.ptr[list.size] = item;                                                                                                \
         list.size++;                                                                                                               \

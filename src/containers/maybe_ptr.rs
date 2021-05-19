@@ -267,7 +267,7 @@ pub(crate) mod c {
 
         #[derive(Debug, PartialEq)]
         struct Foo {
-            bar: i32,
+            bar: Vec<i32>,
         }
 
         extern "C" fn drop_in_place_foo(ptr: *mut std::ffi::c_void) {
@@ -290,8 +290,8 @@ pub(crate) mod c {
 
         #[test]
         fn test_maybe_ptr() {
-            let ptr = MaybePtr::some(Foo { bar: 42 });
-            assert_eq!(ptr.as_option(), Some(&Foo { bar: 42 }));
+            let ptr = MaybePtr::some(Foo { bar: vec![42] });
+            assert_eq!(ptr.as_option(), Some(&Foo { bar: vec![42] }));
 
             let ptr: MaybePtr<Foo> = MaybePtr::none();
             assert_eq!(ptr.as_option(), None);
