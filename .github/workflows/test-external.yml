@@ -1,4 +1,4 @@
-name: test-c
+name: test-external
 
 on:
   push:
@@ -40,6 +40,10 @@ jobs:
         uses: actions/checkout@v2
 
       - name: compile external containers
+        env:
+          CC: clang
+          CXX: clang++
+          AR: ar
         run: cd external && ${{ matrix.build.compile-external-containers }}
 
       - name: install rust
