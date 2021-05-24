@@ -1,7 +1,13 @@
 use crate::containers::{
-    maybe_ptr::AsOption, maybe_string_ptr::MaybeStringPtrAsStringOption, MaybePtr, MaybeStringPtr,
-    StringPtr,
+    maybe_ptr::AsOption, maybe_string_ptr::MaybeStringPtrAsStringOption, MaybeStringPtr, StringPtr,
 };
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalMaybePtr;
+#[cfg(feature = "compile-with-external-structures")]
+type MaybePtr<T> = ExternalMaybePtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type MaybePtr<T> = Option<Box<T>>;
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalList;

@@ -101,11 +101,20 @@ impl InnerNode for {struct_name} {{
         if self.has_field_with_type(FieldType::StringValue) {
             imports.push("use crate::StringValue;");
         }
+
         if self.has_field_with_type(FieldType::MaybeNode)
             || self.has_field_with_type(FieldType::RegexOptions)
         {
-            imports.push("use crate::containers::MaybePtr;");
+            imports.push("");
+            imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
+            imports.push("use crate::containers::ExternalMaybePtr;");
+            imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
+            imports.push("type MaybePtr<T> = ExternalMaybePtr<T>;");
+            imports.push("#[cfg(not(feature = \"compile-with-external-structures\"))]");
+            imports.push("type MaybePtr<T> = Option<Box<T>>;");
+            imports.push("");
         }
+
         if self.has_field_with_type(FieldType::Node) {
             imports.push("use crate::containers::Ptr;");
         }

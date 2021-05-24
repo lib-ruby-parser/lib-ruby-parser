@@ -44,7 +44,7 @@ pub use list::c::List as ExternalList;
 #[cfg(feature = "compile-with-external-structures")]
 pub use maybe_loc::c::MaybeLoc as ExternalMaybeLoc;
 #[cfg(feature = "compile-with-external-structures")]
-pub use maybe_ptr::c::MaybePtr;
+pub use maybe_ptr::c::MaybePtr as ExternalMaybePtr;
 #[cfg(feature = "compile-with-external-structures")]
 pub use maybe_string_ptr::c::MaybeStringPtr;
 #[cfg(feature = "compile-with-external-structures")]

@@ -5,9 +5,16 @@ mod visit_gen;
 pub use visit_gen::Observer;
 
 use crate::{
-    containers::{maybe_ptr::AsOption, MaybePtr, Ptr},
+    containers::{maybe_ptr::AsOption, Ptr},
     Node,
 };
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalMaybePtr;
+#[cfg(feature = "compile-with-external-structures")]
+type MaybePtr<T> = ExternalMaybePtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type MaybePtr<T> = Option<Box<T>>;
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalList;

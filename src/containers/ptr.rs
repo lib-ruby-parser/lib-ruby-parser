@@ -1,6 +1,7 @@
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::get_drop_fn::GetDropFn;
-use crate::containers::MaybePtr;
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalMaybePtr;
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
@@ -9,7 +10,7 @@ pub(crate) mod rust {
 
     use super::IntoMaybePtr;
     impl<T> IntoMaybePtr<T> for Ptr<T> {
-        fn into_maybe_ptr(self) -> crate::containers::MaybePtr<T> {
+        fn into_maybe_ptr(self) -> Option<Self> {
             Some(self)
         }
     }
@@ -24,7 +25,7 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
-    use super::{GetDropFn, MaybePtr};
+    use super::{ExternalMaybePtr, GetDropFn};
 
     // use crate::containers::deleter::{Deleter, GetDeleter};
     use std::ops::Deref;
@@ -103,8 +104,8 @@ pub(crate) mod c {
 
     use super::IntoMaybePtr;
     impl<T: GetDropFn> IntoMaybePtr<T> for Ptr<T> {
-        fn into_maybe_ptr(self) -> MaybePtr<T> {
-            MaybePtr::from_raw(self.into_raw())
+        fn into_maybe_ptr(self) -> ExternalMaybePtr<T> {
+            ExternalMaybePtr::from_raw(self.into_raw())
         }
     }
 
@@ -211,7 +212,7 @@ pub(crate) mod c {
 /// Unwraps the pointer and returns stack value
 pub trait IntoMaybePtr<T: GetDropFn> {
     /// Unwraps the pointer and returns stack value
-    fn into_maybe_ptr(self) -> MaybePtr<T>
+    fn into_maybe_ptr(self) -> ExternalMaybePtr<T>
     where
         Self: Sized;
 }
@@ -219,7 +220,7 @@ pub trait IntoMaybePtr<T: GetDropFn> {
 /// Unwraps the pointer and returns stack value
 pub trait IntoMaybePtr<T> {
     /// Unwraps the pointer and returns stack value
-    fn into_maybe_ptr(self) -> MaybePtr<T>
+    fn into_maybe_ptr(self) -> Option<Box<T>>
     where
         Self: Sized;
 }

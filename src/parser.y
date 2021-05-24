@@ -57,6 +57,13 @@ type List<T> = ExternalList<T>;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type List<T> = Vec<T>;
 
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalMaybePtr;
+#[cfg(feature = "compile-with-external-structures")]
+type MaybePtr<T> = ExternalMaybePtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type MaybePtr<T> = Option<Box<T>>;
+
 use crate::{ParserOptions, ParserResult};
 use crate::{Token};
 use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
@@ -71,7 +78,7 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
 use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult};
 use crate::debug_level;
-use crate::containers::{Ptr, MaybePtr, ptr::UnPtr, maybe_ptr::MaybePtrNone, StringPtr};
+use crate::containers::{Ptr, ptr::UnPtr, maybe_ptr::MaybePtrNone, StringPtr};
 
 }
 
