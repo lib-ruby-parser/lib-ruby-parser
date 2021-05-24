@@ -25,11 +25,10 @@ pub struct ParserOptions {
     ///
     /// # Example
     /// ```rust
-    /// use lib_ruby_parser::containers::{List, StringPtr};
     /// use lib_ruby_parser::source::{CustomDecoder, CustomDecoderResult, InputError};
     /// use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
     ///
-    /// fn decode(encoding: StringPtr, input: List<u8>) -> CustomDecoderResult {
+    /// fn decode(encoding: String, input: Vec<u8>) -> CustomDecoderResult {
     ///     if "US-ASCII" == encoding.to_uppercase() {
     ///         // reencode and return Ok(result)
     ///         return CustomDecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec().into());
@@ -60,12 +59,11 @@ pub struct ParserOptions {
     /// # Example
     /// ```
     /// use lib_ruby_parser::{
-    ///     containers::{Ptr, SharedByteList},
     ///     nodes::*,
     ///     token_rewriter::*,
     ///     Bytes, Node, Parser, ParserOptions, ParserResult, Token,
     /// };
-    /// fn rewrite_foo_to_bar(mut token: Ptr<Token>, input: SharedByteList) -> TokenRewriterResult {
+    /// fn rewrite_foo_to_bar(mut token: Box<Token>, input: &[u8]) -> TokenRewriterResult {
     ///     // simply rewrite all tokens "foo" to "bar"
     ///     if token.to_string_lossy() == "foo" {
     ///         token.token_value = Bytes::new(b"bar".to_vec());
