@@ -98,7 +98,3 @@ pub mod debug_level;
 
 /// Module with generic containers
 pub mod containers;
-
-/// Module with C-compatible API
-#[cfg(feature = "compile-with-external-structures")]
-pub mod c_parse;
