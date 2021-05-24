@@ -1,4 +1,4 @@
-use crate::containers::Loc;
+use crate::Loc;
 
 /// An enum of all magic comment kinds
 #[derive(Debug, Clone, PartialEq)]

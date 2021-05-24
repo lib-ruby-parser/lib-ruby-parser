@@ -1,5 +1,5 @@
-use crate::containers::Loc;
 use crate::source::DecodedInput;
+use crate::Loc;
 use crate::{DiagnosticMessage, ErrorLevel};
 
 /// Diagnostic message that comes from the parser when there's an error or warning

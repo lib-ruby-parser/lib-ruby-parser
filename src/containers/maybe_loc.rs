@@ -81,18 +81,6 @@ pub(crate) mod c {
     }
 
     impl MaybeLoc {
-        // /// Constructs a pointer with a given raw pointer
-        // pub fn from_raw(ptr: *mut Loc) -> Self {
-        //     Self { ptr }
-        // }
-
-        // /// Unwraps into raw pointer, consumes self
-        // pub fn into_raw(mut self) -> *mut Loc {
-        //     let ptr = self.ptr;
-        //     self.ptr = std::ptr::null_mut();
-        //     ptr
-        // }
-
         /// Equivalent of Option::or_else
         pub fn or_else<F>(self, f: F) -> Self
         where
@@ -171,6 +159,12 @@ pub(crate) mod c {
                 MaybeLoc::Some(loc) => Some(loc),
                 MaybeLoc::None => None,
             }
+        }
+    }
+
+    impl From<Loc> for MaybeLoc {
+        fn from(loc: Loc) -> Self {
+            Self::Some(loc)
         }
     }
 }
