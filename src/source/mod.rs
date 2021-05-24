@@ -13,4 +13,4 @@ pub use decoder::InputError;
 pub use decoder::{CustomDecoder, CustomDecoderResult};
 pub use input::Input;
 pub use magic_comment::{MagicComment, MagicCommentKind};
-pub(crate) use source_line::SourceLine;
+pub use source_line::SourceLine;
