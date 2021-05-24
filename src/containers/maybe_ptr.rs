@@ -23,13 +23,6 @@ pub(crate) mod rust {
             self.as_ref().map(|t| &**t)
         }
     }
-
-    use super::IntoOption;
-    impl<T> IntoOption<T> for MaybePtr<T> {
-        fn into_option(self) -> Option<T> {
-            self.map(|t| *t)
-        }
-    }
 }
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -245,16 +238,6 @@ pub(crate) mod c {
         }
     }
 
-    use super::IntoOption;
-    impl<T> IntoOption<T> for MaybePtr<T>
-    where
-        T: Clone + GetDropFn,
-    {
-        fn into_option(self) -> Option<T> {
-            self.as_option().map(|t| t.clone())
-        }
-    }
-
     impl<T> Default for MaybePtr<T>
     where
         T: GetDropFn,
@@ -325,10 +308,4 @@ pub(crate) trait MaybePtrNone<T> {
 pub trait AsOption<T> {
     /// Converts &Ptr<T> into Option<&T>
     fn as_option(&self) -> Option<&T>;
-}
-
-pub(crate) trait IntoOption<T> {
-    fn into_option(self) -> Option<T>
-    where
-        Self: Sized;
 }
