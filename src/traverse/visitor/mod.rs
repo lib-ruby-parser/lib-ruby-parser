@@ -4,10 +4,7 @@ pub use item::Item;
 mod visit_gen;
 pub use visit_gen::Observer;
 
-use crate::{
-    containers::{maybe_ptr::AsOption, Ptr},
-    Node,
-};
+use crate::{containers::Ptr, Node};
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalMaybePtr;
@@ -93,7 +90,7 @@ impl<TObserver: Observer> Visit<&Ptr<Node>> for Visitor<TObserver> {
 
 impl<TObserver: Observer> Visit<&MaybePtr<Node>> for Visitor<TObserver> {
     fn visit(&mut self, node: &MaybePtr<Node>, visit_as: Item) {
-        if let Some(node) = node.as_option() {
+        if let Some(node) = node.as_ref() {
             self.visit(node, visit_as);
         }
     }

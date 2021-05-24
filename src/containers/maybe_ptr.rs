@@ -16,13 +16,6 @@ pub(crate) mod rust {
             None
         }
     }
-
-    use super::AsOption;
-    impl<T> AsOption<T> for MaybePtr<T> {
-        fn as_option(&self) -> Option<&T> {
-            self.as_ref().map(|t| &**t)
-        }
-    }
 }
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -62,7 +55,7 @@ pub(crate) mod c {
         T: std::fmt::Debug + GetDropFn,
     {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            std::fmt::Debug::fmt(&self.as_option(), f)
+            std::fmt::Debug::fmt(&self.as_ref(), f)
         }
     }
 
@@ -71,7 +64,7 @@ pub(crate) mod c {
         T: PartialEq + GetDropFn,
     {
         fn eq(&self, other: &Self) -> bool {
-            PartialEq::eq(&self.as_option(), &other.as_option())
+            PartialEq::eq(&self.as_ref(), &other.as_ref())
         }
     }
 
@@ -80,7 +73,7 @@ pub(crate) mod c {
         T: Clone + GetDropFn,
     {
         fn clone(&self) -> Self {
-            match self.as_option() {
+            match self.as_ref() {
                 Some(value) => Self::some(value.clone()),
                 None => Self::none(),
             }
@@ -200,6 +193,16 @@ pub(crate) mod c {
                 Ptr::from_raw(ptr)
             }
         }
+
+        /// Equivalent of Option::as_ref
+        pub fn as_ref(&self) -> Option<&T> {
+            let ptr = self.as_ptr();
+            if ptr.is_null() {
+                None
+            } else {
+                Some(unsafe { &*ptr })
+            }
+        }
     }
 
     impl<T> From<Option<Box<T>>> for MaybePtr<T>
@@ -228,16 +231,6 @@ pub(crate) mod c {
         }
     }
 
-    use super::AsOption;
-    impl<T> AsOption<T> for MaybePtr<T>
-    where
-        T: GetDropFn,
-    {
-        fn as_option(&self) -> Option<&T> {
-            unsafe { self.as_ptr().as_ref() }
-        }
-    }
-
     impl<T> Default for MaybePtr<T>
     where
         T: GetDropFn,
@@ -250,7 +243,7 @@ pub(crate) mod c {
     #[cfg(test)]
     mod test {
         use super::{
-            AsOption, GetDropFn, MaybePtr, MaybePtrBlob, MaybePtrNone, MaybePtrSome, MAYBE_PTR_SIZE,
+            GetDropFn, MaybePtr, MaybePtrBlob, MaybePtrNone, MaybePtrSome, MAYBE_PTR_SIZE,
         };
 
         #[test]
@@ -284,10 +277,10 @@ pub(crate) mod c {
         #[test]
         fn test_maybe_ptr() {
             let ptr = MaybePtr::some(Foo { bar: vec![42] });
-            assert_eq!(ptr.as_option(), Some(&Foo { bar: vec![42] }));
+            assert_eq!(ptr.as_ref(), Some(&Foo { bar: vec![42] }));
 
             let ptr: MaybePtr<Foo> = MaybePtr::none();
-            assert_eq!(ptr.as_option(), None);
+            assert_eq!(ptr.as_ref(), None);
         }
     }
 }
@@ -302,10 +295,4 @@ pub(crate) trait MaybePtrNone<T> {
     fn none() -> Self
     where
         Self: Sized;
-}
-
-/// Trait for converting &Ptr<T> into Option<&T>
-pub trait AsOption<T> {
-    /// Converts &Ptr<T> into Option<&T>
-    fn as_option(&self) -> Option<&T>;
 }

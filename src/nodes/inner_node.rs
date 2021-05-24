@@ -1,5 +1,5 @@
 use crate::containers::{
-    maybe_ptr::AsOption, maybe_string_ptr::MaybeStringPtrAsStringOption, MaybeStringPtr, StringPtr,
+    maybe_string_ptr::MaybeStringPtrAsStringOption, MaybeStringPtr, StringPtr,
 };
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -82,13 +82,13 @@ impl InspectVec {
     }
 
     pub(crate) fn push_maybe_node(&mut self, node: &MaybePtr<Node>) {
-        if let Some(node) = node.as_option() {
+        if let Some(node) = node.as_ref() {
             self.push_node(node)
         }
     }
 
     pub(crate) fn push_regex_options(&mut self, node: &MaybePtr<Node>) {
-        if let Some(node) = node.as_option() {
+        if let Some(node) = node.as_ref() {
             self.push_node(node)
         } else {
             self.strings.push(format!(
@@ -100,7 +100,7 @@ impl InspectVec {
     }
 
     pub(crate) fn push_maybe_node_or_nil(&mut self, node: &MaybePtr<Node>) {
-        if let Some(node) = node.as_option() {
+        if let Some(node) = node.as_ref() {
             self.push_node(node)
         } else {
             self.push_nil()

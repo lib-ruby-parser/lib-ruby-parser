@@ -65,6 +65,8 @@ use lib_ruby_parser::containers::ExternalMaybeLoc;
 #[cfg(feature = \"compile-with-external-structures\")]
 type MaybeLoc = ExternalMaybeLoc;
 #[cfg(not(feature = \"compile-with-external-structures\"))]
+use lib_ruby_parser::Loc;
+#[cfg(not(feature = \"compile-with-external-structures\"))]
 type MaybeLoc = Option<Loc>;
 
 impl LocName {{

@@ -27,7 +27,7 @@ type MaybePtr<T> = Option<Box<T>>;
 
 use crate::containers::{
     list::TakeFirst,
-    maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},
+    maybe_ptr::{MaybePtrNone, MaybePtrSome},
     maybe_string_ptr::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome},
     ptr::{IntoMaybePtr, UnPtr},
     MaybeStringPtr, Ptr, StringPtr,
@@ -3909,8 +3909,8 @@ impl Builder {
 
         let check_maybe_condition =
             |if_true: &'a MaybePtr<Node>, if_false: &'a MaybePtr<Node>| match (
-                if_true.as_option(),
-                if_false.as_option(),
+                if_true.as_ref(),
+                if_false.as_ref(),
             ) {
                 (None, None) | (None, Some(_)) | (Some(_), None) => None,
                 (Some(if_true), Some(if_false)) => check_condition(&*if_true, &*if_false),

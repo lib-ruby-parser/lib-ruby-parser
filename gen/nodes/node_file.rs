@@ -140,11 +140,6 @@ impl InnerNode for {struct_name} {{
             imports.push("");
         }
 
-        if self.has_field_with_type(FieldType::MaybeNode)
-            || self.has_field_with_type(FieldType::RegexOptions)
-        {
-            imports.push("use crate::containers::maybe_ptr::AsOption;");
-        }
         if self.has_field_with_type(FieldType::Str)
             || self.has_field_with_type(FieldType::RawString)
         {
@@ -246,7 +241,7 @@ impl<'a> FieldWrapper<'a> {
                 field_name = self.field.field_name
             )),
             FieldType::MaybeNode | FieldType::RegexOptions => Some(format!(
-                "{offset}self.{field_name}.as_option().map(|node| node.inner_ref().print_with_locs());",
+                "{offset}self.{field_name}.as_ref().map(|node| node.inner_ref().print_with_locs());",
                 offset = offset,
                 field_name = self.field.field_name
             )),
