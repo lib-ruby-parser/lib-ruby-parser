@@ -1,11 +1,5 @@
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub(crate) mod rust {
-    /// Rust-compatible shared list
-    pub type SharedByteList<'a> = &'a [u8];
-}
-
 #[cfg(feature = "compile-with-external-structures")]
-pub(crate) mod c {
+pub(crate) mod external {
     use std::ops::Deref;
 
     use crate::containers::size::SHARED_BYTE_LIST_SIZE;

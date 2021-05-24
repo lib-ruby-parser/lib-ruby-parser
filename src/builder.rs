@@ -46,11 +46,8 @@ type StringPtr = ExternalStringPtr;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type StringPtr = String;
 
-use crate::containers::{
-    list::TakeFirst,
-    maybe_ptr::{MaybePtrNone, MaybePtrSome},
-    maybe_string_ptr::{MaybeStringPtrNone, MaybeStringPtrSome},
-    ptr::UnPtr,
+use crate::containers::helpers::{
+    ListTakeFirst, MaybePtrNone, MaybePtrSome, MaybeStringPtrNone, MaybeStringPtrSome, UnPtr,
 };
 use crate::error::Diagnostics;
 use crate::nodes::*;

@@ -1,4 +1,4 @@
-use crate::containers::ptr::UnPtr;
+use crate::containers::helpers::UnPtr;
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalList;

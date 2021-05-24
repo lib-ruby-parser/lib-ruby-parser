@@ -19,7 +19,7 @@ pub(crate) mod rust {
 }
 
 #[cfg(feature = "compile-with-external-structures")]
-pub(crate) mod c {
+pub(crate) mod external {
     use std::ffi::c_void;
 
     use crate::containers::get_drop_fn::{DropPtrFn, GetDropFn};

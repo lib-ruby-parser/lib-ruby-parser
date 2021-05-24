@@ -15,7 +15,7 @@ pub(crate) mod rust {
 }
 
 #[cfg(feature = "compile-with-external-structures")]
-pub(crate) mod c {
+pub(crate) mod external {
     use super::GetDropFn;
 
     // use crate::containers::deleter::{Deleter, GetDeleter};

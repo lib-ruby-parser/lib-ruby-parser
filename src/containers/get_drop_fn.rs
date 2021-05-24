@@ -1,4 +1,4 @@
-use crate::containers::list::c::ListBlob;
+use crate::containers::list::external::ListBlob;
 use std::ffi::c_void;
 
 pub type DropPtrFn = extern "C" fn(*mut c_void);

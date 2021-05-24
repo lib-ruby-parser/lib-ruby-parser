@@ -28,7 +28,7 @@ pub(crate) mod rust {
 }
 
 #[cfg(feature = "compile-with-external-structures")]
-pub(crate) mod c {
+pub(crate) mod external {
     use crate::containers::get_drop_fn::GetDropFn;
 
     use crate::containers::size::LIST_SIZE;

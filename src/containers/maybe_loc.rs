@@ -1,13 +1,5 @@
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub(crate) mod rust {
-    use crate::Loc;
-
-    /// Rust-compatible nullable pointer
-    pub type MaybeLoc = Option<Loc>;
-}
-
 #[cfg(feature = "compile-with-external-structures")]
-pub(crate) mod c {
+pub(crate) mod external {
     use crate::Loc;
 
     /// C-compatible Option<Loc>

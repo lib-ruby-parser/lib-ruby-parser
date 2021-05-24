@@ -1,55 +1,36 @@
-/// Module with List container
-pub mod list;
+mod list;
+mod maybe_loc;
+mod maybe_ptr;
+mod maybe_string_ptr;
+mod ptr;
+mod shared_byte_list;
+mod string_ptr;
 
-/// Module with MaybePtr container
-pub mod maybe_ptr;
-
-/// Module with Ptr container
-pub mod ptr;
-
-/// Module with MaybeLoc container
-pub mod maybe_loc;
-
-/// Module with StringPtr container
-pub mod string_ptr;
-
-/// Module with MaybeStringPtr container
-pub mod maybe_string_ptr;
-
-/// Module with SharedByteList container
-pub mod shared_byte_list;
+pub(crate) mod helpers {
+    pub(crate) use super::{
+        list::TakeFirst as ListTakeFirst,
+        maybe_ptr::{MaybePtrNone, MaybePtrSome},
+        maybe_string_ptr::{MaybeStringPtrNone, MaybeStringPtrSome},
+        ptr::UnPtr,
+    };
+}
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod get_drop_fn;
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod size;
 
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub use list::rust::List;
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub use maybe_loc::rust::MaybeLoc;
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub use maybe_ptr::rust::MaybePtr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub use maybe_string_ptr::rust::MaybeStringPtr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub use ptr::rust::Ptr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub use shared_byte_list::rust::SharedByteList;
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub use string_ptr::rust::StringPtr;
-
 #[cfg(feature = "compile-with-external-structures")]
-pub use list::c::List as ExternalList;
+pub use list::external::List as ExternalList;
 #[cfg(feature = "compile-with-external-structures")]
-pub use maybe_loc::c::MaybeLoc as ExternalMaybeLoc;
+pub use maybe_loc::external::MaybeLoc as ExternalMaybeLoc;
 #[cfg(feature = "compile-with-external-structures")]
-pub use maybe_ptr::c::MaybePtr as ExternalMaybePtr;
+pub use maybe_ptr::external::MaybePtr as ExternalMaybePtr;
 #[cfg(feature = "compile-with-external-structures")]
-pub use maybe_string_ptr::c::MaybeStringPtr as ExternalMaybeStringPtr;
+pub use maybe_string_ptr::external::MaybeStringPtr as ExternalMaybeStringPtr;
 #[cfg(feature = "compile-with-external-structures")]
-pub use ptr::c::Ptr as ExternalPtr;
+pub use ptr::external::Ptr as ExternalPtr;
 #[cfg(feature = "compile-with-external-structures")]
-pub use shared_byte_list::c::SharedByteList as ExternalSharedByteList;
+pub use shared_byte_list::external::SharedByteList as ExternalSharedByteList;
 #[cfg(feature = "compile-with-external-structures")]
-pub use string_ptr::c::StringPtr as ExternalStringPtr;
+pub use string_ptr::external::StringPtr as ExternalStringPtr;

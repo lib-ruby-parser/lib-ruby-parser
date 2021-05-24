@@ -92,7 +92,7 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
 use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult};
 use crate::debug_level;
-use crate::containers::{ptr::UnPtr, maybe_ptr::MaybePtrNone};
+use crate::containers::helpers::{UnPtr, MaybePtrNone};
 
 }
 

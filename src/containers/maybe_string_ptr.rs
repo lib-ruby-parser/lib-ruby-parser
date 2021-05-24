@@ -22,7 +22,7 @@ pub(crate) mod rust {
 }
 
 #[cfg(feature = "compile-with-external-structures")]
-pub(crate) mod c {
+pub(crate) mod external {
     use super::{MaybeStringPtrNone, MaybeStringPtrSome};
     use crate::containers::ExternalStringPtr;
 
