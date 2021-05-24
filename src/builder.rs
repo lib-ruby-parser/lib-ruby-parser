@@ -3561,16 +3561,6 @@ impl Builder {
     }
 
     fn arg_name<'a>(&self, node: &'a Node) -> Option<&'a str> {
-        trait StringOrStrAsSlice {
-            fn as_str_slice(self: &Self) -> &str;
-        }
-
-        impl StringOrStrAsSlice for str {
-            fn as_str_slice(self: &Self) -> &str {
-                &self
-            }
-        }
-
         match node {
             Node::Arg(Arg { name, .. })
             | Node::Optarg(Optarg { name, .. })
@@ -3756,7 +3746,7 @@ impl Builder {
         let source = self.static_string(&parts)?;
         let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
         reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
-        if let Some(options_s) = options.as_str() {
+        if let Some(options_s) = options.as_ref().map(|s| s.as_str_slice()) {
             if options_s.as_bytes().contains(&b'x') {
                 reg_options |= RegexOptions::REGEX_OPTION_EXTEND;
             }
@@ -4052,4 +4042,15 @@ pub(crate) struct HeredocMap {
     heredoc_body_l: Loc,
     heredoc_end_l: Loc,
     expression_l: Loc,
+}
+
+// Utility helper
+trait StringOrStrAsSlice {
+    fn as_str_slice(self: &Self) -> &str;
+}
+
+impl StringOrStrAsSlice for str {
+    fn as_str_slice(self: &Self) -> &str {
+        &self
+    }
 }

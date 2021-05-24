@@ -20,10 +20,7 @@ jobs:
         build:
           - { rust: stable,  cargoargs: "--features onig" }
           - { rust: beta,    cargoargs: "--features onig" }
-          # nightly is somewhat broken:
-          # 1. there's a bug with string escaping
-          # 2. it fails to compile onig
-          - { rust: nightly, cargoargs: "--test parser_test" }
+          - { rust: nightly, cargoargs: "--features nightly-features" }
 
     steps:
       - name: checkout
