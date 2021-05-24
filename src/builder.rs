@@ -11,13 +11,20 @@ type List<T> = ExternalList<T>;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type List<T> = Vec<T>;
 
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalMaybeLoc;
+#[cfg(feature = "compile-with-external-structures")]
+type MaybeLoc = ExternalMaybeLoc;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type MaybeLoc = Option<Loc>;
+
 use crate::containers::{
     list::TakeFirst,
     maybe_loc::{MaybeLocNone, MaybeLocSome},
     maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},
     maybe_string_ptr::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome},
     ptr::{IntoMaybePtr, UnPtr},
-    MaybeLoc, MaybePtr, MaybeStringPtr, Ptr, StringPtr,
+    MaybePtr, MaybeStringPtr, Ptr, StringPtr,
 };
 use crate::error::Diagnostics;
 use crate::nodes::*;

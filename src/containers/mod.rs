@@ -42,7 +42,7 @@ pub use string_ptr::rust::StringPtr;
 #[cfg(feature = "compile-with-external-structures")]
 pub use list::c::List as ExternalList;
 #[cfg(feature = "compile-with-external-structures")]
-pub use maybe_loc::c::MaybeLoc;
+pub use maybe_loc::c::MaybeLoc as ExternalMaybeLoc;
 #[cfg(feature = "compile-with-external-structures")]
 pub use maybe_ptr::c::MaybePtr;
 #[cfg(feature = "compile-with-external-structures")]

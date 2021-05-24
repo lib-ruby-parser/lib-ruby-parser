@@ -119,9 +119,18 @@ impl InnerNode for {struct_name} {{
             imports.push("type List<T> = Vec<T>;");
             imports.push("");
         }
+
         if self.has_field_with_type(FieldType::MaybeLoc) {
-            imports.push("use crate::containers::MaybeLoc;")
+            imports.push("");
+            imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
+            imports.push("use crate::containers::ExternalMaybeLoc;");
+            imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
+            imports.push("type MaybeLoc = ExternalMaybeLoc;");
+            imports.push("#[cfg(not(feature = \"compile-with-external-structures\"))]");
+            imports.push("type MaybeLoc = Option<Loc>;");
+            imports.push("");
         }
+
         if self.has_field_with_type(FieldType::MaybeNode)
             || self.has_field_with_type(FieldType::RegexOptions)
         {

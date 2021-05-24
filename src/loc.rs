@@ -1,6 +1,12 @@
 use std::convert::TryInto;
 
-use crate::containers::MaybeLoc;
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalMaybeLoc;
+#[cfg(feature = "compile-with-external-structures")]
+type MaybeLoc = ExternalMaybeLoc;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type MaybeLoc = Option<Loc>;
+
 use crate::source::DecodedInput;
 use crate::Loc;
 
