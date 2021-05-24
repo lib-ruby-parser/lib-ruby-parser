@@ -151,7 +151,14 @@ impl InnerNode for {struct_name} {{
         if self.has_field_with_type(FieldType::Str)
             || self.has_field_with_type(FieldType::RawString)
         {
-            imports.push("use crate::containers::StringPtr;");
+            imports.push("");
+            imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
+            imports.push("use crate::containers::ExternalStringPtr;");
+            imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
+            imports.push("type StringPtr = ExternalStringPtr;");
+            imports.push("#[cfg(not(feature = \"compile-with-external-structures\"))]");
+            imports.push("type StringPtr = String;");
+            imports.push("");
         }
 
         if self.has_field_with_type(FieldType::MaybeStr)

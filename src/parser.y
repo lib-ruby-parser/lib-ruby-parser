@@ -71,6 +71,13 @@ type MaybePtr<T> = ExternalMaybePtr<T>;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type MaybePtr<T> = Option<Box<T>>;
 
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalStringPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type StringPtr = ExternalStringPtr;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type StringPtr = String;
+
 use crate::{ParserOptions, ParserResult};
 use crate::{Token};
 use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
@@ -85,7 +92,7 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
 use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult};
 use crate::debug_level;
-use crate::containers::{ptr::UnPtr, maybe_ptr::MaybePtrNone, StringPtr};
+use crate::containers::{ptr::UnPtr, maybe_ptr::MaybePtrNone};
 
 }
 

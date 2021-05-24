@@ -24,7 +24,7 @@ pub(crate) mod rust {
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod c {
     use super::{MaybeStringPtrNone, MaybeStringPtrSome};
-    use crate::containers::StringPtr;
+    use crate::containers::ExternalStringPtr;
 
     /// C-compatible nullable String container
     #[repr(C)]
@@ -67,7 +67,7 @@ pub(crate) mod c {
 
     impl MaybeStringPtr {
         /// Equivalent of Option::unwrap()
-        pub fn unwrap(self) -> StringPtr {
+        pub fn unwrap(self) -> ExternalStringPtr {
             let len = self.len;
             let ptr = self.take();
 
@@ -76,7 +76,7 @@ pub(crate) mod c {
             } else {
                 let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
                 let s = String::from_utf8(bytes).unwrap();
-                StringPtr::from(s)
+                ExternalStringPtr::from(s)
             }
         }
 

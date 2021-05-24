@@ -52,4 +52,4 @@ pub use ptr::c::Ptr as ExternalPtr;
 #[cfg(feature = "compile-with-external-structures")]
 pub use shared_byte_list::c::SharedByteList as ExternalSharedByteList;
 #[cfg(feature = "compile-with-external-structures")]
-pub use string_ptr::c::StringPtr;
+pub use string_ptr::c::StringPtr as ExternalStringPtr;

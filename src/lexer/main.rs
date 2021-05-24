@@ -1,4 +1,4 @@
-use crate::containers::{ptr::UnPtr, StringPtr};
+use crate::containers::ptr::UnPtr;
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalList;
@@ -13,6 +13,13 @@ use crate::containers::ExternalPtr;
 type Ptr<T> = ExternalPtr<T>;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type Ptr<T> = Box<T>;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalStringPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type StringPtr = ExternalStringPtr;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type StringPtr = String;
 
 use crate::debug_level;
 use crate::lexer::*;

@@ -1,5 +1,3 @@
-use crate::containers::StringPtr;
-
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalMaybePtr;
 #[cfg(feature = "compile-with-external-structures")]
@@ -20,6 +18,13 @@ use crate::containers::ExternalMaybeStringPtr;
 type MaybeStringPtr = ExternalMaybeStringPtr;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type MaybeStringPtr = Option<String>;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalStringPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type StringPtr = ExternalStringPtr;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type StringPtr = String;
 
 use crate::Loc;
 use crate::Node;

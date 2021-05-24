@@ -1,13 +1,18 @@
 use std::convert::TryFrom;
 
-use crate::containers::StringPtr;
-
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalList;
 #[cfg(feature = "compile-with-external-structures")]
 type List<T> = ExternalList<T>;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type List<T> = Vec<T>;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalStringPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type StringPtr = ExternalStringPtr;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type StringPtr = String;
 
 use crate::debug_level;
 use crate::maybe_byte::*;
