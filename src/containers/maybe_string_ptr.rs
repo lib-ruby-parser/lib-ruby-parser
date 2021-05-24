@@ -79,9 +79,15 @@ pub(crate) mod c {
     impl MaybeStringPtr {
         /// Equivalent of Option::unwrap()
         pub fn unwrap(self) -> StringPtr {
-            match self.into_string() {
-                Some(s) => StringPtr::from(s),
-                None => panic!("failed to unwrap null StringPtr"),
+            let len = self.len;
+            let ptr = self.take();
+
+            if ptr.is_null() {
+                panic!("failed to unwrap null StringPtr")
+            } else {
+                let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
+                let s = String::from_utf8(bytes).unwrap();
+                StringPtr::from(s)
             }
         }
 
@@ -94,18 +100,6 @@ pub(crate) mod c {
     }
 
     impl MaybeStringPtrAsStringOption for MaybeStringPtr {
-        fn into_string(self) -> Option<String> {
-            let len = self.len;
-            let ptr = self.take();
-
-            if ptr.is_null() {
-                None
-            } else {
-                let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
-                Some(String::from_utf8(bytes).unwrap())
-            }
-        }
-
         fn as_str(&self) -> Option<&str> {
             if self.ptr.is_null() {
                 None
@@ -172,11 +166,11 @@ pub(crate) mod c {
             assert_eq!(s.as_str(), None)
         }
 
-        #[test]
-        fn test_into_string() {
-            let s = MaybeStringPtr::some("foo");
-            assert_eq!(s.into_string(), Some(String::from("foo")))
-        }
+        // #[test]
+        // fn test_into_string() {
+        //     let s = MaybeStringPtr::some("foo");
+        //     assert_eq!(s.into_string(), Some(String::from("foo")))
+        // }
 
         #[test]
         fn test_as_str() {
@@ -187,10 +181,6 @@ pub(crate) mod c {
 }
 
 pub(crate) trait MaybeStringPtrAsStringOption {
-    fn into_string(self) -> Option<String>
-    where
-        Self: Sized;
-
     fn as_str(&self) -> Option<&str>;
 }
 
