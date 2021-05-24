@@ -35,7 +35,7 @@ type Ptr<T> = Box<T>;
 use crate::containers::{
     list::TakeFirst,
     maybe_ptr::{MaybePtrNone, MaybePtrSome},
-    maybe_string_ptr::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome},
+    maybe_string_ptr::{MaybeStringPtrNone, MaybeStringPtrSome},
     ptr::UnPtr,
     MaybeStringPtr, StringPtr,
 };
@@ -3551,6 +3551,16 @@ impl Builder {
     }
 
     fn arg_name<'a>(&self, node: &'a Node) -> Option<&'a str> {
+        trait StringOrStrAsSlice {
+            fn as_str_slice(self: &Self) -> &str;
+        }
+
+        impl StringOrStrAsSlice for str {
+            fn as_str_slice(self: &Self) -> &str {
+                &self
+            }
+        }
+
         match node {
             Node::Arg(Arg { name, .. })
             | Node::Optarg(Optarg { name, .. })
@@ -3559,7 +3569,7 @@ impl Builder {
             | Node::Shadowarg(Shadowarg { name, .. })
             | Node::Blockarg(Blockarg { name, .. }) => Some(name.as_str()),
             Node::Restarg(Restarg { name, .. }) | Node::Kwrestarg(Kwrestarg { name, .. }) => {
-                name.as_str()
+                name.as_ref().map(|s| s.as_str_slice())
             }
             _ => unreachable!("unsupported arg {:?}", node),
         }

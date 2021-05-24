@@ -1,6 +1,4 @@
-use crate::containers::{
-    maybe_string_ptr::MaybeStringPtrAsStringOption, MaybeStringPtr, StringPtr,
-};
+use crate::containers::{MaybeStringPtr, StringPtr};
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalMaybePtr;
@@ -63,7 +61,7 @@ impl InspectVec {
     }
 
     pub(crate) fn push_maybe_str(&mut self, string: &MaybeStringPtr) {
-        if let Some(string) = string.as_str() {
+        if let Some(string) = string.as_ref() {
             self.strings.push(format!(", {:?}", string));
         }
     }
@@ -114,7 +112,7 @@ impl InspectVec {
     }
 
     pub(crate) fn push_chars(&mut self, chars: &MaybeStringPtr) {
-        if let Some(chars) = chars.as_str() {
+        if let Some(chars) = chars.as_ref() {
             for c in chars.chars() {
                 self.push_str(&StringPtr::from(format!("{}", c)));
             }
