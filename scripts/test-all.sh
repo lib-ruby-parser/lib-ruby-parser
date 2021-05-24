@@ -4,8 +4,8 @@ set -eux
 
 export RUST_BACKTRACE=1
 
-rustup default stable
-cargo test --features "onig"
+# rustup default stable
+cargo test --features "nightly-features" # --features "onig"
 
 rustup default nightly
 
@@ -23,6 +23,7 @@ run_c_tests() {
         cargo test --features "compile-with-external-structures,link-external-c-structures,nightly-features" "$@"
 }
 
+# Linking fails on building doctests with ASAN enabled
 run_c_tests --test parser_test
 run_c_tests --test lexer_test
 run_c_tests --lib
@@ -38,6 +39,7 @@ run_cpp_tests() {
         cargo test --features "compile-with-external-structures,link-external-cpp-structures,nightly-features" "$@"
 }
 
+# Linking fails on building doctests with ASAN enabled
 run_cpp_tests --test parser_test
 run_cpp_tests --test lexer_test
 run_cpp_tests --lib
