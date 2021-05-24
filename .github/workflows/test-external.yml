@@ -70,6 +70,11 @@ jobs:
           RUSTFLAGS: ${{ matrix.rustflags }}
           ASAN_OPTIONS: detect_leaks=1
           CARGO_FEATURES: "compile-with-external-structures,${{ matrix.build.link-feature }},nightly-features"
+          LIB_RUBY_PARSER_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_PTR_SIZE }}
+          LIB_RUBY_PARSER_MAYBE_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAYBE_PTR_SIZE }}
+          LIB_RUBY_PARSER_LIST_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_LIST_SIZE }}
+          LIB_RUBY_PARSER_STRING_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_STRING_PTR_SIZE }}
+          LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE }}
         run: |
           cargo test --features $CARGO_FEATURES --lib -- --nocapture
 
