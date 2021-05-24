@@ -46,7 +46,7 @@ pub use maybe_loc::c::MaybeLoc as ExternalMaybeLoc;
 #[cfg(feature = "compile-with-external-structures")]
 pub use maybe_ptr::c::MaybePtr as ExternalMaybePtr;
 #[cfg(feature = "compile-with-external-structures")]
-pub use maybe_string_ptr::c::MaybeStringPtr;
+pub use maybe_string_ptr::c::MaybeStringPtr as ExternalMaybeStringPtr;
 #[cfg(feature = "compile-with-external-structures")]
 pub use ptr::c::Ptr as ExternalPtr;
 #[cfg(feature = "compile-with-external-structures")]
