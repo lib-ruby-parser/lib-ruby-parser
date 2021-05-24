@@ -73,7 +73,7 @@ pub(crate) mod c {
 
     #[cfg(test)]
     mod tests {
-        use crate::containers::{list::AsSharedByteList, ExternalList};
+        use crate::containers::ExternalList;
         use std::ops::Deref;
 
         type ByteList = ExternalList<u8>;
@@ -86,7 +86,7 @@ pub(crate) mod c {
             list.push(2);
             list.push(3);
 
-            let shared = list.shared();
+            let shared = list.as_slice();
 
             assert_eq!(shared.len(), 3);
             assert_eq!(shared.as_ptr(), list.as_ptr());
@@ -96,7 +96,7 @@ pub(crate) mod c {
         #[test]
         fn test_from_raw_empty() {
             let list = ByteList::new();
-            let shared = list.shared();
+            let shared = list.as_slice();
 
             assert_eq!(shared.len(), 0);
             assert_eq!(shared.as_ptr(), std::ptr::null());

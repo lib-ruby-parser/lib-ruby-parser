@@ -1,4 +1,4 @@
-use crate::containers::{list::AsSharedByteList, StringPtr};
+use crate::containers::StringPtr;
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalSharedByteList;
@@ -110,7 +110,7 @@ impl DecodedInput {
 
     /// Returns raw bytes after decoding
     pub fn as_shared_bytes(&self) -> SharedByteList {
-        self.bytes.shared()
+        self.bytes.as_slice()
     }
 
     /// Converts itself into owned vector of bytes

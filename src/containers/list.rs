@@ -15,13 +15,6 @@ pub(crate) mod rust {
         }
     }
 
-    use super::AsSharedByteList;
-    impl AsSharedByteList for List<u8> {
-        fn shared(&self) -> &[u8] {
-            &self
-        }
-    }
-
     #[cfg(test)]
     mod tests {
         use super::List as GenericList;
@@ -91,8 +84,8 @@ pub(crate) mod c {
         }
     }
 
+    use super::ExternalSharedByteList;
     use super::TakeFirst;
-    use super::{AsSharedByteList, ExternalSharedByteList};
 
     macro_rules! gen_list_impl_for {
         (
@@ -663,10 +656,11 @@ pub(crate) mod c {
             lib_ruby_parser_containers_byte_list_blob_capacity
         );
 
-        use super::{AsSharedByteList, ExternalSharedByteList};
+        use super::ExternalSharedByteList;
 
-        impl AsSharedByteList for List<u8> {
-            fn shared(&self) -> ExternalSharedByteList {
+        impl List<u8> {
+            /// Equivalent of Vec::as_slice
+            pub fn as_slice(&self) -> ExternalSharedByteList {
                 ExternalSharedByteList::from_raw(self.as_ptr(), self.len())
             }
         }
@@ -685,14 +679,4 @@ pub(crate) mod c {
 
 pub(crate) trait TakeFirst<T: Clone> {
     fn take_first(self) -> T;
-}
-
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) trait AsSharedByteList {
-    fn shared(&self) -> ExternalSharedByteList;
-}
-
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub(crate) trait AsSharedByteList {
-    fn shared(&self) -> &[u8];
 }
