@@ -25,12 +25,19 @@ type MaybePtr<T> = ExternalMaybePtr<T>;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type MaybePtr<T> = Option<Box<T>>;
 
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type Ptr<T> = ExternalPtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type Ptr<T> = Box<T>;
+
 use crate::containers::{
     list::TakeFirst,
     maybe_ptr::{MaybePtrNone, MaybePtrSome},
     maybe_string_ptr::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome},
     ptr::{IntoMaybePtr, UnPtr},
-    MaybeStringPtr, Ptr, StringPtr,
+    MaybeStringPtr, StringPtr,
 };
 use crate::error::Diagnostics;
 use crate::nodes::*;

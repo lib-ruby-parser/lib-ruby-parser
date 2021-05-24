@@ -51,6 +51,13 @@
 %code use {
 
 #[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type Ptr<T> = ExternalPtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type Ptr<T> = Box<T>;
+
+#[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalList;
 #[cfg(feature = "compile-with-external-structures")]
 type List<T> = ExternalList<T>;
@@ -78,7 +85,7 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
 use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult};
 use crate::debug_level;
-use crate::containers::{Ptr, ptr::UnPtr, maybe_ptr::MaybePtrNone, StringPtr};
+use crate::containers::{ptr::UnPtr, maybe_ptr::MaybePtrNone, StringPtr};
 
 }
 

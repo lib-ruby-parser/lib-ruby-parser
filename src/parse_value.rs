@@ -1,5 +1,11 @@
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type Ptr<T> = ExternalPtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type Ptr<T> = Box<T>;
+
 use crate::builder::{ArgsType, PKwLabel};
-use crate::containers::Ptr;
 use crate::str_term::StrTerm;
 use crate::Node;
 use crate::Token;

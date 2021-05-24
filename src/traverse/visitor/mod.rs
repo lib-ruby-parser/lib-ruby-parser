@@ -4,7 +4,14 @@ pub use item::Item;
 mod visit_gen;
 pub use visit_gen::Observer;
 
-use crate::{containers::Ptr, Node};
+use crate::Node;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type Ptr<T> = ExternalPtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type Ptr<T> = Box<T>;
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalMaybePtr;

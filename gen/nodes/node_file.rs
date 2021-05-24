@@ -116,8 +116,16 @@ impl InnerNode for {struct_name} {{
         }
 
         if self.has_field_with_type(FieldType::Node) {
-            imports.push("use crate::containers::Ptr;");
+            imports.push("");
+            imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
+            imports.push("use crate::containers::ExternalPtr;");
+            imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
+            imports.push("type Ptr<T> = ExternalPtr<T>;");
+            imports.push("#[cfg(not(feature = \"compile-with-external-structures\"))]");
+            imports.push("type Ptr<T> = Box<T>;");
+            imports.push("");
         }
+
         if self.has_field_with_type(FieldType::Nodes) {
             imports.push("");
             imports.push("#[cfg(feature = \"compile-with-external-structures\")]");

@@ -1,7 +1,11 @@
-use crate::{
-    containers::{Ptr, SharedByteList},
-    Token,
-};
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type Ptr<T> = ExternalPtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type Ptr<T> = Box<T>;
+
+use crate::{containers::SharedByteList, Token};
 
 /// Enum of what token rewriter should do with a token.
 #[derive(Debug)]

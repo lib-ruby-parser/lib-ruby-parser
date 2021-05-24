@@ -23,7 +23,7 @@ pub(crate) mod c {
     use std::ffi::c_void;
 
     use crate::containers::get_drop_fn::{DropPtrFn, GetDropFn};
-    use crate::containers::Ptr;
+    use crate::containers::ExternalPtr;
 
     use crate::containers::size::MAYBE_PTR_SIZE;
 
@@ -150,7 +150,7 @@ pub(crate) mod c {
         }
 
         /// Equivalent of Option::expect
-        pub fn expect(self, message: &str) -> Ptr<T>
+        pub fn expect(self, message: &str) -> ExternalPtr<T>
         where
             T: std::fmt::Debug + GetDropFn,
         {
@@ -158,7 +158,7 @@ pub(crate) mod c {
             if ptr.is_null() {
                 panic!("MaybePtr::expect failed {:?}", message)
             } else {
-                Ptr::from_raw(ptr)
+                ExternalPtr::from_raw(ptr)
             }
         }
 
@@ -166,13 +166,13 @@ pub(crate) mod c {
         pub fn map<F>(self, f: F) -> Self
         where
             T: std::fmt::Debug + GetDropFn,
-            F: FnOnce(Ptr<T>) -> Ptr<T>,
+            F: FnOnce(ExternalPtr<T>) -> ExternalPtr<T>,
         {
             if self.as_ptr().is_null() {
                 self
             } else {
                 let ptr = self.into_raw();
-                let ptr = Ptr::from_raw(ptr);
+                let ptr = ExternalPtr::from_raw(ptr);
                 let ptr = f(ptr);
                 let ptr = ptr.into_raw();
                 Self::from_raw(ptr)
@@ -185,12 +185,12 @@ pub(crate) mod c {
         }
 
         /// Equivalent of Option::unwrap
-        pub fn unwrap(self) -> Ptr<T> {
+        pub fn unwrap(self) -> ExternalPtr<T> {
             if self.as_ptr().is_null() {
                 panic!("unwrapping MaybePtr::None");
             } else {
                 let ptr = self.into_raw();
-                Ptr::from_raw(ptr)
+                ExternalPtr::from_raw(ptr)
             }
         }
 
