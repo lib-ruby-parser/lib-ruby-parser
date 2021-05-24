@@ -367,9 +367,10 @@ uint64_t lib_ruby_parser_containers_shared_byte_list_blob_len(SHARED_BYTE_LIST_B
 #include <stdio.h>
 int main()
 {
-    printf("LIB_RUBY_PARSER_PTR_SIZE = %lu\n", sizeof(PTR_BLOB));
-    printf("LIB_RUBY_PARSER_MAYBE_PTR_SIZE = %lu\n", sizeof(MAYBE_PTR_BLOB));
-    printf("LIB_RUBY_PARSER_LIST_SIZE = TBD\n");
-    printf("LIB_RUBY_PARSER_STRING_PTR_SIZE = TBD\n");
+    printf("LIB_RUBY_PARSER_PTR_SIZE = %lu\n", sizeof(PTR_BLOB_DATA));
+    printf("LIB_RUBY_PARSER_MAYBE_PTR_SIZE = %lu\n", sizeof(MAYBE_PTR_BLOB_DATA));
+    printf("LIB_RUBY_PARSER_LIST_SIZE = %lu\n", sizeof(NodeStructList_BLOB_DATA));
+    printf("LIB_RUBY_PARSER_STRING_PTR_SIZE = %lu\n", sizeof(STRING_PTR_BLOB_DATA));
+    printf("LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE = %lu\n", sizeof(SHARED_BYTE_LIST_BLOB_DATA));
 }
 #endif

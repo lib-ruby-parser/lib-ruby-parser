@@ -20,6 +20,7 @@ jobs:
           - "-Zsanitizer=address"
         build:
           - link-feature: link-external-c-structures
+            compile-external-containers: make print-sizes-c libstructures-c.a
             LIB_RUBY_PARSER_PTR_SIZE: 8
             LIB_RUBY_PARSER_MAYBE_PTR_SIZE: 8
             LIB_RUBY_PARSER_LIST_SIZE: 24
@@ -27,6 +28,7 @@ jobs:
             LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE: 16
 
           - link-feature: link-external-cpp-structures
+            compile-external-containers: make print-sizes-cpp libstructures-cpp.a
             LIB_RUBY_PARSER_PTR_SIZE: 8
             LIB_RUBY_PARSER_MAYBE_PTR_SIZE: 8
             LIB_RUBY_PARSER_LIST_SIZE: 24
@@ -36,6 +38,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+
+      - name: compile external containers
+        run: cd external && ${{ matrix.build.compile-external-containers }}
 
       - name: install rust
         uses: actions-rs/toolchain@v1
