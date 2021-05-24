@@ -20,7 +20,6 @@ type MaybeLoc = Option<Loc>;
 
 use crate::containers::{
     list::TakeFirst,
-    maybe_loc::{MaybeLocNone, MaybeLocSome},
     maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},
     maybe_string_ptr::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome},
     ptr::{IntoMaybePtr, UnPtr},
@@ -142,7 +141,7 @@ impl Builder {
         Box::new(Node::Int(Int {
             value: value(integer_t).into(),
             expression_l,
-            operator_l: MaybeLoc::none(),
+            operator_l: MaybeLoc::None,
         }))
     }
 
@@ -151,7 +150,7 @@ impl Builder {
         Box::new(Node::Float(Float {
             value: value(float_t).into(),
             expression_l,
-            operator_l: MaybeLoc::none(),
+            operator_l: MaybeLoc::None,
         }))
     }
 
@@ -160,7 +159,7 @@ impl Builder {
         Box::new(Node::Rational(Rational {
             value: value(rational_t).into(),
             expression_l,
-            operator_l: MaybeLoc::none(),
+            operator_l: MaybeLoc::None,
         }))
     }
 
@@ -169,7 +168,7 @@ impl Builder {
         Box::new(Node::Complex(Complex {
             value: value(complex_t).into(),
             expression_l,
-            operator_l: MaybeLoc::none(),
+            operator_l: MaybeLoc::None,
         }))
     }
 
@@ -257,8 +256,8 @@ impl Builder {
         let value = StringValue::new(string_t);
         Box::new(Node::Str(Str {
             value,
-            begin_l: MaybeLoc::none(),
-            end_l: MaybeLoc::none(),
+            begin_l: MaybeLoc::None,
+            end_l: MaybeLoc::None,
             expression_l,
         }))
     }
@@ -317,7 +316,7 @@ impl Builder {
         let str_loc = self.loc(&char_t);
 
         let begin_l: MaybeLoc = str_loc.with_end(str_loc.begin + 1).into();
-        let end_l = MaybeLoc::none();
+        let end_l = MaybeLoc::None;
         let expression_l = str_loc;
 
         let value = StringValue::new(char_t);
@@ -356,7 +355,7 @@ impl Builder {
         Box::new(Node::Sym(Sym {
             name: value,
             begin_l,
-            end_l: MaybeLoc::none(),
+            end_l: MaybeLoc::None,
             expression_l,
         }))
     }
@@ -367,8 +366,8 @@ impl Builder {
         self.validate_sym_value(&value, &expression_l);
         Box::new(Node::Sym(Sym {
             name: value,
-            begin_l: MaybeLoc::none(),
-            end_l: MaybeLoc::none(),
+            begin_l: MaybeLoc::None,
+            end_l: MaybeLoc::None,
             expression_l,
         }))
     }
@@ -721,8 +720,8 @@ impl Builder {
         Box::new(Node::Pair(Pair {
             key: Ptr::new(Node::Sym(Sym {
                 name: key.into(),
-                begin_l: MaybeLoc::none(),
-                end_l: MaybeLoc::none(),
+                begin_l: MaybeLoc::None,
+                end_l: MaybeLoc::None,
                 expression_l: key_l,
             })),
             value: value.into(),
@@ -926,11 +925,11 @@ impl Builder {
                         recv: MaybePtr::none(),
                         method_name: name,
                         args: List::<Node>::new(),
-                        dot_l: MaybeLoc::none(),
+                        dot_l: MaybeLoc::None,
                         selector_l: expression_l.clone().into(),
-                        begin_l: MaybeLoc::none(),
-                        end_l: MaybeLoc::none(),
-                        operator_l: MaybeLoc::none(),
+                        begin_l: MaybeLoc::None,
+                        end_l: MaybeLoc::None,
+                        operator_l: MaybeLoc::None,
                         expression_l,
                     }))
                 }
@@ -946,7 +945,7 @@ impl Builder {
         Box::new(Node::Const(Const {
             scope: MaybePtr::none(),
             name: value(name_t).into(),
-            double_colon_l: MaybeLoc::none(),
+            double_colon_l: MaybeLoc::None,
             name_l,
             expression_l,
         }))
@@ -1007,21 +1006,21 @@ impl Builder {
                 value: MaybePtr::none(),
                 name_l: expression_l.clone(),
                 expression_l,
-                operator_l: MaybeLoc::none(),
+                operator_l: MaybeLoc::None,
             }),
             Node::Ivar(Ivar { name, expression_l }) => Node::Ivasgn(Ivasgn {
                 name,
                 value: MaybePtr::none(),
                 name_l: expression_l.clone(),
                 expression_l,
-                operator_l: MaybeLoc::none(),
+                operator_l: MaybeLoc::None,
             }),
             Node::Gvar(Gvar { name, expression_l }) => Node::Gvasgn(Gvasgn {
                 name,
                 value: MaybePtr::none(),
                 name_l: expression_l.clone(),
                 expression_l,
-                operator_l: MaybeLoc::none(),
+                operator_l: MaybeLoc::None,
             }),
             Node::Const(Const {
                 name,
@@ -1041,7 +1040,7 @@ impl Builder {
                     name_l,
                     double_colon_l,
                     expression_l,
-                    operator_l: MaybeLoc::none(),
+                    operator_l: MaybeLoc::None,
                 })
             }
             Node::Lvar(Lvar { name, expression_l }) => {
@@ -1056,7 +1055,7 @@ impl Builder {
                     value: MaybePtr::none(),
                     name_l: expression_l.clone(),
                     expression_l,
-                    operator_l: MaybeLoc::none(),
+                    operator_l: MaybeLoc::None,
                 })
             }
 
@@ -1127,7 +1126,7 @@ impl Builder {
                 double_colon_l,
                 expression_l,
                 value: MaybePtr::none(),
-                operator_l: MaybeLoc::none(),
+                operator_l: MaybeLoc::None,
             })),
             _ => unreachable!("unsupported const_op_assignable arument: {:?}", node),
         }
@@ -1245,7 +1244,7 @@ impl Builder {
                     begin_l,
                     end_l,
                     expression_l,
-                    operator_l: MaybeLoc::none(),
+                    operator_l: MaybeLoc::None,
                 }));
             }
             Node::BackRef(BackRef { expression_l, name }) => {
@@ -1432,7 +1431,7 @@ impl Builder {
             body: body.into(),
             keyword_l,
             name_l,
-            assignment_l: MaybeLoc::none(),
+            assignment_l: MaybeLoc::None,
             end_l: end_l.into(),
             expression_l,
         })))
@@ -1464,7 +1463,7 @@ impl Builder {
             keyword_l,
             name_l,
             assignment_l: assignment_l.into(),
-            end_l: MaybeLoc::none(),
+            end_l: MaybeLoc::None,
             expression_l,
         })))
     }
@@ -1496,7 +1495,7 @@ impl Builder {
             keyword_l,
             operator_l,
             name_l,
-            assignment_l: MaybeLoc::none(),
+            assignment_l: MaybeLoc::None,
             end_l: end_l.into(),
             expression_l,
         })))
@@ -1533,7 +1532,7 @@ impl Builder {
             operator_l,
             name_l,
             assignment_l: assignment_l.into(),
-            end_l: MaybeLoc::none(),
+            end_l: MaybeLoc::None,
             expression_l,
         })))
     }
@@ -1659,7 +1658,7 @@ impl Builder {
                 self.check_reserved_for_numparam(&name, &name_l)?;
                 (Some(name), name_l.into())
             }
-            _ => (None, MaybeLoc::none()),
+            _ => (None, MaybeLoc::None),
         };
 
         let operator_l = self.loc(&star_t);
@@ -1717,7 +1716,7 @@ impl Builder {
                 self.check_reserved_for_numparam(&name, &name_l)?;
                 (Some(name), name_l.into())
             }
-            _ => (None, MaybeLoc::none()),
+            _ => (None, MaybeLoc::None),
         };
 
         let operator_l = self.loc(&dstar_t);
@@ -1792,8 +1791,8 @@ impl Builder {
                     args.push(Node::Arg(arg));
                     args
                 },
-                begin_l: MaybeLoc::none(),
-                end_l: MaybeLoc::none(),
+                begin_l: MaybeLoc::None,
+                end_l: MaybeLoc::None,
             })),
             other => unreachable!("unsupported procarg0 child {:?}", other),
         }
@@ -1854,7 +1853,7 @@ impl Builder {
                 selector_l,
                 begin_l,
                 end_l,
-                operator_l: MaybeLoc::none(),
+                operator_l: MaybeLoc::None,
                 expression_l,
             })),
 
@@ -1866,7 +1865,7 @@ impl Builder {
                 selector_l,
                 begin_l,
                 end_l,
-                operator_l: MaybeLoc::none(),
+                operator_l: MaybeLoc::None,
                 expression_l,
             })),
         }
@@ -2068,9 +2067,9 @@ impl Builder {
                 args: List::<Node>::new(),
                 dot_l: dot_l.into(),
                 selector_l: selector_l.into(),
-                begin_l: MaybeLoc::none(),
-                end_l: MaybeLoc::none(),
-                operator_l: MaybeLoc::none(),
+                begin_l: MaybeLoc::None,
+                end_l: MaybeLoc::None,
+                operator_l: MaybeLoc::None,
                 expression_l,
             })),
 
@@ -2080,9 +2079,9 @@ impl Builder {
                 args: List::<Node>::new(),
                 dot_l,
                 selector_l: selector_l.into(),
-                begin_l: MaybeLoc::none(),
-                end_l: MaybeLoc::none(),
-                operator_l: MaybeLoc::none(),
+                begin_l: MaybeLoc::None,
+                end_l: MaybeLoc::None,
+                operator_l: MaybeLoc::None,
                 expression_l,
             })),
         }
@@ -2127,7 +2126,7 @@ impl Builder {
             value: MaybePtr::none(),
             begin_l,
             end_l,
-            operator_l: MaybeLoc::none(),
+            operator_l: MaybeLoc::None,
             expression_l,
         }))
     }
@@ -2152,11 +2151,11 @@ impl Builder {
                 args.push(*arg);
                 args
             },
-            dot_l: MaybeLoc::none(),
+            dot_l: MaybeLoc::None,
             selector_l,
-            begin_l: MaybeLoc::none(),
-            end_l: MaybeLoc::none(),
-            operator_l: MaybeLoc::none(),
+            begin_l: MaybeLoc::None,
+            end_l: MaybeLoc::None,
+            operator_l: MaybeLoc::None,
             expression_l,
         })))
     }
@@ -2194,11 +2193,11 @@ impl Builder {
                     args.push(*arg);
                     args
                 },
-                dot_l: MaybeLoc::none(),
+                dot_l: MaybeLoc::None,
                 selector_l: selector_l.into(),
-                begin_l: MaybeLoc::none(),
-                end_l: MaybeLoc::none(),
-                operator_l: MaybeLoc::none(),
+                begin_l: MaybeLoc::None,
+                end_l: MaybeLoc::None,
+                operator_l: MaybeLoc::None,
                 expression_l,
             }),
         };
@@ -2218,11 +2217,11 @@ impl Builder {
             recv: Some(receiver).into(),
             method_name: method_name.into(),
             args: List::<Node>::new(),
-            dot_l: MaybeLoc::none(),
+            dot_l: MaybeLoc::None,
             selector_l: selector_l.into(),
-            begin_l: MaybeLoc::none(),
-            end_l: MaybeLoc::none(),
-            operator_l: MaybeLoc::none(),
+            begin_l: MaybeLoc::None,
+            end_l: MaybeLoc::None,
+            operator_l: MaybeLoc::None,
             expression_l,
         })))
     }
@@ -2253,10 +2252,10 @@ impl Builder {
                 method_name: StringPtr::from("!"),
                 args: List::<Node>::new(),
                 selector_l: selector_l.into(),
-                dot_l: MaybeLoc::none(),
+                dot_l: MaybeLoc::None,
                 begin_l,
                 end_l,
-                operator_l: MaybeLoc::none(),
+                operator_l: MaybeLoc::None,
                 expression_l,
             })))
         } else {
@@ -2280,10 +2279,10 @@ impl Builder {
                 method_name: StringPtr::from("!"),
                 args: List::<Node>::new(),
                 selector_l: selector_l.into(),
-                dot_l: MaybeLoc::none(),
-                begin_l: MaybeLoc::none(),
-                end_l: MaybeLoc::none(),
-                operator_l: MaybeLoc::none(),
+                dot_l: MaybeLoc::None,
+                begin_l: MaybeLoc::None,
+                end_l: MaybeLoc::None,
+                operator_l: MaybeLoc::None,
                 expression_l,
             })))
         }
@@ -2524,8 +2523,8 @@ impl Builder {
                 body: Some(body).into(),
                 keyword_l,
                 expression_l,
-                begin_l: MaybeLoc::none(),
-                end_l: MaybeLoc::none(),
+                begin_l: MaybeLoc::None,
+                end_l: MaybeLoc::None,
             })),
             (LoopType::Until, Node::KwBegin(_)) => Box::new(Node::UntilPost(UntilPost {
                 cond: cond.into(),
@@ -2538,8 +2537,8 @@ impl Builder {
                 body: Some(body).into(),
                 keyword_l,
                 expression_l,
-                begin_l: MaybeLoc::none(),
-                end_l: MaybeLoc::none(),
+                begin_l: MaybeLoc::None,
+                end_l: MaybeLoc::None,
             })),
         }
     }
@@ -3806,7 +3805,7 @@ impl Builder {
     pub(crate) fn maybe_loc(&self, token: &Option<Ptr<Token>>) -> MaybeLoc {
         match token {
             Some(token) => self.loc(token).into(),
-            None => MaybeLoc::none(),
+            None => MaybeLoc::None,
         }
     }
 
@@ -3960,15 +3959,15 @@ impl Builder {
 
 pub(crate) fn maybe_node_expr(node: &Option<&Node>) -> MaybeLoc {
     match node {
-        Some(node) => MaybeLoc::some(node.expression().clone()),
-        None => MaybeLoc::none(),
+        Some(node) => MaybeLoc::Some(node.expression().clone()),
+        None => MaybeLoc::None,
     }
 }
 
 pub(crate) fn maybe_boxed_node_expr(node: &Option<Box<Node>>) -> MaybeLoc {
     match node {
-        Some(node) => MaybeLoc::some(node.expression().clone()),
-        None => MaybeLoc::none(),
+        Some(node) => MaybeLoc::Some(node.expression().clone()),
+        None => MaybeLoc::None,
     }
 }
 
@@ -4002,9 +4001,9 @@ pub(crate) fn join_maybe_exprs(lhs: &Option<&Node>, rhs: &Option<&Node>) -> Mayb
 
 pub(crate) fn join_maybe_locs(lhs: &MaybeLoc, rhs: &MaybeLoc) -> MaybeLoc {
     match (lhs.as_ref(), rhs.as_ref()) {
-        (None, None) => MaybeLoc::none(),
-        (None, Some(rhs)) => MaybeLoc::some(rhs.clone()),
-        (Some(lhs), None) => MaybeLoc::some(lhs.clone()),
+        (None, None) => MaybeLoc::None,
+        (None, Some(rhs)) => MaybeLoc::Some(rhs.clone()),
+        (Some(lhs), None) => MaybeLoc::Some(lhs.clone()),
         (Some(lhs), Some(rhs)) => lhs.join(&rhs).into(),
     }
 }

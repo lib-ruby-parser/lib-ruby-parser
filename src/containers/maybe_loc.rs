@@ -1,25 +1,9 @@
-use crate::Loc;
-
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
-    use super::Loc;
+    use crate::Loc;
 
     /// Rust-compatible nullable pointer
     pub type MaybeLoc = Option<Loc>;
-
-    use super::MaybeLocSome;
-    impl MaybeLocSome for MaybeLoc {
-        fn some(loc: Loc) -> Self {
-            Some(loc)
-        }
-    }
-
-    use super::MaybeLocNone;
-    impl MaybeLocNone for MaybeLoc {
-        fn none() -> Self {
-            None
-        }
-    }
 }
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -46,23 +30,9 @@ pub(crate) mod c {
     impl Clone for MaybeLoc {
         fn clone(&self) -> Self {
             match self.as_ref() {
-                Some(loc) => Self::some(loc.clone()),
-                None => Self::none(),
+                Some(loc) => Self::Some(loc.clone()),
+                None => Self::None,
             }
-        }
-    }
-
-    use super::MaybeLocSome;
-    impl MaybeLocSome for MaybeLoc {
-        fn some(loc: Loc) -> Self {
-            Self::Some(loc)
-        }
-    }
-
-    use super::MaybeLocNone;
-    impl MaybeLocNone for MaybeLoc {
-        fn none() -> Self {
-            Self::None
         }
     }
 
@@ -141,16 +111,4 @@ pub(crate) mod c {
             Self::Some(loc)
         }
     }
-}
-
-pub(crate) trait MaybeLocSome {
-    fn some(value: Loc) -> Self
-    where
-        Self: Sized;
-}
-
-pub(crate) trait MaybeLocNone {
-    fn none() -> Self
-    where
-        Self: Sized;
 }
