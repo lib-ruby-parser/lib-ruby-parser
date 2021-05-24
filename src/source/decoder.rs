@@ -1,6 +1,13 @@
 use std::error::Error;
 
-use crate::containers::{List, StringPtr};
+use crate::containers::StringPtr;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
 
 /// Decoder is what is used if input source has encoding
 /// that is not supported out of the box.

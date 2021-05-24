@@ -85,53 +85,60 @@ impl InnerNode for {struct_name} {{
             .collect()
     }
 
-    fn imports(&self) -> Vec<String> {
+    fn imports(&self) -> Vec<&'static str> {
         let mut imports = vec![];
-        imports.push("use crate::nodes::InnerNode;".to_string());
-        imports.push("use crate::nodes::InspectVec;".to_string());
-        imports.push("use crate::Loc;".to_string());
+        imports.push("use crate::nodes::InnerNode;");
+        imports.push("use crate::nodes::InspectVec;");
+        imports.push("use crate::Loc;");
         if self
             .node
             .fields
             .iter()
             .any(|f| f.field_type.has_reference_to_node())
         {
-            imports.push("use crate::Node;".to_string());
+            imports.push("use crate::Node;");
         }
         if self.has_field_with_type(FieldType::StringValue) {
-            imports.push("use crate::StringValue;".to_string());
+            imports.push("use crate::StringValue;");
         }
         if self.has_field_with_type(FieldType::MaybeNode)
             || self.has_field_with_type(FieldType::RegexOptions)
         {
-            imports.push("use crate::containers::MaybePtr;".to_string());
+            imports.push("use crate::containers::MaybePtr;");
         }
         if self.has_field_with_type(FieldType::Node) {
-            imports.push("use crate::containers::Ptr;".to_string());
+            imports.push("use crate::containers::Ptr;");
         }
         if self.has_field_with_type(FieldType::Nodes) {
-            imports.push("use crate::containers::List;".to_string());
+            imports.push("");
+            imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
+            imports.push("use crate::containers::ExternalList;");
+            imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
+            imports.push("type List<T> = ExternalList<T>;");
+            imports.push("#[cfg(not(feature = \"compile-with-external-structures\"))]");
+            imports.push("type List<T> = Vec<T>;");
+            imports.push("");
         }
         if self.has_field_with_type(FieldType::MaybeLoc) {
-            imports.push("use crate::containers::MaybeLoc;".to_string())
+            imports.push("use crate::containers::MaybeLoc;")
         }
         if self.has_field_with_type(FieldType::MaybeNode)
             || self.has_field_with_type(FieldType::RegexOptions)
         {
-            imports.push("use crate::containers::maybe_ptr::AsOption;".to_string());
+            imports.push("use crate::containers::maybe_ptr::AsOption;");
         }
         if self.has_field_with_type(FieldType::MaybeLoc) {
-            imports.push("use crate::containers::maybe_loc::AsLocOption;".to_string());
+            imports.push("use crate::containers::maybe_loc::AsLocOption;");
         }
         if self.has_field_with_type(FieldType::Str)
             || self.has_field_with_type(FieldType::RawString)
         {
-            imports.push("use crate::containers::StringPtr;".to_string());
+            imports.push("use crate::containers::StringPtr;");
         }
         if self.has_field_with_type(FieldType::MaybeStr)
             || self.has_field_with_type(FieldType::Chars)
         {
-            imports.push("use crate::containers::MaybeStringPtr;".to_string());
+            imports.push("use crate::containers::MaybeStringPtr;");
         }
         imports
     }

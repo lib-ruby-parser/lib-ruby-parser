@@ -1,4 +1,12 @@
-use crate::containers::{ptr::UnPtr, List, Ptr, StringPtr};
+use crate::containers::{ptr::UnPtr, Ptr, StringPtr};
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
+
 use crate::debug_level;
 use crate::lexer::*;
 use crate::maybe_byte::*;

@@ -1,4 +1,9 @@
-use crate::containers::List;
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
 
 /// Representation of a byte sequence
 #[derive(Debug, Clone, PartialEq, Eq)]

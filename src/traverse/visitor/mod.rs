@@ -5,9 +5,16 @@ mod visit_gen;
 pub use visit_gen::Observer;
 
 use crate::{
-    containers::{maybe_ptr::AsOption, List, MaybePtr, Ptr},
+    containers::{maybe_ptr::AsOption, MaybePtr, Ptr},
     Node,
 };
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
 
 /// Generic visitor of `Node`.
 ///

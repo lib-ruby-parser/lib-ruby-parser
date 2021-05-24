@@ -1,7 +1,15 @@
 use crate::containers::{
-    maybe_ptr::AsOption, maybe_string_ptr::MaybeStringPtrAsStringOption, List, MaybePtr,
-    MaybeStringPtr, StringPtr,
+    maybe_ptr::AsOption, maybe_string_ptr::MaybeStringPtrAsStringOption, MaybePtr, MaybeStringPtr,
+    StringPtr,
 };
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
+
 use crate::Loc;
 use crate::Node;
 use crate::StringValue;

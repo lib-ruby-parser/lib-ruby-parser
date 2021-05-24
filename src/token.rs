@@ -1,4 +1,11 @@
-use crate::{containers::List, token_name, Bytes, LexState, Loc};
+use crate::{token_name, Bytes, LexState, Loc};
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
 
 /// A token that is emitted by a lexer and consumed by a parser
 #[derive(Clone, PartialEq, Eq)]

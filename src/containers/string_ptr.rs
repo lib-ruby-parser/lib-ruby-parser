@@ -161,10 +161,10 @@ pub(crate) mod c {
 
     impl Eq for StringPtr {}
 
-    use crate::containers::List;
-    impl From<StringPtr> for List<u8> {
+    use crate::containers::ExternalList;
+    impl From<StringPtr> for ExternalList<u8> {
         fn from(s: StringPtr) -> Self {
-            List::from(s.to_vec())
+            ExternalList::from(s.to_vec())
         }
     }
 

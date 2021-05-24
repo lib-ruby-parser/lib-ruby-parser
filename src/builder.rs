@@ -4,6 +4,13 @@ use onig::{Regex, RegexOptions};
 use std::collections::HashMap;
 use std::convert::TryInto;
 
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
+
 use crate::containers::{
     list::TakeFirst,
     loc::IntoMaybeLoc,
@@ -11,7 +18,7 @@ use crate::containers::{
     maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},
     maybe_string_ptr::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome},
     ptr::{IntoMaybePtr, UnPtr},
-    List, MaybeLoc, MaybePtr, MaybeStringPtr, Ptr, StringPtr,
+    MaybeLoc, MaybePtr, MaybeStringPtr, Ptr, StringPtr,
 };
 use crate::error::Diagnostics;
 use crate::nodes::*;

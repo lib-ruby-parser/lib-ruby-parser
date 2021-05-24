@@ -49,21 +49,30 @@
 }
 
 %code use {
-    use crate::{ParserOptions, ParserResult};
-    use crate::{Token};
-    use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
-    use crate::lex_states::*;
-    use crate::{Context as ParserContext, ContextItem};
-    use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel, ArgsType};
-    use crate::builder::clone_value;
-    use crate::parse_value::ParseValue as Value;
-    use crate::parse_value::*;
-    use crate::Node;
-    use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
-    use crate::error::Diagnostics;
-    use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult};
-    use crate::debug_level;
-    use crate::containers::{Ptr, MaybePtr, List, ptr::UnPtr, maybe_ptr::MaybePtrNone, StringPtr};
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
+
+use crate::{ParserOptions, ParserResult};
+use crate::{Token};
+use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
+use crate::lex_states::*;
+use crate::{Context as ParserContext, ContextItem};
+use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel, ArgsType};
+use crate::builder::clone_value;
+use crate::parse_value::ParseValue as Value;
+use crate::parse_value::*;
+use crate::Node;
+use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
+use crate::error::Diagnostics;
+use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult};
+use crate::debug_level;
+use crate::containers::{Ptr, MaybePtr, ptr::UnPtr, maybe_ptr::MaybePtrNone, StringPtr};
+
 }
 
 %code {

@@ -1,4 +1,12 @@
-use crate::containers::{List, MaybePtr};
+use crate::containers::MaybePtr;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
+
 use crate::source::Comment;
 use crate::source::DecodedInput;
 use crate::source::MagicComment;

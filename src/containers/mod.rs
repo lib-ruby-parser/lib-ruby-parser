@@ -45,7 +45,7 @@ pub use shared_byte_list::rust::SharedByteList;
 pub use string_ptr::rust::StringPtr;
 
 #[cfg(feature = "compile-with-external-structures")]
-pub use list::c::List;
+pub use list::c::List as ExternalList;
 #[cfg(feature = "compile-with-external-structures")]
 pub use loc::c::Loc;
 #[cfg(feature = "compile-with-external-structures")]

@@ -80,7 +80,13 @@ impl Diagnostic {
     }
 }
 
-use crate::containers::List;
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
+
 use std::cell::RefCell;
 use std::rc::Rc;
 

@@ -1,4 +1,12 @@
-use crate::containers::{list::AsSharedByteList, List, SharedByteList, StringPtr};
+use crate::containers::{list::AsSharedByteList, SharedByteList, StringPtr};
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
+
 use crate::source::SourceLine;
 
 /// Decoded input
