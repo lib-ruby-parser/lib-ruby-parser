@@ -13,7 +13,7 @@ type List<T> = Vec<T>;
 
 use crate::containers::{
     list::TakeFirst,
-    maybe_loc::{AsLocOption, MaybeLocNone, MaybeLocSome},
+    maybe_loc::{MaybeLocNone, MaybeLocSome},
     maybe_ptr::{AsOption, MaybePtrNone, MaybePtrSome},
     maybe_string_ptr::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome},
     ptr::{IntoMaybePtr, UnPtr},
@@ -3148,7 +3148,7 @@ impl Builder {
 
                 self.static_env.declare(&name);
 
-                if let Some(begin_l) = begin_l.as_option() {
+                if let Some(begin_l) = begin_l.as_ref() {
                     let begin_d: i32 = begin_l
                         .size()
                         .try_into()
@@ -3156,7 +3156,7 @@ impl Builder {
                     name_l = name_l.adjust_begin(begin_d)
                 }
 
-                if let Some(end_l) = end_l.as_option() {
+                if let Some(end_l) = end_l.as_ref() {
                     let end_d: i32 = end_l
                         .size()
                         .try_into()
@@ -3562,7 +3562,7 @@ impl Builder {
                 name_l,
                 expression_l,
                 ..
-            }) => name_l.as_option().unwrap_or(&expression_l),
+            }) => name_l.as_ref().unwrap_or(&expression_l),
 
             _ => unreachable!("unsupported arg {:?}", node),
         }
@@ -3994,7 +3994,7 @@ pub(crate) fn join_maybe_exprs(lhs: &Option<&Node>, rhs: &Option<&Node>) -> Mayb
 }
 
 pub(crate) fn join_maybe_locs(lhs: &MaybeLoc, rhs: &MaybeLoc) -> MaybeLoc {
-    match (lhs.as_option(), rhs.as_option()) {
+    match (lhs.as_ref(), rhs.as_ref()) {
         (None, None) => MaybeLoc::none(),
         (None, Some(rhs)) => MaybeLoc::some(rhs.clone()),
         (Some(lhs), None) => MaybeLoc::some(lhs.clone()),

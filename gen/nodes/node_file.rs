@@ -127,9 +127,6 @@ impl InnerNode for {struct_name} {{
         {
             imports.push("use crate::containers::maybe_ptr::AsOption;");
         }
-        if self.has_field_with_type(FieldType::MaybeLoc) {
-            imports.push("use crate::containers::maybe_loc::AsLocOption;");
-        }
         if self.has_field_with_type(FieldType::Str)
             || self.has_field_with_type(FieldType::RawString)
         {
@@ -246,7 +243,7 @@ impl<'a> FieldWrapper<'a> {
                     .expect("expected loc field to end with _l")
             )),
             FieldType::MaybeLoc => Some(format!(
-                "{offset}self.{field_name}.as_option().map(|loc| loc.print(\"{printable_field_name}\"));",
+                "{offset}self.{field_name}.as_ref().map(|loc| loc.print(\"{printable_field_name}\"));",
                 offset = offset,
                 field_name = self.field.field_name,
                 printable_field_name = self

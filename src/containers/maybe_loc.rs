@@ -20,20 +20,6 @@ pub(crate) mod rust {
             None
         }
     }
-
-    use super::AsLocOption;
-    impl AsLocOption for MaybeLoc {
-        fn as_option(&self) -> Option<&Loc> {
-            self.as_ref()
-        }
-    }
-
-    use super::IntoLocOption;
-    impl IntoLocOption for MaybeLoc {
-        fn into_option(self) -> Option<Loc> {
-            self
-        }
-    }
 }
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -53,13 +39,13 @@ pub(crate) mod c {
 
     impl std::fmt::Debug for MaybeLoc {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            std::fmt::Debug::fmt(&self.as_option(), f)
+            std::fmt::Debug::fmt(&self.as_ref(), f)
         }
     }
 
     impl Clone for MaybeLoc {
         fn clone(&self) -> Self {
-            match self.as_option() {
+            match self.as_ref() {
                 Some(loc) => Self::some(loc.clone()),
                 None => Self::none(),
             }
@@ -140,21 +126,9 @@ pub(crate) mod c {
         pub fn is_some(&self) -> bool {
             matches!(self, MaybeLoc::Some(_))
         }
-    }
 
-    use super::AsLocOption;
-    impl AsLocOption for MaybeLoc {
-        fn as_option(&self) -> Option<&Loc> {
-            match self {
-                MaybeLoc::Some(loc) => Some(loc),
-                MaybeLoc::None => None,
-            }
-        }
-    }
-
-    use super::IntoLocOption;
-    impl IntoLocOption for MaybeLoc {
-        fn into_option(self) -> Option<Loc> {
+        /// Equivalent of Option::as_ref
+        pub fn as_ref(&self) -> Option<&Loc> {
             match self {
                 MaybeLoc::Some(loc) => Some(loc),
                 MaybeLoc::None => None,
@@ -177,18 +151,6 @@ pub(crate) trait MaybeLocSome {
 
 pub(crate) trait MaybeLocNone {
     fn none() -> Self
-    where
-        Self: Sized;
-}
-
-/// Trait for converting &MaybeLoc into Option<&Loc>
-pub trait AsLocOption {
-    /// Converts &MaybeLoc into Option<&Loc>
-    fn as_option(&self) -> Option<&Loc>;
-}
-
-pub(crate) trait IntoLocOption {
-    fn into_option(self) -> Option<Loc>
     where
         Self: Sized;
 }
