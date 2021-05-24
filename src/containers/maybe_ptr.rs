@@ -231,6 +231,13 @@ pub(crate) mod c {
         }
     }
 
+    impl<T: GetDropFn> From<ExternalPtr<T>> for MaybePtr<T> {
+        fn from(ptr: ExternalPtr<T>) -> Self {
+            let ptr = ptr.into_raw();
+            Self::from_raw(ptr)
+        }
+    }
+
     impl<T> Default for MaybePtr<T>
     where
         T: GetDropFn,

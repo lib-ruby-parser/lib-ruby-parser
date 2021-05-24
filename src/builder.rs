@@ -36,7 +36,7 @@ use crate::containers::{
     list::TakeFirst,
     maybe_ptr::{MaybePtrNone, MaybePtrSome},
     maybe_string_ptr::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome},
-    ptr::{IntoMaybePtr, UnPtr},
+    ptr::UnPtr,
     MaybeStringPtr, StringPtr,
 };
 use crate::error::Diagnostics;
@@ -995,7 +995,7 @@ impl Builder {
         let double_colon_l = self.loc(&t_colon2);
 
         Box::new(Node::Const(Const {
-            scope: scope.into_maybe_ptr(),
+            scope: scope.into(),
             name: value(name_t).into(),
             double_colon_l: double_colon_l.into(),
             name_l,
@@ -1195,7 +1195,7 @@ impl Builder {
             }) => {
                 *expression_l = expr_l;
                 *operator_l = op_l;
-                *value = new_rhs.into_maybe_ptr();
+                *value = new_rhs.into();
             }
             Node::Send(Send {
                 args,
@@ -2077,7 +2077,7 @@ impl Builder {
         match self.call_type_for_dot(&Some(dot_t)) {
             MethodCallType::Send => Box::new(Node::Send(Send {
                 method_name: method_name.into(),
-                recv: receiver.into_maybe_ptr(),
+                recv: receiver.into(),
                 args: List::<Node>::new(),
                 dot_l: dot_l.into(),
                 selector_l: selector_l.into(),
@@ -2262,7 +2262,7 @@ impl Builder {
             let end_l = self.maybe_loc(&end_t);
 
             Ok(Box::new(Node::Send(Send {
-                recv: self.check_condition(receiver.into()).into_maybe_ptr(),
+                recv: self.check_condition(receiver.into()).into(),
                 method_name: StringPtr::from("!"),
                 args: List::<Node>::new(),
                 selector_l: selector_l.into(),
