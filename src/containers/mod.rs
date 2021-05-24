@@ -50,6 +50,6 @@ pub use maybe_string_ptr::c::MaybeStringPtr as ExternalMaybeStringPtr;
 #[cfg(feature = "compile-with-external-structures")]
 pub use ptr::c::Ptr as ExternalPtr;
 #[cfg(feature = "compile-with-external-structures")]
-pub use shared_byte_list::c::SharedByteList;
+pub use shared_byte_list::c::SharedByteList as ExternalSharedByteList;
 #[cfg(feature = "compile-with-external-structures")]
 pub use string_ptr::c::StringPtr;

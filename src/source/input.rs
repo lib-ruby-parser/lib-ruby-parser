@@ -1,4 +1,11 @@
-use crate::containers::{SharedByteList, StringPtr};
+use crate::containers::StringPtr;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalSharedByteList;
+#[cfg(feature = "compile-with-external-structures")]
+type SharedByteList = ExternalSharedByteList;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type SharedByteList<'a> = &'a [u8];
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalList;

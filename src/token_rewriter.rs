@@ -5,7 +5,14 @@ type Ptr<T> = ExternalPtr<T>;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type Ptr<T> = Box<T>;
 
-use crate::{containers::SharedByteList, Token};
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalSharedByteList;
+#[cfg(feature = "compile-with-external-structures")]
+type SharedByteList = ExternalSharedByteList;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type SharedByteList<'a> = &'a [u8];
+
+use crate::Token;
 
 /// Enum of what token rewriter should do with a token.
 #[derive(Debug)]

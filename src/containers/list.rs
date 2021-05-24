@@ -1,4 +1,5 @@
-use crate::containers::SharedByteList;
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalSharedByteList;
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
@@ -14,9 +15,9 @@ pub(crate) mod rust {
         }
     }
 
-    use super::{AsSharedByteList, SharedByteList};
+    use super::AsSharedByteList;
     impl AsSharedByteList for List<u8> {
-        fn shared(&self) -> SharedByteList {
+        fn shared(&self) -> &[u8] {
             &self
         }
     }
@@ -91,7 +92,7 @@ pub(crate) mod c {
     }
 
     use super::TakeFirst;
-    use super::{AsSharedByteList, SharedByteList};
+    use super::{AsSharedByteList, ExternalSharedByteList};
 
     macro_rules! gen_list_impl_for {
         (
@@ -662,11 +663,11 @@ pub(crate) mod c {
             lib_ruby_parser_containers_byte_list_blob_capacity
         );
 
-        use super::{AsSharedByteList, SharedByteList};
+        use super::{AsSharedByteList, ExternalSharedByteList};
 
         impl AsSharedByteList for List<u8> {
-            fn shared(&self) -> SharedByteList {
-                SharedByteList::from_raw(self.as_ptr(), self.len())
+            fn shared(&self) -> ExternalSharedByteList {
+                ExternalSharedByteList::from_raw(self.as_ptr(), self.len())
             }
         }
     }
@@ -686,6 +687,12 @@ pub(crate) trait TakeFirst<T: Clone> {
     fn take_first(self) -> T;
 }
 
+#[cfg(feature = "compile-with-external-structures")]
 pub(crate) trait AsSharedByteList {
-    fn shared(&self) -> SharedByteList;
+    fn shared(&self) -> ExternalSharedByteList;
+}
+
+#[cfg(not(feature = "compile-with-external-structures"))]
+pub(crate) trait AsSharedByteList {
+    fn shared(&self) -> &[u8];
 }
