@@ -60,7 +60,9 @@ fn link_with_external_structures() {
     println!("cargo:rerun-if-changed=external/libstructures-cpp.a");
 
     println!("cargo:rustc-link-lib=dylib=c++");
-    // println!("cargo:rustc-link-lib=dylib=stdc++");
+    if cfg!(target_os = "linux") {
+        println!("cargo:rustc-link-lib=dylib=stdc++");
+    }
 }
 
 #[cfg(not(any(
