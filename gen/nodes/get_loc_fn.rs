@@ -58,7 +58,16 @@ impl<'a> GetLocFn<'a> {
     fn contents(&self) -> String {
         format!(
             "use super::LocName;
-use lib_ruby_parser::{{Node, containers::{{MaybeLoc, loc::IntoMaybeLoc}}}};
+use lib_ruby_parser::Node;
+
+#[cfg(feature = \"compile-with-external-structures\")]
+use lib_ruby_parser::containers::ExternalMaybeLoc;
+#[cfg(feature = \"compile-with-external-structures\")]
+type MaybeLoc = ExternalMaybeLoc;
+#[cfg(not(feature = \"compile-with-external-structures\"))]
+use lib_ruby_parser::Loc;
+#[cfg(not(feature = \"compile-with-external-structures\"))]
+type MaybeLoc = Option<Loc>;
 
 impl LocName {{
     pub(crate) fn get(&self, node: &Node) -> MaybeLoc {{
@@ -107,7 +116,7 @@ impl LocName {
                 let field = node.fields.iter().find(|f| f.field_name == self.to_str())?;
                 match field.field_type {
                     FieldType::Loc => Some(format!(
-                        "Node::{struct_name}(inner) => inner.{loc_name}.clone().into_maybe_ptr(),",
+                        "Node::{struct_name}(inner) => inner.{loc_name}.clone().into(),",
                         struct_name = node.struct_name,
                         loc_name = self.to_str()
                     )),

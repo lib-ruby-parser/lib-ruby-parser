@@ -15,10 +15,15 @@ impl<'a> Messages<'a> {
 
     fn contents(&self) -> String {
         format!(
-            "use crate::containers::StringPtr;
+            "#[cfg(feature = \"compile-with-external-structures\")]
+use crate::containers::ExternalStringPtr;
+#[cfg(feature = \"compile-with-external-structures\")]
+type StringPtr = ExternalStringPtr;
+#[cfg(not(feature = \"compile-with-external-structures\"))]
+type StringPtr = String;
 
 /// Enum of all possible diagnostic message (both warnings and errors)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub enum DiagnosticMessage {{
     {sections}

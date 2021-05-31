@@ -1,8 +1,8 @@
-use crate::containers::Loc;
 use crate::source::DecodedInput;
+use crate::Loc;
 
 /// Enum of all possible comment types
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub enum CommentType {
     /// Inline comment like
@@ -27,7 +27,7 @@ pub enum CommentType {
 }
 
 /// A struct that represents a comment in Ruby
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Comment {
     /// Location of the comment (starts with `#` and ends with the last char)
@@ -53,5 +53,14 @@ impl Comment {
             None => CommentType::Unknown,
         };
         Self { location, kind }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Comment;
+    #[test]
+    fn test_size() {
+        assert_eq!(std::mem::size_of::<Comment>(), 24);
     }
 }

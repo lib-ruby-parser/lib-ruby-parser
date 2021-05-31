@@ -1,6 +1,6 @@
 use lib_ruby_parser::{
-    containers::maybe_ptr::AsOption, debug_level, source::MagicComment, source::MagicCommentKind,
-    Loc, Parser, ParserOptions, ParserResult,
+    debug_level, source::MagicComment, source::MagicCommentKind, Loc, Parser, ParserOptions,
+    ParserResult,
 };
 use std::fs;
 use std::panic;
@@ -99,7 +99,7 @@ impl Fixture {
             Some(expected_ast) => {
                 let actual_ast = actual
                     .ast
-                    .as_option()
+                    .as_ref()
                     .map(|node| node.inspect(0))
                     .unwrap_or_else(|| "nil".to_string());
 
@@ -116,7 +116,7 @@ impl Fixture {
 
         match &self.locs {
             Some(locs) => {
-                let ast = if let Some(ast) = actual.ast.as_option() {
+                let ast = if let Some(ast) = actual.ast.as_ref() {
                     ast
                 } else {
                     return TestOutput::Failure("can't compare locs, ast is empty".to_string());

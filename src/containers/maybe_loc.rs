@@ -1,43 +1,5 @@
-use crate::Loc;
-
-#[cfg(not(feature = "c-structures"))]
-pub(crate) mod rust {
-    use super::Loc;
-
-    /// Rust-compatible nullable pointer
-    pub type MaybeLoc = Option<Loc>;
-
-    use super::MaybeLocSome;
-    impl MaybeLocSome for MaybeLoc {
-        fn some(loc: Loc) -> Self {
-            Some(loc)
-        }
-    }
-
-    use super::MaybeLocNone;
-    impl MaybeLocNone for MaybeLoc {
-        fn none() -> Self {
-            None
-        }
-    }
-
-    use super::AsLocOption;
-    impl AsLocOption for MaybeLoc {
-        fn as_option(&self) -> Option<&Loc> {
-            self.as_ref()
-        }
-    }
-
-    use super::IntoLocOption;
-    impl IntoLocOption for MaybeLoc {
-        fn into_option(self) -> Option<Loc> {
-            self
-        }
-    }
-}
-
-#[cfg(feature = "c-structures")]
-pub(crate) mod c {
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) mod external {
     use crate::Loc;
 
     /// C-compatible Option<Loc>
@@ -53,46 +15,20 @@ pub(crate) mod c {
 
     impl std::fmt::Debug for MaybeLoc {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            std::fmt::Debug::fmt(&self.as_option(), f)
+            std::fmt::Debug::fmt(&self.as_ref(), f)
         }
     }
 
     impl Clone for MaybeLoc {
         fn clone(&self) -> Self {
-            match self.as_option() {
-                Some(loc) => Self::some(loc.clone()),
-                None => Self::none(),
+            match self.as_ref() {
+                Some(loc) => Self::Some(loc.clone()),
+                None => Self::None,
             }
         }
     }
 
-    use super::MaybeLocSome;
-    impl MaybeLocSome for MaybeLoc {
-        fn some(loc: Loc) -> Self {
-            Self::Some(loc)
-        }
-    }
-
-    use super::MaybeLocNone;
-    impl MaybeLocNone for MaybeLoc {
-        fn none() -> Self {
-            Self::None
-        }
-    }
-
     impl MaybeLoc {
-        // /// Constructs a pointer with a given raw pointer
-        // pub fn from_raw(ptr: *mut Loc) -> Self {
-        //     Self { ptr }
-        // }
-
-        // /// Unwraps into raw pointer, consumes self
-        // pub fn into_raw(mut self) -> *mut Loc {
-        //     let ptr = self.ptr;
-        //     self.ptr = std::ptr::null_mut();
-        //     ptr
-        // }
-
         /// Equivalent of Option::or_else
         pub fn or_else<F>(self, f: F) -> Self
         where
@@ -152,11 +88,9 @@ pub(crate) mod c {
         pub fn is_some(&self) -> bool {
             matches!(self, MaybeLoc::Some(_))
         }
-    }
 
-    use super::AsLocOption;
-    impl AsLocOption for MaybeLoc {
-        fn as_option(&self) -> Option<&Loc> {
+        /// Equivalent of Option::as_ref
+        pub fn as_ref(&self) -> Option<&Loc> {
             match self {
                 MaybeLoc::Some(loc) => Some(loc),
                 MaybeLoc::None => None,
@@ -164,37 +98,9 @@ pub(crate) mod c {
         }
     }
 
-    use super::IntoLocOption;
-    impl IntoLocOption for MaybeLoc {
-        fn into_option(self) -> Option<Loc> {
-            match self {
-                MaybeLoc::Some(loc) => Some(loc),
-                MaybeLoc::None => None,
-            }
+    impl From<Loc> for MaybeLoc {
+        fn from(loc: Loc) -> Self {
+            Self::Some(loc)
         }
     }
-}
-
-pub(crate) trait MaybeLocSome {
-    fn some(value: Loc) -> Self
-    where
-        Self: Sized;
-}
-
-pub(crate) trait MaybeLocNone {
-    fn none() -> Self
-    where
-        Self: Sized;
-}
-
-/// Trait for converting &MaybeLoc into Option<&Loc>
-pub trait AsLocOption {
-    /// Converts &MaybeLoc into Option<&Loc>
-    fn as_option(&self) -> Option<&Loc>;
-}
-
-pub(crate) trait IntoLocOption {
-    fn into_option(self) -> Option<Loc>
-    where
-        Self: Sized;
 }

@@ -25,25 +25,32 @@ pub struct ParserOptions {
     ///
     /// # Example
     /// ```rust
-    /// use lib_ruby_parser::source::{InputError, CustomDecoder, CustomDecoderResult};
-    /// use lib_ruby_parser::{Parser, ParserOptions, ParserResult, debug_level};
+    /// use lib_ruby_parser::source::{CustomDecoder, CustomDecoderResult, InputError};
+    /// use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
     ///
     /// fn decode(encoding: String, input: Vec<u8>) -> CustomDecoderResult {
     ///     if "US-ASCII" == encoding.to_uppercase() {
     ///         // reencode and return Ok(result)
-    ///         return CustomDecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec());
+    ///         return CustomDecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec().into());
     ///     }
     ///     CustomDecoderResult::Err(InputError::DecodingError(
-    ///         "only us-ascii is supported".to_string(),
+    ///         "only us-ascii is supported".into(),
     ///     ))
     /// }
     ///
     /// let decoder = CustomDecoder::new(Box::new(decode));
-    /// let options = ParserOptions { decoder, debug: debug_level::PARSER, ..Default::default() };
-    /// let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3".to_vec(), options);
+    /// let options = ParserOptions {
+    ///     decoder,
+    ///     debug: debug_level::PARSER,
+    ///     ..Default::default()
+    /// };
+    /// let parser = Parser::new(b"# encoding: us-ascii\n3 + 3".to_vec(), options);
     /// let ParserResult { ast, input, .. } = parser.do_parse();
     ///
-    /// assert_eq!(ast.unwrap().expression().source(&input).unwrap(), "decoded".to_string())
+    /// assert_eq!(
+    ///     ast.unwrap().expression().source(&input).unwrap(),
+    ///     "decoded".to_string()
+    /// )
     /// ```
     pub decoder: CustomDecoder,
 
@@ -51,7 +58,11 @@ pub struct ParserOptions {
     ///
     /// # Example
     /// ```
-    /// use lib_ruby_parser::{Parser, Token, Node, nodes::*, ParserOptions, ParserResult, token_rewriter::*, Bytes};
+    /// use lib_ruby_parser::{
+    ///     nodes::*,
+    ///     token_rewriter::*,
+    ///     Bytes, Node, Parser, ParserOptions, ParserResult, Token,
+    /// };
     /// fn rewrite_foo_to_bar(mut token: Box<Token>, input: &[u8]) -> TokenRewriterResult {
     ///     // simply rewrite all tokens "foo" to "bar"
     ///     if token.to_string_lossy() == "foo" {
@@ -59,17 +70,26 @@ pub struct ParserOptions {
     ///     }
     ///
     ///     // return token + keep it + keep lexer's state
-    ///     TokenRewriterResult { rewritten_token: token, token_action: RewriteAction::Keep, lex_state_action: LexStateAction::Keep }
+    ///     TokenRewriterResult {
+    ///         rewritten_token: token,
+    ///         token_action: RewriteAction::Keep,
+    ///         lex_state_action: LexStateAction::Keep,
+    ///     }
     /// }
     /// let token_rewriter = TokenRewriter::new(Box::new(rewrite_foo_to_bar));
-    /// let options = ParserOptions { token_rewriter, ..Default::default() };
+    /// let options = ParserOptions {
+    ///     token_rewriter,
+    ///     ..Default::default()
+    /// };
     /// let ParserResult { ast, .. } = Parser::new(b"foo = 1".to_vec(), options).do_parse();
     ///
-    /// let lvar_name = match *ast.unwrap() {
-    ///   Node::Lvasgn(Lvasgn { name, ..  }) => name,
-    ///   other => panic!("expected lvasgn node, got {:?}", other)
+    /// let ast = ast.unwrap();
+    ///
+    /// let lvar_name = match &*ast {
+    ///     Node::Lvasgn(Lvasgn { name, .. }) => name,
+    ///     other => panic!("expected lvasgn node, got {:?}", other),
     /// };
-    /// assert_eq!(lvar_name, String::from("bar"));
+    /// assert_eq!(*lvar_name, String::from("bar"));
     /// ```
     pub token_rewriter: TokenRewriter,
 

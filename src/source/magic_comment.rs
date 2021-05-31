@@ -1,4 +1,4 @@
-use crate::containers::Loc;
+use crate::Loc;
 
 /// An enum of all magic comment kinds
 #[derive(Debug, Clone, PartialEq)]
@@ -49,5 +49,14 @@ impl MagicComment {
             key_l,
             value_l,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::MagicComment;
+    #[test]
+    fn test_size() {
+        assert_eq!(std::mem::size_of::<MagicComment>(), 40);
     }
 }

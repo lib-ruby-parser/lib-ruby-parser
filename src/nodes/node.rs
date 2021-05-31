@@ -26,3 +26,20 @@ impl Node {
         self.inner_ref().print_with_locs()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature = "link-external-c-structures")]
+    #[test]
+    fn test_size_c() {
+        use super::Node;
+        assert_eq!(std::mem::size_of::<Node>(), 192);
+    }
+
+    #[cfg(feature = "link-external-cpp-structures")]
+    #[test]
+    fn test_size_cpp() {
+        use super::Node;
+        assert_eq!(std::mem::size_of::<Node>(), 184);
+    }
+}

@@ -1,6 +1,7 @@
-use crate::containers::SharedList;
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalSharedByteList;
 
-#[cfg(not(feature = "c-structures"))]
+#[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible list
     pub type List<T> = Vec<T>;
@@ -14,114 +15,48 @@ pub(crate) mod rust {
         }
     }
 
-    use super::{AsSharedList, SharedList};
-    impl<T> AsSharedList<T> for List<T> {
-        fn shared(&self) -> SharedList<T> {
-            &self
+    #[cfg(test)]
+    mod tests {
+        use super::List as GenericList;
+        type List = GenericList<u8>;
+
+        #[test]
+        fn test_size() {
+            assert_eq!(std::mem::size_of::<List>(), 24);
         }
     }
 }
 
-#[cfg(feature = "c-structures")]
-pub(crate) mod c {
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) mod external {
+    use crate::containers::get_drop_fn::GetDropFn;
+
+    use crate::containers::size::LIST_SIZE;
+
+    #[repr(C)]
+    #[derive(Debug, Clone, Copy)]
+    pub struct ListBlob {
+        blob: [u8; LIST_SIZE],
+    }
+
     /// C-compatible list
     #[repr(C)]
-    pub struct List<T> {
-        ptr: *mut T,
-        len: usize,
-        capacity: usize,
+    pub struct List<T>
+    where
+        T: GetDropFn,
+    {
+        blob: ListBlob,
+        _t: std::marker::PhantomData<T>,
     }
 
-    impl<T> Drop for List<T> {
+    impl<T> Drop for List<T>
+    where
+        T: GetDropFn,
+    {
         fn drop(&mut self) {
-            if self.ptr.is_null() {
-                return;
-            }
-
-            if self.len != 0 {
-                unsafe {
-                    // propagate Drop on items
-                    std::ptr::drop_in_place(std::ptr::slice_from_raw_parts_mut(self.ptr, self.len));
-                }
-            }
-
-            if self.capacity != 0 {
-                unsafe {
-                    // free memory
-                    let layout = std::alloc::Layout::array::<T>(self.capacity).unwrap();
-                    std::alloc::Global
-                        .deallocate(std::ptr::NonNull::new(self.ptr as *mut u8).unwrap(), layout);
-                }
-            }
-
-            self.ptr = std::ptr::null_mut();
-            self.len = 0;
-            self.capacity = 0;
-        }
-    }
-
-    impl<T> std::fmt::Debug for List<T>
-    where
-        T: std::fmt::Debug,
-    {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            std::fmt::Debug::fmt(&**self, f)
-        }
-    }
-
-    impl<T> PartialEq for List<T>
-    where
-        T: PartialEq,
-    {
-        fn eq(&self, other: &Self) -> bool {
-            self.as_ref() == other.as_ref()
-        }
-    }
-
-    impl<T> PartialEq<&[T]> for List<T>
-    where
-        T: PartialEq,
-    {
-        fn eq(&self, other: &&[T]) -> bool {
-            self.as_ref() == *other
-        }
-    }
-
-    impl<T> Clone for List<T>
-    where
-        T: Clone,
-    {
-        fn clone(&self) -> Self {
-            let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<_>>();
-            Self::from(copied)
-        }
-    }
-
-    impl<T> From<Vec<T>> for List<T>
-    where
-        T: Clone,
-    {
-        fn from(mut vec: Vec<T>) -> Self {
-            let ptr = vec.as_mut_ptr();
-            let len = vec.len();
-            let capacity = vec.capacity();
-            std::mem::forget(vec);
-            Self { ptr, len, capacity }
-        }
-    }
-
-    impl<T> From<List<T>> for Vec<T>
-    where
-        T: Clone,
-    {
-        fn from(mut list: List<T>) -> Self {
-            let ptr = list.ptr;
-            let len = list.len;
-            let capacity = list.capacity;
-            list.ptr = std::ptr::null_mut();
-            list.len = 0;
-            list.capacity = 0;
-            unsafe { Vec::from_raw_parts(ptr, len, capacity) }
+            let drop_item_in_place = T::get_drop_ptr_in_place_fn();
+            let drop_list_blob = T::get_drop_list_blob_fn();
+            unsafe { drop_list_blob(self.blob, drop_item_in_place) }
         }
     }
 
@@ -149,203 +84,599 @@ pub(crate) mod c {
         }
     }
 
-    impl<T> List<T> {
-        /// Equivalent of Vec::new
-        pub fn new() -> Self {
-            Self {
-                ptr: std::ptr::null_mut(),
-                len: 0,
-                capacity: 0,
-            }
-        }
-
-        /// Equivalent of Vec::is_empty
-        pub fn is_empty(&self) -> bool {
-            self.len == 0
-        }
-
-        /// Equivalent of Vec::iter
-        pub fn iter(&self) -> std::slice::Iter<'_, T> {
-            self.as_ref().iter()
-        }
-
-        /// Equivalent of Vec::with_capacity
-        pub fn with_capacity(capacity: usize) -> Self {
-            let layout = std::alloc::Layout::array::<T>(capacity).unwrap();
-            let ptr = std::alloc::Global.allocate(layout).unwrap().as_mut_ptr() as *mut T;
-            Self {
-                ptr,
-                len: 0,
-                capacity,
-            }
-        }
-
-        fn grow(&mut self) {
-            let prev_capacity = self.capacity;
-            let prev_layout = std::alloc::Layout::array::<T>(prev_capacity).unwrap();
-            let prev_ptr = self.ptr;
-
-            let new_capacity = if prev_capacity == 0 {
-                1
-            } else {
-                prev_capacity * 2
-            };
-            let new_layout = std::alloc::Layout::array::<T>(new_capacity).unwrap();
-            let new_ptr;
-
-            // allocate space for new data
-            new_ptr = std::alloc::Global
-                .allocate(new_layout)
-                .unwrap()
-                .as_mut_ptr() as *mut T;
-
-            if self.len > 0 {
-                unsafe {
-                    // copy data
-                    std::ptr::copy(prev_ptr, new_ptr, self.len);
-
-                    // free old data
-                    std::alloc::Global.deallocate(
-                        std::ptr::NonNull::new(prev_ptr as *mut u8).unwrap(),
-                        prev_layout,
-                    );
-                };
-            }
-
-            self.ptr = new_ptr;
-            self.capacity = new_capacity;
-        }
-
-        /// Equivalent of Vec::push
-        pub fn push(&mut self, item: T) {
-            if self.len == self.capacity {
-                self.grow()
-            }
-            unsafe {
-                let end = self.ptr.add(self.len);
-                end.write(item);
-                self.len += 1;
-            }
-        }
-
-        /// Equivalent of Vec::remove
-        pub fn remove(&mut self, index: usize) -> T {
-            if index > self.len {
-                panic!("can't remove index {}, len is {}", index, self.len)
-            }
-            unsafe {
-                let ptr = self.ptr.add(index);
-                let result = ptr.read();
-                std::ptr::copy(ptr.offset(1), ptr, self.len - index - 1);
-                self.len -= 1;
-                result
-            }
-        }
-
-        /// Helper for swapping &mut self with Self::default()
-        pub fn take(&mut self) -> Self {
-            std::mem::take(self)
-        }
-    }
-
-    impl<T> std::ops::Deref for List<T> {
-        type Target = [T];
-
-        fn deref(&self) -> &[T] {
-            unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
-        }
-    }
-
-    impl<T> std::ops::DerefMut for List<T> {
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
-        }
-    }
-
-    impl<T, I: std::slice::SliceIndex<[T]>> std::ops::Index<I> for List<T> {
-        type Output = I::Output;
-
-        fn index(&self, index: I) -> &Self::Output {
-            std::ops::Index::index(&**self, index)
-        }
-    }
-
-    impl<T> Default for List<T> {
-        fn default() -> Self {
-            Self::new()
-        }
-    }
-
-    use std::alloc::Allocator;
-
+    use super::ExternalSharedByteList;
     use super::TakeFirst;
-    impl<T: Clone> TakeFirst<T> for List<T> {
-        fn take_first(self) -> T {
-            if self.is_empty() {
-                panic!("can't get the first item from an empty list")
-            } else {
-                unsafe { self.ptr.as_ref() }.unwrap().clone()
+
+    macro_rules! gen_list_impl_for {
+        (
+            $t:ty,
+            $new:ident,
+            $with_capacity:ident,
+            $from_raw:ident,
+            $shrink_to_fit:ident,
+            $push:ident,
+            $remove:ident,
+            $as_ptr:ident,
+            $len:ident,
+            $capacity:ident
+        ) => {
+            use super::{List, ListBlob, TakeFirst};
+
+            #[repr(C)]
+            struct RemoveResult {
+                new_blob: ListBlob,
+                removed_item: $t,
             }
-        }
+
+            extern "C" {
+                fn $new() -> ListBlob;
+                fn $with_capacity(capacity: u64) -> ListBlob;
+                fn $from_raw(ptr: *mut $t, size: u64) -> ListBlob;
+                fn $shrink_to_fit(blob: ListBlob) -> ListBlob;
+                fn $push(blob: ListBlob, item: $t) -> ListBlob;
+                fn $remove(blob: ListBlob, index: u64) -> RemoveResult;
+                fn $as_ptr(blob: ListBlob) -> *mut $t;
+                fn $len(blob: ListBlob) -> u64;
+                fn $capacity(blob: ListBlob) -> u64;
+            }
+
+            impl List<$t> {
+                /// Equivalent of Vec::new
+                pub fn new() -> Self {
+                    let blob = unsafe { $new() };
+                    Self {
+                        blob,
+                        _t: std::marker::PhantomData,
+                    }
+                }
+
+                /// Equivalent of Vec::with_capacity
+                pub fn with_capacity(capacity: usize) -> Self {
+                    let blob = unsafe { $with_capacity(capacity as u64) };
+                    Self {
+                        blob,
+                        _t: std::marker::PhantomData,
+                    }
+                }
+
+                pub(crate) fn from_raw(ptr: *mut $t, size: usize) -> Self {
+                    let blob = unsafe { $from_raw(ptr, size as u64) };
+                    Self {
+                        blob,
+                        _t: std::marker::PhantomData,
+                    }
+                }
+
+                pub(crate) fn shrink_to_fit(&mut self) {
+                    self.blob = unsafe { $shrink_to_fit(self.blob) };
+                }
+
+                /// Equivalent of Vec::push
+                pub fn push(&mut self, item: $t) {
+                    self.blob = unsafe { $push(self.blob, item) };
+                }
+
+                /// Equivalent of Vec::rmeove
+                pub fn remove(&mut self, index: usize) -> $t {
+                    let RemoveResult {
+                        new_blob,
+                        removed_item,
+                    } = unsafe { $remove(self.blob, index as u64) };
+                    self.blob = new_blob;
+                    removed_item
+                }
+
+                pub(crate) fn as_ptr(&self) -> *mut $t {
+                    unsafe { $as_ptr(self.blob) }
+                }
+
+                /// Equivalent of Vec::len
+                pub fn len(&self) -> usize {
+                    unsafe { $len(self.blob) as usize }
+                }
+
+                /// Equivalent of Vec::capacity
+                pub fn capacity(&self) -> usize {
+                    unsafe { $capacity(self.blob) as usize }
+                }
+            }
+
+            impl List<$t> {
+                /// Equivalent of Vec::iter
+                #[allow(dead_code)]
+                fn iter(&self) -> std::slice::Iter<'_, $t> {
+                    self.as_ref().iter()
+                }
+            }
+
+            impl Default for List<$t> {
+                fn default() -> Self {
+                    Self::new()
+                }
+            }
+
+            impl From<Vec<$t>> for List<$t> {
+                fn from(mut vec: Vec<$t>) -> Self {
+                    vec.shrink_to_fit();
+                    let ptr = vec.as_mut_ptr();
+                    let len = vec.len();
+                    std::mem::forget(vec);
+                    Self::from_raw(ptr, len)
+                }
+            }
+
+            impl<const N: usize> From<[$t; N]> for List<$t> {
+                fn from(array: [$t; N]) -> Self {
+                    Self::from(Vec::<$t>::from(array))
+                }
+            }
+
+            impl<const N: usize> From<&[$t; N]> for List<$t> {
+                fn from(array: &[$t; N]) -> Self {
+                    Self::from(Vec::<$t>::from(array.to_owned()))
+                }
+            }
+
+            impl Clone for List<$t> {
+                fn clone(&self) -> Self {
+                    let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<$t>>();
+                    let copy = Self::from(copied);
+                    drop(copy);
+
+                    let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<$t>>();
+                    let copy = Self::from(copied);
+                    copy
+                }
+            }
+
+            impl From<List<$t>> for Vec<$t> {
+                fn from(mut list: List<$t>) -> Self {
+                    list.shrink_to_fit();
+                    let ptr = list.as_ptr();
+                    let len = list.len();
+                    list.blob = unsafe { $new() };
+                    unsafe { Vec::from_raw_parts(ptr, len, len) }
+                }
+            }
+
+            impl std::ops::Deref for List<$t> {
+                type Target = [$t];
+
+                fn deref(&self) -> &[$t] {
+                    unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
+                }
+            }
+
+            impl std::ops::DerefMut for List<$t> {
+                fn deref_mut(&mut self) -> &mut Self::Target {
+                    unsafe { std::slice::from_raw_parts_mut(self.as_ptr(), self.len()) }
+                }
+            }
+
+            impl std::fmt::Debug for List<$t> {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    std::fmt::Debug::fmt(&**self, f)
+                }
+            }
+
+            impl PartialEq for List<$t> {
+                fn eq(&self, other: &Self) -> bool {
+                    self.as_ref() == other.as_ref()
+                }
+            }
+
+            impl Eq for List<$t> {}
+
+            impl PartialEq<&[$t]> for List<$t> {
+                fn eq(&self, other: &&[$t]) -> bool {
+                    self.as_ref() == *other
+                }
+            }
+
+            impl<I> std::ops::Index<I> for List<$t>
+            where
+                I: std::slice::SliceIndex<[$t]>,
+            {
+                type Output = I::Output;
+
+                fn index(&self, index: I) -> &Self::Output {
+                    std::ops::Index::index(&**self, index)
+                }
+            }
+
+            impl TakeFirst<$t> for List<$t> {
+                fn take_first(self) -> $t {
+                    if self.is_empty() {
+                        panic!("can't get the first item from an empty list")
+                    } else {
+                        unsafe { self.as_ptr().as_ref() }.unwrap().clone()
+                    }
+                }
+            }
+
+            #[cfg(test)]
+            mod tests {
+                use super::{make_one, List as GenericList, TakeFirst};
+                use std::ops::{Deref, DerefMut};
+                type List = GenericList<$t>;
+
+                #[test]
+                fn test_size() {
+                    assert_eq!(std::mem::size_of::<List>(), 24);
+                }
+
+                #[test]
+                fn test_new() {
+                    let _ = List::new();
+                }
+
+                #[test]
+                fn test_with_capacity() {
+                    let _ = List::with_capacity(10);
+                }
+
+                fn list_with_items(n: usize) -> List {
+                    let mut list = List::new();
+                    for _ in 0..n {
+                        list.push(make_one());
+                    }
+                    list
+                }
+
+                fn vec_with_items(n: usize) -> Vec<$t> {
+                    let mut list = vec![];
+                    for _ in 0..n {
+                        list.push(make_one());
+                    }
+                    list
+                }
+
+                #[test]
+                fn test_from_raw() {
+                    let mut vec = vec_with_items(20);
+                    let ptr = vec.as_mut_ptr();
+                    let len = vec.len();
+                    std::mem::forget(vec);
+
+                    let list = List::from_raw(ptr, len);
+                    assert_eq!(list.len(), 20);
+                }
+
+                #[test]
+                fn test_push() {
+                    let mut list = List::with_capacity(10);
+                    list.push(make_one());
+                }
+
+                #[test]
+                fn test_remove() {
+                    let mut list = list_with_items(10);
+
+                    assert_eq!(list.remove(0), make_one());
+                    assert_eq!(list.len(), 9);
+
+                    assert_eq!(list.remove(3), make_one());
+                    assert_eq!(list.len(), 8);
+                }
+
+                #[test]
+                fn test_as_ptr() {
+                    let mut list = List::new();
+                    assert_eq!(list.as_ptr(), std::ptr::null_mut());
+
+                    list.push(make_one());
+                    assert_eq!(unsafe { &*list.as_ptr() }, &make_one());
+                }
+
+                #[test]
+                fn test_len() {
+                    let list = list_with_items(10);
+                    assert_eq!(list.len(), 10);
+                }
+
+                #[test]
+                fn test_capacity() {
+                    let list = List::with_capacity(10);
+                    assert_eq!(list.capacity(), 10);
+                }
+
+                #[test]
+                fn test_iter() {
+                    let list = list_with_items(20);
+                    let mut iterated = vec![];
+                    for i in list.iter() {
+                        iterated.push(i.clone());
+                    }
+
+                    assert_eq!(iterated.len(), 20);
+                }
+
+                #[test]
+                fn test_default() {
+                    let list = List::default();
+                    assert_eq!(list.len(), 0);
+                    assert_eq!(list.len(), 0);
+                    assert_eq!(list.as_ptr(), std::ptr::null_mut());
+                }
+
+                #[test]
+                fn test_list_from_vec() {
+                    let list = List::from(vec_with_items(10));
+                    assert_eq!(list.len(), 10);
+                }
+
+                #[test]
+                fn test_clone() {
+                    let mut list = List::new();
+                    // assert_eq!(list.clone().len(), 0);
+
+                    list.push(make_one());
+                    list.push(make_one());
+                    let copy = list.clone();
+                    assert_eq!(copy.len(), 2);
+                    drop(copy);
+                    drop(list);
+                }
+
+                #[test]
+                fn test_vec_from_list() {
+                    let mut list = list_with_items(1);
+                    list.shrink_to_fit();
+                    assert_eq!(Vec::from(list_with_items(1)), vec_with_items(1));
+                }
+
+                #[test]
+                fn test_deref() {
+                    let mut list = List::new();
+                    let mut vec = vec![];
+                    assert_eq!(list.deref(), &vec);
+
+                    list.push(make_one());
+                    vec.push(make_one());
+                    assert_eq!(list.deref(), &vec);
+                }
+
+                #[test]
+                fn test_deref_mut() {
+                    let mut list = List::new();
+                    let mut vec = vec![];
+                    assert_eq!(list.deref_mut(), &vec);
+
+                    list.push(make_one());
+                    vec.push(make_one());
+                    assert_eq!(list.deref_mut(), &vec);
+                }
+
+                #[test]
+                fn test_fmt() {
+                    let mut list = List::new();
+                    list.push(make_one());
+
+                    let vec = vec![make_one()];
+                    let slice = &vec;
+                    assert_eq!(format!("{:?}", list), format!("{:?}", slice));
+                }
+
+                #[test]
+                fn test_eq_list_list() {
+                    assert_eq!(list_with_items(10), list_with_items(10));
+                    assert_ne!(list_with_items(10), list_with_items(20));
+                }
+
+                #[test]
+                fn test_eq_slice_list() {
+                    let list = list_with_items(0);
+                    let vec = vec_with_items(0);
+                    let slice: &[$t] = &vec;
+                    assert_eq!(list, slice);
+
+                    let list = list_with_items(20);
+                    let vec = vec_with_items(20);
+                    let slice: &[$t] = &vec;
+                    assert_eq!(list, slice);
+                }
+
+                #[test]
+                fn test_index() {
+                    let mut list = List::new();
+                    list.push(make_one());
+
+                    assert_eq!(list[0], make_one());
+                }
+
+                #[test]
+                fn test_take_first() {
+                    let mut list = List::new();
+                    list.push(make_one());
+
+                    assert_eq!(list.take_first(), make_one());
+                }
+
+                #[test]
+                fn test_vec_item() {
+                    vec_with_items(10).truncate(5)
+                }
+            }
+        };
     }
 
-    use super::{AsSharedList, SharedList};
-    impl<T> AsSharedList<T> for List<T> {
-        fn shared(&self) -> SharedList<T> {
-            SharedList::from_raw(self.ptr, self.len)
+    mod of_nodes {
+        #[cfg(test)]
+        fn make_one() -> crate::Node {
+            crate::Node::True(crate::nodes::True {
+                expression_l: crate::Loc::default(),
+            })
+        }
+
+        gen_list_impl_for!(
+            crate::Node,
+            lib_ruby_parser_containers_node_list_blob_new,
+            lib_ruby_parser_containers_node_list_blob_with_capacity,
+            lib_ruby_parser_containers_node_list_blob_from_raw,
+            lib_ruby_parser_containers_node_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_node_list_blob_push,
+            lib_ruby_parser_containers_node_list_blob_remove,
+            lib_ruby_parser_containers_node_list_blob_as_ptr,
+            lib_ruby_parser_containers_node_list_blob_len,
+            lib_ruby_parser_containers_node_list_blob_capacity
+        );
+    }
+    mod of_diagnostics {
+        #[cfg(test)]
+        fn make_one() -> crate::Diagnostic {
+            crate::Diagnostic {
+                level: crate::ErrorLevel::Warning,
+                message: crate::DiagnosticMessage::AliasNthRef,
+                loc: crate::Loc::default(),
+            }
+        }
+
+        gen_list_impl_for!(
+            crate::Diagnostic,
+            lib_ruby_parser_containers_diagnostic_list_blob_new,
+            lib_ruby_parser_containers_diagnostic_list_blob_with_capacity,
+            lib_ruby_parser_containers_diagnostic_list_blob_from_raw,
+            lib_ruby_parser_containers_diagnostic_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_diagnostic_list_blob_push,
+            lib_ruby_parser_containers_diagnostic_list_blob_remove,
+            lib_ruby_parser_containers_diagnostic_list_blob_as_ptr,
+            lib_ruby_parser_containers_diagnostic_list_blob_len,
+            lib_ruby_parser_containers_diagnostic_list_blob_capacity
+        );
+    }
+    mod of_comments {
+        #[cfg(test)]
+        fn make_one() -> crate::source::Comment {
+            crate::source::Comment {
+                location: crate::Loc::default(),
+                kind: crate::source::CommentType::Inline,
+            }
+        }
+
+        gen_list_impl_for!(
+            crate::source::Comment,
+            lib_ruby_parser_containers_comment_list_blob_new,
+            lib_ruby_parser_containers_comment_list_blob_with_capacity,
+            lib_ruby_parser_containers_comment_list_blob_from_raw,
+            lib_ruby_parser_containers_comment_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_comment_list_blob_push,
+            lib_ruby_parser_containers_comment_list_blob_remove,
+            lib_ruby_parser_containers_comment_list_blob_as_ptr,
+            lib_ruby_parser_containers_comment_list_blob_len,
+            lib_ruby_parser_containers_comment_list_blob_capacity
+        );
+    }
+    mod of_magic_comments {
+        #[cfg(test)]
+        fn make_one() -> crate::source::MagicComment {
+            crate::source::MagicComment {
+                kind: crate::source::MagicCommentKind::Encoding,
+                key_l: crate::Loc::default(),
+                value_l: crate::Loc::default(),
+            }
+        }
+
+        gen_list_impl_for!(
+            crate::source::MagicComment,
+            lib_ruby_parser_containers_magic_comment_list_blob_new,
+            lib_ruby_parser_containers_magic_comment_list_blob_with_capacity,
+            lib_ruby_parser_containers_magic_comment_list_blob_from_raw,
+            lib_ruby_parser_containers_magic_comment_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_magic_comment_list_blob_push,
+            lib_ruby_parser_containers_magic_comment_list_blob_remove,
+            lib_ruby_parser_containers_magic_comment_list_blob_as_ptr,
+            lib_ruby_parser_containers_magic_comment_list_blob_len,
+            lib_ruby_parser_containers_magic_comment_list_blob_capacity
+        );
+    }
+    mod of_tokens {
+        #[cfg(test)]
+        fn make_one() -> crate::Token {
+            crate::Token {
+                token_type: crate::Lexer::tINTEGER,
+                token_value: crate::Bytes::empty(),
+                loc: crate::Loc::default(),
+                lex_state_before: crate::LexState::default(),
+                lex_state_after: crate::LexState::default(),
+            }
+        }
+
+        gen_list_impl_for!(
+            crate::Token,
+            lib_ruby_parser_containers_token_list_blob_new,
+            lib_ruby_parser_containers_token_list_blob_with_capacity,
+            lib_ruby_parser_containers_token_list_blob_from_raw,
+            lib_ruby_parser_containers_token_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_token_list_blob_push,
+            lib_ruby_parser_containers_token_list_blob_remove,
+            lib_ruby_parser_containers_token_list_blob_as_ptr,
+            lib_ruby_parser_containers_token_list_blob_len,
+            lib_ruby_parser_containers_token_list_blob_capacity
+        );
+    }
+    mod of_source_lines {
+        #[cfg(test)]
+        fn make_one() -> crate::source::SourceLine {
+            crate::source::SourceLine {
+                start: 1,
+                end: 2,
+                ends_with_eof: false,
+            }
+        }
+
+        gen_list_impl_for!(
+            crate::source::SourceLine,
+            lib_ruby_parser_containers_source_line_list_blob_new,
+            lib_ruby_parser_containers_source_line_list_blob_with_capacity,
+            lib_ruby_parser_containers_source_line_list_blob_from_raw,
+            lib_ruby_parser_containers_source_line_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_source_line_list_blob_push,
+            lib_ruby_parser_containers_source_line_list_blob_remove,
+            lib_ruby_parser_containers_source_line_list_blob_as_ptr,
+            lib_ruby_parser_containers_source_line_list_blob_len,
+            lib_ruby_parser_containers_source_line_list_blob_capacity
+        );
+    }
+    mod of_u8 {
+        #[cfg(test)]
+        fn make_one() -> u8 {
+            42
+        }
+
+        gen_list_impl_for!(
+            u8,
+            lib_ruby_parser_containers_byte_list_blob_new,
+            lib_ruby_parser_containers_byte_list_blob_with_capacity,
+            lib_ruby_parser_containers_byte_list_blob_from_raw,
+            lib_ruby_parser_containers_byte_list_blob_shrink_to_fit,
+            lib_ruby_parser_containers_byte_list_blob_push,
+            lib_ruby_parser_containers_byte_list_blob_remove,
+            lib_ruby_parser_containers_byte_list_blob_as_ptr,
+            lib_ruby_parser_containers_byte_list_blob_len,
+            lib_ruby_parser_containers_byte_list_blob_capacity
+        );
+
+        use super::ExternalSharedByteList;
+
+        impl List<u8> {
+            /// Equivalent of Vec::as_slice
+            pub fn as_slice(&self) -> ExternalSharedByteList {
+                ExternalSharedByteList::from_raw(self.as_ptr(), self.len())
+            }
         }
     }
 
     #[cfg(test)]
     mod tests {
-        use super::{List as GenericList, TakeFirst};
-        type List = GenericList<usize>;
+        use super::ListBlob;
 
         #[test]
-        fn test_new() {
-            let list = List::new();
-            assert_eq!(list.len, 0);
-            assert_eq!(list.capacity, 0);
-        }
-
-        #[test]
-        fn test_with_capacity() {
-            let list = List::with_capacity(20);
-            assert_eq!(list.len, 0);
-            assert_eq!(list.capacity, 20);
-        }
-
-        #[test]
-        fn test_push() {
-            let mut list = List::new();
-            let mut vec = vec![];
-            for i in 1..20 {
-                list.push(i);
-                vec.push(i);
-            }
-            assert_eq!(list.as_ref(), &vec);
-        }
-
-        #[test]
-        fn test_take_first() {
-            let mut list = List::new();
-            list.push(10);
-            list.push(20);
-            assert_eq!(list.take_first(), 10)
-        }
-
-        #[test]
-        fn test_from_vec() {
-            let list = List::from(vec![1, 2, 3]);
-            assert_eq!(list.as_ref(), &[1, 2, 3])
+        fn test_size() {
+            assert_eq!(std::mem::size_of::<ListBlob>(), 24);
         }
     }
 }
 
 pub(crate) trait TakeFirst<T: Clone> {
     fn take_first(self) -> T;
-}
-
-pub(crate) trait AsSharedList<T> {
-    fn shared(&self) -> SharedList<T>;
 }

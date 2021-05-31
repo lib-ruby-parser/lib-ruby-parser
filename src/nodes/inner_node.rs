@@ -1,7 +1,31 @@
-use crate::containers::{
-    maybe_ptr::AsOption, maybe_string_ptr::MaybeStringPtrAsStringOption, List, MaybePtr,
-    MaybeStringPtr, StringPtr,
-};
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalMaybePtr;
+#[cfg(feature = "compile-with-external-structures")]
+type MaybePtr<T> = ExternalMaybePtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type MaybePtr<T> = Option<Box<T>>;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalMaybeStringPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type MaybeStringPtr = ExternalMaybeStringPtr;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type MaybeStringPtr = Option<String>;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalStringPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type StringPtr = ExternalStringPtr;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type StringPtr = String;
+
 use crate::Loc;
 use crate::Node;
 use crate::StringValue;
@@ -49,7 +73,7 @@ impl InspectVec {
     }
 
     pub(crate) fn push_maybe_str(&mut self, string: &MaybeStringPtr) {
-        if let Some(string) = string.as_str() {
+        if let Some(string) = string.as_ref() {
             self.strings.push(format!(", {:?}", string));
         }
     }
@@ -68,13 +92,13 @@ impl InspectVec {
     }
 
     pub(crate) fn push_maybe_node(&mut self, node: &MaybePtr<Node>) {
-        if let Some(node) = node.as_option() {
+        if let Some(node) = node.as_ref() {
             self.push_node(node)
         }
     }
 
     pub(crate) fn push_regex_options(&mut self, node: &MaybePtr<Node>) {
-        if let Some(node) = node.as_option() {
+        if let Some(node) = node.as_ref() {
             self.push_node(node)
         } else {
             self.strings.push(format!(
@@ -86,7 +110,7 @@ impl InspectVec {
     }
 
     pub(crate) fn push_maybe_node_or_nil(&mut self, node: &MaybePtr<Node>) {
-        if let Some(node) = node.as_option() {
+        if let Some(node) = node.as_ref() {
             self.push_node(node)
         } else {
             self.push_nil()
@@ -100,7 +124,7 @@ impl InspectVec {
     }
 
     pub(crate) fn push_chars(&mut self, chars: &MaybeStringPtr) {
-        if let Some(chars) = chars.as_str() {
+        if let Some(chars) = chars.as_ref() {
             for c in chars.chars() {
                 self.push_str(&StringPtr::from(format!("{}", c)));
             }

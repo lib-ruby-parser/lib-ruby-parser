@@ -1,4 +1,4 @@
-#[cfg(not(feature = "c-structures"))]
+#[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible nullable string container
     pub type MaybeStringPtr = Option<String>;
@@ -19,23 +19,12 @@ pub(crate) mod rust {
             None
         }
     }
-
-    use super::MaybeStringPtrAsStringOption;
-    impl MaybeStringPtrAsStringOption for MaybeStringPtr {
-        fn into_string(self) -> Option<String> {
-            self
-        }
-
-        fn as_str(&self) -> Option<&str> {
-            self.as_ref().map(|s| s.as_str())
-        }
-    }
 }
 
-#[cfg(feature = "c-structures")]
-pub(crate) mod c {
-    use super::{MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome};
-    use crate::containers::StringPtr;
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) mod external {
+    use super::{MaybeStringPtrNone, MaybeStringPtrSome};
+    use crate::containers::ExternalStringPtr;
 
     /// C-compatible nullable String container
     #[repr(C)]
@@ -57,13 +46,13 @@ pub(crate) mod c {
 
     impl std::fmt::Debug for MaybeStringPtr {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            std::fmt::Debug::fmt(&self.as_str(), f)
+            std::fmt::Debug::fmt(&self.as_ref(), f)
         }
     }
 
     impl Clone for MaybeStringPtr {
         fn clone(&self) -> Self {
-            match self.as_str() {
+            match self.as_ref() {
                 Some(s) => Self::some(s.to_string()),
                 None => Self::none(),
             }
@@ -78,10 +67,16 @@ pub(crate) mod c {
 
     impl MaybeStringPtr {
         /// Equivalent of Option::unwrap()
-        pub fn unwrap(self) -> StringPtr {
-            match self.into_string() {
-                Some(s) => StringPtr::from(s),
-                None => panic!("failed to unwrap null StringPtr"),
+        pub fn unwrap(self) -> ExternalStringPtr {
+            let len = self.len;
+            let ptr = self.take();
+
+            if ptr.is_null() {
+                panic!("failed to unwrap null StringPtr")
+            } else {
+                let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
+                let s = String::from_utf8(bytes).unwrap();
+                ExternalStringPtr::from(s)
             }
         }
 
@@ -91,27 +86,15 @@ pub(crate) mod c {
             self.ptr = std::ptr::null_mut();
             ptr
         }
-    }
 
-    impl MaybeStringPtrAsStringOption for MaybeStringPtr {
-        fn into_string(self) -> Option<String> {
-            let len = self.len;
-            let ptr = self.take();
-
-            if ptr.is_null() {
-                None
-            } else {
-                let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
-                Some(String::from_utf8(bytes).unwrap())
-            }
-        }
-
-        fn as_str(&self) -> Option<&str> {
+        /// Equivalent of Option::as_ref
+        pub fn as_ref(&self) -> Option<&str> {
             if self.ptr.is_null() {
                 None
             } else {
                 let bytes = unsafe { std::slice::from_raw_parts(self.ptr, self.len) };
-                Some(std::str::from_utf8(bytes).unwrap())
+                let s = std::str::from_utf8(bytes).unwrap();
+                Some(s)
             }
         }
     }
@@ -150,48 +133,32 @@ pub(crate) mod c {
 
     impl PartialEq<MaybeStringPtr> for MaybeStringPtr {
         fn eq(&self, other: &MaybeStringPtr) -> bool {
-            self.as_str() == other.as_str()
+            self.as_ref() == other.as_ref()
         }
     }
 
     #[cfg(test)]
     mod tests {
-        use super::{
-            MaybeStringPtr, MaybeStringPtrAsStringOption, MaybeStringPtrNone, MaybeStringPtrSome,
-        };
+        use super::{MaybeStringPtr, MaybeStringPtrNone, MaybeStringPtrSome};
 
         #[test]
         fn test_some() {
             let s = MaybeStringPtr::some("foo");
-            assert_eq!(s.as_str(), Some("foo"))
+            assert_eq!(s.as_ref(), Some("foo"))
         }
 
         #[test]
         fn test_none() {
             let s = MaybeStringPtr::none();
-            assert_eq!(s.as_str(), None)
+            assert_eq!(s.as_ref(), None)
         }
 
         #[test]
-        fn test_into_string() {
+        fn test_as_ref() {
             let s = MaybeStringPtr::some("foo");
-            assert_eq!(s.into_string(), Some(String::from("foo")))
-        }
-
-        #[test]
-        fn test_as_str() {
-            let s = MaybeStringPtr::some("foo");
-            assert_eq!(s.as_str(), Some("foo"))
+            assert_eq!(s.as_ref(), Some("foo"))
         }
     }
-}
-
-pub(crate) trait MaybeStringPtrAsStringOption {
-    fn into_string(self) -> Option<String>
-    where
-        Self: Sized;
-
-    fn as_str(&self) -> Option<&str>;
 }
 
 pub(crate) trait MaybeStringPtrSome {

@@ -5,7 +5,7 @@ extern crate jemallocator;
 #[global_allocator]
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-use lib_ruby_parser::{containers::maybe_ptr::AsOption, ParserResult};
+use lib_ruby_parser::ParserResult;
 use lib_ruby_parser_helpers::*;
 
 #[derive(Debug, Clap)]
@@ -69,13 +69,13 @@ fn print_locations(result: &ParserResult) {
     let src = std::str::from_utf8(src.as_ref()).unwrap_or_else(|_| "invalid-source");
     println!("{}", src);
     print_diagnostics(&result);
-    if let Some(ast) = result.ast.as_option() {
+    if let Some(ast) = result.ast.as_ref() {
         ast.print_with_locs()
     }
 }
 fn print_ast(result: &ParserResult) {
     print_diagnostics(&result);
-    if let Some(ast) = result.ast.as_option() {
+    if let Some(ast) = result.ast.as_ref() {
         println!("{}", ast.inspect(0));
     }
 }
@@ -119,8 +119,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if cfg!(feature = "onig") {
             println!("Using 'onig' feature")
         }
-        if cfg!(feature = "c-structures") {
-            println!("Using 'c-structures' feature")
+        if cfg!(feature = "compile-with-external-structures") {
+            println!("Using 'compile-with-external-structures' feature")
         } else {
             println!("Using Rust structures")
         }

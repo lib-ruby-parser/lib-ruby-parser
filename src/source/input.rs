@@ -1,4 +1,24 @@
-use crate::containers::{List, SharedList, StringPtr};
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalSharedByteList;
+#[cfg(feature = "compile-with-external-structures")]
+type SharedByteList = ExternalSharedByteList;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type SharedByteList<'a> = &'a [u8];
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalStringPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type StringPtr = ExternalStringPtr;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type StringPtr = String;
+
 use crate::source::SourceLine;
 use crate::source::{decode_input, CustomDecoder, DecodedInput, InputError};
 
@@ -81,7 +101,7 @@ impl Input {
     }
 
     /// Returns raw bytes after decoding
-    pub fn as_shared_bytes(&self) -> SharedList<u8> {
+    pub fn as_shared_bytes(&self) -> SharedByteList {
         self.decoded.as_shared_bytes()
     }
 

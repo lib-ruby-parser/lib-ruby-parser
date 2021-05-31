@@ -6,3 +6,4 @@ tSTRING_BEG "\'" [1, 2]
 tSTRING_CONTENT "a" [2, 3]
 tSTRING_END "\'" [3, 4]
 tCOLON2 "::" [4, 6]
+--DISABLE-IF-NIGHTLY

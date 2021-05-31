@@ -1,6 +1,11 @@
-use lib_ruby_parser::{
-    containers::List, source::DecodedInput, Diagnostic, DiagnosticMessage, ErrorLevel, Loc,
-};
+use lib_ruby_parser::{source::DecodedInput, Diagnostic, DiagnosticMessage, ErrorLevel, Loc};
+
+#[cfg(feature = "compile-with-external-structures")]
+use lib_ruby_parser::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
 
 #[test]
 fn it_renders() {

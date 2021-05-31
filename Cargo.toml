@@ -13,18 +13,27 @@ version = "3.0.4"
 [features]
 default = []
 
-# Uses C structures
-c-structures = []
+# Uses external structures
+compile-with-external-structures = []
+
+# Link with C library that provides external structures
+link-external-c-structures = []
+
+# Link with C library that provides external structures
+link-external-cpp-structures = []
 
 # Forces building parser.y and all node files
 rebuild-grammar = ["lib-ruby-parser-nodes", "rust-bison-skeleton"]
+
+# Marker-feature, indicates usage of rust nightly, used only by tests
+nightly-features = []
 
 [dependencies]
 onig = {version = "6", optional = true}
 
 [build-dependencies]
 lib-ruby-parser-nodes = {version = "0.13.0", optional = true}
-rust-bison-skeleton = {version = "0.22.0", optional = true}
+rust-bison-skeleton = {version = "0.26.0", optional = true}
 
 [profile.dev]
 debug-assertions = false

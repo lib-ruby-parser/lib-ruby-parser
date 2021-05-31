@@ -4,10 +4,28 @@ pub use item::Item;
 mod visit_gen;
 pub use visit_gen::Observer;
 
-use crate::{
-    containers::{maybe_ptr::AsOption, List, MaybePtr, Ptr},
-    Node,
-};
+use crate::Node;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type Ptr<T> = ExternalPtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type Ptr<T> = Box<T>;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalMaybePtr;
+#[cfg(feature = "compile-with-external-structures")]
+type MaybePtr<T> = ExternalMaybePtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type MaybePtr<T> = Option<Box<T>>;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
 
 /// Generic visitor of `Node`.
 ///
@@ -79,7 +97,7 @@ impl<TObserver: Observer> Visit<&Ptr<Node>> for Visitor<TObserver> {
 
 impl<TObserver: Observer> Visit<&MaybePtr<Node>> for Visitor<TObserver> {
     fn visit(&mut self, node: &MaybePtr<Node>, visit_as: Item) {
-        if let Some(node) = node.as_option() {
+        if let Some(node) = node.as_ref() {
             self.visit(node, visit_as);
         }
     }

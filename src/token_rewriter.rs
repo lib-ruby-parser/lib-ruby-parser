@@ -1,7 +1,18 @@
-use crate::{
-    containers::{Ptr, SharedList},
-    Token,
-};
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalPtr;
+#[cfg(feature = "compile-with-external-structures")]
+type Ptr<T> = ExternalPtr<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type Ptr<T> = Box<T>;
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalSharedByteList;
+#[cfg(feature = "compile-with-external-structures")]
+type SharedByteList = ExternalSharedByteList;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type SharedByteList<'a> = &'a [u8];
+
+use crate::Token;
 
 /// Enum of what token rewriter should do with a token.
 #[derive(Debug)]
@@ -40,7 +51,7 @@ pub struct TokenRewriterResult {
 }
 
 /// Token rewriter function
-pub type TokenRewriterFn = dyn Fn(Ptr<Token>, SharedList<u8>) -> TokenRewriterResult;
+pub type TokenRewriterFn = dyn Fn(Ptr<Token>, SharedByteList) -> TokenRewriterResult;
 
 /// Token rewriter struct, can be used to rewrite tokens on the fly
 pub struct TokenRewriter {

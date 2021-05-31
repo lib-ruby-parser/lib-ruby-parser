@@ -1,7 +1,12 @@
-use crate::containers::List;
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
 
 /// Representation of a byte sequence
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Bytes {
     /// Raw vector of bytes
@@ -10,7 +15,9 @@ pub struct Bytes {
 
 impl Default for Bytes {
     fn default() -> Self {
-        Self { raw: List::new() }
+        Self {
+            raw: List::<u8>::new(),
+        }
     }
 }
 
@@ -22,7 +29,9 @@ impl Bytes {
 
     /// Constructs an empty instance of `Bytes`
     pub fn empty() -> Self {
-        Self { raw: List::new() }
+        Self {
+            raw: List::<u8>::new(),
+        }
     }
 
     /// Returns a slice of the byte sequence
@@ -76,7 +85,7 @@ impl Bytes {
     }
 
     pub(crate) fn clear(&mut self) {
-        self.raw = List::new()
+        self.raw = List::<u8>::new()
     }
 }
 

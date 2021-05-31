@@ -1,5 +1,4 @@
 use super::LocName;
-use lib_ruby_parser::containers::maybe_loc::AsLocOption;
 use lib_ruby_parser::traverse::finder::Finder;
 use lib_ruby_parser::Node;
 
@@ -78,7 +77,7 @@ impl LocMatcher {
 
     pub fn test(&self, root: &Node) -> Result<(), String> {
         match Finder::run(&self.pattern, root).unwrap() {
-            Some(node) => match self.loc_name.get(&node).as_option() {
+            Some(node) => match self.loc_name.get(&node).as_ref() {
                 Some(loc) => {
                     if loc.begin != self.begin {
                         return Err(format!(

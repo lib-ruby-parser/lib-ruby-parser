@@ -9,4 +9,5 @@ src/traverse/visitor/visit_gen.rs
 tests/loc_matcher/loc_name_gen.rs
 src/reserved_words/list.rs
 src/error/message_gen.rs
+src/containers/size.rs
 flamegraph.svg

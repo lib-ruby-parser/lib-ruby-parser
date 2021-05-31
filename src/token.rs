@@ -1,7 +1,14 @@
-use crate::{containers::List, token_name, Bytes, LexState, Loc};
+use crate::{token_name, Bytes, LexState, Loc};
+
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
 
 /// A token that is emitted by a lexer and consumed by a parser
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Token {
     /// Numeric representation of the token type,
@@ -73,5 +80,15 @@ impl Token {
 
     pub(crate) fn get_loc(&self) -> Loc {
         self.loc.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature = "compile-with-external-structures")]
+    #[test]
+    fn test_size() {
+        use super::Token;
+        assert_eq!(std::mem::size_of::<Token>(), 56);
     }
 }

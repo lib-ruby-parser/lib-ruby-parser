@@ -1,9 +1,9 @@
-use crate::containers::Loc;
 use crate::source::DecodedInput;
+use crate::Loc;
 use crate::{DiagnosticMessage, ErrorLevel};
 
 /// Diagnostic message that comes from the parser when there's an error or warning
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Diagnostic {
     /// Level of the diagnostic (error or warnings)
@@ -80,7 +80,13 @@ impl Diagnostic {
     }
 }
 
-use crate::containers::List;
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
+
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -92,7 +98,7 @@ pub(crate) struct Diagnostics {
 impl Diagnostics {
     pub(crate) fn new() -> Self {
         Self {
-            list: Rc::new(RefCell::new(List::new())),
+            list: Rc::new(RefCell::new(List::<Diagnostic>::new())),
         }
     }
 
@@ -101,6 +107,23 @@ impl Diagnostics {
     }
 
     pub(crate) fn take_inner(self) -> List<Diagnostic> {
-        self.list.replace(List::new())
+        self.list.replace(List::<Diagnostic>::new())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[cfg(feature = "link-external-c-structures")]
+    #[test]
+    fn test_size_c() {
+        use super::Diagnostic;
+        assert_eq!(std::mem::size_of::<Diagnostic>(), 56);
+    }
+
+    #[cfg(feature = "link-external-cpp-structures")]
+    #[test]
+    fn test_size_cpp() {
+        use super::Diagnostic;
+        assert_eq!(std::mem::size_of::<Diagnostic>(), 40);
     }
 }
