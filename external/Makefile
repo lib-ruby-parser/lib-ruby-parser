@@ -5,7 +5,7 @@ libstructures-c.a: structures.c
 	$(AR) rc libstructures-c.a structures-c.o
 
 libstructures-cpp.a: structures.cpp
-	$(CXX) structures.cpp -g -std=c++17 -c -Wall -Wextra -o structures-cpp.o
+	$(CXX) structures.cpp -g -std=c++17 -c -Wall -Wextra -fPIC -o structures-cpp.o
 	$(AR) rc libstructures-cpp.a structures-cpp.o
 
 clean:

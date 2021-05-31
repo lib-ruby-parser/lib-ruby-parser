@@ -55,11 +55,12 @@ fn link_with_external_structures() {
 
 #[cfg(feature = "link-external-cpp-structures")]
 fn link_with_external_structures() {
-    println!("cargo:rustc-link-lib=dylib=c++");
-
     println!("cargo:rustc-link-search=external");
     println!("cargo:rustc-link-lib=static=structures-cpp");
     println!("cargo:rerun-if-changed=external/libstructures-cpp.a");
+
+    println!("cargo:rustc-link-lib=dylib=c++");
+    // println!("cargo:rustc-link-lib=dylib=stdc++");
 }
 
 #[cfg(not(any(

@@ -174,7 +174,7 @@ MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob()
     {                                                                                                                              \
         VALUE##List list = lib_ruby_parser_containers_##PREFIX##_unpack_blob(blob);                                                \
         VALUE##_BLOB_DATA item = list.ptr[index];                                                                                  \
-        memcpy(list.ptr + index, list.ptr + index + 1, sizeof(VALUE) * (list.size - index - 1));                                   \
+        memmove(list.ptr + index, list.ptr + index + 1, sizeof(VALUE) * (list.size - index - 1));                                  \
         list.size--;                                                                                                               \
         VALUE##List_REMOVE_RESULT result = {                                                                                       \
             .new_blob = lib_ruby_parser_containers_##PREFIX##_pack_blob(list),                                                     \
