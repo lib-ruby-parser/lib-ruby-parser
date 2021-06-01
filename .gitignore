@@ -11,3 +11,4 @@ src/reserved_words/list.rs
 src/error/message_gen.rs
 src/containers/size.rs
 flamegraph.svg
+Dockerfile
