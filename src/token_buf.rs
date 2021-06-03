@@ -1,3 +1,4 @@
+use crate::bytes::BytesTrait;
 use crate::Bytes;
 
 #[derive(Debug, Clone, Default)]
@@ -17,7 +18,7 @@ impl TokenBuf {
     }
 
     pub(crate) fn push(&mut self, byte: u8) {
-        self.bytes.raw.push(byte);
+        self.bytes.push(byte);
     }
 
     pub(crate) fn append(&mut self, bytes: &[u8]) {
@@ -28,14 +29,14 @@ impl TokenBuf {
 
     pub(crate) fn prepend(&mut self, part: &[u8]) {
         let mut tmp = part.to_vec();
-        tmp.extend(self.bytes.raw.iter());
-        self.bytes.raw = tmp.into();
+        tmp.extend(self.bytes.as_raw().iter());
+        self.bytes.set_raw(tmp.into());
     }
 
     pub(crate) fn borrow_string(&self) -> Result<&str, &[u8]> {
-        match std::str::from_utf8(&self.bytes.raw) {
+        match std::str::from_utf8(self.bytes.as_raw()) {
             Ok(s) => Ok(s),
-            Err(_) => Err(&self.bytes.raw),
+            Err(_) => Err(self.bytes.as_raw()),
         }
     }
 
@@ -50,6 +51,6 @@ impl TokenBuf {
 
 impl PartialEq<str> for TokenBuf {
     fn eq(&self, other: &str) -> bool {
-        self.bytes.raw == other.as_bytes()
+        self.bytes.as_raw() == other.as_bytes()
     }
 }

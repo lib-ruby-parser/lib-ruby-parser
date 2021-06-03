@@ -46,6 +46,7 @@ type StringPtr = ExternalStringPtr;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type StringPtr = String;
 
+use crate::bytes::BytesTrait;
 use crate::containers::helpers::{
     ListTakeFirst, MaybePtrNone, MaybePtrSome, MaybeStringPtrNone, MaybeStringPtrSome, UnPtr,
 };
@@ -537,7 +538,7 @@ impl Builder {
             i += 1;
         }
 
-        s.bytes = Bytes::new(s.bytes.raw[i..].to_vec());
+        s.bytes = Bytes::new(s.bytes.as_raw()[i..].to_vec());
     }
 
     // Regular expressions

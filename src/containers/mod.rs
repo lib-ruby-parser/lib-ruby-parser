@@ -1,10 +1,10 @@
-mod list;
-mod maybe_loc;
-mod maybe_ptr;
-mod maybe_string_ptr;
-mod ptr;
-mod shared_byte_list;
-mod string_ptr;
+pub(crate) mod list;
+pub(crate) mod maybe_loc;
+pub(crate) mod maybe_ptr;
+pub(crate) mod maybe_string_ptr;
+pub(crate) mod ptr;
+pub(crate) mod shared_byte_list;
+pub(crate) mod string_ptr;
 
 pub(crate) mod helpers {
     pub(crate) use super::{

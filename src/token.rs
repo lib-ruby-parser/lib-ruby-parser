@@ -1,3 +1,4 @@
+use crate::bytes::BytesTrait;
 use crate::{token_name, Bytes, LexState, Loc};
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -45,22 +46,17 @@ impl fmt::Debug for Token {
 impl Token {
     /// Returns a byte array of the token value
     pub fn as_bytes(&self) -> &[u8] {
-        &self.token_value.raw
-    }
-
-    /// Returns a mut byte array of the token value
-    pub fn as_bytes_mut(&mut self) -> &mut [u8] {
-        &mut self.token_value.raw
+        self.token_value.as_raw()
     }
 
     /// Consumes a token and returns an owned byte array of the token value
     pub fn into_bytes(self) -> List<u8> {
-        self.token_value.raw
+        self.token_value.into_raw()
     }
 
     /// Converts token value into `&str`
     pub fn as_str_lossy(&self) -> Result<&str, std::str::Utf8Error> {
-        std::str::from_utf8(&self.token_value.raw)
+        std::str::from_utf8(self.token_value.as_raw())
     }
 
     /// Converts token to a string, replaces unknown chars to `U+FFFD`

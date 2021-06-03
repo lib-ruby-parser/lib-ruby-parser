@@ -84,6 +84,18 @@ pub(crate) mod external {
         }
     }
 
+    impl<T: GetDropFn> From<ListBlob> for List<T> {
+        fn from(blob: ListBlob) -> Self {
+            unsafe { std::mem::transmute(blob) }
+        }
+    }
+
+    impl<T: GetDropFn> From<List<T>> for ListBlob {
+        fn from(list: List<T>) -> Self {
+            unsafe { std::mem::transmute(list) }
+        }
+    }
+
     use super::ExternalSharedByteList;
     use super::TakeFirst;
 
@@ -265,11 +277,23 @@ pub(crate) mod external {
                 }
             }
 
+            impl PartialEq<List<$t>> for [$t] {
+                fn eq(&self, other: &List<$t>) -> bool {
+                    self == other.as_ref()
+                }
+            }
+
             impl Eq for List<$t> {}
 
             impl PartialEq<&[$t]> for List<$t> {
                 fn eq(&self, other: &&[$t]) -> bool {
                     self.as_ref() == *other
+                }
+            }
+
+            impl PartialEq<[$t]> for List<$t> {
+                fn eq(&self, other: &[$t]) -> bool {
+                    self.as_ref() == other
                 }
             }
 
@@ -592,6 +616,7 @@ pub(crate) mod external {
     mod of_tokens {
         #[cfg(test)]
         fn make_one() -> crate::Token {
+            use crate::bytes::BytesTrait;
             crate::Token {
                 token_type: crate::Lexer::tINTEGER,
                 token_value: crate::Bytes::empty(),

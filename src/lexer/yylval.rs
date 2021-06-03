@@ -1,3 +1,4 @@
+use crate::bytes::BytesTrait;
 use crate::lexer::*;
 use crate::Bytes;
 use crate::TokenBuf;

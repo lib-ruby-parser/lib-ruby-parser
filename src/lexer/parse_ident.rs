@@ -1,3 +1,4 @@
+use crate::bytes::BytesTrait;
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::reserved_word;
@@ -73,7 +74,7 @@ impl ParseIdent for Lexer {
             return Self::tLABEL;
         }
         if !self.lex_state.is_some(EXPR_DOT) {
-            if let Some(kw) = reserved_word(self.tokenbuf.bytes.as_bytes()) {
+            if let Some(kw) = reserved_word(self.tokenbuf.bytes.as_raw()) {
                 let state: LexState = self.lex_state.clone();
                 if state.is_some(EXPR_FNAME) {
                     self.lex_state.set(EXPR_ENDFN);

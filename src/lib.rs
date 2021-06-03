@@ -91,7 +91,7 @@ pub use token::Token;
 pub mod token_rewriter;
 
 mod bytes;
-pub use bytes::Bytes;
+pub use bytes::{Bytes, BytesTrait};
 
 /// Debug level of the parser
 pub mod debug_level;
