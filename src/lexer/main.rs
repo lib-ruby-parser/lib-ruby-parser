@@ -31,7 +31,6 @@ use crate::source::Comment;
 use crate::source::CustomDecoder;
 use crate::source::MagicComment;
 use crate::str_term::{str_types::*, HeredocEnd, StrTerm, StringLiteral};
-use crate::token_name;
 use crate::Context;
 use crate::StackState;
 use crate::StaticEnvironment;
@@ -194,7 +193,7 @@ impl Lexer {
         if self.debug {
             println!(
                 "yylex ({:?}, {:?}, {:?})",
-                token_name(token.token_type()),
+                token.token_name(),
                 token.token_value(),
                 token.loc()
             );

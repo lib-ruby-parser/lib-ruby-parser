@@ -1,4 +1,4 @@
-use lib_ruby_parser::{token_name, Token, TokenTrait};
+use lib_ruby_parser::{Token, TokenTrait};
 
 pub struct TokenList {
     pub tokens: Vec<Token>,
@@ -12,7 +12,7 @@ impl TokenList {
     fn tok_name_length(&self) -> usize {
         self.tokens
             .iter()
-            .map(|tok| format!("{:?}", token_name(tok.token_type())).len())
+            .map(|tok| format!("{:?}", tok.token_name()).len())
             .max()
             .unwrap_or(0)
             + 2
@@ -41,7 +41,7 @@ impl std::fmt::Debug for TokenList {
             .tokens
             .iter()
             .map(|token| {
-                let name = rpad(&token_name(token.token_type()), tok_name_length);
+                let name = rpad(&token.token_name(), tok_name_length);
                 let value = rpad(&token_value(&token), tok_value_length);
 
                 format!(

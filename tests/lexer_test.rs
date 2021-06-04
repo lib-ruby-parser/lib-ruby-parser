@@ -1,5 +1,5 @@
 use lib_ruby_parser::lex_states::*;
-use lib_ruby_parser::{source::CustomDecoder, token_name, Lexer, TokenTrait};
+use lib_ruby_parser::{source::CustomDecoder, Lexer, TokenTrait};
 use std::fs;
 use std::panic;
 
@@ -132,7 +132,7 @@ fn test(fixture_path: &str) -> TestResult {
             .map(|token| {
                 format!(
                     "{} {:?} [{}, {}]",
-                    token_name(token.token_type()),
+                    token.token_name(),
                     token.to_string_lossy(),
                     token.loc().begin,
                     token.loc().end

@@ -1,5 +1,6 @@
 use crate::bytes::BytesTrait;
-use crate::{token_name, Bytes, LexState, Loc};
+use crate::parser::token_name;
+use crate::{Bytes, LexState, Loc};
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalList;
