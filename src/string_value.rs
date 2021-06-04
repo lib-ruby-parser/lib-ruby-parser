@@ -5,7 +5,9 @@ type Ptr<T> = ExternalPtr<T>;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type Ptr<T> = Box<T>;
 
-use crate::{bytes::BytesTrait, containers::helpers::UnPtr, Bytes, Token};
+use crate::containers::helpers::UnPtr;
+use crate::{Bytes, BytesTrait};
+use crate::{Token, TokenTrait};
 
 /// Representation of the value of the string literal
 ///

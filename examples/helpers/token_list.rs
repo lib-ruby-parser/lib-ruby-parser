@@ -1,4 +1,4 @@
-use lib_ruby_parser::{token_name, Token};
+use lib_ruby_parser::{token_name, Token, TokenTrait};
 
 pub struct TokenList {
     pub tokens: Vec<Token>,

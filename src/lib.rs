@@ -85,7 +85,7 @@ mod string_value;
 pub use string_value::StringValue;
 
 mod token;
-pub use token::Token;
+pub use token::{Token, TokenTrait};
 
 /// Module to perform token rewriting
 pub mod token_rewriter;
