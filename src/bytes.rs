@@ -80,12 +80,12 @@ pub trait BytesTrait:
 mod bytes {
     use super::{BytesTrait, List};
 
-    /// Representation of a byte sequence
+    /// Representation of a byte sequence, see [`BytesTrait`] for available methods
     #[derive(Debug, Clone, PartialEq, Eq)]
     #[repr(C)]
     pub struct Bytes {
         /// Raw vector of bytes
-        raw: List<u8>,
+        pub raw: List<u8>,
     }
 
     impl Default for Bytes {
@@ -238,7 +238,12 @@ mod bytes {
 
     #[cfg(test)]
     mod tests {
-        use super::{Bytes, BytesTrait, List};
+        use super::{Bytes, BytesTrait, List, BYTES_SIZE};
+
+        #[test]
+        fn test_size() {
+            assert_eq!(std::mem::size_of::<Bytes>(), BYTES_SIZE);
+        }
 
         #[test]
         fn test_new() {
