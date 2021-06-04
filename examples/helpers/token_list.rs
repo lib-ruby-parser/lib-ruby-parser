@@ -12,7 +12,7 @@ impl TokenList {
     fn tok_name_length(&self) -> usize {
         self.tokens
             .iter()
-            .map(|tok| format!("{:?}", token_name(tok.token_type)).len())
+            .map(|tok| format!("{:?}", token_name(tok.token_type())).len())
             .max()
             .unwrap_or(0)
             + 2
@@ -41,12 +41,15 @@ impl std::fmt::Debug for TokenList {
             .tokens
             .iter()
             .map(|token| {
-                let name = rpad(&token_name(token.token_type), tok_name_length);
+                let name = rpad(&token_name(token.token_type()), tok_name_length);
                 let value = rpad(&token_value(&token), tok_value_length);
 
                 format!(
                     "    :{}{}[{}, {}]",
-                    name, value, token.loc.begin, token.loc.end,
+                    name,
+                    value,
+                    token.loc().begin,
+                    token.loc().end,
                 )
             })
             .collect::<Vec<_>>()

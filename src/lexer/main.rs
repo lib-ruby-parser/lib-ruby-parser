@@ -150,11 +150,8 @@ impl Lexer {
 
         loop {
             let token = self.yylex().unptr();
-            match token {
-                Token {
-                    token_type: Self::END_OF_INPUT,
-                    ..
-                } => break,
+            match token.token_type() {
+                Self::END_OF_INPUT => break,
                 _ => tokens.push(token),
             }
         }
@@ -187,19 +184,19 @@ impl Lexer {
             end = begin + 1;
         }
 
-        let token = Ptr::new(Token {
+        let token = Ptr::new(Token::new(
             token_type,
             token_value,
-            loc: Loc::new(begin, end),
+            Loc::new(begin, end),
             lex_state_before,
-            lex_state_after: self.lex_state.clone(),
-        });
+            self.lex_state,
+        ));
         if self.debug {
             println!(
                 "yylex ({:?}, {:?}, {:?})",
-                token_name(token.token_type),
-                token.token_value,
-                token.loc
+                token_name(token.token_type()),
+                token.token_value(),
+                token.loc()
             );
         }
         token

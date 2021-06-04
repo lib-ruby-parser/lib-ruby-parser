@@ -23,7 +23,7 @@ pub struct StringValue {
 impl StringValue {
     pub(crate) fn new(token: Ptr<Token>) -> Self {
         Self {
-            bytes: token.unptr().token_value,
+            bytes: token.unptr().into_token_value(),
         }
     }
 

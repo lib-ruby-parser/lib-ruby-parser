@@ -544,7 +544,7 @@ impl Builder {
     // Regular expressions
 
     pub(crate) fn regexp_options(&self, regexp_end_t: Ptr<Token>) -> Option<Box<Node>> {
-        if regexp_end_t.loc.end - regexp_end_t.loc.begin == 1 {
+        if regexp_end_t.loc().end - regexp_end_t.loc().begin == 1 {
             // no regexp options, only trailing "/"
             return None;
         }
@@ -769,13 +769,13 @@ impl Builder {
         let colon_l = end_l.with_begin(end_l.end - 1);
 
         let end_t = end_t.unptr();
-        let end_t: Ptr<Token> = Ptr::new(Token {
-            token_type: end_t.token_type,
-            token_value: end_t.token_value,
-            loc: quote_loc,
-            lex_state_before: LexState::default(),
-            lex_state_after: LexState::default(),
-        });
+        let end_t: Ptr<Token> = Ptr::new(Token::new(
+            end_t.token_type(),
+            end_t.into_token_value(),
+            quote_loc,
+            LexState::default(),
+            LexState::default(),
+        ));
         let expression_l = self.loc(&begin_t).join(&value.expression());
 
         Box::new(Node::Pair(Pair {
@@ -1829,7 +1829,7 @@ impl Builder {
 
     fn call_type_for_dot(&self, dot_t: &Option<Ptr<Token>>) -> MethodCallType {
         match dot_t {
-            Some(token) if token.token_type == Lexer::tANDDOT => MethodCallType::CSend,
+            Some(token) if token.token_type() == Lexer::tANDDOT => MethodCallType::CSend,
             _ => MethodCallType::Send,
         }
     }
@@ -3824,7 +3824,7 @@ impl Builder {
     }
 
     pub(crate) fn loc(&self, token: &Token) -> Loc {
-        token.loc.clone()
+        token.loc().clone()
     }
 
     pub(crate) fn maybe_loc(&self, token: &Option<Ptr<Token>>) -> MaybeLoc {

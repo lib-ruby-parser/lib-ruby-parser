@@ -617,13 +617,13 @@ pub(crate) mod external {
         #[cfg(test)]
         fn make_one() -> crate::Token {
             use crate::bytes::BytesTrait;
-            crate::Token {
-                token_type: crate::Lexer::tINTEGER,
-                token_value: crate::Bytes::empty(),
-                loc: crate::Loc::default(),
-                lex_state_before: crate::LexState::default(),
-                lex_state_after: crate::LexState::default(),
-            }
+            crate::Token::new(
+                crate::Lexer::tINTEGER,
+                crate::Bytes::empty(),
+                crate::Loc::default(),
+                crate::LexState::default(),
+                crate::LexState::default(),
+            )
         }
 
         gen_list_impl_for!(

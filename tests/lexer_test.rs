@@ -132,10 +132,10 @@ fn test(fixture_path: &str) -> TestResult {
             .map(|token| {
                 format!(
                     "{} {:?} [{}, {}]",
-                    token_name(token.token_type),
+                    token_name(token.token_type()),
                     token.to_string_lossy(),
-                    token.loc.begin,
-                    token.loc.end
+                    token.loc().begin,
+                    token.loc().end
                 )
             })
             .collect::<Vec<_>>()

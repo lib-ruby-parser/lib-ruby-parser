@@ -14,20 +14,20 @@ type List<T> = Vec<T>;
 pub struct Token {
     /// Numeric representation of the token type,
     /// e.g. 42 (for example) for tINTEGER
-    pub token_type: i32,
+    token_type: i32,
 
     /// Value of the token,
     /// e.g "42" for 42
-    pub token_value: Bytes,
+    token_value: Bytes,
 
     /// Location of the token
-    pub loc: Loc,
+    loc: Loc,
 
     /// Lex state **before** reading the token
-    pub lex_state_before: LexState,
+    lex_state_before: LexState,
 
     /// Lex state **after** reading the token
-    pub lex_state_after: LexState,
+    lex_state_after: LexState,
 }
 
 use std::fmt;
@@ -35,7 +35,7 @@ impl fmt::Debug for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&format!(
             "[{}, {:?}, {}...{}]",
-            token_name(self.token_type),
+            self.token_name(),
             self.token_value.to_string_lossy(),
             self.loc.begin,
             self.loc.end,
@@ -44,6 +44,23 @@ impl fmt::Debug for Token {
 }
 
 impl Token {
+    /// Constructor
+    pub fn new(
+        token_type: i32,
+        token_value: Bytes,
+        loc: Loc,
+        lex_state_before: LexState,
+        lex_state_after: LexState,
+    ) -> Self {
+        Self {
+            token_type,
+            token_value,
+            loc,
+            lex_state_before,
+            lex_state_after,
+        }
+    }
+
     /// Returns a byte array of the token value
     pub fn as_bytes(&self) -> &[u8] {
         self.token_value.as_raw()
@@ -74,8 +91,44 @@ impl Token {
         self.token_value.into_string()
     }
 
-    pub(crate) fn get_loc(&self) -> Loc {
-        self.loc.clone()
+    /// Returns type of the token
+    pub fn token_type(&self) -> i32 {
+        self.token_type
+    }
+
+    /// Returns name of the token
+    pub fn token_name(&self) -> &'static str {
+        token_name(self.token_type())
+    }
+
+    /// Returns value of the token
+    pub fn token_value(&self) -> &Bytes {
+        &self.token_value
+    }
+
+    /// Sets token value
+    pub fn set_token_value(&mut self, token_value: Bytes) {
+        self.token_value = token_value;
+    }
+
+    /// Consumes self, returns owned values of the token
+    pub fn into_token_value(self) -> Bytes {
+        self.token_value
+    }
+
+    /// Returns location of the token
+    pub fn loc(&self) -> &Loc {
+        &self.loc
+    }
+
+    /// Returns lex state **before** reading the token
+    pub fn lex_state_before(&self) -> LexState {
+        self.lex_state_before
+    }
+
+    /// Returns lex state **after** reading the token
+    pub fn lex_state_after(&self) -> LexState {
+        self.lex_state_after
     }
 }
 
