@@ -31,7 +31,7 @@ typedef uint8_t BYTE;
             }                                                  \
         };                                                     \
     }                                                          \
-    VALUE UNPACK_##VALUE(VALUE##_BLOB_DATA blob);              \
-    VALUE##_BLOB_DATA PACK_##VALUE(VALUE value);
+    VALUE UNPACK(VALUE##_BLOB_DATA blob);                      \
+    VALUE##_BLOB_DATA PACK(VALUE value);
 
 #endif // LIB_RUBY_PARSER_EXTERNAL_CPP_DECLARE_BLOB_HPP
