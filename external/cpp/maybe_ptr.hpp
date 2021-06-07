@@ -11,7 +11,8 @@ extern "C" typedef void(DropPtrInPlace)(void *);
 // MaybePtr<T>
 typedef std::unique_ptr<DUMMY_MAYBE_PTR_VALUE> MAYBE_PTR;
 _Static_assert(sizeof(MAYBE_PTR) == 8);
-DECLARE_BLOB_FOR(MAYBE_PTR);
+DECLARE_BLOB_STRUCTS(MAYBE_PTR)
+DECLARE_BLOB_UNPACK_FOR(MAYBE_PTR)
 
 extern "C"
 {

@@ -2,6 +2,9 @@
 #include "maybe_ptr.hpp"
 #include "impl_blob.hpp"
 
+// There's a conflict between PTR and MAYBE_PTR types
+// as they are represented by the same data type
+DECLARE_BLOB_PACK_FOR(MAYBE_PTR)
 // PACK comes from unique_ptr
 IMPL_BLOB_UNPACK(MAYBE_PTR)
 

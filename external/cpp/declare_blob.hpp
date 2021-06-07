@@ -5,7 +5,7 @@
 
 typedef uint8_t BYTE;
 
-#define DECLARE_BLOB_FOR(VALUE)                                \
+#define DECLARE_BLOB_STRUCTS(VALUE)                            \
     extern "C"                                                 \
     {                                                          \
         struct VALUE##_BLOB                                    \
@@ -30,8 +30,17 @@ typedef uint8_t BYTE;
             {                                                  \
             }                                                  \
         };                                                     \
-    }                                                          \
-    VALUE UNPACK(VALUE##_BLOB blob);                           \
+    }
+
+#define DECLARE_BLOB_UNPACK_FOR(VALUE) \
+    VALUE UNPACK(VALUE##_BLOB blob);
+
+#define DECLARE_BLOB_PACK_FOR(VALUE) \
     VALUE##_BLOB PACK(VALUE value);
+
+#define DECLARE_BLOB_FOR(VALUE)    \
+    DECLARE_BLOB_STRUCTS(VALUE)    \
+    DECLARE_BLOB_UNPACK_FOR(VALUE) \
+    DECLARE_BLOB_PACK_FOR(VALUE)
 
 #endif // LIB_RUBY_PARSER_EXTERNAL_CPP_DECLARE_BLOB_HPP
