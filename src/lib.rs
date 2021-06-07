@@ -16,6 +16,7 @@ Uses bison under the hood.
 */
 
 mod loc;
+pub use loc::Loc;
 
 /// Module with everything related to output of the Parser, but not related to AST,
 /// like `Comment`, `Input`, `CustomDecoder`
@@ -37,7 +38,7 @@ mod parser_result;
 pub use parser_result::ParserResult;
 
 mod parser;
-pub use parser::{Loc, Parser};
+pub use parser::Parser;
 
 mod builder;
 pub(crate) use builder::Builder;

@@ -8,7 +8,29 @@ type MaybeLoc = ExternalMaybeLoc;
 type MaybeLoc = Option<Loc>;
 
 use crate::source::DecodedInput;
-use crate::Loc;
+
+/// Representation of any location in the given input
+#[derive(Clone, PartialEq, Eq, Copy)]
+#[repr(C)]
+pub struct Loc {
+    /// Begin of the `Loc` range
+    pub begin: usize,
+    /// End of the `Loc` range
+    pub end: usize,
+}
+
+impl Loc {
+    /// Converts location to a range
+    pub fn to_range(&self) -> std::ops::Range<usize> {
+        self.begin..self.end
+    }
+}
+
+impl Default for Loc {
+    fn default() -> Self {
+        Self { begin: 0, end: 0 }
+    }
+}
 
 impl Loc {
     /// Constructs a new Loc struct

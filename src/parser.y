@@ -1,7 +1,6 @@
 %expect 0
 
 %define api.parser.struct { Parser }
-%define api.location.type { Loc }
 %define api.value.type { Value }
 
 %define parse.error custom
@@ -93,6 +92,7 @@ use crate::error::Diagnostics;
 use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult};
 use crate::debug_level;
 use crate::containers::helpers::{UnPtr, MaybePtrNone};
+use crate::Loc;
 
 }
 
