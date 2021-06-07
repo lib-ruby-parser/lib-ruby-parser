@@ -8,7 +8,7 @@
 DECLARE_DUMMY_STRUCT(SourceLine, 24);
 DECLARE_BLOB_FOR(SourceLine);
 
-DECLARE_LIST_OF(SourceLine_BLOB_DATA, LIST_OF_SourceLine);
+DECLARE_LIST_OF(SourceLine_BLOB, LIST_OF_SourceLine);
 DECLARE_BLOB_FOR(LIST_OF_SourceLine);
 _Static_assert(sizeof(LIST_OF_SourceLine) == 24, "sizeof(LIST_OF_SourceLine) == 24");
 

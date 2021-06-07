@@ -7,12 +7,12 @@ IMPL_BLOB_UNPACK(MAYBE_PTR)
 
 extern "C"
 {
-    MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_make_maybe_ptr_blob(void *raw) noexcept
+    MAYBE_PTR_BLOB lib_ruby_parser_containers_make_maybe_ptr_blob(void *raw) noexcept
     {
         return PACK(MAYBE_PTR((DUMMY_MAYBE_PTR_VALUE *)raw));
     }
 
-    void lib_ruby_parser_containers_free_maybe_ptr_blob(MAYBE_PTR_BLOB_DATA maybe_ptr_blob, DropPtrInPlace drop_ptr_in_place) noexcept
+    void lib_ruby_parser_containers_free_maybe_ptr_blob(MAYBE_PTR_BLOB maybe_ptr_blob, DropPtrInPlace drop_ptr_in_place) noexcept
     {
         MAYBE_PTR ptr = UNPACK(maybe_ptr_blob);
         void *raw = ptr.release();
@@ -23,12 +23,12 @@ extern "C"
         }
     }
 
-    void *lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(MAYBE_PTR_BLOB_DATA maybe_ptr_blob) noexcept
+    void *lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(MAYBE_PTR_BLOB maybe_ptr_blob) noexcept
     {
         return UNPACK(maybe_ptr_blob).release();
     }
 
-    MAYBE_PTR_BLOB_DATA lib_ruby_parser_containers_null_maybe_ptr_blob() noexcept
+    MAYBE_PTR_BLOB lib_ruby_parser_containers_null_maybe_ptr_blob() noexcept
     {
         return PACK(MAYBE_PTR(nullptr));
     }

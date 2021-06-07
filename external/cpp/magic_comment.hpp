@@ -8,7 +8,7 @@
 DECLARE_DUMMY_STRUCT(MagicComment, 40);
 DECLARE_BLOB_FOR(MagicComment);
 
-DECLARE_LIST_OF(MagicComment_BLOB_DATA, LIST_OF_MagicComment);
+DECLARE_LIST_OF(MagicComment_BLOB, LIST_OF_MagicComment);
 DECLARE_BLOB_FOR(LIST_OF_MagicComment);
 _Static_assert(sizeof(LIST_OF_MagicComment) == 24, "sizeof(LIST_OF_MagicComment) == 24");
 

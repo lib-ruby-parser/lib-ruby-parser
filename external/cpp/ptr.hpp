@@ -15,10 +15,10 @@ DECLARE_BLOB_FOR(PTR);
 
 extern "C"
 {
-    PTR_BLOB_DATA lib_ruby_parser_containers_make_ptr_blob(void *ptr) noexcept;
-    extern "C" void lib_ruby_parser_containers_free_ptr_blob(PTR_BLOB_DATA blob, DropPtrInPlace drop_ptr_in_place) noexcept;
-    extern "C" void *lib_ruby_parser_containers_raw_ptr_from_ptr_blob(PTR_BLOB_DATA blob) noexcept;
-    extern "C" PTR_BLOB_DATA lib_ruby_parser_containers_null_ptr_blob() noexcept;
+    PTR_BLOB lib_ruby_parser_containers_make_ptr_blob(void *ptr) noexcept;
+    extern "C" void lib_ruby_parser_containers_free_ptr_blob(PTR_BLOB blob, DropPtrInPlace drop_ptr_in_place) noexcept;
+    extern "C" void *lib_ruby_parser_containers_raw_ptr_from_ptr_blob(PTR_BLOB blob) noexcept;
+    extern "C" PTR_BLOB lib_ruby_parser_containers_null_ptr_blob() noexcept;
 }
 
 #endif // LIB_RUBY_PARSER_EXTERNAL_CPP_PTR_HPP
