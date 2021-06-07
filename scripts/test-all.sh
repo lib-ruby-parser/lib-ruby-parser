@@ -21,6 +21,7 @@ run_c_tests() {
     LIB_RUBY_PARSER_STRING_PTR_SIZE=16 \
     LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE=16 \
     LIB_RUBY_PARSER_BYTES_SIZE=24 \
+    LIB_RUBY_PARSER_TOKEN_SIZE=56 \
         cargo test --features "compile-with-external-structures,link-with-external-c-structures,nightly-features" "$@"
 }
 
@@ -38,6 +39,7 @@ run_cpp_tests() {
     LIB_RUBY_PARSER_STRING_PTR_SIZE=8 \
     LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE=16 \
     LIB_RUBY_PARSER_BYTES_SIZE=24 \
+    LIB_RUBY_PARSER_TOKEN_SIZE=56 \
         cargo test --features "compile-with-external-structures,link-with-external-cpp-structures,nightly-features" "$@"
 }
 

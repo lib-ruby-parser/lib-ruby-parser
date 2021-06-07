@@ -126,20 +126,20 @@ mod bytes {
 }
 
 #[cfg(feature = "compile-with-external-structures")]
-mod bytes {
+pub(crate) mod bytes {
     use super::BytesTrait;
     use crate::containers::size::BYTES_SIZE;
 
     #[repr(C)]
     #[derive(Clone, Copy)]
-    struct BytesBlob {
+    pub(crate) struct BytesBlob {
         blob: [u8; BYTES_SIZE],
     }
 
     /// Byte sequence based on external implementation
     #[repr(C)]
     pub struct Bytes {
-        blob: BytesBlob,
+        pub(crate) blob: BytesBlob,
     }
 
     use crate::containers::list::external::{List, ListBlob};
@@ -225,6 +225,14 @@ mod bytes {
             let list_blob: ListBlob = list.into();
             let bytes_blob = unsafe { lib_ruby_parser_bytes_blob_from_list_blob(list_blob) };
             self.blob = bytes_blob;
+        }
+    }
+
+    impl Bytes {
+        pub(crate) fn into_blob(mut self) -> BytesBlob {
+            let result = self.blob;
+            self.blob = unsafe { lib_ruby_parser_bytes_blob_new() };
+            result
         }
     }
 

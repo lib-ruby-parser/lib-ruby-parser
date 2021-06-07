@@ -21,6 +21,9 @@ pub(crate) fn generate_size_rs() {
     println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_BYTES_SIZE");
     let bytes_size = env!("LIB_RUBY_PARSER_BYTES_SIZE");
 
+    println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_TOKEN_SIZE");
+    let token_size = env!("LIB_RUBY_PARSER_TOKEN_SIZE");
+
     let contents = format!(
         "pub(crate) const PTR_SIZE: usize = {ptr_size};
 pub(crate) const MAYBE_PTR_SIZE: usize = {maybe_ptr_size};
@@ -28,13 +31,15 @@ pub(crate) const LIST_SIZE: usize = {list_size};
 pub(crate) const STRING_PTR_SIZE: usize = {string_ptr_size};
 pub(crate) const SHARED_BYTE_LIST_SIZE: usize = {shared_byte_list_size};
 pub(crate) const BYTES_SIZE: usize = {bytes_size};
+pub(crate) const TOKEN_SIZE: usize = {token_size};
 ",
         ptr_size = ptr_size,
         maybe_ptr_size = maybe_ptr_size,
         list_size = list_size,
         string_ptr_size = string_ptr_size,
         shared_byte_list_size = shared_byte_list_size,
-        bytes_size = bytes_size
+        bytes_size = bytes_size,
+        token_size = token_size
     );
 
     std::fs::write("src/containers/size.rs", contents).unwrap();

@@ -297,6 +297,18 @@ pub(crate) mod external {
                 }
             }
 
+            impl PartialEq<Vec<$t>> for List<$t> {
+                fn eq(&self, other: &Vec<$t>) -> bool {
+                    self.as_ref() == other.as_slice()
+                }
+            }
+
+            impl PartialEq<List<$t>> for Vec<$t> {
+                fn eq(&self, other: &List<$t>) -> bool {
+                    self.as_slice() == other.as_ref()
+                }
+            }
+
             impl<I> std::ops::Index<I> for List<$t>
             where
                 I: std::slice::SliceIndex<[$t]>,
