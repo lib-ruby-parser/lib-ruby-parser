@@ -6,6 +6,7 @@
 #include "string_ptr.hpp"
 #include "shared_byte_list.hpp"
 #include "bytes.hpp"
+#include "token.hpp"
 
 int main()
 {
@@ -15,5 +16,6 @@ int main()
     std::cout << "LIB_RUBY_PARSER_STRING_PTR_SIZE = " << sizeof(STRING_PTR) << "\n";
     std::cout << "LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE = " << sizeof(SHARED_BYTE_LIST) << "\n";
 
-    std::cout << "LIB_RUBY_PARSER_BYTES_SIZE = " << sizeof(BYTES) << "\n";
+    std::cout << "LIB_RUBY_PARSER_BYTES_SIZE = " << sizeof(Bytes) << "\n";
+    std::cout << "LIB_RUBY_PARSER_TOKEN_SIZE = " << sizeof(Token) << "\n";
 }

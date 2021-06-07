@@ -16,6 +16,6 @@ int main()
     printf("LIB_RUBY_PARSER_STRING_PTR_SIZE = %lu\n", sizeof(STRING_PTR));
     printf("LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE = %lu\n", sizeof(SHARED_BYTE_LIST));
 
-    printf("LIB_RUBY_PARSER_BYTES_SIZE = %lu\n", sizeof(BYTES));
+    printf("LIB_RUBY_PARSER_BYTES_SIZE = %lu\n", sizeof(Bytes));
     printf("LIB_RUBY_PARSER_TOKEN_SIZE = %lu\n", sizeof(Token));
 }

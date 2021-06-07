@@ -6,22 +6,29 @@
 #include "declare_list.hpp"
 #include "bytes.hpp"
 #include "loc.hpp"
+#include <iostream>
 
 class Token
 {
 public:
     uint32_t token_type;
-    BYTES token_value;
+    Bytes token_value;
     Loc loc;
     uint32_t lex_state_before;
     uint32_t lex_state_after;
 
     explicit Token(
         uint32_t token_type,
-        BYTES token_value,
+        Bytes token_value,
         Loc loc,
         uint32_t lex_state_before,
         uint32_t lex_state_after);
+
+    Token(const Token &) = delete;
+    Token(Token &&) = default;
+    Token &operator=(const Token &other) = delete;
+    Token &operator=(Token &&other) = default;
+    ~Token() = default;
 };
 _Static_assert(sizeof(Token) == 56, "sizeof(Token) == 56");
 DECLARE_BLOB_FOR(Token);
@@ -34,14 +41,14 @@ extern "C"
 {
     Token_BLOB_DATA lib_ruby_parser_token_blob_new(
         uint32_t token_type,
-        BYTES_BLOB_DATA token_value,
+        Bytes_BLOB_DATA token_value,
         Loc loc,
         uint32_t lex_state_before,
         uint32_t lex_state_after);
     uint32_t lib_ruby_parser_token_blob_get_token_type(Token_BLOB_DATA token_blob);
-    BYTES_BLOB_DATA *lib_ruby_parser_token_blob_borrow_token_value(Token_BLOB_DATA *token_blob);
-    Token_BLOB_DATA lib_ruby_parser_token_set_token_value(Token_BLOB_DATA token_blob, BYTES_BLOB_DATA bytes_blob);
-    BYTES_BLOB_DATA lib_ruby_parser_token_blob_into_token_value(Token_BLOB_DATA token_blob);
+    Bytes_BLOB_DATA *lib_ruby_parser_token_blob_borrow_token_value(Token_BLOB_DATA *token_blob);
+    Token_BLOB_DATA lib_ruby_parser_token_set_token_value(Token_BLOB_DATA token_blob, Bytes_BLOB_DATA bytes_blob);
+    Bytes_BLOB_DATA lib_ruby_parser_token_blob_into_token_value(Token_BLOB_DATA token_blob);
     Loc lib_ruby_parser_token_blob_borrow_loc(Token_BLOB_DATA token_blob);
     uint32_t lib_ruby_parser_token_blob_get_lex_state_before(Token_BLOB_DATA token_blob);
     uint32_t lib_ruby_parser_token_blob_get_lex_state_after(Token_BLOB_DATA token_blob);

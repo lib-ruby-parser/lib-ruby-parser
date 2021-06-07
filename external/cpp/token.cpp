@@ -1,12 +1,13 @@
 #include "token.hpp"
 #include "impl_blob.hpp"
+#include "forget.hpp"
 
 IMPL_BLOB(Token);
 IMPL_BLOB(LIST_OF_Token);
 
 Token::Token(
     uint32_t token_type,
-    BYTES token_value,
+    Bytes token_value,
     Loc loc,
     uint32_t lex_state_before,
     uint32_t lex_state_after) : token_type(token_type),
@@ -21,54 +22,68 @@ extern "C"
 {
     Token_BLOB_DATA lib_ruby_parser_token_blob_new(
         uint32_t token_type,
-        BYTES_BLOB_DATA token_value,
+        Bytes_BLOB_DATA token_value,
         Loc loc,
         uint32_t lex_state_before,
         uint32_t lex_state_after)
     {
-        return PACK_Token(Token(token_type, UNPACK_BYTES(token_value), loc, lex_state_before, lex_state_after));
+        return PACK_Token(Token(token_type, UNPACK_Bytes(token_value), loc, lex_state_before, lex_state_after));
     }
 
     uint32_t lib_ruby_parser_token_blob_get_token_type(Token_BLOB_DATA token_blob)
     {
-        return UNPACK_Token(token_blob).token_type;
+        Token token = UNPACK_Token(token_blob);
+        uint32_t token_type = token.token_type;
+        forget(std::move(token));
+        return token_type;
     }
 
-    BYTES_BLOB_DATA *lib_ruby_parser_token_blob_borrow_token_value(Token_BLOB_DATA *token_blob)
+    Bytes_BLOB_DATA *lib_ruby_parser_token_blob_borrow_token_value(Token_BLOB_DATA *token_blob)
     {
         Token *token = (Token *)token_blob;
-        BYTES *bytes = &(token->token_value);
-        return (BYTES_BLOB_DATA *)bytes;
+        Bytes *bytes = &(token->token_value);
+        return (Bytes_BLOB_DATA *)bytes;
     }
 
-    Token_BLOB_DATA lib_ruby_parser_token_set_token_value(Token_BLOB_DATA token_blob, BYTES_BLOB_DATA bytes_blob)
+    Token_BLOB_DATA lib_ruby_parser_token_set_token_value(Token_BLOB_DATA token_blob, Bytes_BLOB_DATA bytes_blob)
     {
         Token token = UNPACK_Token(token_blob);
-        lib_ruby_parser_bytes_blob_free(PACK_BYTES(token.token_value));
-        token.token_value = UNPACK_BYTES(bytes_blob);
-        return PACK_Token(token);
+        lib_ruby_parser_bytes_blob_free(PACK_Bytes(std::move(token.token_value)));
+        token.token_value = UNPACK_Bytes(bytes_blob);
+        return PACK_Token(std::move(token));
     }
 
-    BYTES_BLOB_DATA lib_ruby_parser_token_blob_into_token_value(Token_BLOB_DATA token_blob)
+    Bytes_BLOB_DATA lib_ruby_parser_token_blob_into_token_value(Token_BLOB_DATA token_blob)
     {
-        return PACK_BYTES(UNPACK_Token(token_blob).token_value);
+        Token token = UNPACK_Token(token_blob);
+        Bytes token_value = std::move(token.token_value);
+        return PACK_Bytes(std::move(token_value));
     }
 
     Loc lib_ruby_parser_token_blob_borrow_loc(Token_BLOB_DATA token_blob)
     {
-        return UNPACK_Token(token_blob).loc;
+        Token token = UNPACK_Token(token_blob);
+        Loc loc = token.loc;
+        forget(std::move(token));
+        return loc;
     }
     uint32_t lib_ruby_parser_token_blob_get_lex_state_before(Token_BLOB_DATA token_blob)
     {
-        return UNPACK_Token(token_blob).lex_state_before;
+        Token token = UNPACK_Token(token_blob);
+        uint32_t lex_state_before = token.lex_state_before;
+        forget(std::move(token));
+        return lex_state_before;
     }
     uint32_t lib_ruby_parser_token_blob_get_lex_state_after(Token_BLOB_DATA token_blob)
     {
-        return UNPACK_Token(token_blob).lex_state_after;
+        Token token = UNPACK_Token(token_blob);
+        uint32_t lex_state_after = token.lex_state_after;
+        forget(std::move(token));
+        return lex_state_after;
     }
     void lib_ruby_parser_token_blob_free(Token_BLOB_DATA token_blob)
     {
         Token token = UNPACK_Token(token_blob);
-        UNPACK_LIST_OF_Byte(token.token_value.raw);
+        // ~Token
     }
 }
