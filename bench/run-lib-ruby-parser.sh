@@ -1,3 +1,3 @@
 #!/bin/bash
 
-examples/target/release/examples/parse --no-output --drop-tokens --benchmark "gems/repos/**/*.rb"
+target/release/examples/parse --print=N --drop-tokens --run-timer=1 "gems/repos/**/*.rb"

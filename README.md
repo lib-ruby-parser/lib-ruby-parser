@@ -134,7 +134,7 @@ If you use it from GitHub directly you also need Bison (because `parser.rs` is u
 You can use `parse` example:
 
 ```sh
-$ cargo run --all-features --example parse -- --no-output --profile "<pattern>"
+$ cargo run --features run-examples --example parse -- --print=N --run-profiler "<pattern>"
 ```
 
 ## Benchmarking
@@ -152,27 +152,27 @@ $ ./bench/compare.sh
     Finished release [optimized] target(s) in 0.08s
 Running lib-ruby-parser
 Run 1:
-Time taken: 6.9259099850 (total files: 18018)
+Time taken: 6.6232788220 (total files: 18018)
 Run 2:
-Time taken: 6.9513776890 (total files: 18018)
+Time taken: 6.6498335800 (total files: 18018)
 Run 3:
-Time taken: 6.8753601400 (total files: 18018)
+Time taken: 7.0684415810 (total files: 18018)
 Run 4:
-Time taken: 6.9588531290 (total files: 18018)
+Time taken: 6.7987308510 (total files: 18018)
 Run 5:
-Time taken: 6.8223984890 (total files: 18018)
+Time taken: 6.6954798760 (total files: 18018)
 --------
 Running MRI/ripper
 Run 1:
-Time taken: 22.4108530000085 (total files: 18017)
+Time taken: 22.92822499992326 (total files: 18017)
 Run 2:
-Time taken: 21.238974999985658 (total files: 18017)
+Time taken: 21.8613000002224 (total files: 18017)
 Run 3:
-Time taken: 20.937565999978688 (total files: 18017)
+Time taken: 21.96083900006488 (total files: 18017)
 Run 4:
-Time taken: 20.862804999982473 (total files: 18017)
+Time taken: 21.44488099985756 (total files: 18017)
 Run 5:
-Time taken: 20.898615999962203 (total files: 18017)
+Time taken: 21.738944000098854 (total files: 18017)
 ```
 
 ## Profile-guided optimization
