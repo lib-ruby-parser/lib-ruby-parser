@@ -8,6 +8,7 @@ type MaybeLoc = ExternalMaybeLoc;
 type MaybeLoc = Option<Loc>;
 
 use crate::source::DecodedInput;
+use crate::source::SourceLineTrait;
 
 /// Representation of any location in the given input
 #[derive(Clone, PartialEq, Eq, Copy)]
@@ -126,7 +127,7 @@ impl Loc {
         let (begin_line, _) = self.begin_line_col(input)?;
         let line_no = begin_line;
         let line = input.line_at(line_no);
-        Some((line_no, Self::new(line.start, line.line_end())))
+        Some((line_no, Self::new(line.start(), line.line_end())))
     }
 
     /// Returns source code of the current `Loc` on a given `Input`

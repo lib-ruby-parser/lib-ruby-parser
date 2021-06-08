@@ -29,6 +29,7 @@ jobs:
             LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE: 16
             LIB_RUBY_PARSER_BYTES_SIZE: 24
             LIB_RUBY_PARSER_TOKEN_SIZE: 56
+            LIB_RUBY_PARSER_SOURCE_LINE_SIZE: 24
 
           - link-feature: link-with-external-cpp-structures
             compile-external-containers: |
@@ -40,6 +41,7 @@ jobs:
             LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE: 16
             LIB_RUBY_PARSER_BYTES_SIZE: 24
             LIB_RUBY_PARSER_TOKEN_SIZE: 56
+            LIB_RUBY_PARSER_SOURCE_LINE_SIZE: 24
 
     steps:
       - name: checkout
@@ -83,6 +85,7 @@ jobs:
           LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE }}
           LIB_RUBY_PARSER_BYTES_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_BYTES_SIZE }}
           LIB_RUBY_PARSER_TOKEN_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_TOKEN_SIZE }}
+          LIB_RUBY_PARSER_SOURCE_LINE_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_SOURCE_LINE_SIZE }}
         run: |
           cargo test --features $CARGO_FEATURES --lib -- --nocapture
 

@@ -656,11 +656,9 @@ pub(crate) mod external {
     mod of_source_lines {
         #[cfg(test)]
         fn make_one() -> crate::source::SourceLine {
-            crate::source::SourceLine {
-                start: 1,
-                end: 2,
-                ends_with_eof: false,
-            }
+            use crate::source::SourceLineTrait;
+
+            crate::source::SourceLine::new(1, 2, false)
         }
 
         gen_list_impl_for!(

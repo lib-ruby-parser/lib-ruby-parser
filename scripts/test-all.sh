@@ -9,12 +9,11 @@ cargo test --features "nightly-features" # --features "onig"
 
 rustup default nightly
 
-export ASAN_OPTIONS=detect_leaks=1
-export RUSTFLAGS=-Zsanitizer=address
-
 cargo clean
 
 run_c_tests() {
+    ASAN_OPTIONS=detect_leaks=1 \
+    RUSTFLAGS=-Zsanitizer=address \
     LIB_RUBY_PARSER_PTR_SIZE=8 \
     LIB_RUBY_PARSER_MAYBE_PTR_SIZE=8 \
     LIB_RUBY_PARSER_LIST_SIZE=24 \
@@ -22,6 +21,7 @@ run_c_tests() {
     LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE=16 \
     LIB_RUBY_PARSER_BYTES_SIZE=24 \
     LIB_RUBY_PARSER_TOKEN_SIZE=56 \
+    LIB_RUBY_PARSER_SOURCE_LINE_SIZE=24 \
         cargo test --features "compile-with-external-structures,link-with-external-c-structures,nightly-features" "$@"
 }
 
@@ -33,6 +33,8 @@ run_c_tests --lib
 cargo clean
 
 run_cpp_tests() {
+    ASAN_OPTIONS=detect_leaks=1 \
+    RUSTFLAGS=-Zsanitizer=address \
     LIB_RUBY_PARSER_PTR_SIZE=8 \
     LIB_RUBY_PARSER_MAYBE_PTR_SIZE=8 \
     LIB_RUBY_PARSER_LIST_SIZE=24 \
@@ -40,6 +42,7 @@ run_cpp_tests() {
     LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE=16 \
     LIB_RUBY_PARSER_BYTES_SIZE=24 \
     LIB_RUBY_PARSER_TOKEN_SIZE=56 \
+    LIB_RUBY_PARSER_SOURCE_LINE_SIZE=24 \
         cargo test --features "compile-with-external-structures,link-with-external-cpp-structures,nightly-features" "$@"
 }
 

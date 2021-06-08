@@ -19,7 +19,7 @@ type StringPtr = ExternalStringPtr;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type StringPtr = String;
 
-use crate::source::SourceLine;
+use crate::source::{SourceLine, SourceLineTrait};
 
 /// Decoded input
 #[derive(Debug, Default)]
@@ -49,27 +49,19 @@ impl DecodedInput {
 
     /// Populates `Input` with a given byte array
     pub fn set_bytes(&mut self, bytes: List<u8>) {
-        let mut line = SourceLine {
-            start: 0,
-            end: 0,
-            ends_with_eof: true,
-        };
+        let mut line = SourceLine::new(0, 0, true);
         let mut lines = List::<SourceLine>::new();
 
         for (idx, c) in bytes.iter().enumerate() {
-            line.end = idx + 1;
+            line.set_end(idx + 1);
             if *c == b'\n' {
-                line.ends_with_eof = false;
+                line.set_ends_with_eof(false);
                 lines.push(line);
-                line = SourceLine {
-                    start: idx + 1,
-                    end: 0,
-                    ends_with_eof: true,
-                }
+                line = SourceLine::new(idx + 1, 0, true)
             }
         }
-        line.end = bytes.len();
-        line.ends_with_eof = true;
+        line.set_end(bytes.len());
+        line.set_ends_with_eof(true);
         lines.push(line);
 
         self.bytes = bytes;
