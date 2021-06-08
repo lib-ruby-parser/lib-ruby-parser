@@ -7,6 +7,7 @@ pub(crate) fn generate_parser_y() {
     const PARSER_Y: &str = "src/parser.y";
 
     println!("cargo:rerun-if-changed={}", PARSER_Y);
+    println!("Generating parser.rs");
 
     match rust_bison_skeleton::process_bison_file(&Path::new(PARSER_Y)) {
         Ok(_) => {}

@@ -1,7 +1,4 @@
-#[cfg(any(
-    feature = "link-with-external-c-structures",
-    feature = "link-with-external-cpp-structures"
-))]
+#[cfg(feature = "compile-with-external-structures")]
 pub(crate) fn generate_size_rs() {
     println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_PTR_SIZE");
     let ptr_size = env!("LIB_RUBY_PARSER_PTR_SIZE");
@@ -47,13 +44,11 @@ pub(crate) const SOURCE_LINE_SIZE: usize = {source_line_size};
         source_line_size = source_line_size
     );
 
+    println!("Generating sizes.rs");
     std::fs::write("src/containers/size.rs", contents).unwrap();
 }
 
-#[cfg(not(any(
-    feature = "link-with-external-c-structures",
-    feature = "link-with-external-cpp-structures"
-)))]
+#[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) fn generate_size_rs() {
     println!("Skipping generating size.rs")
 }
