@@ -22,7 +22,6 @@ struct Fixture {
     state: Option<String>,
     input: String,
     tokens: String,
-    disable_if_nightly: bool,
 }
 impl Fixture {
     fn new(path: &str) -> Self {
@@ -36,7 +35,6 @@ impl Fixture {
         let mut current_section = TestSection::None;
         let mut cond = false;
         let mut cmdarg = false;
-        let mut disable_if_nightly = false;
 
         for line in content.lines() {
             match (line, &current_section) {
@@ -46,7 +44,6 @@ impl Fixture {
                 ("--STATE", _) => current_section = TestSection::State,
                 ("--INPUT", _) => current_section = TestSection::Input,
                 ("--TOKENS", _) => current_section = TestSection::Tokens,
-                ("--DISABLE-IF-NIGHTLY", _) => disable_if_nightly = true,
                 (_, &TestSection::Vars) => vars = line.split(' ').map(|s| s.to_string()).collect(),
                 (_, &TestSection::State) => state = Some(line.to_string()),
                 (_, &TestSection::Input) => input.push(line.to_string()),
@@ -67,7 +64,6 @@ impl Fixture {
             state,
             input,
             tokens,
-            disable_if_nightly,
         }
     }
 }
@@ -75,6 +71,7 @@ impl Fixture {
 enum TestResult {
     Segfault,
     Pass,
+    #[allow(dead_code)]
     Skip,
     Failure(String),
 }
@@ -99,14 +96,6 @@ fn lex_state(state: &str) -> Result<i32, &'static str> {
 fn test(fixture_path: &str) -> TestResult {
     let result = panic::catch_unwind(|| {
         let test_case = Fixture::new(fixture_path);
-
-        if test_case.disable_if_nightly {
-            if cfg!(feature = "nightly-features") {
-                return TestResult::Skip;
-            } else {
-                // ok, keep going
-            }
-        }
 
         let mut lexer = Lexer::new(
             test_case.input.as_str(),

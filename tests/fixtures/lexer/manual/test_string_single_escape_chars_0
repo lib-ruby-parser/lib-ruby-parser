@@ -1,7 +1,6 @@
 --INPUT
 's\tri\ng'
 --TOKENS
-tSTRING_BEG "\'" [0, 1]
+tSTRING_BEG "'" [0, 1]
 tSTRING_CONTENT "s\\tri\\ng" [1, 9]
-tSTRING_END "\'" [9, 10]
---DISABLE-IF-NIGHTLY
+tSTRING_END "'" [9, 10]

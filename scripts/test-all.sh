@@ -4,8 +4,8 @@ set -eux
 
 export RUST_BACKTRACE=1
 
-# rustup default stable
-cargo test --features "nightly-features" # --features "onig"
+rustup default stable
+cargo test # --features "onig"
 
 rustup default nightly
 
@@ -22,7 +22,7 @@ run_c_tests() {
     LIB_RUBY_PARSER_BYTES_SIZE=24 \
     LIB_RUBY_PARSER_TOKEN_SIZE=56 \
     LIB_RUBY_PARSER_SOURCE_LINE_SIZE=24 \
-        cargo test --features "compile-with-external-structures,link-with-external-c-structures,nightly-features" "$@"
+        cargo test --features "compile-with-external-structures,link-with-external-c-structures" "$@"
 }
 
 # Linking fails on building doctests with ASAN enabled
@@ -43,7 +43,7 @@ run_cpp_tests() {
     LIB_RUBY_PARSER_BYTES_SIZE=24 \
     LIB_RUBY_PARSER_TOKEN_SIZE=56 \
     LIB_RUBY_PARSER_SOURCE_LINE_SIZE=24 \
-        cargo test --features "compile-with-external-structures,link-with-external-cpp-structures,nightly-features" "$@"
+        cargo test --features "compile-with-external-structures,link-with-external-cpp-structures" "$@"
 }
 
 # Linking fails on building doctests with ASAN enabled

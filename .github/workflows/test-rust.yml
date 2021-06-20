@@ -19,8 +19,8 @@ jobs:
       matrix:
         build:
           - { rust: stable,  cargoargs: "--features onig" }
-          - { rust: beta,    cargoargs: "--features onig,nightly-features" }
-          - { rust: nightly, cargoargs: "--features nightly-features" }
+          - { rust: beta,    cargoargs: "--features onig" }
+          - { rust: nightly, cargoargs: "" }
 
     steps:
       - name: checkout
