@@ -628,8 +628,6 @@ pub(crate) mod external {
     mod of_tokens {
         #[cfg(test)]
         fn make_one() -> crate::Token {
-            use crate::TokenTrait;
-
             use crate::bytes::BytesTrait;
             crate::Token::new(
                 crate::Lexer::tINTEGER,

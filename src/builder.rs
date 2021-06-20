@@ -57,7 +57,7 @@ use crate::Loc;
 use crate::StringValue;
 use crate::{
     Bytes, Context, CurrentArgStack, Lexer, MaxNumparamStack, Node, StaticEnvironment, Token,
-    TokenTrait, VariablesStack,
+    VariablesStack,
 };
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 

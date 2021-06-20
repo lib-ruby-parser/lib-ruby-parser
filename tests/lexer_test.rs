@@ -1,5 +1,5 @@
 use lib_ruby_parser::lex_states::*;
-use lib_ruby_parser::{source::CustomDecoder, Lexer, TokenTrait};
+use lib_ruby_parser::{source::CustomDecoder, Lexer};
 use std::fs;
 use std::panic;
 

@@ -78,7 +78,7 @@ type StringPtr = ExternalStringPtr;
 type StringPtr = String;
 
 use crate::{ParserOptions, ParserResult};
-use crate::{Token, TokenTrait};
+use crate::{Token};
 use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
 use crate::lex_states::*;
 use crate::{Context as ParserContext, ContextItem};

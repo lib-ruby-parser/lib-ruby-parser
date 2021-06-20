@@ -34,11 +34,11 @@ use crate::Context;
 use crate::Loc;
 use crate::StackState;
 use crate::StaticEnvironment;
+use crate::Token;
 use crate::TokenBuf;
 use crate::{error::Diagnostics, Bytes};
 use crate::{lex_states::*, LexState};
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
-use crate::{Token, TokenTrait};
 
 /// A struct responsible for converting a given input
 /// into a sequence of tokens
