@@ -1,4 +1,3 @@
-use crate::bytes::BytesTrait;
 use crate::Bytes;
 
 #[derive(Debug, Clone, Default)]

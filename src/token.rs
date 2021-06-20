@@ -1,4 +1,3 @@
-use crate::bytes::BytesTrait;
 use crate::parser::token_name;
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -10,7 +9,7 @@ type List<T> = Vec<T>;
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 mod token {
-    use crate::{bytes::BytesTrait, Bytes, LexState, Loc};
+    use crate::{Bytes, LexState, Loc};
 
     /// A token that is emitted by a lexer and consumed by a parser
     #[derive(Clone, PartialEq, Eq)]
@@ -104,7 +103,7 @@ mod token {
 #[cfg(feature = "compile-with-external-structures")]
 mod token {
     use crate::containers::size::TOKEN_SIZE;
-    use crate::{Bytes, BytesTrait, LexState, Loc};
+    use crate::{Bytes, LexState, Loc};
 
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -256,7 +255,7 @@ mod token {
 
     #[cfg(test)]
     mod tests {
-        use super::{Bytes, BytesTrait, LexState, Loc, Token, TOKEN_SIZE};
+        use super::{Bytes, LexState, Loc, Token, TOKEN_SIZE};
 
         #[test]
         fn test_size() {

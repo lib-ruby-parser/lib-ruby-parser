@@ -46,7 +46,6 @@ type StringPtr = ExternalStringPtr;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type StringPtr = String;
 
-use crate::bytes::BytesTrait;
 use crate::containers::helpers::{
     ListTakeFirst, MaybePtrNone, MaybePtrSome, MaybeStringPtrNone, MaybeStringPtrSome, UnPtr,
 };

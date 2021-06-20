@@ -6,8 +6,8 @@ type Ptr<T> = ExternalPtr<T>;
 type Ptr<T> = Box<T>;
 
 use crate::containers::helpers::UnPtr;
+use crate::Bytes;
 use crate::Token;
-use crate::{Bytes, BytesTrait};
 
 /// Representation of the value of the string literal
 ///

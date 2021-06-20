@@ -26,7 +26,6 @@ type StringPtr = ExternalStringPtr;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type StringPtr = String;
 
-use crate::bytes::BytesTrait;
 use crate::Loc;
 use crate::Node;
 use crate::StringValue;

@@ -61,7 +61,7 @@ pub struct ParserOptions {
     /// use lib_ruby_parser::{
     ///     nodes::*,
     ///     token_rewriter::*,
-    ///     Bytes, BytesTrait, Node, Parser, ParserOptions, ParserResult, Token,
+    ///     Bytes, Node, Parser, ParserOptions, ParserResult, Token,
     /// };
     /// fn rewrite_foo_to_bar(mut token: Box<Token>, input: &[u8]) -> TokenRewriterResult {
     ///     // simply rewrite all tokens "foo" to "bar"
