@@ -129,22 +129,30 @@ mod source_line {
     impl Eq for SourceLine {}
 
     extern "C" {
-        fn lib_ruby_parser_source_line_new(
+        fn lib_ruby_parser__internal__containers__source_line__new(
             start: u64,
             end: u64,
             ends_with_eof: bool,
         ) -> SourceLineBlob;
 
-        fn lib_ruby_parser_source_line_get_start(blob: SourceLineBlob) -> u64;
-        fn lib_ruby_parser_source_line_get_end(blob: SourceLineBlob) -> u64;
-        fn lib_ruby_parser_source_line_get_ends_with_eof(blob: SourceLineBlob) -> bool;
+        fn lib_ruby_parser__internal__containers__source_line__get_start(
+            blob: SourceLineBlob,
+        ) -> u64;
+        fn lib_ruby_parser__internal__containers__source_line__get_end(blob: SourceLineBlob)
+            -> u64;
+        fn lib_ruby_parser__internal__containers__source_line__get_ends_with_eof(
+            blob: SourceLineBlob,
+        ) -> bool;
 
-        fn lib_ruby_parser_source_line_set_start(
+        fn lib_ruby_parser__internal__containers__source_line__set_start(
             blob: SourceLineBlob,
             start: u64,
         ) -> SourceLineBlob;
-        fn lib_ruby_parser_source_line_set_end(blob: SourceLineBlob, end: u64) -> SourceLineBlob;
-        fn lib_ruby_parser_source_line_set_ends_with_eof(
+        fn lib_ruby_parser__internal__containers__source_line__set_end(
+            blob: SourceLineBlob,
+            end: u64,
+        ) -> SourceLineBlob;
+        fn lib_ruby_parser__internal__containers__source_line__set_ends_with_eof(
             blob: SourceLineBlob,
             ends_with_eof: bool,
         ) -> SourceLineBlob;
@@ -152,30 +160,52 @@ mod source_line {
 
     impl SourceLineTrait for SourceLine {
         fn new(start: usize, end: usize, ends_with_eof: bool) -> Self {
-            let blob =
-                unsafe { lib_ruby_parser_source_line_new(start as u64, end as u64, ends_with_eof) };
+            let blob = unsafe {
+                lib_ruby_parser__internal__containers__source_line__new(
+                    start as u64,
+                    end as u64,
+                    ends_with_eof,
+                )
+            };
             Self { blob }
         }
 
         fn start(&self) -> usize {
-            unsafe { lib_ruby_parser_source_line_get_start(self.blob) as usize }
+            unsafe {
+                lib_ruby_parser__internal__containers__source_line__get_start(self.blob) as usize
+            }
         }
         fn end(&self) -> usize {
-            unsafe { lib_ruby_parser_source_line_get_end(self.blob) as usize }
+            unsafe {
+                lib_ruby_parser__internal__containers__source_line__get_end(self.blob) as usize
+            }
         }
         fn ends_with_eof(&self) -> bool {
-            unsafe { lib_ruby_parser_source_line_get_ends_with_eof(self.blob) }
+            unsafe {
+                lib_ruby_parser__internal__containers__source_line__get_ends_with_eof(self.blob)
+            }
         }
 
         fn set_start(&mut self, start: usize) {
-            self.blob = unsafe { lib_ruby_parser_source_line_set_start(self.blob, start as u64) }
+            self.blob = unsafe {
+                lib_ruby_parser__internal__containers__source_line__set_start(
+                    self.blob,
+                    start as u64,
+                )
+            }
         }
         fn set_end(&mut self, end: usize) {
-            self.blob = unsafe { lib_ruby_parser_source_line_set_end(self.blob, end as u64) }
+            self.blob = unsafe {
+                lib_ruby_parser__internal__containers__source_line__set_end(self.blob, end as u64)
+            }
         }
         fn set_ends_with_eof(&mut self, ends_with_eof: bool) {
-            self.blob =
-                unsafe { lib_ruby_parser_source_line_set_ends_with_eof(self.blob, ends_with_eof) }
+            self.blob = unsafe {
+                lib_ruby_parser__internal__containers__source_line__set_ends_with_eof(
+                    self.blob,
+                    ends_with_eof,
+                )
+            }
         }
     }
 

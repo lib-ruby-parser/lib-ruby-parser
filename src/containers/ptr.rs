@@ -40,8 +40,10 @@ pub(crate) mod external {
     impl<T: GetDropFn> Drop for Ptr<T> {
         fn drop(&mut self) {
             let drop_item_in_place = T::get_drop_ptr_in_place_fn();
-            unsafe { lib_ruby_parser_containers_free_ptr_blob(self.blob, drop_item_in_place) }
-            self.blob = unsafe { lib_ruby_parser_containers_null_ptr_blob() };
+            unsafe {
+                lib_ruby_parser__internal__containers__ptr__free(self.blob, drop_item_in_place)
+            }
+            self.blob = unsafe { lib_ruby_parser__internal__containers__ptr__make_null() };
         }
     }
 
@@ -95,10 +97,10 @@ pub(crate) mod external {
 
     use crate::containers::get_drop_fn::DropPtrFn;
     extern "C" {
-        fn lib_ruby_parser_containers_make_ptr_blob(ptr: *mut c_void) -> PtrBlob;
-        fn lib_ruby_parser_containers_free_ptr_blob(ptr: PtrBlob, deleter: DropPtrFn);
-        fn lib_ruby_parser_containers_raw_ptr_from_ptr_blob(ptr: PtrBlob) -> *mut c_void;
-        fn lib_ruby_parser_containers_null_ptr_blob() -> PtrBlob;
+        fn lib_ruby_parser__internal__containers__ptr__make(ptr: *mut c_void) -> PtrBlob;
+        fn lib_ruby_parser__internal__containers__ptr__free(ptr: PtrBlob, deleter: DropPtrFn);
+        fn lib_ruby_parser__internal__containers__ptr__get_raw(ptr: PtrBlob) -> *mut c_void;
+        fn lib_ruby_parser__internal__containers__ptr__make_null() -> PtrBlob;
     }
 
     impl<T: GetDropFn> Ptr<T> {
@@ -111,7 +113,8 @@ pub(crate) mod external {
         /// Constructs a pointer from a given raw pointer
         pub(crate) fn from_raw(ptr: *mut T) -> Self {
             debug_assert!(!ptr.is_null());
-            let blob = unsafe { lib_ruby_parser_containers_make_ptr_blob(ptr as *mut c_void) };
+            let blob =
+                unsafe { lib_ruby_parser__internal__containers__ptr__make(ptr as *mut c_void) };
             Self {
                 blob,
                 _t: std::marker::PhantomData,
@@ -121,14 +124,14 @@ pub(crate) mod external {
         /// Converts self into raw pointer
         pub(crate) fn into_raw(mut self) -> *mut T {
             let ptr =
-                unsafe { lib_ruby_parser_containers_raw_ptr_from_ptr_blob(self.blob) } as *mut T;
-            self.blob = unsafe { lib_ruby_parser_containers_null_ptr_blob() };
+                unsafe { lib_ruby_parser__internal__containers__ptr__get_raw(self.blob) } as *mut T;
+            self.blob = unsafe { lib_ruby_parser__internal__containers__ptr__make_null() };
             ptr
         }
 
         /// Returns borrowed raw pointer stored in Ptr
         pub(crate) fn as_ptr(&self) -> *mut T {
-            unsafe { lib_ruby_parser_containers_raw_ptr_from_ptr_blob(self.blob) as *mut T }
+            unsafe { lib_ruby_parser__internal__containers__ptr__get_raw(self.blob) as *mut T }
         }
     }
 

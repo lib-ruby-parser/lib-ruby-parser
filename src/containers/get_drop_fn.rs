@@ -46,47 +46,41 @@ define_deleter_impl!(
     crate::Token,
     lib_ruby_parser_containers_drop_ptr_token,
     lib_ruby_parser_containers_drop_ptr_in_place_token,
-    lib_ruby_parser_containers_token_list_blob_free
+    lib_ruby_parser__internal__containers__list__of_tokens__free
 );
 define_deleter_impl!(
     crate::Node,
     lib_ruby_parser_containers_drop_ptr_node,
     lib_ruby_parser_containers_drop_ptr_in_place_node,
-    lib_ruby_parser_containers_node_list_blob_free
+    lib_ruby_parser__internal__containers__list__of_nodes__free
 );
 define_deleter_impl!(
     u8,
     lib_ruby_parser_containers_drop_ptr_u8,
     lib_ruby_parser_containers_drop_ptr_in_place_u8,
-    lib_ruby_parser_containers_byte_list_blob_free
-);
-define_deleter_impl!(
-    u64,
-    lib_ruby_parser_containers_drop_ptr_u64,
-    lib_ruby_parser_containers_drop_ptr_in_place_u64,
-    lib_ruby_parser_containers_u64_list_blob_free
+    lib_ruby_parser__internal__containers__list__of_bytes__free
 );
 define_deleter_impl!(
     crate::Diagnostic,
     lib_ruby_parser_containers_drop_ptr_diagnostic,
     lib_ruby_parser_containers_drop_ptr_in_place_diagnostic,
-    lib_ruby_parser_containers_diagnostic_list_blob_free
+    lib_ruby_parser__internal__containers__list__of_diagnostics__free
 );
 define_deleter_impl!(
     crate::source::Comment,
     lib_ruby_parser_containers_drop_ptr_comment,
     lib_ruby_parser_containers_drop_ptr_in_place_comment,
-    lib_ruby_parser_containers_comment_list_blob_free
+    lib_ruby_parser__internal__containers__list__of_comments__free
 );
 define_deleter_impl!(
     crate::source::MagicComment,
     lib_ruby_parser_containers_drop_ptr_magic_comment,
     lib_ruby_parser_containers_drop_ptr_in_place_magic_comment,
-    lib_ruby_parser_containers_magic_comment_list_blob_free
+    lib_ruby_parser__internal__containers__list__of_magic_comments__free
 );
 define_deleter_impl!(
     crate::source::SourceLine,
     lib_ruby_parser_containers_drop_ptr_source_line,
     lib_ruby_parser_containers_drop_ptr_in_place_source_line,
-    lib_ruby_parser_containers_source_line_list_blob_free
+    lib_ruby_parser__internal__containers__list__of_source_lines__free
 );

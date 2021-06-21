@@ -14,37 +14,37 @@ SourceLine::SourceLine(uint64_t start,
 
 extern "C"
 {
-    SourceLine_BLOB lib_ruby_parser_source_line_new(uint64_t start, uint64_t end, bool ends_with_eof)
+    SourceLine_BLOB lib_ruby_parser__internal__containers__source_line__new(uint64_t start, uint64_t end, bool ends_with_eof)
     {
         return PACK(SourceLine(start, end, ends_with_eof));
     }
 
-    uint64_t lib_ruby_parser_source_line_get_start(SourceLine_BLOB blob)
+    uint64_t lib_ruby_parser__internal__containers__source_line__get_start(SourceLine_BLOB blob)
     {
         return UNPACK(blob).start;
     }
-    uint64_t lib_ruby_parser_source_line_get_end(SourceLine_BLOB blob)
+    uint64_t lib_ruby_parser__internal__containers__source_line__get_end(SourceLine_BLOB blob)
     {
         return UNPACK(blob).end;
     }
-    bool lib_ruby_parser_source_line_get_ends_with_eof(SourceLine_BLOB blob)
+    bool lib_ruby_parser__internal__containers__source_line__get_ends_with_eof(SourceLine_BLOB blob)
     {
         return UNPACK(blob).ends_with_eof;
     }
 
-    SourceLine_BLOB lib_ruby_parser_source_line_set_start(SourceLine_BLOB blob, uint64_t start)
+    SourceLine_BLOB lib_ruby_parser__internal__containers__source_line__set_start(SourceLine_BLOB blob, uint64_t start)
     {
         SourceLine source_line = UNPACK(blob);
         source_line.start = start;
         return PACK(source_line);
     }
-    SourceLine_BLOB lib_ruby_parser_source_line_set_end(SourceLine_BLOB blob, uint64_t end)
+    SourceLine_BLOB lib_ruby_parser__internal__containers__source_line__set_end(SourceLine_BLOB blob, uint64_t end)
     {
         SourceLine source_line = UNPACK(blob);
         source_line.end = end;
         return PACK(source_line);
     }
-    SourceLine_BLOB lib_ruby_parser_source_line_set_ends_with_eof(SourceLine_BLOB blob, bool ends_with_eof)
+    SourceLine_BLOB lib_ruby_parser__internal__containers__source_line__set_ends_with_eof(SourceLine_BLOB blob, bool ends_with_eof)
     {
         SourceLine source_line = UNPACK(blob);
         source_line.ends_with_eof = ends_with_eof;

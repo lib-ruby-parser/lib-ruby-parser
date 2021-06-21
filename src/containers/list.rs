@@ -546,15 +546,15 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::Node,
-            lib_ruby_parser_containers_node_list_blob_new,
-            lib_ruby_parser_containers_node_list_blob_with_capacity,
-            lib_ruby_parser_containers_node_list_blob_from_raw,
-            lib_ruby_parser_containers_node_list_blob_shrink_to_fit,
-            lib_ruby_parser_containers_node_list_blob_push,
-            lib_ruby_parser_containers_node_list_blob_remove,
-            lib_ruby_parser_containers_node_list_blob_as_ptr,
-            lib_ruby_parser_containers_node_list_blob_len,
-            lib_ruby_parser_containers_node_list_blob_capacity
+            lib_ruby_parser__internal__containers__list__of_nodes__new,
+            lib_ruby_parser__internal__containers__list__of_nodes__with_capacity,
+            lib_ruby_parser__internal__containers__list__of_nodes__from_raw,
+            lib_ruby_parser__internal__containers__list__of_nodes__shrink_to_fit,
+            lib_ruby_parser__internal__containers__list__of_nodes__push,
+            lib_ruby_parser__internal__containers__list__of_nodes__remove,
+            lib_ruby_parser__internal__containers__list__of_nodes__as_ptr,
+            lib_ruby_parser__internal__containers__list__of_nodes__len,
+            lib_ruby_parser__internal__containers__list__of_nodes__capacity
         );
     }
     mod of_diagnostics {
@@ -569,15 +569,15 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::Diagnostic,
-            lib_ruby_parser_containers_diagnostic_list_blob_new,
-            lib_ruby_parser_containers_diagnostic_list_blob_with_capacity,
-            lib_ruby_parser_containers_diagnostic_list_blob_from_raw,
-            lib_ruby_parser_containers_diagnostic_list_blob_shrink_to_fit,
-            lib_ruby_parser_containers_diagnostic_list_blob_push,
-            lib_ruby_parser_containers_diagnostic_list_blob_remove,
-            lib_ruby_parser_containers_diagnostic_list_blob_as_ptr,
-            lib_ruby_parser_containers_diagnostic_list_blob_len,
-            lib_ruby_parser_containers_diagnostic_list_blob_capacity
+            lib_ruby_parser__internal__containers__list__of_diagnostics__new,
+            lib_ruby_parser__internal__containers__list__of_diagnostics__with_capacity,
+            lib_ruby_parser__internal__containers__list__of_diagnostics__from_raw,
+            lib_ruby_parser__internal__containers__list__of_diagnostics__shrink_to_fit,
+            lib_ruby_parser__internal__containers__list__of_diagnostics__push,
+            lib_ruby_parser__internal__containers__list__of_diagnostics__remove,
+            lib_ruby_parser__internal__containers__list__of_diagnostics__as_ptr,
+            lib_ruby_parser__internal__containers__list__of_diagnostics__len,
+            lib_ruby_parser__internal__containers__list__of_diagnostics__capacity
         );
     }
     mod of_comments {
@@ -591,15 +591,15 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::source::Comment,
-            lib_ruby_parser_containers_comment_list_blob_new,
-            lib_ruby_parser_containers_comment_list_blob_with_capacity,
-            lib_ruby_parser_containers_comment_list_blob_from_raw,
-            lib_ruby_parser_containers_comment_list_blob_shrink_to_fit,
-            lib_ruby_parser_containers_comment_list_blob_push,
-            lib_ruby_parser_containers_comment_list_blob_remove,
-            lib_ruby_parser_containers_comment_list_blob_as_ptr,
-            lib_ruby_parser_containers_comment_list_blob_len,
-            lib_ruby_parser_containers_comment_list_blob_capacity
+            lib_ruby_parser__internal__containers__list__of_comments__new,
+            lib_ruby_parser__internal__containers__list__of_comments__with_capacity,
+            lib_ruby_parser__internal__containers__list__of_comments__from_raw,
+            lib_ruby_parser__internal__containers__list__of_comments__shrink_to_fit,
+            lib_ruby_parser__internal__containers__list__of_comments__push,
+            lib_ruby_parser__internal__containers__list__of_comments__remove,
+            lib_ruby_parser__internal__containers__list__of_comments__as_ptr,
+            lib_ruby_parser__internal__containers__list__of_comments__len,
+            lib_ruby_parser__internal__containers__list__of_comments__capacity
         );
     }
     mod of_magic_comments {
@@ -614,15 +614,15 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::source::MagicComment,
-            lib_ruby_parser_containers_magic_comment_list_blob_new,
-            lib_ruby_parser_containers_magic_comment_list_blob_with_capacity,
-            lib_ruby_parser_containers_magic_comment_list_blob_from_raw,
-            lib_ruby_parser_containers_magic_comment_list_blob_shrink_to_fit,
-            lib_ruby_parser_containers_magic_comment_list_blob_push,
-            lib_ruby_parser_containers_magic_comment_list_blob_remove,
-            lib_ruby_parser_containers_magic_comment_list_blob_as_ptr,
-            lib_ruby_parser_containers_magic_comment_list_blob_len,
-            lib_ruby_parser_containers_magic_comment_list_blob_capacity
+            lib_ruby_parser__internal__containers__list__of_magic_comments__new,
+            lib_ruby_parser__internal__containers__list__of_magic_comments__with_capacity,
+            lib_ruby_parser__internal__containers__list__of_magic_comments__from_raw,
+            lib_ruby_parser__internal__containers__list__of_magic_comments__shrink_to_fit,
+            lib_ruby_parser__internal__containers__list__of_magic_comments__push,
+            lib_ruby_parser__internal__containers__list__of_magic_comments__remove,
+            lib_ruby_parser__internal__containers__list__of_magic_comments__as_ptr,
+            lib_ruby_parser__internal__containers__list__of_magic_comments__len,
+            lib_ruby_parser__internal__containers__list__of_magic_comments__capacity
         );
     }
     mod of_tokens {
@@ -639,15 +639,15 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::Token,
-            lib_ruby_parser_containers_token_list_blob_new,
-            lib_ruby_parser_containers_token_list_blob_with_capacity,
-            lib_ruby_parser_containers_token_list_blob_from_raw,
-            lib_ruby_parser_containers_token_list_blob_shrink_to_fit,
-            lib_ruby_parser_containers_token_list_blob_push,
-            lib_ruby_parser_containers_token_list_blob_remove,
-            lib_ruby_parser_containers_token_list_blob_as_ptr,
-            lib_ruby_parser_containers_token_list_blob_len,
-            lib_ruby_parser_containers_token_list_blob_capacity
+            lib_ruby_parser__internal__containers__list__of_tokens__new,
+            lib_ruby_parser__internal__containers__list__of_tokens__with_capacity,
+            lib_ruby_parser__internal__containers__list__of_tokens__from_raw,
+            lib_ruby_parser__internal__containers__list__of_tokens__shrink_to_fit,
+            lib_ruby_parser__internal__containers__list__of_tokens__push,
+            lib_ruby_parser__internal__containers__list__of_tokens__remove,
+            lib_ruby_parser__internal__containers__list__of_tokens__as_ptr,
+            lib_ruby_parser__internal__containers__list__of_tokens__len,
+            lib_ruby_parser__internal__containers__list__of_tokens__capacity
         );
     }
     mod of_source_lines {
@@ -660,15 +660,15 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::source::SourceLine,
-            lib_ruby_parser_containers_source_line_list_blob_new,
-            lib_ruby_parser_containers_source_line_list_blob_with_capacity,
-            lib_ruby_parser_containers_source_line_list_blob_from_raw,
-            lib_ruby_parser_containers_source_line_list_blob_shrink_to_fit,
-            lib_ruby_parser_containers_source_line_list_blob_push,
-            lib_ruby_parser_containers_source_line_list_blob_remove,
-            lib_ruby_parser_containers_source_line_list_blob_as_ptr,
-            lib_ruby_parser_containers_source_line_list_blob_len,
-            lib_ruby_parser_containers_source_line_list_blob_capacity
+            lib_ruby_parser__internal__containers__list__of_source_lines__new,
+            lib_ruby_parser__internal__containers__list__of_source_lines__with_capacity,
+            lib_ruby_parser__internal__containers__list__of_source_lines__from_raw,
+            lib_ruby_parser__internal__containers__list__of_source_lines__shrink_to_fit,
+            lib_ruby_parser__internal__containers__list__of_source_lines__push,
+            lib_ruby_parser__internal__containers__list__of_source_lines__remove,
+            lib_ruby_parser__internal__containers__list__of_source_lines__as_ptr,
+            lib_ruby_parser__internal__containers__list__of_source_lines__len,
+            lib_ruby_parser__internal__containers__list__of_source_lines__capacity
         );
     }
     mod of_u8 {
@@ -679,15 +679,15 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             u8,
-            lib_ruby_parser_containers_byte_list_blob_new,
-            lib_ruby_parser_containers_byte_list_blob_with_capacity,
-            lib_ruby_parser_containers_byte_list_blob_from_raw,
-            lib_ruby_parser_containers_byte_list_blob_shrink_to_fit,
-            lib_ruby_parser_containers_byte_list_blob_push,
-            lib_ruby_parser_containers_byte_list_blob_remove,
-            lib_ruby_parser_containers_byte_list_blob_as_ptr,
-            lib_ruby_parser_containers_byte_list_blob_len,
-            lib_ruby_parser_containers_byte_list_blob_capacity
+            lib_ruby_parser__internal__containers__list__of_bytes__new,
+            lib_ruby_parser__internal__containers__list__of_bytes__with_capacity,
+            lib_ruby_parser__internal__containers__list__of_bytes__from_raw,
+            lib_ruby_parser__internal__containers__list__of_bytes__shrink_to_fit,
+            lib_ruby_parser__internal__containers__list__of_bytes__push,
+            lib_ruby_parser__internal__containers__list__of_bytes__remove,
+            lib_ruby_parser__internal__containers__list__of_bytes__as_ptr,
+            lib_ruby_parser__internal__containers__list__of_bytes__len,
+            lib_ruby_parser__internal__containers__list__of_bytes__capacity
         );
 
         use super::ExternalSharedByteList;

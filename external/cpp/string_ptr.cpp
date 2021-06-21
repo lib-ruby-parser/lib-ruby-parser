@@ -6,19 +6,19 @@ IMPL_BLOB(STRING_PTR);
 
 extern "C"
 {
-    void lib_ruby_parser_containers_free_string_blob(STRING_PTR_BLOB blob) noexcept
+    void lib_ruby_parser__internal__containers__string_ptr__free(STRING_PTR_BLOB blob) noexcept
     {
         STRING_PTR string_ptr = UNPACK(blob);
         // unique_ptr<string> destructor does the cleanup
     }
-    STRING_PTR_BLOB lib_ruby_parser_containers_clone_string_blob(STRING_PTR_BLOB blob) noexcept
+    STRING_PTR_BLOB lib_ruby_parser__internal__containers__string_ptr__clone(STRING_PTR_BLOB blob) noexcept
     {
         STRING_PTR original = UNPACK(blob);
         STRING_PTR copy(new std::string(original->c_str()));
         forget(std::move(original));
         return PACK(std::move(copy));
     }
-    const uint8_t *lib_ruby_parser_containers_raw_ptr_from_string_blob(STRING_PTR_BLOB blob) noexcept
+    const uint8_t *lib_ruby_parser__internal__containers__string_ptr__get_raw(STRING_PTR_BLOB blob) noexcept
     {
         STRING_PTR string_ptr = UNPACK(blob);
         const uint8_t *raw_ptr;
@@ -33,14 +33,14 @@ extern "C"
         forget(std::move(string_ptr));
         return raw_ptr;
     }
-    uint64_t lib_ruby_parser_containers_string_blob_len(STRING_PTR_BLOB blob) noexcept
+    uint64_t lib_ruby_parser__internal__containers__string_ptr__len(STRING_PTR_BLOB blob) noexcept
     {
         STRING_PTR string_ptr = UNPACK(blob);
         uint64_t length = string_ptr->length();
         forget(std::move(string_ptr));
         return length;
     }
-    STRING_PTR_BLOB lib_ruby_parser_containers_string_blob_from_raw_ptr(const char *ptr, uint64_t len) noexcept
+    STRING_PTR_BLOB lib_ruby_parser__internal__containers__string_ptr__make(const char *ptr, uint64_t len) noexcept
     {
         return PACK(std::make_unique<std::string>(ptr, len));
     }

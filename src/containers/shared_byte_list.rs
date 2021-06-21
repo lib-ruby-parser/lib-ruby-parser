@@ -17,14 +17,16 @@ pub(crate) mod external {
     }
 
     extern "C" {
-        fn lib_ruby_parser_containers_shared_byte_list_blob_from_raw(
+        fn lib_ruby_parser__internal__containers__shared_byte_list__from_raw(
             ptr: *const u8,
             len: u64,
         ) -> SharedByteListBlob;
-        fn lib_ruby_parser_containers_shared_byte_list_blob_as_ptr(
+        fn lib_ruby_parser__internal__containers__shared_byte_list__as_ptr(
             blob: SharedByteListBlob,
         ) -> *const u8;
-        fn lib_ruby_parser_containers_shared_byte_list_blob_len(blob: SharedByteListBlob) -> u64;
+        fn lib_ruby_parser__internal__containers__shared_byte_list__len(
+            blob: SharedByteListBlob,
+        ) -> u64;
     }
 
     impl std::fmt::Debug for SharedByteList {
@@ -50,18 +52,20 @@ pub(crate) mod external {
     impl SharedByteList {
         pub(crate) fn from_raw(ptr: *const u8, len: usize) -> Self {
             let blob = unsafe {
-                lib_ruby_parser_containers_shared_byte_list_blob_from_raw(ptr, len as u64)
+                lib_ruby_parser__internal__containers__shared_byte_list__from_raw(ptr, len as u64)
             };
             Self { blob }
         }
 
         pub(crate) fn as_ptr(&self) -> *const u8 {
-            unsafe { lib_ruby_parser_containers_shared_byte_list_blob_as_ptr(self.blob) }
+            unsafe { lib_ruby_parser__internal__containers__shared_byte_list__as_ptr(self.blob) }
         }
 
         /// Equivalent of std::slice::len
         pub fn len(&self) -> usize {
-            unsafe { lib_ruby_parser_containers_shared_byte_list_blob_len(self.blob) as usize }
+            unsafe {
+                lib_ruby_parser__internal__containers__shared_byte_list__len(self.blob) as usize
+            }
         }
     }
 

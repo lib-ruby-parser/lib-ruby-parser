@@ -16,11 +16,14 @@ pub(crate) mod external {
     }
 
     extern "C" {
-        fn lib_ruby_parser_containers_free_string_blob(blob: StringBlob);
-        fn lib_ruby_parser_containers_clone_string_blob(blob: StringBlob) -> StringBlob;
-        fn lib_ruby_parser_containers_raw_ptr_from_string_blob(blob: StringBlob) -> *const i8;
-        fn lib_ruby_parser_containers_string_blob_len(blob: StringBlob) -> u64;
-        fn lib_ruby_parser_containers_string_blob_from_raw_ptr(
+        fn lib_ruby_parser__internal__containers__string_ptr__free(blob: StringBlob);
+        fn lib_ruby_parser__internal__containers__string_ptr__clone(blob: StringBlob)
+            -> StringBlob;
+        fn lib_ruby_parser__internal__containers__string_ptr__get_raw(
+            blob: StringBlob,
+        ) -> *const i8;
+        fn lib_ruby_parser__internal__containers__string_ptr__len(blob: StringBlob) -> u64;
+        fn lib_ruby_parser__internal__containers__string_ptr__make(
             ptr: *const i8,
             len: u64,
         ) -> StringBlob;
@@ -28,7 +31,7 @@ pub(crate) mod external {
 
     impl Drop for StringPtr {
         fn drop(&mut self) {
-            unsafe { lib_ruby_parser_containers_free_string_blob(self.blob) }
+            unsafe { lib_ruby_parser__internal__containers__string_ptr__free(self.blob) }
         }
     }
 
@@ -41,7 +44,9 @@ pub(crate) mod external {
     impl Clone for StringPtr {
         fn clone(&self) -> Self {
             Self {
-                blob: unsafe { lib_ruby_parser_containers_clone_string_blob(self.blob) },
+                blob: unsafe {
+                    lib_ruby_parser__internal__containers__string_ptr__clone(self.blob)
+                },
             }
         }
     }
@@ -66,11 +71,11 @@ pub(crate) mod external {
 
         /// Equivalent of String::len
         pub fn len(&self) -> usize {
-            unsafe { lib_ruby_parser_containers_string_blob_len(self.blob) as usize }
+            unsafe { lib_ruby_parser__internal__containers__string_ptr__len(self.blob) as usize }
         }
 
         pub(crate) fn as_ptr(&self) -> *const i8 {
-            unsafe { lib_ruby_parser_containers_raw_ptr_from_string_blob(self.blob) }
+            unsafe { lib_ruby_parser__internal__containers__string_ptr__get_raw(self.blob) }
         }
     }
 
@@ -112,7 +117,7 @@ pub(crate) mod external {
                 bytes.as_ptr() as *const i8
             };
 
-            let blob = unsafe { lib_ruby_parser_containers_string_blob_from_raw_ptr(ptr, len) };
+            let blob = unsafe { lib_ruby_parser__internal__containers__string_ptr__make(ptr, len) };
             Self { blob }
         }
     }

@@ -44,9 +44,12 @@ pub(crate) mod external {
         fn drop(&mut self) {
             let drop_item_in_place = T::get_drop_ptr_in_place_fn();
             unsafe {
-                lib_ruby_parser_containers_free_maybe_ptr_blob(self.blob, drop_item_in_place)
+                lib_ruby_parser__internal__containers___maybe_ptr__free(
+                    self.blob,
+                    drop_item_in_place,
+                )
             };
-            self.blob = unsafe { lib_ruby_parser_containers_null_maybe_ptr_blob() };
+            self.blob = unsafe { lib_ruby_parser__internal__containers___maybe_ptr__make_null() };
         }
     }
 
@@ -102,12 +105,17 @@ pub(crate) mod external {
     }
 
     extern "C" {
-        fn lib_ruby_parser_containers_make_maybe_ptr_blob(ptr: *mut c_void) -> MaybePtrBlob;
-        fn lib_ruby_parser_containers_free_maybe_ptr_blob(blob: MaybePtrBlob, deleter: DropPtrFn);
-        fn lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(
+        fn lib_ruby_parser__internal__containers___maybe_ptr__make(
+            ptr: *mut c_void,
+        ) -> MaybePtrBlob;
+        fn lib_ruby_parser__internal__containers___maybe_ptr__free(
+            blob: MaybePtrBlob,
+            deleter: DropPtrFn,
+        );
+        fn lib_ruby_parser__internal__containers___maybe_ptr__get_raw(
             blob: MaybePtrBlob,
         ) -> *mut c_void;
-        fn lib_ruby_parser_containers_null_maybe_ptr_blob() -> MaybePtrBlob;
+        fn lib_ruby_parser__internal__containers___maybe_ptr__make_null() -> MaybePtrBlob;
     }
 
     impl<T> MaybePtr<T>
@@ -116,8 +124,9 @@ pub(crate) mod external {
     {
         /// Constructs a pointer with a given raw pointer
         pub fn from_raw(ptr: *mut T) -> Self {
-            let blob =
-                unsafe { lib_ruby_parser_containers_make_maybe_ptr_blob(ptr as *mut c_void) };
+            let blob = unsafe {
+                lib_ruby_parser__internal__containers___maybe_ptr__make(ptr as *mut c_void)
+            };
             Self {
                 blob,
                 _t: std::marker::PhantomData,
@@ -126,14 +135,17 @@ pub(crate) mod external {
 
         /// Returns borrowed raw pointer stored in MaybePtr
         pub(crate) fn as_ptr(&self) -> *const T {
-            unsafe { lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(self.blob) as *const T }
+            unsafe {
+                lib_ruby_parser__internal__containers___maybe_ptr__get_raw(self.blob) as *const T
+            }
         }
 
         /// Converts self into raw pointer
         pub fn into_raw(mut self) -> *mut T {
-            let ptr = unsafe { lib_ruby_parser_containers_raw_ptr_from_maybe_ptr_blob(self.blob) }
-                as *mut T;
-            self.blob = unsafe { lib_ruby_parser_containers_null_maybe_ptr_blob() };
+            let ptr =
+                unsafe { lib_ruby_parser__internal__containers___maybe_ptr__get_raw(self.blob) }
+                    as *mut T;
+            self.blob = unsafe { lib_ruby_parser__internal__containers___maybe_ptr__make_null() };
             ptr
         }
 

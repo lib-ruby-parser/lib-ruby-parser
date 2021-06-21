@@ -7,12 +7,12 @@ IMPL_BLOB(PTR);
 
 extern "C"
 {
-    PTR_BLOB lib_ruby_parser_containers_make_ptr_blob(void *raw) noexcept
+    PTR_BLOB lib_ruby_parser__internal__containers__ptr__make(void *raw) noexcept
     {
         return PACK(PTR((DUMMY_PTR_VALUE *)raw));
     }
 
-    extern "C" void lib_ruby_parser_containers_free_ptr_blob(PTR_BLOB ptr_blob, DropPtrInPlace drop_ptr_in_place) noexcept
+    extern "C" void lib_ruby_parser__internal__containers__ptr__free(PTR_BLOB ptr_blob, DropPtrInPlace drop_ptr_in_place) noexcept
     {
         PTR ptr = UNPACK(ptr_blob);
         void *raw = ptr.release();
@@ -23,12 +23,12 @@ extern "C"
         }
     }
 
-    extern "C" void *lib_ruby_parser_containers_raw_ptr_from_ptr_blob(PTR_BLOB ptr_blob) noexcept
+    extern "C" void *lib_ruby_parser__internal__containers__ptr__get_raw(PTR_BLOB ptr_blob) noexcept
     {
         return UNPACK(ptr_blob).release();
     }
 
-    extern "C" PTR_BLOB lib_ruby_parser_containers_null_ptr_blob() noexcept
+    extern "C" PTR_BLOB lib_ruby_parser__internal__containers__ptr__make_null() noexcept
     {
         return PACK(PTR(nullptr));
     }

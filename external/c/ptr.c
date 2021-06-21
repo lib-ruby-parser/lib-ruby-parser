@@ -5,12 +5,12 @@
 
 IMPL_BLOB(PTR);
 
-PTR_BLOB lib_ruby_parser_containers_make_ptr_blob(void *ptr)
+PTR_BLOB lib_ruby_parser__internal__containers__ptr__make(void *ptr)
 {
     return PACK_PTR(ptr);
 }
 
-void lib_ruby_parser_containers_free_ptr_blob(PTR_BLOB blob, DropPtr drop)
+void lib_ruby_parser__internal__containers__ptr__free(PTR_BLOB blob, DropPtr drop)
 {
     PTR ptr = UNPACK_PTR(blob);
     if (ptr != NULL)
@@ -20,12 +20,12 @@ void lib_ruby_parser_containers_free_ptr_blob(PTR_BLOB blob, DropPtr drop)
     }
 }
 
-void *lib_ruby_parser_containers_raw_ptr_from_ptr_blob(PTR_BLOB blob)
+void *lib_ruby_parser__internal__containers__ptr__get_raw(PTR_BLOB blob)
 {
     return UNPACK_PTR(blob);
 }
 
-PTR_BLOB lib_ruby_parser_containers_null_ptr_blob()
+PTR_BLOB lib_ruby_parser__internal__containers__ptr__make_null()
 {
     return PACK_PTR(NULL);
 }
