@@ -3887,12 +3887,12 @@ impl Builder {
 
     pub(crate) fn error(&self, message: DiagnosticMessage, loc: &Loc) {
         self.diagnostics
-            .emit(Diagnostic::new(ErrorLevel::Error, message, loc.clone()))
+            .emit(Diagnostic::new(ErrorLevel::error(), message, loc.clone()))
     }
 
     pub(crate) fn warn(&self, message: DiagnosticMessage, loc: &Loc) {
         self.diagnostics
-            .emit(Diagnostic::new(ErrorLevel::Warning, message, loc.clone()))
+            .emit(Diagnostic::new(ErrorLevel::warning(), message, loc.clone()))
     }
 
     pub(crate) fn value_expr(&self, node: &Node) -> Result<(), ()> {

@@ -22,13 +22,14 @@ run_c_tests() {
     LIB_RUBY_PARSER_BYTES_SIZE=24 \
     LIB_RUBY_PARSER_TOKEN_SIZE=56 \
     LIB_RUBY_PARSER_SOURCE_LINE_SIZE=24 \
+    LIB_RUBY_PARSER_ERROR_LEVEL_SIZE=4 \
         cargo test --features "compile-with-external-structures,link-with-external-c-structures" "$@"
 }
 
 # Linking fails on building doctests with ASAN enabled
+run_c_tests --lib
 run_c_tests --test parser_test
 run_c_tests --test lexer_test
-run_c_tests --lib
 
 cargo clean
 
@@ -43,10 +44,11 @@ run_cpp_tests() {
     LIB_RUBY_PARSER_BYTES_SIZE=24 \
     LIB_RUBY_PARSER_TOKEN_SIZE=56 \
     LIB_RUBY_PARSER_SOURCE_LINE_SIZE=24 \
+    LIB_RUBY_PARSER_ERROR_LEVEL_SIZE=4 \
         cargo test --features "compile-with-external-structures,link-with-external-cpp-structures" "$@"
 }
 
 # Linking fails on building doctests with ASAN enabled
+run_cpp_tests --lib
 run_cpp_tests --test parser_test
 run_cpp_tests --test lexer_test
-run_cpp_tests --lib

@@ -71,12 +71,12 @@ impl Diagnostic {
 
     /// Returns `true` if level of the diagnostic is `Warning`
     pub fn is_warning(&self) -> bool {
-        matches!(self.level, ErrorLevel::Warning)
+        self.level.is_warning()
     }
 
     /// Returns `true` if level of the diagnostic is `Error`
     pub fn is_error(&self) -> bool {
-        matches!(self.level, ErrorLevel::Error)
+        self.level.is_error()
     }
 }
 

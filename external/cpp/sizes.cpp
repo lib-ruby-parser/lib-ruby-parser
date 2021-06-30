@@ -7,6 +7,7 @@
 #include "shared_byte_list.hpp"
 #include "bytes.hpp"
 #include "token.hpp"
+#include "error_level.hpp"
 
 int main()
 {
@@ -18,4 +19,5 @@ int main()
 
     std::cout << "LIB_RUBY_PARSER_BYTES_SIZE = " << sizeof(Bytes) << "\n";
     std::cout << "LIB_RUBY_PARSER_TOKEN_SIZE = " << sizeof(Token) << "\n";
+    std::cout << "LIB_RUBY_PARSER_ERROR_LEVEL_SIZE = " << sizeof(ErrorLevel) << "\n";
 }

@@ -1,6 +1,8 @@
 #ifndef LIB_RUBY_PARSER_EXTERNAL_CPP_IMPL_BLOB_H
 #define LIB_RUBY_PARSER_EXTERNAL_CPP_IMPL_BLOB_H
 
+#include <utility>
+
 #define IMPL_BLOB_PACK(VALUE)                                  \
     VALUE##_BLOB PACK(VALUE value)                             \
     {                                                          \

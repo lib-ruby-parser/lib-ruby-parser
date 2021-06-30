@@ -561,7 +561,7 @@ pub(crate) mod external {
         #[cfg(test)]
         fn make_one() -> crate::Diagnostic {
             crate::Diagnostic {
-                level: crate::ErrorLevel::Warning,
+                level: crate::ErrorLevel::warning(),
                 message: crate::DiagnosticMessage::AliasNthRef,
                 loc: crate::Loc::default(),
             }

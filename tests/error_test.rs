@@ -14,7 +14,7 @@ fn it_renders() {
     input.set_bytes(List::from(source));
 
     let error = Diagnostic::new(
-        ErrorLevel::Warning,
+        ErrorLevel::warning(),
         DiagnosticMessage::FractionAfterNumeric,
         Loc::new(8, 12),
     );

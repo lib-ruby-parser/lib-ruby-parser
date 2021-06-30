@@ -5,6 +5,7 @@ OBJECTS = \
 	bytes.o \
 	comment.o \
 	diagnostic.o \
+	error_level.o \
 	list.o \
 	loc.o \
 	magic_comment.o \
