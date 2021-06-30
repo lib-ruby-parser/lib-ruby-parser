@@ -8,6 +8,7 @@
 #include "bytes.h"
 #include "token.h"
 #include "error_level.h"
+#include "loc.h"
 
 int main()
 {
@@ -20,4 +21,5 @@ int main()
     printf("LIB_RUBY_PARSER_BYTES_SIZE = %lu\n", sizeof(Bytes));
     printf("LIB_RUBY_PARSER_TOKEN_SIZE = %lu\n", sizeof(Token));
     printf("LIB_RUBY_PARSER_ERROR_LEVEL_SIZE = %lu\n", sizeof(ErrorLevel));
+    printf("LIB_RUBY_PARSER_LOC_SIZE = %lu\n", sizeof(Loc));
 }

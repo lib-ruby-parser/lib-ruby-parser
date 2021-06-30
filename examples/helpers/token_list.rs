@@ -48,8 +48,8 @@ impl std::fmt::Debug for TokenList {
                     "    :{}{}[{}, {}]",
                     name,
                     value,
-                    token.loc().begin,
-                    token.loc().end,
+                    token.loc().begin(),
+                    token.loc().end(),
                 )
             })
             .collect::<Vec<_>>()

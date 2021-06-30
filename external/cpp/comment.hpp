@@ -5,7 +5,7 @@
 #include "declare_blob.hpp"
 #include "declare_list.hpp"
 
-DECLARE_DUMMY_STRUCT(Comment, 24);
+DECLARE_DUMMY_STRUCT(Comment, 20);
 DECLARE_BLOB_FOR(Comment);
 
 DECLARE_LIST_OF(Comment_BLOB, LIST_OF_Comment);

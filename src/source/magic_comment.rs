@@ -54,9 +54,17 @@ impl MagicComment {
 
 #[cfg(test)]
 mod tests {
-    use super::MagicComment;
+    #[cfg(feature = "link-with-external-c-structures")]
     #[test]
-    fn test_size() {
-        assert_eq!(std::mem::size_of::<MagicComment>(), 40);
+    fn test_size_c() {
+        use super::MagicComment;
+        assert_eq!(std::mem::size_of::<MagicComment>(), 36);
+    }
+
+    #[cfg(feature = "link-with-external-cpp-structures")]
+    #[test]
+    fn test_size_cpp() {
+        use super::MagicComment;
+        assert_eq!(std::mem::size_of::<MagicComment>(), 36);
     }
 }

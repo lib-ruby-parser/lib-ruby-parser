@@ -33,13 +33,13 @@ mod tests {
     #[test]
     fn test_size_c() {
         use super::Node;
-        assert_eq!(std::mem::size_of::<Node>(), 192);
+        assert_eq!(std::mem::size_of::<Node>(), 176);
     }
 
     #[cfg(feature = "link-with-external-cpp-structures")]
     #[test]
     fn test_size_cpp() {
         use super::Node;
-        assert_eq!(std::mem::size_of::<Node>(), 184);
+        assert_eq!(std::mem::size_of::<Node>(), 168);
     }
 }

@@ -27,6 +27,9 @@ pub(crate) fn generate_size_rs() {
     println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_ERROR_LEVEL_SIZE");
     let error_level_size = env!("LIB_RUBY_PARSER_ERROR_LEVEL_SIZE");
 
+    println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_LOC_SIZE");
+    let loc_size = env!("LIB_RUBY_PARSER_LOC_SIZE");
+
     let contents = format!(
         "pub(crate) const PTR_SIZE: usize = {ptr_size};
 pub(crate) const MAYBE_PTR_SIZE: usize = {maybe_ptr_size};
@@ -37,6 +40,7 @@ pub(crate) const BYTES_SIZE: usize = {bytes_size};
 pub(crate) const TOKEN_SIZE: usize = {token_size};
 pub(crate) const SOURCE_LINE_SIZE: usize = {source_line_size};
 pub(crate) const ERROR_LEVEL_SIZE: usize = {error_level_size};
+pub(crate) const LOC_SIZE: usize = {loc_size};
 ",
         ptr_size = ptr_size,
         maybe_ptr_size = maybe_ptr_size,
@@ -46,7 +50,8 @@ pub(crate) const ERROR_LEVEL_SIZE: usize = {error_level_size};
         bytes_size = bytes_size,
         token_size = token_size,
         source_line_size = source_line_size,
-        error_level_size = error_level_size
+        error_level_size = error_level_size,
+        loc_size = loc_size
     );
 
     println!("Generating sizes.rs");

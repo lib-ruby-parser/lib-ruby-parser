@@ -60,12 +60,12 @@ extern "C"
         return PACK(std::move(token_value));
     }
 
-    Loc lib_ruby_parser__internal__containers__token__get_loc(Token_BLOB token_blob)
+    Loc_BLOB lib_ruby_parser__internal__containers__token__get_loc(Token_BLOB token_blob)
     {
         Token token = UNPACK(token_blob);
         Loc loc = token.loc;
         forget(std::move(token));
-        return loc;
+        return PACK(loc);
     }
     uint32_t lib_ruby_parser__internal__containers__token__get_lex_state_before(Token_BLOB token_blob)
     {

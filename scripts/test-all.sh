@@ -23,6 +23,7 @@ run_c_tests() {
     LIB_RUBY_PARSER_TOKEN_SIZE=56 \
     LIB_RUBY_PARSER_SOURCE_LINE_SIZE=24 \
     LIB_RUBY_PARSER_ERROR_LEVEL_SIZE=4 \
+    LIB_RUBY_PARSER_LOC_SIZE=16 \
         cargo test --features "compile-with-external-structures,link-with-external-c-structures" "$@"
 }
 
@@ -45,6 +46,7 @@ run_cpp_tests() {
     LIB_RUBY_PARSER_TOKEN_SIZE=56 \
     LIB_RUBY_PARSER_SOURCE_LINE_SIZE=24 \
     LIB_RUBY_PARSER_ERROR_LEVEL_SIZE=4 \
+    LIB_RUBY_PARSER_LOC_SIZE=16 \
         cargo test --features "compile-with-external-structures,link-with-external-cpp-structures" "$@"
 }
 

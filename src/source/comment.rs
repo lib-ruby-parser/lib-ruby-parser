@@ -58,9 +58,17 @@ impl Comment {
 
 #[cfg(test)]
 mod tests {
-    use super::Comment;
+    #[cfg(feature = "link-with-external-c-structures")]
     #[test]
-    fn test_size() {
-        assert_eq!(std::mem::size_of::<Comment>(), 24);
+    fn test_size_c() {
+        use super::Comment;
+        assert_eq!(std::mem::size_of::<Comment>(), 20);
+    }
+
+    #[cfg(feature = "link-with-external-cpp-structures")]
+    #[test]
+    fn test_size_cpp() {
+        use super::Comment;
+        assert_eq!(std::mem::size_of::<Comment>(), 20);
     }
 }

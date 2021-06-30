@@ -44,9 +44,9 @@ Bytes_BLOB lib_ruby_parser__internal__containers__token__into_token_value(Token_
     return UNPACK_Token(token_blob).token_value;
 }
 
-Loc lib_ruby_parser__internal__containers__token__get_loc(Token_BLOB token_blob)
+Loc_BLOB lib_ruby_parser__internal__containers__token__get_loc(Token_BLOB token_blob)
 {
-    return UNPACK_Token(token_blob).loc;
+    return PACK_Loc(UNPACK_Token(token_blob).loc);
 }
 uint32_t lib_ruby_parser__internal__containers__token__get_lex_state_before(Token_BLOB token_blob)
 {

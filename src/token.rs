@@ -39,8 +39,8 @@ mod token {
                 "[{}, {:?}, {}...{}]",
                 self.token_name(),
                 self.token_value.to_string_lossy(),
-                self.loc.begin,
-                self.loc.end,
+                self.loc.begin(),
+                self.loc.end(),
             ))
         }
     }
@@ -103,6 +103,7 @@ mod token {
 #[cfg(feature = "compile-with-external-structures")]
 mod token {
     use crate::containers::size::TOKEN_SIZE;
+    use crate::loc::LocBlob;
     use crate::{Bytes, LexState, Loc};
 
     #[repr(C)]
@@ -123,8 +124,8 @@ mod token {
                 "[{}, {:?}, {}...{}]",
                 self.token_name(),
                 self.token_value().to_string_lossy(),
-                self.loc().begin,
-                self.loc().end,
+                self.loc().begin(),
+                self.loc().end(),
             ))
         }
     }
@@ -181,7 +182,7 @@ mod token {
         fn lib_ruby_parser__internal__containers__token__into_token_value(
             token_blob: TokenBlob,
         ) -> BytesBlob;
-        fn lib_ruby_parser__internal__containers__token__get_loc(token_blob: TokenBlob) -> Loc;
+        fn lib_ruby_parser__internal__containers__token__get_loc(token_blob: TokenBlob) -> LocBlob;
         fn lib_ruby_parser__internal__containers__token__get_lex_state_before(
             token_blob: TokenBlob,
         ) -> i32;
@@ -248,7 +249,9 @@ mod token {
 
         /// Returns location of the token
         pub fn loc(&self) -> Loc {
-            unsafe { lib_ruby_parser__internal__containers__token__get_loc(self.blob) }
+            let loc_blob =
+                unsafe { lib_ruby_parser__internal__containers__token__get_loc(self.blob) };
+            Loc { blob: loc_blob }
         }
 
         /// Returns lex state **before** reading the token
@@ -291,7 +294,7 @@ mod token {
             Token::new(
                 1,
                 Bytes::new(vec![1, 2, 3]),
-                Loc { begin: 1, end: 2 },
+                Loc::new(1, 2),
                 lex_state(1),
                 lex_state(2),
             )
@@ -331,7 +334,7 @@ mod token {
         #[test]
         fn test_loc() {
             let token = new_token();
-            assert_eq!(token.loc(), Loc { begin: 1, end: 2 });
+            assert_eq!(token.loc(), Loc::new(1, 2));
         }
 
         #[test]

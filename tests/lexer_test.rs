@@ -123,8 +123,8 @@ fn test(fixture_path: &str) -> TestResult {
                     "{} {:?} [{}, {}]",
                     token.token_name(),
                     token.to_string_lossy(),
-                    token.loc().begin,
-                    token.loc().end
+                    token.loc().begin(),
+                    token.loc().end()
                 )
             })
             .collect::<Vec<_>>()

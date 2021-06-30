@@ -339,7 +339,7 @@ impl Builder {
     pub(crate) fn character(&self, char_t: Ptr<Token>) -> Box<Node> {
         let str_loc = self.loc(&char_t);
 
-        let begin_l: MaybeLoc = str_loc.with_end(str_loc.begin + 1).into();
+        let begin_l: MaybeLoc = str_loc.with_end(str_loc.begin() + 1).into();
         let end_l = MaybeLoc::None;
         let expression_l = str_loc;
 
@@ -543,7 +543,7 @@ impl Builder {
     // Regular expressions
 
     pub(crate) fn regexp_options(&self, regexp_end_t: Ptr<Token>) -> Option<Box<Node>> {
-        if regexp_end_t.loc().end - regexp_end_t.loc().begin == 1 {
+        if regexp_end_t.loc().end() - regexp_end_t.loc().begin() == 1 {
             // no regexp options, only trailing "/"
             return None;
         }
@@ -735,7 +735,7 @@ impl Builder {
     pub(crate) fn pair_keyword(&self, key_t: Ptr<Token>, value: Box<Node>) -> Box<Node> {
         let key_loc = self.loc(&key_t);
         let key_l = key_loc.adjust_end(-1);
-        let colon_l = key_loc.with_begin(key_loc.end - 1);
+        let colon_l = key_loc.with_begin(key_loc.end() - 1);
         let expression_l = key_loc.join(&value.expression());
 
         let key = StringValue::new(key_t);
@@ -763,9 +763,9 @@ impl Builder {
     ) -> Box<Node> {
         let end_l = self.loc(&end_t);
 
-        let quote_loc = Loc::new(end_l.end - 2, end_l.end - 1);
+        let quote_loc = Loc::new(end_l.end() - 2, end_l.end() - 1);
 
-        let colon_l = end_l.with_begin(end_l.end - 1);
+        let colon_l = end_l.with_begin(end_l.end() - 1);
 
         let end_t = end_t.unptr();
         let end_t: Ptr<Token> = Ptr::new(Token::new(

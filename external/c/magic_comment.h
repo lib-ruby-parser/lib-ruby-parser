@@ -5,7 +5,7 @@
 #include "declare_blob.h"
 #include "declare_list.h"
 
-DECLARE_DUMMY_STRUCT(MagicComment, 40);
+DECLARE_DUMMY_STRUCT(MagicComment, 36);
 DECLARE_BLOB_FOR(MagicComment);
 
 DECLARE_LIST_OF(MagicComment_BLOB, LIST_OF_MagicComment);
