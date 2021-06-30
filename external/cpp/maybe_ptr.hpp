@@ -16,10 +16,10 @@ DECLARE_BLOB_UNPACK_FOR(MAYBE_PTR)
 
 extern "C"
 {
-    MAYBE_PTR_BLOB lib_ruby_parser__internal__containers___maybe_ptr__make(void *ptr) noexcept;
-    void lib_ruby_parser__internal__containers___maybe_ptr__free(MAYBE_PTR_BLOB blob, DropPtrInPlace drop_ptr_in_place) noexcept;
-    void *lib_ruby_parser__internal__containers___maybe_ptr__get_raw(MAYBE_PTR_BLOB blob) noexcept;
-    MAYBE_PTR_BLOB lib_ruby_parser__internal__containers___maybe_ptr__make_null() noexcept;
+    MAYBE_PTR_BLOB lib_ruby_parser__internal__containers__maybe_ptr__make(void *ptr) noexcept;
+    void lib_ruby_parser__internal__containers__maybe_ptr__free(MAYBE_PTR_BLOB blob, DropPtrInPlace drop_ptr_in_place) noexcept;
+    void *lib_ruby_parser__internal__containers__maybe_ptr__get_raw(MAYBE_PTR_BLOB blob) noexcept;
+    MAYBE_PTR_BLOB lib_ruby_parser__internal__containers__maybe_ptr__make_null() noexcept;
 }
 
 #endif // LIB_RUBY_PARSER_EXTERNAL_CPP_MAYBE_PTR_HPP
