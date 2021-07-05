@@ -1,60 +1,21 @@
-/// Trait with common methods of SourceLine (Rust- or external-based)
-pub trait SourceLineTrait: std::fmt::Debug + Clone + Default + PartialEq + Eq {
-    /// Constructs a SourceLine
-    fn new(start: usize, end: usize, ends_with_eof: bool) -> Self
-    where
-        Self: Sized;
-
-    /// Returns start of the line
-    fn start(&self) -> usize;
-    /// Sets start of the line
-    fn set_start(&mut self, start: usize);
-
-    /// Returns end of the line
-    fn end(&self) -> usize;
-    /// Sets end of the line
-    fn set_end(&mut self, end: usize);
-
-    /// Returns true of line ends with EOF
-    fn ends_with_eof(&self) -> bool;
-    /// Sets whether line ends with EOF
-    fn set_ends_with_eof(&mut self, ends_with_eof: bool);
-
-    /// Returns length of the line
-    fn len(&self) -> usize {
-        self.end() - self.start()
-    }
-
-    /// Returns location of the last non-EOF, non-EOL character
-    fn line_end(&self) -> usize {
-        let mut result = self.end();
-        if !self.ends_with_eof() {
-            result -= 1 // exclude trailing \n
-        }
-        result
-    }
-}
-
 #[cfg(not(feature = "compile-with-external-structures"))]
 mod source_line {
-    use super::SourceLineTrait;
-
-    #[derive(Debug, Clone, Default, PartialEq, Eq)]
     #[repr(C)]
     /// Representation of a source line in a source file
     pub struct SourceLine {
         /// Start of the line (in bytes)
-        start: usize,
+        pub start: usize,
 
         /// End of the line (in bytes)
-        end: usize,
+        pub end: usize,
 
         /// `true` if line ends with EOF char (which is true for the last line in the file)
-        ends_with_eof: bool,
+        pub ends_with_eof: bool,
     }
 
-    impl SourceLineTrait for SourceLine {
-        fn new(start: usize, end: usize, ends_with_eof: bool) -> Self {
+    impl SourceLine {
+        /// Constructs a SourceLine
+        pub fn new(start: usize, end: usize, ends_with_eof: bool) -> Self {
             Self {
                 start,
                 end,
@@ -62,22 +23,28 @@ mod source_line {
             }
         }
 
-        fn start(&self) -> usize {
+        /// Returns start of the line
+        pub fn start(&self) -> usize {
             self.start
         }
-        fn set_start(&mut self, start: usize) {
+        /// Sets start of the line
+        pub fn set_start(&mut self, start: usize) {
             self.start = start
         }
-        fn end(&self) -> usize {
+        /// Returns end of the line
+        pub fn end(&self) -> usize {
             self.end
         }
-        fn set_end(&mut self, end: usize) {
+        /// Sets end of the line
+        pub fn set_end(&mut self, end: usize) {
             self.end = end
         }
-        fn ends_with_eof(&self) -> bool {
+        /// Returns true of line ends with EOF
+        pub fn ends_with_eof(&self) -> bool {
             self.ends_with_eof
         }
-        fn set_ends_with_eof(&mut self, ends_with_eof: bool) {
+        /// Sets whether line ends with EOF
+        pub fn set_ends_with_eof(&mut self, ends_with_eof: bool) {
             self.ends_with_eof = ends_with_eof
         }
     }
@@ -85,7 +52,6 @@ mod source_line {
 
 #[cfg(feature = "compile-with-external-structures")]
 mod source_line {
-    use super::SourceLineTrait;
     use crate::containers::size::SOURCE_LINE_SIZE;
 
     #[repr(C)]
@@ -99,34 +65,6 @@ mod source_line {
     pub struct SourceLine {
         blob: SourceLineBlob,
     }
-
-    impl std::fmt::Debug for SourceLine {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            f.debug_struct("SourceLine")
-                .field("start", &self.start())
-                .field("end", &self.end())
-                .field("ends_with_eof", &self.ends_with_eof())
-                .finish()
-        }
-    }
-    impl Clone for SourceLine {
-        fn clone(&self) -> Self {
-            Self::new(self.start(), self.end(), self.ends_with_eof())
-        }
-    }
-    impl Default for SourceLine {
-        fn default() -> Self {
-            Self::new(Default::default(), Default::default(), Default::default())
-        }
-    }
-    impl PartialEq for SourceLine {
-        fn eq(&self, other: &Self) -> bool {
-            (self.start() == other.start())
-                && (self.end() == other.end())
-                && (self.ends_with_eof() == other.ends_with_eof())
-        }
-    }
-    impl Eq for SourceLine {}
 
     extern "C" {
         fn lib_ruby_parser__internal__containers__source_line__new(
@@ -158,8 +96,9 @@ mod source_line {
         ) -> SourceLineBlob;
     }
 
-    impl SourceLineTrait for SourceLine {
-        fn new(start: usize, end: usize, ends_with_eof: bool) -> Self {
+    impl SourceLine {
+        /// Constructs a SourceLine
+        pub fn new(start: usize, end: usize, ends_with_eof: bool) -> Self {
             let blob = unsafe {
                 lib_ruby_parser__internal__containers__source_line__new(
                     start as u64,
@@ -170,23 +109,27 @@ mod source_line {
             Self { blob }
         }
 
-        fn start(&self) -> usize {
+        /// Returns start of the line
+        pub fn start(&self) -> usize {
             unsafe {
                 lib_ruby_parser__internal__containers__source_line__get_start(self.blob) as usize
             }
         }
-        fn end(&self) -> usize {
+        /// Sets start of the line
+        pub fn end(&self) -> usize {
             unsafe {
                 lib_ruby_parser__internal__containers__source_line__get_end(self.blob) as usize
             }
         }
-        fn ends_with_eof(&self) -> bool {
+        /// Returns end of the line
+        pub fn ends_with_eof(&self) -> bool {
             unsafe {
                 lib_ruby_parser__internal__containers__source_line__get_ends_with_eof(self.blob)
             }
         }
 
-        fn set_start(&mut self, start: usize) {
+        /// Sets end of the line
+        pub fn set_start(&mut self, start: usize) {
             self.blob = unsafe {
                 lib_ruby_parser__internal__containers__source_line__set_start(
                     self.blob,
@@ -194,12 +137,14 @@ mod source_line {
                 )
             }
         }
-        fn set_end(&mut self, end: usize) {
+        /// Returns true of line ends with EOF
+        pub fn set_end(&mut self, end: usize) {
             self.blob = unsafe {
                 lib_ruby_parser__internal__containers__source_line__set_end(self.blob, end as u64)
             }
         }
-        fn set_ends_with_eof(&mut self, ends_with_eof: bool) {
+        /// Sets whether line ends with EOF
+        pub fn set_ends_with_eof(&mut self, ends_with_eof: bool) {
             self.blob = unsafe {
                 lib_ruby_parser__internal__containers__source_line__set_ends_with_eof(
                     self.blob,
@@ -211,7 +156,7 @@ mod source_line {
 
     #[cfg(test)]
     mod tests {
-        use super::{SourceLine, SourceLineTrait};
+        use super::SourceLine;
 
         #[test]
         fn test_size() {
@@ -270,3 +215,47 @@ mod source_line {
 }
 
 pub use source_line::SourceLine;
+
+impl std::fmt::Debug for SourceLine {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SourceLine")
+            .field("start", &self.start())
+            .field("end", &self.end())
+            .field("ends_with_eof", &self.ends_with_eof())
+            .finish()
+    }
+}
+impl Clone for SourceLine {
+    fn clone(&self) -> Self {
+        Self::new(self.start(), self.end(), self.ends_with_eof())
+    }
+}
+impl Default for SourceLine {
+    fn default() -> Self {
+        Self::new(Default::default(), Default::default(), Default::default())
+    }
+}
+impl PartialEq for SourceLine {
+    fn eq(&self, other: &Self) -> bool {
+        (self.start() == other.start())
+            && (self.end() == other.end())
+            && (self.ends_with_eof() == other.ends_with_eof())
+    }
+}
+impl Eq for SourceLine {}
+
+impl SourceLine {
+    /// Returns length of the line
+    pub fn len(&self) -> usize {
+        self.end() - self.start()
+    }
+
+    /// Returns location of the last non-EOF, non-EOL character
+    pub fn line_end(&self) -> usize {
+        let mut result = self.end();
+        if !self.ends_with_eof() {
+            result -= 1 // exclude trailing \n
+        }
+        result
+    }
+}

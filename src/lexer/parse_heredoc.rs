@@ -1,7 +1,6 @@
 use crate::lexer::{ParseIdent, ParseString, TokAdd, Yylval};
 use crate::maybe_byte::MaybeByte;
 use crate::source::buffer::*;
-use crate::source::SourceLineTrait;
 use crate::str_term::{str_types::*, HeredocEnd, HeredocLiteral, StrTerm};
 use crate::Lexer;
 use crate::TokenBuf;

@@ -19,7 +19,7 @@ type StringPtr = ExternalStringPtr;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type StringPtr = String;
 
-use crate::source::{SourceLine, SourceLineTrait};
+use crate::source::SourceLine;
 
 /// Decoded input
 #[derive(Debug, Default)]

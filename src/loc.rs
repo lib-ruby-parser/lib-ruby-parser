@@ -8,7 +8,6 @@ type MaybeLoc = ExternalMaybeLoc;
 type MaybeLoc = Option<Loc>;
 
 use crate::source::DecodedInput;
-use crate::source::SourceLineTrait;
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 mod loc {

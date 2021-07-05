@@ -653,8 +653,6 @@ pub(crate) mod external {
     mod of_source_lines {
         #[cfg(test)]
         fn make_one() -> crate::source::SourceLine {
-            use crate::source::SourceLineTrait;
-
             crate::source::SourceLine::new(1, 2, false)
         }
 

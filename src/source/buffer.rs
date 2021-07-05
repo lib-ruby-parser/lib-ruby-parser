@@ -17,7 +17,6 @@ type StringPtr = String;
 use crate::debug_level;
 use crate::maybe_byte::*;
 use crate::source::input::Input;
-use crate::source::SourceLineTrait;
 use crate::source::{CustomDecoder, InputError};
 
 #[derive(Debug, Default)]
