@@ -5,6 +5,25 @@
 #include "declare_blob.hpp"
 #include "declare_list.hpp"
 
+enum class CommentType
+{
+    DOCUMENT,
+    INLINE,
+    UNKNOWN,
+};
+DECLARE_BLOB_FOR(CommentType);
+_Static_assert(sizeof(CommentType) == 4, "sizeof(CommentType) == 4");
+
+extern "C"
+{
+    CommentType_BLOB lib_ruby_parser__internal__containers__comment_type__make_inline();
+    CommentType_BLOB lib_ruby_parser__internal__containers__comment_type__make_document();
+    CommentType_BLOB lib_ruby_parser__internal__containers__comment_type__make_unknown();
+    bool lib_ruby_parser__internal__containers__comment_type__is_inline(CommentType_BLOB blob);
+    bool lib_ruby_parser__internal__containers__comment_type__is_document(CommentType_BLOB blob);
+    bool lib_ruby_parser__internal__containers__comment_type__is_unknown(CommentType_BLOB blob);
+}
+
 DECLARE_DUMMY_STRUCT(Comment, 20);
 DECLARE_BLOB_FOR(Comment);
 

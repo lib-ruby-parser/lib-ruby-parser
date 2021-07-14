@@ -1,30 +1,5 @@
-use crate::source::DecodedInput;
+use crate::source::{CommentType, DecodedInput};
 use crate::Loc;
-
-/// Enum of all possible comment types
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[repr(C)]
-pub enum CommentType {
-    /// Inline comment like
-    ///
-    /// ```text
-    /// # comment
-    /// ```
-    Inline,
-
-    /// Document comment like
-    ///
-    /// ```text
-    /// =begin
-    /// comment
-    /// =end
-    /// ```
-    Document,
-
-    /// Uknknown comment type,
-    /// most probably means that either `Loc` or given `Input` is invalid
-    Unknown,
-}
 
 /// A struct that represents a comment in Ruby
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -43,14 +18,14 @@ impl Comment {
         let kind = match location.source(input) {
             Some(source) => {
                 if source.starts_with('#') {
-                    CommentType::Inline
+                    CommentType::inline()
                 } else if source.starts_with("=begin") {
-                    CommentType::Document
+                    CommentType::document()
                 } else {
-                    CommentType::Unknown
+                    CommentType::unknown()
                 }
             }
-            None => CommentType::Unknown,
+            None => CommentType::unknown(),
         };
         Self { location, kind }
     }

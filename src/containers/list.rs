@@ -585,7 +585,7 @@ pub(crate) mod external {
         fn make_one() -> crate::source::Comment {
             crate::source::Comment {
                 location: crate::Loc::default(),
-                kind: crate::source::CommentType::Inline,
+                kind: crate::source::CommentType::inline(),
             }
         }
 
