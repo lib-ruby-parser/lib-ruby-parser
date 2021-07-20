@@ -4,18 +4,18 @@ use crate::source::{MagicComment, MagicCommentKind};
 use crate::DiagnosticMessage;
 use crate::Lexer;
 
-const MAGIC_COMMENTS: &[(&str, MagicCommentKind)] = &[
-    ("coding", MagicCommentKind::Encoding),
-    ("encoding", MagicCommentKind::Encoding),
+const MAGIC_COMMENTS: &[(&str, fn() -> MagicCommentKind)] = &[
+    ("coding", MagicCommentKind::encoding),
+    ("encoding", MagicCommentKind::encoding),
     (
         "frozen_string_literal",
-        MagicCommentKind::FrozenStringLiteral,
+        MagicCommentKind::frozen_string_literal,
     ),
     (
         "shareable_constant_value",
-        MagicCommentKind::ShareableContstantValue,
+        MagicCommentKind::shareable_constant_value,
     ),
-    ("warn_indent", MagicCommentKind::WarnIndent),
+    ("warn_indent", MagicCommentKind::warn_indent),
 ];
 
 pub(crate) trait ParseMagicComment {
@@ -324,8 +324,9 @@ impl ParseMagicComment for Lexer {
 
             let name_to_compare = name.replace("-", "_");
             for (name, kind) in MAGIC_COMMENTS.iter() {
+                let kind = kind();
                 if &name_to_compare == name {
-                    if kind == &MagicCommentKind::Encoding {
+                    if kind.is_encoding() {
                         let encoding = match String::from_utf8(
                             self.buffer
                                 .substr_at(vbeg, vend)

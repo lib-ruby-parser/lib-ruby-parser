@@ -606,7 +606,7 @@ pub(crate) mod external {
         #[cfg(test)]
         fn make_one() -> crate::source::MagicComment {
             crate::source::MagicComment {
-                kind: crate::source::MagicCommentKind::Encoding,
+                kind: crate::source::MagicCommentKind::encoding(),
                 key_l: crate::Loc::default(),
                 value_l: crate::Loc::default(),
             }

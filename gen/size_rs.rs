@@ -36,6 +36,9 @@ pub(crate) fn generate_size_rs() {
     println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_COMMENT_SIZE");
     let comment_size = env!("LIB_RUBY_PARSER_COMMENT_SIZE");
 
+    println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE");
+    let magic_comment_kind_size = env!("LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE");
+
     let contents = format!(
         "pub(crate) const PTR_SIZE: usize = {ptr_size};
 pub(crate) const MAYBE_PTR_SIZE: usize = {maybe_ptr_size};
@@ -49,6 +52,7 @@ pub(crate) const ERROR_LEVEL_SIZE: usize = {error_level_size};
 pub(crate) const LOC_SIZE: usize = {loc_size};
 pub(crate) const COMMENT_TYPE_SIZE: usize = {comment_type_size};
 pub(crate) const COMMENT_SIZE: usize = {comment_size};
+pub(crate) const MAGIC_COMMENT_KIND_SIZE: usize = {magic_comment_kind_size};
 ",
         ptr_size = ptr_size,
         maybe_ptr_size = maybe_ptr_size,
@@ -61,7 +65,8 @@ pub(crate) const COMMENT_SIZE: usize = {comment_size};
         error_level_size = error_level_size,
         loc_size = loc_size,
         comment_type_size = comment_type_size,
-        comment_size = comment_size
+        comment_size = comment_size,
+        magic_comment_kind_size = magic_comment_kind_size
     );
 
     println!("Generating sizes.rs");

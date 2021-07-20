@@ -5,6 +5,7 @@ mod decoded_input;
 mod decoder;
 mod input;
 mod magic_comment;
+mod magic_comment_kind;
 mod source_line;
 
 pub use comment::Comment;
@@ -14,5 +15,6 @@ pub(crate) use decoder::decode_input;
 pub use decoder::InputError;
 pub use decoder::{CustomDecoder, CustomDecoderResult};
 pub use input::Input;
-pub use magic_comment::{MagicComment, MagicCommentKind};
+pub use magic_comment::MagicComment;
+pub use magic_comment_kind::MagicCommentKind;
 pub use source_line::SourceLine;

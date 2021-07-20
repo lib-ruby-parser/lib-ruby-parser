@@ -301,27 +301,27 @@ fn test_magic_comment() {
         magic_comments,
         vec![
             MagicComment {
-                kind: MagicCommentKind::Encoding,
+                kind: MagicCommentKind::encoding(),
                 key_l: Loc::new(2, 10),
                 value_l: Loc::new(12, 17),
             },
             MagicComment {
-                kind: MagicCommentKind::FrozenStringLiteral,
+                kind: MagicCommentKind::frozen_string_literal(),
                 key_l: Loc::new(20, 41),
                 value_l: Loc::new(43, 47),
             },
             MagicComment {
-                kind: MagicCommentKind::Encoding,
+                kind: MagicCommentKind::encoding(),
                 key_l: Loc::new(50, 56),
                 value_l: Loc::new(58, 63),
             },
             MagicComment {
-                kind: MagicCommentKind::ShareableContstantValue,
+                kind: MagicCommentKind::shareable_constant_value(),
                 key_l: Loc::new(66, 90),
                 value_l: Loc::new(92, 99),
             },
             MagicComment {
-                kind: MagicCommentKind::WarnIndent,
+                kind: MagicCommentKind::warn_indent(),
                 key_l: Loc::new(102, 113),
                 value_l: Loc::new(115, 119),
             },

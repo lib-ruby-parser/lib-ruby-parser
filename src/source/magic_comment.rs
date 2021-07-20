@@ -1,21 +1,5 @@
+use crate::source::MagicCommentKind;
 use crate::Loc;
-
-/// An enum of all magic comment kinds
-#[derive(Debug, Clone, PartialEq)]
-#[repr(C)]
-pub enum MagicCommentKind {
-    /// `# encoding: ... comment`
-    Encoding,
-
-    /// `# frozen_string_literal: true/false` comment
-    FrozenStringLiteral,
-
-    /// `# warn_ident: true/false` comment
-    WarnIndent,
-
-    /// `# shareable_constant_value: ...` comment
-    ShareableContstantValue,
-}
 
 /// Representation of a magic comment in Ruby
 #[derive(Debug, Clone, PartialEq)]

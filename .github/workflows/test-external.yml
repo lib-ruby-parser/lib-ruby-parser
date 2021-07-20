@@ -34,6 +34,7 @@ jobs:
             LIB_RUBY_PARSER_LOC_SIZE: 16
             LIB_RUBY_PARSER_COMMENT_TYPE_SIZE: 4
             LIB_RUBY_PARSER_COMMENT_SIZE: 24
+            LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE: 4
 
           - link-feature: link-with-external-cpp-structures
             compile-external-containers: |
@@ -50,6 +51,7 @@ jobs:
             LIB_RUBY_PARSER_LOC_SIZE: 16
             LIB_RUBY_PARSER_COMMENT_TYPE_SIZE: 4
             LIB_RUBY_PARSER_COMMENT_SIZE: 24
+            LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE: 4
 
     steps:
       - name: checkout
@@ -98,6 +100,7 @@ jobs:
           LIB_RUBY_PARSER_LOC_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_LOC_SIZE }}
           LIB_RUBY_PARSER_COMMENT_TYPE_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_COMMENT_TYPE_SIZE }}
           LIB_RUBY_PARSER_COMMENT_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_COMMENT_SIZE }}
+          LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE }}
         run: |
           cargo test --features $CARGO_FEATURES --lib -- --nocapture
 

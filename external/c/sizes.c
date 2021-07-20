@@ -25,4 +25,5 @@ int main()
     printf("LIB_RUBY_PARSER_LOC_SIZE = %lu\n", sizeof(Loc));
     printf("LIB_RUBY_PARSER_COMMENT_TYPE_SIZE = %lu\n", sizeof(CommentType));
     printf("LIB_RUBY_PARSER_COMMENT_SIZE = %lu\n", sizeof(Comment));
+    printf("LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE = %lu\n", sizeof(MagicCommentKind));
 }
