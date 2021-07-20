@@ -4,6 +4,7 @@
 #include "declare_dummy_struct.h"
 #include "declare_blob.h"
 #include "declare_list.h"
+#include "loc.h"
 #include <stdbool.h>
 
 typedef enum
@@ -26,8 +27,19 @@ bool lib_ruby_parser__internal__containers__magic_comment_kind__is_frozen_string
 bool lib_ruby_parser__internal__containers__magic_comment_kind__is_warn_indent(MagicCommentKind_BLOB blob);
 bool lib_ruby_parser__internal__containers__magic_comment_kind__is_shareable_constant_value(MagicCommentKind_BLOB blob);
 
-DECLARE_DUMMY_STRUCT(MagicComment, 36);
+typedef struct
+{
+    MagicCommentKind kind;
+    Loc key_l;
+    Loc value_l;
+} MagicComment;
 DECLARE_BLOB_FOR(MagicComment);
+_Static_assert(sizeof(MagicComment) == 40, "sizeof(MagicComment) == 40");
+
+MagicComment_BLOB lib_ruby_parser__internal__containers__magic_comment__make(MagicCommentKind_BLOB kind, Loc_BLOB key_l, Loc_BLOB value_l);
+const MagicCommentKind_BLOB *lib_ruby_parser__internal__containers__magic_comment__get_kind(const MagicComment_BLOB *blob);
+const Loc_BLOB *lib_ruby_parser__internal__containers__magic_comment__get_key_l(const MagicComment_BLOB *blob);
+const Loc_BLOB *lib_ruby_parser__internal__containers__magic_comment__get_value_l(const MagicComment_BLOB *blob);
 
 DECLARE_LIST_OF(MagicComment_BLOB, LIST_OF_MagicComment);
 DECLARE_BLOB_FOR(LIST_OF_MagicComment);

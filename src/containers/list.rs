@@ -605,11 +605,11 @@ pub(crate) mod external {
     mod of_magic_comments {
         #[cfg(test)]
         fn make_one() -> crate::source::MagicComment {
-            crate::source::MagicComment {
-                kind: crate::source::MagicCommentKind::encoding(),
-                key_l: crate::Loc::default(),
-                value_l: crate::Loc::default(),
-            }
+            crate::source::MagicComment::new(
+                crate::source::MagicCommentKind::encoding(),
+                crate::Loc::default(),
+                crate::Loc::default(),
+            )
         }
 
         gen_list_impl_for!(

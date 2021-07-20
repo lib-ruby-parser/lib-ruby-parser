@@ -201,6 +201,8 @@ impl PartialEq for MagicCommentKind {
 }
 
 pub use magic_comment_kind::MagicCommentKind;
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) use magic_comment_kind::MagicCommentKindBlob;
 
 #[cfg(test)]
 mod tests {

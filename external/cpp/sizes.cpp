@@ -26,4 +26,5 @@ int main()
     std::cout << "LIB_RUBY_PARSER_COMMENT_TYPE_SIZE = " << sizeof(CommentType) << "\n";
     std::cout << "LIB_RUBY_PARSER_COMMENT_SIZE = " << sizeof(Comment) << "\n";
     std::cout << "LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE = " << sizeof(MagicCommentKind) << "\n";
+    std::cout << "LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE = " << sizeof(MagicComment) << "\n";
 }

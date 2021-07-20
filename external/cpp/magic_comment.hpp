@@ -4,6 +4,7 @@
 #include "declare_dummy_struct.hpp"
 #include "declare_blob.hpp"
 #include "declare_list.hpp"
+#include "loc.hpp"
 
 enum class MagicCommentKind
 {
@@ -28,7 +29,14 @@ extern "C"
     bool lib_ruby_parser__internal__containers__magic_comment_kind__is_shareable_constant_value(MagicCommentKind_BLOB blob);
 }
 
-DECLARE_DUMMY_STRUCT(MagicComment, 36);
+class MagicComment
+{
+public:
+    MagicComment(MagicCommentKind kind, Loc key_l, Loc value_l);
+    MagicCommentKind kind;
+    Loc key_l;
+    Loc value_l;
+};
 DECLARE_BLOB_FOR(MagicComment);
 
 DECLARE_LIST_OF(MagicComment_BLOB, LIST_OF_MagicComment);
