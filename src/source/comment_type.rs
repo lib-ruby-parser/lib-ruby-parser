@@ -63,14 +63,14 @@ mod comment_type {
 
     #[repr(C)]
     #[derive(Clone, Copy)]
-    struct CommentTypeBlob {
+    pub(crate) struct CommentTypeBlob {
         blob: [u8; COMMENT_TYPE_SIZE],
     }
 
     /// Enum of all possible comment types
     #[repr(C)]
     pub struct CommentType {
-        blob: CommentTypeBlob,
+        pub(crate) blob: CommentTypeBlob,
     }
 
     extern "C" {
@@ -173,6 +173,8 @@ impl PartialEq for CommentType {
 impl Eq for CommentType {}
 
 pub use comment_type::CommentType;
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) use comment_type::CommentTypeBlob;
 
 #[cfg(test)]
 mod tests {

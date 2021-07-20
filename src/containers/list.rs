@@ -583,10 +583,10 @@ pub(crate) mod external {
     mod of_comments {
         #[cfg(test)]
         fn make_one() -> crate::source::Comment {
-            crate::source::Comment {
-                location: crate::Loc::default(),
-                kind: crate::source::CommentType::inline(),
-            }
+            crate::source::Comment::make(
+                crate::Loc::new(1, 2),
+                crate::source::CommentType::unknown(),
+            )
         }
 
         gen_list_impl_for!(

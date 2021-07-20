@@ -5,6 +5,7 @@
 #include "declare_blob.h"
 #include "declare_list.h"
 #include <stdbool.h>
+#include "loc.h"
 
 typedef enum
 {
@@ -22,8 +23,16 @@ bool lib_ruby_parser__internal__containers__comment_type__is_inline(CommentType_
 bool lib_ruby_parser__internal__containers__comment_type__is_document(CommentType_BLOB blob);
 bool lib_ruby_parser__internal__containers__comment_type__is_unknown(CommentType_BLOB blob);
 
-DECLARE_DUMMY_STRUCT(Comment, 20);
+typedef struct
+{
+    Loc location;
+    CommentType kind;
+} Comment;
 DECLARE_BLOB_FOR(Comment);
+
+Loc_BLOB *lib_ruby_parser__internal__containers__comment__get_location(Comment_BLOB *blob);
+CommentType_BLOB *lib_ruby_parser__internal__containers__comment__get_kind(Comment_BLOB *blob);
+Comment_BLOB lib_ruby_parser__internal__containers__comment__make(Loc_BLOB location, CommentType_BLOB kind);
 
 DECLARE_LIST_OF(Comment_BLOB, LIST_OF_Comment);
 DECLARE_BLOB_FOR(LIST_OF_Comment);
