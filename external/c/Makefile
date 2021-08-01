@@ -10,6 +10,7 @@ OBJECTS = \
 	loc.o \
 	magic_comment.o \
 	maybe_ptr.o \
+	messages.o \
 	node.o \
 	ptr.o \
 	shared_byte_list.o \

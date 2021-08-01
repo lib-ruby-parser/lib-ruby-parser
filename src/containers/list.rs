@@ -562,7 +562,7 @@ pub(crate) mod external {
         fn make_one() -> crate::Diagnostic {
             crate::Diagnostic {
                 level: crate::ErrorLevel::warning(),
-                message: crate::DiagnosticMessage::AliasNthRef,
+                message: crate::DiagnosticMessage::new_alias_nth_ref(),
                 loc: crate::Loc::default(),
             }
         }

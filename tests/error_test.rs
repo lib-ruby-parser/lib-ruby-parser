@@ -15,7 +15,7 @@ fn it_renders() {
 
     let error = Diagnostic::new(
         ErrorLevel::warning(),
-        DiagnosticMessage::FractionAfterNumeric,
+        DiagnosticMessage::new_fraction_after_numeric(),
         Loc::new(8, 12),
     );
 

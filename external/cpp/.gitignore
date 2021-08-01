@@ -2,3 +2,5 @@
 *.a
 *.dSYM
 sizes
+messages.cpp
+messages.hpp

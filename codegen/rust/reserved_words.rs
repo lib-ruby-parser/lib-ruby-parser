@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+// FIXME: use .0
 #[derive(Clone)]
 struct RawString {
     s: &'static str,
@@ -393,4 +394,8 @@ impl std::fmt::Debug for RawString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.s)
     }
+}
+
+pub(crate) fn codegen() {
+    ReservedWordsList::new().write();
 }

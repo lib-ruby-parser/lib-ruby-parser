@@ -339,13 +339,13 @@ impl ParseNumeric for Lexer {
     }
 
     fn invalid_octal(&mut self) -> i32 {
-        self.yyerror0(DiagnosticMessage::InvalidOctalDigit);
+        self.yyerror0(DiagnosticMessage::new_invalid_octal_digit());
         Self::END_OF_INPUT
     }
 
     fn trailing_uc(&mut self, nondigit: u8) -> i32 {
         self.literal_flush(self.buffer.pcur - 1);
-        self.yyerror0(DiagnosticMessage::TrailingCharInNumber { c: nondigit });
+        self.yyerror0(DiagnosticMessage::new_trailing_char_in_number(nondigit));
         Self::END_OF_INPUT
     }
 
@@ -399,7 +399,7 @@ impl ParseNumeric for Lexer {
     }
 
     fn no_digits(&mut self) -> i32 {
-        self.yyerror0(DiagnosticMessage::NumericLiteralWithoutDigits);
+        self.yyerror0(DiagnosticMessage::new_numeric_literal_without_digits());
         if self.buffer.peek(b'_') {
             self.nextc();
         }

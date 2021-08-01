@@ -13,6 +13,22 @@ jobs:
   test:
     name: ${{ matrix.build.link-feature }}
     runs-on: ubuntu-latest
+    env:
+      LIB_RUBY_PARSER_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_PTR_SIZE }}
+      LIB_RUBY_PARSER_MAYBE_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAYBE_PTR_SIZE }}
+      LIB_RUBY_PARSER_LIST_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_LIST_SIZE }}
+      LIB_RUBY_PARSER_STRING_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_STRING_PTR_SIZE }}
+      LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE }}
+      LIB_RUBY_PARSER_BYTES_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_BYTES_SIZE }}
+      LIB_RUBY_PARSER_TOKEN_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_TOKEN_SIZE }}
+      LIB_RUBY_PARSER_SOURCE_LINE_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_SOURCE_LINE_SIZE }}
+      LIB_RUBY_PARSER_ERROR_LEVEL_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_ERROR_LEVEL_SIZE }}
+      LIB_RUBY_PARSER_LOC_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_LOC_SIZE }}
+      LIB_RUBY_PARSER_COMMENT_TYPE_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_COMMENT_TYPE_SIZE }}
+      LIB_RUBY_PARSER_COMMENT_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_COMMENT_SIZE }}
+      LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE }}
+      LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE }}
+      LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE }}
     strategy:
       fail-fast: false
       matrix:
@@ -36,6 +52,7 @@ jobs:
             LIB_RUBY_PARSER_COMMENT_SIZE: 24
             LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE: 4
             LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE: 40
+            LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE: 40
 
           - link-feature: link-with-external-cpp-structures
             compile-external-containers: |
@@ -54,17 +71,11 @@ jobs:
             LIB_RUBY_PARSER_COMMENT_SIZE: 24
             LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE: 4
             LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE: 40
+            LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE: 24
 
     steps:
       - name: checkout
         uses: actions/checkout@v2
-
-      - name: compile external containers
-        env:
-          CC: clang
-          CXX: clang++
-          AR: ar
-        run: ${{ matrix.build.compile-external-containers }}
 
       - name: install rust
         uses: actions-rs/toolchain@v1
@@ -83,27 +94,20 @@ jobs:
         run: bison --version
 
       - name: codegen
-        run: cargo build --features rebuild-grammar
+        run: cargo build --features rebuild-grammar,compile-with-external-structures
+
+      - name: compile external containers
+        env:
+          CC: clang
+          CXX: clang++
+          AR: ar
+        run: ${{ matrix.build.compile-external-containers }}
 
       - name: run tests
         env:
           RUSTFLAGS: ${{ matrix.rustflags }}
           ASAN_OPTIONS: detect_leaks=1
           CARGO_FEATURES: "compile-with-external-structures,${{ matrix.build.link-feature }}"
-          LIB_RUBY_PARSER_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_PTR_SIZE }}
-          LIB_RUBY_PARSER_MAYBE_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAYBE_PTR_SIZE }}
-          LIB_RUBY_PARSER_LIST_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_LIST_SIZE }}
-          LIB_RUBY_PARSER_STRING_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_STRING_PTR_SIZE }}
-          LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE }}
-          LIB_RUBY_PARSER_BYTES_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_BYTES_SIZE }}
-          LIB_RUBY_PARSER_TOKEN_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_TOKEN_SIZE }}
-          LIB_RUBY_PARSER_SOURCE_LINE_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_SOURCE_LINE_SIZE }}
-          LIB_RUBY_PARSER_ERROR_LEVEL_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_ERROR_LEVEL_SIZE }}
-          LIB_RUBY_PARSER_LOC_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_LOC_SIZE }}
-          LIB_RUBY_PARSER_COMMENT_TYPE_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_COMMENT_TYPE_SIZE }}
-          LIB_RUBY_PARSER_COMMENT_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_COMMENT_SIZE }}
-          LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE }}
-          LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE }}
         run: |
           cargo test --features $CARGO_FEATURES --lib -- --nocapture
 

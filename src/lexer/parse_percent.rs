@@ -20,7 +20,7 @@ impl ParsePercent for Lexer {
             None => return Self::END_OF_INPUT,
         }
         self.yyerror1(
-            DiagnosticMessage::UnknownTypeOfPercentString,
+            DiagnosticMessage::new_unknown_type_of_percent_string(),
             self.current_loc().adjust_end(-1),
         );
         Self::END_OF_INPUT
@@ -46,7 +46,7 @@ impl ParsePercent for Lexer {
         let mut term = match term.to_option() {
             None => {
                 self.compile_error(
-                    DiagnosticMessage::UnterminatedQuotedString,
+                    DiagnosticMessage::new_unterminated_quoted_string(),
                     self.current_loc(),
                 );
                 return Self::END_OF_INPUT;
@@ -108,7 +108,7 @@ impl ParsePercent for Lexer {
             }
             _ => {
                 self.yyerror1(
-                    DiagnosticMessage::UnknownTypeOfPercentString,
+                    DiagnosticMessage::new_unknown_type_of_percent_string(),
                     self.current_loc().adjust_end(-1),
                 );
                 Self::END_OF_INPUT

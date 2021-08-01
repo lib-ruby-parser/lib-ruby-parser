@@ -10,6 +10,7 @@
 #include "error_level.h"
 #include "loc.h"
 #include "comment.h"
+#include "messages.h"
 
 int main()
 {
@@ -27,4 +28,5 @@ int main()
     printf("LIB_RUBY_PARSER_COMMENT_SIZE = %lu\n", sizeof(Comment));
     printf("LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE = %lu\n", sizeof(MagicCommentKind));
     printf("LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE = %lu\n", sizeof(MagicComment));
+    printf("LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE = %lu\n", sizeof(DiagnosticMessage));
 }

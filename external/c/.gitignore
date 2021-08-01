@@ -2,3 +2,5 @@
 *.a
 *.dSYM
 sizes
+messages.h
+messages.c

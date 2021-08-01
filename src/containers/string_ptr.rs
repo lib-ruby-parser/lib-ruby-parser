@@ -12,7 +12,7 @@ pub(crate) mod external {
     /// C-compatible list
     #[repr(C)]
     pub struct StringPtr {
-        blob: StringBlob,
+        pub(crate) blob: StringBlob,
     }
 
     extern "C" {

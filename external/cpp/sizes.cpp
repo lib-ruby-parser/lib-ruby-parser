@@ -10,6 +10,7 @@
 #include "error_level.hpp"
 #include "loc.hpp"
 #include "comment.hpp"
+#include "messages.hpp"
 
 int main()
 {
@@ -27,4 +28,5 @@ int main()
     std::cout << "LIB_RUBY_PARSER_COMMENT_SIZE = " << sizeof(Comment) << "\n";
     std::cout << "LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE = " << sizeof(MagicCommentKind) << "\n";
     std::cout << "LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE = " << sizeof(MagicComment) << "\n";
+    std::cout << "LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE = " << sizeof(DiagnosticMessage) << "\n";
 }

@@ -362,12 +362,7 @@ impl Builder {
 
     fn validate_sym_value(&self, value: &StringValue, loc: &Loc) {
         if !value.bytes.is_valid_utf8() {
-            self.error(
-                DiagnosticMessage::InvalidSymbol {
-                    symbol: "UTF-8".into(),
-                },
-                loc,
-            )
+            self.error(DiagnosticMessage::new_invalid_symbol("UTF-8".into()), loc)
         }
     }
 
@@ -915,9 +910,7 @@ impl Builder {
 
         if parsed.is_err() || parsed.map(|n| n > Self::MAX_NTH_REF) == Ok(true) {
             self.warn(
-                DiagnosticMessage::NthRefIsTooBig {
-                    nth_ref: name.clone().into(),
-                },
+                DiagnosticMessage::new_nth_ref_is_too_big(name.clone().into()),
                 &expression_l,
             )
         }
@@ -935,9 +928,7 @@ impl Builder {
                     if let Some(current_arg) = self.current_arg_stack.top() {
                         if current_arg == name_s {
                             self.error(
-                                DiagnosticMessage::CircularArgumentReference {
-                                    arg_name: name.clone(),
-                                },
+                                DiagnosticMessage::new_circular_argument_reference(name.clone()),
                                 &expression_l,
                             );
                         }
@@ -1054,7 +1045,10 @@ impl Builder {
                 name_l,
             }) => {
                 if !self.context.is_dynamic_const_definition_allowed() {
-                    self.error(DiagnosticMessage::DynamicConstantAssignment, &expression_l);
+                    self.error(
+                        DiagnosticMessage::new_dynamic_constant_assignment(),
+                        &expression_l,
+                    );
                     return Err(());
                 }
                 Node::Casgn(Casgn {
@@ -1084,47 +1078,46 @@ impl Builder {
             }
 
             Node::Self_(Self_ { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToSelf, &expression_l);
+                self.error(DiagnosticMessage::new_cant_assign_to_self(), &expression_l);
                 return Err(());
             }
             Node::Nil(Nil { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToNil, &expression_l);
+                self.error(DiagnosticMessage::new_cant_assign_to_nil(), &expression_l);
                 return Err(());
             }
             Node::True(True { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToTrue, &expression_l);
+                self.error(DiagnosticMessage::new_cant_assign_to_true(), &expression_l);
                 return Err(());
             }
             Node::False(False { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToFalse, &expression_l);
+                self.error(DiagnosticMessage::new_cant_assign_to_false(), &expression_l);
                 return Err(());
             }
             Node::File(File { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToFile, &expression_l);
+                self.error(DiagnosticMessage::new_cant_assign_to_file(), &expression_l);
                 return Err(());
             }
             Node::Line(Line { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToLine, &expression_l);
+                self.error(DiagnosticMessage::new_cant_assign_to_line(), &expression_l);
                 return Err(());
             }
             Node::Encoding(Encoding { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToEncoding, &expression_l);
+                self.error(
+                    DiagnosticMessage::new_cant_assign_to_encoding(),
+                    &expression_l,
+                );
                 return Err(());
             }
             Node::BackRef(BackRef { expression_l, name }) => {
                 self.error(
-                    DiagnosticMessage::CantSetVariable {
-                        var_name: name.clone(),
-                    },
+                    DiagnosticMessage::new_cant_set_variable(name.clone()),
                     &expression_l,
                 );
                 return Err(());
             }
             Node::NthRef(NthRef { expression_l, name }) => {
                 self.error(
-                    DiagnosticMessage::CantSetVariable {
-                        var_name: format!("${}", name.as_str()).into(),
-                    },
+                    DiagnosticMessage::new_cant_set_variable(format!("${}", name.as_str()).into()),
                     &expression_l,
                 );
                 return Err(());
@@ -1273,18 +1266,14 @@ impl Builder {
             }
             Node::BackRef(BackRef { expression_l, name }) => {
                 self.error(
-                    DiagnosticMessage::CantSetVariable {
-                        var_name: name.clone(),
-                    },
+                    DiagnosticMessage::new_cant_set_variable(name.clone()),
                     &expression_l,
                 );
                 return Err(());
             }
             Node::NthRef(NthRef { expression_l, name }) => {
                 self.error(
-                    DiagnosticMessage::CantSetVariable {
-                        var_name: format!("${}", name.as_str()).into(),
-                    },
+                    DiagnosticMessage::new_cant_set_variable(format!("${}", name.as_str()).into()),
                     &expression_l,
                 );
                 return Err(());
@@ -1916,7 +1905,10 @@ impl Builder {
                 match last_arg {
                     Node::BlockPass(BlockPass { expression_l, .. })
                     | Node::ForwardedArgs(ForwardedArgs { expression_l, .. }) => {
-                        self.error(DiagnosticMessage::BlockAndBlockArgGiven, &expression_l);
+                        self.error(
+                            DiagnosticMessage::new_block_and_block_arg_given(),
+                            &expression_l,
+                        );
                         Err(())
                     }
                     _ => Ok(()),
@@ -1928,7 +1920,7 @@ impl Builder {
 
         match &*method_call {
             Node::Yield(Yield { keyword_l, .. }) => {
-                self.error(DiagnosticMessage::BlockGivenToYield, &keyword_l);
+                self.error(DiagnosticMessage::new_block_given_to_yield(), &keyword_l);
                 return Err(());
             }
             Node::Send(Send { args, .. }) | Node::CSend(CSend { args, .. }) => {
@@ -2609,7 +2601,7 @@ impl Builder {
 
         if type_ == KeywordCmd::Yield && !args.is_empty() {
             if let Some(Node::BlockPass(_)) = args.last() {
-                self.error(DiagnosticMessage::BlockGivenToYield, &keyword_l);
+                self.error(DiagnosticMessage::new_block_given_to_yield(), &keyword_l);
                 return Err(());
             }
         }
@@ -3157,7 +3149,7 @@ impl Builder {
     ) -> Result<Box<Node>, ()> {
         if strings.len() != 1 {
             self.error(
-                DiagnosticMessage::SymbolLiteralWithInterpolation,
+                DiagnosticMessage::new_symbol_literal_with_interpolation(),
                 &self.loc(&begin_t).join(&self.loc(&end_t)),
             );
             return Err(());
@@ -3209,7 +3201,7 @@ impl Builder {
             }
             _ => {
                 self.error(
-                    DiagnosticMessage::SymbolLiteralWithInterpolation,
+                    DiagnosticMessage::new_symbol_literal_with_interpolation(),
                     &self.loc(&begin_t).join(&self.loc(&end_t)),
                 );
                 return Err(());
@@ -3414,7 +3406,7 @@ impl Builder {
                     Some(var_name) => self.check_duplicate_pattern_key(&var_name, &label_loc)?,
                     _ => {
                         self.error(
-                            DiagnosticMessage::SymbolLiteralWithInterpolation,
+                            DiagnosticMessage::new_symbol_literal_with_interpolation(),
                             &label_loc,
                         );
                         return Err(());
@@ -3621,7 +3613,7 @@ impl Builder {
                 };
                 if self.arg_name_collides(this_name, that_name) {
                     self.error(
-                        DiagnosticMessage::DuplicatedArgumentName,
+                        DiagnosticMessage::new_duplicated_argument_name(),
                         &self.arg_name_loc(this_arg),
                     )
                 }
@@ -3639,9 +3631,7 @@ impl Builder {
 
         if assigning_to_numparam {
             self.error(
-                DiagnosticMessage::CantAssignToNumparam {
-                    numparam: name.into(),
-                },
+                DiagnosticMessage::new_cant_assign_to_numparam(name.into()),
                 loc,
             );
             return Err(());
@@ -3653,9 +3643,7 @@ impl Builder {
         match name {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
                 self.error(
-                    DiagnosticMessage::ReservedForNumparam {
-                        numparam: name.into(),
-                    },
+                    DiagnosticMessage::new_reserved_for_numparam(name.into()),
                     loc,
                 );
                 Err(())
@@ -3680,7 +3668,10 @@ impl Builder {
         {
             Ok(())
         } else {
-            self.error(DiagnosticMessage::KeyMustBeValidAsLocalVariable, loc);
+            self.error(
+                DiagnosticMessage::new_key_must_be_valid_as_local_variable(),
+                loc,
+            );
             Err(())
         }
     }
@@ -3691,7 +3682,7 @@ impl Builder {
         }
 
         if self.pattern_variables.is_declared(name) {
-            self.error(DiagnosticMessage::DuplicateVariableName, loc);
+            self.error(DiagnosticMessage::new_duplicate_variable_name(), loc);
             return Err(());
         }
 
@@ -3701,7 +3692,7 @@ impl Builder {
 
     pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: &Loc) -> Result<(), ()> {
         if self.pattern_hash_keys.is_declared(name) {
-            self.error(DiagnosticMessage::DuplicateKeyName, loc);
+            self.error(DiagnosticMessage::new_duplicate_key_name(), loc);
             return Err(());
         }
 
@@ -3898,7 +3889,7 @@ impl Builder {
     pub(crate) fn value_expr(&self, node: &Node) -> Result<(), ()> {
         if let Some(void_node) = self.void_value(node) {
             self.error(
-                DiagnosticMessage::VoidValueExpression,
+                DiagnosticMessage::new_void_value_expression(),
                 void_node.expression(),
             );
             Err(())

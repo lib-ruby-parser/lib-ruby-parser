@@ -447,7 +447,7 @@ use crate::Loc;
                         let compound_stmt = $<MaybeBoxedNode>1;
                         let rescue_bodies = $<NodeList>2;
                         if rescue_bodies.is_empty() {
-                            return self.yyerror(&@3, DiagnosticMessage::ElseWithoutRescue);
+                            return self.yyerror(&@3, DiagnosticMessage::new_else_without_rescue());
                         }
 
                         let else_ = Some(( $<Token>3, $<MaybeBoxedNode>4 ));
@@ -516,7 +516,7 @@ use crate::Loc;
                     }
                 | klBEGIN
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::BeginNotAtTopLevel);
+                        return self.yyerror(&@1, DiagnosticMessage::new_begin_not_at_top_level());
                     }
                   begin_block
                     {
@@ -557,7 +557,7 @@ use crate::Loc;
                     }
                 | kALIAS tGVAR tNTH_REF
                     {
-                        return self.yyerror(&@3, DiagnosticMessage::AliasNthRef);
+                        return self.yyerror(&@3, DiagnosticMessage::new_alias_nth_ref());
                     }
                 | kUNDEF undef_list
                     {
@@ -635,7 +635,7 @@ use crate::Loc;
                 | klEND tLCURLY compstmt tRCURLY
                     {
                         if self.context.is_in_def() {
-                            self.warn(&@1, DiagnosticMessage::EndInMethod);
+                            self.warn(&@1, DiagnosticMessage::new_end_in_method());
                         }
 
                         $$ = Value::Node(
@@ -1475,7 +1475,7 @@ use crate::Loc;
                     {
                         let op_t = $<Token>2;
                         if op_t.token_type() == Lexer::tANDDOT {
-                            return self.yyerror(&@2, DiagnosticMessage::CsendInsideMasgn);
+                            return self.yyerror(&@2, DiagnosticMessage::new_csend_inside_masgn());
                         }
 
                         $$ = Value::Node(
@@ -1500,7 +1500,7 @@ use crate::Loc;
                     {
                         let op_t = $<Token>2;
                         if op_t.token_type() == Lexer::tANDDOT {
-                            return self.yyerror(&@2, DiagnosticMessage::CsendInsideMasgn);
+                            return self.yyerror(&@2, DiagnosticMessage::new_csend_inside_masgn());
                         }
 
                         $$ = Value::Node(
@@ -1632,7 +1632,7 @@ use crate::Loc;
 
            cname: tIDENTIFIER
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::ClassOrModuleNameMustBeConstant);
+                        return self.yyerror(&@1, DiagnosticMessage::new_class_or_module_name_must_be_constant());
                     }
                 | tCONSTANT
                     {
@@ -2373,7 +2373,7 @@ use crate::Loc;
                         let op_t = $<Token>2;
                         self.warn(
                             &@2,
-                            DiagnosticMessage::ComparisonAfterComparison { comparison: clone_value(&op_t).into() }
+                            DiagnosticMessage::new_comparison_after_comparison(clone_value(&op_t).into())
                         );
                         $$ = Value::Node(
                             self.builder.binary_op(
@@ -2463,7 +2463,7 @@ use crate::Loc;
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(&@4, DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3".into() });
+                            return self.yyerror(&@4, DiagnosticMessage::new_unexpected_token("tBDOT3".into()));
                         }
 
                         let mut args = $<NodeList>2;
@@ -2480,7 +2480,7 @@ use crate::Loc;
                 | tLPAREN2 args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(&@2, DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3".into() });
+                            return self.yyerror(&@2, DiagnosticMessage::new_unexpected_token("tBDOT3".into()));
                         }
 
                         $$ = Value::new_paren_args(
@@ -3119,7 +3119,7 @@ use crate::Loc;
                   k_end
                     {
                         if !self.context.is_class_definition_allowed() {
-                            return self.yyerror(&@1, DiagnosticMessage::ClassDefinitionInMethodBody);
+                            return self.yyerror(&@1, DiagnosticMessage::new_class_definition_in_method_body());
                         }
 
                         let Superclass { lt_t, value } = $<Superclass>3;
@@ -3178,7 +3178,7 @@ use crate::Loc;
                   k_end
                     {
                         if !self.context.is_module_definition_allowed() {
-                            return self.yyerror(&@1, DiagnosticMessage::ModuleDefinitionInMethodBody);
+                            return self.yyerror(&@1, DiagnosticMessage::new_module_definition_in_method_body());
                         }
 
                         $$ = Value::Node(
@@ -3413,7 +3413,7 @@ use crate::Loc;
         k_return: kRETURN
                     {
                         if self.context.is_in_class() {
-                            return self.yyerror(&@1, DiagnosticMessage::InvalidReturnInClassOrModuleBody);
+                            return self.yyerror(&@1, DiagnosticMessage::new_invalid_return_in_class_or_module_body());
                         }
                         $$ = $1;
                     }
@@ -5159,7 +5159,7 @@ opt_block_args_tail:
                         let name = clone_value(&ident_t);
 
                         if !self.static_env.is_declared(&name) {
-                            return self.yyerror(&@2, DiagnosticMessage::NoSuchLocalVariable { var_name: name.into() });
+                            return self.yyerror(&@2, DiagnosticMessage::new_no_such_local_variable(name.into()));
                         }
 
                         let lvar = self.builder.accessible(self.builder.lvar(ident_t));
@@ -5728,7 +5728,7 @@ keyword_variable: kNIL
                                         if self.max_numparam_stack.has_ordinary_params() {
                                             return self.yyerror(
                                                 &@1,
-                                                DiagnosticMessage::OrdinaryParamDefined,
+                                                DiagnosticMessage::new_ordinary_param_defined(),
                                             );
                                         }
 
@@ -5748,7 +5748,7 @@ keyword_variable: kNIL
                                                 if outer_scope_has_numparams {
                                                     return self.yyerror(
                                                         &@1,
-                                                        DiagnosticMessage::NumparamUsed,
+                                                        DiagnosticMessage::new_numparam_used(),
                                                     );
                                                 } else {
                                                     /* for now it's ok, but an outer scope can also be a block
@@ -6112,19 +6112,19 @@ f_opt_paren_args: f_paren_args
 
        f_bad_arg: tCONSTANT
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::ConstArgument);
+                        return self.yyerror(&@1, DiagnosticMessage::new_const_argument());
                     }
                 | tIVAR
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::IvarArgument);
+                        return self.yyerror(&@1, DiagnosticMessage::new_ivar_argument());
                     }
                 | tGVAR
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::GvarArgument);
+                        return self.yyerror(&@1, DiagnosticMessage::new_gvar_argument());
                     }
                 | tCVAR
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::CvarArgument);
+                        return self.yyerror(&@1, DiagnosticMessage::new_cvar_argument());
                     }
                 ;
 
@@ -6429,7 +6429,7 @@ f_opt_paren_args: f_paren_args
                             | Node::Array(_)
                             | Node::Hash(_) => {
                                 self.yyerror1(
-                                    DiagnosticMessage::SingletonLiteral,
+                                    DiagnosticMessage::new_singleton_literal(),
                                     expr.expression().clone(),
                                 )?;
                             }
@@ -6811,7 +6811,7 @@ impl Parser {
             self.diagnostics.emit(
                 Diagnostic::new(
                     ErrorLevel::error(),
-                    DiagnosticMessage::ConstArgument,
+                    DiagnosticMessage::new_const_argument(),
                     loc
                 )
             );
@@ -6822,7 +6822,7 @@ impl Parser {
     fn validate_endless_method_name(&mut self, name_t: &Token) -> Result<(), ()> {
         let name = clone_value(&name_t);
         if name.ends_with('=') {
-            self.yyerror(&name_t.loc(), DiagnosticMessage::EndlessSetterDefinition).map(|_| ())
+            self.yyerror(&name_t.loc(), DiagnosticMessage::new_endless_setter_definition()).map(|_| ())
         } else {
             Ok(())
         }
@@ -6845,7 +6845,7 @@ impl Parser {
         let id: usize = ctx.token().code().try_into().expect("failed to convert token code into i32, is it too big?");
         let diagnostic = Diagnostic::new(
             ErrorLevel::error(),
-            DiagnosticMessage::UnexpectedToken { token_name: Lexer::TOKEN_NAMES[id].into() },
+            DiagnosticMessage::new_unexpected_token(Lexer::TOKEN_NAMES[id].into()),
             ctx.location().clone(),
         );
         self.diagnostics.emit(diagnostic);
@@ -6853,7 +6853,7 @@ impl Parser {
 
     fn warn_eol(&mut self, loc: &Loc, tok: &str) {
         if self.yylexer.buffer.is_looking_at_eol() {
-            self.warn(loc, DiagnosticMessage::TokAtEolWithoutExpression { token_name: tok.into() });
+            self.warn(loc, DiagnosticMessage::new_tok_at_eol_without_expression(tok.into()));
         }
     }
 

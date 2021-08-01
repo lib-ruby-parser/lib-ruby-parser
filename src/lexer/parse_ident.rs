@@ -126,7 +126,7 @@ impl ParseIdent for Lexer {
         ident = match self.tokenize_ident() {
             Some(ident) => ident,
             None => {
-                self.yyerror0(DiagnosticMessage::InvalidMultibyteChar);
+                self.yyerror0(DiagnosticMessage::new_invalid_multibyte_char());
                 return Self::END_OF_INPUT;
             }
         };

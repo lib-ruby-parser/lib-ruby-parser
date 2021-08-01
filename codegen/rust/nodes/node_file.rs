@@ -1,5 +1,4 @@
-use super::comment::Comment;
-use lib_ruby_parser_nodes::{Field, FieldType, Node};
+use lib_ruby_parser_nodes::{Node, NodeField, NodeFieldType};
 
 pub(crate) struct NodeFile<'a> {
     node: &'a Node,
@@ -52,7 +51,7 @@ impl InnerNode for {struct_name} {{
 
 ",
             imports = self.imports().join("\n"),
-            comment = Comment::new(&self.node.comment).to_string(0),
+            comment = self.node.render_comment("///", 0),
             struct_name = self.node.struct_name,
             fields_declaration = self.fields_declaration().join("\n"),
             inspected_children = self.inspected_children().join("\n        "),
@@ -64,6 +63,7 @@ impl InnerNode for {struct_name} {{
     fn fields_declaration(&self) -> Vec<String> {
         self.node
             .fields
+            .0
             .iter()
             .map(|f| FieldWrapper::new(f).declaration())
             .collect::<Vec<_>>()
@@ -72,6 +72,7 @@ impl InnerNode for {struct_name} {{
     fn inspected_children(&self) -> Vec<String> {
         self.node
             .fields
+            .0
             .iter()
             .filter_map(|f| FieldWrapper::new(f).print_me_code())
             .collect()
@@ -80,6 +81,7 @@ impl InnerNode for {struct_name} {{
     fn print_with_locs(&self) -> Vec<String> {
         self.node
             .fields
+            .0
             .iter()
             .filter_map(|f| FieldWrapper::new(f).print_with_locs_me())
             .collect()
@@ -90,20 +92,19 @@ impl InnerNode for {struct_name} {{
         imports.push("use crate::nodes::InnerNode;");
         imports.push("use crate::nodes::InspectVec;");
         imports.push("use crate::Loc;");
-        if self
-            .node
-            .fields
-            .iter()
-            .any(|f| f.field_type.has_reference_to_node())
+        if self.has_field_with_type(NodeFieldType::Node)
+            || self.has_field_with_type(NodeFieldType::Nodes)
+            || self.has_field_with_type(NodeFieldType::RegexOptions)
+            || self.has_field_with_type(NodeFieldType::MaybeNode)
         {
             imports.push("use crate::Node;");
         }
-        if self.has_field_with_type(FieldType::StringValue) {
+        if self.has_field_with_type(NodeFieldType::StringValue) {
             imports.push("use crate::StringValue;");
         }
 
-        if self.has_field_with_type(FieldType::MaybeNode)
-            || self.has_field_with_type(FieldType::RegexOptions)
+        if self.has_field_with_type(NodeFieldType::MaybeNode)
+            || self.has_field_with_type(NodeFieldType::RegexOptions)
         {
             imports.push("");
             imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
@@ -115,7 +116,7 @@ impl InnerNode for {struct_name} {{
             imports.push("");
         }
 
-        if self.has_field_with_type(FieldType::Node) {
+        if self.has_field_with_type(NodeFieldType::Node) {
             imports.push("");
             imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
             imports.push("use crate::containers::ExternalPtr;");
@@ -126,7 +127,7 @@ impl InnerNode for {struct_name} {{
             imports.push("");
         }
 
-        if self.has_field_with_type(FieldType::Nodes) {
+        if self.has_field_with_type(NodeFieldType::Nodes) {
             imports.push("");
             imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
             imports.push("use crate::containers::ExternalList;");
@@ -137,7 +138,7 @@ impl InnerNode for {struct_name} {{
             imports.push("");
         }
 
-        if self.has_field_with_type(FieldType::MaybeLoc) {
+        if self.has_field_with_type(NodeFieldType::MaybeLoc) {
             imports.push("");
             imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
             imports.push("use crate::containers::ExternalMaybeLoc;");
@@ -148,8 +149,8 @@ impl InnerNode for {struct_name} {{
             imports.push("");
         }
 
-        if self.has_field_with_type(FieldType::Str)
-            || self.has_field_with_type(FieldType::RawString)
+        if self.has_field_with_type(NodeFieldType::Str)
+            || self.has_field_with_type(NodeFieldType::RawString)
         {
             imports.push("");
             imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
@@ -161,8 +162,8 @@ impl InnerNode for {struct_name} {{
             imports.push("");
         }
 
-        if self.has_field_with_type(FieldType::MaybeStr)
-            || self.has_field_with_type(FieldType::Chars)
+        if self.has_field_with_type(NodeFieldType::MaybeStr)
+            || self.has_field_with_type(NodeFieldType::Chars)
         {
             imports.push("");
             imports.push("#[cfg(feature = \"compile-with-external-structures\")]");
@@ -177,17 +178,17 @@ impl InnerNode for {struct_name} {{
         imports
     }
 
-    fn has_field_with_type(&self, field_type: FieldType) -> bool {
-        self.node.fields.iter().any(|f| f.field_type == field_type)
+    fn has_field_with_type(&self, field_type: NodeFieldType) -> bool {
+        self.node.fields.any_field_has_type(field_type)
     }
 }
 
 struct FieldWrapper<'a> {
-    field: &'a Field,
+    field: &'a NodeField,
 }
 
 impl<'a> FieldWrapper<'a> {
-    pub(crate) fn new(field: &'a Field) -> Self {
+    pub(crate) fn new(field: &'a NodeField) -> Self {
         Self { field }
     }
 
@@ -195,7 +196,7 @@ impl<'a> FieldWrapper<'a> {
         format!(
             "{comment}
     pub {field_name}: {field_type},",
-            comment = Comment::new(&self.field.comment).to_string(4),
+            comment = self.field.render_comment("///", 4),
             field_name = self.field.field_name,
             field_type = self.str_field_type()
         )
@@ -203,43 +204,43 @@ impl<'a> FieldWrapper<'a> {
 
     pub(crate) fn str_field_type(&self) -> &'static str {
         match self.field.field_type {
-            FieldType::Node => "Ptr<Node>",
-            FieldType::Nodes => "List<Node>",
-            FieldType::MaybeNode => "MaybePtr<Node>",
-            FieldType::Loc => "Loc",
-            FieldType::MaybeLoc => "MaybeLoc",
-            FieldType::Str => "StringPtr",
-            FieldType::MaybeStr => "MaybeStringPtr",
-            FieldType::Chars => "MaybeStringPtr",
-            FieldType::StringValue => "StringValue",
-            FieldType::U8 => "u8",
-            FieldType::Usize => "usize",
-            FieldType::RawString => "StringPtr",
-            FieldType::RegexOptions => "MaybePtr<Node>",
+            NodeFieldType::Node => "Ptr<Node>",
+            NodeFieldType::Nodes => "List<Node>",
+            NodeFieldType::MaybeNode => "MaybePtr<Node>",
+            NodeFieldType::Loc => "Loc",
+            NodeFieldType::MaybeLoc => "MaybeLoc",
+            NodeFieldType::Str => "StringPtr",
+            NodeFieldType::MaybeStr => "MaybeStringPtr",
+            NodeFieldType::Chars => "MaybeStringPtr",
+            NodeFieldType::StringValue => "StringValue",
+            NodeFieldType::U8 => "u8",
+            NodeFieldType::Usize => "usize",
+            NodeFieldType::RawString => "StringPtr",
+            NodeFieldType::RegexOptions => "MaybePtr<Node>",
         }
     }
 
     fn print_me_code(&self) -> Option<String> {
         let method_name = match &self.field.field_type {
-            FieldType::Node => "push_node",
-            FieldType::Nodes => "push_nodes",
-            FieldType::MaybeNode => {
+            NodeFieldType::Node => "push_node",
+            NodeFieldType::Nodes => "push_nodes",
+            NodeFieldType::MaybeNode => {
                 if self.field.always_print {
                     "push_maybe_node_or_nil"
                 } else {
                     "push_maybe_node"
                 }
             }
-            FieldType::Loc => return None,
-            FieldType::MaybeLoc => return None,
-            FieldType::Str => "push_str",
-            FieldType::MaybeStr => "push_maybe_str",
-            FieldType::Chars => "push_chars",
-            FieldType::StringValue => "push_string_value",
-            FieldType::U8 => "push_u8",
-            FieldType::Usize => "push_usize",
-            FieldType::RawString => "push_raw_str",
-            FieldType::RegexOptions => "push_regex_options",
+            NodeFieldType::Loc => return None,
+            NodeFieldType::MaybeLoc => return None,
+            NodeFieldType::Str => "push_str",
+            NodeFieldType::MaybeStr => "push_maybe_str",
+            NodeFieldType::Chars => "push_chars",
+            NodeFieldType::StringValue => "push_string_value",
+            NodeFieldType::U8 => "push_u8",
+            NodeFieldType::Usize => "push_usize",
+            NodeFieldType::RawString => "push_raw_str",
+            NodeFieldType::RegexOptions => "push_regex_options",
         };
 
         Some(format!(
@@ -252,24 +253,24 @@ impl<'a> FieldWrapper<'a> {
         let offset = "        ";
 
         match &self.field.field_type {
-            FieldType::Node => Some(format!(
+            NodeFieldType::Node => Some(format!(
                 "{offset}self.{field_name}.inner_ref().print_with_locs();",
                 offset = offset,
                 field_name = self.field.field_name
             )),
-            FieldType::Nodes => Some(format!(
+            NodeFieldType::Nodes => Some(format!(
                 "{offset}for node in self.{field_name}.iter() {{
 {offset}    node.inner_ref().print_with_locs();
 {offset}}}",
                 offset = offset,
                 field_name = self.field.field_name
             )),
-            FieldType::MaybeNode | FieldType::RegexOptions => Some(format!(
+            NodeFieldType::MaybeNode | NodeFieldType::RegexOptions => Some(format!(
                 "{offset}self.{field_name}.as_ref().map(|node| node.inner_ref().print_with_locs());",
                 offset = offset,
                 field_name = self.field.field_name
             )),
-            FieldType::Loc => Some(format!(
+            NodeFieldType::Loc => Some(format!(
                 "{offset}self.{field_name}.print(\"{printable_field_name}\");",
                 offset = offset,
                 field_name = self.field.field_name,
@@ -279,7 +280,7 @@ impl<'a> FieldWrapper<'a> {
                     .strip_suffix("_l")
                     .expect("expected loc field to end with _l")
             )),
-            FieldType::MaybeLoc => Some(format!(
+            NodeFieldType::MaybeLoc => Some(format!(
                 "{offset}self.{field_name}.as_ref().map(|loc| loc.print(\"{printable_field_name}\"));",
                 offset = offset,
                 field_name = self.field.field_name,
@@ -289,13 +290,13 @@ impl<'a> FieldWrapper<'a> {
                     .strip_suffix("_l")
                     .expect("expected loc field to end with _l"),
             )),
-            FieldType::Str => None,
-            FieldType::MaybeStr => None,
-            FieldType::Chars => None,
-            FieldType::StringValue => None,
-            FieldType::U8 => None,
-            FieldType::Usize => None,
-            FieldType::RawString => None,
+            NodeFieldType::Str => None,
+            NodeFieldType::MaybeStr => None,
+            NodeFieldType::Chars => None,
+            NodeFieldType::StringValue => None,
+            NodeFieldType::U8 => None,
+            NodeFieldType::Usize => None,
+            NodeFieldType::RawString => None,
         }
     }
 }

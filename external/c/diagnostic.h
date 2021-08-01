@@ -5,7 +5,7 @@
 #include "declare_blob.h"
 #include "declare_list.h"
 
-DECLARE_DUMMY_STRUCT(Diagnostic, 56);
+DECLARE_DUMMY_STRUCT(Diagnostic, 60);
 DECLARE_BLOB_FOR(Diagnostic);
 
 DECLARE_LIST_OF(Diagnostic_BLOB, LIST_OF_Diagnostic);

@@ -1,6 +1,23 @@
-use lib_ruby_parser_nodes::{FieldType, Node};
+use lib_ruby_parser_nodes::{Node, NodeFieldType};
 
-include!("../../tests/loc_matcher/loc_name.rs");
+#[derive(Debug)]
+pub enum LocName {
+    Begin,
+    End,
+    Expression,
+    Keyword,
+    Name,
+    Assignment,
+    Colon,
+    DoubleColon,
+    Else,
+    HeredocBody,
+    Operator,
+    Selector,
+    Assoc,
+    Question,
+    HeredocEnd,
+}
 
 impl LocName {
     fn to_str(&self) -> &'static str {
@@ -113,14 +130,18 @@ impl LocName {
         nodes
             .iter()
             .filter_map(|node| {
-                let field = node.fields.iter().find(|f| f.field_name == self.to_str())?;
+                let field = node
+                    .fields
+                    .0
+                    .iter()
+                    .find(|f| f.field_name == self.to_str())?;
                 match field.field_type {
-                    FieldType::Loc => Some(format!(
+                    NodeFieldType::Loc => Some(format!(
                         "Node::{struct_name}(inner) => inner.{loc_name}.clone().into(),",
                         struct_name = node.struct_name,
                         loc_name = self.to_str()
                     )),
-                    FieldType::MaybeLoc => Some(format!(
+                    NodeFieldType::MaybeLoc => Some(format!(
                         "Node::{struct_name}(inner) => inner.{loc_name}.clone(),",
                         struct_name = node.struct_name,
                         loc_name = self.to_str()

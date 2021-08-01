@@ -69,7 +69,7 @@ impl ParseHeredoc for Lexer {
                 }
 
                 if c.is_eof() || c == b'\r' || c == b'\n' {
-                    self.yyerror0(DiagnosticMessage::UnterminatedHeredocId);
+                    self.yyerror0(DiagnosticMessage::new_unterminated_heredoc_id());
                     return Some(Self::END_OF_INPUT);
                 }
             }
@@ -331,15 +331,15 @@ impl ParseHeredoc for Lexer {
     fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32 {
         self.heredoc_restore(&here);
         self.compile_error(
-            DiagnosticMessage::UnterminatedHeredoc {
-                heredoc_id: String::from_utf8_lossy(
+            DiagnosticMessage::new_unterminated_heredoc(
+                String::from_utf8_lossy(
                     self.buffer
                         .substr_at(eos, eos + len)
                         .expect("failed to get heredoc id for comparison"),
                 )
                 .into_owned()
                 .into(),
-            },
+            ),
             self.current_loc(),
         );
         self.token_flush();

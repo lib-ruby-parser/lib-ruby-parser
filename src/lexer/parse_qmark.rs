@@ -27,7 +27,7 @@ impl ParseQmark for Lexer {
         c = self.nextc();
         if c.is_eof() {
             self.compile_error(
-                DiagnosticMessage::IncompleteCharacterSyntax,
+                DiagnosticMessage::new_incomplete_character_syntax(),
                 self.current_loc(),
             );
             return Ok(Self::END_OF_INPUT);
@@ -66,13 +66,11 @@ impl ParseQmark for Lexer {
                     }
                 }
                 self.warn(
-                    DiagnosticMessage::AmbiguousTernaryOperator {
-                        condition: String::from_utf8_lossy(
-                            self.buffer.substr_at(start, ptr).unwrap(),
-                        )
-                        .into_owned()
-                        .into(),
-                    },
+                    DiagnosticMessage::new_ambiguous_ternary_operator(
+                        String::from_utf8_lossy(self.buffer.substr_at(start, ptr).unwrap())
+                            .into_owned()
+                            .into(),
+                    ),
                     self.loc(start - 1, start),
                 )
             }

@@ -117,13 +117,13 @@ mod tests {
     #[test]
     fn test_size_c() {
         use super::Diagnostic;
-        assert_eq!(std::mem::size_of::<Diagnostic>(), 56);
+        assert_eq!(std::mem::size_of::<Diagnostic>(), 60);
     }
 
     #[cfg(feature = "link-with-external-cpp-structures")]
     #[test]
     fn test_size_cpp() {
         use super::Diagnostic;
-        assert_eq!(std::mem::size_of::<Diagnostic>(), 40);
+        assert_eq!(std::mem::size_of::<Diagnostic>(), 44);
     }
 }

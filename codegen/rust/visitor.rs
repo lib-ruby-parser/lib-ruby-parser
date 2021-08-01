@@ -1,4 +1,4 @@
-use lib_ruby_parser_nodes::{Field, FieldType, Node};
+use lib_ruby_parser_nodes::{Node, NodeField, NodeFieldType};
 
 pub(crate) struct Visitor<'a> {
     nodes: &'a [Node],
@@ -138,23 +138,24 @@ impl<'a> NodeWrapper<'a> {
     pub(crate) fn visit_children(&self) -> Vec<String> {
         self.node
             .fields
+            .0
             .iter()
             .filter_map(|f| {
                 match f.field_type {
-                    FieldType::Node => {}
-                    FieldType::Nodes => {}
-                    FieldType::MaybeNode => {}
-                    FieldType::RegexOptions => {}
+                    NodeFieldType::Node => {}
+                    NodeFieldType::Nodes => {}
+                    NodeFieldType::MaybeNode => {}
+                    NodeFieldType::RegexOptions => {}
 
-                    FieldType::Loc
-                    | FieldType::MaybeLoc
-                    | FieldType::Str
-                    | FieldType::MaybeStr
-                    | FieldType::Chars
-                    | FieldType::StringValue
-                    | FieldType::U8
-                    | FieldType::Usize
-                    | FieldType::RawString => return None,
+                    NodeFieldType::Loc
+                    | NodeFieldType::MaybeLoc
+                    | NodeFieldType::Str
+                    | NodeFieldType::MaybeStr
+                    | NodeFieldType::Chars
+                    | NodeFieldType::StringValue
+                    | NodeFieldType::U8
+                    | NodeFieldType::Usize
+                    | NodeFieldType::RawString => return None,
                 }
 
                 let variant = field_name_to_variant(self.node, f);
@@ -169,7 +170,7 @@ impl<'a> NodeWrapper<'a> {
     }
 }
 
-fn field_name_to_variant(node: &Node, field: &Field) -> String {
+fn field_name_to_variant(node: &Node, field: &NodeField) -> String {
     match (&node.str_type[..], &field.field_name[..]) {
         (_, "statements") => return "Stmts".to_string(),
         (_, "call") => return "MethodCall".to_string(),
@@ -195,4 +196,10 @@ fn capitalize_word(s: &str) -> String {
         None => String::new(),
         Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
     }
+}
+
+pub(crate) fn codegen() {
+    let nodes = lib_ruby_parser_nodes::nodes().0;
+
+    Visitor::new(&nodes).write();
 }

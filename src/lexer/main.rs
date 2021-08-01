@@ -256,7 +256,10 @@ impl Lexer {
                 Some(b'\r') => {
                     if !self.buffer.cr_seen {
                         self.buffer.cr_seen = true;
-                        self.warn(DiagnosticMessage::SlashRAtMiddleOfLine, self.current_loc());
+                        self.warn(
+                            DiagnosticMessage::new_slash_r_at_middle_of_line(),
+                            self.current_loc(),
+                        );
                     }
                 }
 
@@ -355,7 +358,7 @@ impl Lexer {
                         self.buffer.pushback(&c);
                         if self.lex_state.is_spacearg(&c, space_seen) {
                             self.warn(
-                                DiagnosticMessage::DStarInterpretedAsArgPrefix,
+                                DiagnosticMessage::new_d_star_interpreted_as_arg_prefix(),
                                 self.current_loc(),
                             );
                             result = Self::tDSTAR;
@@ -380,7 +383,7 @@ impl Lexer {
                         self.buffer.pushback(&c);
                         if self.lex_state.is_spacearg(&c, space_seen) {
                             self.warn(
-                                DiagnosticMessage::StarInterpretedAsArgPrefix,
+                                DiagnosticMessage::new_star_interpreted_as_arg_prefix(),
                                 self.current_loc(),
                             );
                             result = Self::tSTAR;
@@ -437,7 +440,7 @@ impl Lexer {
                                 c = self.nextc();
                                 if c.is_eof() {
                                     self.compile_error(
-                                        DiagnosticMessage::EmbeddedDocumentMeetsEof,
+                                        DiagnosticMessage::new_embedded_document_meets_eof(),
                                         begin_loc,
                                     );
                                     return Self::END_OF_INPUT;
@@ -635,7 +638,7 @@ impl Lexer {
                                     .is_identchar(self.buffer.pcur + 1, self.buffer.pend))
                         {
                             self.warn(
-                                DiagnosticMessage::AmpersandInterpretedAsArgPrefix,
+                                DiagnosticMessage::new_ampersand_interpreted_as_arg_prefix(),
                                 self.current_loc(),
                             );
                         }
@@ -779,7 +782,10 @@ impl Lexer {
                         c = self.nextc();
                         if c == b'.' {
                             if self.paren_nest == 0 && self.buffer.is_looking_at_eol() {
-                                self.warn(DiagnosticMessage::TripleDotAtEol, self.current_loc());
+                                self.warn(
+                                    DiagnosticMessage::new_triple_dot_at_eol(),
+                                    self.current_loc(),
+                                );
                             } else if self.lpar_beg >= 0
                                 && self.lpar_beg + 1 == self.paren_nest
                                 && last_state.is_some(EXPR_LABEL)
@@ -800,9 +806,9 @@ impl Lexer {
                         };
                         self.parse_numeric(b'.');
                         if prev.is_digit() {
-                            self.yyerror0(DiagnosticMessage::FractionAfterNumeric);
+                            self.yyerror0(DiagnosticMessage::new_fraction_after_numeric());
                         } else {
-                            self.yyerror0(DiagnosticMessage::NoDigitsAfterDot);
+                            self.yyerror0(DiagnosticMessage::new_no_digits_after_dot());
                         }
                         self.lex_state.set(EXPR_END);
                         self.buffer.set_ptok(self.buffer.pcur);
@@ -978,7 +984,7 @@ impl Lexer {
                         result = Self::tLPAREN_ARG;
                     } else if self.lex_state.is_some(EXPR_ENDFN) && !self.is_lambda_beginning() {
                         self.warn(
-                            DiagnosticMessage::ParenthesesIterpretedAsArglist,
+                            DiagnosticMessage::new_parentheses_iterpreted_as_arglist(),
                             self.current_loc(),
                         );
                     }
@@ -1098,7 +1104,7 @@ impl Lexer {
                 Some(c) => {
                     if !self.is_identchar() {
                         self.compile_error(
-                            DiagnosticMessage::InvalidChar { c },
+                            DiagnosticMessage::new_invalid_char(c),
                             self.current_loc(),
                         );
                         self.token_flush();
@@ -1142,10 +1148,7 @@ impl Lexer {
             && space_seen & !c.is_space()
         {
             self.warn(
-                DiagnosticMessage::AmbiguousOperator {
-                    operator: op.into(),
-                    interpreted_as: syn.into(),
-                },
+                DiagnosticMessage::new_ambiguous_operator(op.into(), syn.into()),
                 self.current_loc(),
             );
         }
@@ -1186,12 +1189,9 @@ impl Lexer {
 
     pub(crate) fn arg_ambiguous(&mut self, c: u8, loc: Loc) -> bool {
         if c == b'/' {
-            self.warn(DiagnosticMessage::AmbiguousRegexp, loc);
+            self.warn(DiagnosticMessage::new_ambiguous_regexp(), loc);
         } else {
-            self.warn(
-                DiagnosticMessage::AmbiguousFirstArgument { operator: c },
-                loc,
-            );
+            self.warn(DiagnosticMessage::new_ambiguous_first_argument(c), loc);
         }
         true
     }
@@ -1288,7 +1288,7 @@ impl Lexer {
     pub(crate) fn multibyte_char_len(&mut self, ptr: usize) -> Option<usize> {
         let result = self._multibyte_char_len(ptr);
         if result.is_none() {
-            self.yyerror0(DiagnosticMessage::InvalidMultibyteChar);
+            self.yyerror0(DiagnosticMessage::new_invalid_multibyte_char());
         }
         result
     }
