@@ -160,7 +160,7 @@ mod token {
         }
     }
 
-    use crate::bytes::bytes::BytesBlob;
+    use crate::bytes::BytesBlob;
     extern "C" {
         fn lib_ruby_parser__internal__containers__token__new(
             token_type: i32,
