@@ -1,3 +1,5 @@
+use super::Loc;
+use crate::source::DecodedInput;
 use std::convert::TryInto;
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -7,94 +9,10 @@ type MaybeLoc = ExternalMaybeLoc;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type MaybeLoc = Option<Loc>;
 
-use crate::source::DecodedInput;
-
-#[cfg(not(feature = "compile-with-external-structures"))]
-mod loc {
-    /// Representation of any location in the given input
-    #[repr(C)]
-    pub struct Loc {
-        /// Begin of the `Loc` range
-        pub begin: usize,
-        /// End of the `Loc` range
-        pub end: usize,
-    }
-
-    impl Loc {
-        /// Constructs a new Loc struct
-        pub fn new(begin: usize, end: usize) -> Loc {
-            Self { begin, end }
-        }
-
-        /// Returns `begin` field of the `Loc`
-        pub fn begin(&self) -> usize {
-            self.begin
-        }
-
-        /// Returns `end` field of the `Loc`
-        pub fn end(&self) -> usize {
-            self.end
-        }
-    }
-}
-
-#[cfg(feature = "compile-with-external-structures")]
-mod loc {
-    use crate::containers::size::LOC_SIZE;
-
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub(crate) struct LocBlob {
-        blob: [u8; LOC_SIZE],
-    }
-
-    /// Byte sequence based on external implementation
-    #[repr(C)]
-    pub struct Loc {
-        pub(crate) blob: LocBlob,
-    }
-
-    extern "C" {
-        fn lib_ruby_parser__internal__containers__loc__make(begin: u64, end: u64) -> LocBlob;
-        fn lib_ruby_parser__internal__containers__loc__begin(blob: LocBlob) -> u64;
-        fn lib_ruby_parser__internal__containers__loc__end(blob: LocBlob) -> u64;
-    }
-
-    impl Loc {
-        /// Constructs a new Loc struct
-        pub fn new(begin: usize, end: usize) -> Loc {
-            let blob = unsafe {
-                lib_ruby_parser__internal__containers__loc__make(begin as u64, end as u64)
-            };
-            Self { blob }
-        }
-
-        /// Returns `begin` field of the `Loc`
-        pub fn begin(&self) -> usize {
-            unsafe { lib_ruby_parser__internal__containers__loc__begin(self.blob) as usize }
-        }
-
-        /// Returns `end` field of the `Loc`
-        pub fn end(&self) -> usize {
-            unsafe { lib_ruby_parser__internal__containers__loc__end(self.blob) as usize }
-        }
-    }
-}
-
-pub use loc::Loc;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use loc::LocBlob;
-
 impl Loc {
     /// Converts location to a range
     pub fn to_range(&self) -> std::ops::Range<usize> {
         self.begin()..self.end()
-    }
-}
-
-impl Default for Loc {
-    fn default() -> Self {
-        Self::new(0, 0)
     }
 }
 
@@ -201,19 +119,3 @@ impl std::fmt::Debug for Loc {
         f.write_str(&format!("{}...{}", self.begin(), self.end()))
     }
 }
-
-impl Clone for Loc {
-    fn clone(&self) -> Self {
-        Self::new(self.begin(), self.end())
-    }
-}
-
-impl PartialEq for Loc {
-    fn eq(&self, other: &Self) -> bool {
-        (self.begin() == other.begin()) && (self.end() == other.end())
-    }
-}
-
-impl Eq for Loc {}
-
-impl Copy for Loc {}
