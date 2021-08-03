@@ -12,14 +12,12 @@ mod node_mod;
 
 #[cfg(feature = "lib-ruby-parser-nodes")]
 pub(crate) fn codegen() {
-    use node_file::NodeFile;
-
     let nodes = lib_ruby_parser_nodes::nodes();
 
     std::fs::create_dir_all("src/nodes/types").unwrap();
 
     for node in nodes.0.iter() {
-        NodeFile::new(node).write();
+        node_file::codegen(node);
     }
 
     node_mod::codegen();
