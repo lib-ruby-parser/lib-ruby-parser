@@ -12,10 +12,7 @@ mod node_mod;
 
 #[cfg(feature = "lib-ruby-parser-nodes")]
 pub(crate) fn codegen() {
-    use get_loc_fn::GetLocFn;
-    use node_enum::NodeEnum;
     use node_file::NodeFile;
-    use node_mod::NodeMod;
 
     let nodes = lib_ruby_parser_nodes::nodes();
 
@@ -25,9 +22,9 @@ pub(crate) fn codegen() {
         NodeFile::new(node).write();
     }
 
-    NodeMod::new(&nodes.0).write();
-    NodeEnum::new(&nodes.0).write();
-    GetLocFn::new(&nodes.0).write();
+    node_mod::codegen();
+    node_enum::codegen();
+    get_loc_fn::codegen();
 }
 
 #[cfg(not(feature = "lib-ruby-parser-nodes"))]
