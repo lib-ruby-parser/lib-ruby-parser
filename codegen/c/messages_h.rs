@@ -1,7 +1,7 @@
 use crate::codegen::c::helpers;
 
 fn contents() -> String {
-    let messages = lib_ruby_parser_nodes::messages().messages();
+    let messages = lib_ruby_parser_nodes::messages();
 
     format!(
         "#ifndef LIB_RUBY_PARSER_EXTERNAL_C_SHARED_MESSAGES_H
