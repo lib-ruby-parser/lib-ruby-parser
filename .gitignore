@@ -4,7 +4,7 @@ test.rb
 out
 src/parser.rs
 src/nodes/types
-src/nodes/node_enum_gen.rs
+src/nodes/node_enum/native.rs
 src/traverse/visitor/visit_gen.rs
 tests/loc_matcher/loc_name_gen.rs
 src/reserved_words/list.rs

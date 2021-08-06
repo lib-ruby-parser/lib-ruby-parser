@@ -539,9 +539,7 @@ pub(crate) mod external {
     mod of_nodes {
         #[cfg(test)]
         fn make_one() -> crate::Node {
-            crate::Node::True(crate::nodes::True {
-                expression_l: crate::Loc::default(),
-            })
+            crate::Node::True(crate::nodes::True::new(crate::Loc::default()))
         }
 
         gen_list_impl_for!(

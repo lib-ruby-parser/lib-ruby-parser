@@ -10,6 +10,9 @@ pub use external::{struct_name};
 mod native;
 #[cfg(not(feature = \"compile-with-external-structures\"))]
 pub use native::{struct_name};
+
+mod internal;
+pub(crate) use internal::Internal{struct_name};
 ",
         generator = file!(),
         struct_name = node.struct_name

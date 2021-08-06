@@ -4,10 +4,9 @@ set -eux
 
 export RUST_BACKTRACE=1
 
-rustup default stable
-cargo test # --features "onig"
-
 rustup default nightly
+
+cargo test # --features "onig"
 
 cargo clean
 

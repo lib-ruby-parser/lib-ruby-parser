@@ -11,6 +11,18 @@ pub struct {struct_name} {{
 {fields_declaration}
 }}
 
+impl {struct_name} {{
+    {constructor}
+
+    {getters}
+
+    #[allow(dead_code)]
+    pub(crate) fn into_internal(self) -> super::Internal{struct_name} {{
+        let Self {{ {field_names} }} = self;
+        super::Internal{struct_name} {{ {field_names} }}
+    }}
+}}
+
 impl InnerNode for {struct_name} {{
     fn expression(&self) -> &Loc {{
         &self.expression_l
@@ -40,6 +52,9 @@ impl InnerNode for {struct_name} {{
         inspected_children = node.fields.map(&inspect_field).join("\n        "),
         str_type = node.str_type,
         print_with_locs = node.fields.flat_map(&print_with_locs).join("\n        "),
+        constructor = constructor(&node),
+        getters = node.fields.map(&getter).join("\n\n    "),
+        field_names = node.fields.map(&|f| f.field_name.to_string()).join(", ")
     )
 }
 
@@ -103,10 +118,10 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
     imports
 }
 
-fn field_declaration(field: &lib_ruby_parser_nodes::NodeField) -> String {
+fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
     use lib_ruby_parser_nodes::NodeFieldType;
 
-    let field_type = match field.field_type {
+    match field.field_type {
         NodeFieldType::Node => "Ptr<Node>",
         NodeFieldType::Nodes => "List<Node>",
         NodeFieldType::MaybeNode => "MaybePtr<Node>",
@@ -120,14 +135,16 @@ fn field_declaration(field: &lib_ruby_parser_nodes::NodeField) -> String {
         NodeFieldType::Usize => "usize",
         NodeFieldType::RawString => "StringPtr",
         NodeFieldType::RegexOptions => "MaybePtr<Node>",
-    };
+    }
+}
 
+fn field_declaration(field: &lib_ruby_parser_nodes::NodeField) -> String {
     format!(
         "{comment}
-    pub {field_name}: {field_type},",
+    {field_name}: {field_type},",
         comment = field.render_comment("///", 4),
         field_name = field.field_name,
-        field_type = field_type
+        field_type = field_type(field)
     )
 }
 
@@ -202,4 +219,51 @@ fn print_with_locs(field: &lib_ruby_parser_nodes::NodeField) -> Vec<String> {
         NodeFieldType::Usize => vec![],
         NodeFieldType::RawString => vec![],
     }
+}
+
+fn constructor(node: &lib_ruby_parser_nodes::Node) -> String {
+    let arglist = node
+        .fields
+        .map(&|field| {
+            format!(
+                "{name}: {t}",
+                name = field.field_name,
+                t = field_type(field)
+            )
+        })
+        .join(", ");
+
+    let fields = node
+        .fields
+        .map(&|field| field.field_name.to_string())
+        .join(", ");
+
+    format!(
+        "pub(crate) fn new({arglist}) -> Self {{
+        Self {{ {fields} }}
+    }}",
+        arglist = arglist,
+        fields = fields
+    )
+}
+
+fn getter(field: &lib_ruby_parser_nodes::NodeField) -> String {
+    let getter = format!("get_{}", field.field_name).replace("__", "_");
+    let getter_mut = format!("get_{}_mut", field.field_name).replace("__", "_");
+
+    format!(
+        "/// Returns {field_name} field
+    pub fn {getter}(&self) -> &{return_type} {{
+        &self.{field_name}
+    }}
+
+    /// Returns mutable {field_name} field
+    pub fn {getter_mut}(&mut self) -> &mut {return_type} {{
+        &mut self.{field_name}
+    }}",
+        field_name = field.field_name,
+        return_type = field_type(field),
+        getter = getter,
+        getter_mut = getter_mut
+    )
 }

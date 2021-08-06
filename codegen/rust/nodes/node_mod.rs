@@ -7,10 +7,15 @@ fn contents() -> String {
 {mods}
 
 {uses}
+
+pub(crate) mod internal {{
+    {internal_uses}
+}}
 ",
         generator = file!(),
         mods = nodes.map(&mod_).join("\n"),
-        uses = nodes.map(&use_).join("\n")
+        uses = nodes.map(&use_).join("\n"),
+        internal_uses = nodes.map(&internal_use).join("\n    ")
     )
 }
 
@@ -24,4 +29,13 @@ fn mod_(node: &lib_ruby_parser_nodes::Node) -> String {
 
 fn use_(node: &lib_ruby_parser_nodes::Node) -> String {
     format!("pub use {}::{};", node.filename, node.struct_name)
+}
+
+fn internal_use(node: &lib_ruby_parser_nodes::Node) -> String {
+    format!(
+        "#[allow(unused_imports)]
+    pub(crate) use super::{mod_name}::Internal{struct_name} as {struct_name};",
+        mod_name = node.filename,
+        struct_name = node.struct_name
+    )
 }

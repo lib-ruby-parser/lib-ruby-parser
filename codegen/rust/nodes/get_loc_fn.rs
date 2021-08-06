@@ -4,7 +4,6 @@ fn contents() -> String {
 
 use super::LocName;
 use lib_ruby_parser::Node;
-use lib_ruby_parser::nodes::*;
 
 #[cfg(feature = \"compile-with-external-structures\")]
 use lib_ruby_parser::containers::ExternalMaybeLoc;
@@ -99,18 +98,17 @@ fn map_loc(f: &dyn Fn(&LocName) -> String) -> Vec<String> {
 }
 
 fn loc_getter(loc_name: &LocName) -> String {
-    let mut nullables = vec![];
-    let mut not_nullables = vec![];
+    let mut variants = vec![];
 
     for node in lib_ruby_parser_nodes::nodes().0.iter() {
         for field in node.fields.0.iter() {
             if field.field_name == loc_name.to_str() {
                 match field.field_type {
                     lib_ruby_parser_nodes::NodeFieldType::Loc => {
-                        not_nullables.push(node.camelcase_name())
+                        variants.push((node.clone(), false))
                     }
                     lib_ruby_parser_nodes::NodeFieldType::MaybeLoc => {
-                        nullables.push(node.camelcase_name())
+                        variants.push((node.clone(), true))
                     }
                     _ => {}
                 }
@@ -118,43 +116,42 @@ fn loc_getter(loc_name: &LocName) -> String {
         }
     }
 
-    let mut nullables: Vec<String> = nullables
+    let statements: Vec<String> = variants
         .into_iter()
-        .map(|node_name| {
+        .map(|(node, nullable)| {
+            let get_loc = if nullable {
+                format!(
+                    "return inner.get_{loc_name}().clone()",
+                    loc_name = loc_name.to_str()
+                )
+            } else {
+                format!(
+                    "return inner.get_{loc_name}().clone().into()",
+                    loc_name = loc_name.to_str()
+                )
+            };
+
             format!(
-                "Node::{name}({name} {{ {loc_name}, .. }}) => {loc_name}.clone(),",
-                name = node_name,
-                loc_name = loc_name.to_str()
-            )
-        })
-        .collect();
-    let mut not_nullables: Vec<String> = not_nullables
-        .into_iter()
-        .map(|node_name| {
-            format!(
-                "Node::{name}({name} {{ {loc_name}, .. }}) => {loc_name}.clone().into(),",
-                name = node_name,
-                loc_name = loc_name.to_str()
+                "if let Some(inner) = node.as_{lower_node_name}() {{
+            {get_loc}
+        }}",
+                lower_node_name = node.lower_name(),
+                get_loc = get_loc
             )
         })
         .collect();
 
-    let mut branches = vec![];
-    branches.append(&mut nullables);
-    branches.append(&mut not_nullables);
-
-    let branches = branches.join("\n            ");
+    let statements = statements.join(" else ");
 
     format!(
         "fn get_{loc_name}(node: &Node) -> MaybeLoc {{
-        match node {{
-            {branches}
-            #[allow(unreachable_patterns)]
-            other => panic!(\"node {{}} doesn't support {loc_name} loc\", other.str_type()),
+        {statements}
+        else {{
+            panic!(\"node {{}} doesn't support {loc_name} loc\", node.str_type())
         }}
     }}",
         loc_name = loc_name.to_str(),
-        branches = branches
+        statements = statements
     )
 }
 

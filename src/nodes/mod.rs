@@ -1,5 +1,5 @@
-mod node_enum_gen;
-pub use node_enum_gen::Node;
+mod node_enum;
+pub use node_enum::Node;
 
 mod node;
 

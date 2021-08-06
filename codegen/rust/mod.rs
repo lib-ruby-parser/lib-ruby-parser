@@ -1,15 +1,15 @@
-#[cfg(feature = "rebuild-grammar")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod messages;
-#[cfg(feature = "rebuild-grammar")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod nodes;
-#[cfg(feature = "rebuild-grammar")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod reserved_words;
-#[cfg(feature = "rebuild-grammar")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod visitor;
 
 pub(crate) mod size_rs;
 
-#[cfg(feature = "rebuild-grammar")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 pub(crate) fn codegen() {
     reserved_words::codegen();
     visitor::codegen();
@@ -17,7 +17,7 @@ pub(crate) fn codegen() {
     nodes::codegen();
 }
 
-#[cfg(not(feature = "rebuild-grammar"))]
+#[cfg(not(feature = "lib-ruby-parser-nodes"))]
 pub(crate) fn codegen() {
     println!("Skipping codegen in {}", file!())
 }

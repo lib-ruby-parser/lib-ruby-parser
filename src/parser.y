@@ -1314,7 +1314,7 @@ use crate::Loc;
                 | tLPAREN mlhs_inner rparen
                     {
                         let mlhs_items: Vec<Node> = match $<Node>2 {
-                            Node::Mlhs(mlhs) => mlhs.items.into(),
+                            Node::Mlhs(mlhs) => mlhs.get_items().to_owned().into(),
                             other => unreachable!("unsupported mlhs item {:?}", other)
                         };
 
@@ -5719,7 +5719,7 @@ keyword_variable: kNIL
                     {
                         let node = $<BoxedNode>1;
                         if let Node::Lvar(node) = &*node {
-                            let name = node.name.as_str();
+                            let name = node.get_name().as_str();
                             match name.as_bytes()[..] {
                                 [b'_', n] if n >= b'1' && n <= b'9' => {
                                     if !self.static_env.is_declared(&name) && self.context.is_in_dynamic_block() {

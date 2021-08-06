@@ -1,4 +1,5 @@
 mod external;
+mod internal;
 mod mod_file;
 mod native;
 
@@ -7,5 +8,6 @@ pub(crate) fn codegen(node: &lib_ruby_parser_nodes::Node) {
 
     external::codegen(node);
     native::codegen(node);
+    internal::codegen(node);
     mod_file::codegen(node);
 }
