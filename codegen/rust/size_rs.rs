@@ -30,6 +30,9 @@ pub(crate) fn codegen() {
     println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_LOC_SIZE");
     let loc_size = env!("LIB_RUBY_PARSER_LOC_SIZE");
 
+    println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_MAYBE_LOC_SIZE");
+    let maybe_loc_size = env!("LIB_RUBY_PARSER_MAYBE_LOC_SIZE");
+
     println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_COMMENT_TYPE_SIZE");
     let comment_type_size = env!("LIB_RUBY_PARSER_COMMENT_TYPE_SIZE");
 
@@ -56,6 +59,7 @@ pub(crate) const TOKEN_SIZE: usize = {token_size};
 pub(crate) const SOURCE_LINE_SIZE: usize = {source_line_size};
 pub(crate) const ERROR_LEVEL_SIZE: usize = {error_level_size};
 pub(crate) const LOC_SIZE: usize = {loc_size};
+pub(crate) const MAYBE_LOC_SIZE: usize = {maybe_loc_size};
 pub(crate) const COMMENT_TYPE_SIZE: usize = {comment_type_size};
 pub(crate) const COMMENT_SIZE: usize = {comment_size};
 pub(crate) const MAGIC_COMMENT_KIND_SIZE: usize = {magic_comment_kind_size};
@@ -72,6 +76,7 @@ pub(crate) const DIAGNOSTIC_MESSAGE_SIZE: usize = {diagnostic_message_size};
         source_line_size = source_line_size,
         error_level_size = error_level_size,
         loc_size = loc_size,
+        maybe_loc_size = maybe_loc_size,
         comment_type_size = comment_type_size,
         comment_size = comment_size,
         magic_comment_kind_size = magic_comment_kind_size,

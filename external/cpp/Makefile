@@ -9,6 +9,7 @@ OBJECTS = \
 	list.o \
 	loc.o \
 	magic_comment.o \
+	maybe_loc.o \
 	maybe_ptr.o \
 	messages.o \
 	node.o \

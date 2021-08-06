@@ -11,6 +11,7 @@
 #include "loc.hpp"
 #include "comment.hpp"
 #include "messages.hpp"
+#include "maybe_loc.hpp"
 
 int main()
 {
@@ -24,6 +25,7 @@ int main()
     std::cout << "LIB_RUBY_PARSER_TOKEN_SIZE = " << sizeof(Token) << "\n";
     std::cout << "LIB_RUBY_PARSER_ERROR_LEVEL_SIZE = " << sizeof(ErrorLevel) << "\n";
     std::cout << "LIB_RUBY_PARSER_LOC_SIZE = " << sizeof(Loc) << "\n";
+    std::cout << "LIB_RUBY_PARSER_MAYBE_LOC_SIZE = " << sizeof(MaybeLoc) << "\n";
     std::cout << "LIB_RUBY_PARSER_COMMENT_TYPE_SIZE = " << sizeof(CommentType) << "\n";
     std::cout << "LIB_RUBY_PARSER_COMMENT_SIZE = " << sizeof(Comment) << "\n";
     std::cout << "LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE = " << sizeof(MagicCommentKind) << "\n";

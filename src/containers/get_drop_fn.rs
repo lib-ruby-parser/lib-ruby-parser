@@ -3,7 +3,8 @@ use std::ffi::c_void;
 
 pub type DropPtrFn = extern "C" fn(*mut c_void);
 pub type DropInPlaceFn = extern "C" fn(ptr: *mut c_void);
-pub type DropListBlobFn = unsafe extern "C" fn(blob: ListBlob, drop_item_in_place: DropInPlaceFn);
+pub(crate) type DropListBlobFn =
+    unsafe extern "C" fn(blob: ListBlob, drop_item_in_place: DropInPlaceFn);
 
 pub trait GetDropFn {
     fn get_drop_ptr_fn() -> DropPtrFn;

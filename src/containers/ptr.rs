@@ -26,7 +26,7 @@ pub(crate) mod external {
 
     #[repr(C)]
     #[derive(Clone, Copy)]
-    struct PtrBlob {
+    pub(crate) struct PtrBlob {
         blob: [u8; PTR_SIZE],
     }
 

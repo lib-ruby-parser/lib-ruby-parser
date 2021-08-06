@@ -11,6 +11,7 @@
 #include "loc.h"
 #include "comment.h"
 #include "messages.h"
+#include "maybe_loc.h"
 
 int main()
 {
@@ -24,6 +25,7 @@ int main()
     printf("LIB_RUBY_PARSER_TOKEN_SIZE = %lu\n", sizeof(Token));
     printf("LIB_RUBY_PARSER_ERROR_LEVEL_SIZE = %lu\n", sizeof(ErrorLevel));
     printf("LIB_RUBY_PARSER_LOC_SIZE = %lu\n", sizeof(Loc));
+    printf("LIB_RUBY_PARSER_MAYBE_LOC_SIZE = %lu\n", sizeof(MaybeLoc));
     printf("LIB_RUBY_PARSER_COMMENT_TYPE_SIZE = %lu\n", sizeof(CommentType));
     printf("LIB_RUBY_PARSER_COMMENT_SIZE = %lu\n", sizeof(Comment));
     printf("LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE = %lu\n", sizeof(MagicCommentKind));

@@ -1,16 +1,103 @@
+use crate::Loc;
+
+pub(crate) trait MaybeLocAPI {
+    fn some(loc: Loc) -> Self
+    where
+        Self: Sized;
+    fn none() -> Self
+    where
+        Self: Sized;
+}
+
+#[cfg(not(feature = "compile-with-external-structures"))]
+pub(crate) mod rust {
+    use super::{Loc, MaybeLocAPI};
+
+    /// Rust-compatible optional loc
+    pub type MaybeLoc = Option<Loc>;
+
+    impl MaybeLocAPI for MaybeLoc {
+        fn some(loc: Loc) -> Self {
+            Some(loc)
+        }
+
+        fn none() -> Self {
+            None
+        }
+    }
+}
+
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
-    use crate::Loc;
+    use super::{Loc, MaybeLocAPI};
+    use crate::containers::size::MAYBE_LOC_SIZE;
+    use crate::loc::LocBlob;
+
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub(crate) struct MaybeLocBlob {
+        blob: [u8; MAYBE_LOC_SIZE],
+    }
 
     /// C-compatible Option<Loc>
     #[repr(C)]
-    #[derive(PartialEq)]
-    pub enum MaybeLoc {
-        /// Equivalent of Option::Some
-        Some(Loc),
+    pub struct MaybeLoc {
+        pub(crate) blob: MaybeLocBlob,
+    }
 
-        /// Equivalent of Option::None
-        None,
+    extern "C" {
+        fn lib_ruby_parser__internal__containers__maybe_loc__make_some(
+            loc_blob: LocBlob,
+        ) -> MaybeLocBlob;
+        fn lib_ruby_parser__internal__containers__maybe_loc__make_none() -> MaybeLocBlob;
+        fn lib_ruby_parser__internal__containers__maybe_loc__is_some(blob: MaybeLocBlob) -> bool;
+        fn lib_ruby_parser__internal__containers__maybe_loc__is_none(blob: MaybeLocBlob) -> bool;
+        fn lib_ruby_parser__internal__containers__maybe_loc__borrow_loc(
+            blob: *const MaybeLocBlob,
+        ) -> *const LocBlob;
+        fn lib_ruby_parser__internal__containers__maybe_loc__into_loc(
+            blob: MaybeLocBlob,
+        ) -> LocBlob;
+    }
+
+    impl MaybeLocAPI for MaybeLoc {
+        fn some(loc: Loc) -> Self {
+            let blob =
+                unsafe { lib_ruby_parser__internal__containers__maybe_loc__make_some(loc.blob) };
+            Self { blob }
+        }
+
+        fn none() -> Self {
+            let blob = unsafe { lib_ruby_parser__internal__containers__maybe_loc__make_none() };
+            Self { blob }
+        }
+    }
+
+    impl MaybeLoc {
+        /// Equivalent of Option::is_some
+        pub fn is_some(&self) -> bool {
+            unsafe { lib_ruby_parser__internal__containers__maybe_loc__is_some(self.blob) }
+        }
+
+        /// Equivalent of Option::is_none
+        pub fn is_none(&self) -> bool {
+            unsafe { lib_ruby_parser__internal__containers__maybe_loc__is_none(self.blob) }
+        }
+
+        fn loc(&self) -> &Loc {
+            let maybe_loc_blob_ptr: *const MaybeLocBlob = &self.blob;
+            let loc_ptr = unsafe {
+                lib_ruby_parser__internal__containers__maybe_loc__borrow_loc(maybe_loc_blob_ptr)
+                    as *const Loc
+            };
+            unsafe { loc_ptr.as_ref().unwrap() }
+        }
+
+        fn into_loc(self) -> Loc {
+            let loc_blob =
+                unsafe { lib_ruby_parser__internal__containers__maybe_loc__into_loc(self.blob) };
+            Loc { blob: loc_blob }
+        }
     }
 
     impl std::fmt::Debug for MaybeLoc {
@@ -19,11 +106,17 @@ pub(crate) mod external {
         }
     }
 
+    impl PartialEq for MaybeLoc {
+        fn eq(&self, other: &Self) -> bool {
+            self.as_ref() == other.as_ref()
+        }
+    }
+
     impl Clone for MaybeLoc {
         fn clone(&self) -> Self {
             match self.as_ref() {
-                Some(loc) => Self::Some(loc.clone()),
-                None => Self::None,
+                Some(loc) => Self::some(loc.clone()),
+                None => Self::none(),
             }
         }
     }
@@ -43,9 +136,10 @@ pub(crate) mod external {
 
         /// Equivalent of Option::unwrap
         pub fn unwrap(self) -> Loc {
-            match self {
-                MaybeLoc::Some(loc) => loc,
-                MaybeLoc::None => panic!("failed to unwrap MaybeLoc::None"),
+            if self.is_some() {
+                return self.loc().to_owned();
+            } else {
+                panic!("failed to unwrap MaybeLoc::None")
             }
         }
 
@@ -54,17 +148,18 @@ pub(crate) mod external {
         where
             F: FnOnce() -> Loc,
         {
-            match self {
-                MaybeLoc::Some(loc) => loc,
-                MaybeLoc::None => f(),
+            match self.as_ref() {
+                Some(loc) => loc.to_owned(),
+                None => f(),
             }
         }
 
         /// Equivalent of Option::expect
         pub fn expect(self, message: &str) -> Loc {
-            match self {
-                MaybeLoc::Some(loc) => loc,
-                MaybeLoc::None => panic!("{}", message),
+            if self.is_some() {
+                self.into_loc()
+            } else {
+                panic!("{}", message)
             }
         }
 
@@ -73,34 +168,26 @@ pub(crate) mod external {
         where
             F: FnOnce(Loc) -> Loc,
         {
-            match self {
-                MaybeLoc::Some(loc) => Self::Some(f(loc)),
-                MaybeLoc::None => Self::None,
+            if self.is_some() {
+                Self::some(f(self.into_loc()))
+            } else {
+                Self::none()
             }
-        }
-
-        /// Equivalent of Option::is_none
-        pub fn is_none(&self) -> bool {
-            matches!(self, MaybeLoc::None)
-        }
-
-        /// Equivalent of Option::is_some
-        pub fn is_some(&self) -> bool {
-            matches!(self, MaybeLoc::Some(_))
         }
 
         /// Equivalent of Option::as_ref
         pub fn as_ref(&self) -> Option<&Loc> {
-            match self {
-                MaybeLoc::Some(loc) => Some(loc),
-                MaybeLoc::None => None,
+            if self.is_some() {
+                Some(self.loc())
+            } else {
+                None
             }
         }
     }
 
     impl From<Loc> for MaybeLoc {
         fn from(loc: Loc) -> Self {
-            Self::Some(loc)
+            Self::some(loc)
         }
     }
 }

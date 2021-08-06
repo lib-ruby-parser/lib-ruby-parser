@@ -23,6 +23,7 @@ run_c_tests() {
     LIB_RUBY_PARSER_SOURCE_LINE_SIZE=24 \
     LIB_RUBY_PARSER_ERROR_LEVEL_SIZE=4 \
     LIB_RUBY_PARSER_LOC_SIZE=16 \
+    LIB_RUBY_PARSER_MAYBE_LOC_SIZE=24 \
     LIB_RUBY_PARSER_COMMENT_TYPE_SIZE=4 \
     LIB_RUBY_PARSER_COMMENT_SIZE=24 \
     LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE=4 \
@@ -32,6 +33,7 @@ run_c_tests() {
 }
 
 # Linking fails on building doctests with ASAN enabled
+run_c_tests --lib -- test_size
 run_c_tests --lib
 run_c_tests --test parser_test
 run_c_tests --test lexer_test
@@ -51,6 +53,7 @@ run_cpp_tests() {
     LIB_RUBY_PARSER_SOURCE_LINE_SIZE=24 \
     LIB_RUBY_PARSER_ERROR_LEVEL_SIZE=4 \
     LIB_RUBY_PARSER_LOC_SIZE=16 \
+    LIB_RUBY_PARSER_MAYBE_LOC_SIZE=24 \
     LIB_RUBY_PARSER_COMMENT_TYPE_SIZE=4 \
     LIB_RUBY_PARSER_COMMENT_SIZE=24 \
     LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE=4 \
@@ -60,6 +63,7 @@ run_cpp_tests() {
 }
 
 # Linking fails on building doctests with ASAN enabled
+run_cpp_tests --lib -- test_size
 run_cpp_tests --lib
 run_cpp_tests --test parser_test
 run_cpp_tests --test lexer_test
