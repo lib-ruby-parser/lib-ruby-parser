@@ -23,6 +23,10 @@ impl {struct_name} {{
     }}
 }}
 
+extern \"C\" {{
+    {extern_fns}
+}}
+
 impl InnerNode for {struct_name} {{
     fn expression(&self) -> &Loc {{
         &self.expression_l
@@ -54,7 +58,8 @@ impl InnerNode for {struct_name} {{
         print_with_locs = node.fields.flat_map(&print_with_locs).join("\n        "),
         constructor = constructor(&node),
         getters = node.fields.map(&getter).join("\n\n    "),
-        field_names = node.fields.map(&|f| f.field_name.to_string()).join(", ")
+        field_names = node.fields.map(&|f| f.field_name.to_string()).join(", "),
+        extern_fns = extern_fns(&node).join("\n    "),
     )
 }
 
@@ -82,7 +87,7 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::StringValue) {
-        imports.push("use crate::StringValue;");
+        imports.push("use crate::Bytes;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode)
@@ -130,7 +135,7 @@ fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
         NodeFieldType::Str => "StringPtr",
         NodeFieldType::MaybeStr => "MaybeStringPtr",
         NodeFieldType::Chars => "MaybeStringPtr",
-        NodeFieldType::StringValue => "StringValue",
+        NodeFieldType::StringValue => "Bytes",
         NodeFieldType::U8 => "u8",
         NodeFieldType::Usize => "usize",
         NodeFieldType::RawString => "StringPtr",
@@ -252,12 +257,12 @@ fn getter(field: &lib_ruby_parser_nodes::NodeField) -> String {
     let getter_mut = format!("get_{}_mut", field.field_name).replace("__", "_");
 
     format!(
-        "/// Returns {field_name} field
+        "/// Returns `{field_name}` field
     pub fn {getter}(&self) -> &{return_type} {{
         &self.{field_name}
     }}
 
-    /// Returns mutable {field_name} field
+    /// Returns mutable `{field_name}` field
     pub fn {getter_mut}(&mut self) -> &mut {return_type} {{
         &mut self.{field_name}
     }}",
@@ -266,4 +271,49 @@ fn getter(field: &lib_ruby_parser_nodes::NodeField) -> String {
         getter = getter,
         getter_mut = getter_mut
     )
+}
+
+fn blob_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
+    use lib_ruby_parser_nodes::NodeFieldType;
+
+    match field.field_type {
+        NodeFieldType::Node => "PtrBlob",
+        NodeFieldType::Nodes => "ListBlob",
+        NodeFieldType::MaybeNode => "MaybePtrBlob",
+        NodeFieldType::Loc => "LocBlob",
+        NodeFieldType::MaybeLoc => "MaybeLocBlob",
+        NodeFieldType::Str => "StringPtrBlob",
+        NodeFieldType::MaybeStr => "MaybeStringPtrBlob",
+        NodeFieldType::Chars => "MaybeStringPtrBlob",
+        NodeFieldType::StringValue => "BytesBlob",
+        NodeFieldType::U8 => "u8",
+        NodeFieldType::Usize => "u64",
+        NodeFieldType::RawString => "StringPtrBlob",
+        NodeFieldType::RegexOptions => "MaybePtrBlob",
+    }
+}
+
+fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
+    let mut result = vec![];
+    return result;
+
+    let prefix = format!(
+        "lib_ruby_parser__internal__containers__nodes__{}",
+        node.lower_name()
+    );
+
+    {
+        let ctor_args = node
+            .fields
+            .map(&|field| format!("{}: {}", field.field_name, blob_type(field)))
+            .join(", ");
+        result.push(format!(
+            "fn {prefix}__make({ctor_args}) -> {node_type}Blob;",
+            prefix = prefix,
+            ctor_args = ctor_args,
+            node_type = node.camelcase_name()
+        ));
+    }
+
+    result
 }

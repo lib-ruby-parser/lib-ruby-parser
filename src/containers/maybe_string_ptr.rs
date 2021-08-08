@@ -3,18 +3,15 @@ pub(crate) mod rust {
     /// Rust-compatible nullable string container
     pub type MaybeStringPtr = Option<String>;
 
-    use super::MaybeStringPtrSome;
-    impl MaybeStringPtrSome for MaybeStringPtr {
+    use super::MaybeStringPtrAPI;
+    impl MaybeStringPtrAPI for MaybeStringPtr {
         fn some<T>(value: T) -> Self
         where
             T: Into<String>,
         {
             Some(value.into())
         }
-    }
 
-    use super::MaybeStringPtrNone;
-    impl MaybeStringPtrNone for MaybeStringPtr {
         fn none() -> Self {
             None
         }
@@ -23,24 +20,54 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
-    use super::{MaybeStringPtrNone, MaybeStringPtrSome};
+    use super::MaybeStringPtrAPI;
+    use crate::containers::size::MAYBE_STRING_PTR_SIZE;
     use crate::containers::ExternalStringPtr;
 
-    /// C-compatible nullable String container
+    #[repr(C)]
+    #[derive(Debug, Clone, Copy)]
+    pub(crate) struct MaybeStringPtrBlob {
+        blob: [u8; MAYBE_STRING_PTR_SIZE],
+    }
+
+    /// C-compatible nullable MaybeString container
     #[repr(C)]
     pub struct MaybeStringPtr {
-        ptr: *mut u8,
-        len: usize,
+        pub(crate) blob: MaybeStringPtrBlob,
+    }
+
+    extern "C" {
+        fn lib_ruby_parser__internal__containers__maybe_string_ptr__make_some(
+            ptr: *const u8,
+            suze: u64,
+        ) -> MaybeStringPtrBlob;
+        fn lib_ruby_parser__internal__containers__maybe_string_ptr__make_none() -> MaybeStringPtrBlob;
+
+        fn lib_ruby_parser__internal__containers__maybe_string_ptr__is_some(
+            blob: *const MaybeStringPtrBlob,
+        ) -> bool;
+        fn lib_ruby_parser__internal__containers__maybe_string_ptr__is_none(
+            blob: *const MaybeStringPtrBlob,
+        ) -> bool;
+
+        fn lib_ruby_parser__internal__containers__maybe_string_ptr__free(
+            blob: *mut MaybeStringPtrBlob,
+        );
+        fn lib_ruby_parser__internal__containers__maybe_string_ptr__get_raw_const(
+            blob: *const MaybeStringPtrBlob,
+        ) -> *const u8;
+        fn lib_ruby_parser__internal__containers__maybe_string_ptr__into_raw(
+            blob: *mut MaybeStringPtrBlob,
+        ) -> *mut u8;
+        fn lib_ruby_parser__internal__containers__maybe_string_ptr__len(
+            blob: *const MaybeStringPtrBlob,
+        ) -> u64;
     }
 
     impl Drop for MaybeStringPtr {
         fn drop(&mut self) {
-            if self.ptr.is_null() {
-                return;
-            }
-
-            drop(unsafe { Box::from_raw(self.ptr) });
-            self.ptr = std::ptr::null_mut();
+            let blob_ptr: *mut MaybeStringPtrBlob = &mut self.blob;
+            unsafe { lib_ruby_parser__internal__containers__maybe_string_ptr__free(blob_ptr) }
         }
     }
 
@@ -66,35 +93,51 @@ pub(crate) mod external {
     }
 
     impl MaybeStringPtr {
-        /// Equivalent of Option::unwrap()
-        pub fn unwrap(self) -> ExternalStringPtr {
-            let len = self.len;
-            let ptr = self.take();
+        /// Equivalent of Option::is_some()
+        pub fn is_some(&self) -> bool {
+            let blob_ptr: *const MaybeStringPtrBlob = &self.blob;
+            unsafe { lib_ruby_parser__internal__containers__maybe_string_ptr__is_some(blob_ptr) }
+        }
 
-            if ptr.is_null() {
-                panic!("failed to unwrap null StringPtr")
-            } else {
+        /// Equivalent of Option::is_none()
+        pub fn is_none(&self) -> bool {
+            let blob_ptr: *const MaybeStringPtrBlob = &self.blob;
+            unsafe { lib_ruby_parser__internal__containers__maybe_string_ptr__is_none(blob_ptr) }
+        }
+
+        /// Equivalent of Option::unwrap()
+        pub fn unwrap(mut self) -> ExternalStringPtr {
+            if self.is_some() {
+                let blob_ptr: *mut MaybeStringPtrBlob = &mut self.blob;
+                let len = unsafe {
+                    lib_ruby_parser__internal__containers__maybe_string_ptr__len(blob_ptr) as usize
+                };
+                let ptr = unsafe {
+                    lib_ruby_parser__internal__containers__maybe_string_ptr__into_raw(blob_ptr)
+                };
                 let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
                 let s = String::from_utf8(bytes).unwrap();
                 ExternalStringPtr::from(s)
+            } else {
+                panic!("failed to unwrap null MaybeStringPtr")
             }
-        }
-
-        /// Returns raw pointer
-        pub fn take(mut self) -> *mut u8 {
-            let ptr = self.ptr;
-            self.ptr = std::ptr::null_mut();
-            ptr
         }
 
         /// Equivalent of Option::as_ref
         pub fn as_ref(&self) -> Option<&str> {
-            if self.ptr.is_null() {
-                None
-            } else {
-                let bytes = unsafe { std::slice::from_raw_parts(self.ptr, self.len) };
+            if self.is_some() {
+                let blob_ptr: *const MaybeStringPtrBlob = &self.blob;
+                let len = unsafe {
+                    lib_ruby_parser__internal__containers__maybe_string_ptr__len(blob_ptr) as usize
+                };
+                let ptr = unsafe {
+                    lib_ruby_parser__internal__containers__maybe_string_ptr__get_raw_const(blob_ptr)
+                };
+                let bytes = unsafe { std::slice::from_raw_parts(ptr, len) };
                 let s = std::str::from_utf8(bytes).unwrap();
                 Some(s)
+            } else {
+                None
             }
         }
     }
@@ -108,7 +151,7 @@ pub(crate) mod external {
         }
     }
 
-    impl MaybeStringPtrSome for MaybeStringPtr {
+    impl MaybeStringPtrAPI for MaybeStringPtr {
         fn some<T>(value: T) -> Self
         where
             T: Into<String>,
@@ -116,18 +159,17 @@ pub(crate) mod external {
             let value: String = value.into();
             let mut bytes = value.into_bytes();
             let ptr = bytes.as_mut_ptr();
-            let len = bytes.len();
-            std::mem::forget(bytes);
-            Self { ptr, len }
+            let len = bytes.len() as u64;
+            let blob = unsafe {
+                lib_ruby_parser__internal__containers__maybe_string_ptr__make_some(ptr, len)
+            };
+            Self { blob }
         }
-    }
 
-    impl MaybeStringPtrNone for MaybeStringPtr {
         fn none() -> Self {
-            Self {
-                ptr: std::ptr::null_mut(),
-                len: 0,
-            }
+            let blob =
+                unsafe { lib_ruby_parser__internal__containers__maybe_string_ptr__make_none() };
+            Self { blob }
         }
     }
 
@@ -139,12 +181,12 @@ pub(crate) mod external {
 
     #[cfg(test)]
     mod tests {
-        use super::{MaybeStringPtr, MaybeStringPtrNone, MaybeStringPtrSome};
+        use super::{MaybeStringPtr, MaybeStringPtrAPI};
 
         #[test]
         fn test_some() {
-            let s = MaybeStringPtr::some("foo");
-            assert_eq!(s.as_ref(), Some("foo"))
+            let s = MaybeStringPtr::some("foobar");
+            assert_eq!(s.as_ref(), Some("foobar"))
         }
 
         #[test]
@@ -155,20 +197,18 @@ pub(crate) mod external {
 
         #[test]
         fn test_as_ref() {
-            let s = MaybeStringPtr::some("foo");
-            assert_eq!(s.as_ref(), Some("foo"))
+            let s = MaybeStringPtr::some("foobar");
+            assert_eq!(s.as_ref(), Some("foobar"))
         }
     }
 }
 
-pub(crate) trait MaybeStringPtrSome {
+pub(crate) trait MaybeStringPtrAPI {
     fn some<T>(value: T) -> Self
     where
         T: Into<String>,
         Self: Sized;
-}
 
-pub(crate) trait MaybeStringPtrNone {
     fn none() -> Self
     where
         Self: Sized;

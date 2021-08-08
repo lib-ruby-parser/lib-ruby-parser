@@ -47,15 +47,13 @@ type StringPtr = ExternalStringPtr;
 type StringPtr = String;
 
 use crate::containers::helpers::{
-    ListTakeFirst, MaybeLocAPI, MaybePtrNone, MaybePtrSome, MaybeStringPtrNone, MaybeStringPtrSome,
-    UnPtr,
+    ListTakeFirst, MaybeLocAPI, MaybePtrNone, MaybePtrSome, MaybeStringPtrAPI, UnPtr,
 };
 use crate::error::Diagnostics;
 use crate::nodes::internal;
 use crate::nodes::*;
 use crate::LexState;
 use crate::Loc;
-use crate::StringValue;
 use crate::{
     Bytes, Context, CurrentArgStack, Lexer, MaxNumparamStack, Node, StaticEnvironment, Token,
     VariablesStack,
@@ -240,7 +238,7 @@ impl Builder {
     pub(crate) fn str_node(
         &self,
         begin_t: Option<Ptr<Token>>,
-        value: StringValue,
+        value: Bytes,
         parts: Vec<Node>,
         end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
@@ -270,7 +268,7 @@ impl Builder {
 
     pub(crate) fn string_internal(&self, string_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&string_t);
-        let value = StringValue::new(string_t);
+        let value = string_t.unptr().into_token_value();
         Box::new(Node::Str(Str::new(
             value,
             MaybeLoc::none(),
@@ -286,7 +284,7 @@ impl Builder {
         end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         if parts.is_empty() {
-            return self.str_node(begin_t, StringValue::empty(), parts, end_t);
+            return self.str_node(begin_t, Bytes::empty(), parts, end_t);
         } else if parts.len() == 1 {
             let part = parts.first().unwrap();
 
@@ -348,7 +346,7 @@ impl Builder {
         let end_l = MaybeLoc::none();
         let expression_l = str_loc;
 
-        let value = StringValue::new(char_t);
+        let value = char_t.unptr().into_token_value();
         Box::new(Node::Str(Str::new(value, begin_l, end_l, expression_l)))
     }
 
@@ -358,8 +356,8 @@ impl Builder {
 
     // Symbols
 
-    fn validate_sym_value(&self, value: &StringValue, loc: &Loc) {
-        if !value.bytes.is_valid_utf8() {
+    fn validate_sym_value(&self, value: &Bytes, loc: &Loc) {
+        if !value.is_valid_utf8() {
             self.error(DiagnosticMessage::new_invalid_symbol("UTF-8".into()), loc)
         }
     }
@@ -367,7 +365,7 @@ impl Builder {
     pub(crate) fn symbol(&self, start_t: Ptr<Token>, value_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&start_t).join(&self.loc(&value_t));
         let begin_l = self.loc(&start_t).into();
-        let value = StringValue::new(value_t);
+        let value = value_t.unptr().into_token_value();
         self.validate_sym_value(&value, &expression_l);
         Box::new(Node::Sym(Sym::new(
             value,
@@ -379,7 +377,7 @@ impl Builder {
 
     pub(crate) fn symbol_internal(&self, symbol_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&symbol_t);
-        let value = StringValue::new(symbol_t);
+        let value = symbol_t.unptr().into_token_value();
         self.validate_sym_value(&value, &expression_l);
         Box::new(Node::Sym(Sym::new(
             value,
@@ -477,7 +475,7 @@ impl Builder {
                 if let Some(part) = part.as_str_mut() {
                     let value = part.get_value_mut();
                     Self::dedent_string(value, dedent_level);
-                    if value.bytes.is_empty() {
+                    if value.is_empty() {
                         idx_to_drop.push(idx);
                     }
                 } else if part.is_begin()
@@ -510,18 +508,18 @@ impl Builder {
 
     const TAB_WIDTH: usize = 8;
 
-    pub(crate) fn dedent_string(s: &mut StringValue, width: usize) {
+    pub(crate) fn dedent_string(s: &mut Bytes, width: usize) {
         let mut col: usize = 0;
         let mut i: usize = 0;
 
         loop {
-            if !(i < s.bytes.len() && col < width) {
+            if !(i < s.len() && col < width) {
                 break;
             }
 
-            if s.bytes[i] == b' ' {
+            if s[i] == b' ' {
                 col += 1;
-            } else if s.bytes[i] == b'\t' {
+            } else if s[i] == b'\t' {
                 let n = Self::TAB_WIDTH * (col / Self::TAB_WIDTH + 1);
                 if n > Self::TAB_WIDTH {
                     break;
@@ -534,7 +532,7 @@ impl Builder {
             i += 1;
         }
 
-        s.bytes = Bytes::new(s.bytes.as_raw()[i..].to_vec());
+        *s = Bytes::new(s.as_raw()[i..].to_vec());
     }
 
     // Regular expressions
@@ -737,7 +735,7 @@ impl Builder {
         let colon_l = key_loc.with_begin(key_loc.end() - 1);
         let expression_l = key_loc.join(&value.expression());
 
-        let key = StringValue::new(key_t);
+        let key = key_t.unptr().into_token_value();
         self.validate_sym_value(&key, &key_l);
 
         Box::new(Node::Pair(Pair::new(
@@ -3073,7 +3071,7 @@ impl Builder {
                 expression_l,
             } = string.into_str().into_internal();
 
-            let name = value.bytes.to_string_lossy();
+            let name = value.to_string_lossy();
             let mut name_l = expression_l.clone();
 
             self.check_lvar_name(&name, &name_l)?;
@@ -3630,7 +3628,7 @@ impl Builder {
 
         for node in nodes {
             if let Some(str) = node.as_str() {
-                let value = str.get_value().bytes.to_string_lossy();
+                let value = str.get_value().to_string_lossy();
                 result.push_str(&value)
             } else if let Some(begin) = node.as_begin() {
                 let statements = begin.get_statements();

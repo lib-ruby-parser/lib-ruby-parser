@@ -12,6 +12,9 @@ pub(crate) fn codegen() {
     println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_STRING_PTR_SIZE");
     let string_ptr_size = env!("LIB_RUBY_PARSER_STRING_PTR_SIZE");
 
+    println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_MAYBE_STRING_PTR_SIZE");
+    let maybe_string_ptr_size = env!("LIB_RUBY_PARSER_MAYBE_STRING_PTR_SIZE");
+
     println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE");
     let shared_byte_list_size = env!("LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE");
 
@@ -53,6 +56,7 @@ pub(crate) fn codegen() {
 pub(crate) const MAYBE_PTR_SIZE: usize = {maybe_ptr_size};
 pub(crate) const LIST_SIZE: usize = {list_size};
 pub(crate) const STRING_PTR_SIZE: usize = {string_ptr_size};
+pub(crate) const MAYBE_STRING_PTR_SIZE: usize = {maybe_string_ptr_size};
 pub(crate) const SHARED_BYTE_LIST_SIZE: usize = {shared_byte_list_size};
 pub(crate) const BYTES_SIZE: usize = {bytes_size};
 pub(crate) const TOKEN_SIZE: usize = {token_size};
@@ -70,6 +74,7 @@ pub(crate) const DIAGNOSTIC_MESSAGE_SIZE: usize = {diagnostic_message_size};
         maybe_ptr_size = maybe_ptr_size,
         list_size = list_size,
         string_ptr_size = string_ptr_size,
+        maybe_string_ptr_size = maybe_string_ptr_size,
         shared_byte_list_size = shared_byte_list_size,
         bytes_size = bytes_size,
         token_size = token_size,

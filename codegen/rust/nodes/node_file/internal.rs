@@ -4,6 +4,7 @@ fn contents(node: &lib_ruby_parser_nodes::Node) -> String {
 
 {imports}
 
+#[repr(C)]
 pub(crate) struct Internal{struct_name} {{
     {fields_declaration}
 }}
@@ -37,7 +38,7 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::StringValue) {
-        imports.push("use crate::StringValue;");
+        imports.push("use crate::Bytes;");
     }
 
     enum ImportType {
@@ -111,7 +112,7 @@ fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
         NodeFieldType::Str => "StringPtr",
         NodeFieldType::MaybeStr => "MaybeStringPtr",
         NodeFieldType::Chars => "MaybeStringPtr",
-        NodeFieldType::StringValue => "StringValue",
+        NodeFieldType::StringValue => "Bytes",
         NodeFieldType::U8 => "u8",
         NodeFieldType::Usize => "usize",
         NodeFieldType::RawString => "StringPtr",

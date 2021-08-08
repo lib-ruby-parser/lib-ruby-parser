@@ -11,7 +11,7 @@ pub(crate) mod helpers {
         list::TakeFirst as ListTakeFirst,
         maybe_loc::MaybeLocAPI,
         maybe_ptr::{MaybePtrNone, MaybePtrSome},
-        maybe_string_ptr::{MaybeStringPtrNone, MaybeStringPtrSome},
+        maybe_string_ptr::MaybeStringPtrAPI,
         ptr::UnPtr,
     };
 }
@@ -32,7 +32,11 @@ pub(crate) use maybe_loc::external::MaybeLocBlob;
 #[cfg(feature = "compile-with-external-structures")]
 pub use maybe_ptr::external::MaybePtr as ExternalMaybePtr;
 #[cfg(feature = "compile-with-external-structures")]
+pub(crate) use maybe_ptr::external::MaybePtrBlob;
+#[cfg(feature = "compile-with-external-structures")]
 pub use maybe_string_ptr::external::MaybeStringPtr as ExternalMaybeStringPtr;
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) use maybe_string_ptr::external::MaybeStringPtrBlob;
 #[cfg(feature = "compile-with-external-structures")]
 pub use ptr::external::Ptr as ExternalPtr;
 #[cfg(feature = "compile-with-external-structures")]

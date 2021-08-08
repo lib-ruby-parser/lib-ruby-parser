@@ -12,6 +12,7 @@
 #include "comment.hpp"
 #include "messages.hpp"
 #include "maybe_loc.hpp"
+#include "maybe_string_ptr.hpp"
 
 int main()
 {
@@ -19,6 +20,7 @@ int main()
     std::cout << "LIB_RUBY_PARSER_MAYBE_PTR_SIZE = " << sizeof(MAYBE_PTR) << "\n";
     std::cout << "LIB_RUBY_PARSER_LIST_SIZE = " << sizeof(LIST_OF_Node) << "\n";
     std::cout << "LIB_RUBY_PARSER_STRING_PTR_SIZE = " << sizeof(STRING_PTR) << "\n";
+    std::cout << "LIB_RUBY_PARSER_MAYBE_STRING_PTR_SIZE = " << sizeof(MAYBE_STRING_PTR) << "\n";
     std::cout << "LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE = " << sizeof(SHARED_BYTE_LIST) << "\n";
 
     std::cout << "LIB_RUBY_PARSER_BYTES_SIZE = " << sizeof(Bytes) << "\n";

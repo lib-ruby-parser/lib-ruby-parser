@@ -5,7 +5,7 @@
 #include "declare_blob.hpp"
 #include "declare_list.hpp"
 
-DECLARE_DUMMY_STRUCT(Node, 184);
+DECLARE_DUMMY_STRUCT(Node, 180);
 DECLARE_BLOB_FOR(Node);
 
 DECLARE_LIST_OF(Node_BLOB, LIST_OF_Node);

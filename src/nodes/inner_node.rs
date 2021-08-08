@@ -26,9 +26,9 @@ type StringPtr = ExternalStringPtr;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type StringPtr = String;
 
+use crate::Bytes;
 use crate::Loc;
 use crate::Node;
-use crate::StringValue;
 
 pub trait InnerNode {
     fn expression(&self) -> &Loc;
@@ -131,8 +131,8 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_string_value(&mut self, s: &StringValue) {
-        self.push_str(&StringPtr::from(s.bytes.to_string_lossy()))
+    pub(crate) fn push_string_value(&mut self, bytes: &Bytes) {
+        self.push_str(&StringPtr::from(bytes.to_string_lossy()))
     }
 
     pub(crate) fn strings(&mut self) -> Vec<String> {

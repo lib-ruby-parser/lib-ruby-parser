@@ -82,7 +82,7 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::StringValue) {
-        imports.push("use crate::StringValue;");
+        imports.push("use crate::Bytes;");
     }
 
     imports
@@ -99,7 +99,7 @@ fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
         NodeFieldType::Str => "String",
         NodeFieldType::MaybeStr => "Option<String>",
         NodeFieldType::Chars => "Option<String>",
-        NodeFieldType::StringValue => "StringValue",
+        NodeFieldType::StringValue => "Bytes",
         NodeFieldType::U8 => "u8",
         NodeFieldType::Usize => "usize",
         NodeFieldType::RawString => "String",

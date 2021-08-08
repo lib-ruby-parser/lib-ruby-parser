@@ -29,7 +29,7 @@ pub(crate) mod external {
 
     #[repr(C)]
     #[derive(Clone, Copy)]
-    struct MaybePtrBlob {
+    pub(crate) struct MaybePtrBlob {
         blob: [u8; MAYBE_PTR_SIZE],
     }
 

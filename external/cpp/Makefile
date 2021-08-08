@@ -11,6 +11,7 @@ OBJECTS = \
 	magic_comment.o \
 	maybe_loc.o \
 	maybe_ptr.o \
+	maybe_string_ptr.o \
 	messages.o \
 	node.o \
 	ptr.o \

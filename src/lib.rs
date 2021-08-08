@@ -82,9 +82,6 @@ pub use nodes::Node;
 /// Module to perform recursive traversing
 pub mod traverse;
 
-mod string_value;
-pub use string_value::StringValue;
-
 mod token;
 pub use token::Token;
 
