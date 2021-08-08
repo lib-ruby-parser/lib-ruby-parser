@@ -5,28 +5,29 @@ pub(crate) mod external {
 
     #[repr(C)]
     #[derive(Debug, Clone, Copy)]
-    pub struct StringBlob {
+    pub struct StringPtrBlob {
         blob: [u8; STRING_PTR_SIZE],
     }
 
     /// C-compatible list
     #[repr(C)]
     pub struct StringPtr {
-        pub(crate) blob: StringBlob,
+        pub(crate) blob: StringPtrBlob,
     }
 
     extern "C" {
-        fn lib_ruby_parser__internal__containers__string_ptr__free(blob: StringBlob);
-        fn lib_ruby_parser__internal__containers__string_ptr__clone(blob: StringBlob)
-            -> StringBlob;
+        fn lib_ruby_parser__internal__containers__string_ptr__free(blob: StringPtrBlob);
+        fn lib_ruby_parser__internal__containers__string_ptr__clone(
+            blob: StringPtrBlob,
+        ) -> StringPtrBlob;
         fn lib_ruby_parser__internal__containers__string_ptr__get_raw(
-            blob: StringBlob,
+            blob: StringPtrBlob,
         ) -> *const i8;
-        fn lib_ruby_parser__internal__containers__string_ptr__len(blob: StringBlob) -> u64;
+        fn lib_ruby_parser__internal__containers__string_ptr__len(blob: StringPtrBlob) -> u64;
         fn lib_ruby_parser__internal__containers__string_ptr__make(
             ptr: *const i8,
             len: u64,
-        ) -> StringBlob;
+        ) -> StringPtrBlob;
     }
 
     impl Drop for StringPtr {

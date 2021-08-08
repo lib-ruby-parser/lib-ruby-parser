@@ -44,4 +44,8 @@ pub(crate) use ptr::external::PtrBlob;
 #[cfg(feature = "compile-with-external-structures")]
 pub use shared_byte_list::external::SharedByteList as ExternalSharedByteList;
 #[cfg(feature = "compile-with-external-structures")]
+pub(crate) use shared_byte_list::external::SharedByteListBlob;
+#[cfg(feature = "compile-with-external-structures")]
 pub use string_ptr::external::StringPtr as ExternalStringPtr;
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) use string_ptr::external::StringPtrBlob;
