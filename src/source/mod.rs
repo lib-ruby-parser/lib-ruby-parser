@@ -5,7 +5,7 @@ mod decoded_input;
 mod decoder;
 mod input;
 mod magic_comment;
-mod magic_comment_kind;
+pub(crate) mod magic_comment_kind;
 mod source_line;
 
 pub use comment::Comment;

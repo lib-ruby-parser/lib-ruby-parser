@@ -1,26 +1,16 @@
 CFLAGS += -g -Wall -Wextra -fPIE
 
 OBJECTS = \
-	byte.o \
-	bytes.o \
-	comment.o \
-	diagnostic.o \
-	error_level.o \
-	list.o \
-	loc.o \
-	magic_comment.o \
-	maybe_loc.o \
-	maybe_ptr.o \
-	maybe_string_ptr.o \
+	structs.o \
+	blobs.o \
+	nodes.o \
 	messages.o \
-	node.o \
-	ptr.o \
-	shared_byte_list.o \
-	source_line.o \
-	string_ptr.o \
-	token.o
+	bindings.o \
+	bindings_nodes.o \
+	bindings_messages.o
 
-all: libstructures.a
+all: libstructures.a sizes
+	./sizes > sizes-out
 
 libstructures.a: $(OBJECTS)
 	$(AR) rc libstructures.a $(OBJECTS)
@@ -36,6 +26,3 @@ clean:
 
 sizes: sizes.c $(OBJECTS)
 	$(CC) sizes.c $(CFLAGS) -o sizes
-
-print-sizes: sizes
-	./sizes

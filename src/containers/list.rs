@@ -14,22 +14,11 @@ pub(crate) mod rust {
                 .expect("expected at least 1 element")
         }
     }
-
-    #[cfg(test)]
-    mod tests {
-        use super::List as GenericList;
-        type List = GenericList<u8>;
-
-        #[test]
-        fn test_size() {
-            assert_eq!(std::mem::size_of::<List>(), 24);
-        }
-    }
 }
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
-    use crate::containers::get_drop_fn::GetDropFn;
+    use crate::containers::get_drop_fn::GetDropListInPlaceFn;
 
     use crate::containers::size::LIST_SIZE;
 
@@ -43,20 +32,19 @@ pub(crate) mod external {
     #[repr(C)]
     pub struct List<T>
     where
-        T: GetDropFn,
+        T: GetDropListInPlaceFn,
     {
-        blob: ListBlob,
+        pub(crate) blob: ListBlob,
         _t: std::marker::PhantomData<T>,
     }
 
     impl<T> Drop for List<T>
     where
-        T: GetDropFn,
+        T: GetDropListInPlaceFn,
     {
         fn drop(&mut self) {
-            let drop_item_in_place = T::get_drop_ptr_in_place_fn();
-            let drop_list_blob = T::get_drop_list_blob_fn();
-            unsafe { drop_list_blob(self.blob, drop_item_in_place) }
+            let drop_list_in_place_fn = T::get_drop_list_in_place_fn();
+            unsafe { drop_list_in_place_fn(&mut self.blob) }
         }
     }
 
@@ -84,15 +72,28 @@ pub(crate) mod external {
         }
     }
 
-    impl<T: GetDropFn> From<ListBlob> for List<T> {
+    impl<T: GetDropListInPlaceFn> From<ListBlob> for List<T> {
         fn from(blob: ListBlob) -> Self {
             unsafe { std::mem::transmute(blob) }
         }
     }
 
-    impl<T: GetDropFn> From<List<T>> for ListBlob {
+    impl<T: GetDropListInPlaceFn> From<List<T>> for ListBlob {
         fn from(list: List<T>) -> Self {
             unsafe { std::mem::transmute(list) }
+        }
+    }
+
+    impl<T: GetDropListInPlaceFn> IntoIterator for List<T>
+    where
+        Vec<T>: From<List<T>>,
+    {
+        type Item = T;
+        type IntoIter = std::vec::IntoIter<T>;
+
+        fn into_iter(self) -> Self::IntoIter {
+            let v: Vec<T> = self.into();
+            v.into_iter()
         }
     }
 
@@ -105,91 +106,90 @@ pub(crate) mod external {
             $new:ident,
             $with_capacity:ident,
             $from_raw:ident,
-            $shrink_to_fit:ident,
             $push:ident,
             $remove:ident,
+            $shrink_to_fit:ident,
             $as_ptr:ident,
             $len:ident,
             $capacity:ident
         ) => {
             use super::{List, ListBlob, TakeFirst};
 
-            #[repr(C)]
-            struct RemoveResult {
-                new_blob: ListBlob,
-                removed_item: $t,
-            }
-
             extern "C" {
                 fn $new() -> ListBlob;
                 fn $with_capacity(capacity: u64) -> ListBlob;
                 fn $from_raw(ptr: *mut $t, size: u64) -> ListBlob;
-                fn $shrink_to_fit(blob: ListBlob) -> ListBlob;
-                fn $push(blob: ListBlob, item: $t) -> ListBlob;
-                fn $remove(blob: ListBlob, index: u64) -> RemoveResult;
-                fn $as_ptr(blob: ListBlob) -> *mut $t;
-                fn $len(blob: ListBlob) -> u64;
-                fn $capacity(blob: ListBlob) -> u64;
+                fn $push(blob: *mut ListBlob, item: $t);
+                fn $remove(blob: *mut ListBlob, index: u64) -> $t;
+                fn $shrink_to_fit(blob: *mut ListBlob);
+                fn $as_ptr(blob: *mut ListBlob) -> *mut $t;
+                fn $len(blob: *const ListBlob) -> u64;
+                fn $capacity(blob: *const ListBlob) -> u64;
             }
 
             impl List<$t> {
                 /// Equivalent of Vec::new
                 pub fn new() -> Self {
                     let blob = unsafe { $new() };
-                    Self {
-                        blob,
-                        _t: std::marker::PhantomData,
-                    }
+                    Self::from_blob(blob)
                 }
 
                 /// Equivalent of Vec::with_capacity
                 pub fn with_capacity(capacity: usize) -> Self {
                     let blob = unsafe { $with_capacity(capacity as u64) };
-                    Self {
-                        blob,
-                        _t: std::marker::PhantomData,
-                    }
+                    Self::from_blob(blob)
                 }
 
                 pub(crate) fn from_raw(ptr: *mut $t, size: usize) -> Self {
                     let blob = unsafe { $from_raw(ptr, size as u64) };
-                    Self {
-                        blob,
-                        _t: std::marker::PhantomData,
-                    }
+                    Self::from_blob(blob)
                 }
 
                 pub(crate) fn shrink_to_fit(&mut self) {
-                    self.blob = unsafe { $shrink_to_fit(self.blob) };
+                    unsafe { $shrink_to_fit(&mut self.blob) };
                 }
 
                 /// Equivalent of Vec::push
                 pub fn push(&mut self, item: $t) {
-                    self.blob = unsafe { $push(self.blob, item) };
+                    unsafe { $push(&mut self.blob, item) };
                 }
 
                 /// Equivalent of Vec::rmeove
                 pub fn remove(&mut self, index: usize) -> $t {
-                    let RemoveResult {
-                        new_blob,
-                        removed_item,
-                    } = unsafe { $remove(self.blob, index as u64) };
-                    self.blob = new_blob;
-                    removed_item
+                    unsafe { $remove(&mut self.blob, index as u64) }
                 }
 
-                pub(crate) fn as_ptr(&self) -> *mut $t {
-                    unsafe { $as_ptr(self.blob) }
+                pub(crate) fn as_ptr(&self) -> *const $t {
+                    let blob_ptr: *const ListBlob = &self.blob;
+                    unsafe { $as_ptr(blob_ptr as *mut ListBlob) }
+                }
+
+                pub(crate) fn as_mut_ptr(&mut self) -> *mut $t {
+                    unsafe { $as_ptr(&mut self.blob) }
+                }
+
+                pub(crate) fn into_ptr(mut self) -> *mut $t {
+                    let ptr = self.as_mut_ptr();
+                    std::mem::forget(self);
+                    ptr
                 }
 
                 /// Equivalent of Vec::len
                 pub fn len(&self) -> usize {
-                    unsafe { $len(self.blob) as usize }
+                    unsafe { $len(&self.blob) as usize }
                 }
 
                 /// Equivalent of Vec::capacity
                 pub fn capacity(&self) -> usize {
-                    unsafe { $capacity(self.blob) as usize }
+                    unsafe { $capacity(&self.blob) as usize }
+                }
+
+                #[allow(dead_code)]
+                pub(crate) fn from_blob(blob: ListBlob) -> Self {
+                    Self {
+                        blob,
+                        _t: std::marker::PhantomData,
+                    }
                 }
             }
 
@@ -244,9 +244,8 @@ pub(crate) mod external {
             impl From<List<$t>> for Vec<$t> {
                 fn from(mut list: List<$t>) -> Self {
                     list.shrink_to_fit();
-                    let ptr = list.as_ptr();
                     let len = list.len();
-                    list.blob = unsafe { $new() };
+                    let ptr = list.into_ptr();
                     unsafe { Vec::from_raw_parts(ptr, len, len) }
                 }
             }
@@ -261,7 +260,7 @@ pub(crate) mod external {
 
             impl std::ops::DerefMut for List<$t> {
                 fn deref_mut(&mut self) -> &mut Self::Target {
-                    unsafe { std::slice::from_raw_parts_mut(self.as_ptr(), self.len()) }
+                    unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
                 }
             }
 
@@ -337,18 +336,15 @@ pub(crate) mod external {
                 type List = GenericList<$t>;
 
                 #[test]
-                fn test_size() {
-                    assert_eq!(std::mem::size_of::<List>(), 24);
-                }
-
-                #[test]
                 fn test_new() {
-                    let _ = List::new();
+                    let list = List::new();
+                    drop(list);
                 }
 
                 #[test]
                 fn test_with_capacity() {
-                    let _ = List::with_capacity(10);
+                    let list = List::with_capacity(10);
+                    drop(list);
                 }
 
                 fn list_with_items(n: usize) -> List {
@@ -539,7 +535,7 @@ pub(crate) mod external {
     mod of_nodes {
         #[cfg(test)]
         fn make_one() -> crate::Node {
-            crate::Node::True(crate::nodes::True::new(crate::Loc::default()))
+            crate::Node::make_true(crate::Loc::default())
         }
 
         gen_list_impl_for!(
@@ -547,9 +543,9 @@ pub(crate) mod external {
             lib_ruby_parser__internal__containers__list__of_nodes__new,
             lib_ruby_parser__internal__containers__list__of_nodes__with_capacity,
             lib_ruby_parser__internal__containers__list__of_nodes__from_raw,
-            lib_ruby_parser__internal__containers__list__of_nodes__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_nodes__push,
             lib_ruby_parser__internal__containers__list__of_nodes__remove,
+            lib_ruby_parser__internal__containers__list__of_nodes__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_nodes__as_ptr,
             lib_ruby_parser__internal__containers__list__of_nodes__len,
             lib_ruby_parser__internal__containers__list__of_nodes__capacity
@@ -558,11 +554,11 @@ pub(crate) mod external {
     mod of_diagnostics {
         #[cfg(test)]
         fn make_one() -> crate::Diagnostic {
-            crate::Diagnostic {
-                level: crate::ErrorLevel::warning(),
-                message: crate::DiagnosticMessage::new_alias_nth_ref(),
-                loc: crate::Loc::default(),
-            }
+            crate::Diagnostic::new(
+                crate::ErrorLevel::warning(),
+                crate::DiagnosticMessage::new_alias_nth_ref(),
+                crate::Loc::default(),
+            )
         }
 
         gen_list_impl_for!(
@@ -570,9 +566,9 @@ pub(crate) mod external {
             lib_ruby_parser__internal__containers__list__of_diagnostics__new,
             lib_ruby_parser__internal__containers__list__of_diagnostics__with_capacity,
             lib_ruby_parser__internal__containers__list__of_diagnostics__from_raw,
-            lib_ruby_parser__internal__containers__list__of_diagnostics__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_diagnostics__push,
             lib_ruby_parser__internal__containers__list__of_diagnostics__remove,
+            lib_ruby_parser__internal__containers__list__of_diagnostics__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_diagnostics__as_ptr,
             lib_ruby_parser__internal__containers__list__of_diagnostics__len,
             lib_ruby_parser__internal__containers__list__of_diagnostics__capacity
@@ -592,9 +588,9 @@ pub(crate) mod external {
             lib_ruby_parser__internal__containers__list__of_comments__new,
             lib_ruby_parser__internal__containers__list__of_comments__with_capacity,
             lib_ruby_parser__internal__containers__list__of_comments__from_raw,
-            lib_ruby_parser__internal__containers__list__of_comments__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_comments__push,
             lib_ruby_parser__internal__containers__list__of_comments__remove,
+            lib_ruby_parser__internal__containers__list__of_comments__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_comments__as_ptr,
             lib_ruby_parser__internal__containers__list__of_comments__len,
             lib_ruby_parser__internal__containers__list__of_comments__capacity
@@ -615,9 +611,9 @@ pub(crate) mod external {
             lib_ruby_parser__internal__containers__list__of_magic_comments__new,
             lib_ruby_parser__internal__containers__list__of_magic_comments__with_capacity,
             lib_ruby_parser__internal__containers__list__of_magic_comments__from_raw,
-            lib_ruby_parser__internal__containers__list__of_magic_comments__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_magic_comments__push,
             lib_ruby_parser__internal__containers__list__of_magic_comments__remove,
+            lib_ruby_parser__internal__containers__list__of_magic_comments__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_magic_comments__as_ptr,
             lib_ruby_parser__internal__containers__list__of_magic_comments__len,
             lib_ruby_parser__internal__containers__list__of_magic_comments__capacity
@@ -640,9 +636,9 @@ pub(crate) mod external {
             lib_ruby_parser__internal__containers__list__of_tokens__new,
             lib_ruby_parser__internal__containers__list__of_tokens__with_capacity,
             lib_ruby_parser__internal__containers__list__of_tokens__from_raw,
-            lib_ruby_parser__internal__containers__list__of_tokens__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_tokens__push,
             lib_ruby_parser__internal__containers__list__of_tokens__remove,
+            lib_ruby_parser__internal__containers__list__of_tokens__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_tokens__as_ptr,
             lib_ruby_parser__internal__containers__list__of_tokens__len,
             lib_ruby_parser__internal__containers__list__of_tokens__capacity
@@ -659,9 +655,9 @@ pub(crate) mod external {
             lib_ruby_parser__internal__containers__list__of_source_lines__new,
             lib_ruby_parser__internal__containers__list__of_source_lines__with_capacity,
             lib_ruby_parser__internal__containers__list__of_source_lines__from_raw,
-            lib_ruby_parser__internal__containers__list__of_source_lines__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_source_lines__push,
             lib_ruby_parser__internal__containers__list__of_source_lines__remove,
+            lib_ruby_parser__internal__containers__list__of_source_lines__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_source_lines__as_ptr,
             lib_ruby_parser__internal__containers__list__of_source_lines__len,
             lib_ruby_parser__internal__containers__list__of_source_lines__capacity
@@ -678,9 +674,9 @@ pub(crate) mod external {
             lib_ruby_parser__internal__containers__list__of_bytes__new,
             lib_ruby_parser__internal__containers__list__of_bytes__with_capacity,
             lib_ruby_parser__internal__containers__list__of_bytes__from_raw,
-            lib_ruby_parser__internal__containers__list__of_bytes__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_bytes__push,
             lib_ruby_parser__internal__containers__list__of_bytes__remove,
+            lib_ruby_parser__internal__containers__list__of_bytes__shrink_to_fit,
             lib_ruby_parser__internal__containers__list__of_bytes__as_ptr,
             lib_ruby_parser__internal__containers__list__of_bytes__len,
             lib_ruby_parser__internal__containers__list__of_bytes__capacity
@@ -693,16 +689,6 @@ pub(crate) mod external {
             pub fn as_slice(&self) -> ExternalSharedByteList {
                 ExternalSharedByteList::from_raw(self.as_ptr(), self.len())
             }
-        }
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::ListBlob;
-
-        #[test]
-        fn test_size() {
-            assert_eq!(std::mem::size_of::<ListBlob>(), 24);
         }
     }
 }

@@ -13,24 +13,6 @@ jobs:
   test:
     name: ${{ matrix.build.link-feature }}
     runs-on: ubuntu-latest
-    env:
-      LIB_RUBY_PARSER_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_PTR_SIZE }}
-      LIB_RUBY_PARSER_MAYBE_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAYBE_PTR_SIZE }}
-      LIB_RUBY_PARSER_LIST_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_LIST_SIZE }}
-      LIB_RUBY_PARSER_STRING_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_STRING_PTR_SIZE }}
-      LIB_RUBY_PARSER_MAYBE_STRING_PTR_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAYBE_STRING_PTR_SIZE }}
-      LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE }}
-      LIB_RUBY_PARSER_BYTES_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_BYTES_SIZE }}
-      LIB_RUBY_PARSER_TOKEN_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_TOKEN_SIZE }}
-      LIB_RUBY_PARSER_SOURCE_LINE_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_SOURCE_LINE_SIZE }}
-      LIB_RUBY_PARSER_ERROR_LEVEL_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_ERROR_LEVEL_SIZE }}
-      LIB_RUBY_PARSER_LOC_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_LOC_SIZE }}
-      LIB_RUBY_PARSER_COMMENT_TYPE_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_COMMENT_TYPE_SIZE }}
-      LIB_RUBY_PARSER_COMMENT_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_COMMENT_SIZE }}
-      LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE }}
-      LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE }}
-      LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE }}
-      LIB_RUBY_PARSER_MAYBE_LOC_SIZE: ${{ matrix.build.LIB_RUBY_PARSER_MAYBE_LOC_SIZE }}
     strategy:
       fail-fast: false
       matrix:
@@ -38,46 +20,12 @@ jobs:
           - "-Zsanitizer=address"
         build:
           - link-feature: link-with-external-c-structures
-            compile-external-containers: |
-              cd external/c && make print-sizes libstructures.a
-            LIB_RUBY_PARSER_PTR_SIZE: 8
-            LIB_RUBY_PARSER_MAYBE_PTR_SIZE: 8
-            LIB_RUBY_PARSER_LIST_SIZE: 24
-            LIB_RUBY_PARSER_STRING_PTR_SIZE: 16
-            LIB_RUBY_PARSER_MAYBE_STRING_PTR_SIZE: 16
-            LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE: 16
-            LIB_RUBY_PARSER_BYTES_SIZE: 24
-            LIB_RUBY_PARSER_TOKEN_SIZE: 56
-            LIB_RUBY_PARSER_SOURCE_LINE_SIZE: 24
-            LIB_RUBY_PARSER_ERROR_LEVEL_SIZE: 4
-            LIB_RUBY_PARSER_LOC_SIZE: 16
-            LIB_RUBY_PARSER_MAYBE_LOC_SIZE: 24
-            LIB_RUBY_PARSER_COMMENT_TYPE_SIZE: 4
-            LIB_RUBY_PARSER_COMMENT_SIZE: 24
-            LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE: 4
-            LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE: 40
-            LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE: 40
+            compile-external-containers: cd external/c && make all
+            sizes-file: external/c/sizes-out
 
           - link-feature: link-with-external-cpp-structures
-            compile-external-containers: |
-              cd external/cpp && make print-sizes libstructures.a
-            LIB_RUBY_PARSER_PTR_SIZE: 8
-            LIB_RUBY_PARSER_MAYBE_PTR_SIZE: 8
-            LIB_RUBY_PARSER_LIST_SIZE: 24
-            LIB_RUBY_PARSER_STRING_PTR_SIZE: 8
-            LIB_RUBY_PARSER_MAYBE_STRING_PTR_SIZE: 8
-            LIB_RUBY_PARSER_SHARED_BYTE_LIST_SIZE: 16
-            LIB_RUBY_PARSER_BYTES_SIZE: 24
-            LIB_RUBY_PARSER_TOKEN_SIZE: 56
-            LIB_RUBY_PARSER_SOURCE_LINE_SIZE: 24
-            LIB_RUBY_PARSER_ERROR_LEVEL_SIZE: 4
-            LIB_RUBY_PARSER_LOC_SIZE: 16
-            LIB_RUBY_PARSER_MAYBE_LOC_SIZE: 24
-            LIB_RUBY_PARSER_COMMENT_TYPE_SIZE: 4
-            LIB_RUBY_PARSER_COMMENT_SIZE: 24
-            LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE: 4
-            LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE: 40
-            LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE: 24
+            compile-external-containers: cd external/cpp && make all
+            sizes-file: external/cpp/sizes-out
 
     steps:
       - name: checkout
@@ -100,22 +48,24 @@ jobs:
         run: bison --version
 
       - name: codegen
-        run: cargo build --features rebuild-grammar,compile-with-external-structures
+        run: cargo build --features rebuild-grammar
 
       - name: compile external containers
         env:
           CC: clang
           CXX: clang++
           AR: ar
-        run: ${{ matrix.build.compile-external-containers }}
+        run: |
+          ${{ matrix.build.compile-external-containers }}
+          cat sizes-out
 
       - name: run tests
         env:
           RUSTFLAGS: ${{ matrix.rustflags }}
           ASAN_OPTIONS: detect_leaks=1
           CARGO_FEATURES: "compile-with-external-structures,${{ matrix.build.link-feature }}"
+          LIB_RUBY_PARSER_SIZES_FILEPATH: ${{ matrix.build.sizes-file }}
         run: |
-          cargo test --features $CARGO_FEATURES --lib -- test_size --nocapture
           cargo test --features $CARGO_FEATURES --lib -- --nocapture
 
           cargo test --features $CARGO_FEATURES --test parser_test -- --nocapture

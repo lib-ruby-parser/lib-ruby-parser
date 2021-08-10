@@ -5,6 +5,8 @@ use crate::containers::size::MAGIC_COMMENT_SIZE;
 use crate::loc::LocBlob;
 use crate::source::magic_comment_kind::MagicCommentKindBlob;
 
+use crate::containers::helpers::IntoBlob;
+
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub(crate) struct MagicCommentBlob {
@@ -18,7 +20,7 @@ pub struct MagicComment {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__magic_comment__make(
+    fn lib_ruby_parser__internal__containers__magic_comment__new(
         kind: MagicCommentKindBlob,
         key_l: LocBlob,
         value_l: LocBlob,
@@ -32,16 +34,17 @@ extern "C" {
     fn lib_ruby_parser__internal__containers__magic_comment__get_value_l(
         blob: *const MagicCommentBlob,
     ) -> *const LocBlob;
+    fn lib_ruby_parser__internal__containers__magic_comment__drop(blob: *mut MagicCommentBlob);
 }
 
 impl MagicComment {
     /// Constructor
     pub fn new(kind: MagicCommentKind, key_l: Loc, value_l: Loc) -> Self {
         let blob = unsafe {
-            lib_ruby_parser__internal__containers__magic_comment__make(
-                kind.blob,
-                key_l.blob,
-                value_l.blob,
+            lib_ruby_parser__internal__containers__magic_comment__new(
+                kind.into_blob(),
+                key_l.into_blob(),
+                value_l.into_blob(),
             )
         };
         Self { blob }
@@ -49,27 +52,30 @@ impl MagicComment {
 
     /// Returns kind of the of the MagicComment
     pub fn kind(&self) -> &MagicCommentKind {
-        let self_blob_ptr: *const MagicCommentBlob = &self.blob;
-        let kind_blob_ptr = unsafe {
-            lib_ruby_parser__internal__containers__magic_comment__get_kind(self_blob_ptr)
-        };
-        unsafe { (kind_blob_ptr as *const MagicCommentKind).as_ref().unwrap() }
+        unsafe {
+            (lib_ruby_parser__internal__containers__magic_comment__get_kind(&self.blob)
+                as *const MagicCommentKind)
+                .as_ref()
+                .unwrap()
+        }
     }
     /// Returns location of MagicComment's key
     pub fn key_l(&self) -> &Loc {
-        let self_blob_ptr: *const MagicCommentBlob = &self.blob;
-        let key_l_blob_ptr = unsafe {
-            lib_ruby_parser__internal__containers__magic_comment__get_key_l(self_blob_ptr)
-        };
-        unsafe { (key_l_blob_ptr as *const Loc).as_ref().unwrap() }
+        unsafe {
+            (lib_ruby_parser__internal__containers__magic_comment__get_key_l(&self.blob)
+                as *const Loc)
+                .as_ref()
+                .unwrap()
+        }
     }
     /// Returns location of MagicComment's value
     pub fn value_l(&self) -> &Loc {
-        let self_blob_ptr: *const MagicCommentBlob = &self.blob;
-        let value_l_blob_ptr = unsafe {
-            lib_ruby_parser__internal__containers__magic_comment__get_value_l(self_blob_ptr)
-        };
-        unsafe { (value_l_blob_ptr as *const Loc).as_ref().unwrap() }
+        unsafe {
+            (lib_ruby_parser__internal__containers__magic_comment__get_value_l(&self.blob)
+                as *const Loc)
+                .as_ref()
+                .unwrap()
+        }
     }
 }
 
@@ -96,5 +102,11 @@ impl PartialEq for MagicComment {
         (self.kind() == other.kind())
             && (self.key_l() == other.key_l())
             && (self.value_l() == other.value_l())
+    }
+}
+
+impl Drop for MagicComment {
+    fn drop(&mut self) {
+        unsafe { lib_ruby_parser__internal__containers__magic_comment__drop(&mut self.blob) }
     }
 }

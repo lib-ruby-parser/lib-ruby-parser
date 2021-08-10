@@ -30,7 +30,7 @@ use crate::Bytes;
 use crate::Loc;
 use crate::Node;
 
-pub trait InnerNode {
+pub trait InnerNode: std::fmt::Debug {
     fn expression(&self) -> &Loc;
     fn str_type(&self) -> &'static str;
     fn inspected_children(&self, indent: usize) -> Vec<String>;

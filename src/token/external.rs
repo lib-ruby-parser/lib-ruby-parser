@@ -1,3 +1,4 @@
+use crate::containers::helpers::IntoBlob;
 use crate::containers::size::TOKEN_SIZE;
 use crate::loc::LocBlob;
 use crate::{Bytes, LexState, Loc};
@@ -40,7 +41,7 @@ impl Eq for Token {}
 
 impl Drop for Token {
     fn drop(&mut self) {
-        unsafe { lib_ruby_parser__internal__containers__token__free(self.blob) }
+        unsafe { lib_ruby_parser__internal__containers__token__drop(&mut self.blob) }
     }
 }
 
@@ -49,29 +50,30 @@ extern "C" {
     fn lib_ruby_parser__internal__containers__token__new(
         token_type: i32,
         token_value: BytesBlob,
-        loc: Loc,
+        loc: LocBlob,
         lex_state_before: i32,
         lex_state_after: i32,
     ) -> TokenBlob;
-    fn lib_ruby_parser__internal__containers__token__get_token_type(token_blob: TokenBlob) -> i32;
-    fn lib_ruby_parser__internal__containers__token__get_token_value_ptr(
-        token_blob: *const TokenBlob,
+    fn lib_ruby_parser__internal__containers__token__get_token_type(blob: *const TokenBlob) -> i32;
+    fn lib_ruby_parser__internal__containers__token__get_token_value(
+        blob: *const TokenBlob,
     ) -> *const BytesBlob;
     fn lib_ruby_parser__internal__containers__token__set_token_value(
-        token_blob: TokenBlob,
+        blob: *mut TokenBlob,
         bytes_blob: BytesBlob,
-    ) -> TokenBlob;
-    fn lib_ruby_parser__internal__containers__token__into_token_value(
-        token_blob: TokenBlob,
-    ) -> BytesBlob;
-    fn lib_ruby_parser__internal__containers__token__get_loc(token_blob: TokenBlob) -> LocBlob;
+    );
+    fn lib_ruby_parser__internal__containers__token__into_token_value(blob: TokenBlob)
+        -> BytesBlob;
+    fn lib_ruby_parser__internal__containers__token__get_loc(
+        blob: *const TokenBlob,
+    ) -> *const LocBlob;
     fn lib_ruby_parser__internal__containers__token__get_lex_state_before(
-        token_blob: TokenBlob,
+        blob: *const TokenBlob,
     ) -> i32;
     fn lib_ruby_parser__internal__containers__token__get_lex_state_after(
-        token_blob: TokenBlob,
+        blob: *const TokenBlob,
     ) -> i32;
-    fn lib_ruby_parser__internal__containers__token__free(token_blob: TokenBlob);
+    fn lib_ruby_parser__internal__containers__token__drop(blob: *mut TokenBlob);
 }
 
 impl Token {
@@ -87,7 +89,7 @@ impl Token {
             lib_ruby_parser__internal__containers__token__new(
                 token_type,
                 token_value.into_blob(),
-                loc,
+                loc.into_blob(),
                 lex_state_before.get(),
                 lex_state_after.get(),
             )
@@ -97,24 +99,24 @@ impl Token {
 
     /// Returns type of the token
     pub fn token_type(&self) -> i32 {
-        unsafe { lib_ruby_parser__internal__containers__token__get_token_type(self.blob) }
+        unsafe { lib_ruby_parser__internal__containers__token__get_token_type(&self.blob) }
     }
 
     /// Returns type of the token
     pub fn token_value(&self) -> &Bytes {
-        let token_blob_ptr: *const TokenBlob = &self.blob;
-        let bytes_ptr = unsafe {
-            lib_ruby_parser__internal__containers__token__get_token_value_ptr(token_blob_ptr)
-                as *const Bytes
-        };
-        unsafe { bytes_ptr.as_ref().unwrap() }
+        unsafe {
+            (lib_ruby_parser__internal__containers__token__get_token_value(&self.blob)
+                as *const Bytes)
+                .as_ref()
+                .unwrap()
+        }
     }
 
     /// Sets token value
     pub fn set_token_value(&mut self, token_value: Bytes) {
-        self.blob = unsafe {
+        unsafe {
             lib_ruby_parser__internal__containers__token__set_token_value(
-                self.blob,
+                &mut self.blob,
                 token_value.into_blob(),
             )
         }
@@ -129,27 +131,27 @@ impl Token {
     }
 
     /// Returns location of the token
-    pub fn loc(&self) -> Loc {
-        let loc_blob = unsafe { lib_ruby_parser__internal__containers__token__get_loc(self.blob) };
-        Loc { blob: loc_blob }
+    pub fn loc(&self) -> &Loc {
+        unsafe {
+            (lib_ruby_parser__internal__containers__token__get_loc(&self.blob) as *const Loc)
+                .as_ref()
+                .unwrap()
+        }
     }
 
     /// Returns lex state **before** reading the token
     pub fn lex_state_before(&self) -> LexState {
         let value = unsafe {
-            lib_ruby_parser__internal__containers__token__get_lex_state_before(self.blob)
+            lib_ruby_parser__internal__containers__token__get_lex_state_before(&self.blob)
         };
-        let mut lex_state = LexState::default();
-        lex_state.set(value);
-        lex_state
+        LexState { value }
     }
 
     /// Returns lex state **after** reading the token
     pub fn lex_state_after(&self) -> LexState {
-        let value =
-            unsafe { lib_ruby_parser__internal__containers__token__get_lex_state_after(self.blob) };
-        let mut lex_state = LexState::default();
-        lex_state.set(value);
-        lex_state
+        let value = unsafe {
+            lib_ruby_parser__internal__containers__token__get_lex_state_after(&self.blob)
+        };
+        LexState { value }
     }
 }

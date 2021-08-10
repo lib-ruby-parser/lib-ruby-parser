@@ -4,7 +4,7 @@ use crate::maybe_byte::MaybeByte;
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct LexState {
-    value: i32,
+    pub(crate) value: i32,
 }
 
 impl LexState {

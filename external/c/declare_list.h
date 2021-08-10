@@ -7,7 +7,7 @@
     typedef struct                  \
     {                               \
         ITEM *ptr;                  \
-        uint64_t size;              \
+        uint64_t len;               \
         uint64_t capacity;          \
     } LIST;
 

@@ -68,7 +68,7 @@ fn extern_c_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
     {{
         return PACK(DiagnosticMessage({variant_name}({unpack_args})));
     }}",
-        signature = c_helpers::messages::constructor_signature(message),
+        signature = c_helpers::messages::constructor::sig(message),
         variant_name = message.camelcase_name(),
         unpack_args = unpack_args.join(", ")
     )
@@ -96,7 +96,7 @@ fn extern_c_getters(message: &lib_ruby_parser_nodes::Message) -> Vec<String> {
         {variant} *variant = std::get_if<{variant}>(&((DiagnosticMessage *)blob)->variant);
         {get_field}
     }}",
-            signature = c_helpers::messages::getter_signature(message, field),
+            signature = c_helpers::messages::getter::sig(message, field),
             variant = message.camelcase_name(),
             get_field = get_field
         )
@@ -108,7 +108,7 @@ fn extern_c_predicate(message: &lib_ruby_parser_nodes::Message) -> String {
     {{
         return std::get_if<{variant_name}>(&((DiagnosticMessage *)blob)->variant) != nullptr;
     }}",
-        signature = c_helpers::messages::type_predicate_signature(message),
+        signature = c_helpers::messages::type_predicate::sig(message),
         variant_name = message.camelcase_name()
     )
 }

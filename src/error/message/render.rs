@@ -61,10 +61,10 @@ impl DiagnosticMessage {
             return "invalid hex escape".to_string();
         }
 
-        if self.is_unterminated_heredoc() {
+        if let Some(unterminated_heredoc) = self.as_unterminated_heredoc() {
             return format!(
                 "can't find string \"{}\" anywhere before EOF",
-                self.unterminated_heredoc_get_heredoc_id().as_str()
+                unterminated_heredoc.get_heredoc_id().as_str()
             );
         }
 
@@ -97,25 +97,25 @@ impl DiagnosticMessage {
                 .to_string();
         }
 
-        if self.is_ambiguous_first_argument() {
+        if let Some(ambiguous_first_argument) = self.as_ambiguous_first_argument() {
             return format!(
                 "ambiguous first argument; put parentheses or a space even after `{}' operator",
-                self.ambiguous_first_argument_get_operator() as char
+                *ambiguous_first_argument.get_operator() as char
             );
         }
 
-        if self.is_ambiguous_operator() {
+        if let Some(ambiguous_operator) = self.as_ambiguous_operator() {
             return format!(
                 "`{}' after local variable or literal is interpreted as binary operator even though it seems like {}",
-                self.ambiguous_operator_get_operator().as_str(),
-                self.ambiguous_operator_get_interpreted_as().as_str(),
+                ambiguous_operator.get_operator().as_str(),
+                ambiguous_operator.get_interpreted_as().as_str(),
             );
         }
 
-        if self.is_invalid_character_syntax() {
+        if let Some(invalid_character_syntax) = self.as_invalid_character_syntax() {
             return format!(
                 "invalid character syntax; use {}",
-                self.invalid_character_syntax_get_suggestion().as_str()
+                invalid_character_syntax.get_suggestion().as_str()
             );
         }
 
@@ -123,10 +123,10 @@ impl DiagnosticMessage {
             return "Invalid octal digit".to_string();
         }
 
-        if self.is_trailing_char_in_number() {
+        if let Some(trailing_char_in_number) = self.as_trailing_char_in_number() {
             return format!(
                 "trailing `{}' in number",
-                self.trailing_char_in_number_get_c() as char
+                *trailing_char_in_number.get_c() as char
             );
         }
 
@@ -134,10 +134,10 @@ impl DiagnosticMessage {
             return "embedded document meets end of file".to_string();
         }
 
-        if self.is_invalid_char() {
+        if let Some(invalid_char) = self.as_invalid_char() {
             return format!(
                 "Invalid char `{}' in expression",
-                self.invalid_char_get_c() as char
+                *invalid_char.get_c() as char
             );
         }
 
@@ -149,10 +149,10 @@ impl DiagnosticMessage {
             return "`$' without identifiers is not allowed as a global variable name".to_string();
         }
 
-        if self.is_invalid_gvar_name() {
+        if let Some(invalid_gvar_name) = self.as_invalid_gvar_name() {
             return format!(
                 "`${}' is not allowed as a global variable name",
-                self.invalid_gvar_name_get_c() as char
+                *invalid_gvar_name.get_c() as char
             );
         }
 
@@ -161,10 +161,10 @@ impl DiagnosticMessage {
                 .to_string();
         }
 
-        if self.is_invalid_ivar_name() {
+        if let Some(invalid_ivar_name) = self.as_invalid_ivar_name() {
             return format!(
                 "`@{}' is not allowed as an instance variable name",
-                self.invalid_ivar_name_get_c() as char
+                *invalid_ivar_name.get_c() as char
             );
         }
 
@@ -172,24 +172,24 @@ impl DiagnosticMessage {
             return "`@@' without identifiers is not allowed as a class variable name".to_string();
         }
 
-        if self.is_invalid_cvar_name() {
+        if let Some(invalid_cvar_name) = self.as_invalid_cvar_name() {
             return format!(
                 "`@@{}' is not allowed as a class variable name",
-                self.invalid_cvar_name_get_c() as char
+                *invalid_cvar_name.get_c() as char
             );
         }
 
-        if self.is_unknown_regex_options() {
+        if let Some(unknown_regex_options) = self.as_unknown_regex_options() {
             return format!(
                 "unknown regexp options - {}",
-                self.unknown_regex_options_get_options().as_str()
+                unknown_regex_options.get_options().as_str()
             );
         }
 
-        if self.is_ambiguous_ternary_operator() {
+        if let Some(ambiguous_ternary_operator) = self.as_ambiguous_ternary_operator() {
             return format!(
                 "`?' just followed by `{}' is interpreted as a conditional operator, put a space after `?'",
-                self.ambiguous_ternary_operator_get_condition().as_str()
+                ambiguous_ternary_operator.get_condition().as_str()
             );
         }
 
@@ -202,11 +202,8 @@ impl DiagnosticMessage {
             return "unterminated Unicode escape".to_string();
         }
 
-        if self.is_encoding_error() {
-            return format!(
-                "encoding error: {}",
-                self.encoding_error_get_error().as_str()
-            );
+        if let Some(encoding_error) = self.as_encoding_error() {
+            return format!("encoding error: {}", encoding_error.get_error().as_str());
         }
 
         if self.is_invalid_multibyte_char() {
@@ -239,11 +236,8 @@ impl DiagnosticMessage {
             return "setter method cannot be defined in an endless method definition".to_string();
         }
 
-        if self.is_unexpected_token() {
-            return format!(
-                "unexpected {}",
-                self.unexpected_token_get_token_name().as_str()
-            );
+        if let Some(unexpected_token) = self.as_unexpected_token() {
+            return format!("unexpected {}", unexpected_token.get_token_name().as_str());
         }
 
         if self.is_class_definition_in_method_body() {
@@ -274,10 +268,10 @@ impl DiagnosticMessage {
             return "formal argument cannot be a class variable".to_string();
         }
 
-        if self.is_no_such_local_variable() {
+        if let Some(no_such_local_variable) = self.as_no_such_local_variable() {
             return format!(
                 "{}: no such local variable",
-                self.no_such_local_variable_get_var_name().as_str()
+                no_such_local_variable.get_var_name().as_str()
             );
         }
 
@@ -289,10 +283,10 @@ impl DiagnosticMessage {
             return "numbered parameter is already used".to_string();
         }
 
-        if self.is_tok_at_eol_without_expression() {
+        if let Some(tok_at_eol_without_expression) = self.as_tok_at_eol_without_expression() {
             return format!(
                 "`{}' at the end of line without an expression",
-                self.tok_at_eol_without_expression_get_token_name().as_str()
+                tok_at_eol_without_expression.get_token_name().as_str()
             );
         }
 
@@ -301,18 +295,18 @@ impl DiagnosticMessage {
             return "END in method; use at_exit".to_string();
         }
 
-        if self.is_comparison_after_comparison() {
+        if let Some(comparison_after_comparison) = self.as_comparison_after_comparison() {
             return format!(
                 "comparison '{}' after comparison",
-                self.comparison_after_comparison_get_comparison().as_str()
+                comparison_after_comparison.get_comparison().as_str()
             );
         }
 
-        // // Builder errors
-        if self.is_circular_argument_reference() {
+        // Builder errors
+        if let Some(circular_argument_reference) = self.as_circular_argument_reference() {
             return format!(
                 "circular argument reference - {}",
-                self.circular_argument_reference_get_arg_name().as_str()
+                circular_argument_reference.get_arg_name().as_str()
             );
         }
 
@@ -348,17 +342,17 @@ impl DiagnosticMessage {
             return "Can't assign to __ENCODING__".to_string();
         }
 
-        if self.is_cant_assign_to_numparam() {
+        if let Some(cant_assign_to_numparam) = self.as_cant_assign_to_numparam() {
             return format!(
                 "Can't assign to numbered parameter {}",
-                self.cant_assign_to_numparam_get_numparam().as_str()
+                cant_assign_to_numparam.get_numparam().as_str()
             );
         }
 
-        if self.is_cant_set_variable() {
+        if let Some(cant_set_variable) = self.as_cant_set_variable() {
             return format!(
                 "Can't set variable {}",
-                self.cant_set_variable_get_var_name().as_str()
+                cant_set_variable.get_var_name().as_str()
             );
         }
 
@@ -374,10 +368,10 @@ impl DiagnosticMessage {
             return "symbol literal with interpolation is not allowed".to_string();
         }
 
-        if self.is_reserved_for_numparam() {
+        if let Some(reserved_for_numparam) = self.as_reserved_for_numparam() {
             return format!(
                 "{} is reserved for numbered parameter",
-                self.reserved_for_numparam_get_numparam().as_str()
+                reserved_for_numparam.get_numparam().as_str()
             );
         }
 
@@ -397,10 +391,10 @@ impl DiagnosticMessage {
             return "can't define singleton method for literals".to_string();
         }
 
-        if self.is_nth_ref_is_too_big() {
+        if let Some(nth_ref_is_too_big) = self.as_nth_ref_is_too_big() {
             return format!(
                 "`{}' is too big for a number variable, always nil",
-                self.nth_ref_is_too_big_get_nth_ref().as_str()
+                nth_ref_is_too_big.get_nth_ref().as_str()
             );
         }
 
@@ -408,14 +402,14 @@ impl DiagnosticMessage {
             return "duplicated argument name".to_string();
         }
 
-        if self.is_regex_error() {
-            return self.regex_error_get_error().as_str().to_string();
+        if let Some(regex_error) = self.as_regex_error() {
+            return regex_error.get_error().as_str().to_string();
         }
 
-        if self.is_invalid_symbol() {
+        if let Some(invalid_symbol) = self.as_invalid_symbol() {
             return format!(
                 "invalid symbol in encoding {}",
-                self.invalid_symbol_get_symbol().as_str()
+                invalid_symbol.get_symbol().as_str()
             );
         }
 

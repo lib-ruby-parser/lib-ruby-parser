@@ -12,8 +12,6 @@ pub struct {struct_name} {{
 }}
 
 impl {struct_name} {{
-    {constructor}
-
     {getters}
 
     #[allow(dead_code)]
@@ -52,7 +50,6 @@ impl InnerNode for {struct_name} {{
         inspected_children = node.fields.map(&inspect_field).join("\n        "),
         str_type = node.str_type,
         print_with_locs = node.fields.flat_map(&print_with_locs).join("\n        "),
-        constructor = constructor(&node),
         getters = node.fields.map(&getter).join("\n\n    "),
         field_names = node.fields.map(&|f| f.field_name.to_string()).join(", ")
     )
@@ -188,32 +185,6 @@ fn print_with_locs(field: &lib_ruby_parser_nodes::NodeField) -> Vec<String> {
         NodeFieldType::Usize => vec![],
         NodeFieldType::RawString => vec![],
     }
-}
-
-fn constructor(node: &lib_ruby_parser_nodes::Node) -> String {
-    let arglist = node
-        .fields
-        .map(&|field| {
-            format!(
-                "{name}: {t}",
-                name = field.field_name,
-                t = field_type(field)
-            )
-        })
-        .join(", ");
-
-    let fields = node
-        .fields
-        .map(&|field| field.field_name.to_string())
-        .join(", ");
-
-    format!(
-        "pub(crate) fn new({arglist}) -> Self {{
-        Self {{ {fields} }}
-    }}",
-        arglist = arglist,
-        fields = fields
-    )
 }
 
 fn getter(field: &lib_ruby_parser_nodes::NodeField) -> String {

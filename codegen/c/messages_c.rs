@@ -8,18 +8,22 @@ fn contents() -> String {
 #include \"messages.h\"
 #include \"impl_blob.h\"
 
-IMPL_BLOB(DiagnosticMessage);
+{impl_blobs}
 
-{constructors}
+{drop_fns}
 
-{getters}
-
-{predicates}
+void drop_diagnostic_message(DiagnosticMessage *message)
+{{
+    switch(message->tag)
+    {{
+        {drop_branches}
+    }}
+}}
 ",
         generator = file!(),
-        constructors = messages.map(&constructor).join("\n\n"),
-        getters = messages.flat_map(&getters).join("\n\n"),
-        predicates = messages.map(&predicate).join("\n\n")
+        impl_blobs = messages.map(&impl_blob).join("\n"),
+        drop_fns = messages.map(&drop_fn).join("\n\n"),
+        drop_branches = messages.map(&drop_branch).join("\n        ")
     )
 }
 
@@ -27,70 +31,44 @@ pub(crate) fn codegen() {
     std::fs::write("external/c/messages.c", contents()).unwrap();
 }
 
-fn constructor(message: &lib_ruby_parser_nodes::Message) -> String {
-    let initializer_list = message
-        .fields
-        .map(&|field| {
-            format!(
-                ".{name} = UNPACK_{t}({name})",
-                name = helpers::messages::field_name(field),
-                t = helpers::messages::field_type(field)
-            )
-        })
-        .join(", ");
-
-    format!(
-            "{signature}
-{{
-    {inner_t} inner = {{ {initializer_list} }};
-    DiagnosticMessage message = {{ .tag = {enum_tag_name}, .as = {{ .{union_variant_name} = inner }} }};
-    return PACK_DiagnosticMessage(message);
-}}",
-signature = helpers::messages::constructor_signature(message),
-            inner_t = message.camelcase_name(),
-            initializer_list = initializer_list,
-            enum_tag_name = message.upper_name(),
-            union_variant_name = message.lower_name()
-        )
+fn impl_blob(message: &lib_ruby_parser_nodes::Message) -> String {
+    format!("IMPL_BLOB({});", message.camelcase_name())
 }
-fn getters(message: &lib_ruby_parser_nodes::Message) -> Vec<String> {
-    message.fields.map(&|field| {
-        let get_byte_field = format!(
-            "return message->as.{union_variant_name}.{field_name};",
-            union_variant_name = message.lower_name(),
-            field_name = helpers::messages::field_name(field)
-        );
 
-        let get_string_field = format!(
-            "STRING_PTR *field_ptr = &(message->as.{union_variant_name}.{field_name});
-    return (STRING_PTR_BLOB *)field_ptr;",
-            union_variant_name = message.lower_name(),
-            field_name = helpers::messages::field_name(field)
-        );
-
-        let get_field = match field.field_type {
-            lib_ruby_parser_nodes::MessageFieldType::Str => get_string_field,
-            lib_ruby_parser_nodes::MessageFieldType::Byte => get_byte_field,
+fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
+    let mut drop_fields = message.fields.map(&|field| {
+        let drop_fn_name = match field.field_type {
+            lib_ruby_parser_nodes::MessageFieldType::Str => "drop_string_ptr",
+            lib_ruby_parser_nodes::MessageFieldType::Byte => "drop_byte",
         };
-
+        let field_name = helpers::messages::fields::field_name(field);
         format!(
-            "{signature}
-{{
-    DiagnosticMessage *message = (DiagnosticMessage *)blob;
-    {get_field}
-}}",
-            signature = helpers::messages::getter_signature(message, field),
-            get_field = get_field
+            "{drop_fn_name}(&(variant->{field_name}));",
+            drop_fn_name = drop_fn_name,
+            field_name = field_name
         )
-    })
-}
-fn predicate(message: &lib_ruby_parser_nodes::Message) -> String {
+    });
+    if drop_fields.is_empty() {
+        drop_fields = vec![String::from("(void)variant;")];
+    }
+
     format!(
-        "{signature}
+        "void drop_message_{variant}({struct_name}* variant)
 {{
-    return ((DiagnosticMessage *)blob)->tag == {enum_tag_name};
+    {drop_fields}
 }}",
-        signature = helpers::messages::type_predicate_signature(message),
-        enum_tag_name = message.upper_name()
+        variant = message.lower_name(),
+        struct_name = message.camelcase_name(),
+        drop_fields = drop_fields.join("\n    ")
+    )
+}
+fn drop_branch(message: &lib_ruby_parser_nodes::Message) -> String {
+    format!(
+        "case {tag_name}:
+            drop_message_{variant}(&(message->as.{member_name}));
+            break;",
+        tag_name = message.upper_name(),
+        member_name = message.lower_name(),
+        variant = message.lower_name()
     )
 }

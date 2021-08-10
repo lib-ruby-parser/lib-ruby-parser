@@ -1313,9 +1313,11 @@ use crate::Loc;
                     }
                 | tLPAREN mlhs_inner rparen
                     {
-                        let mlhs_items: Vec<Node> = match $<Node>2 {
-                            Node::Mlhs(mlhs) => mlhs.get_items().to_owned().into(),
-                            other => unreachable!("unsupported mlhs item {:?}", other)
+                        let mlhs_inner = $<Node>2;
+                        let mlhs_items: Vec<Node> = if mlhs_inner.is_mlhs() {
+                            mlhs_inner.into_mlhs().into_internal().items.into()
+                        } else {
+                            unreachable!("unsupported mlhs item {:?}", mlhs_inner)
                         };
 
                         $$ = Value::Node(
@@ -5311,7 +5313,7 @@ opt_block_args_tail:
                         let mut string = self.builder.string_compose(Some($<Token>1), $<NodeList>2, Some($<Token>3));
                         let indent = self.yylexer.buffer.heredoc_indent;
                         self.yylexer.buffer.heredoc_indent = 0;
-                        self.builder.heredoc_dedent(&mut string, indent);
+                        string = Box::new(self.builder.heredoc_dedent(*string, indent));
                         $$ = Value::Node(string);
                     }
                 ;
@@ -5321,7 +5323,7 @@ opt_block_args_tail:
                         let mut string = self.builder.xstring_compose($<Token>1, $<NodeList>2, $<Token>3);
                         let indent = self.yylexer.buffer.heredoc_indent;
                         self.yylexer.buffer.heredoc_indent = 0;
-                        self.builder.heredoc_dedent(&mut string, indent);
+                        string = Box::new(self.builder.heredoc_dedent(*string, indent));
                         $$ = Value::Node(string);
                     }
                 ;
@@ -5718,7 +5720,7 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         let node = $<BoxedNode>1;
-                        if let Node::Lvar(node) = &*node {
+                        if let Some(node) = node.as_lvar() {
                             let name = node.get_name().as_str();
                             match name.as_bytes()[..] {
                                 [b'_', n] if n >= b'1' && n <= b'9' => {
@@ -6414,29 +6416,28 @@ f_opt_paren_args: f_paren_args
                 | tLPAREN2 { self.yylexer.lex_state.set(EXPR_BEG); $<None>$ = Value::None; } expr rparen
                     {
                         let expr = $<BoxedNode>3;
-                        match &*expr {
-                            Node::Int(_)
-                            | Node::Float(_)
-                            | Node::Rational(_)
-                            | Node::Complex(_)
-                            | Node::Str(_)
-                            | Node::Dstr(_)
-                            | Node::Sym(_)
-                            | Node::Dsym(_)
-                            | Node::Heredoc(_)
-                            | Node::XHeredoc(_)
-                            | Node::Regexp(_)
-                            | Node::Array(_)
-                            | Node::Hash(_) => {
-                                self.yyerror1(
-                                    DiagnosticMessage::new_singleton_literal(),
-                                    expr.expression().clone(),
-                                )?;
-                            }
-                            other => {
-                                self.value_expr(other)?
-                            },
+
+                        if expr.is_int() ||
+                            expr.is_float() ||
+                            expr.is_rational() ||
+                            expr.is_complex() ||
+                            expr.is_str() ||
+                            expr.is_dstr() ||
+                            expr.is_sym() ||
+                            expr.is_dsym() ||
+                            expr.is_heredoc() ||
+                            expr.is_x_heredoc() ||
+                            expr.is_regexp() ||
+                            expr.is_array() ||
+                            expr.is_hash() {
+                            self.yyerror1(
+                                DiagnosticMessage::new_singleton_literal(),
+                                expr.expression().clone(),
+                            )?;
+                        } else {
+                            self.value_expr(&expr)?
                         }
+
                         $$ = Value::Node(expr);
                     }
                 ;

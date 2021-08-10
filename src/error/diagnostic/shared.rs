@@ -1,32 +1,19 @@
-use crate::source::DecodedInput;
-use crate::Loc;
-use crate::{DiagnosticMessage, ErrorLevel};
+#[cfg(feature = "compile-with-external-structures")]
+use crate::containers::ExternalList;
+#[cfg(feature = "compile-with-external-structures")]
+type List<T> = ExternalList<T>;
+#[cfg(not(feature = "compile-with-external-structures"))]
+type List<T> = Vec<T>;
 
-/// Diagnostic message that comes from the parser when there's an error or warning
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[repr(C)]
-pub struct Diagnostic {
-    /// Level of the diagnostic (error or warnings)
-    pub level: ErrorLevel,
-    /// Message of the diagnostic
-    pub message: DiagnosticMessage,
-    /// Location of the diagnostic
-    pub loc: Loc,
-}
+use super::Diagnostic;
+use crate::source::DecodedInput;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 impl Diagnostic {
-    /// Construncts an instance of `Diagnostic`
-    pub fn new(level: ErrorLevel, message: DiagnosticMessage, loc: Loc) -> Self {
-        Self {
-            level,
-            message,
-            loc,
-        }
-    }
-
     /// Returns rendered message
     pub fn render_message(&self) -> String {
-        self.message.render()
+        self.message().render()
     }
 
     /// Renders all data into a single String, produces an output like:
@@ -37,18 +24,18 @@ impl Diagnostic {
     /// (test.rb):1:      ^
     /// ```
     pub fn render(&self, input: &DecodedInput) -> Option<String> {
-        let (line_no, line_loc) = self.loc.expand_to_line(input)?;
+        let (line_no, line_loc) = self.loc().expand_to_line(input)?;
         let line = line_loc.source(input)?;
 
         let filename = &input.name;
-        let (_, start_col) = self.loc.begin_line_col(input)?;
+        let (_, start_col) = self.loc().begin_line_col(input)?;
 
         let prefix = format!("{}:{}", filename.as_str(), line_no + 1);
         let highlight = format!(
             "{indent}^{tildes}",
             indent = " ".repeat(start_col),
-            tildes = if self.loc.size() > 0 {
-                "~".repeat(self.loc.size() - 1)
+            tildes = if self.loc().size() > 0 {
+                "~".repeat(self.loc().size() - 1)
             } else {
                 "".to_string()
             }
@@ -59,8 +46,8 @@ impl Diagnostic {
                 "{prefix}:{start_col}: {level:?}: {message}\n{prefix}: {line}\n{prefix}: {highlight}",
                 prefix = prefix,
                 start_col = start_col,
-                level = self.level,
-                message = self.message.render(),
+                level = self.level(),
+                message = self.message().render(),
                 line = line,
                 highlight = highlight
             )
@@ -71,24 +58,14 @@ impl Diagnostic {
 
     /// Returns `true` if level of the diagnostic is `Warning`
     pub fn is_warning(&self) -> bool {
-        self.level.is_warning()
+        self.level().is_warning()
     }
 
     /// Returns `true` if level of the diagnostic is `Error`
     pub fn is_error(&self) -> bool {
-        self.level.is_error()
+        self.level().is_error()
     }
 }
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
-
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(Debug, Default, Clone)]
 pub(crate) struct Diagnostics {
@@ -108,22 +85,5 @@ impl Diagnostics {
 
     pub(crate) fn take_inner(self) -> List<Diagnostic> {
         self.list.replace(List::<Diagnostic>::new())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[cfg(feature = "link-with-external-c-structures")]
-    #[test]
-    fn test_size_c() {
-        use super::Diagnostic;
-        assert_eq!(std::mem::size_of::<Diagnostic>(), 60);
-    }
-
-    #[cfg(feature = "link-with-external-cpp-structures")]
-    #[test]
-    fn test_size_cpp() {
-        use super::Diagnostic;
-        assert_eq!(std::mem::size_of::<Diagnostic>(), 44);
     }
 }

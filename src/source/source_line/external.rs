@@ -19,24 +19,30 @@ extern "C" {
         ends_with_eof: bool,
     ) -> SourceLineBlob;
 
-    fn lib_ruby_parser__internal__containers__source_line__get_start(blob: SourceLineBlob) -> u64;
-    fn lib_ruby_parser__internal__containers__source_line__get_end(blob: SourceLineBlob) -> u64;
+    fn lib_ruby_parser__internal__containers__source_line__get_start(
+        blob: *const SourceLineBlob,
+    ) -> u64;
+    fn lib_ruby_parser__internal__containers__source_line__get_end(
+        blob: *const SourceLineBlob,
+    ) -> u64;
     fn lib_ruby_parser__internal__containers__source_line__get_ends_with_eof(
-        blob: SourceLineBlob,
+        blob: *const SourceLineBlob,
     ) -> bool;
 
     fn lib_ruby_parser__internal__containers__source_line__set_start(
-        blob: SourceLineBlob,
+        blob: *mut SourceLineBlob,
         start: u64,
-    ) -> SourceLineBlob;
+    );
     fn lib_ruby_parser__internal__containers__source_line__set_end(
-        blob: SourceLineBlob,
+        blob: *mut SourceLineBlob,
         end: u64,
-    ) -> SourceLineBlob;
+    );
     fn lib_ruby_parser__internal__containers__source_line__set_ends_with_eof(
-        blob: SourceLineBlob,
+        blob: *mut SourceLineBlob,
         ends_with_eof: bool,
-    ) -> SourceLineBlob;
+    );
+
+    fn lib_ruby_parser__internal__containers__source_line__drop(blob: *mut SourceLineBlob);
 }
 
 impl SourceLine {
@@ -52,36 +58,41 @@ impl SourceLine {
         Self { blob }
     }
 
-    /// Returns start of the line
+    /// Returns `start` attribute
     pub fn start(&self) -> usize {
-        unsafe { lib_ruby_parser__internal__containers__source_line__get_start(self.blob) as usize }
+        unsafe {
+            lib_ruby_parser__internal__containers__source_line__get_start(&self.blob) as usize
+        }
     }
-    /// Sets start of the line
+    /// Returns `end` attribute
     pub fn end(&self) -> usize {
-        unsafe { lib_ruby_parser__internal__containers__source_line__get_end(self.blob) as usize }
+        unsafe { lib_ruby_parser__internal__containers__source_line__get_end(&self.blob) as usize }
     }
-    /// Returns end of the line
+    /// Returns `ends_with_eof` attribute
     pub fn ends_with_eof(&self) -> bool {
-        unsafe { lib_ruby_parser__internal__containers__source_line__get_ends_with_eof(self.blob) }
+        unsafe { lib_ruby_parser__internal__containers__source_line__get_ends_with_eof(&self.blob) }
     }
 
-    /// Sets end of the line
+    /// Sets `start` attribute to given value
     pub fn set_start(&mut self, start: usize) {
-        self.blob = unsafe {
-            lib_ruby_parser__internal__containers__source_line__set_start(self.blob, start as u64)
+        unsafe {
+            lib_ruby_parser__internal__containers__source_line__set_start(
+                &mut self.blob,
+                start as u64,
+            )
         }
     }
-    /// Returns true of line ends with EOF
+    /// Sets `end` attribute to given value
     pub fn set_end(&mut self, end: usize) {
-        self.blob = unsafe {
-            lib_ruby_parser__internal__containers__source_line__set_end(self.blob, end as u64)
+        unsafe {
+            lib_ruby_parser__internal__containers__source_line__set_end(&mut self.blob, end as u64)
         }
     }
-    /// Sets whether line ends with EOF
+    /// Sets `ends_with_eof` attribute to given value
     pub fn set_ends_with_eof(&mut self, ends_with_eof: bool) {
-        self.blob = unsafe {
+        unsafe {
             lib_ruby_parser__internal__containers__source_line__set_ends_with_eof(
-                self.blob,
+                &mut self.blob,
                 ends_with_eof,
             )
         }
@@ -115,3 +126,9 @@ impl PartialEq for SourceLine {
     }
 }
 impl Eq for SourceLine {}
+
+impl Drop for SourceLine {
+    fn drop(&mut self) {
+        unsafe { lib_ruby_parser__internal__containers__source_line__drop(&mut self.blob) };
+    }
+}

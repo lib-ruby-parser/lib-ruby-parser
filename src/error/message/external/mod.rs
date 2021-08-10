@@ -12,13 +12,25 @@ pub struct DiagnosticMessage {
     pub(crate) blob: DiagnosticMessageBlob,
 }
 
+extern "C" {
+    fn lib_ruby_parser__internal__containers__diagnostic_message__drop(
+        blob: *mut DiagnosticMessageBlob,
+    );
+}
+
+impl Drop for DiagnosticMessage {
+    fn drop(&mut self) {
+        unsafe { lib_ruby_parser__internal__containers__diagnostic_message__drop(&mut self.blob) }
+    }
+}
+
 mod constructors;
-mod getters;
 mod predicates;
 
 mod impl_clone;
 mod impl_debug;
-mod impl_drop;
 mod impl_partial_eq;
 
 impl Eq for DiagnosticMessage {}
+
+mod variants;

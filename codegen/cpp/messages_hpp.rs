@@ -90,20 +90,20 @@ fn variant(message: &lib_ruby_parser_nodes::Message) -> String {
 fn constructor(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "{signature};",
-        signature = c_helpers::messages::constructor_signature(message)
+        signature = c_helpers::messages::constructor::sig(message)
     )
 }
 fn getters(message: &lib_ruby_parser_nodes::Message) -> Vec<String> {
     message.fields.map(&|field| {
         format!(
             "{signature};",
-            signature = c_helpers::messages::getter_signature(message, field)
+            signature = c_helpers::messages::getter::sig(message, field)
         )
     })
 }
 fn predicate(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "{signature};",
-        signature = c_helpers::messages::type_predicate_signature(message)
+        signature = c_helpers::messages::type_predicate::sig(message)
     )
 }

@@ -3,12 +3,10 @@
 
 #include <stdint.h>
 
-typedef uint8_t BYTE;
-
 #define DECLARE_BLOB_FOR(VALUE)                               \
-    typedef struct                                            \
+    typedef struct VALUE##_BLOB                               \
     {                                                         \
-        BYTE data[sizeof(VALUE)];                             \
+        uint8_t data[sizeof(VALUE)];                          \
     } VALUE##_BLOB;                                           \
                                                               \
     typedef union                                             \

@@ -50,7 +50,7 @@ fn test_into_token_value() {
 #[test]
 fn test_loc() {
     let token = new_token();
-    assert_eq!(token.loc(), Loc::new(1, 2));
+    assert_eq!(token.loc(), &Loc::new(1, 2));
 }
 
 #[test]

@@ -1,3 +1,4 @@
+use crate::containers::helpers::IntoBlob;
 use crate::containers::size::BYTES_SIZE;
 
 #[repr(C)]
@@ -15,20 +16,24 @@ pub struct Bytes {
 use crate::containers::list::external::{List, ListBlob};
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__bytes__make_from_list_blob(
+    fn lib_ruby_parser__internal__containers__bytes__new_from_byte_list(
         list_blob: ListBlob,
     ) -> BytesBlob;
-    fn lib_ruby_parser__internal__containers__bytes__free(bytes_blob: BytesBlob);
-    fn lib_ruby_parser__internal__containers__bytes__make() -> BytesBlob;
-    fn lib_ruby_parser__internal__containers__bytes__to_list_blob(
-        bytes_blob: BytesBlob,
-    ) -> ListBlob;
+    fn lib_ruby_parser__internal__containers__bytes__drop(blob: *mut BytesBlob);
+    fn lib_ruby_parser__internal__containers__bytes__get_byte_list(
+        blob: *const BytesBlob,
+    ) -> *const ListBlob;
+    fn lib_ruby_parser__internal__containers__bytes__set_byte_list(
+        blob: *mut BytesBlob,
+        list_blob: ListBlob,
+    );
+    fn lib_ruby_parser__internal__containers__bytes__into_byte_list(blob: BytesBlob) -> ListBlob;
+    fn lib_ruby_parser__internal__containers__bytes__push(blob: *mut BytesBlob, byte: u8);
 }
 
 impl Drop for Bytes {
     fn drop(&mut self) {
-        unsafe { lib_ruby_parser__internal__containers__bytes__free(self.blob) }
-        self.blob = unsafe { lib_ruby_parser__internal__containers__bytes__make() };
+        unsafe { lib_ruby_parser__internal__containers__bytes__drop(&mut self.blob) }
     }
 }
 
@@ -64,61 +69,43 @@ impl Bytes {
     /// Constructs Bytes based on a given vector
     pub fn new(raw: Vec<u8>) -> Self {
         let list: List<u8> = raw.into();
-        let list_blob: ListBlob = list.into();
-        let bytes_blob =
-            unsafe { lib_ruby_parser__internal__containers__bytes__make_from_list_blob(list_blob) };
-        Self { blob: bytes_blob }
+        let blob = unsafe {
+            lib_ruby_parser__internal__containers__bytes__new_from_byte_list(list.into_blob())
+        };
+        Self { blob }
     }
 
     /// Returns a reference to inner data
     pub fn as_raw(&self) -> &[u8] {
-        let list_blob =
-            unsafe { lib_ruby_parser__internal__containers__bytes__to_list_blob(self.blob) };
-        let list: List<u8> = list_blob.into();
-        let slice = unsafe { std::slice::from_raw_parts(list.as_ptr(), list.len()) };
-        std::mem::forget(list);
-        slice
+        unsafe {
+            (lib_ruby_parser__internal__containers__bytes__get_byte_list(&self.blob)
+                as *const List<u8>)
+                .as_ref()
+                .unwrap()
+        }
     }
 
     /// "Unwraps" self and returns inner data
-    pub fn into_raw(mut self) -> List<u8> {
+    pub fn into_raw(self) -> List<u8> {
         let list_blob =
-            unsafe { lib_ruby_parser__internal__containers__bytes__to_list_blob(self.blob) };
-        self.blob = unsafe { lib_ruby_parser__internal__containers__bytes__make() };
-        list_blob.into()
+            unsafe { lib_ruby_parser__internal__containers__bytes__into_byte_list(self.blob) };
+        std::mem::forget(self);
+        List::<u8>::from_blob(list_blob)
     }
 
     /// Replaces inner data with given list
     pub fn set_raw(&mut self, raw: List<u8>) {
-        let list_blob =
-            unsafe { lib_ruby_parser__internal__containers__bytes__to_list_blob(self.blob) };
-        let list: List<u8> = list_blob.into();
-        drop(list);
-
-        let list_blob: ListBlob = raw.into();
-        self.blob =
-            unsafe { lib_ruby_parser__internal__containers__bytes__make_from_list_blob(list_blob) };
+        unsafe {
+            lib_ruby_parser__internal__containers__bytes__set_byte_list(
+                &mut self.blob,
+                raw.into_blob(),
+            )
+        }
     }
 
     /// Appends a byte
     pub fn push(&mut self, byte: u8) {
-        let bytes_blob = self.blob;
-        let list_blob =
-            unsafe { lib_ruby_parser__internal__containers__bytes__to_list_blob(bytes_blob) };
-        let mut list: List<u8> = list_blob.into();
-        list.push(byte);
-        let list_blob: ListBlob = list.into();
-        let bytes_blob =
-            unsafe { lib_ruby_parser__internal__containers__bytes__make_from_list_blob(list_blob) };
-        self.blob = bytes_blob;
-    }
-}
-
-impl Bytes {
-    pub(crate) fn into_blob(mut self) -> BytesBlob {
-        let result = self.blob;
-        self.blob = unsafe { lib_ruby_parser__internal__containers__bytes__make() };
-        result
+        unsafe { lib_ruby_parser__internal__containers__bytes__push(&mut self.blob, byte) };
     }
 }
 

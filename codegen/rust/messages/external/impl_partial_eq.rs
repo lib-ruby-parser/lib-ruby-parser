@@ -24,10 +24,13 @@ pub(crate) fn codegen() {
 }
 
 fn branch(message: &lib_ruby_parser_nodes::Message) -> String {
-    // FIXME: compare fields
     format!(
-        "if self.is_{message_type}() {{
-            other.is_{message_type}()
+        "if let Some(lhs) = self.as_{message_type}() {{
+            if let Some(rhs) = other.as_{message_type}() {{
+                lhs == rhs
+            }} else {{
+                false
+            }}
         }}",
         message_type = message.lower_name()
     )

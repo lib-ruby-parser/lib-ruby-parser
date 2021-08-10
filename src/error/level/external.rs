@@ -9,12 +9,12 @@ pub(crate) struct ErrorLevelBlob {
 /// Byte sequence based on external implementation
 #[repr(C)]
 pub struct ErrorLevel {
-    blob: ErrorLevelBlob,
+    pub(crate) blob: ErrorLevelBlob,
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__error_level__make_warning() -> ErrorLevelBlob;
-    fn lib_ruby_parser__internal__containers__error_level__make_error() -> ErrorLevelBlob;
+    fn lib_ruby_parser__internal__containers__error_level__new_warning() -> ErrorLevelBlob;
+    fn lib_ruby_parser__internal__containers__error_level__new_error() -> ErrorLevelBlob;
     fn lib_ruby_parser__internal__containers__error_level__is_warning(blob: ErrorLevelBlob)
         -> bool;
     fn lib_ruby_parser__internal__containers__error_level__is_error(blob: ErrorLevelBlob) -> bool;
@@ -23,13 +23,13 @@ extern "C" {
 impl ErrorLevel {
     /// Constructs a warning
     pub fn warning() -> Self {
-        let blob = unsafe { lib_ruby_parser__internal__containers__error_level__make_warning() };
+        let blob = unsafe { lib_ruby_parser__internal__containers__error_level__new_warning() };
         Self { blob }
     }
 
     /// Constructs an error
     pub fn error() -> Self {
-        let blob = unsafe { lib_ruby_parser__internal__containers__error_level__make_error() };
+        let blob = unsafe { lib_ruby_parser__internal__containers__error_level__new_error() };
         Self { blob }
     }
 

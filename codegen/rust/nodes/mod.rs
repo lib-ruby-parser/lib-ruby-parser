@@ -1,16 +1,11 @@
-#[cfg(feature = "lib-ruby-parser-nodes")]
 extern crate lib_ruby_parser_nodes;
 
-#[cfg(feature = "lib-ruby-parser-nodes")]
 mod get_loc_fn;
-#[cfg(feature = "lib-ruby-parser-nodes")]
+pub(crate) mod helpers;
 mod node_enum;
-#[cfg(feature = "lib-ruby-parser-nodes")]
 mod node_file;
-#[cfg(feature = "lib-ruby-parser-nodes")]
 mod node_mod;
 
-#[cfg(feature = "lib-ruby-parser-nodes")]
 pub(crate) fn codegen() {
     let nodes = lib_ruby_parser_nodes::nodes();
 
@@ -23,9 +18,4 @@ pub(crate) fn codegen() {
     node_mod::codegen();
     node_enum::codegen();
     get_loc_fn::codegen();
-}
-
-#[cfg(not(feature = "lib-ruby-parser-nodes"))]
-pub(crate) fn codegen() {
-    println!("Skipping generating node-based Rust source files")
 }

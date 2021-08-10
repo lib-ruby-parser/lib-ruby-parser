@@ -8,6 +8,7 @@ fn contents() -> String {
 
 use crate::containers::StringPtrBlob;
 use crate::containers::ExternalStringPtr as StringPtr;
+use crate::containers::helpers::IntoBlob;
 
 use super::{{DiagnosticMessage, DiagnosticMessageBlob}};
 
@@ -49,7 +50,7 @@ fn extern_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
 
     format!(
         "fn {name}({arglist}) -> DiagnosticMessageBlob;",
-        name = c_helpers::messages::constructor_name(message),
+        name = c_helpers::messages::constructor::name(message),
         arglist = arglist
     )
 }
@@ -75,29 +76,22 @@ fn foreign_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
         .fields
         .map(&|field| match field.field_type {
             lib_ruby_parser_nodes::MessageFieldType::Str => {
-                format!("{name}.blob", name = field.name)
+                format!("{name}.into_blob()", name = field.name)
             }
             lib_ruby_parser_nodes::MessageFieldType::Byte => field.name.to_string(),
         })
         .join(", ");
 
-    let forget_external_arglist = message
-        .fields
-        .map(&|field| format!("std::mem::forget({field_name});", field_name = field.name))
-        .join(" ");
-
     format!(
         "/// Constructs {variant_name} variant
 pub fn new_{fn_name}({rust_arglist}) -> Self {{
     let blob = unsafe {{ {extern_constructor_name}({extern_arglist}) }};
-    {forget_external_arglist}
     Self {{ blob }}
 }}",
         variant_name = message.camelcase_name(),
         fn_name = message.lower_name(),
         rust_arglist = rust_arglist,
-        extern_constructor_name = c_helpers::messages::constructor_name(message),
+        extern_constructor_name = c_helpers::messages::constructor::name(message),
         extern_arglist = extern_arglist,
-        forget_external_arglist = forget_external_arglist
     )
 }

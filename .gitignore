@@ -5,6 +5,7 @@ out
 src/parser.rs
 src/nodes/types
 src/nodes/node_enum/native.rs
+src/nodes/node_enum/external.rs
 src/traverse/visitor/visit_gen.rs
 tests/loc_matcher/loc_name_gen.rs
 src/reserved_words/list.rs
@@ -19,6 +20,23 @@ src/error/message/native/constructors.rs
 src/error/message/native/enum_.rs
 src/error/message/native/getters.rs
 src/error/message/native/predicates.rs
+src/error/message/external/variants.rs
+src/error/message/tests.rs
 src/containers/size.rs
 flamegraph.svg
 Dockerfile
+
+# external/c
+external/c/*.o
+external/c/*.a
+external/c/*.dSYM
+external/c/sizes
+external/c/messages.h
+external/c/messages.c
+external/c/nodes.h
+external/c/nodes.c
+external/c/sizes-out
+external/c/bindings_messages.h
+external/c/bindings_messages.c
+external/c/bindings_nodes.h
+external/c/bindings_nodes.c

@@ -13,13 +13,13 @@ pub struct MagicCommentKind {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__make_encoding(
+    fn lib_ruby_parser__internal__containers__magic_comment_kind__new_encoding(
     ) -> MagicCommentKindBlob;
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__make_frozen_string_literal(
+    fn lib_ruby_parser__internal__containers__magic_comment_kind__new_frozen_string_literal(
     ) -> MagicCommentKindBlob;
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__make_warn_indent(
+    fn lib_ruby_parser__internal__containers__magic_comment_kind__new_warn_indent(
     ) -> MagicCommentKindBlob;
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__make_shareable_constant_value(
+    fn lib_ruby_parser__internal__containers__magic_comment_kind__new_shareable_constant_value(
     ) -> MagicCommentKindBlob;
 
     fn lib_ruby_parser__internal__containers__magic_comment_kind__is_encoding(
@@ -40,27 +40,26 @@ impl MagicCommentKind {
     /// Constructs `Encoding` variant
     pub fn encoding() -> Self {
         let blob =
-            unsafe { lib_ruby_parser__internal__containers__magic_comment_kind__make_encoding() };
+            unsafe { lib_ruby_parser__internal__containers__magic_comment_kind__new_encoding() };
         Self { blob }
     }
     /// Constructs `FrozenStringLiteral` variant
     pub fn frozen_string_literal() -> Self {
         let blob = unsafe {
-            lib_ruby_parser__internal__containers__magic_comment_kind__make_frozen_string_literal()
+            lib_ruby_parser__internal__containers__magic_comment_kind__new_frozen_string_literal()
         };
         Self { blob }
     }
     /// Constructs `WarnIndent` variant
     pub fn warn_indent() -> Self {
-        let blob = unsafe {
-            lib_ruby_parser__internal__containers__magic_comment_kind__make_warn_indent()
-        };
+        let blob =
+            unsafe { lib_ruby_parser__internal__containers__magic_comment_kind__new_warn_indent() };
         Self { blob }
     }
     /// Constructs `ShareableConstantValue` variant
     pub fn shareable_constant_value() -> Self {
         let blob = unsafe {
-            lib_ruby_parser__internal__containers__magic_comment_kind__make_shareable_constant_value(
+            lib_ruby_parser__internal__containers__magic_comment_kind__new_shareable_constant_value(
             )
         };
         Self { blob }

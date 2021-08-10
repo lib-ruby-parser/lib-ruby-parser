@@ -24,23 +24,11 @@ pub(crate) fn codegen() {
 }
 
 fn branch(message: &lib_ruby_parser_nodes::Message) -> String {
-    let debug_fields = message
-        .fields
-        .map(&|field| {
-            format!(
-                ".field(\"{field_name}\", &self.{prefix}_get_{field_name}())",
-                field_name = field.name,
-                prefix = message.lower_name(),
-            )
-        })
-        .join("");
-
     format!(
-        "if self.is_{message_type}() {{
-            f.debug_struct(\"{struct_name}\"){debug_fields}.finish()
+        "if let Some(inner) = self.as_{message_type}() {{
+            write!(f, \"{struct_name}({{:?}})\", inner)
         }}",
         message_type = message.lower_name(),
         struct_name = message.camelcase_name(),
-        debug_fields = debug_fields
     )
 }

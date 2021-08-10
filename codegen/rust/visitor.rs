@@ -58,9 +58,7 @@ impl<TObserver: Observer> Visit<&Node> for Visitor<TObserver> {{
         self.observer.on_subitem(visit_as);
         self.observer.on_node(node);
 
-        match node {{
-            {match_branches}
-        }}
+        {visit_branches}
 
         self.observer.on_node_moving_up(&node);
         self.observer.on_subitem_moving_up(visit_as);
@@ -75,7 +73,7 @@ where
 }}
 ",
             observer_methods = self.observer_methods().join("\n\n    "),
-            match_branches = self.match_branches().join("\n            "),
+            visit_branches = self.visit_branches().join("\n        "),
             visitor_methods = self.visitor_methods().join("\n\n    ")
         )
     }
@@ -87,22 +85,23 @@ where
                 format!(
                     "/// Invoked by a `Visitor` on entering into `{struct_name}` node.
     #[allow(unused_variables)]
-    fn on_{mid}(&mut self, node: &{struct_name}) {{}}",
-                    mid = node.filename,
+    fn on_{lower}(&mut self, node: &{struct_name}) {{}}",
+                    lower = node.lower_name(),
                     struct_name = node.struct_name
                 )
             })
             .collect()
     }
 
-    fn match_branches(&self) -> Vec<String> {
+    fn visit_branches(&self) -> Vec<String> {
         self.nodes
             .iter()
             .map(|node| {
                 format!(
-                    "Node::{struct_name}(inner) => self.visit_{mid}(inner),",
-                    struct_name = node.struct_name,
-                    mid = node.filename
+                    "if let Some(inner) = node.as_{lower}() {{
+            self.visit_{lower}(inner)
+        }}",
+                    lower = node.lower_name()
                 )
             })
             .collect()
@@ -112,13 +111,13 @@ where
             .iter()
             .map(|node| {
                 format!(
-                    "fn visit_{mid}(&mut self, node: &{struct_name}) {{
-        self.observer.on_{mid}(node);
+                    "fn visit_{lower}(&mut self, node: &{struct_name}) {{
+        self.observer.on_{lower}(node);
 
         {visit_children}
     }}",
                     struct_name = node.struct_name,
-                    mid = node.filename,
+                    lower = node.lower_name(),
                     visit_children = NodeWrapper::new(node).visit_children().join("\n        ")
                 )
             })

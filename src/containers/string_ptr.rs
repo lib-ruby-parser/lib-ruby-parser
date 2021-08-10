@@ -16,23 +16,22 @@ pub(crate) mod external {
     }
 
     extern "C" {
-        fn lib_ruby_parser__internal__containers__string_ptr__free(blob: StringPtrBlob);
-        fn lib_ruby_parser__internal__containers__string_ptr__clone(
-            blob: StringPtrBlob,
-        ) -> StringPtrBlob;
-        fn lib_ruby_parser__internal__containers__string_ptr__get_raw(
-            blob: StringPtrBlob,
-        ) -> *const i8;
-        fn lib_ruby_parser__internal__containers__string_ptr__len(blob: StringPtrBlob) -> u64;
-        fn lib_ruby_parser__internal__containers__string_ptr__make(
-            ptr: *const i8,
+        fn lib_ruby_parser__internal__containers__string_ptr__new(
+            ptr: *const u8,
             len: u64,
         ) -> StringPtrBlob;
+        fn lib_ruby_parser__internal__containers__string_ptr__drop(blob: *mut StringPtrBlob);
+        fn lib_ruby_parser__internal__containers__string_ptr__get_raw(
+            blob_ptr: *mut StringPtrBlob,
+        ) -> *mut u8;
+        fn lib_ruby_parser__internal__containers__string_ptr__get_len(
+            blob: *const StringPtrBlob,
+        ) -> u64;
     }
 
     impl Drop for StringPtr {
         fn drop(&mut self) {
-            unsafe { lib_ruby_parser__internal__containers__string_ptr__free(self.blob) }
+            unsafe { lib_ruby_parser__internal__containers__string_ptr__drop(&mut self.blob) }
         }
     }
 
@@ -44,11 +43,8 @@ pub(crate) mod external {
 
     impl Clone for StringPtr {
         fn clone(&self) -> Self {
-            Self {
-                blob: unsafe {
-                    lib_ruby_parser__internal__containers__string_ptr__clone(self.blob)
-                },
-            }
+            let vec: &[u8] = self.into();
+            Self::from(vec.to_vec())
         }
     }
 
@@ -72,11 +68,28 @@ pub(crate) mod external {
 
         /// Equivalent of String::len
         pub fn len(&self) -> usize {
-            unsafe { lib_ruby_parser__internal__containers__string_ptr__len(self.blob) as usize }
+            unsafe {
+                lib_ruby_parser__internal__containers__string_ptr__get_len(&self.blob) as usize
+            }
         }
 
-        pub(crate) fn as_ptr(&self) -> *const i8 {
-            unsafe { lib_ruby_parser__internal__containers__string_ptr__get_raw(self.blob) }
+        pub(crate) fn as_ptr(&self) -> *const u8 {
+            let blob_ptr: *const StringPtrBlob = &self.blob;
+            unsafe {
+                lib_ruby_parser__internal__containers__string_ptr__get_raw(
+                    blob_ptr as *mut StringPtrBlob,
+                )
+            }
+        }
+
+        pub(crate) fn as_mut_ptr(&mut self) -> *mut u8 {
+            unsafe { lib_ruby_parser__internal__containers__string_ptr__get_raw(&mut self.blob) }
+        }
+
+        pub(crate) fn into_ptr(mut self) -> *mut u8 {
+            let ptr = self.as_mut_ptr();
+            std::mem::forget(self);
+            ptr
         }
     }
 
@@ -84,9 +97,8 @@ pub(crate) mod external {
         type Target = [u8];
 
         fn deref(&self) -> &Self::Target {
-            let ptr = self.as_ptr();
-            let len = self.len();
-            unsafe { std::slice::from_raw_parts(ptr as *const u8, len) }
+            let s: &[u8] = self.into();
+            s
         }
     }
 
@@ -115,10 +127,10 @@ pub(crate) mod external {
             let ptr = if len == 0 {
                 std::ptr::null_mut()
             } else {
-                bytes.as_ptr() as *const i8
+                bytes.as_ptr()
             };
 
-            let blob = unsafe { lib_ruby_parser__internal__containers__string_ptr__make(ptr, len) };
+            let blob = unsafe { lib_ruby_parser__internal__containers__string_ptr__new(ptr, len) };
             Self { blob }
         }
     }
@@ -132,6 +144,30 @@ pub(crate) mod external {
     impl From<StringPtr> for String {
         fn from(value: StringPtr) -> Self {
             String::from_utf8(value.to_vec()).unwrap()
+        }
+    }
+
+    impl From<StringPtr> for Vec<u8> {
+        fn from(value: StringPtr) -> Self {
+            let len = value.len();
+            let ptr = value.into_ptr();
+            unsafe { Vec::from_raw_parts(ptr, len, len) }
+        }
+    }
+
+    impl From<&StringPtr> for &[u8] {
+        fn from(value: &StringPtr) -> Self {
+            let ptr = value.as_ptr();
+            let len = value.len();
+            unsafe { std::slice::from_raw_parts(ptr, len) }
+        }
+    }
+
+    impl From<&mut StringPtr> for &mut [u8] {
+        fn from(value: &mut StringPtr) -> Self {
+            let ptr = value.as_mut_ptr();
+            let len = value.len();
+            unsafe { std::slice::from_raw_parts_mut(ptr, len) }
         }
     }
 
@@ -236,6 +272,21 @@ pub(crate) mod external {
 
             let empty_ref = empty.deref();
             assert_eq!(empty_ref, &[]);
+        }
+
+        #[test]
+        fn test_from() {
+            let string_ptr = StringPtr::from("foo");
+            drop(string_ptr);
+
+            let string_ptr = StringPtr::from(String::from("foo"));
+            drop(string_ptr);
+
+            let string_ptr = StringPtr::from(&String::from("foo"));
+            drop(string_ptr);
+
+            let string_ptr = StringPtr::from(vec![1, 2, 3]);
+            drop(string_ptr);
         }
     }
 }

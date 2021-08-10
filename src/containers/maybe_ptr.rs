@@ -22,40 +22,35 @@ pub(crate) mod rust {
 pub(crate) mod external {
     use std::ffi::c_void;
 
-    use crate::containers::get_drop_fn::{DropPtrFn, GetDropFn};
+    use crate::containers::get_drop_fn::{GetFreeMaybePtrFn, GetFreePtrFn};
     use crate::containers::ExternalPtr;
 
     use crate::containers::size::MAYBE_PTR_SIZE;
 
+    /// MaybePtrBlob, exposed only because it's used in some pub trait
     #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub(crate) struct MaybePtrBlob {
+    #[derive(Clone, Copy, Debug)]
+    pub struct MaybePtrBlob {
         blob: [u8; MAYBE_PTR_SIZE],
     }
 
     /// C-compatible nullable pointer
     #[repr(C)]
-    pub struct MaybePtr<T: GetDropFn> {
-        blob: MaybePtrBlob,
+    pub struct MaybePtr<T: GetFreeMaybePtrFn> {
+        pub(crate) blob: MaybePtrBlob,
         _t: std::marker::PhantomData<T>,
     }
 
-    impl<T: GetDropFn> Drop for MaybePtr<T> {
+    impl<T: GetFreeMaybePtrFn> Drop for MaybePtr<T> {
         fn drop(&mut self) {
-            let drop_item_in_place = T::get_drop_ptr_in_place_fn();
-            unsafe {
-                lib_ruby_parser__internal__containers__maybe_ptr__free(
-                    self.blob,
-                    drop_item_in_place,
-                )
-            };
-            self.blob = unsafe { lib_ruby_parser__internal__containers__maybe_ptr__make_null() };
+            let free_maybe_ptr_pfn = T::get_maybe_free_ptr_fn();
+            unsafe { free_maybe_ptr_pfn(&mut self.blob) };
         }
     }
 
     impl<T> std::fmt::Debug for MaybePtr<T>
     where
-        T: std::fmt::Debug + GetDropFn,
+        T: std::fmt::Debug + GetFreeMaybePtrFn,
     {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             std::fmt::Debug::fmt(&self.as_ref(), f)
@@ -64,7 +59,7 @@ pub(crate) mod external {
 
     impl<T> PartialEq for MaybePtr<T>
     where
-        T: PartialEq + GetDropFn,
+        T: PartialEq + GetFreeMaybePtrFn,
     {
         fn eq(&self, other: &Self) -> bool {
             PartialEq::eq(&self.as_ref(), &other.as_ref())
@@ -73,7 +68,7 @@ pub(crate) mod external {
 
     impl<T> Clone for MaybePtr<T>
     where
-        T: Clone + GetDropFn,
+        T: Clone + GetFreeMaybePtrFn,
     {
         fn clone(&self) -> Self {
             match self.as_ref() {
@@ -86,7 +81,7 @@ pub(crate) mod external {
     use super::MaybePtrSome;
     impl<T> MaybePtrSome<T> for MaybePtr<T>
     where
-        T: GetDropFn,
+        T: GetFreeMaybePtrFn,
     {
         fn some(value: T) -> Self {
             let ptr = Box::into_raw(Box::new(value));
@@ -97,34 +92,33 @@ pub(crate) mod external {
     use super::MaybePtrNone;
     impl<T> MaybePtrNone<T> for MaybePtr<T>
     where
-        T: GetDropFn,
+        T: GetFreeMaybePtrFn,
     {
         fn none() -> Self {
-            Self::from_raw(std::ptr::null_mut())
+            let blob = unsafe { lib_ruby_parser__internal__containers__maybe_ptr__new_null() };
+            Self {
+                blob,
+                _t: std::marker::PhantomData,
+            }
         }
     }
 
     extern "C" {
-        fn lib_ruby_parser__internal__containers__maybe_ptr__make(ptr: *mut c_void)
-            -> MaybePtrBlob;
-        fn lib_ruby_parser__internal__containers__maybe_ptr__free(
-            blob: MaybePtrBlob,
-            deleter: DropPtrFn,
-        );
+        fn lib_ruby_parser__internal__containers__maybe_ptr__new(ptr: *mut c_void) -> MaybePtrBlob;
+        fn lib_ruby_parser__internal__containers__maybe_ptr__new_null() -> MaybePtrBlob;
         fn lib_ruby_parser__internal__containers__maybe_ptr__get_raw(
-            blob: MaybePtrBlob,
+            blob_ptr: *mut MaybePtrBlob,
         ) -> *mut c_void;
-        fn lib_ruby_parser__internal__containers__maybe_ptr__make_null() -> MaybePtrBlob;
     }
 
     impl<T> MaybePtr<T>
     where
-        T: GetDropFn,
+        T: GetFreeMaybePtrFn,
     {
         /// Constructs a pointer with a given raw pointer
         pub fn from_raw(ptr: *mut T) -> Self {
             let blob = unsafe {
-                lib_ruby_parser__internal__containers__maybe_ptr__make(ptr as *mut c_void)
+                lib_ruby_parser__internal__containers__maybe_ptr__new(ptr as *mut c_void)
             };
             Self {
                 blob,
@@ -134,18 +128,26 @@ pub(crate) mod external {
 
         /// Returns borrowed raw pointer stored in MaybePtr
         pub(crate) fn as_ptr(&self) -> *const T {
+            let blob_ptr: *const MaybePtrBlob = &self.blob;
             unsafe {
-                lib_ruby_parser__internal__containers__maybe_ptr__get_raw(self.blob) as *const T
+                lib_ruby_parser__internal__containers__maybe_ptr__get_raw(
+                    blob_ptr as *mut MaybePtrBlob,
+                ) as *const T
+            }
+        }
+
+        /// Returns borrowed raw pointer stored in MaybePtr
+        pub(crate) fn as_mut_ptr(&mut self) -> *mut T {
+            unsafe {
+                lib_ruby_parser__internal__containers__maybe_ptr__get_raw(&mut self.blob) as *mut T
             }
         }
 
         /// Converts self into raw pointer
         pub fn into_raw(mut self) -> *mut T {
-            let ptr =
-                unsafe { lib_ruby_parser__internal__containers__maybe_ptr__get_raw(self.blob) }
-                    as *mut T;
-            self.blob = unsafe { lib_ruby_parser__internal__containers__maybe_ptr__make_null() };
-            ptr
+            let raw = self.as_mut_ptr();
+            std::mem::forget(self);
+            raw
         }
 
         /// Equivalent of Option::or_else
@@ -163,7 +165,7 @@ pub(crate) mod external {
         /// Equivalent of Option::expect
         pub fn expect(self, message: &str) -> ExternalPtr<T>
         where
-            T: std::fmt::Debug + GetDropFn,
+            T: std::fmt::Debug + GetFreeMaybePtrFn + GetFreePtrFn,
         {
             let ptr = self.into_raw();
             if ptr.is_null() {
@@ -176,7 +178,7 @@ pub(crate) mod external {
         /// Equivalent of Option::map
         pub fn map<F>(self, f: F) -> Self
         where
-            T: std::fmt::Debug + GetDropFn,
+            T: std::fmt::Debug + GetFreeMaybePtrFn + GetFreePtrFn,
             F: FnOnce(ExternalPtr<T>) -> ExternalPtr<T>,
         {
             if self.as_ptr().is_null() {
@@ -196,7 +198,10 @@ pub(crate) mod external {
         }
 
         /// Equivalent of Option::unwrap
-        pub fn unwrap(self) -> ExternalPtr<T> {
+        pub fn unwrap(self) -> ExternalPtr<T>
+        where
+            T: GetFreePtrFn,
+        {
             if self.as_ptr().is_null() {
                 panic!("unwrapping MaybePtr::None");
             } else {
@@ -214,11 +219,21 @@ pub(crate) mod external {
                 Some(unsafe { &*ptr })
             }
         }
+
+        /// Equivalent of Option::as_mut
+        pub fn as_mut(&mut self) -> Option<&mut T> {
+            let ptr = self.as_mut_ptr();
+            if ptr.is_null() {
+                return None;
+            } else {
+                Some(unsafe { &mut *ptr })
+            }
+        }
     }
 
     impl<T> From<Option<Box<T>>> for MaybePtr<T>
     where
-        T: GetDropFn,
+        T: GetFreeMaybePtrFn,
     {
         fn from(maybe_boxed: Option<Box<T>>) -> Self {
             match maybe_boxed {
@@ -230,7 +245,7 @@ pub(crate) mod external {
 
     impl<T> From<MaybePtr<T>> for Option<Box<T>>
     where
-        T: GetDropFn,
+        T: GetFreeMaybePtrFn,
     {
         fn from(ptr: MaybePtr<T>) -> Self {
             let ptr = ptr.into_raw();
@@ -242,7 +257,10 @@ pub(crate) mod external {
         }
     }
 
-    impl<T: GetDropFn> From<ExternalPtr<T>> for MaybePtr<T> {
+    impl<T> From<ExternalPtr<T>> for MaybePtr<T>
+    where
+        T: GetFreeMaybePtrFn + GetFreePtrFn,
+    {
         fn from(ptr: ExternalPtr<T>) -> Self {
             let ptr = ptr.into_raw();
             Self::from_raw(ptr)
@@ -251,7 +269,7 @@ pub(crate) mod external {
 
     impl<T> Default for MaybePtr<T>
     where
-        T: GetDropFn,
+        T: GetFreeMaybePtrFn,
     {
         fn default() -> Self {
             Self::none()
@@ -260,35 +278,28 @@ pub(crate) mod external {
 
     #[cfg(test)]
     mod test {
-        use super::{
-            GetDropFn, MaybePtr, MaybePtrBlob, MaybePtrNone, MaybePtrSome, MAYBE_PTR_SIZE,
-        };
-
-        #[test]
-        fn test_size() {
-            assert_eq!(std::mem::size_of::<MaybePtrBlob>(), MAYBE_PTR_SIZE);
-        }
+        use super::{GetFreeMaybePtrFn, MaybePtr, MaybePtrBlob, MaybePtrNone, MaybePtrSome};
+        use std::ffi::c_void;
 
         #[derive(Debug, PartialEq)]
         struct Foo {
             bar: Vec<i32>,
         }
 
-        extern "C" fn drop_in_place_foo(ptr: *mut std::ffi::c_void) {
-            unsafe { std::ptr::drop_in_place(ptr as *mut Foo) }
+        extern "C" fn drop_maybe_ptr_of_foo(ptr: *mut MaybePtrBlob) {
+            let ptr = unsafe { *(ptr as *mut *mut Foo) };
+            if ptr.is_null() {
+                return;
+            }
+            unsafe {
+                std::ptr::drop_in_place(ptr);
+                drop(Box::from_raw(ptr as *mut c_void))
+            }
         }
 
-        impl GetDropFn for Foo {
-            fn get_drop_ptr_fn() -> crate::containers::get_drop_fn::DropPtrFn {
-                unreachable!()
-            }
-
-            fn get_drop_ptr_in_place_fn() -> crate::containers::get_drop_fn::DropInPlaceFn {
-                drop_in_place_foo
-            }
-
-            fn get_drop_list_blob_fn() -> crate::containers::get_drop_fn::DropListBlobFn {
-                unreachable!()
+        impl GetFreeMaybePtrFn for Foo {
+            fn get_maybe_free_ptr_fn() -> unsafe extern "C" fn(*mut MaybePtrBlob) {
+                drop_maybe_ptr_of_foo
             }
         }
 
@@ -296,9 +307,14 @@ pub(crate) mod external {
         fn test_maybe_ptr() {
             let ptr = MaybePtr::some(Foo { bar: vec![42] });
             assert_eq!(ptr.as_ref(), Some(&Foo { bar: vec![42] }));
+            assert_eq!(format!("{:?}", ptr), "Some(Foo { bar: [42] })");
 
             let ptr: MaybePtr<Foo> = MaybePtr::none();
             assert_eq!(ptr.as_ref(), None);
+            assert_eq!(format!("{:?}", ptr), "None");
+
+            let ptr: MaybePtr<crate::Node> = MaybePtr::none();
+            assert_eq!(format!("{:?}", ptr), "None");
         }
     }
 }

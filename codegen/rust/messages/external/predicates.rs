@@ -29,17 +29,18 @@ pub(crate) fn codegen() {
 fn extern_predicate(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "fn {name}(blob: *const DiagnosticMessageBlob) -> bool;",
-        name = c_helpers::messages::type_predicate_name(message),
+        name = c_helpers::messages::type_predicate::name(message),
     )
 }
 
 fn foreign_predicate(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
-        "pub(crate) fn is_{variant}(&self) -> bool {{
-    let message_blob_ptr: *const DiagnosticMessageBlob = &self.blob;
-    unsafe {{ {extern_predicate}(message_blob_ptr) }}
-}}",
+        "/// Returns true if current variant is {variant}
+    pub fn is_{variant}(&self) -> bool {{
+        let message_blob_ptr: *const DiagnosticMessageBlob = &self.blob;
+        unsafe {{ {extern_predicate}(message_blob_ptr) }}
+    }}",
         variant = message.lower_name(),
-        extern_predicate = c_helpers::messages::type_predicate_name(message)
+        extern_predicate = c_helpers::messages::type_predicate::name(message)
     )
 }

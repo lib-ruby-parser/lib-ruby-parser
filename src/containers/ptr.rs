@@ -1,5 +1,5 @@
 #[cfg(feature = "compile-with-external-structures")]
-use crate::containers::get_drop_fn::GetDropFn;
+use crate::containers::get_drop_fn::GetFreePtrFn;
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
@@ -16,7 +16,7 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
-    use super::GetDropFn;
+    use super::GetFreePtrFn;
 
     // use crate::containers::deleter::{Deleter, GetDeleter};
     use std::ops::Deref;
@@ -24,32 +24,31 @@ pub(crate) mod external {
 
     use crate::containers::size::PTR_SIZE;
 
+    /// PtrBlob, exposed only because it's used in some pub trait
     #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub(crate) struct PtrBlob {
+    #[derive(Debug, Clone, Copy)]
+    pub struct PtrBlob {
         blob: [u8; PTR_SIZE],
     }
 
     /// C-compatible not-null pointer
     #[repr(C)]
-    pub struct Ptr<T: GetDropFn> {
-        blob: PtrBlob,
+    pub struct Ptr<T: GetFreePtrFn> {
+        pub(crate) blob: PtrBlob,
         _t: std::marker::PhantomData<T>,
     }
 
-    impl<T: GetDropFn> Drop for Ptr<T> {
+    impl<T: GetFreePtrFn> Drop for Ptr<T> {
         fn drop(&mut self) {
-            let drop_item_in_place = T::get_drop_ptr_in_place_fn();
-            unsafe {
-                lib_ruby_parser__internal__containers__ptr__free(self.blob, drop_item_in_place)
-            }
-            self.blob = unsafe { lib_ruby_parser__internal__containers__ptr__make_null() };
+            let free_ptr_fn = T::get_free_ptr_fn();
+            let blob_ptr: *mut PtrBlob = &mut self.blob;
+            unsafe { free_ptr_fn(blob_ptr) };
         }
     }
 
     impl<T> std::fmt::Debug for Ptr<T>
     where
-        T: std::fmt::Debug + GetDropFn,
+        T: std::fmt::Debug + GetFreePtrFn,
     {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             std::fmt::Debug::fmt(&**self, f)
@@ -58,7 +57,7 @@ pub(crate) mod external {
 
     impl<T> PartialEq for Ptr<T>
     where
-        T: PartialEq + GetDropFn,
+        T: PartialEq + GetFreePtrFn,
     {
         fn eq(&self, other: &Self) -> bool {
             PartialEq::eq(self.as_ref(), other.as_ref())
@@ -67,7 +66,7 @@ pub(crate) mod external {
 
     impl<T> Clone for Ptr<T>
     where
-        T: Clone + GetDropFn,
+        T: Clone + GetFreePtrFn,
     {
         fn clone(&self) -> Self {
             let value = self.as_ref().clone();
@@ -75,7 +74,7 @@ pub(crate) mod external {
         }
     }
 
-    impl<T: GetDropFn> Deref for Ptr<T> {
+    impl<T: GetFreePtrFn> Deref for Ptr<T> {
         type Target = T;
 
         fn deref(&self) -> &Self::Target {
@@ -83,27 +82,32 @@ pub(crate) mod external {
         }
     }
 
-    impl<T: GetDropFn> DerefMut for Ptr<T> {
+    impl<T: GetFreePtrFn> DerefMut for Ptr<T> {
         fn deref_mut(&mut self) -> &mut Self::Target {
-            unsafe { &mut *self.as_ptr() }
+            unsafe { &mut *self.as_mut_ptr() }
         }
     }
 
-    impl<T: GetDropFn> AsRef<T> for Ptr<T> {
+    impl<T: GetFreePtrFn> AsRef<T> for Ptr<T> {
         fn as_ref(&self) -> &T {
             unsafe { self.as_ptr().as_ref().unwrap() }
         }
     }
 
-    use crate::containers::get_drop_fn::DropPtrFn;
-    extern "C" {
-        fn lib_ruby_parser__internal__containers__ptr__make(ptr: *mut c_void) -> PtrBlob;
-        fn lib_ruby_parser__internal__containers__ptr__free(ptr: PtrBlob, deleter: DropPtrFn);
-        fn lib_ruby_parser__internal__containers__ptr__get_raw(ptr: PtrBlob) -> *mut c_void;
-        fn lib_ruby_parser__internal__containers__ptr__make_null() -> PtrBlob;
+    impl<T: GetFreePtrFn> AsMut<T> for Ptr<T> {
+        fn as_mut(&mut self) -> &mut T {
+            unsafe { self.as_mut_ptr().as_mut().unwrap() }
+        }
     }
 
-    impl<T: GetDropFn> Ptr<T> {
+    extern "C" {
+        fn lib_ruby_parser__internal__containers__ptr__new(ptr: *mut c_void) -> PtrBlob;
+        fn lib_ruby_parser__internal__containers__ptr__get_raw(
+            ptr_blob: *mut PtrBlob,
+        ) -> *mut c_void;
+    }
+
+    impl<T: GetFreePtrFn> Ptr<T> {
         /// Constructs a pointer with a given value
         pub fn new(t: T) -> Self {
             let ptr = Box::into_raw(Box::new(t));
@@ -114,7 +118,7 @@ pub(crate) mod external {
         pub(crate) fn from_raw(ptr: *mut T) -> Self {
             debug_assert!(!ptr.is_null());
             let blob =
-                unsafe { lib_ruby_parser__internal__containers__ptr__make(ptr as *mut c_void) };
+                unsafe { lib_ruby_parser__internal__containers__ptr__new(ptr as *mut c_void) };
             Self {
                 blob,
                 _t: std::marker::PhantomData,
@@ -123,26 +127,34 @@ pub(crate) mod external {
 
         /// Converts self into raw pointer
         pub(crate) fn into_raw(mut self) -> *mut T {
-            let ptr =
-                unsafe { lib_ruby_parser__internal__containers__ptr__get_raw(self.blob) } as *mut T;
-            self.blob = unsafe { lib_ruby_parser__internal__containers__ptr__make_null() };
+            let ptr = self.as_mut_ptr();
+            std::mem::forget(self);
             ptr
         }
 
         /// Returns borrowed raw pointer stored in Ptr
-        pub(crate) fn as_ptr(&self) -> *mut T {
-            unsafe { lib_ruby_parser__internal__containers__ptr__get_raw(self.blob) as *mut T }
+        pub(crate) fn as_ptr(&self) -> *const T {
+            let ptr_blob: *const PtrBlob = &self.blob;
+            unsafe {
+                lib_ruby_parser__internal__containers__ptr__get_raw(ptr_blob as *mut PtrBlob)
+                    as *const T
+            }
+        }
+
+        pub(crate) fn as_mut_ptr(&mut self) -> *mut T {
+            let ptr_blob: *mut PtrBlob = &mut self.blob;
+            unsafe { lib_ruby_parser__internal__containers__ptr__get_raw(ptr_blob) as *mut T }
         }
     }
 
-    impl<T: GetDropFn> From<Box<T>> for Ptr<T> {
+    impl<T: GetFreePtrFn> From<Box<T>> for Ptr<T> {
         fn from(boxed: Box<T>) -> Self {
             Self::from_raw(Box::into_raw(boxed))
         }
     }
 
     use super::UnPtr;
-    impl<T: Sized + GetDropFn> UnPtr<T> for Ptr<T> {
+    impl<T: Sized + GetFreePtrFn> UnPtr<T> for Ptr<T> {
         fn unptr(self) -> T {
             *unsafe { Box::from_raw(self.into_raw()) }
         }
@@ -150,39 +162,34 @@ pub(crate) mod external {
 
     #[cfg(test)]
     mod tests {
-        use super::{DropPtrFn, GetDropFn, Ptr, PtrBlob, UnPtr, PTR_SIZE};
+        use std::ffi::c_void;
+
+        use super::{GetFreePtrFn, Ptr, PtrBlob, UnPtr};
 
         #[derive(Debug, PartialEq)]
         struct Foo {
             bar: Vec<i32>,
         }
 
-        extern "C" fn drop_in_place_foo(ptr: *mut std::ffi::c_void) {
-            unsafe { std::ptr::drop_in_place(ptr as *mut Foo) }
-        }
-
-        impl GetDropFn for Foo {
-            fn get_drop_ptr_fn() -> DropPtrFn {
-                unreachable!()
-            }
-
-            fn get_drop_ptr_in_place_fn() -> crate::containers::get_drop_fn::DropInPlaceFn {
-                drop_in_place_foo
-            }
-
-            fn get_drop_list_blob_fn() -> crate::containers::get_drop_fn::DropListBlobFn {
-                unreachable!()
+        extern "C" fn drop_ptr_of_foo(ptr: *mut PtrBlob) {
+            let ptr = unsafe { *(ptr as *mut *mut Foo) };
+            unsafe {
+                std::ptr::drop_in_place(ptr);
+                drop(Box::from_raw(ptr as *mut c_void))
             }
         }
 
-        #[test]
-        fn test_size() {
-            assert_eq!(std::mem::size_of::<PtrBlob>(), PTR_SIZE);
+        impl GetFreePtrFn for Foo {
+            fn get_free_ptr_fn() -> unsafe extern "C" fn(*mut PtrBlob) {
+                drop_ptr_of_foo
+            }
         }
 
         #[test]
         fn test_ptr() {
-            let ptr = Ptr::from_raw(Box::leak(Box::new(Foo { bar: vec![42] })));
+            let foo = Foo { bar: vec![42] };
+            let raw: *mut Foo = Box::leak(Box::new(foo));
+            let ptr = Ptr::from_raw(raw);
 
             assert_eq!(ptr.as_ref(), &Foo { bar: vec![42] });
         }

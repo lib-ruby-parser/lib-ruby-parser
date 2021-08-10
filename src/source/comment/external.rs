@@ -18,42 +18,42 @@ pub struct Comment {
 }
 
 extern "C" {
+    fn lib_ruby_parser__internal__containers__comment__new(
+        location: LocBlob,
+        kind: CommentTypeBlob,
+    ) -> CommentBlob;
     fn lib_ruby_parser__internal__containers__comment__get_location(
         blob: *const CommentBlob,
     ) -> *const LocBlob;
     fn lib_ruby_parser__internal__containers__comment__get_kind(
         blob: *const CommentBlob,
     ) -> *const CommentTypeBlob;
-    fn lib_ruby_parser__internal__containers__comment__make(
-        location: LocBlob,
-        kind: CommentTypeBlob,
-    ) -> CommentBlob;
+    fn lib_ruby_parser__internal__containers__comment__drop(blob: *mut CommentBlob);
 }
 
 impl Comment {
     /// Returns Location of the comment (starts with `#` and ends with the last char)
     pub fn location(&self) -> &Loc {
-        let comment_blob_ptr: *const CommentBlob = &self.blob;
-        let loc_ptr = unsafe {
-            lib_ruby_parser__internal__containers__comment__get_location(comment_blob_ptr)
-                as *const Loc
-        };
-        unsafe { loc_ptr.as_ref().unwrap() }
+        unsafe {
+            (lib_ruby_parser__internal__containers__comment__get_location(&self.blob) as *const Loc)
+                .as_ref()
+                .unwrap()
+        }
     }
 
     /// Returns kind of the comment
     pub fn kind(&self) -> &CommentType {
-        let comment_blob_ptr: *const CommentBlob = &self.blob;
-        let coment_type_ptr = unsafe {
-            lib_ruby_parser__internal__containers__comment__get_kind(comment_blob_ptr)
-                as *const CommentType
-        };
-        unsafe { coment_type_ptr.as_ref().unwrap() }
+        unsafe {
+            (lib_ruby_parser__internal__containers__comment__get_kind(&self.blob)
+                as *const CommentType)
+                .as_ref()
+                .unwrap()
+        }
     }
 
     pub(crate) fn make(location: Loc, kind: CommentType) -> Self {
         let blob = unsafe {
-            lib_ruby_parser__internal__containers__comment__make(location.blob, kind.blob)
+            lib_ruby_parser__internal__containers__comment__new(location.blob, kind.blob)
         };
         Self { blob }
     }
@@ -81,3 +81,9 @@ impl PartialEq for Comment {
 }
 
 impl Eq for Comment {}
+
+impl Drop for Comment {
+    fn drop(&mut self) {
+        unsafe { lib_ruby_parser__internal__containers__comment__drop(&mut self.blob) };
+    }
+}

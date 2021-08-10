@@ -13,9 +13,9 @@ pub struct CommentType {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__comment_type__make_inline() -> CommentTypeBlob;
-    fn lib_ruby_parser__internal__containers__comment_type__make_document() -> CommentTypeBlob;
-    fn lib_ruby_parser__internal__containers__comment_type__make_unknown() -> CommentTypeBlob;
+    fn lib_ruby_parser__internal__containers__comment_type__new_inline() -> CommentTypeBlob;
+    fn lib_ruby_parser__internal__containers__comment_type__new_document() -> CommentTypeBlob;
+    fn lib_ruby_parser__internal__containers__comment_type__new_unknown() -> CommentTypeBlob;
 
     fn lib_ruby_parser__internal__containers__comment_type__is_inline(
         blob: CommentTypeBlob,
@@ -31,19 +31,19 @@ extern "C" {
 impl CommentType {
     /// Constructs `Inline` variant
     pub fn inline() -> Self {
-        let blob = unsafe { lib_ruby_parser__internal__containers__comment_type__make_inline() };
+        let blob = unsafe { lib_ruby_parser__internal__containers__comment_type__new_inline() };
         Self { blob }
     }
 
     /// Constructs `Document` variant
     pub fn document() -> Self {
-        let blob = unsafe { lib_ruby_parser__internal__containers__comment_type__make_document() };
+        let blob = unsafe { lib_ruby_parser__internal__containers__comment_type__new_document() };
         Self { blob }
     }
 
     /// Constructs `Unknown` variant
     pub fn unknown() -> Self {
-        let blob = unsafe { lib_ruby_parser__internal__containers__comment_type__make_unknown() };
+        let blob = unsafe { lib_ruby_parser__internal__containers__comment_type__new_unknown() };
         Self { blob }
     }
 
