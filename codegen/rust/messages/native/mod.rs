@@ -1,11 +1,11 @@
 mod constructors;
 mod enum_;
-mod getters;
 mod predicates;
+mod variants;
 
 pub(crate) fn codegen() {
     enum_::codegen();
     constructors::codegen();
     predicates::codegen();
-    getters::codegen();
+    variants::codegen();
 }

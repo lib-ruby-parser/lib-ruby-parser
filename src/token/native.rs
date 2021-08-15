@@ -61,8 +61,8 @@ impl Token {
     }
 
     /// Returns location of the token
-    pub fn loc(&self) -> Loc {
-        self.loc
+    pub fn loc(&self) -> &Loc {
+        &self.loc
     }
 
     /// Returns lex state **before** reading the token

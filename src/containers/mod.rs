@@ -1,4 +1,3 @@
-pub(crate) mod into_blob;
 pub(crate) mod list;
 pub(crate) mod maybe_loc;
 pub(crate) mod maybe_ptr;
@@ -9,7 +8,6 @@ pub(crate) mod string_ptr;
 
 pub(crate) mod helpers {
     pub(crate) use super::{
-        into_blob::IntoBlob,
         list::TakeFirst as ListTakeFirst,
         maybe_loc::MaybeLocAPI,
         maybe_ptr::{MaybePtrNone, MaybePtrSome},
@@ -52,3 +50,8 @@ pub(crate) use shared_byte_list::external::SharedByteListBlob;
 pub use string_ptr::external::StringPtr as ExternalStringPtr;
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) use string_ptr::external::StringPtrBlob;
+
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) mod into_blob;
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) use into_blob::IntoBlob;

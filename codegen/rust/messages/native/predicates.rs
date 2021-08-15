@@ -22,9 +22,9 @@ pub(crate) fn codegen() {
 fn predicate(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "/// Returns true if `self` is {variant_name}
-        pub(crate) fn is_{lower_variant_name}(&self) -> bool {{
-            matches!(self, Self::{variant_name} {{ .. }})
-        }}",
+    pub fn is_{lower_variant_name}(&self) -> bool {{
+        matches!(self, Self::{variant_name} {{ .. }})
+    }}",
         variant_name = message.camelcase_name(),
         lower_variant_name = message.lower_name()
     )

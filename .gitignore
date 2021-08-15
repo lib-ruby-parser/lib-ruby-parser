@@ -1,14 +1,9 @@
 /target
 Cargo.lock
-test.rb
+Dockerfile
+flamegraph.svg
 out
-src/parser.rs
-src/nodes/types
-src/nodes/node_enum/native.rs
-src/nodes/node_enum/external.rs
-src/traverse/visitor/visit_gen.rs
-tests/loc_matcher/loc_name_gen.rs
-src/reserved_words/list.rs
+src/containers/size.rs
 src/error/message/external/constructors.rs
 src/error/message/external/getters.rs
 src/error/message/external/impl_clone.rs
@@ -16,15 +11,21 @@ src/error/message/external/impl_debug.rs
 src/error/message/external/impl_drop.rs
 src/error/message/external/impl_partial_eq.rs
 src/error/message/external/predicates.rs
+src/error/message/external/variants.rs
 src/error/message/native/constructors.rs
 src/error/message/native/enum_.rs
 src/error/message/native/getters.rs
 src/error/message/native/predicates.rs
-src/error/message/external/variants.rs
+src/error/message/native/variants.rs
 src/error/message/tests.rs
-src/containers/size.rs
-flamegraph.svg
-Dockerfile
+src/nodes/node_enum/external.rs
+src/nodes/node_enum/native.rs
+src/nodes/types
+src/parser.rs
+src/reserved_words/list.rs
+src/traverse/visitor/visit_gen.rs
+test.rb
+tests/loc_matcher/loc_name_gen.rs
 
 # external/c
 external/c/*.o

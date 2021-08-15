@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 pub(crate) fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
     use lib_ruby_parser_nodes::NodeFieldType;
 
@@ -15,6 +16,7 @@ pub(crate) fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn blob_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
     use lib_ruby_parser_nodes::NodeFieldType;
 

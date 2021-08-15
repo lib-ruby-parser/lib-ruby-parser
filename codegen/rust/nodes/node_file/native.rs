@@ -14,6 +14,8 @@ pub struct {struct_name} {{
 impl {struct_name} {{
     {getters}
 
+    {setters}
+
     #[allow(dead_code)]
     pub(crate) fn into_internal(self) -> super::Internal{struct_name} {{
         let Self {{ {field_names} }} = self;
@@ -51,6 +53,7 @@ impl InnerNode for {struct_name} {{
         str_type = node.str_type,
         print_with_locs = node.fields.flat_map(&print_with_locs).join("\n        "),
         getters = node.fields.map(&getter).join("\n\n    "),
+        setters = node.fields.map(&setter).join("\n\n    "),
         field_names = node.fields.map(&|f| f.field_name.to_string()).join(", ")
     )
 }
@@ -205,5 +208,19 @@ fn getter(field: &lib_ruby_parser_nodes::NodeField) -> String {
         return_type = field_type(field),
         getter = getter,
         getter_mut = getter_mut
+    )
+}
+
+fn setter(field: &lib_ruby_parser_nodes::NodeField) -> String {
+    let setter = format!("set_{}", field.field_name).replace("__", "_");
+
+    format!(
+        "/// Sets {field_name} field
+    pub fn {setter}(&mut self, value: {field_type}) {{
+        self.{field_name} = value;
+    }}",
+        field_name = field.field_name,
+        field_type = field_type(field),
+        setter = setter,
     )
 }

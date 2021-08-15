@@ -22,4 +22,19 @@ impl Diagnostic {
             loc,
         }
     }
+
+    /// Returns `level` field
+    pub fn level(&self) -> &ErrorLevel {
+        &self.level
+    }
+
+    /// Returns `message` field
+    pub fn message(&self) -> &DiagnosticMessage {
+        &self.message
+    }
+
+    /// Returns `loc` field
+    pub fn loc(&self) -> &Loc {
+        &self.loc
+    }
 }
