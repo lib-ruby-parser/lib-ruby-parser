@@ -5,7 +5,7 @@ use crate::containers::size::MAGIC_COMMENT_SIZE;
 use crate::loc::LocBlob;
 use crate::source::magic_comment_kind::MagicCommentKindBlob;
 
-use crate::containers::helpers::IntoBlob;
+use crate::containers::IntoBlob;
 
 #[repr(C)]
 #[derive(Clone, Copy)]

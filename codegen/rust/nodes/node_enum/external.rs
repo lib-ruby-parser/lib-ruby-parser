@@ -1,4 +1,5 @@
 use crate::codegen::c::helpers as c_helpers;
+use crate::codegen::rust::nodes::helpers::{node_field_name, struct_name};
 
 fn contents() -> String {
     let nodes = lib_ruby_parser_nodes::nodes();
@@ -28,7 +29,7 @@ use crate::containers::MaybeLocBlob;
 use crate::containers::StringPtrBlob;
 use crate::containers::MaybeStringPtrBlob;
 
-use crate::containers::helpers::IntoBlob;
+use crate::containers::IntoBlob;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -137,7 +138,7 @@ fn debug_impl(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
             write!(f, \"{struct_name}({{:?}})\", inner)
         }}",
                 lower = node.lower_name(),
-                struct_name = node.camelcase_name()
+                struct_name = struct_name(node)
             )
         })
         .join(" else ");
@@ -212,7 +213,7 @@ fn make_fn(node: &lib_ruby_parser_nodes::Node) -> String {
         .map(&|field| {
             format!(
                 "{name}: {t}",
-                name = field.field_name,
+                name = node_field_name(field),
                 t = field_type(field)
             )
         })
@@ -220,7 +221,7 @@ fn make_fn(node: &lib_ruby_parser_nodes::Node) -> String {
 
     let fields = node
         .fields
-        .map(&|field| format!("{}.into_blob()", field.field_name))
+        .map(&|field| format!("{}.into_blob()", node_field_name(field)))
         .join(", ");
 
     format!(
@@ -229,7 +230,7 @@ fn make_fn(node: &lib_ruby_parser_nodes::Node) -> String {
         let blob = unsafe {{ {extern_constructor}({fields}) }};
         Self {{ blob }}
     }}",
-        node_type = node.camelcase_name(),
+        node_type = struct_name(node),
         lower_node_type = node.lower_name(),
         extern_constructor = c_helpers::nodes::constructor::name(node),
         arglist = arglist,
@@ -242,7 +243,7 @@ fn is_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     pub fn is_{lower_node_type}(&self) -> bool {{
         unsafe {{ {extern_fn_name}(&self.blob) }}
     }}",
-        node_type = node.camelcase_name(),
+        node_type = struct_name(node),
         lower_node_type = node.lower_name(),
         extern_fn_name = c_helpers::nodes::variant_predicate::name(node)
     )
@@ -250,34 +251,34 @@ fn is_fn(node: &lib_ruby_parser_nodes::Node) -> String {
 fn as_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "/// Casts `&Node` to `Option<&nodes::{node_type}>`
-    pub fn {fn_name}(&self) -> Option<&{node_type}> {{
+    pub fn as_{lower}(&self) -> Option<&{node_type}> {{
         unsafe {{ ({extern_fn_name}(&self.blob) as *const {node_type}).as_ref() }}
     }}",
-        node_type = node.camelcase_name(),
-        fn_name = format!("as_{}", node.lower_name()).replace("__", "_"),
+        node_type = struct_name(node),
+        lower = node.lower_name(),
         extern_fn_name = c_helpers::nodes::variant_getter::name(node)
     )
 }
 fn as_mut_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "/// Casts `&Node` to `Option<&mut nodes::{node_type}>`
-    pub fn {fn_name}(&mut self) -> Option<&mut {node_type}> {{
+    pub fn as_{lower}_mut(&mut self) -> Option<&mut {node_type}> {{
         unsafe {{ ({extern_fn_name}(&mut self.blob) as *mut {node_type}).as_mut() }}
     }}",
-        node_type = node.camelcase_name(),
-        fn_name = format!("as_{}_mut", node.lower_name()).replace("__", "_"),
+        node_type = struct_name(node),
+        lower = node.lower_name(),
         extern_fn_name = c_helpers::nodes::variant_getter::name(node)
     )
 }
 fn into_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "/// Casts `self` to nodes::{node_type}, panics if variant doesn't match
-    pub fn {fn_name}(self) -> {node_type} {{
+    pub fn into_{lower}(self) -> {node_type} {{
         let blob = unsafe {{ {into_variant_fn_name}(self.into_blob()) }};
         {node_type} {{ blob }}
     }}",
-        node_type = node.camelcase_name(),
-        fn_name = format!("into_{}", node.lower_name()).replace("__", "_"),
+        node_type = struct_name(node),
+        lower = node.lower_name(),
         into_variant_fn_name = c_helpers::nodes::into_variant::name(node),
     )
 }
@@ -289,7 +290,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     {
         let ctor_args = node
             .fields
-            .map(&|field| format!("{}: {}", field.field_name, blob_type(field)))
+            .map(&|field| format!("{}: {}", node_field_name(field), blob_type(field)))
             .join(", ");
         result.push(format!(
             "fn {name}({ctor_args}) -> NodeBlob;",
@@ -311,7 +312,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
         result.push(format!(
             "fn {name}(blob_ptr: *const NodeBlob) -> *mut {node_type}Blob;",
             name = c_helpers::nodes::variant_getter::name(node),
-            node_type = node.camelcase_name()
+            node_type = struct_name(node)
         ))
     }
 
@@ -320,7 +321,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
         let line = format!(
             "fn {fn_name}(blob: NodeBlob) -> {struct_name}Blob;",
             fn_name = c_helpers::nodes::into_variant::name(node),
-            struct_name = node.camelcase_name()
+            struct_name = struct_name(node)
         );
         result.push(line);
     }
@@ -334,17 +335,13 @@ fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
     match field.field_type {
         NodeFieldType::Node => "Ptr<Node>",
         NodeFieldType::Nodes => "List<Node>",
-        NodeFieldType::MaybeNode => "MaybePtr<Node>",
+        NodeFieldType::MaybeNode { .. } => "MaybePtr<Node>",
         NodeFieldType::Loc => "Loc",
         NodeFieldType::MaybeLoc => "MaybeLoc",
-        NodeFieldType::Str => "StringPtr",
-        NodeFieldType::MaybeStr => "MaybeStringPtr",
-        NodeFieldType::Chars => "MaybeStringPtr",
+        NodeFieldType::Str { .. } => "StringPtr",
+        NodeFieldType::MaybeStr { .. } => "MaybeStringPtr",
         NodeFieldType::StringValue => "Bytes",
         NodeFieldType::U8 => "u8",
-        NodeFieldType::Usize => "usize",
-        NodeFieldType::RawString => "StringPtr",
-        NodeFieldType::RegexOptions => "MaybePtr<Node>",
     }
 }
 
@@ -354,16 +351,12 @@ fn blob_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
     match field.field_type {
         NodeFieldType::Node => "PtrBlob",
         NodeFieldType::Nodes => "ListBlob",
-        NodeFieldType::MaybeNode => "MaybePtrBlob",
+        NodeFieldType::MaybeNode { .. } => "MaybePtrBlob",
         NodeFieldType::Loc => "LocBlob",
         NodeFieldType::MaybeLoc => "MaybeLocBlob",
-        NodeFieldType::Str => "StringPtrBlob",
-        NodeFieldType::MaybeStr => "MaybeStringPtrBlob",
-        NodeFieldType::Chars => "MaybeStringPtrBlob",
+        NodeFieldType::Str { .. } => "StringPtrBlob",
+        NodeFieldType::MaybeStr { .. } => "MaybeStringPtrBlob",
         NodeFieldType::StringValue => "BytesBlob",
         NodeFieldType::U8 => "u8",
-        NodeFieldType::Usize => "u64",
-        NodeFieldType::RawString => "StringPtrBlob",
-        NodeFieldType::RegexOptions => "MaybePtrBlob",
     }
 }

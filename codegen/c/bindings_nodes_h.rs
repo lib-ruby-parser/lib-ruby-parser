@@ -91,7 +91,7 @@ fn internal_struct(node: &lib_ruby_parser_nodes::Node) -> String {
 {{
     {fields}
 }} Internal{struct_name};",
-        struct_name = node.camelcase_name(),
+        struct_name = node.camelcase_name,
         fields = fields.join("\n    ")
     )
 }

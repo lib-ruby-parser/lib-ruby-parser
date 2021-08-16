@@ -1,3 +1,5 @@
+use crate::codegen::rust::nodes::helpers::{node_field_name, struct_name};
+
 fn contents() -> String {
     let nodes = lib_ruby_parser_nodes::nodes();
 
@@ -43,25 +45,19 @@ pub(crate) fn codegen() {
 }
 
 fn variant(node: &lib_ruby_parser_nodes::Node) -> String {
-    format!("{name}({name})", name = node.camelcase_name())
+    format!("{name}({name})", name = struct_name(node))
 }
 
 fn match_branch(node: &lib_ruby_parser_nodes::Node) -> String {
-    format!(
-        "Node::{name}(inner) => inner,",
-        name = node.camelcase_name()
-    )
+    format!("Node::{name}(inner) => inner,", name = struct_name(node))
 }
 
 fn getter(node: &lib_ruby_parser_nodes::Node) -> String {
-    let as_ref_mid = format!("as_{}", node.lower_name()).replace("__", "_");
-    let as_ref_mut_mid = format!("as_{}_mut", node.lower_name()).replace("__", "_");
-
     format!(
         "/// Returns true if `self` is `Node::{node_type}`
-    pub fn is_{lower_node_type}(&self) -> bool {{ matches!(self, Self::{node_type}(_)) }}
+    pub fn is_{lower}(&self) -> bool {{ matches!(self, Self::{node_type}(_)) }}
     /// Casts `&Node` to `Option<&nodes::{node_type}>`
-    pub fn {as_ref_mid}(&self) -> Option<&{node_type}> {{
+    pub fn as_{lower}(&self) -> Option<&{node_type}> {{
         if let Self::{node_type}(inner) = self {{
             Some(inner)
         }} else {{
@@ -69,7 +65,7 @@ fn getter(node: &lib_ruby_parser_nodes::Node) -> String {
         }}
     }}
     /// Casts `&Node` to `Option<&mut nodes::{node_type}>`
-    pub fn {as_ref_mut_mid}(&mut self) -> Option<&mut {node_type}> {{
+    pub fn as_{lower}_mut(&mut self) -> Option<&mut {node_type}> {{
         if let Self::{node_type}(inner) = self {{
             Some(inner)
         }} else {{
@@ -77,7 +73,7 @@ fn getter(node: &lib_ruby_parser_nodes::Node) -> String {
         }}
     }}
     /// Casts `self` to `nodes::{node_type}`, panics if variant doesn't match
-    pub fn into_{lower_node_type}(self) -> {node_type} {{
+    pub fn into_{lower}(self) -> {node_type} {{
         if let Self::{node_type}(inner) = self {{
             inner
         }} else {{
@@ -85,10 +81,8 @@ fn getter(node: &lib_ruby_parser_nodes::Node) -> String {
         }}
     }}
 ",
-        lower_node_type = node.lower_name(),
-        node_type = node.camelcase_name(),
-        as_ref_mid = as_ref_mid,
-        as_ref_mut_mid = as_ref_mut_mid,
+        lower = node.lower_name(),
+        node_type = struct_name(node),
     )
 }
 
@@ -98,23 +92,20 @@ fn make_fn(node: &lib_ruby_parser_nodes::Node) -> String {
         .map(&|field| {
             format!(
                 "{name}: {t}",
-                name = field.field_name,
+                name = node_field_name(field),
                 t = field_type(field)
             )
         })
         .join(", ");
 
-    let fields = node
-        .fields
-        .map(&|field| field.field_name.to_string())
-        .join(", ");
+    let fields = node.fields.map(&|field| node_field_name(field)).join(", ");
 
     format!(
         "/// Constructs `Node::{node_type}` variant
     pub(crate) fn make_{lower_node_type}({arglist}) -> Self {{
         Self::{node_type}({node_type} {{ {fields} }})
     }}",
-        node_type = node.camelcase_name(),
+        node_type = struct_name(node),
         lower_node_type = node.lower_name(),
         arglist = arglist,
         fields = fields
@@ -127,16 +118,12 @@ fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
     match field.field_type {
         NodeFieldType::Node => "Box<Node>",
         NodeFieldType::Nodes => "Vec<Node>",
-        NodeFieldType::MaybeNode => "Option<Box<Node>>",
+        NodeFieldType::MaybeNode { .. } => "Option<Box<Node>>",
         NodeFieldType::Loc => "Loc",
         NodeFieldType::MaybeLoc => "Option<Loc>",
-        NodeFieldType::Str => "String",
-        NodeFieldType::MaybeStr => "Option<String>",
-        NodeFieldType::Chars => "Option<String>",
+        NodeFieldType::Str { .. } => "String",
+        NodeFieldType::MaybeStr { .. } => "Option<String>",
         NodeFieldType::StringValue => "Bytes",
         NodeFieldType::U8 => "u8",
-        NodeFieldType::Usize => "usize",
-        NodeFieldType::RawString => "String",
-        NodeFieldType::RegexOptions => "Option<Box<Node>>",
     }
 }

@@ -1,3 +1,5 @@
+use crate::codegen::rust::nodes::helpers::struct_name;
+
 fn contents() -> String {
     let nodes = lib_ruby_parser_nodes::nodes();
 
@@ -29,27 +31,29 @@ pub(crate) fn codegen() {
     std::fs::write("src/nodes/types/mod.rs", contents()).unwrap();
 }
 
+use crate::codegen::rust::nodes::helpers::filename;
+
 fn mod_(node: &lib_ruby_parser_nodes::Node) -> String {
-    format!("mod {};", node.filename)
+    format!("mod {};", filename(node))
 }
 
 fn use_(node: &lib_ruby_parser_nodes::Node) -> String {
-    format!("pub use {}::{};", node.filename, node.struct_name)
+    format!("pub use {}::{};", filename(node), struct_name(node))
 }
 
 fn internal_use(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "#[allow(unused_imports)]
     pub(crate) use super::{mod_name}::Internal{struct_name} as {struct_name};",
-        mod_name = node.filename,
-        struct_name = node.struct_name
+        mod_name = filename(node),
+        struct_name = struct_name(node)
     )
 }
 
 fn blob_use(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "pub(crate) use super::{mod_name}::{struct_name}Blob;",
-        mod_name = node.filename,
-        struct_name = node.struct_name
+        mod_name = filename(node),
+        struct_name = struct_name(node)
     )
 }

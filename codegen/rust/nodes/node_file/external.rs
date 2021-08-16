@@ -1,5 +1,6 @@
 use crate::codegen::c::helpers as c_helpers;
 use crate::codegen::rust::nodes::helpers;
+use crate::codegen::rust::nodes::helpers::{filename, node_field_name, struct_name};
 
 fn contents(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
@@ -9,7 +10,7 @@ fn contents(node: &lib_ruby_parser_nodes::Node) -> String {
 
 use crate::containers::size::NODE_{upper}_SIZE;
 use super::internal::Internal{struct_name};
-use crate::containers::helpers::IntoBlob;
+use crate::containers::IntoBlob;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -81,9 +82,9 @@ impl Drop for {struct_name} {{
         upper = node.upper_name(),
         imports = imports(&node).join("\n"),
         comment = node.render_comment("///", 0),
-        struct_name = node.struct_name,
+        struct_name = struct_name(node),
         inspected_children = node.fields.map(&inspect_field).join("\n        "),
-        str_type = node.str_type,
+        str_type = node.wqp_name,
         print_with_locs = node.fields.flat_map(&print_with_locs).join("\n        "),
         getters = node
             .fields
@@ -99,7 +100,8 @@ impl Drop for {struct_name} {{
 }
 
 pub(crate) fn codegen(node: &lib_ruby_parser_nodes::Node) {
-    let path = format!("src/nodes/types/{}/external.rs", node.filename);
+    let dir = filename(node);
+    let path = format!("src/nodes/types/{}/external.rs", dir);
     std::fs::write(&path, contents(node)).unwrap();
 }
 
@@ -116,8 +118,12 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::Node)
         || has_field(lib_ruby_parser_nodes::NodeFieldType::Nodes)
-        || has_field(lib_ruby_parser_nodes::NodeFieldType::RegexOptions)
-        || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode)
+        || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode {
+            regexp_options: true,
+        })
+        || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode {
+            regexp_options: false,
+        })
     {
         imports.push("use crate::Node;");
     }
@@ -127,9 +133,11 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
         imports.push("use crate::bytes::BytesBlob;");
     }
 
-    if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode)
-        || has_field(lib_ruby_parser_nodes::NodeFieldType::RegexOptions)
-    {
+    if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode {
+        regexp_options: true,
+    }) || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode {
+        regexp_options: false,
+    }) {
         imports.push("use crate::containers::ExternalMaybePtr as MaybePtr;");
         imports.push("use crate::containers::MaybePtrBlob;");
     }
@@ -149,15 +157,15 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
         imports.push("use crate::containers::MaybeLocBlob;");
     }
 
-    if has_field(lib_ruby_parser_nodes::NodeFieldType::Str)
-        || has_field(lib_ruby_parser_nodes::NodeFieldType::RawString)
+    if has_field(lib_ruby_parser_nodes::NodeFieldType::Str { raw: true })
+        || has_field(lib_ruby_parser_nodes::NodeFieldType::Str { raw: false })
     {
         imports.push("use crate::containers::ExternalStringPtr as StringPtr;");
         imports.push("use crate::containers::StringPtrBlob;");
     }
 
-    if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr)
-        || has_field(lib_ruby_parser_nodes::NodeFieldType::Chars)
+    if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: false })
+        || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: true })
     {
         imports.push("use crate::containers::ExternalMaybeStringPtr as MaybeStringPtr;");
         imports.push("use crate::containers::MaybeStringPtrBlob;");
@@ -177,8 +185,10 @@ fn inspect_field(field: &lib_ruby_parser_nodes::NodeField) -> String {
     let method_name = match field.field_type {
         NodeFieldType::Node => "push_node",
         NodeFieldType::Nodes => "push_nodes",
-        NodeFieldType::MaybeNode => {
-            if field.always_print {
+        NodeFieldType::MaybeNode { regexp_options } => {
+            if regexp_options {
+                "push_regex_options"
+            } else if field.always_print {
                 "push_maybe_node_or_nil"
             } else {
                 "push_maybe_node"
@@ -186,14 +196,22 @@ fn inspect_field(field: &lib_ruby_parser_nodes::NodeField) -> String {
         }
         NodeFieldType::Loc => return format!(""),
         NodeFieldType::MaybeLoc => return format!(""),
-        NodeFieldType::Str => "push_str",
-        NodeFieldType::MaybeStr => "push_maybe_str",
-        NodeFieldType::Chars => "push_chars",
+        NodeFieldType::Str { raw } => {
+            if raw {
+                "push_raw_str"
+            } else {
+                "push_str"
+            }
+        }
+        NodeFieldType::MaybeStr { chars } => {
+            if chars {
+                "push_chars"
+            } else {
+                "push_maybe_str"
+            }
+        }
         NodeFieldType::StringValue => "push_string_value",
         NodeFieldType::U8 => "push_u8",
-        NodeFieldType::Usize => "push_usize",
-        NodeFieldType::RawString => "push_raw_str",
-        NodeFieldType::RegexOptions => "push_regex_options",
     };
 
     format!("result.{}(self.get_{}());", method_name, field.field_name)
@@ -214,7 +232,7 @@ fn print_with_locs(field: &lib_ruby_parser_nodes::NodeField) -> Vec<String> {
             "  node.inner_ref().print_with_locs();".to_string(),
             "}".to_string(),
         ],
-        NodeFieldType::MaybeNode | NodeFieldType::RegexOptions => vec![format!(
+        NodeFieldType::MaybeNode { .. } => vec![format!(
             "self.get_{field_name}().as_ref().map(|node| node.inner_ref().print_with_locs());",
             field_name = field.field_name
         )],
@@ -234,23 +252,17 @@ fn print_with_locs(field: &lib_ruby_parser_nodes::NodeField) -> Vec<String> {
                 .strip_suffix("_l")
                 .expect("expected loc field to end with _l"),
         )],
-        NodeFieldType::Str => vec![],
-        NodeFieldType::MaybeStr => vec![],
-        NodeFieldType::Chars => vec![],
+        NodeFieldType::Str { .. } => vec![],
+        NodeFieldType::MaybeStr { .. } => vec![],
         NodeFieldType::StringValue => vec![],
         NodeFieldType::U8 => vec![],
-        NodeFieldType::Usize => vec![],
-        NodeFieldType::RawString => vec![],
     }
 }
 
 fn getter(node: &lib_ruby_parser_nodes::Node, field: &lib_ruby_parser_nodes::NodeField) -> String {
-    let getter = format!("get_{}", field.field_name).replace("__", "_");
-    let setter = format!("set_{}", field.field_name).replace("__", "_");
-
     format!(
         "/// Returns `{field_name}` field
-    pub fn {getter}(&self) -> &{field_type} {{
+    pub fn get_{method_name}(&self) -> &{field_type} {{
         unsafe {{
             #[allow(trivial_casts)]
             ({extern_getter}(&self.blob) as *const {field_type})
@@ -260,15 +272,14 @@ fn getter(node: &lib_ruby_parser_nodes::Node, field: &lib_ruby_parser_nodes::Nod
     }}
 
     /// Sets `{field_name}` field
-    pub fn {setter}(&mut self, {field_name}: {field_type}) {{
+    pub fn set_{method_name}(&mut self, {field_name}: {field_type}) {{
         unsafe {{ {extern_setter}(&mut self.blob, {field_name}.into_blob()) }}
     }}",
-        field_name = field.field_name,
+        method_name = field.field_name,
+        field_name = node_field_name(field),
         field_type = helpers::field_type(field),
         extern_getter = c_helpers::nodes::getter::name(node, field),
         extern_setter = c_helpers::nodes::setter::name(node, field),
-        getter = getter,
-        setter = setter,
     )
 }
 
@@ -282,14 +293,14 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
                 let getter = format!(
                     "fn {getter_name}(blob: *const {struct_name}Blob) -> *mut {field_blob_type};",
                     getter_name = c_helpers::nodes::getter::name(node, field),
-                    struct_name = node.camelcase_name(),
+                    struct_name = struct_name(node),
                     field_blob_type = helpers::blob_type(field)
                 );
 
                 let setter = format!(
                     "fn {setter_name}(blob: *mut {struct_name}Blob, blob: {field_blob_type});",
                     setter_name = c_helpers::nodes::setter::name(node, field),
-                    struct_name = node.camelcase_name(),
+                    struct_name = struct_name(node),
                     field_blob_type = helpers::blob_type(field)
                 );
 
@@ -304,7 +315,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
         let line = format!(
             "fn {fn_name}(blob: {struct_name}Blob) -> Internal{struct_name};",
             fn_name = c_helpers::nodes::into_internal::name(node),
-            struct_name = node.camelcase_name()
+            struct_name = struct_name(node)
         );
         result.push(line);
     }
@@ -314,7 +325,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
         let line = format!(
             "fn {fn_name}(blob: *mut {struct_name}Blob);",
             fn_name = c_helpers::nodes::drop_variant::name(node),
-            struct_name = node.camelcase_name()
+            struct_name = struct_name(node)
         );
         result.push(line);
     }
@@ -326,12 +337,13 @@ fn debug_impl(node: &lib_ruby_parser_nodes::Node) -> String {
     let mut stmts = vec![];
     stmts.push(format!(
         "f.debug_struct(\"{struct_name}\")\n",
-        struct_name = node.camelcase_name()
+        struct_name = struct_name(node)
     ));
     for field in node.fields.0.iter() {
         stmts.push(format!(
-            "            .field(\"{field_name}\", &self.get_{field_name}())\n",
-            field_name = field.field_name
+            "            .field(\"{field_name}\", &self.get_{method_name}())\n",
+            field_name = node_field_name(field),
+            method_name = field.field_name
         ));
     }
     stmts.push(format!("            .finish()"));

@@ -102,7 +102,7 @@ fn variant_getter(node: &lib_ruby_parser_nodes::Node) -> String {
 }}",
         sig = helpers::nodes::variant_getter::sig(node),
         tag_name = helpers::nodes::enum_variant_name(node),
-        struct_name = node.camelcase_name(),
+        struct_name = node.camelcase_name,
         union_member = helpers::nodes::union_member_name(node)
     )
 }
@@ -118,7 +118,7 @@ fn field_getters(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     return ({blob_type} *)field;
 }}",
             sig = helpers::nodes::getter::sig(node, field),
-            variant = node.camelcase_name(),
+            variant = node.camelcase_name,
             field_type = field_type,
             field_name = helpers::nodes::fields::field_name(field),
             blob_type = helpers::nodes::fields::blob_type(field)
@@ -130,19 +130,15 @@ fn field_setters(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
         let drop_old_value_fn = match field.field_type {
             lib_ruby_parser_nodes::NodeFieldType::Node => "drop_node_ptr",
             lib_ruby_parser_nodes::NodeFieldType::Nodes => "drop_node_list",
-            lib_ruby_parser_nodes::NodeFieldType::MaybeNode
-            | lib_ruby_parser_nodes::NodeFieldType::RegexOptions => "drop_maybe_node_ptr",
+            lib_ruby_parser_nodes::NodeFieldType::MaybeNode { .. } => "drop_maybe_node_ptr",
             lib_ruby_parser_nodes::NodeFieldType::Loc => "drop_loc",
             lib_ruby_parser_nodes::NodeFieldType::MaybeLoc => "drop_maybe_loc",
 
-            lib_ruby_parser_nodes::NodeFieldType::Str
-            | lib_ruby_parser_nodes::NodeFieldType::RawString => "drop_string_ptr",
+            lib_ruby_parser_nodes::NodeFieldType::Str { .. } => "drop_string_ptr",
 
-            lib_ruby_parser_nodes::NodeFieldType::MaybeStr
-            | lib_ruby_parser_nodes::NodeFieldType::Chars => "drop_maybe_string_ptr",
+            lib_ruby_parser_nodes::NodeFieldType::MaybeStr { .. } => "drop_maybe_string_ptr",
             lib_ruby_parser_nodes::NodeFieldType::StringValue => "drop_bytes",
             lib_ruby_parser_nodes::NodeFieldType::U8 => "drop_byte",
-            lib_ruby_parser_nodes::NodeFieldType::Usize => unreachable!(),
         };
 
         format!(
@@ -153,7 +149,7 @@ fn field_setters(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     variant->{field_name} = {unpack_fn}(value_blob);
 }}",
             sig = helpers::nodes::setter::sig(node, field),
-            struct_name = node.camelcase_name(),
+            struct_name = node.camelcase_name,
             field_name = helpers::nodes::fields::field_name(field),
             unpack_fn = helpers::nodes::fields::unpack_field_fn(field),
             drop_old_value_fn = drop_old_value_fn
@@ -181,7 +177,7 @@ fn into_internal_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     return internal;
 }}",
         sig = helpers::nodes::into_internal::sig(node),
-        struct_name = node.camelcase_name(),
+        struct_name = node.camelcase_name,
         fields = fields
     )
 }
@@ -194,7 +190,7 @@ fn into_variant_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     return PACK_{struct_name}(variant);
 }}",
         sig = helpers::nodes::into_variant::sig(node),
-        struct_name = node.camelcase_name(),
+        struct_name = node.camelcase_name,
         union_member_name = helpers::nodes::union_member_name(node)
     )
 }
@@ -206,7 +202,7 @@ fn variant_drop_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     drop_node_{lower}(variant);
 }}",
         sig = helpers::nodes::drop_variant::sig(node),
-        struct_name = node.camelcase_name(),
+        struct_name = node.camelcase_name,
         lower = node.lower_name()
     )
 }

@@ -59,7 +59,7 @@ pub(crate) fn codegen() {
 fn impl_blob(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "IMPL_BLOB({struct_name});",
-        struct_name = node.camelcase_name()
+        struct_name = node.camelcase_name
     )
 }
 
@@ -70,19 +70,15 @@ fn drop_variant_fn(node: &lib_ruby_parser_nodes::Node) -> String {
             let fn_name = match field.field_type {
                 lib_ruby_parser_nodes::NodeFieldType::Node => "drop_node_ptr",
                 lib_ruby_parser_nodes::NodeFieldType::Nodes => "drop_node_list",
-                lib_ruby_parser_nodes::NodeFieldType::MaybeNode
-                | lib_ruby_parser_nodes::NodeFieldType::RegexOptions => "drop_maybe_node_ptr",
+                lib_ruby_parser_nodes::NodeFieldType::MaybeNode { .. } => "drop_maybe_node_ptr",
                 lib_ruby_parser_nodes::NodeFieldType::Loc => "drop_loc",
                 lib_ruby_parser_nodes::NodeFieldType::MaybeLoc => "drop_maybe_loc",
 
-                lib_ruby_parser_nodes::NodeFieldType::Str
-                | lib_ruby_parser_nodes::NodeFieldType::RawString => "drop_string_ptr",
+                lib_ruby_parser_nodes::NodeFieldType::Str { .. } => "drop_string_ptr",
 
-                lib_ruby_parser_nodes::NodeFieldType::MaybeStr
-                | lib_ruby_parser_nodes::NodeFieldType::Chars => "drop_maybe_string_ptr",
+                lib_ruby_parser_nodes::NodeFieldType::MaybeStr { .. } => "drop_maybe_string_ptr",
                 lib_ruby_parser_nodes::NodeFieldType::StringValue => "drop_bytes",
                 lib_ruby_parser_nodes::NodeFieldType::U8 => "drop_byte",
-                lib_ruby_parser_nodes::NodeFieldType::Usize => unreachable!(),
             };
 
             format!(
@@ -97,7 +93,7 @@ fn drop_variant_fn(node: &lib_ruby_parser_nodes::Node) -> String {
         "void drop_node_{lower}({struct_name} *variant) {{
     {drop_fields}
 }}",
-        struct_name = node.camelcase_name(),
+        struct_name = node.camelcase_name,
         drop_fields = drop_fields,
         lower = node.lower_name()
     )

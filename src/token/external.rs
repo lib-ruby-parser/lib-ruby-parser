@@ -1,5 +1,5 @@
-use crate::containers::helpers::IntoBlob;
 use crate::containers::size::TOKEN_SIZE;
+use crate::containers::IntoBlob;
 use crate::loc::LocBlob;
 use crate::{Bytes, LexState, Loc};
 

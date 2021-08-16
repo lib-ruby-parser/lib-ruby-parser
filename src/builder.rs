@@ -51,6 +51,8 @@ use crate::containers::helpers::{
 };
 use crate::error::Diagnostics;
 use crate::nodes::internal;
+#[allow(unused_imports)]
+use crate::nodes::*;
 use crate::LexState;
 use crate::Loc;
 use crate::{
@@ -836,7 +838,7 @@ impl Builder {
     //
 
     pub(crate) fn self_(&self, token: Ptr<Token>) -> Box<Node> {
-        Box::new(Node::make_self_(self.loc(&token)))
+        Box::new(Node::make_self(self.loc(&token)))
     }
 
     pub(crate) fn lvar(&self, token: Ptr<Token>) -> Box<Node> {
@@ -1037,7 +1039,7 @@ impl Builder {
                 MaybeLoc::none(),
                 expression_l,
             )
-        } else if let Some(self_) = node.as_self_() {
+        } else if let Some(self_) = node.as_self() {
             let expression_l = self_.get_expression_l();
             self.error(DiagnosticMessage::new_cant_assign_to_self(), expression_l);
             return Err(());

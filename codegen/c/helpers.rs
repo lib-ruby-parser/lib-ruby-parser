@@ -128,6 +128,8 @@ pub(crate) mod nodes {
             match &field.field_name[..] {
                 "default" => "default_",
                 "operator" => "operator_",
+                "else" => "else_",
+                "const" => "const_",
                 other => other,
             }
             .to_owned()
@@ -139,14 +141,13 @@ pub(crate) mod nodes {
             match field.field_type {
                 NodeFieldType::Node => "NodePtr",
                 NodeFieldType::Nodes => "NodeList",
-                NodeFieldType::MaybeNode | NodeFieldType::RegexOptions => "MaybeNodePtr",
+                NodeFieldType::MaybeNode { .. } => "MaybeNodePtr",
                 NodeFieldType::Loc => "Loc",
                 NodeFieldType::MaybeLoc => "MaybeLoc",
-                NodeFieldType::Str | NodeFieldType::RawString => "StringPtr",
-                NodeFieldType::MaybeStr | NodeFieldType::Chars => "MaybeStringPtr",
+                NodeFieldType::Str { .. } => "StringPtr",
+                NodeFieldType::MaybeStr { .. } => "MaybeStringPtr",
                 NodeFieldType::StringValue => "Bytes",
                 NodeFieldType::U8 => "Byte",
-                NodeFieldType::Usize => unreachable!(),
             }
         }
 
@@ -156,14 +157,13 @@ pub(crate) mod nodes {
             match field.field_type {
                 NodeFieldType::Node => "Ptr",
                 NodeFieldType::Nodes => "NodeList",
-                NodeFieldType::MaybeNode | NodeFieldType::RegexOptions => "MaybePtr",
+                NodeFieldType::MaybeNode { .. } => "MaybePtr",
                 NodeFieldType::Loc => "Loc",
                 NodeFieldType::MaybeLoc => "MaybeLoc",
-                NodeFieldType::Str | NodeFieldType::RawString => "StringPtr",
-                NodeFieldType::MaybeStr | NodeFieldType::Chars => "MaybeStringPtr",
+                NodeFieldType::Str { .. } => "StringPtr",
+                NodeFieldType::MaybeStr { .. } => "MaybeStringPtr",
                 NodeFieldType::StringValue => "Bytes",
                 NodeFieldType::U8 => "Byte",
-                NodeFieldType::Usize => unreachable!(),
             }
         }
 
@@ -244,7 +244,7 @@ pub(crate) mod nodes {
                 "{return_type} {name}({struct_name}_BLOB *blob)",
                 return_type = return_type,
                 name = name(node, field),
-                struct_name = node.camelcase_name()
+                struct_name = node.camelcase_name
             )
         }
     }
@@ -270,7 +270,7 @@ pub(crate) mod nodes {
             format!(
                 "void {setter_name}({struct_name}_BLOB* blob, {value_blob_type} value_blob)",
                 setter_name = name(node, field),
-                struct_name = node.camelcase_name(),
+                struct_name = node.camelcase_name,
                 value_blob_type = fields::blob_type(field)
             )
         }
@@ -296,7 +296,7 @@ pub(crate) mod nodes {
         pub(crate) fn sig(node: &lib_ruby_parser_nodes::Node) -> String {
             format!(
                 "{struct_name}_BLOB *{getter_name}(Node_BLOB *blob)",
-                struct_name = node.camelcase_name(),
+                struct_name = node.camelcase_name,
                 getter_name = name(node)
             )
         }
@@ -315,7 +315,7 @@ pub(crate) mod nodes {
         pub(crate) fn sig(node: &lib_ruby_parser_nodes::Node) -> String {
             format!(
                 "Internal{struct_name} {name}({struct_name}_BLOB blob)",
-                struct_name = node.camelcase_name(),
+                struct_name = node.camelcase_name,
                 name = name(node)
             )
         }
@@ -330,7 +330,7 @@ pub(crate) mod nodes {
         pub(crate) fn sig(node: &lib_ruby_parser_nodes::Node) -> String {
             format!(
                 "{struct_name}_BLOB {name}(Node_BLOB blob)",
-                struct_name = node.camelcase_name(),
+                struct_name = node.camelcase_name,
                 name = name(node)
             )
         }
@@ -345,7 +345,7 @@ pub(crate) mod nodes {
         pub(crate) fn sig(node: &lib_ruby_parser_nodes::Node) -> String {
             format!(
                 "void {name}({struct_name}_BLOB *blob)",
-                struct_name = node.camelcase_name(),
+                struct_name = node.camelcase_name,
                 name = name(node)
             )
         }

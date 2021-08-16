@@ -8,7 +8,7 @@ fn contents() -> String {
 
 use crate::containers::StringPtrBlob;
 use crate::containers::ExternalStringPtr as StringPtr;
-use crate::containers::helpers::IntoBlob;
+use crate::containers::IntoBlob;
 
 use super::{{DiagnosticMessage, DiagnosticMessageBlob}};
 

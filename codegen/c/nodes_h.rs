@@ -76,7 +76,7 @@ fn struct_declaration(node: &lib_ruby_parser_nodes::Node) -> String {
     {fields}
 }} {struct_name};
 DECLARE_BLOB_FOR({struct_name});",
-        struct_name = node.camelcase_name(),
+        struct_name = node.camelcase_name,
         fields = fields.join("\n    ")
     )
 }
@@ -86,7 +86,7 @@ fn enum_variant(node: &lib_ruby_parser_nodes::Node) -> String {
 fn union_member(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "{node_type} {union_member_name};",
-        node_type = node.camelcase_name(),
+        node_type = node.camelcase_name,
         union_member_name = helpers::nodes::union_member_name(node)
     )
 }
@@ -95,7 +95,7 @@ fn print_size(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "printf(\"LIB_RUBY_PARSER_NODE_{upper}_SIZE=%lu\\n\", sizeof({struct_name}));",
         upper = node.upper_name(),
-        struct_name = node.camelcase_name()
+        struct_name = node.camelcase_name
     )
 }
 
@@ -103,6 +103,6 @@ fn drop_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "void drop_node_{lower}({struct_name} *variant);",
         lower = node.lower_name(),
-        struct_name = node.camelcase_name()
+        struct_name = node.camelcase_name
     )
 }

@@ -1,5 +1,5 @@
-use crate::containers::helpers::IntoBlob;
 use crate::containers::size::DIAGNOSTIC_SIZE;
+use crate::containers::IntoBlob;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
