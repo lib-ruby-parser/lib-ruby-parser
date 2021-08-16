@@ -3580,9 +3580,7 @@ impl Builder {
             Ok(regex) => Some(regex),
             Err(err) => {
                 self.error(
-                    DiagnosticMessage::RegexError {
-                        error: err.description().into(),
-                    },
+                    DiagnosticMessage::new_regex_error(err.description().into()),
                     loc,
                 );
                 None

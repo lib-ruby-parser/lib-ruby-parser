@@ -1,24 +1,24 @@
-#[cfg(feature = "compile-with-external-structures")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 pub(crate) mod helpers;
 
-#[cfg(feature = "compile-with-external-structures")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod bindings_messages_c;
-#[cfg(feature = "compile-with-external-structures")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod bindings_messages_h;
-#[cfg(feature = "compile-with-external-structures")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod bindings_nodes_c;
-#[cfg(feature = "compile-with-external-structures")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod bindings_nodes_h;
-#[cfg(feature = "compile-with-external-structures")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod messages_c;
-#[cfg(feature = "compile-with-external-structures")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod messages_h;
-#[cfg(feature = "compile-with-external-structures")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod nodes_c;
-#[cfg(feature = "compile-with-external-structures")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod nodes_h;
 
-#[cfg(feature = "compile-with-external-structures")]
+#[cfg(feature = "lib-ruby-parser-nodes")]
 pub(crate) fn codegen() {
     nodes_h::codegen();
     nodes_c::codegen();
@@ -33,7 +33,7 @@ pub(crate) fn codegen() {
     bindings_messages_c::codegen();
 }
 
-#[cfg(not(feature = "compile-with-external-structures"))]
+#[cfg(not(feature = "lib-ruby-parser-nodes"))]
 pub(crate) fn codegen() {
     println!("Skipping codegen in {}", file!())
 }

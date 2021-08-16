@@ -1,6 +1,8 @@
+#[cfg(feature = "lib-ruby-parser-nodes")]
 mod codegen;
 
 fn main() {
+    #[cfg(feature = "lib-ruby-parser-nodes")]
     codegen::codegen();
 
     link_with_external_structures();
