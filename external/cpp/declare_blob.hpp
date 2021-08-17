@@ -3,14 +3,12 @@
 
 #include <cstdint>
 
-typedef uint8_t BYTE;
-
-#define DECLARE_BLOB_STRUCTS(VALUE)                            \
+#define DECLARE_BLOB_FOR(VALUE)                                \
     extern "C"                                                 \
     {                                                          \
         struct VALUE##_BLOB                                    \
         {                                                      \
-            BYTE data[sizeof(VALUE)];                          \
+            uint8_t data[sizeof(VALUE)];                       \
         };                                                     \
     }                                                          \
                                                                \
@@ -30,17 +28,8 @@ typedef uint8_t BYTE;
             {                                                  \
             }                                                  \
         };                                                     \
-    }
-
-#define DECLARE_BLOB_UNPACK_FOR(VALUE) \
-    VALUE UNPACK(VALUE##_BLOB blob);
-
-#define DECLARE_BLOB_PACK_FOR(VALUE) \
-    VALUE##_BLOB PACK(VALUE value);
-
-#define DECLARE_BLOB_FOR(VALUE)    \
-    DECLARE_BLOB_STRUCTS(VALUE)    \
-    DECLARE_BLOB_UNPACK_FOR(VALUE) \
-    DECLARE_BLOB_PACK_FOR(VALUE)
+    }                                                          \
+    VALUE UNPACK_##VALUE(VALUE##_BLOB blob);                   \
+    VALUE##_BLOB PACK_##VALUE(VALUE value);
 
 #endif // LIB_RUBY_PARSER_EXTERNAL_CPP_DECLARE_BLOB_HPP

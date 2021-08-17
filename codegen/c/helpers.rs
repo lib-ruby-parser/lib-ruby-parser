@@ -268,10 +268,11 @@ pub(crate) mod nodes {
             field: &lib_ruby_parser_nodes::NodeField,
         ) -> String {
             format!(
-                "void {setter_name}({struct_name}_BLOB* blob, {value_blob_type} value_blob)",
+                "void {setter_name}({struct_name}_BLOB* blob, {value_blob_type} {field_name})",
                 setter_name = name(node, field),
                 struct_name = node.camelcase_name,
-                value_blob_type = fields::blob_type(field)
+                value_blob_type = fields::blob_type(field),
+                field_name = fields::field_name(field)
             )
         }
     }

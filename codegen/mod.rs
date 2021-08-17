@@ -6,7 +6,7 @@ mod y;
 pub(crate) fn codegen() {
     y::codegen();
     rust::codegen();
-    rust::size_rs::codegen();
     c::codegen();
     cpp::codegen();
+    rust::size_rs::codegen();
 }

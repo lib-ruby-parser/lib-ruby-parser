@@ -8,7 +8,7 @@ pub(crate) mod messages {
 
     pub(crate) fn field_type(field: &lib_ruby_parser_nodes::MessageField) -> &str {
         match field.field_type {
-            lib_ruby_parser_nodes::MessageFieldType::Str => "STRING_PTR",
+            lib_ruby_parser_nodes::MessageFieldType::Str => "StringPtr",
             lib_ruby_parser_nodes::MessageFieldType::Byte => "Byte",
         }
     }

@@ -146,7 +146,7 @@ fn field_setters(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
 {{
     {struct_name}* variant = ({struct_name} *)blob;
     {drop_old_value_fn}(&(variant->{field_name}));
-    variant->{field_name} = {unpack_fn}(value_blob);
+    variant->{field_name} = {unpack_fn}({field_name});
 }}",
             sig = helpers::nodes::setter::sig(node, field),
             struct_name = node.camelcase_name,

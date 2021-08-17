@@ -4,7 +4,6 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "declare_list.h"
-#include "declare_dummy_struct.h"
 
 // Byte
 typedef uint8_t Byte;

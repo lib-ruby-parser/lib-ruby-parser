@@ -1,26 +1,16 @@
 CXXFLAGS += -g -Wall -Wextra -std=c++17 -fPIC
 
 OBJECTS = \
-	byte.o \
-	bytes.o \
-	comment.o \
-	diagnostic.o \
-	error_level.o \
-	list.o \
-	loc.o \
-	magic_comment.o \
-	maybe_loc.o \
-	maybe_ptr.o \
-	maybe_string_ptr.o \
+	structs.o \
+	blobs.o \
+	nodes.o \
 	messages.o \
-	node.o \
-	ptr.o \
-	shared_byte_list.o \
-	source_line.o \
-	string_ptr.o \
-	token.o
+	bindings.o \
+	bindings_nodes.o \
+	bindings_messages.o
 
-all: libstructures.a
+all: libstructures.a sizes
+	./sizes > sizes-out
 
 libstructures.a: $(OBJECTS)
 	$(AR) rc libstructures.a $(OBJECTS)
@@ -34,8 +24,5 @@ clean:
 	rm -rf *.dSYM
 	rm -f sizes
 
-sizes: sizes.cpp $(OBJECTS)
+sizes: sizes.cpp
 	$(CXX) sizes.cpp $(CXXFLAGS) -o sizes
-
-print-sizes: sizes
-	./sizes

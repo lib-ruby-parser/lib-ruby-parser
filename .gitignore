@@ -41,3 +41,18 @@ external/c/bindings_messages.h
 external/c/bindings_messages.c
 external/c/bindings_nodes.h
 external/c/bindings_nodes.c
+
+# external/cpp
+external/cpp/*.o
+external/cpp/*.a
+external/cpp/*.dSYM
+external/cpp/sizes
+external/cpp/messages.hpp
+external/cpp/messages.cpp
+external/cpp/nodes.hpp
+external/cpp/nodes.cpp
+external/cpp/sizes-out
+external/cpp/bindings_messages.hpp
+external/cpp/bindings_messages.cpp
+external/cpp/bindings_nodes.hpp
+external/cpp/bindings_nodes.cpp

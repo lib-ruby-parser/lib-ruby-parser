@@ -68,5 +68,5 @@ jobs:
         run: |
           cargo test --features $CARGO_FEATURES --lib -- --nocapture
 
-          cargo test --features $CARGO_FEATURES --test parser_test -- --nocapture
           cargo test --features $CARGO_FEATURES --test lexer_test -- --nocapture
+          cargo test --features $CARGO_FEATURES --test parser_test -- --nocapture
