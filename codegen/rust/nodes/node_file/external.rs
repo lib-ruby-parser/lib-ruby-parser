@@ -1,6 +1,12 @@
-use crate::codegen::c::helpers as c_helpers;
 use crate::codegen::rust::nodes::helpers;
 use crate::codegen::rust::nodes::helpers::{filename, node_field_name, struct_name};
+
+use lib_ruby_parser_bindings::helpers::nodes::{
+    drop_variant::name as external_drop_variant_name,
+    field_getter::name as external_field_getter_name,
+    field_setter::name as external_field_setter_name,
+    into_internal::name as external_into_internal_name,
+};
 
 fn contents(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
@@ -41,7 +47,7 @@ impl {struct_name} {{
 
     #[allow(dead_code)]
     pub(crate) fn into_internal(self) -> Internal{struct_name} {{
-        let internal = unsafe {{ {into_internal_fn_name}(self.blob) }};
+        let internal = unsafe {{ {external_into_internal_name}(self.blob) }};
         std::mem::forget(self);
         internal
     }}
@@ -74,7 +80,7 @@ impl InnerNode for {struct_name} {{
 
 impl Drop for {struct_name} {{
     fn drop(&mut self) {{
-        unsafe {{ {extern_drop}(&mut self.blob) }}
+        unsafe {{ {external_drop_variant_name}(&mut self.blob) }}
     }}
 }}
 ",
@@ -90,12 +96,12 @@ impl Drop for {struct_name} {{
             .fields
             .map(&|field| getter(node, field))
             .join("\n\n    "),
-        into_internal_fn_name = c_helpers::nodes::into_internal::name(node),
+        external_into_internal_name = external_into_internal_name(node),
         extern_fns = extern_fns(&node).join("\n    "),
         // trait impls
         debug_impl = debug_impl(&node),
         partial_eq_impl = partial_eq_impl(&node),
-        extern_drop = c_helpers::nodes::drop_variant::name(node)
+        external_drop_variant_name = external_drop_variant_name(node)
     )
 }
 
@@ -278,8 +284,8 @@ fn getter(node: &lib_ruby_parser_nodes::Node, field: &lib_ruby_parser_nodes::Nod
         method_name = field.field_name,
         field_name = node_field_name(field),
         field_type = helpers::field_type(field),
-        extern_getter = c_helpers::nodes::getter::name(node, field),
-        extern_setter = c_helpers::nodes::setter::name(node, field),
+        extern_getter = external_field_getter_name(node, field),
+        extern_setter = external_field_setter_name(node, field),
     )
 }
 
@@ -292,14 +298,14 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
             .flat_map(&|field| {
                 let getter = format!(
                     "fn {getter_name}(blob: *const {struct_name}Blob) -> *mut {field_blob_type};",
-                    getter_name = c_helpers::nodes::getter::name(node, field),
+                    getter_name = external_field_getter_name(node, field),
                     struct_name = struct_name(node),
                     field_blob_type = helpers::blob_type(field)
                 );
 
                 let setter = format!(
                     "fn {setter_name}(blob: *mut {struct_name}Blob, blob: {field_blob_type});",
-                    setter_name = c_helpers::nodes::setter::name(node, field),
+                    setter_name = external_field_setter_name(node, field),
                     struct_name = struct_name(node),
                     field_blob_type = helpers::blob_type(field)
                 );
@@ -314,7 +320,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     {
         let line = format!(
             "fn {fn_name}(blob: {struct_name}Blob) -> Internal{struct_name};",
-            fn_name = c_helpers::nodes::into_internal::name(node),
+            fn_name = external_into_internal_name(node),
             struct_name = struct_name(node)
         );
         result.push(line);
@@ -324,7 +330,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     {
         let line = format!(
             "fn {fn_name}(blob: *mut {struct_name}Blob);",
-            fn_name = c_helpers::nodes::drop_variant::name(node),
+            fn_name = external_drop_variant_name(node),
             struct_name = struct_name(node)
         );
         result.push(line);

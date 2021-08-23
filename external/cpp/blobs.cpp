@@ -67,3 +67,7 @@ IMPL_BLOB(DiagnosticList);
 
 // DiagnosticMessage
 IMPL_BLOB(DiagnosticMessage);
+
+// Node
+IMPL_BLOB(Node);
+IMPL_BLOB(NodeList);

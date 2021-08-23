@@ -1,4 +1,4 @@
-use crate::codegen::c::helpers as c_helpers;
+use lib_ruby_parser_bindings::helpers::messages::variant_predicate as bindings_variant_predicate;
 
 fn contents() -> String {
     let messages = lib_ruby_parser_nodes::messages();
@@ -29,7 +29,7 @@ pub(crate) fn codegen() {
 fn extern_predicate(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "fn {name}(blob: *const DiagnosticMessageBlob) -> bool;",
-        name = c_helpers::messages::type_predicate::name(message),
+        name = bindings_variant_predicate::name(message),
     )
 }
 
@@ -41,6 +41,6 @@ fn foreign_predicate(message: &lib_ruby_parser_nodes::Message) -> String {
         unsafe {{ {extern_predicate}(message_blob_ptr) }}
     }}",
         variant = message.lower_name(),
-        extern_predicate = c_helpers::messages::type_predicate::name(message)
+        extern_predicate = bindings_variant_predicate::name(message)
     )
 }

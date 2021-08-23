@@ -1,4 +1,4 @@
-use crate::codegen::c::helpers as c_helpers;
+use lib_ruby_parser_bindings::helpers::messages::constructor as bindings_constructor;
 
 fn contents() -> String {
     let messages = lib_ruby_parser_nodes::messages();
@@ -50,7 +50,7 @@ fn extern_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
 
     format!(
         "fn {name}({arglist}) -> DiagnosticMessageBlob;",
-        name = c_helpers::messages::constructor::name(message),
+        name = bindings_constructor::name(message),
         arglist = arglist
     )
 }
@@ -91,7 +91,7 @@ pub fn new_{fn_name}({rust_arglist}) -> Self {{
         variant_name = message.camelcase_name(),
         fn_name = message.lower_name(),
         rust_arglist = rust_arglist,
-        extern_constructor_name = c_helpers::messages::constructor::name(message),
+        extern_constructor_name = bindings_constructor::name(message),
         extern_arglist = extern_arglist,
     )
 }

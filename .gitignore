@@ -37,10 +37,11 @@ external/c/messages.c
 external/c/nodes.h
 external/c/nodes.c
 external/c/sizes-out
-external/c/bindings_messages.h
+external/c/bindings.h
 external/c/bindings_messages.c
-external/c/bindings_nodes.h
 external/c/bindings_nodes.c
+external/c/blobs_gen.h
+external/c/blobs_gen.c
 
 # external/cpp
 external/cpp/*.o
@@ -52,7 +53,8 @@ external/cpp/messages.cpp
 external/cpp/nodes.hpp
 external/cpp/nodes.cpp
 external/cpp/sizes-out
-external/cpp/bindings_messages.hpp
+external/cpp/bindings.hpp
 external/cpp/bindings_messages.cpp
-external/cpp/bindings_nodes.hpp
 external/cpp/bindings_nodes.cpp
+external/cpp/blobs_gen.hpp
+external/cpp/blobs_gen.cpp

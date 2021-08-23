@@ -31,4 +31,9 @@ DECLARE_BLOB_FOR(DiagnosticMessage);
 DECLARE_BLOB_FOR(Diagnostic);
 DECLARE_BLOB_FOR(DiagnosticList);
 
+#include "blobs_gen.h"
+
+DECLARE_BLOB_FOR(Node);
+DECLARE_BLOB_FOR(NodeList);
+
 #endif // LIB_RUBY_PARSER_C_BINDINGS_BLOBS

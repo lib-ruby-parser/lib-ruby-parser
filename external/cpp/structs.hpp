@@ -181,4 +181,7 @@ enum class ErrorLevel
 // DiagnosticMessage
 #include "messages.hpp"
 
+// Node
+#include "nodes.hpp"
+
 #endif // LIB_RUBY_PARSER_CPP_BINDINGS_STRUCTS_HPP

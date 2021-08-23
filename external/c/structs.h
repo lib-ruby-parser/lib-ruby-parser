@@ -140,4 +140,7 @@ typedef enum ErrorLevel
 // DiagnosticMessage
 #include "messages.h"
 
+// Node
+#include "nodes.h"
+
 #endif // LIB_RUBY_PARSER_C_BINDINGS_STRUCTS

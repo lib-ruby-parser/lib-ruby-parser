@@ -1,4 +1,6 @@
-use crate::codegen::c::helpers as c_helpers;
+use lib_ruby_parser_bindings::helpers::messages::{
+    field_getter as bindings_field_getter, variant_getter as bindings_variant_getter,
+};
 
 fn contents() -> String {
     let messages = lib_ruby_parser_nodes::messages();
@@ -78,7 +80,7 @@ impl PartialEq for {struct_name} {{
         size_var = size_var,
         struct_name = message.camelcase_name(),
         extern_getters = extern_getters(message),
-        extern_variant_getter_name = c_helpers::messages::variant_getter::name(message),
+        extern_variant_getter_name = bindings_variant_getter::name(message),
         lower = message.lower_name(),
         getters = getters(message),
         debug_fields = debug_fields(message),
@@ -92,7 +94,7 @@ fn extern_getters(message: &lib_ruby_parser_nodes::Message) -> String {
         .map(&|field| {
             format!(
                 "fn {name}(blob: *const {struct_name}Blob) -> *const {return_type}Blob;",
-                name = c_helpers::messages::getter::name(message, field),
+                name = bindings_field_getter::name(message, field),
                 struct_name = message.camelcase_name(),
                 return_type = field_type(field)
             )
@@ -114,7 +116,7 @@ fn getters(message: &lib_ruby_parser_nodes::Message) -> String {
     }}",
                 field_name = field.name,
                 return_type = field_type(field),
-                extern_getter = c_helpers::messages::getter::name(message, field),
+                extern_getter = bindings_field_getter::name(message, field),
             )
         })
         .join("\n    ")
