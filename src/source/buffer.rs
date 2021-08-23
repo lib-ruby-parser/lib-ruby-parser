@@ -56,7 +56,7 @@ impl Buffer {
     const CTRL_Z_CHAR: u8 = 0x1a;
     const CTRL_D_CHAR: u8 = 0x04;
 
-    pub(crate) fn new(name: StringPtr, bytes: List<u8>, decoder: Decoder) -> Self {
+    pub(crate) fn new(name: StringPtr, bytes: List<u8>, decoder: Option<Decoder>) -> Self {
         let mut input = Input::new(name, decoder);
 
         input.set_bytes(bytes);

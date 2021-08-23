@@ -1,5 +1,3 @@
-use lib_ruby_parser::source::Decoder;
-use lib_ruby_parser::token_rewriter::TokenRewriter;
 use lib_ruby_parser::{
     debug_level, source::MagicComment, source::MagicCommentKind, Loc, Parser, ParserOptions,
     ParserResult,
@@ -204,8 +202,8 @@ fn test_file(fixture_path: &str) -> TestResult {
         let options = ParserOptions::new(
             format!("(test {})", fixture_path).into(),
             debug_level::NONE,
-            Decoder::none(),
-            TokenRewriter::none(),
+            None,
+            None,
             false,
         );
         let parser = Parser::new(test_case.input.as_bytes(), options);
@@ -288,13 +286,7 @@ fn read_fixture(path: &str) -> Vec<u8> {
 }
 
 fn parse(input: &[u8]) -> ParserResult {
-    let options = ParserOptions::new(
-        "(eval)".into(),
-        debug_level::NONE,
-        Decoder::none(),
-        TokenRewriter::none(),
-        false,
-    );
+    let options = ParserOptions::new("(eval)".into(), debug_level::NONE, None, None, false);
     let parser = Parser::new(input, options);
     parser.do_parse()
 }

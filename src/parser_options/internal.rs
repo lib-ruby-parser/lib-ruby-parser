@@ -12,7 +12,7 @@ use crate::token_rewriter::TokenRewriter;
 pub(crate) struct InternalParserOptions {
     pub(crate) buffer_name: StringPtr,
     pub(crate) debug: debug_level::Type,
-    pub(crate) decoder: Decoder,
-    pub(crate) token_rewriter: TokenRewriter,
+    pub(crate) decoder: Option<Decoder>,
+    pub(crate) token_rewriter: Option<TokenRewriter>,
     pub(crate) record_tokens: bool,
 }

@@ -116,7 +116,7 @@ impl Lexer {
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
     /// Constructs an instance of Lexer
-    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: Decoder) -> Self
+    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: Option<Decoder>) -> Self
     where
         Bytes: Into<List<u8>>,
         Name: Into<StringPtr>,

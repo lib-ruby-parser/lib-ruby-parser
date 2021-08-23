@@ -43,7 +43,7 @@
     pattern_hash_keys: VariablesStack,
     tokens: List<Token>,
     diagnostics: Diagnostics,
-    token_rewriter: TokenRewriter,
+    token_rewriter: Option<TokenRewriter>,
     record_tokens: bool,
 }
 
@@ -6779,9 +6779,9 @@ impl Parser {
     fn next_token(&mut self) -> Ptr<Token> {
         let mut token = self.yylex();
 
-        if let Some(token_rewriter) = self.token_rewriter.as_option() {
+        if let Some(token_rewriter) = self.token_rewriter.as_ref() {
             let TokenRewriterResult { rewritten_token, token_action, lex_state_action } =
-                token_rewriter(token, self.yylexer.buffer.input.as_shared_bytes());
+                token_rewriter.call(token, self.yylexer.buffer.input.as_shared_bytes());
 
             match lex_state_action {
                 LexStateAction::Set(new_state) => self.yylexer.lex_state.set(new_state),

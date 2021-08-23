@@ -55,34 +55,23 @@ pub type TokenRewriterFn = dyn Fn(Ptr<Token>, SharedByteList) -> TokenRewriterRe
 
 /// Token rewriter struct, can be used to rewrite tokens on the fly
 pub struct TokenRewriter {
-    f: Option<Box<TokenRewriterFn>>,
+    f: Box<TokenRewriterFn>,
 }
 
 impl TokenRewriter {
     /// Constructs a rewriter based on a given function
     pub fn new(f: Box<TokenRewriterFn>) -> Self {
-        Self { f: Some(f) }
+        Self { f }
     }
 
-    /// Constructs a no-op token rewriter that has no side effect. Default value.
-    pub fn none() -> Self {
-        Self { f: None }
-    }
-
-    /// Returns an optional reference to a function that rewrite tokens
-    pub fn as_option(&self) -> Option<&TokenRewriterFn> {
-        if let Some(f) = &self.f {
-            Some(&**f)
-        } else {
-            None
-        }
+    pub(crate) fn call(&self, token: Ptr<Token>, input: SharedByteList) -> TokenRewriterResult {
+        let f = &*self.f;
+        f(token, input)
     }
 }
 
 impl std::fmt::Debug for TokenRewriter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("TokenRewriter")
-            .field("f", &self.as_option().map(|_| "function"))
-            .finish()
+        f.debug_struct("TokenRewriter").finish()
     }
 }

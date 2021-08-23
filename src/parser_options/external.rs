@@ -53,7 +53,7 @@ pub struct ParserOptions {
     ///     "decoded".to_string()
     /// )
     /// ```
-    decoder: Decoder,
+    decoder: Option<Decoder>,
 
     /// Optional token rewriter, see TokenRewriter API
     ///
@@ -92,7 +92,7 @@ pub struct ParserOptions {
     /// };
     /// assert_eq!(*lvar_name, String::from("bar"));
     /// ```
-    token_rewriter: TokenRewriter,
+    token_rewriter: Option<TokenRewriter>,
 
     /// When set to true Parser records tokens.
     /// When set to false `ParserResult.tokens` is guaranteed to be empty.
@@ -105,8 +105,8 @@ impl ParserOptions {
     pub fn new(
         buffer_name: StringPtr,
         debug: debug_level::Type,
-        decoder: Decoder,
-        token_rewriter: TokenRewriter,
+        decoder: Option<Decoder>,
+        token_rewriter: Option<TokenRewriter>,
         record_tokens: bool,
     ) -> Self {
         Self {
@@ -127,11 +127,11 @@ impl ParserOptions {
         &self.debug
     }
     /// Returns `decoder` field
-    pub fn decoder(&self) -> &Decoder {
+    pub fn decoder(&self) -> &Option<Decoder> {
         &self.decoder
     }
     /// Returns `token_rewriter` field
-    pub fn token_rewriter(&self) -> &TokenRewriter {
+    pub fn token_rewriter(&self) -> &Option<TokenRewriter> {
         &self.token_rewriter
     }
     /// Returns `record_tokens` field

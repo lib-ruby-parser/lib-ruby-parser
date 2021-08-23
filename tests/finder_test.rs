@@ -1,16 +1,8 @@
-use lib_ruby_parser::source::Decoder;
-use lib_ruby_parser::token_rewriter::TokenRewriter;
 use lib_ruby_parser::traverse::finder::Finder;
 use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
 
 fn find(src: &str, pattern: &str) -> Option<String> {
-    let options = ParserOptions::new(
-        "(find_test)".into(),
-        debug_level::NONE,
-        Decoder::none(),
-        TokenRewriter::none(),
-        false,
-    );
+    let options = ParserOptions::new("(find_test)".into(), debug_level::NONE, None, None, false);
     let parser = Parser::new(src, options);
 
     let ParserResult { ast, input, .. } = parser.do_parse();

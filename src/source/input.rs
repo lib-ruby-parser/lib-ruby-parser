@@ -27,12 +27,12 @@ use crate::source::{decode_input, DecodedInput, Decoder, InputError};
 #[repr(C)]
 pub struct Input {
     pub(crate) decoded: DecodedInput,
-    decoder: Decoder,
+    decoder: Option<Decoder>,
 }
 
 impl Input {
     /// Constructs a new input
-    pub fn new<Name>(name: Name, decoder: Decoder) -> Self
+    pub fn new<Name>(name: Name, decoder: Option<Decoder>) -> Self
     where
         Name: Into<StringPtr>,
     {
@@ -93,7 +93,7 @@ impl Input {
         let new_input = decode_input(
             std::mem::take(&mut self.decoded.bytes),
             StringPtr::from(encoding),
-            self.decoder.take(),
+            &self.decoder,
         )
         .to_result()?;
         self.set_bytes(new_input);

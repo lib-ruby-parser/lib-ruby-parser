@@ -28,46 +28,24 @@ pub type DecoderFn = dyn Fn(StringPtr, List<u8>) -> DecoderResult;
 
 /// Custom decoder, a wrapper around a function
 pub struct Decoder {
-    f: Option<Box<DecoderFn>>,
+    f: Box<DecoderFn>,
 }
 
 impl Decoder {
     /// Constructs a rewriter based on a given function
     pub fn new(f: Box<DecoderFn>) -> Self {
-        Self { f: Some(f) }
+        Self { f }
     }
 
-    /// Constructs a no-op token rewriter that has no side effect. Default value.
-    pub fn none() -> Self {
-        Self { f: None }
-    }
-
-    /// Returns an optional reference to a function that rewrite tokens
-    pub fn as_option(&self) -> Option<&DecoderFn> {
-        if let Some(f) = &self.f {
-            let f = &**f;
-            Some(f)
-        } else {
-            None
-        }
-    }
-
-    pub(crate) fn take(&mut self) -> Self {
-        Self { f: self.f.take() }
+    pub(crate) fn call(&self, encoding: StringPtr, input: List<u8>) -> DecoderResult {
+        let f = &*self.f;
+        f(encoding, input)
     }
 }
 
 impl std::fmt::Debug for Decoder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Decoder")
-            .field("f", &self.as_option().map(|_| "function"))
-            .finish()
-    }
-}
-
-impl Default for Decoder {
-    fn default() -> Self {
-        Self::none()
+        f.debug_struct("Decoder").finish()
     }
 }
 
@@ -91,14 +69,14 @@ impl DecoderResult {
     }
 }
 
-pub fn decode_input(input: List<u8>, enc: StringPtr, decoder: Decoder) -> DecoderResult {
+pub fn decode_input(input: List<u8>, enc: StringPtr, decoder: &Option<Decoder>) -> DecoderResult {
     match enc.to_uppercase().as_str() {
         "UTF-8" | "ASCII-8BIT" | "BINARY" => {
             return DecoderResult::Ok(input.into());
         }
         _ => {
-            if let Some(f) = decoder.as_option() {
-                f(enc, input)
+            if let Some(decoder) = decoder.as_ref() {
+                decoder.call(enc, input)
             } else {
                 DecoderResult::Err(InputError::new_unsupported_encoding(enc))
             }
