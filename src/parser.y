@@ -93,6 +93,7 @@ use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter, TokenR
 use crate::debug_level;
 use crate::containers::helpers::{UnPtr, MaybePtrNone};
 use crate::Loc;
+use crate::parser_options::InternalParserOptions;
 
 }
 
@@ -6666,13 +6667,13 @@ impl Parser {
     where
         TInput: Into<List<u8>>
     {
-        let ParserOptions {
+        let InternalParserOptions {
             buffer_name,
             debug,
             decoder,
             token_rewriter,
             record_tokens,
-        } = options;
+        } = options.into();
 
         let context = ParserContext::new();
         let current_arg_stack = CurrentArgStack::new();

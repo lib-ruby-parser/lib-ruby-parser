@@ -1,12 +1,15 @@
 use super::{DebugLevel, InputFile};
+use lib_ruby_parser::source::CustomDecoder;
+use lib_ruby_parser::token_rewriter::TokenRewriter;
 use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
 
 pub fn parse(input: InputFile, debug_level: DebugLevel, drop_tokens: bool) -> ParserResult {
-    let options = ParserOptions {
-        buffer_name: input.filepath,
-        debug: debug_level.level,
-        record_tokens: !drop_tokens,
-        ..Default::default()
-    };
+    let options = ParserOptions::new(
+        input.filepath.into(),
+        debug_level.level,
+        CustomDecoder::none(),
+        TokenRewriter::none(),
+        !drop_tokens,
+    );
     Parser::new(input.code, options).do_parse()
 }

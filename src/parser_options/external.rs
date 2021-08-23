@@ -1,3 +1,4 @@
+use crate::containers::ExternalStringPtr as StringPtr;
 use crate::debug_level;
 use crate::source::CustomDecoder;
 use crate::token_rewriter::TokenRewriter;
@@ -6,7 +7,7 @@ use crate::token_rewriter::TokenRewriter;
 #[derive(Debug)]
 pub struct ParserOptions {
     /// Name of the buffer. Used in all diagnostic messages
-    pub buffer_name: String,
+    buffer_name: StringPtr,
 
     /// Controls which debug information is printed during parsing
     ///
@@ -17,7 +18,7 @@ pub struct ParserOptions {
     /// + lib_ruby_parser::debug_level::Lexer
     /// + lib_ruby_parser::debug_level::Buffer
     /// + or a combination of them (like `Lexer | Buffer`, these value is just a bitmask)
-    pub debug: debug_level::Type,
+    debug: debug_level::Type,
 
     /// Custom decoder that can be used if the source is encoded
     /// in unknown encoding. Only UTF-8 and ASCII-8BIT/BINARY are
@@ -52,7 +53,7 @@ pub struct ParserOptions {
     ///     "decoded".to_string()
     /// )
     /// ```
-    pub decoder: CustomDecoder,
+    decoder: CustomDecoder,
 
     /// Optional token rewriter, see TokenRewriter API
     ///
@@ -91,24 +92,71 @@ pub struct ParserOptions {
     /// };
     /// assert_eq!(*lvar_name, String::from("bar"));
     /// ```
-    pub token_rewriter: TokenRewriter,
+    token_rewriter: TokenRewriter,
 
     /// When set to true Parser records tokens.
     /// When set to false `ParserResult.tokens` is guaranteed to be empty.
     /// If you don't need tokens better set it to false to speed up parsing.
-    pub record_tokens: bool,
+    record_tokens: bool,
 }
 
-const DEFAULT_BUFFER_NAME: &str = "(eval)";
-
-impl Default for ParserOptions {
-    fn default() -> Self {
+impl ParserOptions {
+    /// Constructs new ParserOptions
+    pub fn new(
+        buffer_name: StringPtr,
+        debug: debug_level::Type,
+        decoder: CustomDecoder,
+        token_rewriter: TokenRewriter,
+        record_tokens: bool,
+    ) -> Self {
         Self {
-            buffer_name: DEFAULT_BUFFER_NAME.to_string(),
-            debug: debug_level::NONE,
-            decoder: CustomDecoder::none(),
-            token_rewriter: TokenRewriter::none(),
-            record_tokens: true,
+            buffer_name,
+            debug,
+            decoder,
+            token_rewriter,
+            record_tokens,
+        }
+    }
+
+    /// Returns `buffer_name` field
+    pub fn buffer_name(&self) -> &StringPtr {
+        &self.buffer_name
+    }
+    /// Returns `debug` field
+    pub fn debug(&self) -> &debug_level::Type {
+        &self.debug
+    }
+    /// Returns `decoder` field
+    pub fn decoder(&self) -> &CustomDecoder {
+        &self.decoder
+    }
+    /// Returns `token_rewriter` field
+    pub fn token_rewriter(&self) -> &TokenRewriter {
+        &self.token_rewriter
+    }
+    /// Returns `record_tokens` field
+    pub fn record_tokens(&self) -> &bool {
+        &self.record_tokens
+    }
+}
+
+use super::InternalParserOptions;
+impl From<ParserOptions> for InternalParserOptions {
+    fn from(options: ParserOptions) -> Self {
+        let ParserOptions {
+            buffer_name,
+            debug,
+            decoder,
+            token_rewriter,
+            record_tokens,
+        } = options;
+
+        Self {
+            buffer_name,
+            debug,
+            decoder,
+            token_rewriter,
+            record_tokens,
         }
     }
 }

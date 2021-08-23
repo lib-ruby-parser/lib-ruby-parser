@@ -1,3 +1,5 @@
+use lib_ruby_parser::source::CustomDecoder;
+use lib_ruby_parser::token_rewriter::TokenRewriter;
 use lib_ruby_parser::{
     debug_level, source::MagicComment, source::MagicCommentKind, Loc, Parser, ParserOptions,
     ParserResult,
@@ -199,11 +201,13 @@ fn test_file(fixture_path: &str) -> TestResult {
             }
         }
 
-        let options = ParserOptions {
-            buffer_name: format!("(test {})", fixture_path),
-            debug: debug_level::NONE,
-            ..Default::default()
-        };
+        let options = ParserOptions::new(
+            format!("(test {})", fixture_path).into(),
+            debug_level::NONE,
+            CustomDecoder::none(),
+            TokenRewriter::none(),
+            false,
+        );
         let parser = Parser::new(test_case.input.as_bytes(), options);
 
         parser.static_env.declare("foo");
@@ -284,11 +288,13 @@ fn read_fixture(path: &str) -> Vec<u8> {
 }
 
 fn parse(input: &[u8]) -> ParserResult {
-    let options = ParserOptions {
-        buffer_name: "(eval)".to_string(),
-        debug: debug_level::NONE,
-        ..Default::default()
-    };
+    let options = ParserOptions::new(
+        "(eval)".into(),
+        debug_level::NONE,
+        CustomDecoder::none(),
+        TokenRewriter::none(),
+        false,
+    );
     let parser = Parser::new(input, options);
     parser.do_parse()
 }
