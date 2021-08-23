@@ -24,11 +24,13 @@ int main()
     printf("LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE=%lu\n", sizeof(MagicCommentKind));
     printf("LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE=%lu\n", sizeof(MagicComment));
     printf("LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE=%lu\n", sizeof(DiagnosticMessage));
-    printf("LIB_RUBY_PARSER_DIAGNOSTIC_SIZE=%lu\n", sizeof(Diagnostic));
 
     NODE_PRINT_SIZES
 
     MESSAGE_PRINT_SIZES
 
+    printf("LIB_RUBY_PARSER_DIAGNOSTIC_SIZE=%lu\n", sizeof(Diagnostic));
     printf("LIB_RUBY_PARSER_NODE_SIZE=%lu\n", sizeof(Node));
+
+    printf("LIB_RUBY_PARSER_INPUT_ERROR_SIZE=%lu\n", sizeof(InputError));
 }

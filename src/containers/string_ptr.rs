@@ -177,6 +177,12 @@ pub(crate) mod external {
         }
     }
 
+    impl PartialEq<str> for StringPtr {
+        fn eq(&self, other: &str) -> bool {
+            self.as_ref() == other.as_bytes()
+        }
+    }
+
     impl PartialEq<StringPtr> for &str {
         fn eq(&self, other: &StringPtr) -> bool {
             self.as_bytes() == other.as_ref()

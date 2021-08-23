@@ -661,3 +661,65 @@ void lib_ruby_parser__internal__containers__diagnostic__drop(Diagnostic_BLOB *bl
     Diagnostic *diagnostic = (Diagnostic *)blob;
     drop_diagnostic(diagnostic);
 }
+
+/*
+    InputError
+*/
+
+InputError_BLOB lib_ruby_parser__internal__containers__input_error__new_unsupported_encoding(StringPtr_BLOB err)
+{
+    InputError input_error = {.tag = UNSUPPORTED_ENCODING, .as = {.unsupported_encoding = UNPACK_StringPtr(err)}};
+    return PACK_InputError(input_error);
+}
+InputError_BLOB lib_ruby_parser__internal__containers__input_error__new_decoding_error(StringPtr_BLOB err)
+{
+    InputError input_error = {.tag = DECODING_ERROR, .as = {.decoding_error = UNPACK_StringPtr(err)}};
+    return PACK_InputError(input_error);
+}
+bool lib_ruby_parser__internal__containers__input_error__is_unsupported_encoding(const InputError_BLOB *blob)
+{
+    const InputError *input_error = (const InputError *)blob;
+    return input_error->tag == UNSUPPORTED_ENCODING;
+}
+bool lib_ruby_parser__internal__containers__input_error__is_decoding_error(const InputError_BLOB *blob)
+{
+    const InputError *input_error = (const InputError *)blob;
+    return input_error->tag == DECODING_ERROR;
+}
+const StringPtr_BLOB *lib_ruby_parser__internal__containers__input_error__get_unsupported_encoding(const InputError_BLOB *blob)
+{
+    const InputError *input_error = (const InputError *)blob;
+    if (input_error->tag == UNSUPPORTED_ENCODING)
+    {
+        return (const StringPtr_BLOB *)(&(input_error->as.unsupported_encoding));
+    }
+    else
+    {
+        return NULL;
+    }
+}
+const StringPtr_BLOB *lib_ruby_parser__internal__containers__input_error__get_decoding_error(const InputError_BLOB *blob)
+{
+    const InputError *input_error = (const InputError *)blob;
+    if (input_error->tag == DECODING_ERROR)
+    {
+        return (const StringPtr_BLOB *)(&(input_error->as.decoding_error));
+    }
+    else
+    {
+        return NULL;
+    }
+}
+void lib_ruby_parser__internal__containers__input_error__drop(InputError_BLOB *blob)
+{
+    InputError *input_error = (InputError *)blob;
+    switch (input_error->tag)
+    {
+    case UNSUPPORTED_ENCODING:
+        drop_string_ptr(&(input_error->as.unsupported_encoding));
+        break;
+    case DECODING_ERROR:
+        drop_string_ptr(&(input_error->as.decoding_error));
+        break;
+    }
+}

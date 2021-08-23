@@ -143,4 +143,20 @@ typedef enum ErrorLevel
 // Node
 #include "nodes.h"
 
+// InputError
+typedef struct InputError
+{
+    enum
+    {
+        UNSUPPORTED_ENCODING,
+        DECODING_ERROR
+    } tag;
+
+    union
+    {
+        StringPtr unsupported_encoding;
+        StringPtr decoding_error;
+    } as;
+} InputError;
+
 #endif // LIB_RUBY_PARSER_C_BINDINGS_STRUCTS

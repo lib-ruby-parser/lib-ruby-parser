@@ -100,7 +100,7 @@ pub fn decode_input(input: List<u8>, enc: StringPtr, decoder: Decoder) -> Decode
             if let Some(f) = decoder.as_option() {
                 f(enc, input)
             } else {
-                DecoderResult::Err(InputError::UnsupportedEncoding(enc))
+                DecoderResult::Err(InputError::new_unsupported_encoding(enc))
             }
         }
     }

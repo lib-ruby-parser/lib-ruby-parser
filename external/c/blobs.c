@@ -71,3 +71,6 @@ IMPL_BLOB(DiagnosticMessage);
 // Node
 IMPL_BLOB(Node);
 IMPL_BLOB(NodeList);
+
+// InputError
+IMPL_BLOB(InputError);
