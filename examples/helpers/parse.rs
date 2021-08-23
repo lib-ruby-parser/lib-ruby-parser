@@ -1,5 +1,5 @@
 use super::{DebugLevel, InputFile};
-use lib_ruby_parser::source::CustomDecoder;
+use lib_ruby_parser::source::Decoder;
 use lib_ruby_parser::token_rewriter::TokenRewriter;
 use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
 
@@ -7,7 +7,7 @@ pub fn parse(input: InputFile, debug_level: DebugLevel, drop_tokens: bool) -> Pa
     let options = ParserOptions::new(
         input.filepath.into(),
         debug_level.level,
-        CustomDecoder::none(),
+        Decoder::none(),
         TokenRewriter::none(),
         !drop_tokens,
     );

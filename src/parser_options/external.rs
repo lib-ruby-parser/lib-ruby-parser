@@ -1,6 +1,6 @@
 use crate::containers::ExternalStringPtr as StringPtr;
 use crate::debug_level;
-use crate::source::CustomDecoder;
+use crate::source::Decoder;
 use crate::token_rewriter::TokenRewriter;
 
 /// Configuration of the parser
@@ -26,20 +26,20 @@ pub struct ParserOptions {
     ///
     /// # Example
     /// ```rust
-    /// use lib_ruby_parser::source::{CustomDecoder, CustomDecoderResult, InputError};
+    /// use lib_ruby_parser::source::{Decoder, DecoderResult, InputError};
     /// use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
     ///
-    /// fn decode(encoding: String, input: Vec<u8>) -> CustomDecoderResult {
+    /// fn decode(encoding: String, input: Vec<u8>) -> DecoderResult {
     ///     if "US-ASCII" == encoding.to_uppercase() {
     ///         // reencode and return Ok(result)
-    ///         return CustomDecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec().into());
+    ///         return DecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec().into());
     ///     }
-    ///     CustomDecoderResult::Err(InputError::DecodingError(
+    ///     DecoderResult::Err(InputError::DecodingError(
     ///         "only us-ascii is supported".into(),
     ///     ))
     /// }
     ///
-    /// let decoder = CustomDecoder::new(Box::new(decode));
+    /// let decoder = Decoder::new(Box::new(decode));
     /// let options = ParserOptions {
     ///     decoder,
     ///     debug: debug_level::PARSER,
@@ -53,7 +53,7 @@ pub struct ParserOptions {
     ///     "decoded".to_string()
     /// )
     /// ```
-    decoder: CustomDecoder,
+    decoder: Decoder,
 
     /// Optional token rewriter, see TokenRewriter API
     ///
@@ -105,7 +105,7 @@ impl ParserOptions {
     pub fn new(
         buffer_name: StringPtr,
         debug: debug_level::Type,
-        decoder: CustomDecoder,
+        decoder: Decoder,
         token_rewriter: TokenRewriter,
         record_tokens: bool,
     ) -> Self {
@@ -127,7 +127,7 @@ impl ParserOptions {
         &self.debug
     }
     /// Returns `decoder` field
-    pub fn decoder(&self) -> &CustomDecoder {
+    pub fn decoder(&self) -> &Decoder {
         &self.decoder
     }
     /// Returns `token_rewriter` field

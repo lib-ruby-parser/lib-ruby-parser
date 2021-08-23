@@ -1,18 +1,6 @@
-use std::error::Error;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalStringPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type StringPtr = ExternalStringPtr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type StringPtr = String;
+use crate::containers::ExternalList as List;
+use crate::containers::ExternalStringPtr as StringPtr;
+use crate::source::InputError;
 
 /// Decoder is what is used if input source has encoding
 /// that is not supported out of the box.
@@ -36,16 +24,16 @@ type StringPtr = String;
 /// Takes encoding name and initial input as arguments
 /// and returns `Ok(decoded)` vector of bytes or `Err(error)` that will be returned
 /// in the `ParserResult::diagnostics` vector.
-pub type CustomDecoderFn = dyn Fn(StringPtr, List<u8>) -> CustomDecoderResult;
+pub type DecoderFn = dyn Fn(StringPtr, List<u8>) -> DecoderResult;
 
 /// Custom decoder, a wrapper around a function
-pub struct CustomDecoder {
-    f: Option<Box<CustomDecoderFn>>,
+pub struct Decoder {
+    f: Option<Box<DecoderFn>>,
 }
 
-impl CustomDecoder {
+impl Decoder {
     /// Constructs a rewriter based on a given function
-    pub fn new(f: Box<CustomDecoderFn>) -> Self {
+    pub fn new(f: Box<DecoderFn>) -> Self {
         Self { f: Some(f) }
     }
 
@@ -55,7 +43,7 @@ impl CustomDecoder {
     }
 
     /// Returns an optional reference to a function that rewrite tokens
-    pub fn as_option(&self) -> Option<&CustomDecoderFn> {
+    pub fn as_option(&self) -> Option<&DecoderFn> {
         if let Some(f) = &self.f {
             let f = &**f;
             Some(f)
@@ -69,15 +57,15 @@ impl CustomDecoder {
     }
 }
 
-impl std::fmt::Debug for CustomDecoder {
+impl std::fmt::Debug for Decoder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("CustomDecoder")
+        f.debug_struct("Decoder")
             .field("f", &self.as_option().map(|_| "function"))
             .finish()
     }
 }
 
-impl Default for CustomDecoder {
+impl Default for Decoder {
     fn default() -> Self {
         Self::none()
     }
@@ -86,7 +74,7 @@ impl Default for CustomDecoder {
 /// Result that is returned from decoding function
 #[repr(C)]
 #[derive(Debug)]
-pub enum CustomDecoderResult {
+pub enum DecoderResult {
     /// Ok + decoded bytes
     Ok(List<u8>),
 
@@ -94,7 +82,7 @@ pub enum CustomDecoderResult {
     Err(InputError),
 }
 
-impl CustomDecoderResult {
+impl DecoderResult {
     pub(crate) fn to_result(self) -> Result<List<u8>, InputError> {
         match self {
             Self::Ok(value) => Ok(value),
@@ -103,42 +91,16 @@ impl CustomDecoderResult {
     }
 }
 
-/// An enum with all possible kinds of errors that can be returned
-/// from a decoder
-#[derive(Debug)]
-#[repr(C)]
-pub enum InputError {
-    /// Emitted when no custom decoder provided but input has custom encoding.
-    ///
-    /// You can return this error from your custom decoder if you don't support given encoding.
-    UnsupportedEncoding(StringPtr),
-
-    /// Generic error that can be emitted from a custom decoder
-    DecodingError(StringPtr),
-}
-
-impl std::fmt::Display for InputError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-impl Error for InputError {}
-
-pub fn decode_input(
-    input: List<u8>,
-    enc: StringPtr,
-    decoder: CustomDecoder,
-) -> CustomDecoderResult {
+pub fn decode_input(input: List<u8>, enc: StringPtr, decoder: Decoder) -> DecoderResult {
     match enc.to_uppercase().as_str() {
         "UTF-8" | "ASCII-8BIT" | "BINARY" => {
-            return CustomDecoderResult::Ok(input.into());
+            return DecoderResult::Ok(input.into());
         }
         _ => {
             if let Some(f) = decoder.as_option() {
                 f(enc, input)
             } else {
-                CustomDecoderResult::Err(InputError::UnsupportedEncoding(enc))
+                DecoderResult::Err(InputError::UnsupportedEncoding(enc))
             }
         }
     }

@@ -15,7 +15,7 @@ mod loc;
 pub use loc::Loc;
 
 /// Module with everything related to output of the Parser, but not related to AST,
-/// like `Comment`, `Input`, `CustomDecoder`
+/// like `Comment`, `Input`, `Decoder`
 pub mod source;
 
 mod lexer;

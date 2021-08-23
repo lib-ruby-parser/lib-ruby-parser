@@ -20,19 +20,19 @@ type StringPtr = ExternalStringPtr;
 type StringPtr = String;
 
 use crate::source::SourceLine;
-use crate::source::{decode_input, CustomDecoder, DecodedInput, InputError};
+use crate::source::{decode_input, DecodedInput, Decoder, InputError};
 
 /// Representation of the source code.
 #[derive(Debug, Default)]
 #[repr(C)]
 pub struct Input {
     pub(crate) decoded: DecodedInput,
-    decoder: CustomDecoder,
+    decoder: Decoder,
 }
 
 impl Input {
     /// Constructs a new input
-    pub fn new<Name>(name: Name, decoder: CustomDecoder) -> Self
+    pub fn new<Name>(name: Name, decoder: Decoder) -> Self
     where
         Name: Into<StringPtr>,
     {

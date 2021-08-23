@@ -17,7 +17,7 @@ type StringPtr = String;
 use crate::debug_level;
 use crate::maybe_byte::*;
 use crate::source::input::Input;
-use crate::source::{CustomDecoder, InputError};
+use crate::source::{Decoder, InputError};
 
 #[derive(Debug, Default)]
 pub(crate) struct Buffer {
@@ -56,7 +56,7 @@ impl Buffer {
     const CTRL_Z_CHAR: u8 = 0x1a;
     const CTRL_D_CHAR: u8 = 0x04;
 
-    pub(crate) fn new(name: StringPtr, bytes: List<u8>, decoder: CustomDecoder) -> Self {
+    pub(crate) fn new(name: StringPtr, bytes: List<u8>, decoder: Decoder) -> Self {
         let mut input = Input::new(name, decoder);
 
         input.set_bytes(bytes);

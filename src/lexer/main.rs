@@ -26,7 +26,7 @@ use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::source::Comment;
-use crate::source::CustomDecoder;
+use crate::source::Decoder;
 use crate::source::MagicComment;
 use crate::str_term::{str_types::*, HeredocEnd, StrTerm, StringLiteral};
 use crate::Context;
@@ -116,7 +116,7 @@ impl Lexer {
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
     /// Constructs an instance of Lexer
-    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: CustomDecoder) -> Self
+    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: Decoder) -> Self
     where
         Bytes: Into<List<u8>>,
         Name: Into<StringPtr>,

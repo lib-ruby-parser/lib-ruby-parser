@@ -6,13 +6,13 @@ type StringPtr = ExternalStringPtr;
 type StringPtr = String;
 
 use crate::debug_level;
-use crate::source::CustomDecoder;
+use crate::source::Decoder;
 use crate::token_rewriter::TokenRewriter;
 
 pub(crate) struct InternalParserOptions {
     pub(crate) buffer_name: StringPtr,
     pub(crate) debug: debug_level::Type,
-    pub(crate) decoder: CustomDecoder,
+    pub(crate) decoder: Decoder,
     pub(crate) token_rewriter: TokenRewriter,
     pub(crate) record_tokens: bool,
 }

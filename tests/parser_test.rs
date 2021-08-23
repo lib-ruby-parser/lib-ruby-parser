@@ -1,4 +1,4 @@
-use lib_ruby_parser::source::CustomDecoder;
+use lib_ruby_parser::source::Decoder;
 use lib_ruby_parser::token_rewriter::TokenRewriter;
 use lib_ruby_parser::{
     debug_level, source::MagicComment, source::MagicCommentKind, Loc, Parser, ParserOptions,
@@ -204,7 +204,7 @@ fn test_file(fixture_path: &str) -> TestResult {
         let options = ParserOptions::new(
             format!("(test {})", fixture_path).into(),
             debug_level::NONE,
-            CustomDecoder::none(),
+            Decoder::none(),
             TokenRewriter::none(),
             false,
         );
@@ -291,7 +291,7 @@ fn parse(input: &[u8]) -> ParserResult {
     let options = ParserOptions::new(
         "(eval)".into(),
         debug_level::NONE,
-        CustomDecoder::none(),
+        Decoder::none(),
         TokenRewriter::none(),
         false,
     );

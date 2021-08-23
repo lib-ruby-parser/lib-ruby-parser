@@ -1,4 +1,4 @@
-use lib_ruby_parser::source::CustomDecoder;
+use lib_ruby_parser::source::Decoder;
 use lib_ruby_parser::token_rewriter::TokenRewriter;
 use lib_ruby_parser::traverse::finder::Finder;
 use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
@@ -7,7 +7,7 @@ fn find(src: &str, pattern: &str) -> Option<String> {
     let options = ParserOptions::new(
         "(find_test)".into(),
         debug_level::NONE,
-        CustomDecoder::none(),
+        Decoder::none(),
         TokenRewriter::none(),
         false,
     );

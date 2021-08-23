@@ -66,15 +66,15 @@ By default `lib-ruby-parser` can only parse source files encoded in `UTF-8` or `
 It's possible to pass a `decoder` function in `ParserOptions` that takes a recognized (by the library) encoding and a byte array. It must return a UTF-8 encoded byte array or an error:
 
 ```rust
-use lib_ruby_parser::source::{InputError, CustomDecoder, CustomDecoderResult};
+use lib_ruby_parser::source::{InputError, Decoder, DecoderResult};
 use lib_ruby_parser::{Parser, ParserOptions, ParserResult, debug_level};
 
-fn decode(encoding: String, input: Vec<u8>) -> CustomDecoderResult {
+fn decode(encoding: String, input: Vec<u8>) -> DecoderResult {
     if "US-ASCII" == encoding.to_uppercase() {
         // reencode and return Ok(result)
-        return CustomDecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec());
+        return DecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec());
     }
-    CustomDecoderResult::Err(InputError::DecodingError(
+    DecoderResult::Err(InputError::DecodingError(
         "only us-ascii is supported".to_string(),
     ))
 }
