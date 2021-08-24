@@ -59,14 +59,15 @@ mod dummy_decoder {
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 mod dummy_decoder {
-    use crate::source::{Decoder, DecoderResult, InputError};
+    use super::{decoded_output, decoding_error};
+    use crate::source::{Decoder, DecoderResult};
 
-    fn decode_ok(encoding: String, input: Vec<u8>) -> DecoderResult {
-        DecoderResult::Ok(vec![b'3', b'+', b'3'])
+    fn decode_ok(_encoding: String, _input: Vec<u8>) -> DecoderResult {
+        DecoderResult::Ok(decoded_output())
     }
 
-    fn decode_err(encoding: String, input: Vec<u8>) -> DecoderResult {
-        DecoderResult::Err(InputError::DecodingError(String::from("foo")))
+    fn decode_err(_encoding: String, _input: Vec<u8>) -> DecoderResult {
+        DecoderResult::Err(decoding_error())
     }
 
     pub(crate) fn dummy_ok_decoder() -> Decoder {

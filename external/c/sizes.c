@@ -35,4 +35,8 @@ int main()
     printf("LIB_RUBY_PARSER_INPUT_ERROR_SIZE=%lu\n", sizeof(InputError));
     printf("LIB_RUBY_PARSER_DECODER_RESULT_SIZE=%lu\n", sizeof(DecoderResult));
     printf("LIB_RUBY_PARSER_DECODER_SIZE=%lu\n", sizeof(Decoder));
+
+    printf("LIB_RUBY_PARSER_REWRITE_ACTION_SIZE=%lu\n", sizeof(RewriteAction));
+    printf("LIB_RUBY_PARSER_LEX_STATE_ACTION_SIZE=%lu\n", sizeof(LexStateAction));
+    printf("LIB_RUBY_PARSER_TOKEN_REWRITER_RESULT_SIZE=%lu\n", sizeof(TokenRewriterResult));
 }

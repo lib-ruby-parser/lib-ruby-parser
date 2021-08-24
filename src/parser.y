@@ -89,7 +89,7 @@ use crate::parse_value::*;
 use crate::Node;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
-use crate::token_rewriter::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult};
+use crate::token_rewriter::{TokenRewriter, InternalTokenRewriterResult};
 use crate::debug_level;
 use crate::containers::helpers::{UnPtr, MaybePtrNone};
 use crate::Loc;
@@ -6780,17 +6780,23 @@ impl Parser {
         let mut token = self.yylex();
 
         if let Some(token_rewriter) = self.token_rewriter.as_ref() {
-            let TokenRewriterResult { rewritten_token, token_action, lex_state_action } =
-                token_rewriter.call(token, self.yylexer.buffer.input.as_shared_bytes());
+            let InternalTokenRewriterResult { rewritten_token, token_action, lex_state_action } =
+                token_rewriter.call(token, self.yylexer.buffer.input.as_shared_bytes()).into_internal();
 
-            match lex_state_action {
-                LexStateAction::Set(new_state) => self.yylexer.lex_state.set(new_state),
-                LexStateAction::Keep => {}
+            if lex_state_action.is_keep() {
+                // keep
+            } else if lex_state_action.is_set() {
+                self.yylexer.lex_state.set(lex_state_action.next_state());
+            } else {
+                panic!("Unknown LexStateAction variant");
             }
 
-            match token_action {
-                RewriteAction::Drop => return self.next_token(),
-                RewriteAction::Keep => token = rewritten_token
+            if token_action.is_drop() {
+                return self.next_token()
+            } else if token_action.is_keep() {
+                token = rewritten_token
+            } else {
+                panic!("Unknown RewriteAction variant");
             }
         }
 

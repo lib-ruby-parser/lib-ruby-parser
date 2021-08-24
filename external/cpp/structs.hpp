@@ -284,4 +284,29 @@ public:
     dummy_decoder_t f;
 };
 
+// TokenRewriter
+enum class RewriteAction
+{
+    DROP,
+    KEEP
+};
+class LexStateAction
+{
+public:
+    enum class Kind
+    {
+        SET,
+        KEEP
+    };
+    Kind kind;
+    int32_t next_state;
+};
+class TokenRewriterResult
+{
+public:
+    std::unique_ptr<Token> rewritten_token;
+    RewriteAction token_action;
+    LexStateAction lex_state_action;
+};
+
 #endif // LIB_RUBY_PARSER_CPP_BINDINGS_STRUCTS_HPP

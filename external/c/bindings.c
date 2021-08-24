@@ -762,3 +762,54 @@ Decoder_BLOB lib_ruby_parser__internal__containers__decoder__new(dummy_decoder_t
     Decoder decoder = {.f = f};
     return PACK_Decoder(decoder);
 }
+
+/*
+    TokenRewriter
+*/
+bool lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__is_drop(const RewriteAction_BLOB *blob)
+{
+    const RewriteAction *rewrite_action = (const RewriteAction *)blob;
+    return *rewrite_action == REWRITE_ACTION_DROP;
+}
+bool lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__is_keep(const RewriteAction_BLOB *blob)
+{
+    const RewriteAction *rewrite_action = (const RewriteAction *)blob;
+    return *rewrite_action == REWRITE_ACTION_KEEP;
+}
+void lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__drop(RewriteAction_BLOB *blob)
+{
+    (void)blob;
+}
+bool lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__is_set(const LexStateAction_BLOB *blob)
+{
+    const LexStateAction *lex_state_action = (const LexStateAction *)blob;
+    return lex_state_action->tag == LEX_STATE_SET;
+}
+bool lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__is_keep(const LexStateAction_BLOB *blob)
+{
+    const LexStateAction *lex_state_action = (const LexStateAction *)blob;
+    return lex_state_action->tag == LEX_STATE_KEEP;
+}
+void lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__drop(LexStateAction_BLOB *blob)
+{
+    (void)blob;
+}
+int32_t lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__get_next_state(const LexStateAction_BLOB *blob)
+{
+    const LexStateAction *lex_state_action = (const LexStateAction *)blob;
+    return lex_state_action->as.set;
+}
+InternalTokenRewriterResult lib_ruby_parser__internal__containers__token_rewriter__into_internal(TokenRewriterResult_BLOB blob)
+{
+    TokenRewriterResult input = UNPACK_TokenRewriterResult(blob);
+    InternalTokenRewriterResult output = {
+        .token_action = PACK_RewriteAction(input.token_action),
+        .lex_state_action = PACK_LexStateAction(input.lex_state_action),
+        .rewritten_token = PACK_Ptr(input.rewritten_token)};
+    return output;
+}
+void lib_ruby_parser__internal__containers__token_rewriter__drop(TokenRewriterResult_BLOB *blob)
+{
+    TokenRewriterResult *result = (TokenRewriterResult *)blob;
+    drop_token_rewriter_result(result);
+}

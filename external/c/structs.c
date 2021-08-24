@@ -107,3 +107,9 @@ void drop_decoder_result(DecoderResult *decoder_result)
         break;
     }
 }
+
+// TokenRewriter
+void drop_token_rewriter_result(TokenRewriterResult *token_rewriter_result)
+{
+    drop_token(token_rewriter_result->rewritten_token);
+}

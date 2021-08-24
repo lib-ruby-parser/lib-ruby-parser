@@ -185,4 +185,30 @@ typedef struct Decoder
     dummy_decoder_t f;
 } Decoder;
 
+// TokenRewriter
+typedef enum RewriteAction
+{
+    REWRITE_ACTION_DROP,
+    REWRITE_ACTION_KEEP
+} RewriteAction;
+typedef struct LexStateAction
+{
+    enum
+    {
+        LEX_STATE_SET,
+        LEX_STATE_KEEP
+    } tag;
+    union
+    {
+        int32_t set;
+    } as;
+} LexStateAction;
+typedef struct TokenRewriterResult
+{
+    Token *rewritten_token;
+    RewriteAction token_action;
+    LexStateAction lex_state_action;
+} TokenRewriterResult;
+void drop_token_rewriter_result(TokenRewriterResult *);
+
 #endif // LIB_RUBY_PARSER_C_BINDINGS_STRUCTS

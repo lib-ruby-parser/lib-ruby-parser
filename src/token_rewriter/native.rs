@@ -1,17 +1,4 @@
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type Ptr<T> = ExternalPtr<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type Ptr<T> = Box<T>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalSharedByteList;
-#[cfg(feature = "compile-with-external-structures")]
-type SharedByteList = ExternalSharedByteList;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type SharedByteList<'a> = &'a [u8];
-
+use super::InternalTokenRewriterResult;
 use crate::Token;
 
 /// Enum of what token rewriter should do with a token.
@@ -25,6 +12,16 @@ pub enum RewriteAction {
     Keep,
 }
 
+impl RewriteAction {
+    pub(crate) fn is_drop(&self) -> bool {
+        matches!(self, Self::Drop)
+    }
+
+    pub(crate) fn is_keep(&self) -> bool {
+        matches!(self, Self::Keep)
+    }
+}
+
 /// Enum of what token rewriter should do with the state of the lexer
 #[derive(Debug)]
 #[repr(C)]
@@ -36,12 +33,29 @@ pub enum LexStateAction {
     Keep,
 }
 
+impl LexStateAction {
+    pub(crate) fn is_set(&self) -> bool {
+        matches!(self, Self::Set(_))
+    }
+
+    pub(crate) fn is_keep(&self) -> bool {
+        matches!(self, Self::Keep)
+    }
+
+    pub(crate) fn next_state(&self) -> i32 {
+        match self {
+            Self::Set(state) => *state,
+            Self::Keep => panic!("Wrong variant of LexStateAction"),
+        }
+    }
+}
+
 /// Output of the token rewriter
 #[derive(Debug)]
 #[repr(C)]
 pub struct TokenRewriterResult {
     /// Rewritten token. Can be input token if no rewriting expected
-    pub rewritten_token: Ptr<Token>,
+    pub rewritten_token: Box<Token>,
 
     /// Action to be applied on a token (keep or drop)
     pub token_action: RewriteAction,
@@ -50,8 +64,23 @@ pub struct TokenRewriterResult {
     pub lex_state_action: LexStateAction,
 }
 
+impl TokenRewriterResult {
+    pub(crate) fn into_internal(self) -> InternalTokenRewriterResult {
+        let Self {
+            rewritten_token,
+            token_action,
+            lex_state_action,
+        } = self;
+        InternalTokenRewriterResult {
+            rewritten_token,
+            token_action,
+            lex_state_action,
+        }
+    }
+}
+
 /// Token rewriter function
-pub type TokenRewriterFn = dyn Fn(Ptr<Token>, SharedByteList) -> TokenRewriterResult;
+pub type TokenRewriterFn = dyn Fn(Box<Token>, &[u8]) -> TokenRewriterResult;
 
 /// Token rewriter struct, can be used to rewrite tokens on the fly
 pub struct TokenRewriter {
@@ -64,14 +93,8 @@ impl TokenRewriter {
         Self { f }
     }
 
-    pub(crate) fn call(&self, token: Ptr<Token>, input: SharedByteList) -> TokenRewriterResult {
+    pub(crate) fn call(&self, token: Box<Token>, input: &[u8]) -> TokenRewriterResult {
         let f = &*self.f;
         f(token, input)
-    }
-}
-
-impl std::fmt::Debug for TokenRewriter {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("TokenRewriter").finish()
     }
 }
