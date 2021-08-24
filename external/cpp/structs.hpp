@@ -272,4 +272,16 @@ public:
     DecoderResult &operator=(DecoderResult &&other) = default;
 };
 
+// Decoder
+extern "C"
+{
+    typedef DecoderResult (*dummy_decoder_t)(void);
+}
+class Decoder
+{
+public:
+    // Here for tests we use a dummy fn that blindly returns what's configured when called
+    dummy_decoder_t f;
+};
+
 #endif // LIB_RUBY_PARSER_CPP_BINDINGS_STRUCTS_HPP

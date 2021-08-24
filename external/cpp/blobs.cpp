@@ -77,3 +77,6 @@ IMPL_BLOB(InputError);
 
 // DecoderResult
 IMPL_BLOB(DecoderResult);
+
+// Decoder
+IMPL_BLOB(Decoder);

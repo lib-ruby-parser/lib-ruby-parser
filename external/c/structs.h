@@ -177,4 +177,12 @@ typedef struct DecoderResult
 } DecoderResult;
 void drop_decoder_result(DecoderResult *);
 
+// Decoder
+typedef DecoderResult (*dummy_decoder_t)(void);
+typedef struct Decoder
+{
+    // Here for tests we use a dummy fn that blindly returns what's configured when called
+    dummy_decoder_t f;
+} Decoder;
+
 #endif // LIB_RUBY_PARSER_C_BINDINGS_STRUCTS

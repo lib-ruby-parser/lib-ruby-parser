@@ -744,4 +744,33 @@ extern "C"
         DecoderResult *decoder_result = (DecoderResult *)blob;
         decoder_result->~DecoderResult();
     }
+
+    /*
+        Decoder
+    */
+    DecoderResult_BLOB lib_ruby_parser__internal__containers__decoder__call(
+        const Decoder_BLOB *blob,
+        StringPtr_BLOB encoding_blob,
+        ByteList_BLOB input_blob)
+    {
+        // cleanup unused values that we own
+        StringPtr encoding = UNPACK_StringPtr(encoding_blob);
+        (void)encoding; // dtor
+        ByteList input = UNPACK_ByteList(input_blob);
+        (void)input; // dtor
+
+        // call dummy decoder
+        const Decoder *decoder = (const Decoder *)blob;
+        return PACK_DecoderResult(decoder->f());
+    }
+    void lib_ruby_parser__internal__containers__decoder_drop(Decoder_BLOB *blob)
+    {
+        (void)blob;
+    }
+    Decoder_BLOB lib_ruby_parser__internal__containers__decoder__new(dummy_decoder_t f)
+    {
+        Decoder decoder;
+        decoder.f = f;
+        return PACK_Decoder(decoder);
+    }
 }

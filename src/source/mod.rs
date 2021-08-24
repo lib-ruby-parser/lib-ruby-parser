@@ -23,4 +23,9 @@ pub use magic_comment_kind::MagicCommentKind;
 pub use source_line::SourceLine;
 
 #[cfg(feature = "compile-with-external-structures")]
+#[allow(unused_imports)]
+pub(crate) use decoder::DecoderBlob;
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) use decoder_result::DecoderResultBlob;
+#[cfg(feature = "compile-with-external-structures")]
 pub(crate) use input_error::InputErrorBlob;

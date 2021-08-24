@@ -152,3 +152,13 @@ impl IntoBlob for crate::source::InputError {
         blob
     }
 }
+
+impl IntoBlob for crate::source::DecoderResult {
+    type Output = crate::source::DecoderResultBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}

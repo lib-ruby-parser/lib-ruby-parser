@@ -125,10 +125,34 @@ impl DecoderResult {
             panic!("Unknown DecoderResult variant")
         }
     }
+
+    pub(crate) fn from_blob(blob: DecoderResultBlob) -> Self {
+        Self { blob }
+    }
 }
 
 impl std::fmt::Debug for DecoderResult {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self.as_result())
+    }
+}
+
+impl PartialEq for DecoderResult {
+    fn eq(&self, other: &Self) -> bool {
+        self.as_result() == other.as_result()
+    }
+}
+
+impl Eq for DecoderResult {}
+
+impl Clone for DecoderResult {
+    fn clone(&self) -> Self {
+        if self.is_ok() {
+            Self::new_ok(self.as_ok().clone())
+        } else if self.is_err() {
+            Self::new_err(self.as_err().clone())
+        } else {
+            panic!("Unknown DecoderResult variant")
+        }
     }
 }
