@@ -43,5 +43,6 @@ DECLARE_BLOB_FOR(Decoder);
 DECLARE_BLOB_FOR(RewriteAction);
 DECLARE_BLOB_FOR(LexStateAction);
 DECLARE_BLOB_FOR(TokenRewriterResult);
+DECLARE_BLOB_FOR(TokenRewriter);
 
 #endif // LIB_RUBY_PARSER_C_BINDINGS_BLOBS

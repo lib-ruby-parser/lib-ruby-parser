@@ -85,3 +85,4 @@ IMPL_BLOB(Decoder);
 IMPL_BLOB(RewriteAction);
 IMPL_BLOB(LexStateAction);
 IMPL_BLOB(TokenRewriterResult);
+IMPL_BLOB(TokenRewriter);

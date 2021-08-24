@@ -39,4 +39,5 @@ int main()
     printf("LIB_RUBY_PARSER_REWRITE_ACTION_SIZE=%lu\n", sizeof(RewriteAction));
     printf("LIB_RUBY_PARSER_LEX_STATE_ACTION_SIZE=%lu\n", sizeof(LexStateAction));
     printf("LIB_RUBY_PARSER_TOKEN_REWRITER_RESULT_SIZE=%lu\n", sizeof(TokenRewriterResult));
+    printf("LIB_RUBY_PARSER_TOKEN_REWRITER_SIZE=%lu\n", sizeof(TokenRewriter));
 }

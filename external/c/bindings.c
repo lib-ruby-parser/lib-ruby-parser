@@ -799,7 +799,7 @@ int32_t lib_ruby_parser__internal__containers__token_rewriter__lex_state_action_
     const LexStateAction *lex_state_action = (const LexStateAction *)blob;
     return lex_state_action->as.set;
 }
-InternalTokenRewriterResult lib_ruby_parser__internal__containers__token_rewriter__into_internal(TokenRewriterResult_BLOB blob)
+InternalTokenRewriterResult lib_ruby_parser__internal__containers__token_rewriter__result__into_internal(TokenRewriterResult_BLOB blob)
 {
     TokenRewriterResult input = UNPACK_TokenRewriterResult(blob);
     InternalTokenRewriterResult output = {
@@ -808,8 +808,38 @@ InternalTokenRewriterResult lib_ruby_parser__internal__containers__token_rewrite
         .rewritten_token = PACK_Ptr(input.rewritten_token)};
     return output;
 }
-void lib_ruby_parser__internal__containers__token_rewriter__drop(TokenRewriterResult_BLOB *blob)
+void lib_ruby_parser__internal__containers__token_rewriter__result__drop(TokenRewriterResult_BLOB *blob)
 {
     TokenRewriterResult *result = (TokenRewriterResult *)blob;
     drop_token_rewriter_result(result);
+}
+TokenRewriterResult_BLOB lib_ruby_parser__internal__containers__token_rewriter__call(
+    const TokenRewriter_BLOB *blob,
+    Ptr_BLOB token_blob,
+    SharedByteList_BLOB input_blob)
+{
+    Ptr token = UNPACK_Ptr(token_blob);
+
+    // call dummy token_rewriter
+    const TokenRewriter *token_rewriter = (const TokenRewriter *)blob;
+    TokenRewriterResult result = token_rewriter->rewrite_f(token, token_rewriter->build_new_token_f);
+    return PACK_TokenRewriterResult(result);
+}
+void lib_ruby_parser__internal__containers__token_rewriter__drop(TokenRewriter_BLOB *blob)
+{
+    (void)blob;
+}
+// Test APIs
+TokenRewriter_BLOB lib_ruby_parser__internal__containers__token_rewriter__new_keep(build_new_token_t build_new_token_f)
+{
+    return PACK_TokenRewriter(__keep_token_rewriter(build_new_token_f));
+}
+TokenRewriter_BLOB lib_ruby_parser__internal__containers__token_rewriter__new_drop(build_new_token_t build_new_token_f)
+{
+    return PACK_TokenRewriter(__drop_token_rewriter(build_new_token_f));
+}
+TokenRewriter_BLOB lib_ruby_parser__internal__containers__token_rewriter__new_rewrite(
+    build_new_token_t build_new_token_f)
+{
+    return PACK_TokenRewriter(__rewriter_token_rewriter(build_new_token_f));
 }

@@ -7,8 +7,6 @@ pub use native::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResu
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::{LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult};
-// #[cfg(feature = "compile-with-external-structures")]
-// pub(crate) use external::TokenRewriterBlob;
 
 mod shared;
 
@@ -17,3 +15,9 @@ pub(crate) use internal::InternalTokenRewriterResult;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(feature = "compile-with-external-structures")]
+#[allow(unused_imports)]
+pub(crate) use external::{
+    LexStateActionBlob, RewriteActionBlob, TokenRewriterBlob, TokenRewriterResultBlob,
+};

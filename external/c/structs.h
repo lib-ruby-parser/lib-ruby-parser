@@ -181,7 +181,7 @@ void drop_decoder_result(DecoderResult *);
 typedef DecoderResult (*dummy_decoder_t)(void);
 typedef struct Decoder
 {
-    // Here for tests we use a dummy fn that blindly returns what's configured when called
+    // Here for tests we use a dummy fn that (when called) blindly returns what's configured
     dummy_decoder_t f;
 } Decoder;
 
@@ -210,5 +210,17 @@ typedef struct TokenRewriterResult
     LexStateAction lex_state_action;
 } TokenRewriterResult;
 void drop_token_rewriter_result(TokenRewriterResult *);
+typedef Token *(*build_new_token_t)(void);
+typedef TokenRewriterResult (*rewrite_token_t)(Token *, build_new_token_t);
+typedef struct TokenRewriter
+{
+    // Here for tests we use a dummy fn that (when called) blindly returns what's configured
+    rewrite_token_t rewrite_f;
+    build_new_token_t build_new_token_f;
+} TokenRewriter;
+// Test APIS
+TokenRewriter __keep_token_rewriter(build_new_token_t build_new_token_f);
+TokenRewriter __drop_token_rewriter(build_new_token_t build_new_token_f);
+TokenRewriter __rewriter_token_rewriter(build_new_token_t build_new_token_f);
 
 #endif // LIB_RUBY_PARSER_C_BINDINGS_STRUCTS

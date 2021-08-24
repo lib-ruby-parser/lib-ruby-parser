@@ -13,7 +13,7 @@ pub(crate) mod external {
     /// C-compatible shared list
     #[repr(C)]
     pub struct SharedByteList {
-        blob: SharedByteListBlob,
+        pub(crate) blob: SharedByteListBlob,
     }
 
     extern "C" {

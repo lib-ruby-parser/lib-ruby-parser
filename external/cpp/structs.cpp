@@ -69,3 +69,66 @@ InputError::InputError(InputError::variant_t variant) : variant(std::move(varian
 DecoderResult::Ok::Ok(ByteList output) : output(std::move(output)) {}
 DecoderResult::Err::Err(InputError error) : error(std::move(error)) {}
 DecoderResult::DecoderResult(DecoderResult::variant_t variant) : variant(std::move(variant)) {}
+
+// TokenRewriter
+LexStateAction LexStateAction::NewKeep()
+{
+    LexStateAction result;
+    result.kind = LexStateAction::Kind::KEEP;
+    result.next_state = 0;
+    return result;
+}
+LexStateAction LexStateAction::NewSet(int32_t next_state)
+{
+    LexStateAction result;
+    result.kind = LexStateAction::Kind::SET;
+    result.next_state = next_state;
+    return result;
+}
+
+TokenRewriterResult::TokenRewriterResult(std::unique_ptr<Token> rewritten_token,
+                                         RewriteAction token_action,
+                                         LexStateAction lex_state_action) : rewritten_token(std::move(rewritten_token)),
+                                                                            token_action(token_action),
+                                                                            lex_state_action(lex_state_action) {}
+
+TokenRewriter::TokenRewriter(rewrite_token_t rewrite_f,
+                             build_new_token_t build_new_token_f) : rewrite_f(rewrite_f),
+                                                                    build_new_token_f(build_new_token_f) {}
+
+TokenRewriterResult __keep_token(std::unique_ptr<Token> token_to_rewrite, build_new_token_t build_new_token)
+{
+    (void)build_new_token;
+    return TokenRewriterResult(
+        std::move(token_to_rewrite),
+        RewriteAction::KEEP,
+        LexStateAction::NewKeep());
+}
+TokenRewriter TokenRewriter::NewKeepRewriter(build_new_token_t build_new_token_f)
+{
+    return TokenRewriter(__keep_token, build_new_token_f);
+}
+TokenRewriterResult __drop_token(std::unique_ptr<Token> token_to_rewrite, build_new_token_t build_new_token)
+{
+    (void)build_new_token;
+    return TokenRewriterResult(
+        std::move(token_to_rewrite),
+        RewriteAction::DROP,
+        LexStateAction::NewKeep());
+}
+TokenRewriter TokenRewriter::NewDropRewriter(build_new_token_t build_new_token_f)
+{
+    return TokenRewriter(__drop_token, build_new_token_f);
+}
+TokenRewriterResult __rewrite_token(std::unique_ptr<Token> token_to_rewrite, build_new_token_t build_new_token)
+{
+    (void)token_to_rewrite;
+    return TokenRewriterResult(
+        std::unique_ptr<Token>(build_new_token()),
+        RewriteAction::KEEP,
+        LexStateAction::NewKeep());
+}
+TokenRewriter TokenRewriter::NewRewriteRewriter(build_new_token_t build_new_token_f)
+{
+    return TokenRewriter(__rewrite_token, build_new_token_f);
+}

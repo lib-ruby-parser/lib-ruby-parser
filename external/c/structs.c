@@ -113,3 +113,47 @@ void drop_token_rewriter_result(TokenRewriterResult *token_rewriter_result)
 {
     drop_token(token_rewriter_result->rewritten_token);
 }
+TokenRewriterResult __keep_token(Token *token_to_rewrite, build_new_token_t build_new_token)
+{
+    (void)build_new_token;
+    TokenRewriterResult result = {
+        .rewritten_token = token_to_rewrite,
+        .lex_state_action = {.tag = LEX_STATE_KEEP},
+        .token_action = REWRITE_ACTION_KEEP};
+    return result;
+}
+TokenRewriter __keep_token_rewriter(build_new_token_t build_new_token_f)
+{
+    TokenRewriter rewriter = {.build_new_token_f = build_new_token_f, .rewrite_f = __keep_token};
+    return rewriter;
+}
+TokenRewriterResult __drop_token(Token *token_to_rewrite, build_new_token_t build_new_token)
+{
+    drop_token(token_to_rewrite);
+    free(token_to_rewrite);
+    TokenRewriterResult result = {
+        .rewritten_token = build_new_token(),
+        .lex_state_action = {.tag = LEX_STATE_KEEP},
+        .token_action = REWRITE_ACTION_DROP};
+    return result;
+}
+TokenRewriter __drop_token_rewriter(build_new_token_t build_new_token_f)
+{
+    TokenRewriter rewriter = {.build_new_token_f = build_new_token_f, .rewrite_f = __drop_token};
+    return rewriter;
+}
+TokenRewriterResult __rewrite_token(Token *token_to_rewrite, build_new_token_t build_new_token)
+{
+    drop_token(token_to_rewrite);
+    free(token_to_rewrite);
+    TokenRewriterResult result = {
+        .rewritten_token = build_new_token(),
+        .lex_state_action = {.tag = LEX_STATE_KEEP},
+        .token_action = REWRITE_ACTION_KEEP};
+    return result;
+}
+TokenRewriter __rewriter_token_rewriter(build_new_token_t build_new_token_f)
+{
+    TokenRewriter rewriter = {.build_new_token_f = build_new_token_f, .rewrite_f = __rewrite_token};
+    return rewriter;
+}

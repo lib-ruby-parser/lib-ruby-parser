@@ -2,7 +2,7 @@ use super::InternalTokenRewriterResult;
 use crate::Token;
 
 /// Enum of what token rewriter should do with a token.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[repr(C)]
 pub enum RewriteAction {
     /// Means "drop the token", i.e. don't return it to a parser
@@ -23,7 +23,7 @@ impl RewriteAction {
 }
 
 /// Enum of what token rewriter should do with the state of the lexer
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[repr(C)]
 pub enum LexStateAction {
     /// Means "set the state to X"
@@ -51,7 +51,7 @@ impl LexStateAction {
 }
 
 /// Output of the token rewriter
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[repr(C)]
 pub struct TokenRewriterResult {
     /// Rewritten token. Can be input token if no rewriting expected

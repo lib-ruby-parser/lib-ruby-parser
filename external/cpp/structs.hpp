@@ -300,6 +300,9 @@ public:
     };
     Kind kind;
     int32_t next_state;
+
+    static LexStateAction NewKeep();
+    static LexStateAction NewSet(int32_t next_state);
 };
 class TokenRewriterResult
 {
@@ -307,6 +310,40 @@ public:
     std::unique_ptr<Token> rewritten_token;
     RewriteAction token_action;
     LexStateAction lex_state_action;
+
+    TokenRewriterResult(std::unique_ptr<Token> rewritten_token,
+                        RewriteAction token_action,
+                        LexStateAction lex_state_action);
+
+    TokenRewriterResult(const TokenRewriterResult &) = delete;
+    TokenRewriterResult &operator=(const TokenRewriterResult &other) = delete;
+
+    TokenRewriterResult(TokenRewriterResult &&) = default;
+    TokenRewriterResult &operator=(TokenRewriterResult &&other) = default;
+};
+extern "C"
+{
+    typedef Token *(*build_new_token_t)(void);
+}
+typedef TokenRewriterResult (*rewrite_token_t)(std::unique_ptr<Token>, build_new_token_t);
+class TokenRewriter
+{
+public:
+    // Here for tests we use a dummy fn that (when called) blindly returns what's configured
+    rewrite_token_t rewrite_f;
+    build_new_token_t build_new_token_f;
+
+    TokenRewriter(rewrite_token_t rewrite_f, build_new_token_t build_new_token_f);
+
+    TokenRewriter(const TokenRewriter &) = delete;
+    TokenRewriter &operator=(const TokenRewriter &other) = delete;
+
+    TokenRewriter(TokenRewriter &&) = default;
+    TokenRewriter &operator=(TokenRewriter &&other) = default;
+
+    static TokenRewriter NewKeepRewriter(build_new_token_t build_new_token_f);
+    static TokenRewriter NewDropRewriter(build_new_token_t build_new_token_f);
+    static TokenRewriter NewRewriteRewriter(build_new_token_t build_new_token_f);
 };
 
 #endif // LIB_RUBY_PARSER_CPP_BINDINGS_STRUCTS_HPP

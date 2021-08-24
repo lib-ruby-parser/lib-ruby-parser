@@ -1,8 +1,11 @@
 use super::InternalTokenRewriterResult;
 use crate::containers::size::{
-    LEX_STATE_ACTION_SIZE, REWRITE_ACTION_SIZE, TOKEN_REWRITER_RESULT_SIZE,
+    LEX_STATE_ACTION_SIZE, REWRITE_ACTION_SIZE, TOKEN_REWRITER_RESULT_SIZE, TOKEN_REWRITER_SIZE,
 };
-use crate::containers::{ExternalPtr as Ptr, ExternalSharedByteList as SharedByteList};
+use crate::containers::{
+    ExternalPtr as Ptr, ExternalSharedByteList as SharedByteList, IntoBlob, PtrBlob,
+    SharedByteListBlob,
+};
 use crate::Token;
 
 #[repr(C)]
@@ -56,6 +59,20 @@ impl RewriteAction {
         }
     }
 }
+
+impl PartialEq for RewriteAction {
+    fn eq(&self, other: &Self) -> bool {
+        if self.is_keep() {
+            other.is_keep()
+        } else if self.is_drop() {
+            other.is_drop()
+        } else {
+            panic!("Unknown RewriteAction variant")
+        }
+    }
+}
+
+impl Eq for RewriteAction {}
 
 impl std::fmt::Debug for RewriteAction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -144,6 +161,24 @@ impl std::fmt::Debug for LexStateAction {
     }
 }
 
+impl PartialEq for LexStateAction {
+    fn eq(&self, other: &Self) -> bool {
+        if self.is_keep() {
+            other.is_keep()
+        } else if self.is_set() {
+            if other.is_set() {
+                self.next_state() == other.next_state()
+            } else {
+                false
+            }
+        } else {
+            panic!("Unknown LexStateAction variant")
+        }
+    }
+}
+
+impl Eq for LexStateAction {}
+
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub(crate) struct TokenRewriterResultBlob {
@@ -157,27 +192,33 @@ pub struct TokenRewriterResult {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__token_rewriter__into_internal(
+    fn lib_ruby_parser__internal__containers__token_rewriter__result__into_internal(
         blob: TokenRewriterResultBlob,
     ) -> InternalTokenRewriterResult;
-    fn lib_ruby_parser__internal__containers__token_rewriter__drop(
+    fn lib_ruby_parser__internal__containers__token_rewriter__result__drop(
         blob: *mut TokenRewriterResultBlob,
     );
 }
 
 impl Drop for TokenRewriterResult {
     fn drop(&mut self) {
-        unsafe { lib_ruby_parser__internal__containers__token_rewriter__drop(&mut self.blob) }
+        unsafe {
+            lib_ruby_parser__internal__containers__token_rewriter__result__drop(&mut self.blob)
+        }
     }
 }
 
 impl TokenRewriterResult {
     pub(crate) fn into_internal(self) -> InternalTokenRewriterResult {
         let internal = unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__into_internal(self.blob)
+            lib_ruby_parser__internal__containers__token_rewriter__result__into_internal(self.blob)
         };
         std::mem::forget(self);
         internal
+    }
+
+    pub(crate) fn from_blob(blob: TokenRewriterResultBlob) -> Self {
+        Self { blob }
     }
 }
 
@@ -187,22 +228,39 @@ impl std::fmt::Debug for TokenRewriterResult {
     }
 }
 
-/// Token rewriter function
-pub type TokenRewriterFn = dyn Fn(Ptr<Token>, SharedByteList) -> TokenRewriterResult;
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub(crate) struct TokenRewriterBlob {
+    blob: [u8; TOKEN_REWRITER_SIZE],
+}
 
-/// Token rewriter struct, can be used to rewrite tokens on the fly
+/// Output of the token rewriter
+#[repr(C)]
 pub struct TokenRewriter {
-    f: Box<TokenRewriterFn>,
+    pub(crate) blob: TokenRewriterBlob,
+}
+
+extern "C" {
+    fn lib_ruby_parser__internal__containers__token_rewriter__call(
+        blob: *const TokenRewriterBlob,
+        token: PtrBlob,
+        input: SharedByteListBlob,
+    ) -> TokenRewriterResultBlob;
 }
 
 impl TokenRewriter {
-    /// Constructs a rewriter based on a given function
-    pub fn new(f: Box<TokenRewriterFn>) -> Self {
-        Self { f }
+    pub(crate) fn call(&self, token: Ptr<Token>, input: SharedByteList) -> TokenRewriterResult {
+        TokenRewriterResult::from_blob(unsafe {
+            lib_ruby_parser__internal__containers__token_rewriter__call(
+                &self.blob,
+                token.into_blob(),
+                input.into_blob(),
+            )
+        })
     }
 
-    pub(crate) fn call(&self, token: Ptr<Token>, input: SharedByteList) -> TokenRewriterResult {
-        let f = &*self.f;
-        f(token, input)
+    #[allow(dead_code)]
+    pub(crate) fn from_blob(blob: TokenRewriterBlob) -> Self {
+        Self { blob }
     }
 }

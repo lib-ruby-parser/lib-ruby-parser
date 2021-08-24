@@ -64,6 +64,8 @@ pub(crate) mod external {
         }
     }
 
+    impl<T> Eq for Ptr<T> where T: PartialEq + GetFreePtrFn {}
+
     impl<T> Clone for Ptr<T>
     where
         T: Clone + GetFreePtrFn,
