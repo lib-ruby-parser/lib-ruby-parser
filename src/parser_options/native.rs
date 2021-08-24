@@ -40,7 +40,7 @@ pub struct ParserOptions {
     ///
     /// let decoder = Decoder::new(Box::new(decode));
     /// let options = ParserOptions {
-    ///     decoder,
+    ///     decoder: Some(decoder),
     ///     debug: debug_level::PARSER,
     ///     ..Default::default()
     /// };
@@ -78,7 +78,7 @@ pub struct ParserOptions {
     /// }
     /// let token_rewriter = TokenRewriter::new(Box::new(rewrite_foo_to_bar));
     /// let options = ParserOptions {
-    ///     token_rewriter,
+    ///     token_rewriter: Some(token_rewriter),
     ///     ..Default::default()
     /// };
     /// let ParserResult { ast, .. } = Parser::new(b"foo = 1".to_vec(), options).do_parse();
