@@ -142,3 +142,13 @@ impl IntoBlob for crate::error::DiagnosticMessage {
         blob
     }
 }
+
+impl IntoBlob for crate::source::InputError {
+    type Output = crate::source::InputErrorBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}

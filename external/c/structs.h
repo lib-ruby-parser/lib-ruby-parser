@@ -158,5 +158,23 @@ typedef struct InputError
         StringPtr decoding_error;
     } as;
 } InputError;
+void drop_input_error(InputError *);
+
+// DecoderResult
+typedef struct DecoderResult
+{
+    enum
+    {
+        DECODE_OK,
+        DECODE_ERR
+    } tag;
+
+    union
+    {
+        ByteList ok;
+        InputError err;
+    } as;
+} DecoderResult;
+void drop_decoder_result(DecoderResult *);
 
 #endif // LIB_RUBY_PARSER_C_BINDINGS_STRUCTS

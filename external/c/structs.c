@@ -79,3 +79,31 @@ void drop_diagnostic(Diagnostic *diagnostic)
 {
     drop_diagnostic_message(&(diagnostic->message));
 }
+
+// InputError
+void drop_input_error(InputError *input_error)
+{
+    switch (input_error->tag)
+    {
+    case UNSUPPORTED_ENCODING:
+        drop_string_ptr(&(input_error->as.unsupported_encoding));
+        break;
+    case DECODING_ERROR:
+        drop_string_ptr(&(input_error->as.decoding_error));
+        break;
+    }
+}
+
+// DecoderResult
+void drop_decoder_result(DecoderResult *decoder_result)
+{
+    switch (decoder_result->tag)
+    {
+    case DECODE_OK:
+        drop_byte_list(&(decoder_result->as.ok));
+        break;
+    case DECODE_ERR:
+        drop_input_error(&(decoder_result->as.err));
+        break;
+    }
+}

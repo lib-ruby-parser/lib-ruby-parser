@@ -86,13 +86,8 @@ uint8_t *lib_ruby_parser__internal__containers__string_ptr__get_raw(StringPtr_BL
 {
     StringPtr *string_ptr = (StringPtr *)blob;
     if (string_ptr->len == 0)
-    {
         return NULL;
-    }
-    else
-    {
-        return string_ptr->ptr;
-    }
+    return string_ptr->ptr;
 }
 uint64_t lib_ruby_parser__internal__containers__string_ptr__get_len(const StringPtr_BLOB *blob)
 {
@@ -138,9 +133,7 @@ uint8_t *lib_ruby_parser__internal__containers__maybe_string_ptr__into_raw(Maybe
 {
     MaybeStringPtr *maybe_string_ptr = (MaybeStringPtr *)blob;
     if (maybe_string_ptr->ptr == NULL)
-    {
         return NULL;
-    }
     uint8_t *result = (uint8_t *)(maybe_string_ptr->ptr);
     maybe_string_ptr->ptr = NULL;
     maybe_string_ptr->len = 0;
@@ -521,13 +514,8 @@ Loc_BLOB *lib_ruby_parser__internal__containers__maybe_loc__get_loc(MaybeLoc_BLO
 {
     MaybeLoc *maybe_loc = (MaybeLoc *)blob;
     if (maybe_loc->tag == MAYBE_LOC_NONE)
-    {
         return NULL;
-    }
-    else
-    {
-        return (Loc_BLOB *)(&(maybe_loc->as.loc));
-    }
+    return (Loc_BLOB *)(&(maybe_loc->as.loc));
 }
 Loc_BLOB lib_ruby_parser__internal__containers__maybe_loc__into_loc(MaybeLoc_BLOB blob)
 {
@@ -618,14 +606,8 @@ const uint8_t *lib_ruby_parser__internal__containers__shared_byte_list__get_raw(
 {
     const SharedByteList *shared_byte_list = (const SharedByteList *)blob;
     if (shared_byte_list->len == 0)
-    {
         return NULL;
-    }
-    else
-    {
-
-        return shared_byte_list->ptr;
-    }
+    return shared_byte_list->ptr;
 }
 uint64_t lib_ruby_parser__internal__containers__shared_byte_list__get_len(const SharedByteList_BLOB *blob)
 {
@@ -690,36 +672,65 @@ const StringPtr_BLOB *lib_ruby_parser__internal__containers__input_error__get_un
 {
     const InputError *input_error = (const InputError *)blob;
     if (input_error->tag == UNSUPPORTED_ENCODING)
-    {
         return (const StringPtr_BLOB *)(&(input_error->as.unsupported_encoding));
-    }
-    else
-    {
-        return NULL;
-    }
+    return NULL;
 }
 const StringPtr_BLOB *lib_ruby_parser__internal__containers__input_error__get_decoding_error(const InputError_BLOB *blob)
 {
     const InputError *input_error = (const InputError *)blob;
     if (input_error->tag == DECODING_ERROR)
-    {
         return (const StringPtr_BLOB *)(&(input_error->as.decoding_error));
-    }
-    else
-    {
-        return NULL;
-    }
+    return NULL;
 }
 void lib_ruby_parser__internal__containers__input_error__drop(InputError_BLOB *blob)
 {
     InputError *input_error = (InputError *)blob;
-    switch (input_error->tag)
-    {
-    case UNSUPPORTED_ENCODING:
-        drop_string_ptr(&(input_error->as.unsupported_encoding));
-        break;
-    case DECODING_ERROR:
-        drop_string_ptr(&(input_error->as.decoding_error));
-        break;
-    }
+    drop_input_error(input_error);
+}
+
+/*
+    DecoderResult
+*/
+DecoderResult_BLOB lib_ruby_parser__internal__containers__decoder_result__new_ok(ByteList_BLOB byte_list)
+{
+    DecoderResult decoder_result = {.tag = DECODE_OK, .as = {.ok = UNPACK_ByteList(byte_list)}};
+    return PACK_DecoderResult(decoder_result);
+}
+DecoderResult_BLOB lib_ruby_parser__internal__containers__decoder_result__new_err(InputError_BLOB input_error)
+{
+    DecoderResult decoder_result = {.tag = DECODE_ERR, .as = {.err = UNPACK_InputError(input_error)}};
+    return PACK_DecoderResult(decoder_result);
+}
+bool lib_ruby_parser__internal__containers__decoder_result_is_ok(const DecoderResult_BLOB *blob)
+{
+    const DecoderResult *decoder_result = (const DecoderResult *)blob;
+    return decoder_result->tag == DECODE_OK;
+}
+bool lib_ruby_parser__internal__containers__decoder_result_is_err(const DecoderResult_BLOB *blob)
+{
+    const DecoderResult *decoder_result = (const DecoderResult *)blob;
+    return decoder_result->tag == DECODE_ERR;
+}
+ByteList_BLOB lib_ruby_parser__internal__containers__decoder_result_into_ok(DecoderResult_BLOB blob)
+{
+    return PACK_ByteList(UNPACK_DecoderResult(blob).as.ok);
+}
+InputError_BLOB lib_ruby_parser__internal__containers__decoder_result_into_err(DecoderResult_BLOB blob)
+{
+    return PACK_InputError(UNPACK_DecoderResult(blob).as.err);
+}
+const ByteList_BLOB *lib_ruby_parser__internal__containers__decoder_result_as_ok(const DecoderResult_BLOB *blob)
+{
+    const DecoderResult *decoder_result = (const DecoderResult *)blob;
+    return (const ByteList_BLOB *)(&(decoder_result->as.ok));
+}
+const InputError_BLOB *lib_ruby_parser__internal__containers__decoder_result_as_err(const DecoderResult_BLOB *blob)
+{
+    const DecoderResult *decoder_result = (const DecoderResult *)blob;
+    return (const InputError_BLOB *)(&(decoder_result->as.err));
+}
+void lib_ruby_parser__internal__containers__decoder_result__drop(DecoderResult_BLOB *blob)
+{
+    DecoderResult *decoder_result = (DecoderResult *)blob;
+    drop_decoder_result(decoder_result);
 }

@@ -651,4 +651,97 @@ extern "C"
         Diagnostic *diagnostic = (Diagnostic *)blob;
         diagnostic->~Diagnostic();
     }
+
+    /*
+        InputError
+    */
+    InputError_BLOB lib_ruby_parser__internal__containers__input_error__new_unsupported_encoding(StringPtr_BLOB err)
+    {
+        return PACK_InputError(InputError(InputError::UnsupportedEncoding(UNPACK_StringPtr(err))));
+    }
+    InputError_BLOB lib_ruby_parser__internal__containers__input_error__new_decoding_error(StringPtr_BLOB err)
+    {
+        return PACK_InputError(InputError(InputError::DecodingError(UNPACK_StringPtr(err))));
+    }
+    bool lib_ruby_parser__internal__containers__input_error__is_unsupported_encoding(const InputError_BLOB *blob)
+    {
+        const InputError *input_error = (const InputError *)blob;
+        return std::holds_alternative<InputError::UnsupportedEncoding>(input_error->variant);
+    }
+    bool lib_ruby_parser__internal__containers__input_error__is_decoding_error(const InputError_BLOB *blob)
+    {
+        const InputError *input_error = (const InputError *)blob;
+        return std::holds_alternative<InputError::DecodingError>(input_error->variant);
+    }
+    const StringPtr_BLOB *lib_ruby_parser__internal__containers__input_error__get_unsupported_encoding(const InputError_BLOB *blob)
+    {
+        const InputError *input_error = (const InputError *)blob;
+        const InputError::UnsupportedEncoding *variant = std::get_if<InputError::UnsupportedEncoding>(&(input_error->variant));
+        if (variant == nullptr)
+            return nullptr;
+        return (const StringPtr_BLOB *)(&(variant->message));
+    }
+    const StringPtr_BLOB *lib_ruby_parser__internal__containers__input_error__get_decoding_error(const InputError_BLOB *blob)
+    {
+        const InputError *input_error = (const InputError *)blob;
+        const InputError::DecodingError *variant = std::get_if<InputError::DecodingError>(&(input_error->variant));
+        if (variant == nullptr)
+            return nullptr;
+        return (const StringPtr_BLOB *)(&(variant->message));
+    }
+    void lib_ruby_parser__internal__containers__input_error__drop(InputError_BLOB *blob)
+    {
+        ((InputError *)blob)->~InputError();
+    }
+
+    /*
+        Decoder
+    */
+    DecoderResult_BLOB lib_ruby_parser__internal__containers__decoder_result__new_ok(ByteList_BLOB byte_list)
+    {
+        return PACK_DecoderResult(DecoderResult(DecoderResult::Ok(UNPACK_ByteList(byte_list))));
+    }
+    DecoderResult_BLOB lib_ruby_parser__internal__containers__decoder_result__new_err(InputError_BLOB input_error)
+    {
+        return PACK_DecoderResult(DecoderResult(DecoderResult::Err(UNPACK_InputError(input_error))));
+    }
+    bool lib_ruby_parser__internal__containers__decoder_result_is_ok(const DecoderResult_BLOB *blob)
+    {
+        const DecoderResult *decoder_result = (const DecoderResult *)blob;
+        return std::holds_alternative<DecoderResult::Ok>(decoder_result->variant);
+    }
+    bool lib_ruby_parser__internal__containers__decoder_result_is_err(const DecoderResult_BLOB *blob)
+    {
+        const DecoderResult *decoder_result = (const DecoderResult *)blob;
+        return std::holds_alternative<DecoderResult::Err>(decoder_result->variant);
+    }
+    ByteList_BLOB lib_ruby_parser__internal__containers__decoder_result_into_ok(DecoderResult_BLOB blob)
+    {
+        return PACK_ByteList(std::get<DecoderResult::Ok>(UNPACK_DecoderResult(blob).variant).output);
+    }
+    InputError_BLOB lib_ruby_parser__internal__containers__decoder_result_into_err(DecoderResult_BLOB blob)
+    {
+        return PACK_InputError(std::get<DecoderResult::Err>(UNPACK_DecoderResult(blob).variant).error);
+    }
+    const ByteList_BLOB *lib_ruby_parser__internal__containers__decoder_result_as_ok(const DecoderResult_BLOB *blob)
+    {
+        const DecoderResult *decoder_result = (const DecoderResult *)blob;
+        const DecoderResult::Ok *ok = std::get_if<DecoderResult::Ok>(&(decoder_result->variant));
+        if (ok == nullptr)
+            return nullptr;
+        return (const ByteList_BLOB *)(&(ok->output));
+    }
+    const InputError_BLOB *lib_ruby_parser__internal__containers__decoder_result_as_err(const DecoderResult_BLOB *blob)
+    {
+        const DecoderResult *decoder_result = (const DecoderResult *)blob;
+        const DecoderResult::Err *err = std::get_if<DecoderResult::Err>(&(decoder_result->variant));
+        if (err == nullptr)
+            return nullptr;
+        return (const InputError_BLOB *)(&(err->error));
+    }
+    void lib_ruby_parser__internal__containers__decoder_result__drop(DecoderResult_BLOB *blob)
+    {
+        DecoderResult *decoder_result = (DecoderResult *)blob;
+        decoder_result->~DecoderResult();
+    }
 }

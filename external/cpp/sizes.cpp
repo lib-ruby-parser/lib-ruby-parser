@@ -24,11 +24,14 @@ int main()
     std::cout << "LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SIZE=" << sizeof(MagicCommentKind) << '\n';
     std::cout << "LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE=" << sizeof(MagicComment) << '\n';
     std::cout << "LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE=" << sizeof(DiagnosticMessage) << '\n';
-    std::cout << "LIB_RUBY_PARSER_DIAGNOSTIC_SIZE=" << sizeof(Diagnostic) << '\n';
 
     NODE_PRINT_SIZES
 
     MESSAGE_PRINT_SIZES
 
+    std::cout << "LIB_RUBY_PARSER_DIAGNOSTIC_SIZE=" << sizeof(Diagnostic) << '\n';
     std::cout << "LIB_RUBY_PARSER_NODE_SIZE=" << sizeof(Node) << '\n';
+
+    std::cout << "LIB_RUBY_PARSER_INPUT_ERROR_SIZE=" << sizeof(InputError) << '\n';
+    std::cout << "LIB_RUBY_PARSER_DECODER_RESULT_SIZE=" << sizeof(DecoderResult) << '\n';
 }

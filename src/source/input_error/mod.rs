@@ -7,8 +7,8 @@ pub use native::InputError;
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::InputError;
-// #[cfg(feature = "compile-with-external-structures")]
-// pub(crate) use external::DecoderBlob;
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) use external::InputErrorBlob;
 
 mod shared;
 

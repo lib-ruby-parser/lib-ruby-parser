@@ -3,6 +3,7 @@ mod comment;
 mod comment_type;
 mod decoded_input;
 mod decoder;
+mod decoder_result;
 mod input;
 mod input_error;
 mod magic_comment;
@@ -13,9 +14,13 @@ pub use comment::Comment;
 pub use comment_type::CommentType;
 pub use decoded_input::DecodedInput;
 pub(crate) use decoder::decode_input;
-pub use decoder::{Decoder, DecoderResult};
+pub use decoder::Decoder;
+pub use decoder_result::DecoderResult;
 pub use input::Input;
 pub use input_error::InputError;
 pub use magic_comment::MagicComment;
 pub use magic_comment_kind::MagicCommentKind;
 pub use source_line::SourceLine;
+
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) use input_error::InputErrorBlob;

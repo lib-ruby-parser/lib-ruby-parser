@@ -111,4 +111,42 @@ impl InputError {
                 .unwrap()
         }
     }
+
+    pub(crate) fn from_blob(blob: InputErrorBlob) -> Self {
+        Self { blob }
+    }
+}
+
+impl PartialEq for InputError {
+    fn eq(&self, other: &Self) -> bool {
+        if self.is_unsupported_encoding() {
+            if other.is_unsupported_encoding() {
+                self.get_unsupported_encoding_message() == other.get_unsupported_encoding_message()
+            } else {
+                false
+            }
+        } else if self.is_decoding_error() {
+            if other.is_decoding_error() {
+                self.get_decoding_error_message() == other.get_decoding_error_message()
+            } else {
+                false
+            }
+        } else {
+            panic!("Unknown InputError variant")
+        }
+    }
+}
+
+impl Eq for InputError {}
+
+impl Clone for InputError {
+    fn clone(&self) -> Self {
+        if self.is_unsupported_encoding() {
+            Self::new_unsupported_encoding(self.get_unsupported_encoding_message().clone())
+        } else if self.is_decoding_error() {
+            Self::new_decoding_error(self.get_decoding_error_message().clone())
+        } else {
+            panic!("Unknown InputError variant")
+        }
+    }
 }

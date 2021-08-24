@@ -74,3 +74,6 @@ IMPL_BLOB(NodeList);
 
 // InputError
 IMPL_BLOB(InputError);
+
+// DecoderResult
+IMPL_BLOB(DecoderResult);

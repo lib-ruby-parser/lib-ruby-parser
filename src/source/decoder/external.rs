@@ -1,5 +1,6 @@
 use crate::containers::ExternalList as List;
 use crate::containers::ExternalStringPtr as StringPtr;
+use crate::source::DecoderResult;
 use crate::source::InputError;
 
 /// Decoder is what is used if input source has encoding
@@ -49,36 +50,16 @@ impl std::fmt::Debug for Decoder {
     }
 }
 
-/// Result that is returned from decoding function
-#[repr(C)]
-#[derive(Debug)]
-pub enum DecoderResult {
-    /// Ok + decoded bytes
-    Ok(List<u8>),
-
-    /// Err + reason
-    Err(InputError),
-}
-
-impl DecoderResult {
-    pub(crate) fn to_result(self) -> Result<List<u8>, InputError> {
-        match self {
-            Self::Ok(value) => Ok(value),
-            Self::Err(err) => Err(err),
-        }
-    }
-}
-
 pub fn decode_input(input: List<u8>, enc: StringPtr, decoder: &Option<Decoder>) -> DecoderResult {
     match enc.to_uppercase().as_str() {
         "UTF-8" | "ASCII-8BIT" | "BINARY" => {
-            return DecoderResult::Ok(input.into());
+            return DecoderResult::new_ok(input.into());
         }
         _ => {
             if let Some(decoder) = decoder.as_ref() {
                 decoder.call(enc, input)
             } else {
-                DecoderResult::Err(InputError::new_unsupported_encoding(enc))
+                DecoderResult::new_err(InputError::new_unsupported_encoding(enc))
             }
         }
     }

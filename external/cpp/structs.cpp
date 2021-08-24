@@ -59,3 +59,13 @@ void drop_diagnostic(Diagnostic *diagnostic)
 {
     diagnostic->~Diagnostic();
 }
+
+// InputError
+InputError::UnsupportedEncoding::UnsupportedEncoding(StringPtr message) : message(std::move(message)) {}
+InputError::DecodingError::DecodingError(StringPtr message) : message(std::move(message)) {}
+InputError::InputError(InputError::variant_t variant) : variant(std::move(variant)) {}
+
+// DecoderResult
+DecoderResult::Ok::Ok(ByteList output) : output(std::move(output)) {}
+DecoderResult::Err::Err(InputError error) : error(std::move(error)) {}
+DecoderResult::DecoderResult(DecoderResult::variant_t variant) : variant(std::move(variant)) {}

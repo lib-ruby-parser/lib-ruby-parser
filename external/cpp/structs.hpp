@@ -184,4 +184,92 @@ enum class ErrorLevel
 // Node
 #include "nodes.hpp"
 
+// InputError
+class InputError
+{
+public:
+    class UnsupportedEncoding
+    {
+    public:
+        StringPtr message;
+
+        UnsupportedEncoding(StringPtr message);
+
+        UnsupportedEncoding(const UnsupportedEncoding &) = delete;
+        UnsupportedEncoding &operator=(const UnsupportedEncoding &other) = delete;
+
+        UnsupportedEncoding(UnsupportedEncoding &&) = default;
+        UnsupportedEncoding &operator=(UnsupportedEncoding &&other) = default;
+    };
+
+    class DecodingError
+    {
+    public:
+        StringPtr message;
+
+        DecodingError(StringPtr message);
+
+        DecodingError(const DecodingError &) = delete;
+        DecodingError &operator=(const DecodingError &other) = delete;
+
+        DecodingError(DecodingError &&) = default;
+        DecodingError &operator=(DecodingError &&other) = default;
+    };
+
+    using variant_t = std::variant<UnsupportedEncoding, DecodingError>;
+    variant_t variant;
+
+    InputError(variant_t variant);
+
+    InputError(const InputError &) = delete;
+    InputError &operator=(const InputError &other) = delete;
+
+    InputError(InputError &&) = default;
+    InputError &operator=(InputError &&other) = default;
+};
+
+// DecoderResult
+class DecoderResult
+{
+public:
+    class Ok
+    {
+    public:
+        ByteList output;
+
+        Ok(ByteList output);
+
+        Ok(const Ok &) = delete;
+        Ok &operator=(const Ok &other) = delete;
+
+        Ok(Ok &&) = default;
+        Ok &operator=(Ok &&other) = default;
+    };
+
+    class Err
+    {
+    public:
+        InputError error;
+
+        Err(InputError error);
+
+        Err(const Err &) = delete;
+        Err &operator=(const Err &other) = delete;
+
+        Err(Err &&) = default;
+        Err &operator=(Err &&other) = default;
+    };
+
+    using variant_t = std::variant<Ok, Err>;
+    variant_t variant;
+
+    DecoderResult(variant_t variant);
+
+    DecoderResult(const DecoderResult &) = delete;
+    DecoderResult &operator=(const DecoderResult &other) = delete;
+
+    DecoderResult(DecoderResult &&) = default;
+    DecoderResult &operator=(DecoderResult &&other) = default;
+};
+
 #endif // LIB_RUBY_PARSER_CPP_BINDINGS_STRUCTS_HPP

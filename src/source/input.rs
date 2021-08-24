@@ -95,7 +95,7 @@ impl Input {
             StringPtr::from(encoding),
             &self.decoder,
         )
-        .to_result()?;
+        .into_result()?;
         self.set_bytes(new_input);
         Ok(())
     }
