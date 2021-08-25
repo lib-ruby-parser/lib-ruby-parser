@@ -40,4 +40,8 @@ int main()
     std::cout << "LIB_RUBY_PARSER_LEX_STATE_ACTION_SIZE=" << sizeof(LexStateAction) << '\n';
     std::cout << "LIB_RUBY_PARSER_TOKEN_REWRITER_RESULT_SIZE=" << sizeof(TokenRewriterResult) << '\n';
     std::cout << "LIB_RUBY_PARSER_TOKEN_REWRITER_SIZE=" << sizeof(TokenRewriter) << '\n';
+
+    std::cout << "LIB_RUBY_PARSER_MAYBE_DECODER_SIZE=" << sizeof(MaybeDecoder) << '\n';
+    std::cout << "LIB_RUBY_PARSER_MAYBE_TOKEN_REWRITER_SIZE=" << sizeof(MaybeTokenRewriter) << '\n';
+    std::cout << "LIB_RUBY_PARSER_PARSER_OPTIONS_SIZE=" << sizeof(ParserOptions) << '\n';
 }

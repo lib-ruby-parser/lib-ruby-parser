@@ -86,3 +86,8 @@ IMPL_BLOB(RewriteAction);
 IMPL_BLOB(LexStateAction);
 IMPL_BLOB(TokenRewriterResult);
 IMPL_BLOB(TokenRewriter);
+
+// ParserOptions
+IMPL_BLOB(MaybeDecoder);
+IMPL_BLOB(MaybeTokenRewriter);
+IMPL_BLOB(ParserOptions);

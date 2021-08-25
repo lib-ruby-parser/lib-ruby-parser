@@ -346,4 +346,58 @@ public:
     static TokenRewriter NewRewriteRewriter(build_new_token_t build_new_token_f);
 };
 
+// ParserOptions
+class MaybeDecoder
+{
+public:
+    std::optional<Decoder> decoder;
+
+    MaybeDecoder();
+    MaybeDecoder(Decoder decoder);
+
+    MaybeDecoder(const MaybeDecoder &) = delete;
+    MaybeDecoder &operator=(const MaybeDecoder &other) = delete;
+
+    MaybeDecoder(MaybeDecoder &&) = default;
+    MaybeDecoder &operator=(MaybeDecoder &&other) = default;
+};
+
+class MaybeTokenRewriter
+{
+public:
+    std::optional<TokenRewriter> token_rewriter;
+
+    MaybeTokenRewriter();
+    MaybeTokenRewriter(TokenRewriter decoder);
+
+    MaybeTokenRewriter(const MaybeTokenRewriter &) = delete;
+    MaybeTokenRewriter &operator=(const MaybeTokenRewriter &other) = delete;
+
+    MaybeTokenRewriter(MaybeTokenRewriter &&) = default;
+    MaybeTokenRewriter &operator=(MaybeTokenRewriter &&other) = default;
+};
+
+class ParserOptions
+{
+public:
+    StringPtr buffer_name;
+    uint8_t debug;
+    MaybeDecoder decoder;
+    MaybeTokenRewriter token_rewriter;
+    bool record_tokens;
+
+    ParserOptions(
+        StringPtr buffer_name,
+        uint8_t debug,
+        MaybeDecoder decoder,
+        MaybeTokenRewriter token_rewriter,
+        bool record_tokens);
+
+    ParserOptions(const ParserOptions &) = delete;
+    ParserOptions &operator=(const ParserOptions &other) = delete;
+
+    ParserOptions(ParserOptions &&) = default;
+    ParserOptions &operator=(ParserOptions &&other) = default;
+};
+
 #endif // LIB_RUBY_PARSER_CPP_BINDINGS_STRUCTS_HPP

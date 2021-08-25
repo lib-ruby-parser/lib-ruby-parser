@@ -922,3 +922,63 @@ void lib_ruby_parser__internal__containers__maybe_token_rewriter__drop(MaybeToke
 {
     (void)blob;
 }
+
+/*
+    ParserOptions
+*/
+ParserOptions_BLOB lib_ruby_parser__internal__containers__parser_options__new(
+    StringPtr_BLOB buffer_name,
+    uint8_t debug,
+    MaybeDecoder_BLOB decoder,
+    MaybeTokenRewriter_BLOB token_rewriter,
+    bool record_tokens)
+{
+    ParserOptions options = {
+        .buffer_name = UNPACK_StringPtr(buffer_name),
+        .debug = debug,
+        .decoder = UNPACK_MaybeDecoder(decoder),
+        .token_rewriter = UNPACK_MaybeTokenRewriter(token_rewriter),
+        .record_tokens = record_tokens};
+    return PACK_ParserOptions(options);
+}
+void lib_ruby_parser__internal__containers__parser_options__drop(ParserOptions_BLOB *blob)
+{
+    ParserOptions *options = (ParserOptions *)blob;
+    drop_string_ptr(&(options->buffer_name));
+}
+InternalParserOptions lib_ruby_parser__internal__containers__parser_options__into_internal(ParserOptions_BLOB blob)
+{
+    ParserOptions input = UNPACK_ParserOptions(blob);
+    InternalParserOptions output = {
+        .buffer_name = PACK_StringPtr(input.buffer_name),
+        .debug = input.debug,
+        .decoder = PACK_MaybeDecoder(input.decoder),
+        .token_rewriter = PACK_MaybeTokenRewriter(input.token_rewriter),
+        .record_tokens = input.record_tokens};
+    return output;
+}
+const StringPtr_BLOB *lib_ruby_parser__internal__containers__parser_options__get_buffer_name(const ParserOptions_BLOB *blob)
+{
+    const ParserOptions *options = (const ParserOptions *)blob;
+    return (const StringPtr_BLOB *)(&(options->buffer_name));
+}
+uint8_t lib_ruby_parser__internal__containers__parser_options__get_debug(const ParserOptions_BLOB *blob)
+{
+    const ParserOptions *options = (const ParserOptions *)blob;
+    return options->debug;
+}
+const MaybeDecoder_BLOB *lib_ruby_parser__internal__containers__parser_options__get_decoder(const ParserOptions_BLOB *blob)
+{
+    const ParserOptions *options = (const ParserOptions *)blob;
+    return (const MaybeDecoder_BLOB *)(&(options->decoder));
+}
+const MaybeTokenRewriter_BLOB *lib_ruby_parser__internal__containers__parser_options__get_token_rewriter(const ParserOptions_BLOB *blob)
+{
+    const ParserOptions *options = (const ParserOptions *)blob;
+    return (const MaybeTokenRewriter_BLOB *)(&(options->token_rewriter));
+}
+bool lib_ruby_parser__internal__containers__parser_options__get_record_tokens(const ParserOptions_BLOB *blob)
+{
+    const ParserOptions *options = (const ParserOptions *)blob;
+    return options->record_tokens;
+}

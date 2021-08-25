@@ -1,5 +1,5 @@
 /// A type of the debug level
-pub type Type = i8;
+pub type Type = u8;
 
 /// Print no debug information
 pub const NONE: Type = 0;

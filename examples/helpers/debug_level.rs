@@ -2,7 +2,7 @@ use lib_ruby_parser::debug_level;
 
 #[derive(Debug, Clone, Copy)]
 pub struct DebugLevel {
-    pub level: i8,
+    pub level: u8,
 }
 
 impl DebugLevel {

@@ -7,9 +7,9 @@ type StringPtr = String;
 
 use crate::debug_level;
 use crate::source::maybe_token_rewriter::MaybeTokenRewriter;
-use crate::source::token_rewriter::TokenRewriter;
 use crate::source::MaybeDecoder;
 
+#[repr(C)]
 pub(crate) struct InternalParserOptions {
     pub(crate) buffer_name: StringPtr,
     pub(crate) debug: debug_level::Type,

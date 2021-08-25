@@ -183,8 +183,38 @@ impl IntoBlob for crate::source::Decoder {
     }
 }
 
+impl IntoBlob for crate::source::MaybeDecoder {
+    type Output = crate::source::MaybeDecoderBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+
 impl IntoBlob for crate::source::token_rewriter::TokenRewriter {
     type Output = crate::source::token_rewriter::TokenRewriterBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+
+impl IntoBlob for crate::source::maybe_token_rewriter::MaybeTokenRewriter {
+    type Output = crate::source::maybe_token_rewriter::MaybeTokenRewriterBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+
+impl IntoBlob for crate::ParserOptions {
+    type Output = crate::parser_options::ParserOptionsBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;

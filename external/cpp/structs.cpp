@@ -132,3 +132,20 @@ TokenRewriter TokenRewriter::NewRewriteRewriter(build_new_token_t build_new_toke
 {
     return TokenRewriter(__rewrite_token, build_new_token_f);
 }
+
+// ParserOptions
+MaybeDecoder::MaybeDecoder() {}
+MaybeDecoder::MaybeDecoder(Decoder decoder) : decoder(std::move(decoder)) {}
+
+MaybeTokenRewriter::MaybeTokenRewriter() {}
+MaybeTokenRewriter::MaybeTokenRewriter(TokenRewriter token_rewriter) : token_rewriter(std::move(token_rewriter)) {}
+
+ParserOptions::ParserOptions(StringPtr buffer_name,
+                             uint8_t debug,
+                             MaybeDecoder decoder,
+                             MaybeTokenRewriter token_rewriter,
+                             bool record_tokens) : buffer_name(std::move(buffer_name)),
+                                                   debug(debug),
+                                                   decoder(std::move(decoder)),
+                                                   token_rewriter(std::move(token_rewriter)),
+                                                   record_tokens(record_tokens) {}
