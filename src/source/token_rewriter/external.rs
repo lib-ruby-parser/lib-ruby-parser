@@ -234,6 +234,14 @@ pub(crate) struct TokenRewriterBlob {
     blob: [u8; TOKEN_REWRITER_SIZE],
 }
 
+#[cfg(test)]
+impl Default for TokenRewriterBlob {
+    fn default() -> Self {
+        let blob: [u8; TOKEN_REWRITER_SIZE] = [0; TOKEN_REWRITER_SIZE];
+        Self { blob }
+    }
+}
+
 /// Output of the token rewriter
 #[repr(C)]
 pub struct TokenRewriter {

@@ -43,7 +43,7 @@
     pattern_hash_keys: VariablesStack,
     tokens: List<Token>,
     diagnostics: Diagnostics,
-    token_rewriter: Option<TokenRewriter>,
+    token_rewriter: MaybeTokenRewriter,
     record_tokens: bool,
 }
 
@@ -89,7 +89,8 @@ use crate::parse_value::*;
 use crate::Node;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
-use crate::source::token_rewriter::{TokenRewriter, InternalTokenRewriterResult};
+use crate::source::maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI};
+use crate::source::token_rewriter::InternalTokenRewriterResult;
 use crate::debug_level;
 use crate::containers::helpers::{UnPtr, MaybePtrNone};
 use crate::Loc;
@@ -6779,7 +6780,7 @@ impl Parser {
     fn next_token(&mut self) -> Ptr<Token> {
         let mut token = self.yylex();
 
-        if let Some(token_rewriter) = self.token_rewriter.as_ref() {
+        if let Some(token_rewriter) = self.token_rewriter.as_token_rewriter() {
             let InternalTokenRewriterResult { rewritten_token, token_action, lex_state_action } =
                 token_rewriter.call(token, self.yylexer.buffer.input.as_shared_bytes()).into_internal();
 

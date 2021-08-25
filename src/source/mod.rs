@@ -11,6 +11,8 @@ pub(crate) mod magic_comment_kind;
 mod maybe_decoder;
 mod source_line;
 
+/// Module with external implementation of Option<TokenRewriter>
+pub mod maybe_token_rewriter;
 /// Module to perform token rewriting
 pub mod token_rewriter;
 

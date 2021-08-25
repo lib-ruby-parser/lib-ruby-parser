@@ -1,6 +1,6 @@
 use crate::containers::ExternalStringPtr as StringPtr;
 use crate::debug_level;
-use crate::source::token_rewriter::TokenRewriter;
+use crate::source::maybe_token_rewriter::MaybeTokenRewriter;
 
 use crate::containers::size::{MAYBE_TOKEN_REWRITER_SIZE, PARSER_OPTIONS_SIZE};
 use crate::containers::IntoBlob;
@@ -62,7 +62,7 @@ pub struct ParserOptions {
     /// };
     /// assert_eq!(*lvar_name, String::from("bar"));
     /// ```
-    token_rewriter: Option<TokenRewriter>,
+    token_rewriter: MaybeTokenRewriter,
 
     /// When set to true Parser records tokens.
     /// When set to false `ParserResult.tokens` is guaranteed to be empty.
@@ -76,7 +76,7 @@ impl ParserOptions {
         buffer_name: StringPtr,
         debug: debug_level::Type,
         decoder: MaybeDecoder,
-        token_rewriter: Option<TokenRewriter>,
+        token_rewriter: MaybeTokenRewriter,
         record_tokens: bool,
     ) -> Self {
         Self {
@@ -101,9 +101,9 @@ impl ParserOptions {
     //     &self.decoder
     // }
     /// Returns `token_rewriter` field
-    pub fn token_rewriter(&self) -> &Option<TokenRewriter> {
-        &self.token_rewriter
-    }
+    // pub fn token_rewriter(&self) -> &Option<TokenRewriter> {
+    //     &self.token_rewriter
+    // }
     /// Returns `record_tokens` field
     pub fn record_tokens(&self) -> &bool {
         &self.record_tokens

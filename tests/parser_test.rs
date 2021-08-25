@@ -1,6 +1,7 @@
 use lib_ruby_parser::{
     debug_level,
     source::{
+        maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI},
         MagicComment, MagicCommentKind, {MaybeDecoder, MaybeDecoderAPI},
     },
     Loc, Parser, ParserOptions, ParserResult,
@@ -206,7 +207,7 @@ fn test_file(fixture_path: &str) -> TestResult {
             format!("(test {})", fixture_path).into(),
             debug_level::NONE,
             MaybeDecoder::new_none(),
-            None,
+            MaybeTokenRewriter::new_none(),
             false,
         );
         let parser = Parser::new(test_case.input.as_bytes(), options);
@@ -293,7 +294,7 @@ fn parse(input: &[u8]) -> ParserResult {
         "(eval)".into(),
         debug_level::NONE,
         MaybeDecoder::new_none(),
-        None,
+        MaybeTokenRewriter::new_none(),
         false,
     );
     let parser = Parser::new(input, options);

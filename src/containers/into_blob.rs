@@ -182,3 +182,13 @@ impl IntoBlob for crate::source::Decoder {
         blob
     }
 }
+
+impl IntoBlob for crate::source::token_rewriter::TokenRewriter {
+    type Output = crate::source::token_rewriter::TokenRewriterBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}

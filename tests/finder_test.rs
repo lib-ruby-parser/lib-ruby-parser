@@ -1,6 +1,7 @@
 use lib_ruby_parser::traverse::finder::Finder;
 use lib_ruby_parser::{
     debug_level,
+    source::maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI},
     source::{MaybeDecoder, MaybeDecoderAPI},
     Parser, ParserOptions, ParserResult,
 };
@@ -10,7 +11,7 @@ fn find(src: &str, pattern: &str) -> Option<String> {
         "(find_test)".into(),
         debug_level::NONE,
         MaybeDecoder::new_none(),
-        None,
+        MaybeTokenRewriter::new_none(),
         false,
     );
     let parser = Parser::new(src, options);

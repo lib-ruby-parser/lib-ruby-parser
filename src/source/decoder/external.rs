@@ -16,6 +16,7 @@ pub(crate) struct DecoderBlob {
     blob: [u8; DECODER_SIZE],
 }
 
+#[cfg(test)]
 impl Default for DecoderBlob {
     fn default() -> Self {
         let blob: [u8; DECODER_SIZE] = [0; DECODER_SIZE];

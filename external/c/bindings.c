@@ -883,3 +883,42 @@ void lib_ruby_parser__internal__containers__maybe_decoder__drop(MaybeDecoder_BLO
 {
     (void)blob;
 }
+
+/*
+    MaybeTokenRewriter
+*/
+MaybeTokenRewriter_BLOB lib_ruby_parser__internal__containers__maybe_token_rewriter__new_some(TokenRewriter_BLOB blob)
+{
+    MaybeTokenRewriter maybe_token_rewriter = {.tag = MAYBE_TOKEN_REWRITER_SOME, .as = {.token_rewriter = UNPACK_TokenRewriter(blob)}};
+    return PACK_MaybeTokenRewriter(maybe_token_rewriter);
+}
+MaybeTokenRewriter_BLOB lib_ruby_parser__internal__containers__maybe_token_rewriter__new_none()
+{
+    MaybeTokenRewriter maybe_token_rewriter = {.tag = MAYBE_TOKEN_REWRITER_NONE, .as = {.nothing = {.dummy = 42}}};
+    return PACK_MaybeTokenRewriter(maybe_token_rewriter);
+}
+bool lib_ruby_parser__internal__containers__maybe_token_rewriter__is_some(const MaybeTokenRewriter_BLOB *blob)
+{
+    const MaybeTokenRewriter *maybe_token_rewriter = (const MaybeTokenRewriter *)blob;
+    return maybe_token_rewriter->tag == MAYBE_TOKEN_REWRITER_SOME;
+}
+bool lib_ruby_parser__internal__containers__maybe_token_rewriter__is_none(const MaybeTokenRewriter_BLOB *blob)
+{
+    const MaybeTokenRewriter *maybe_token_rewriter = (const MaybeTokenRewriter *)blob;
+    return maybe_token_rewriter->tag == MAYBE_TOKEN_REWRITER_NONE;
+}
+const TokenRewriter_BLOB *lib_ruby_parser__internal__containers__maybe_token_rewriter__as_token_rewriter(const MaybeTokenRewriter_BLOB *blob)
+{
+    const MaybeTokenRewriter *maybe_token_rewriter = (const MaybeTokenRewriter *)blob;
+    if (maybe_token_rewriter->tag == MAYBE_TOKEN_REWRITER_SOME)
+        return (const TokenRewriter_BLOB *)(&(maybe_token_rewriter->as.token_rewriter));
+    return NULL;
+}
+TokenRewriter_BLOB lib_ruby_parser__internal__containers__maybe_token_rewriter__into_token_rewriter(MaybeTokenRewriter_BLOB blob)
+{
+    return PACK_TokenRewriter(UNPACK_MaybeTokenRewriter(blob).as.token_rewriter);
+}
+void lib_ruby_parser__internal__containers__maybe_token_rewriter__drop(MaybeTokenRewriter_BLOB *blob)
+{
+    (void)blob;
+}
