@@ -1,8 +1,18 @@
 use lib_ruby_parser::traverse::finder::Finder;
-use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
+use lib_ruby_parser::{
+    debug_level,
+    source::{MaybeDecoder, MaybeDecoderAPI},
+    Parser, ParserOptions, ParserResult,
+};
 
 fn find(src: &str, pattern: &str) -> Option<String> {
-    let options = ParserOptions::new("(find_test)".into(), debug_level::NONE, None, None, false);
+    let options = ParserOptions::new(
+        "(find_test)".into(),
+        debug_level::NONE,
+        MaybeDecoder::new_none(),
+        None,
+        false,
+    );
     let parser = Parser::new(src, options);
 
     let ParserResult { ast, input, .. } = parser.do_parse();

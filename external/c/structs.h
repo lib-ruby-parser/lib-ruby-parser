@@ -223,4 +223,49 @@ TokenRewriter __keep_token_rewriter(build_new_token_t build_new_token_f);
 TokenRewriter __drop_token_rewriter(build_new_token_t build_new_token_f);
 TokenRewriter __rewriter_token_rewriter(build_new_token_t build_new_token_f);
 
+// ParserOptions
+typedef struct MaybeDecoder
+{
+    enum
+    {
+        MAYBE_DECODER_SOME,
+        MAYBE_DECODER_NONE
+    } tag;
+
+    union
+    {
+        struct
+        {
+            uint8_t dummy;
+        } nothing;
+        Decoder decoder;
+    } as;
+} MaybeDecoder;
+typedef struct MaybeTokenRewriter
+{
+    enum
+    {
+        MAYBE_TOKEN_REWRITER_SOME,
+        MAYBE_TOKEN_REWRITER_NONE
+    } tag;
+
+    union
+    {
+        struct
+        {
+            uint8_t dummy;
+        } nothing;
+        TokenRewriter token_rewriter;
+    } as;
+} MaybeTokenRewriter;
+typedef struct ParserOptions
+{
+    StringPtr buffer_name;
+    uint8_t debug;
+    MaybeDecoder decoder;
+    MaybeTokenRewriter token_rewriter;
+    bool record_tokens;
+} ParserOptions;
+void drop_parser_options(ParserOptions *);
+
 #endif // LIB_RUBY_PARSER_C_BINDINGS_STRUCTS

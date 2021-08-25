@@ -1,6 +1,6 @@
 use crate::debug_level;
+use crate::source::token_rewriter::TokenRewriter;
 use crate::source::Decoder;
-use crate::token_rewriter::TokenRewriter;
 
 /// Configuration of the parser
 #[derive(Debug)]
@@ -60,7 +60,7 @@ pub struct ParserOptions {
     /// ```
     /// use lib_ruby_parser::{
     ///     nodes::*,
-    ///     token_rewriter::*,
+    ///     source::token_rewriter::*,
     ///     Bytes, Node, Parser, ParserOptions, ParserResult, Token,
     /// };
     /// fn rewrite_foo_to_bar(mut token: Box<Token>, input: &[u8]) -> TokenRewriterResult {

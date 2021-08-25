@@ -19,20 +19,21 @@ type StringPtr = ExternalStringPtr;
 #[cfg(not(feature = "compile-with-external-structures"))]
 type StringPtr = String;
 
+use crate::source::MaybeDecoder;
 use crate::source::SourceLine;
-use crate::source::{decode_input, DecodedInput, Decoder, InputError};
+use crate::source::{decode_input, DecodedInput, InputError};
 
 /// Representation of the source code.
 #[derive(Debug, Default)]
 #[repr(C)]
 pub struct Input {
     pub(crate) decoded: DecodedInput,
-    decoder: Option<Decoder>,
+    decoder: MaybeDecoder,
 }
 
 impl Input {
     /// Constructs a new input
-    pub fn new<Name>(name: Name, decoder: Option<Decoder>) -> Self
+    pub fn new<Name>(name: Name, decoder: MaybeDecoder) -> Self
     where
         Name: Into<StringPtr>,
     {

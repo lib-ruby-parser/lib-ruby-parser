@@ -819,6 +819,7 @@ TokenRewriterResult_BLOB lib_ruby_parser__internal__containers__token_rewriter__
     SharedByteList_BLOB input_blob)
 {
     Ptr token = UNPACK_Ptr(token_blob);
+    (void)input_blob;
 
     // call dummy token_rewriter
     const TokenRewriter *token_rewriter = (const TokenRewriter *)blob;
@@ -842,4 +843,43 @@ TokenRewriter_BLOB lib_ruby_parser__internal__containers__token_rewriter__new_re
     build_new_token_t build_new_token_f)
 {
     return PACK_TokenRewriter(__rewriter_token_rewriter(build_new_token_f));
+}
+
+/*
+    MaybeDecoder
+*/
+MaybeDecoder_BLOB lib_ruby_parser__internal__containers__maybe_decoder__new_some(Decoder_BLOB blob)
+{
+    MaybeDecoder maybe_decoder = {.tag = MAYBE_DECODER_SOME, .as = {.decoder = UNPACK_Decoder(blob)}};
+    return PACK_MaybeDecoder(maybe_decoder);
+}
+MaybeDecoder_BLOB lib_ruby_parser__internal__containers__maybe_decoder__new_none()
+{
+    MaybeDecoder maybe_decoder = {.tag = MAYBE_DECODER_NONE, .as = {.nothing = {.dummy = 42}}};
+    return PACK_MaybeDecoder(maybe_decoder);
+}
+bool lib_ruby_parser__internal__containers__maybe_decoder__is_some(const MaybeDecoder_BLOB *blob)
+{
+    const MaybeDecoder *maybe_decoder = (const MaybeDecoder *)blob;
+    return maybe_decoder->tag == MAYBE_DECODER_SOME;
+}
+bool lib_ruby_parser__internal__containers__maybe_decoder__is_none(const MaybeDecoder_BLOB *blob)
+{
+    const MaybeDecoder *maybe_decoder = (const MaybeDecoder *)blob;
+    return maybe_decoder->tag == MAYBE_DECODER_NONE;
+}
+const Decoder_BLOB *lib_ruby_parser__internal__containers__maybe_decoder__as_decoder(const MaybeDecoder_BLOB *blob)
+{
+    const MaybeDecoder *maybe_decoder = (const MaybeDecoder *)blob;
+    if (maybe_decoder->tag == MAYBE_DECODER_SOME)
+        return (const Decoder_BLOB *)(&(maybe_decoder->as.decoder));
+    return NULL;
+}
+Decoder_BLOB lib_ruby_parser__internal__containers__maybe_decoder__into_decoder(MaybeDecoder_BLOB blob)
+{
+    return PACK_Decoder(UNPACK_MaybeDecoder(blob).as.decoder);
+}
+void lib_ruby_parser__internal__containers__maybe_decoder__drop(MaybeDecoder_BLOB *blob)
+{
+    (void)blob;
 }

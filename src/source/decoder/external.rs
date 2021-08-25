@@ -7,11 +7,20 @@ use crate::containers::StringPtrBlob;
 use crate::source::DecoderResult;
 use crate::source::DecoderResultBlob;
 use crate::source::InputError;
+use crate::source::MaybeDecoder;
+use crate::source::MaybeDecoderAPI;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub(crate) struct DecoderBlob {
     blob: [u8; DECODER_SIZE],
+}
+
+impl Default for DecoderBlob {
+    fn default() -> Self {
+        let blob: [u8; DECODER_SIZE] = [0; DECODER_SIZE];
+        Self { blob }
+    }
 }
 
 /// Custom decoder, a wrapper around a function
@@ -58,13 +67,13 @@ impl std::fmt::Debug for Decoder {
     }
 }
 
-pub fn decode_input(input: List<u8>, enc: StringPtr, decoder: &Option<Decoder>) -> DecoderResult {
+pub fn decode_input(input: List<u8>, enc: StringPtr, decoder: &MaybeDecoder) -> DecoderResult {
     match enc.to_uppercase().as_str() {
         "UTF-8" | "ASCII-8BIT" | "BINARY" => {
             return DecoderResult::new_ok(input.into());
         }
         _ => {
-            if let Some(decoder) = decoder.as_ref() {
+            if let Some(decoder) = decoder.as_decoder() {
                 decoder.call(enc, input)
             } else {
                 DecoderResult::new_err(InputError::new_unsupported_encoding(enc))

@@ -89,7 +89,7 @@ use crate::parse_value::*;
 use crate::Node;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
-use crate::token_rewriter::{TokenRewriter, InternalTokenRewriterResult};
+use crate::source::token_rewriter::{TokenRewriter, InternalTokenRewriterResult};
 use crate::debug_level;
 use crate::containers::helpers::{UnPtr, MaybePtrNone};
 use crate::Loc;

@@ -7,7 +7,7 @@ type Ptr<T> = Box<T>;
 
 #[cfg(feature = "compile-with-external-structures")]
 use crate::containers::ExternalList;
-use crate::token_rewriter::InternalTokenRewriterResult;
+use crate::source::token_rewriter::InternalTokenRewriterResult;
 #[cfg(feature = "compile-with-external-structures")]
 type List<T> = ExternalList<T>;
 #[cfg(not(feature = "compile-with-external-structures"))]
@@ -34,8 +34,9 @@ fn rewritten_token() -> Ptr<Token> {
 
 #[cfg(feature = "compile-with-external-structures")]
 mod dummy_rewriter {
+    use super::rewritten_token;
     use super::{Ptr, Token};
-    use crate::token_rewriter::{tests::rewritten_token, TokenRewriter, TokenRewriterBlob};
+    use crate::source::token_rewriter::{TokenRewriter, TokenRewriterBlob};
 
     extern "C" {
         fn lib_ruby_parser__internal__containers__token_rewriter__new_keep(
@@ -74,8 +75,10 @@ mod dummy_rewriter {
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 mod dummy_rewriter {
-    use super::{rewritten_token, TokenRewriter, TokenRewriterResult};
-    use crate::token_rewriter::{LexStateAction, RewriteAction};
+    use super::rewritten_token;
+    use crate::source::token_rewriter::{
+        LexStateAction, RewriteAction, TokenRewriter, TokenRewriterResult,
+    };
 
     pub(crate) fn dummy_decoder_keep() -> TokenRewriter {
         TokenRewriter::new(Box::new(|token, _input| TokenRewriterResult {

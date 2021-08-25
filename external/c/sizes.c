@@ -40,4 +40,8 @@ int main()
     printf("LIB_RUBY_PARSER_LEX_STATE_ACTION_SIZE=%lu\n", sizeof(LexStateAction));
     printf("LIB_RUBY_PARSER_TOKEN_REWRITER_RESULT_SIZE=%lu\n", sizeof(TokenRewriterResult));
     printf("LIB_RUBY_PARSER_TOKEN_REWRITER_SIZE=%lu\n", sizeof(TokenRewriter));
+
+    printf("LIB_RUBY_PARSER_MAYBE_DECODER_SIZE=%lu\n", sizeof(MaybeDecoder));
+    printf("LIB_RUBY_PARSER_MAYBE_TOKEN_REWRITER_SIZE=%lu\n", sizeof(MaybeTokenRewriter));
+    printf("LIB_RUBY_PARSER_PARSER_OPTIONS_SIZE=%lu\n", sizeof(ParserOptions));
 }

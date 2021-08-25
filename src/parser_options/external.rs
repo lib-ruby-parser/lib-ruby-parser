@@ -1,7 +1,10 @@
 use crate::containers::ExternalStringPtr as StringPtr;
 use crate::debug_level;
-use crate::source::Decoder;
-use crate::token_rewriter::TokenRewriter;
+use crate::source::token_rewriter::TokenRewriter;
+
+use crate::containers::size::{MAYBE_TOKEN_REWRITER_SIZE, PARSER_OPTIONS_SIZE};
+use crate::containers::IntoBlob;
+use crate::source::{MaybeDecoder, MaybeDecoderBlob};
 
 /// Configuration of the parser
 #[derive(Debug)]
@@ -20,40 +23,7 @@ pub struct ParserOptions {
     /// + or a combination of them (like `Lexer | Buffer`, these value is just a bitmask)
     debug: debug_level::Type,
 
-    /// Custom decoder that can be used if the source is encoded
-    /// in unknown encoding. Only UTF-8 and ASCII-8BIT/BINARY are
-    /// supported out of the box.
-    ///
-    /// # Example
-    /// ```rust
-    /// use lib_ruby_parser::source::{Decoder, DecoderResult, InputError};
-    /// use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
-    ///
-    /// fn decode(encoding: String, input: Vec<u8>) -> DecoderResult {
-    ///     if "US-ASCII" == encoding.to_uppercase() {
-    ///         // reencode and return Ok(result)
-    ///         return DecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec().into());
-    ///     }
-    ///     DecoderResult::Err(InputError::DecodingError(
-    ///         "only us-ascii is supported".into(),
-    ///     ))
-    /// }
-    ///
-    /// let decoder = Decoder::new(Box::new(decode));
-    /// let options = ParserOptions {
-    ///     decoder,
-    ///     debug: debug_level::PARSER,
-    ///     ..Default::default()
-    /// };
-    /// let parser = Parser::new(b"# encoding: us-ascii\n3 + 3".to_vec(), options);
-    /// let ParserResult { ast, input, .. } = parser.do_parse();
-    ///
-    /// assert_eq!(
-    ///     ast.unwrap().expression().source(&input).unwrap(),
-    ///     "decoded".to_string()
-    /// )
-    /// ```
-    decoder: Option<Decoder>,
+    decoder: MaybeDecoder,
 
     /// Optional token rewriter, see TokenRewriter API
     ///
@@ -105,7 +75,7 @@ impl ParserOptions {
     pub fn new(
         buffer_name: StringPtr,
         debug: debug_level::Type,
-        decoder: Option<Decoder>,
+        decoder: MaybeDecoder,
         token_rewriter: Option<TokenRewriter>,
         record_tokens: bool,
     ) -> Self {
@@ -126,10 +96,10 @@ impl ParserOptions {
     pub fn debug(&self) -> &debug_level::Type {
         &self.debug
     }
-    /// Returns `decoder` field
-    pub fn decoder(&self) -> &Option<Decoder> {
-        &self.decoder
-    }
+    // / Returns `decoder` field
+    // pub fn decoder(&self) -> &Option<Decoder> {
+    //     &self.decoder
+    // }
     /// Returns `token_rewriter` field
     pub fn token_rewriter(&self) -> &Option<TokenRewriter> {
         &self.token_rewriter
@@ -143,20 +113,21 @@ impl ParserOptions {
 use super::InternalParserOptions;
 impl From<ParserOptions> for InternalParserOptions {
     fn from(options: ParserOptions) -> Self {
-        let ParserOptions {
-            buffer_name,
-            debug,
-            decoder,
-            token_rewriter,
-            record_tokens,
-        } = options;
+        todo!()
+        // let ParserOptions {
+        //     buffer_name,
+        //     debug,
+        //     decoder,
+        //     token_rewriter,
+        //     record_tokens,
+        // } = options;
 
-        Self {
-            buffer_name,
-            debug,
-            decoder,
-            token_rewriter,
-            record_tokens,
-        }
+        // Self {
+        //     buffer_name,
+        //     debug,
+        //     decoder,
+        //     token_rewriter,
+        //     record_tokens,
+        // }
     }
 }

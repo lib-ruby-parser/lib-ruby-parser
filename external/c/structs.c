@@ -157,3 +157,9 @@ TokenRewriter __rewriter_token_rewriter(build_new_token_t build_new_token_f)
     TokenRewriter rewriter = {.build_new_token_f = build_new_token_f, .rewrite_f = __rewrite_token};
     return rewriter;
 }
+
+// ParserOptions
+void drop_parser_options(ParserOptions *parser_options)
+{
+    drop_string_ptr(&(parser_options->buffer_name));
+}

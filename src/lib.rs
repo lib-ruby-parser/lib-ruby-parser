@@ -81,9 +81,6 @@ pub mod traverse;
 mod token;
 pub use token::Token;
 
-/// Module to perform token rewriting
-pub mod token_rewriter;
-
 mod bytes;
 pub use bytes::Bytes;
 

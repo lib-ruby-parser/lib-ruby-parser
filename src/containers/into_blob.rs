@@ -172,3 +172,13 @@ impl IntoBlob for crate::containers::ExternalSharedByteList {
         blob
     }
 }
+
+impl IntoBlob for crate::source::Decoder {
+    type Output = crate::source::DecoderBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}

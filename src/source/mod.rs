@@ -8,7 +8,11 @@ mod input;
 mod input_error;
 mod magic_comment;
 pub(crate) mod magic_comment_kind;
+mod maybe_decoder;
 mod source_line;
+
+/// Module to perform token rewriting
+pub mod token_rewriter;
 
 pub use comment::Comment;
 pub use comment_type::CommentType;
@@ -20,6 +24,7 @@ pub use input::Input;
 pub use input_error::InputError;
 pub use magic_comment::MagicComment;
 pub use magic_comment_kind::MagicCommentKind;
+pub use maybe_decoder::{MaybeDecoder, MaybeDecoderAPI};
 pub use source_line::SourceLine;
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -29,3 +34,5 @@ pub(crate) use decoder::DecoderBlob;
 pub(crate) use decoder_result::DecoderResultBlob;
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) use input_error::InputErrorBlob;
+#[cfg(feature = "compile-with-external-structures")]
+pub(crate) use maybe_decoder::MaybeDecoderBlob;
