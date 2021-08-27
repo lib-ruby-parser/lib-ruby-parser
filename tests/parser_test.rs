@@ -102,7 +102,7 @@ impl Fixture {
         match &self.ast {
             Some(expected_ast) => {
                 let actual_ast = actual
-                    .ast
+                    .ast()
                     .as_ref()
                     .map(|node| node.inspect(0))
                     .unwrap_or_else(|| "nil".to_string());
@@ -120,7 +120,7 @@ impl Fixture {
 
         match &self.locs {
             Some(locs) => {
-                let ast = if let Some(ast) = actual.ast.as_ref() {
+                let ast = if let Some(ast) = actual.ast().as_ref() {
                     ast
                 } else {
                     return TestOutput::Failure("can't compare locs, ast is empty".to_string());
@@ -137,14 +137,14 @@ impl Fixture {
         }
 
         let actual_diagnostics = actual
-            .diagnostics
+            .diagnostics()
             .iter()
             .map(|d| render_diagnostic_for_testing(d))
             .collect::<Vec<_>>();
 
         match &self.diagnostics {
             None => {
-                if actual.diagnostics.len() == 0 {
+                if actual.diagnostics().len() == 0 {
                     // ok
                 } else {
                     return TestOutput::Failure(format!(
@@ -304,7 +304,7 @@ fn parse(input: &[u8]) -> ParserResult {
 #[test]
 fn test_magic_comment() {
     let result = parse(&read_fixture("tests/fixtures/magic_comments.rb"));
-    let magic_comments: Vec<MagicComment> = result.magic_comments.into();
+    let magic_comments: Vec<MagicComment> = result.magic_comments().to_owned().into();
     assert_eq!(
         magic_comments,
         vec![

@@ -156,3 +156,16 @@ DecodedInput::DecodedInput(StringPtr name,
                            ByteList bytes) : name(std::move(name)),
                                              lines(std::move(lines)),
                                              bytes(std::move(bytes)) {}
+
+// ParserResult
+ParserResult::ParserResult(std::unique_ptr<Node> ast,
+                           TokenList tokens,
+                           DiagnosticList diagnostics,
+                           CommentList comments,
+                           MagicCommentList magic_comments,
+                           DecodedInput input) : ast(std::move(ast)),
+                                                 tokens(std::move(tokens)),
+                                                 diagnostics(std::move(diagnostics)),
+                                                 comments(std::move(comments)),
+                                                 magic_comments(std::move(magic_comments)),
+                                                 input(std::move(input)) {}

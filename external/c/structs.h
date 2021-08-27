@@ -96,6 +96,7 @@ typedef struct Token
 } Token;
 DECLARE_LIST_OF(Token, TokenList);
 void drop_token(Token *);
+void drop_token_list(TokenList *);
 
 // CommentType
 typedef enum CommentType
@@ -112,6 +113,7 @@ typedef struct Comment
     CommentType kind;
 } Comment;
 DECLARE_LIST_OF(Comment, CommentList);
+void drop_comment_list(CommentList *);
 
 // MagicCommentKind
 typedef enum MagicCommentKind
@@ -130,6 +132,7 @@ typedef struct MagicComment
     Loc value_l;
 } MagicComment;
 DECLARE_LIST_OF(MagicComment, MagicCommentList);
+void drop_magic_comment_list(MagicCommentList *);
 
 // ErrorLevel
 typedef enum ErrorLevel
@@ -140,6 +143,7 @@ typedef enum ErrorLevel
 
 // DiagnosticMessage
 #include "messages.h"
+void drop_diagnostic_list(DiagnosticList *);
 
 // Node
 #include "nodes.h"
@@ -277,5 +281,17 @@ typedef struct DecodedInput
     ByteList bytes;
 } DecodedInput;
 void drop_decoded_input(DecodedInput *);
+
+// ParserResult
+typedef struct ParserResult
+{
+    Node *ast;
+    TokenList tokens;
+    DiagnosticList diagnostics;
+    CommentList comments;
+    MagicCommentList magic_comments;
+    DecodedInput input;
+} ParserResult;
+void drop_parser_result(ParserResult *);
 
 #endif // LIB_RUBY_PARSER_C_BINDINGS_STRUCTS

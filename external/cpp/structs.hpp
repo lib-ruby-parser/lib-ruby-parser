@@ -420,4 +420,30 @@ public:
     DecodedInput &operator=(DecodedInput &&other) = default;
 };
 
+// ParserResult
+class ParserResult
+{
+public:
+    std::unique_ptr<Node> ast;
+    TokenList tokens;
+    DiagnosticList diagnostics;
+    CommentList comments;
+    MagicCommentList magic_comments;
+    DecodedInput input;
+
+    ParserResult(
+        std::unique_ptr<Node> ast,
+        TokenList tokens,
+        DiagnosticList diagnostics,
+        CommentList comments,
+        MagicCommentList magic_comments,
+        DecodedInput input);
+
+    ParserResult(const ParserResult &) = delete;
+    ParserResult &operator=(const ParserResult &other) = delete;
+
+    ParserResult(ParserResult &&) = default;
+    ParserResult &operator=(ParserResult &&other) = default;
+};
+
 #endif // LIB_RUBY_PARSER_CPP_BINDINGS_STRUCTS_HPP

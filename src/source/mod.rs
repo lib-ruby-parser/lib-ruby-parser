@@ -30,6 +30,8 @@ pub use maybe_decoder::{MaybeDecoder, MaybeDecoderAPI};
 pub use source_line::SourceLine;
 
 #[cfg(feature = "compile-with-external-structures")]
+pub(crate) use decoded_input::DecodedInputBlob;
+#[cfg(feature = "compile-with-external-structures")]
 #[allow(unused_imports)]
 pub(crate) use decoder::DecoderBlob;
 #[cfg(feature = "compile-with-external-structures")]

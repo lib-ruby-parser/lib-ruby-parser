@@ -222,3 +222,13 @@ impl IntoBlob for crate::ParserOptions {
         blob
     }
 }
+
+impl IntoBlob for crate::source::DecodedInput {
+    type Output = crate::source::DecodedInputBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}

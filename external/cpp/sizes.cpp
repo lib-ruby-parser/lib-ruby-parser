@@ -46,4 +46,5 @@ int main()
     std::cout << "LIB_RUBY_PARSER_PARSER_OPTIONS_SIZE=" << sizeof(ParserOptions) << '\n';
 
     std::cout << "LIB_RUBY_PARSER_DECODED_INPUT_SIZE=" << sizeof(DecodedInput) << '\n';
+    std::cout << "LIB_RUBY_PARSER_PARSER_RESULT_SIZE=" << sizeof(ParserResult) << '\n';
 }

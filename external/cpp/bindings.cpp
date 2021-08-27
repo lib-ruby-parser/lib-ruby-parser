@@ -1057,4 +1057,59 @@ extern "C"
         decoded_input->bytes = ByteList();
         return PACK_ByteList(std::move(bytes));
     }
+
+    /*
+        ParserResult
+    */
+    ParserResult_BLOB lib_ruby_parser__internal__containers__parser_result__new(
+        MaybePtr_BLOB ast,
+        TokenList_BLOB tokens,
+        DiagnosticList_BLOB diagnostics,
+        CommentList_BLOB comments,
+        MagicCommentList_BLOB magic_comments,
+        DecodedInput_BLOB input)
+    {
+        return PACK_ParserResult(ParserResult(
+            std::unique_ptr<Node>((Node *)(UNPACK_MaybePtr(ast).release())),
+            UNPACK_TokenList(tokens),
+            UNPACK_DiagnosticList(diagnostics),
+            UNPACK_CommentList(comments),
+            UNPACK_MagicCommentList(magic_comments),
+            UNPACK_DecodedInput(input)));
+    }
+    void lib_ruby_parser__internal__containers__parser_result__drop(ParserResult_BLOB *blob)
+    {
+        ParserResult *parser_result = (ParserResult *)blob;
+        parser_result->~ParserResult();
+    }
+    const MaybePtr_BLOB *lib_ruby_parser__internal__containers__parser_result__get_ast(const ParserResult_BLOB *blob)
+    {
+        const ParserResult *parser_result = (const ParserResult *)blob;
+        return (const MaybePtr_BLOB *)(&(parser_result->ast));
+    }
+    const TokenList_BLOB *lib_ruby_parser__internal__containers__parser_result__get_tokens(const ParserResult_BLOB *blob)
+    {
+        const ParserResult *parser_result = (const ParserResult *)blob;
+        return (const TokenList_BLOB *)(&(parser_result->tokens));
+    }
+    const DiagnosticList_BLOB *lib_ruby_parser__internal__containers__parser_result__get_diagnostics(const ParserResult_BLOB *blob)
+    {
+        const ParserResult *parser_result = (const ParserResult *)blob;
+        return (const DiagnosticList_BLOB *)(&(parser_result->diagnostics));
+    }
+    const CommentList_BLOB *lib_ruby_parser__internal__containers__parser_result__get_comments(const ParserResult_BLOB *blob)
+    {
+        const ParserResult *parser_result = (const ParserResult *)blob;
+        return (const CommentList_BLOB *)(&(parser_result->comments));
+    }
+    const MagicCommentList_BLOB *lib_ruby_parser__internal__containers__parser_result__get_magic_comments(const ParserResult_BLOB *blob)
+    {
+        const ParserResult *parser_result = (const ParserResult *)blob;
+        return (const MagicCommentList_BLOB *)(&(parser_result->magic_comments));
+    }
+    const DecodedInput_BLOB *lib_ruby_parser__internal__containers__parser_result__get_input(const ParserResult_BLOB *blob)
+    {
+        const ParserResult *parser_result = (const ParserResult *)blob;
+        return (const DecodedInput_BLOB *)(&(parser_result->input));
+    }
 }

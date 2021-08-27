@@ -67,14 +67,30 @@ void drop_token(Token *token)
 {
     drop_bytes(&(token->token_value));
 }
+void drop_token_list(TokenList *token_list)
+{
+    for (uint64_t i = 0; i < token_list->len; i++)
+    {
+        drop_token(&(token_list->ptr[i]));
+    }
+    free(token_list->ptr);
+}
 
 // CommentType
 
 // Comment
+void drop_comment_list(CommentList *comment_list)
+{
+    free(comment_list->ptr);
+}
 
 // MagicCommentKind
 
 // MagicComment
+void drop_magic_comment_list(MagicCommentList *magic_comment_list)
+{
+    free(magic_comment_list->ptr);
+}
 
 // ErrorLevel
 
@@ -82,6 +98,14 @@ void drop_token(Token *token)
 void drop_diagnostic(Diagnostic *diagnostic)
 {
     drop_diagnostic_message(&(diagnostic->message));
+}
+void drop_diagnostic_list(DiagnosticList *diagnostic_list)
+{
+    for (uint64_t i = 0; i < diagnostic_list->len; i++)
+    {
+        drop_diagnostic(&(diagnostic_list->ptr[i]));
+    }
+    free(diagnostic_list->ptr);
 }
 
 // InputError
@@ -174,4 +198,15 @@ void drop_decoded_input(DecodedInput *decoded_input)
     drop_string_ptr(&(decoded_input->name));
     drop_source_line_list(&(decoded_input->lines));
     drop_byte_list(&(decoded_input->bytes));
+}
+
+// ParserResult
+void drop_parser_result(ParserResult *parser_result)
+{
+    drop_maybe_node_ptr(&(parser_result->ast));
+    drop_token_list(&(parser_result->tokens));
+    drop_diagnostic_list(&(parser_result->diagnostics));
+    drop_comment_list(&(parser_result->comments));
+    drop_magic_comment_list(&(parser_result->magic_comments));
+    drop_decoded_input(&(parser_result->input));
 }

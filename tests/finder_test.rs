@@ -3,7 +3,7 @@ use lib_ruby_parser::{
     debug_level,
     source::maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI},
     source::{MaybeDecoder, MaybeDecoderAPI},
-    Parser, ParserOptions, ParserResult,
+    Parser, ParserOptions,
 };
 
 fn find(src: &str, pattern: &str) -> Option<String> {
@@ -16,10 +16,10 @@ fn find(src: &str, pattern: &str) -> Option<String> {
     );
     let parser = Parser::new(src, options);
 
-    let ParserResult { ast, input, .. } = parser.do_parse();
-    let ast = ast.expect("expected AST to be Some");
-    let node = Finder::run(&pattern, &ast).unwrap()?;
-    node.expression().source(&input)
+    let result = parser.do_parse();
+    let ast = result.ast().as_ref().expect("expected AST to be Some");
+    let node = Finder::run(&pattern, ast).unwrap()?;
+    node.expression().source(result.input())
 }
 
 #[test]

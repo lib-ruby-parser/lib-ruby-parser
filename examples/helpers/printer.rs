@@ -15,10 +15,10 @@ mod formatters {
     use super::ParserResult;
 
     pub fn print_only_diagnostics(result: &ParserResult) {
-        for d in result.diagnostics.iter() {
+        for d in result.diagnostics().iter() {
             println!(
                 "{}",
-                d.render(&result.input)
+                d.render(result.input())
                     .expect("Failed to render a diagnostic")
             )
         }
@@ -27,17 +27,17 @@ mod formatters {
     pub fn print_nothing(_: &ParserResult) {}
 
     pub fn print_compact_ast_with_locations(result: &ParserResult) {
-        let src = result.input.as_shared_bytes();
+        let src = result.input().as_shared_bytes();
         let src = std::str::from_utf8(src.as_ref()).unwrap_or_else(|_| "invalid-source");
         println!("{}", src);
         print_only_diagnostics(&result);
-        if let Some(ast) = result.ast.as_ref() {
+        if let Some(ast) = result.ast().as_ref() {
             ast.print_with_locs()
         }
     }
     pub fn print_compact_ast(result: &ParserResult) {
         print_only_diagnostics(&result);
-        if let Some(ast) = result.ast.as_ref() {
+        if let Some(ast) = result.ast().as_ref() {
             println!("{}", ast.inspect(0));
         }
     }

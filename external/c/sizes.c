@@ -46,4 +46,5 @@ int main()
     printf("LIB_RUBY_PARSER_PARSER_OPTIONS_SIZE=%lu\n", sizeof(ParserOptions));
 
     printf("LIB_RUBY_PARSER_DECODED_INPUT_SIZE=%lu\n", sizeof(DecodedInput));
+    printf("LIB_RUBY_PARSER_PARSER_RESULT_SIZE=%lu\n", sizeof(ParserResult));
 }

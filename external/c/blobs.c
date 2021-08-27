@@ -94,3 +94,6 @@ IMPL_BLOB(ParserOptions);
 
 // DecodedInput
 IMPL_BLOB(DecodedInput);
+
+// ParserResult
+IMPL_BLOB(ParserResult);
