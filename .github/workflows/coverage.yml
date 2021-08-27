@@ -39,3 +39,49 @@ jobs:
         uses: codecov/codecov-action@v1.0.2
         with:
           token: ${{secrets.CODECOV_TOKEN}}
+
+  coverage-native:
+    name: coverage-native
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: install bison
+        run: |
+          brew install bison
+          echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
+          bison --version
+
+      - name: codegen
+        run: cargo build --features rebuild-grammar
+
+      - name: compile external containers
+        env:
+          CC: clang
+          CXX: clang++
+          AR: ar
+        run: |
+          cd external/c && make all
+          cat sizes-out
+
+      - name: cargo-tarpaulin
+        env:
+          LIB_RUBY_PARSER_SIZES_FILEPATH: external/c/sizes-out
+        run: |
+          cargo install cargo-tarpaulin
+          cargo tarpaulin --features "compile-with-external-structures,link-with-external-c-structures" -v --out Xml
+
+      - name: upload to codecov.io
+        uses: codecov/codecov-action@v1.0.2
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
