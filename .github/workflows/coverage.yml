@@ -33,7 +33,7 @@ jobs:
       - name: cargo-tarpaulin
         run: |
           cargo install cargo-tarpaulin
-          cargo tarpaulin --features "onig,rebuild-grammar" -v --out Xml
+          cargo tarpaulin --features "onig,rebuild-grammar" -v --out Xml --exclude-files codegen
 
       - name: upload to codecov.io
         uses: codecov/codecov-action@v1.0.2
@@ -79,7 +79,7 @@ jobs:
           LIB_RUBY_PARSER_SIZES_FILEPATH: external/c/sizes-out
         run: |
           cargo install cargo-tarpaulin
-          cargo tarpaulin --features "compile-with-external-structures,link-with-external-c-structures" -v --out Xml
+          cargo tarpaulin --features "compile-with-external-structures,link-with-external-c-structures" -v --out Xml --exclude-files codegen
 
       - name: upload to codecov.io
         uses: codecov/codecov-action@v1.0.2
