@@ -10,8 +10,8 @@ type List<T> = Vec<T>;
 #[test]
 fn it_renders() {
     let source = "line 1\nvery long line 2\n";
-    let mut input = DecodedInput::new("(test_render)");
-    input.set_bytes(List::from(source));
+    let mut input = DecodedInput::named("(test_render)");
+    input.update_bytes(List::from(source));
 
     let error = Diagnostic::new(
         ErrorLevel::warning(),

@@ -44,4 +44,6 @@ int main()
     printf("LIB_RUBY_PARSER_MAYBE_DECODER_SIZE=%lu\n", sizeof(MaybeDecoder));
     printf("LIB_RUBY_PARSER_MAYBE_TOKEN_REWRITER_SIZE=%lu\n", sizeof(MaybeTokenRewriter));
     printf("LIB_RUBY_PARSER_PARSER_OPTIONS_SIZE=%lu\n", sizeof(ParserOptions));
+
+    printf("LIB_RUBY_PARSER_DECODED_INPUT_SIZE=%lu\n", sizeof(DecodedInput));
 }

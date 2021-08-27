@@ -149,3 +149,10 @@ ParserOptions::ParserOptions(StringPtr buffer_name,
                                                    decoder(std::move(decoder)),
                                                    token_rewriter(std::move(token_rewriter)),
                                                    record_tokens(record_tokens) {}
+
+// DecodedInput
+DecodedInput::DecodedInput(StringPtr name,
+                           SourceLineList lines,
+                           ByteList bytes) : name(std::move(name)),
+                                             lines(std::move(lines)),
+                                             bytes(std::move(bytes)) {}

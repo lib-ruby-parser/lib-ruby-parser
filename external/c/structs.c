@@ -39,6 +39,10 @@ void drop_maybe_string_ptr(MaybeStringPtr *maybe_string_ptr)
 // SharedByteList
 
 // SourceLine
+void drop_source_line_list(SourceLineList *source_line_list)
+{
+    free(source_line_list->ptr);
+}
 
 // Loc
 void drop_loc(Loc *loc)
@@ -162,4 +166,12 @@ TokenRewriter __rewriter_token_rewriter(build_new_token_t build_new_token_f)
 void drop_parser_options(ParserOptions *parser_options)
 {
     drop_string_ptr(&(parser_options->buffer_name));
+}
+
+// DecodedInput
+void drop_decoded_input(DecodedInput *decoded_input)
+{
+    drop_string_ptr(&(decoded_input->name));
+    drop_source_line_list(&(decoded_input->lines));
+    drop_byte_list(&(decoded_input->bytes));
 }

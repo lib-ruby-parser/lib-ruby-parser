@@ -10,7 +10,7 @@ fn decoder() -> Decoder {
 #[cfg(not(feature = "compile-with-external-structures"))]
 fn decoder() -> Decoder {
     use crate::source::DecoderResult;
-    Decoder::new(Box::new(|encoding: String, input: Vec<u8>| {
+    Decoder::new(Box::new(|_encoding: String, _input: Vec<u8>| {
         DecoderResult::Ok(b"# encoding: us-ascii\ndecoded".to_vec().into())
     }))
 }

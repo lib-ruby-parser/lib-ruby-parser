@@ -44,4 +44,6 @@ int main()
     std::cout << "LIB_RUBY_PARSER_MAYBE_DECODER_SIZE=" << sizeof(MaybeDecoder) << '\n';
     std::cout << "LIB_RUBY_PARSER_MAYBE_TOKEN_REWRITER_SIZE=" << sizeof(MaybeTokenRewriter) << '\n';
     std::cout << "LIB_RUBY_PARSER_PARSER_OPTIONS_SIZE=" << sizeof(ParserOptions) << '\n';
+
+    std::cout << "LIB_RUBY_PARSER_DECODED_INPUT_SIZE=" << sizeof(DecodedInput) << '\n';
 }

@@ -48,6 +48,7 @@ typedef struct SourceLine
     bool ends_with_eof;
 } SourceLine;
 DECLARE_LIST_OF(SourceLine, SourceLineList);
+void drop_source_line_list(SourceLineList *source_line_list);
 
 // Loc
 typedef struct Loc
@@ -267,5 +268,14 @@ typedef struct ParserOptions
     bool record_tokens;
 } ParserOptions;
 void drop_parser_options(ParserOptions *);
+
+// DecodedInput
+typedef struct DecodedInput
+{
+    StringPtr name;
+    SourceLineList lines;
+    ByteList bytes;
+} DecodedInput;
+void drop_decoded_input(DecodedInput *);
 
 #endif // LIB_RUBY_PARSER_C_BINDINGS_STRUCTS

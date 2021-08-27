@@ -91,3 +91,6 @@ IMPL_BLOB(TokenRewriter);
 IMPL_BLOB(MaybeDecoder);
 IMPL_BLOB(MaybeTokenRewriter);
 IMPL_BLOB(ParserOptions);
+
+// DecodedInput
+IMPL_BLOB(DecodedInput);

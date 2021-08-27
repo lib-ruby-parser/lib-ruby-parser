@@ -400,4 +400,24 @@ public:
     ParserOptions &operator=(ParserOptions &&other) = default;
 };
 
+// DecodedInput
+class DecodedInput
+{
+public:
+    StringPtr name;
+    SourceLineList lines;
+    ByteList bytes;
+
+    DecodedInput(
+        StringPtr name,
+        SourceLineList lines,
+        ByteList bytes);
+
+    DecodedInput(const DecodedInput &) = delete;
+    DecodedInput &operator=(const DecodedInput &other) = delete;
+
+    DecodedInput(DecodedInput &&) = default;
+    DecodedInput &operator=(DecodedInput &&other) = default;
+};
+
 #endif // LIB_RUBY_PARSER_CPP_BINDINGS_STRUCTS_HPP

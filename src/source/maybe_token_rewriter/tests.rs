@@ -11,7 +11,7 @@ fn decoder() -> TokenRewriter {
 fn decoder() -> TokenRewriter {
     use crate::source::token_rewriter::{LexStateAction, RewriteAction, TokenRewriterResult};
     use crate::Token;
-    TokenRewriter::new(Box::new(|token: Box<Token>, input: &[u8]| {
+    TokenRewriter::new(Box::new(|token: Box<Token>, _input: &[u8]| {
         TokenRewriterResult {
             rewritten_token: token,
             token_action: RewriteAction::Keep,

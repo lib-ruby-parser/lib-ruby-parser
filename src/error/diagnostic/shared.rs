@@ -27,7 +27,7 @@ impl Diagnostic {
         let (line_no, line_loc) = self.loc().expand_to_line(input)?;
         let line = line_loc.source(input)?;
 
-        let filename = &input.name;
+        let filename = &input.name();
         let (_, start_col) = self.loc().begin_line_col(input)?;
 
         let prefix = format!("{}:{}", filename.as_str(), line_no + 1);

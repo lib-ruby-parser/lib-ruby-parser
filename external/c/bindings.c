@@ -982,3 +982,69 @@ bool lib_ruby_parser__internal__containers__parser_options__get_record_tokens(co
     const ParserOptions *options = (const ParserOptions *)blob;
     return options->record_tokens;
 }
+
+// DecodedInput
+DecodedInput_BLOB lib_ruby_parser__internal__containers__decoded_input__new(
+    StringPtr_BLOB name,
+    SourceLineList_BLOB lines,
+    ByteList_BLOB bytes)
+{
+    DecodedInput decoded_input = {
+        .name = UNPACK_StringPtr(name),
+        .lines = UNPACK_SourceLineList(lines),
+        .bytes = UNPACK_ByteList(bytes)};
+    return PACK_DecodedInput(decoded_input);
+}
+void lib_ruby_parser__internal__containers__decoded_input__drop(DecodedInput_BLOB *blob)
+{
+    DecodedInput *decoded_input = (DecodedInput *)blob;
+    drop_decoded_input(decoded_input);
+}
+const StringPtr_BLOB *lib_ruby_parser__internal__containers__decoded_input__get_name(const DecodedInput_BLOB *blob)
+{
+    const DecodedInput *decoded_input = (const DecodedInput *)blob;
+    return (const StringPtr_BLOB *)(&(decoded_input->name));
+}
+const SourceLineList_BLOB *lib_ruby_parser__internal__containers__decoded_input__get_lines(const DecodedInput_BLOB *blob)
+{
+    const DecodedInput *decoded_input = (const DecodedInput *)blob;
+    return (const SourceLineList_BLOB *)(&(decoded_input->lines));
+}
+const ByteList_BLOB *lib_ruby_parser__internal__containers__decoded_input__get_bytes(const DecodedInput_BLOB *blob)
+{
+    const DecodedInput *decoded_input = (const DecodedInput *)blob;
+    return (const ByteList_BLOB *)(&(decoded_input->bytes));
+}
+void lib_ruby_parser__internal__containers__decoded_input__set_name(DecodedInput_BLOB *blob, StringPtr_BLOB name)
+{
+    DecodedInput *decoded_input = (DecodedInput *)blob;
+    drop_string_ptr(&(decoded_input->name));
+    decoded_input->name = UNPACK_StringPtr(name);
+}
+void lib_ruby_parser__internal__containers__decoded_input__set_lines(DecodedInput_BLOB *blob, SourceLineList_BLOB lines)
+{
+    DecodedInput *decoded_input = (DecodedInput *)blob;
+    drop_source_line_list(&(decoded_input->lines));
+    decoded_input->lines = UNPACK_SourceLineList(lines);
+}
+void lib_ruby_parser__internal__containers__decoded_input__set_bytes(DecodedInput_BLOB *blob, ByteList_BLOB bytes)
+{
+    DecodedInput *decoded_input = (DecodedInput *)blob;
+    drop_byte_list(&(decoded_input->bytes));
+    decoded_input->bytes = UNPACK_ByteList(bytes);
+}
+ByteList_BLOB lib_ruby_parser__internal__containers__decoded_input__into_bytes(DecodedInput_BLOB blob)
+{
+    DecodedInput decoded_input = UNPACK_DecodedInput(blob);
+    drop_string_ptr(&(decoded_input.name));
+    drop_source_line_list(&(decoded_input.lines));
+    return PACK_ByteList(decoded_input.bytes);
+}
+ByteList_BLOB lib_ruby_parser__internal__containers__decoded_input__take_bytes(DecodedInput_BLOB *blob)
+{
+    DecodedInput *decoded_input = (DecodedInput *)blob;
+    ByteList bytes = decoded_input->bytes;
+    ByteList empty = {.ptr = NULL, .len = 0, .capacity = 0};
+    decoded_input->bytes = empty;
+    return PACK_ByteList(bytes);
+}

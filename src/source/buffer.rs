@@ -60,7 +60,7 @@ impl Buffer {
     pub(crate) fn new(name: StringPtr, bytes: List<u8>, decoder: MaybeDecoder) -> Self {
         let mut input = Input::new(name, decoder);
 
-        input.set_bytes(bytes);
+        input.update_bytes(bytes);
 
         let mut this = Self {
             input,

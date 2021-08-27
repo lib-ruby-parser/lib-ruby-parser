@@ -38,21 +38,18 @@ impl Input {
         Name: Into<StringPtr>,
     {
         Self {
-            decoded: DecodedInput {
-                name: name.into(),
-                ..Default::default()
-            },
+            decoded: DecodedInput::named(name),
             decoder,
         }
     }
 
     /// Populates `Input` with a given byte array
-    pub fn set_bytes(&mut self, bytes: List<u8>) {
-        self.decoded.set_bytes(bytes)
+    pub fn update_bytes(&mut self, bytes: List<u8>) {
+        self.decoded.update_bytes(bytes)
     }
 
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
-        if let Some(c) = self.decoded.bytes.get(idx) {
+        if let Some(c) = self.decoded.bytes().get(idx) {
             Some(*c)
         } else {
             None
@@ -60,7 +57,7 @@ impl Input {
     }
 
     pub(crate) fn unchecked_byte_at(&self, idx: usize) -> u8 {
-        self.decoded.bytes[idx]
+        self.decoded.bytes()[idx]
     }
 
     pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&[u8]> {
@@ -87,17 +84,17 @@ impl Input {
     }
 
     pub(crate) fn lines_count(&self) -> usize {
-        self.decoded.lines.len()
+        self.decoded.lines().len()
     }
 
     pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
         let new_input = decode_input(
-            std::mem::take(&mut self.decoded.bytes),
+            self.decoded.take_bytes(),
             StringPtr::from(encoding),
             &self.decoder,
         )
         .into_result()?;
-        self.set_bytes(new_input);
+        self.update_bytes(new_input);
         Ok(())
     }
 

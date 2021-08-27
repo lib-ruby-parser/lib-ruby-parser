@@ -49,4 +49,6 @@ DECLARE_BLOB_FOR(MaybeDecoder);
 DECLARE_BLOB_FOR(MaybeTokenRewriter);
 DECLARE_BLOB_FOR(ParserOptions);
 
+DECLARE_BLOB_FOR(DecodedInput);
+
 #endif // LIB_RUBY_PARSER_CPP_BINDINGS_BLOBS
