@@ -30,10 +30,13 @@ jobs:
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
           bison --version
 
+      - name: codegen
+        run: cargo build --features rebuild-grammar
+
       - name: cargo-tarpaulin
         run: |
           cargo install cargo-tarpaulin
-          cargo tarpaulin --features "onig,rebuild-grammar" -v --out Xml --exclude-files codegen
+          cargo tarpaulin --features onig -v --out Xml --exclude-files codegen
 
       - name: upload to codecov.io
         uses: codecov/codecov-action@v1.0.2
