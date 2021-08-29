@@ -1,7 +1,7 @@
 use lib_ruby_parser::ParserResult;
 
 #[derive(Clone)]
-pub struct Printer {
+pub(crate) struct Printer {
     f: fn(&ParserResult),
 }
 
@@ -14,7 +14,7 @@ impl std::fmt::Debug for Printer {
 mod formatters {
     use super::ParserResult;
 
-    pub fn print_only_diagnostics(result: &ParserResult) {
+    pub(crate) fn print_only_diagnostics(result: &ParserResult) {
         for d in result.diagnostics().iter() {
             println!(
                 "{}",
@@ -24,9 +24,9 @@ mod formatters {
         }
     }
 
-    pub fn print_nothing(_: &ParserResult) {}
+    pub(crate) fn print_nothing(_: &ParserResult) {}
 
-    pub fn print_compact_ast_with_locations(result: &ParserResult) {
+    pub(crate) fn print_compact_ast_with_locations(result: &ParserResult) {
         let src = result.input().as_shared_bytes();
         let src = std::str::from_utf8(src.as_ref()).unwrap_or_else(|_| "invalid-source");
         println!("{}", src);
@@ -35,13 +35,13 @@ mod formatters {
             ast.print_with_locs()
         }
     }
-    pub fn print_compact_ast(result: &ParserResult) {
+    pub(crate) fn print_compact_ast(result: &ParserResult) {
         print_only_diagnostics(&result);
         if let Some(ast) = result.ast().as_ref() {
             println!("{}", ast.inspect(0));
         }
     }
-    pub fn print_full_ast(result: &ParserResult) {
+    pub(crate) fn print_full_ast(result: &ParserResult) {
         println!("{:#?}", result)
     }
 }
@@ -50,11 +50,11 @@ impl Printer {
     pub const ABOUT: &'static str =
         "N = Nothing, F = Full AST, L = Compact AST with locations, D = Only Diagnostics, default = Compact AST";
 
-    pub fn new(f: fn(&ParserResult)) -> Self {
+    pub(crate) fn new(f: fn(&ParserResult)) -> Self {
         Self { f }
     }
 
-    pub fn print(&self, result: &ParserResult) {
+    pub(crate) fn print(&self, result: &ParserResult) {
         (self.f)(result)
     }
 }

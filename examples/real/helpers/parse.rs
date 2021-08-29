@@ -5,7 +5,8 @@ use lib_ruby_parser::{
     Parser, ParserOptions, ParserResult,
 };
 
-pub fn parse(input: InputFile, debug_level: DebugLevel, drop_tokens: bool) -> ParserResult {
+#[allow(dead_code)]
+pub(crate) fn parse(input: InputFile, debug_level: DebugLevel, drop_tokens: bool) -> ParserResult {
     let options = ParserOptions::new(
         input.filepath.into(),
         debug_level.level,

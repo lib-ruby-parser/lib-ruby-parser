@@ -1,7 +1,7 @@
 use lib_ruby_parser::debug_level;
 
 #[derive(Debug, Clone, Copy)]
-pub struct DebugLevel {
+pub(crate) struct DebugLevel {
     pub level: u8,
 }
 

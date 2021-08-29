@@ -4,7 +4,8 @@ use lib_ruby_parser::{
     Lexer, Token,
 };
 
-pub fn tokenize(input: InputFile, debug_level: DebugLevel) -> Result<Vec<Token>, String> {
+#[allow(dead_code)]
+pub(crate) fn tokenize(input: InputFile, debug_level: DebugLevel) -> Result<Vec<Token>, String> {
     print!("tokenizing {} ... ", input.filepath);
     let mut lexer = Lexer::new(input.code, input.filepath, MaybeDecoder::new_none());
     lexer.set_debug(debug_level.level);

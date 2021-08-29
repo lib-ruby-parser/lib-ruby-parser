@@ -2,20 +2,20 @@
 mod profiler {
     extern crate pprof;
 
-    pub struct Profiler {
+    pub(crate) struct Profiler {
         enabled: bool,
         guard: Option<pprof::ProfilerGuard<'static>>,
     }
 
     impl Profiler {
-        pub fn new(enabled: bool) -> Self {
+        pub(crate) fn new(enabled: bool) -> Self {
             Self {
                 enabled,
                 guard: None,
             }
         }
 
-        pub fn start(&mut self) {
+        pub(crate) fn start(&mut self) {
             if self.enabled {
                 self.guard = Some(pprof::ProfilerGuard::new(100).unwrap())
             } else {
@@ -23,7 +23,7 @@ mod profiler {
             }
         }
 
-        pub fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        pub(crate) fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
             if self.enabled {
                 println!("Creating flamegraph.svg");
                 let report = self.guard.take().unwrap().report().build()?;
@@ -59,19 +59,19 @@ mod profiler {
 
 #[cfg(not(feature = "pprof"))]
 mod profiler {
-    pub struct Profiler {}
+    pub(crate) struct Profiler {}
 
     impl Profiler {
-        pub fn new(_: bool) -> Self {
+        pub(crate) fn new(_: bool) -> Self {
             Self {}
         }
 
-        pub fn start(&mut self) {}
+        pub(crate) fn start(&mut self) {}
 
-        pub fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        pub(crate) fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
     }
 }
 
-pub use profiler::Profiler;
+pub(crate) use profiler::Profiler;

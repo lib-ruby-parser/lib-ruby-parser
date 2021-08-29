@@ -1,4 +1,4 @@
-pub struct BuildInfo {}
+pub(crate) struct BuildInfo {}
 
 impl BuildInfo {
     pub fn print() {

@@ -1,27 +1,27 @@
 use std::time::Instant;
 
 #[derive(Debug)]
-pub struct Timer {
+pub(crate) struct Timer {
     enabled: bool,
     started_at: Option<Instant>,
 }
 
 impl Timer {
-    pub fn new(enabled: bool) -> Self {
+    pub(crate) fn new(enabled: bool) -> Self {
         Self {
             enabled,
             started_at: None,
         }
     }
 
-    pub fn start(&mut self) {
+    pub(crate) fn start(&mut self) {
         if !self.enabled {
             return;
         }
         self.started_at = Some(Instant::now());
     }
 
-    pub fn stop(&mut self, files_count: usize) {
+    pub(crate) fn stop(&mut self, files_count: usize) {
         if !self.enabled {
             return;
         }
