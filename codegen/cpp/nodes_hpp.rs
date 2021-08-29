@@ -1,4 +1,4 @@
-use crate::codegen::c::helpers;
+use crate::codegen::cpp::helpers as cpp_helpers;
 
 fn contents() -> String {
     let nodes = lib_ruby_parser_nodes::nodes();
@@ -62,8 +62,8 @@ fn struct_declaration(node: &lib_ruby_parser_nodes::Node) -> String {
     let fields = node.fields.map(&|field| {
         format!(
             "{} {};",
-            helpers::nodes::fields::field_type(field),
-            helpers::nodes::fields::field_name(field)
+            cpp_helpers::nodes::field_type(field),
+            cpp_helpers::nodes::field_name(field)
         )
     });
 
@@ -72,8 +72,8 @@ fn struct_declaration(node: &lib_ruby_parser_nodes::Node) -> String {
         .map(&|field| {
             format!(
                 "{} {}",
-                helpers::nodes::fields::field_type(field),
-                helpers::nodes::fields::field_name(field)
+                cpp_helpers::nodes::field_type(field),
+                cpp_helpers::nodes::field_name(field)
             )
         })
         .join(", ");

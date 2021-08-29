@@ -1,4 +1,4 @@
-use crate::codegen::c::helpers as c_helpers;
+use crate::codegen::cpp::helpers as cpp_helpers;
 use lib_ruby_parser_bindings::{
     helpers::messages::{
         constructor::sig as constructor_sig, field_getter::sig as field_getter_sig,
@@ -60,7 +60,7 @@ fn constructor(message: &lib_ruby_parser_nodes::Message, options: &Options) -> S
             format!(
                 "UNPACK_{t}({name}_blob)",
                 name = field_name(field),
-                t = c_helpers::messages::fields::field_type(field)
+                t = cpp_helpers::messages::field_type(field)
             )
         })
         .join(", ");
@@ -98,7 +98,7 @@ fn field_getters(message: &lib_ruby_parser_nodes::Message, options: &Options) ->
             signature = field_getter_sig(message, field, options),
             variant_name = message.camelcase_name(),
             field_name = field_name(field),
-            blob_type = c_helpers::messages::fields::blob_type(field),
+            blob_type = cpp_helpers::messages::blob_type(field),
         )
     })
 }

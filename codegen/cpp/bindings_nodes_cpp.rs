@@ -1,4 +1,4 @@
-use crate::codegen::c::helpers as c_helpers;
+use crate::codegen::cpp::helpers as cpp_helpers;
 use lib_ruby_parser_bindings::{
     helpers::nodes::{
         constructor::sig as external_constructor_sig,
@@ -91,7 +91,7 @@ fn constructor(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String 
         .map(&|field| {
             format!(
                 "std::move({field_name})",
-                field_name = c_helpers::nodes::fields::field_name(field),
+                field_name = cpp_helpers::nodes::field_name(field),
             )
         })
         .join(", ");
@@ -138,7 +138,7 @@ fn variant_getter(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Stri
 }
 fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<String> {
     node.fields.map(&|field| {
-        let field_type = c_helpers::nodes::fields::field_type(field);
+        let field_type = cpp_helpers::nodes::field_type(field);
 
         format!(
             "{sig}
@@ -150,8 +150,8 @@ fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
             sig = external_field_getter_sig(node, field, options),
             variant = node.camelcase_name,
             field_type = field_type,
-            field_name = c_helpers::nodes::fields::field_name(field),
-            blob_type = c_helpers::nodes::fields::blob_type(field)
+            field_name = cpp_helpers::nodes::field_name(field),
+            blob_type = cpp_helpers::nodes::blob_type(field)
         )
     })
 }
@@ -166,7 +166,7 @@ fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
     }}",
             sig = external_field_setter_sig(node, field, options),
             struct_name = node.camelcase_name,
-            field_name = c_helpers::nodes::fields::field_name(field),
+            field_name = cpp_helpers::nodes::field_name(field),
             unpack_arg = unpack_field(field),
         )
     })
@@ -175,7 +175,7 @@ fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> St
     let fields = node
         .fields
         .map(&|field| {
-            let field_name = c_helpers::nodes::fields::field_name(field);
+            let field_name = cpp_helpers::nodes::field_name(field);
 
             format!(".{field_name} = {field_name}", field_name = field_name,)
         })
@@ -224,7 +224,7 @@ fn variant_drop_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Str
 }
 
 fn unpack_field(field: &lib_ruby_parser_nodes::NodeField) -> String {
-    let field_name = c_helpers::nodes::fields::field_name(field);
+    let field_name = cpp_helpers::nodes::field_name(field);
 
     match field.field_type {
         lib_ruby_parser_nodes::NodeFieldType::Node => {
@@ -242,16 +242,16 @@ fn unpack_field(field: &lib_ruby_parser_nodes::NodeField) -> String {
         _ => {
             format!(
                 "{field_type} {field_name} = {unpack}({field_name}_blob);",
-                field_type = c_helpers::nodes::fields::field_type(field),
+                field_type = cpp_helpers::nodes::field_type(field),
                 field_name = field_name,
-                unpack = c_helpers::nodes::fields::unpack_field_fn(field)
+                unpack = cpp_helpers::nodes::unpack_field_fn(field)
             )
         }
     }
 }
 
 fn pack_field(field: &lib_ruby_parser_nodes::NodeField) -> String {
-    let field_name = c_helpers::nodes::fields::field_name(field);
+    let field_name = cpp_helpers::nodes::field_name(field);
 
     match field.field_type {
         lib_ruby_parser_nodes::NodeFieldType::Node => {
@@ -269,9 +269,9 @@ fn pack_field(field: &lib_ruby_parser_nodes::NodeField) -> String {
         _ => {
             format!(
                 "{field_type}_BLOB {field_name} = {pack}(std::move(self.{field_name}));",
-                field_type = c_helpers::nodes::fields::field_type(field),
+                field_type = cpp_helpers::nodes::field_type(field),
                 field_name = field_name,
-                pack = c_helpers::nodes::fields::pack_field_fn(field)
+                pack = cpp_helpers::nodes::pack_field_fn(field)
             )
         }
     }
