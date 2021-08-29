@@ -17,7 +17,7 @@ pub(crate) fn link_with_external_structures() {
 pub(crate) fn link_with_external_structures() {
     println!("cargo:rustc-link-search=external/cpp");
     println!("cargo:rustc-link-lib=static=structures");
-    println!("cargo:rerun-if-changed=external/libstructures.a");
+    println!("cargo:rerun-if-changed=external/cpplibstructures.a");
 
     println!("cargo:rustc-link-lib=dylib=c++");
     if cfg!(target_os = "linux") {
