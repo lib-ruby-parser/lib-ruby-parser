@@ -6,8 +6,8 @@ pub(crate) mod rust {
     /// Rust-compatible not-null pointer
     pub type Ptr<T> = Box<T>;
 
-    use super::UnPtr;
-    impl<T> UnPtr<T> for Ptr<T> {
+    use super::PtrAPI;
+    impl<T> PtrAPI<T> for Ptr<T> {
         fn unptr(self) -> T {
             *self
         }
@@ -148,8 +148,8 @@ pub(crate) mod external {
         }
     }
 
-    use super::UnPtr;
-    impl<T: Sized + GetDropPtrFn> UnPtr<T> for Ptr<T> {
+    use super::PtrAPI;
+    impl<T: Sized + GetDropPtrFn> PtrAPI<T> for Ptr<T> {
         fn unptr(self) -> T {
             *unsafe { Box::from_raw(self.into_raw()) }
         }
@@ -159,7 +159,7 @@ pub(crate) mod external {
     mod tests {
         use std::ffi::c_void;
 
-        use super::{GetDropPtrFn, Ptr, PtrBlob, UnPtr};
+        use super::{GetDropPtrFn, Ptr, PtrAPI, PtrBlob};
 
         #[derive(Debug, PartialEq)]
         struct Foo {
@@ -197,7 +197,7 @@ pub(crate) mod external {
     }
 }
 
-pub(crate) trait UnPtr<T: Sized> {
+pub(crate) trait PtrAPI<T: Sized> {
     fn unptr(self) -> T
     where
         Self: Sized;

@@ -48,7 +48,7 @@ type StringPtr = String;
 
 #[allow(unused_imports)]
 use crate::containers::helpers::{{
-    ListTakeFirst, MaybeLocAPI, MaybePtrNone, MaybePtrSome, MaybeStringPtrAPI, UnPtr,
+    ListAPI, MaybeLocAPI, MaybePtrAPI, MaybeStringPtrAPI, PtrAPI,
 }};
 
 use crate::{{Node, Loc, Bytes}};

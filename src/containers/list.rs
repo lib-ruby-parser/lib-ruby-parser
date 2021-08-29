@@ -6,8 +6,8 @@ pub(crate) mod rust {
     /// Rust-compatible list
     pub type List<T> = Vec<T>;
 
-    use super::TakeFirst;
-    impl<T: Clone> TakeFirst<T> for List<T> {
+    use super::ListAPI;
+    impl<T: Clone> ListAPI<T> for List<T> {
         fn take_first(self) -> T {
             self.into_iter()
                 .next()
@@ -98,7 +98,7 @@ pub(crate) mod external {
     }
 
     use super::ExternalSharedByteList;
-    use super::TakeFirst;
+    use super::ListAPI;
 
     macro_rules! gen_list_impl_for {
         (
@@ -113,7 +113,7 @@ pub(crate) mod external {
             $len:ident,
             $capacity:ident
         ) => {
-            use super::{List, ListBlob, TakeFirst};
+            use super::{List, ListAPI, ListBlob};
 
             extern "C" {
                 fn $new() -> ListBlob;
@@ -319,7 +319,7 @@ pub(crate) mod external {
                 }
             }
 
-            impl TakeFirst<$t> for List<$t> {
+            impl ListAPI<$t> for List<$t> {
                 fn take_first(self) -> $t {
                     if self.is_empty() {
                         panic!("can't get the first item from an empty list")
@@ -331,7 +331,7 @@ pub(crate) mod external {
 
             #[cfg(test)]
             mod tests {
-                use super::{make_one, List as GenericList, TakeFirst};
+                use super::{make_one, List as GenericList, ListAPI};
                 use std::ops::{Deref, DerefMut};
                 type List = GenericList<$t>;
 
@@ -693,6 +693,6 @@ pub(crate) mod external {
     }
 }
 
-pub(crate) trait TakeFirst<T: Clone> {
+pub(crate) trait ListAPI<T: Clone> {
     fn take_first(self) -> T;
 }

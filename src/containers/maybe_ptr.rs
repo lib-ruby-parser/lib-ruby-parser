@@ -3,15 +3,12 @@ pub(crate) mod rust {
     /// Rust-compatible nullable pointer
     pub type MaybePtr<T> = Option<Box<T>>;
 
-    use super::MaybePtrSome;
-    impl<T> MaybePtrSome<T> for MaybePtr<T> {
+    use super::MaybePtrAPI;
+    impl<T> MaybePtrAPI<T> for MaybePtr<T> {
         fn some(value: T) -> Self {
             Some(Box::new(value))
         }
-    }
 
-    use super::MaybePtrNone;
-    impl<T> MaybePtrNone<T> for MaybePtr<T> {
         fn none() -> Self {
             None
         }
@@ -78,8 +75,8 @@ pub(crate) mod external {
         }
     }
 
-    use super::MaybePtrSome;
-    impl<T> MaybePtrSome<T> for MaybePtr<T>
+    use super::MaybePtrAPI;
+    impl<T> MaybePtrAPI<T> for MaybePtr<T>
     where
         T: GetDropMaybePtrFn,
     {
@@ -87,13 +84,7 @@ pub(crate) mod external {
             let ptr = Box::into_raw(Box::new(value));
             Self::from_raw(ptr)
         }
-    }
 
-    use super::MaybePtrNone;
-    impl<T> MaybePtrNone<T> for MaybePtr<T>
-    where
-        T: GetDropMaybePtrFn,
-    {
         fn none() -> Self {
             let blob = unsafe { lib_ruby_parser__external__maybe_ptr__new_null() };
             Self {
@@ -273,7 +264,7 @@ pub(crate) mod external {
 
     #[cfg(test)]
     mod test {
-        use super::{GetDropMaybePtrFn, MaybePtr, MaybePtrBlob, MaybePtrNone, MaybePtrSome};
+        use super::{GetDropMaybePtrFn, MaybePtr, MaybePtrAPI, MaybePtrBlob};
         use std::ffi::c_void;
 
         #[derive(Debug, PartialEq)]
@@ -314,13 +305,11 @@ pub(crate) mod external {
     }
 }
 
-pub(crate) trait MaybePtrSome<T> {
+pub(crate) trait MaybePtrAPI<T> {
     fn some(value: T) -> Self
     where
         Self: Sized;
-}
 
-pub(crate) trait MaybePtrNone<T> {
     fn none() -> Self
     where
         Self: Sized;

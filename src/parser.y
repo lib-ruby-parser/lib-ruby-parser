@@ -92,7 +92,7 @@ use crate::error::Diagnostics;
 use crate::source::maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI};
 use crate::source::token_rewriter::InternalTokenRewriterResult;
 use crate::debug_level;
-use crate::containers::helpers::{UnPtr, MaybePtrNone};
+use crate::containers::helpers::{PtrAPI, MaybePtrAPI};
 use crate::Loc;
 use crate::parser_options::InternalParserOptions;
 

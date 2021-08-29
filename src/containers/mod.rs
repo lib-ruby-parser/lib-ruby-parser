@@ -8,11 +8,8 @@ pub(crate) mod string_ptr;
 
 pub(crate) mod helpers {
     pub(crate) use super::{
-        list::TakeFirst as ListTakeFirst,
-        maybe_loc::MaybeLocAPI,
-        maybe_ptr::{MaybePtrNone, MaybePtrSome},
-        maybe_string_ptr::MaybeStringPtrAPI,
-        ptr::UnPtr,
+        list::ListAPI, maybe_loc::MaybeLocAPI, maybe_ptr::MaybePtrAPI,
+        maybe_string_ptr::MaybeStringPtrAPI, ptr::PtrAPI,
     };
 }
 

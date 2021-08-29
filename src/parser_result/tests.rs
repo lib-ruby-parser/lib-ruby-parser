@@ -1,5 +1,5 @@
 use super::ParserResult;
-use crate::containers::helpers::MaybePtrSome;
+use crate::containers::helpers::MaybePtrAPI;
 use crate::source::{CommentType, MagicCommentKind, SourceLine};
 use crate::{
     source::Comment, source::DecodedInput, source::MagicComment, Bytes, Diagnostic,
