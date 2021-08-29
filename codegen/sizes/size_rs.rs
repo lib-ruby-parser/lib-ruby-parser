@@ -1,4 +1,3 @@
-#[cfg(feature = "compile-with-external-structures")]
 pub(crate) fn codegen() {
     println!("cargo:rerun-if-env-changed=LIB_RUBY_PARSER_SIZES_FILEPATH");
     let sizes_filepath = env!("LIB_RUBY_PARSER_SIZES_FILEPATH");
@@ -19,9 +18,4 @@ pub(crate) fn codegen() {
 
     println!("Generating sizes.rs");
     std::fs::write("src/containers/size.rs", contents).unwrap();
-}
-
-#[cfg(not(feature = "compile-with-external-structures"))]
-pub(crate) fn codegen() {
-    println!("Skipping codegen in {:?}", file!())
 }

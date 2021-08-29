@@ -43,7 +43,7 @@ jobs:
         run: bison --version
 
       - name: codegen
-        run: cargo build --features rebuild-grammar
+        run: cargo build --features "codegen-y,codegen-rust"
 
       - name: run tests
         run: cargo test ${{ matrix.build.cargoargs }} -- --nocapture

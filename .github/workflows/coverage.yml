@@ -31,7 +31,7 @@ jobs:
           bison --version
 
       - name: codegen
-        run: cargo build --features rebuild-grammar && cargo clean
+        run: cargo build --features "codegen-y,codegen-rust" && cargo clean
 
       - name: cargo-tarpaulin
         run: |
@@ -66,7 +66,7 @@ jobs:
           bison --version
 
       - name: codegen
-        run: cargo build --features rebuild-grammar && cargo clean
+        run: cargo build --features "codegen-y,codegen-rust,codegen-c" && cargo clean
 
       - name: compile external containers
         env:

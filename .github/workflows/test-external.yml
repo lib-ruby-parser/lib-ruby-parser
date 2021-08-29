@@ -11,21 +11,21 @@ env:
 
 jobs:
   test:
-    name: ${{ matrix.build.link-feature }}
+    name: ${{ matrix.build.name }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        rustflags:
-          - "-Zsanitizer=address"
         build:
-          - link-feature: link-with-external-c-structures
-            compile-external-containers: cd external/c && make all
-            sizes-file: external/c/sizes-out
+          - name: Compile with external C structures
+            build-feature: link-with-external-c-structures
+            codegen-feature: codegen-c
+            external-implementation-dir: external/c
 
-          - link-feature: link-with-external-cpp-structures
-            compile-external-containers: cd external/cpp && make all
-            sizes-file: external/cpp/sizes-out
+          - name: Compile with external CXX structures
+            build-feature: link-with-external-cpp-structures
+            codegen-feature: codegen-cpp
+            external-implementation-dir: external/cpp
 
     steps:
       - name: checkout
@@ -48,7 +48,7 @@ jobs:
         run: bison --version
 
       - name: codegen
-        run: cargo build --features rebuild-grammar
+        run: cargo build --features "codegen-y,codegen-rust,${{ matrix.build.codegen-feature }}"
 
       - name: compile external containers
         env:
@@ -56,15 +56,15 @@ jobs:
           CXX: clang++
           AR: ar
         run: |
-          ${{ matrix.build.compile-external-containers }}
+          cd ${{ matrix.build.external-implementation-dir }} && make all
           cat sizes-out
 
       - name: run tests
         env:
-          RUSTFLAGS: ${{ matrix.rustflags }}
-          ASAN_OPTIONS: detect_leaks=1
-          CARGO_FEATURES: "compile-with-external-structures,${{ matrix.build.link-feature }}"
-          LIB_RUBY_PARSER_SIZES_FILEPATH: ${{ matrix.build.sizes-file }}
+          RUSTFLAGS: "-Zsanitizer=address"
+          ASAN_OPTIONS: "detect_leaks=1"
+          CARGO_FEATURES: "compile-with-external-structures,${{ matrix.build.build-feature }}"
+          LIB_RUBY_PARSER_SIZES_FILEPATH: "${{ matrix.build.external-implementation-dir }}/sizes-out"
         run: |
           cargo test --features $CARGO_FEATURES --lib -- --nocapture
 

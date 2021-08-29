@@ -1,8 +1,6 @@
-#[cfg(feature = "rust-bison-skeleton")]
 extern crate rust_bison_skeleton;
 
-#[cfg(feature = "rust-bison-skeleton")]
-pub(crate) fn generate_parser_y() {
+pub(crate) fn codegen() {
     use std::path::Path;
     const PARSER_Y: &str = "src/parser.y";
 
@@ -16,9 +14,4 @@ pub(crate) fn generate_parser_y() {
             std::process::exit(1);
         }
     }
-}
-
-#[cfg(not(feature = "rust-bison-skeleton"))]
-pub(crate) fn generate_parser_y() {
-    println!("Skipping generating parser.rs")
 }
