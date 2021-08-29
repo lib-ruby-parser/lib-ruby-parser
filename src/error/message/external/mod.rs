@@ -13,14 +13,12 @@ pub struct DiagnosticMessage {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__diagnostic_message__drop(
-        blob: *mut DiagnosticMessageBlob,
-    );
+    fn lib_ruby_parser__external__diagnostic_message__drop(blob: *mut DiagnosticMessageBlob);
 }
 
 impl Drop for DiagnosticMessage {
     fn drop(&mut self) {
-        unsafe { lib_ruby_parser__internal__containers__diagnostic_message__drop(&mut self.blob) }
+        unsafe { lib_ruby_parser__external__diagnostic_message__drop(&mut self.blob) }
     }
 }
 

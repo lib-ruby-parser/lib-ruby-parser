@@ -46,34 +46,25 @@ pub(crate) mod external {
     }
 
     extern "C" {
-        fn lib_ruby_parser__internal__containers__maybe_loc__new_some(
-            loc_blob: LocBlob,
-        ) -> MaybeLocBlob;
-        fn lib_ruby_parser__internal__containers__maybe_loc__new_none() -> MaybeLocBlob;
-        fn lib_ruby_parser__internal__containers__maybe_loc__is_some(
-            blob: *const MaybeLocBlob,
-        ) -> bool;
-        fn lib_ruby_parser__internal__containers__maybe_loc__is_none(
-            blob: *const MaybeLocBlob,
-        ) -> bool;
-        fn lib_ruby_parser__internal__containers__maybe_loc__get_loc(
+        fn lib_ruby_parser__external__maybe_loc__new_some(loc_blob: LocBlob) -> MaybeLocBlob;
+        fn lib_ruby_parser__external__maybe_loc__new_none() -> MaybeLocBlob;
+        fn lib_ruby_parser__external__maybe_loc__drop(blob: *mut MaybeLocBlob);
+        fn lib_ruby_parser__external__maybe_loc__is_some(blob: *const MaybeLocBlob) -> bool;
+        fn lib_ruby_parser__external__maybe_loc__is_none(blob: *const MaybeLocBlob) -> bool;
+        fn lib_ruby_parser__external__maybe_loc__as_loc(
             blob: *const MaybeLocBlob,
         ) -> *const LocBlob;
-        fn lib_ruby_parser__internal__containers__maybe_loc__into_loc(
-            blob: MaybeLocBlob,
-        ) -> LocBlob;
-        fn lib_ruby_parser__internal__containers__maybe_loc__drop(blob: *mut MaybeLocBlob);
+        fn lib_ruby_parser__external__maybe_loc__into_loc(blob: MaybeLocBlob) -> LocBlob;
     }
 
     impl MaybeLocAPI for MaybeLoc {
         fn some(loc: Loc) -> Self {
-            let blob =
-                unsafe { lib_ruby_parser__internal__containers__maybe_loc__new_some(loc.blob) };
+            let blob = unsafe { lib_ruby_parser__external__maybe_loc__new_some(loc.blob) };
             Self { blob }
         }
 
         fn none() -> Self {
-            let blob = unsafe { lib_ruby_parser__internal__containers__maybe_loc__new_none() };
+            let blob = unsafe { lib_ruby_parser__external__maybe_loc__new_none() };
             Self { blob }
         }
     }
@@ -81,16 +72,16 @@ pub(crate) mod external {
     impl MaybeLoc {
         /// Equivalent of Option::is_some
         pub fn is_some(&self) -> bool {
-            unsafe { lib_ruby_parser__internal__containers__maybe_loc__is_some(&self.blob) }
+            unsafe { lib_ruby_parser__external__maybe_loc__is_some(&self.blob) }
         }
 
         /// Equivalent of Option::is_none
         pub fn is_none(&self) -> bool {
-            unsafe { lib_ruby_parser__internal__containers__maybe_loc__is_none(&self.blob) }
+            unsafe { lib_ruby_parser__external__maybe_loc__is_none(&self.blob) }
         }
 
         unsafe fn into_loc(self) -> Loc {
-            let loc_blob = lib_ruby_parser__internal__containers__maybe_loc__into_loc(self.blob);
+            let loc_blob = lib_ruby_parser__external__maybe_loc__into_loc(self.blob);
             Loc { blob: loc_blob }
         }
     }
@@ -164,9 +155,7 @@ pub(crate) mod external {
         /// Equivalent of Option::as_ref
         pub fn as_ref(&self) -> Option<&Loc> {
             unsafe {
-                (lib_ruby_parser__internal__containers__maybe_loc__get_loc(&self.blob)
-                    as *const Loc)
-                    .as_ref()
+                (lib_ruby_parser__external__maybe_loc__as_loc(&self.blob) as *const Loc).as_ref()
             }
         }
 
@@ -203,7 +192,7 @@ pub(crate) mod external {
 
     impl Drop for MaybeLoc {
         fn drop(&mut self) {
-            unsafe { lib_ruby_parser__internal__containers__maybe_loc__drop(&mut self.blob) }
+            unsafe { lib_ruby_parser__external__maybe_loc__drop(&mut self.blob) }
         }
     }
 

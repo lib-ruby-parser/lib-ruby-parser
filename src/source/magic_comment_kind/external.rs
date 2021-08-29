@@ -13,82 +13,76 @@ pub struct MagicCommentKind {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__new_encoding(
+    fn lib_ruby_parser__external__magic_comment_kind__new_encoding() -> MagicCommentKindBlob;
+    fn lib_ruby_parser__external__magic_comment_kind__new_frozen_string_literal(
     ) -> MagicCommentKindBlob;
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__new_frozen_string_literal(
+    fn lib_ruby_parser__external__magic_comment_kind__new_warn_indent() -> MagicCommentKindBlob;
+    fn lib_ruby_parser__external__magic_comment_kind__new_shareable_constant_value(
     ) -> MagicCommentKindBlob;
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__new_warn_indent(
-    ) -> MagicCommentKindBlob;
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__new_shareable_constant_value(
-    ) -> MagicCommentKindBlob;
+    fn lib_ruby_parser__external__magic_comment_kind__drop(blob: *mut MagicCommentKindBlob);
+    fn lib_ruby_parser__external__magic_comment_kind__is_encoding(
+        blob: *const MagicCommentKindBlob,
+    ) -> bool;
+    fn lib_ruby_parser__external__magic_comment_kind__is_frozen_string_literal(
+        blob: *const MagicCommentKindBlob,
+    ) -> bool;
+    fn lib_ruby_parser__external__magic_comment_kind__is_warn_indent(
+        blob: *const MagicCommentKindBlob,
+    ) -> bool;
+    fn lib_ruby_parser__external__magic_comment_kind__is_shareable_constant_value(
+        blob: *const MagicCommentKindBlob,
+    ) -> bool;
+}
 
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__is_encoding(
-        blob: MagicCommentKindBlob,
-    ) -> bool;
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__is_frozen_string_literal(
-        blob: MagicCommentKindBlob,
-    ) -> bool;
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__is_warn_indent(
-        blob: MagicCommentKindBlob,
-    ) -> bool;
-    fn lib_ruby_parser__internal__containers__magic_comment_kind__is_shareable_constant_value(
-        blob: MagicCommentKindBlob,
-    ) -> bool;
+impl Drop for MagicCommentKind {
+    fn drop(&mut self) {
+        unsafe { lib_ruby_parser__external__magic_comment_kind__drop(&mut self.blob) }
+    }
 }
 
 impl MagicCommentKind {
     /// Constructs `Encoding` variant
     pub fn encoding() -> Self {
-        let blob =
-            unsafe { lib_ruby_parser__internal__containers__magic_comment_kind__new_encoding() };
+        let blob = unsafe { lib_ruby_parser__external__magic_comment_kind__new_encoding() };
         Self { blob }
     }
     /// Constructs `FrozenStringLiteral` variant
     pub fn frozen_string_literal() -> Self {
-        let blob = unsafe {
-            lib_ruby_parser__internal__containers__magic_comment_kind__new_frozen_string_literal()
-        };
+        let blob =
+            unsafe { lib_ruby_parser__external__magic_comment_kind__new_frozen_string_literal() };
         Self { blob }
     }
     /// Constructs `WarnIndent` variant
     pub fn warn_indent() -> Self {
-        let blob =
-            unsafe { lib_ruby_parser__internal__containers__magic_comment_kind__new_warn_indent() };
+        let blob = unsafe { lib_ruby_parser__external__magic_comment_kind__new_warn_indent() };
         Self { blob }
     }
     /// Constructs `ShareableConstantValue` variant
     pub fn shareable_constant_value() -> Self {
         let blob = unsafe {
-            lib_ruby_parser__internal__containers__magic_comment_kind__new_shareable_constant_value(
-            )
+            lib_ruby_parser__external__magic_comment_kind__new_shareable_constant_value()
         };
         Self { blob }
     }
 
     /// Returns `true` if variant is `Encoding`
     pub fn is_encoding(&self) -> bool {
-        unsafe { lib_ruby_parser__internal__containers__magic_comment_kind__is_encoding(self.blob) }
+        unsafe { lib_ruby_parser__external__magic_comment_kind__is_encoding(&self.blob) }
     }
     /// Returns `true` if variant is `FrozenStringLiteral`
     pub fn is_frozen_string_literal(&self) -> bool {
         unsafe {
-            lib_ruby_parser__internal__containers__magic_comment_kind__is_frozen_string_literal(
-                self.blob,
-            )
+            lib_ruby_parser__external__magic_comment_kind__is_frozen_string_literal(&self.blob)
         }
     }
     /// Returns `true` if variant is `WarnIndent`
     pub fn is_warn_indent(&self) -> bool {
-        unsafe {
-            lib_ruby_parser__internal__containers__magic_comment_kind__is_warn_indent(self.blob)
-        }
+        unsafe { lib_ruby_parser__external__magic_comment_kind__is_warn_indent(&self.blob) }
     }
     /// Returns `true` if variant is `ShareableConstantValue`
     pub fn is_shareable_constant_value(&self) -> bool {
         unsafe {
-            lib_ruby_parser__internal__containers__magic_comment_kind__is_shareable_constant_value(
-                self.blob,
-            )
+            lib_ruby_parser__external__magic_comment_kind__is_shareable_constant_value(&self.blob)
         }
     }
 }

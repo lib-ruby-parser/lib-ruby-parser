@@ -26,18 +26,26 @@ extern \"C\"
 
     {variant_predicates}
 
-    void lib_ruby_parser__internal__containers__diagnostic_message__drop(DiagnosticMessage_BLOB *blob)
+    void lib_ruby_parser__external__diagnostic_message__drop(DiagnosticMessage_BLOB *self_blob)
     {{
-        DiagnosticMessage *message = (DiagnosticMessage *)blob;
-        drop_diagnostic_message(message);
+        DiagnosticMessage *self = (DiagnosticMessage *)self_blob;
+        drop_diagnostic_message(self);
     }}
 }}
 ",
         generator = file!(),
-        constructors = messages.map(&|message| constructor(message, options)).join("\n\n    "),
-        variant_getters = messages.map(&|message| variant_getter(message, options)).join("\n\n    "),
-        field_getters = messages.flat_map(&|message| field_getters(message, options)).join("\n\n    "),
-        variant_predicates = messages.map(&|message| variant_predicate(message, options)).join("\n\n    ")
+        constructors = messages
+            .map(&|message| constructor(message, options))
+            .join("\n\n    "),
+        variant_getters = messages
+            .map(&|message| variant_getter(message, options))
+            .join("\n\n    "),
+        field_getters = messages
+            .flat_map(&|message| field_getters(message, options))
+            .join("\n\n    "),
+        variant_predicates = messages
+            .map(&|message| variant_predicate(message, options))
+            .join("\n\n    ")
     )
 }
 
@@ -50,7 +58,7 @@ fn constructor(message: &lib_ruby_parser_nodes::Message, options: &Options) -> S
         .fields
         .map(&|field| {
             format!(
-                "UNPACK_{t}({name})",
+                "UNPACK_{t}({name}_blob)",
                 name = field_name(field),
                 t = c_helpers::messages::fields::field_type(field)
             )
@@ -71,8 +79,8 @@ fn variant_getter(message: &lib_ruby_parser_nodes::Message, options: &Options) -
     format!(
         "{sig}
     {{
-        const DiagnosticMessage *message = (const DiagnosticMessage *)blob;
-        const {variant_name} *variant = std::get_if<{variant_name}>(&(message->variant));
+        const DiagnosticMessage *self = (const DiagnosticMessage *)self_blob;
+        const {variant_name} *variant = std::get_if<{variant_name}>(&(self->variant));
         return (const {variant_name}_BLOB*)variant;
     }}",
         sig = variant_getter_sig(message, options),
@@ -84,8 +92,8 @@ fn field_getters(message: &lib_ruby_parser_nodes::Message, options: &Options) ->
         format!(
             "{signature}
     {{
-        const {variant_name} *variant = (const {variant_name} *)blob;
-        return (const {blob_type} *)(&(variant->{field_name}));
+        const {variant_name} *self = (const {variant_name} *)self_blob;
+        return (const {blob_type} *)(&(self->{field_name}));
     }}",
             signature = field_getter_sig(message, field, options),
             variant_name = message.camelcase_name(),
@@ -98,8 +106,8 @@ fn variant_predicate(message: &lib_ruby_parser_nodes::Message, options: &Options
     format!(
         "{signature}
     {{
-        const DiagnosticMessage *message = (const DiagnosticMessage *)blob;
-        return std::holds_alternative<{variant_name}>(message->variant);
+        const DiagnosticMessage *self = (const DiagnosticMessage *)self_blob;
+        return std::holds_alternative<{variant_name}>(self->variant);
     }}",
         signature = variant_predicate_sig(message, options),
         variant_name = message.camelcase_name()

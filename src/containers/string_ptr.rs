@@ -16,22 +16,15 @@ pub(crate) mod external {
     }
 
     extern "C" {
-        fn lib_ruby_parser__internal__containers__string_ptr__new(
-            ptr: *const u8,
-            len: u64,
-        ) -> StringPtrBlob;
-        fn lib_ruby_parser__internal__containers__string_ptr__drop(blob: *mut StringPtrBlob);
-        fn lib_ruby_parser__internal__containers__string_ptr__get_raw(
-            blob_ptr: *mut StringPtrBlob,
-        ) -> *mut u8;
-        fn lib_ruby_parser__internal__containers__string_ptr__get_len(
-            blob: *const StringPtrBlob,
-        ) -> u64;
+        fn lib_ruby_parser__external__string_ptr__new(ptr: *const u8, len: u64) -> StringPtrBlob;
+        fn lib_ruby_parser__external__string_ptr__drop(blob: *mut StringPtrBlob);
+        fn lib_ruby_parser__external__string_ptr__get_raw(blob_ptr: *mut StringPtrBlob) -> *mut u8;
+        fn lib_ruby_parser__external__string_ptr__get_len(blob: *const StringPtrBlob) -> u64;
     }
 
     impl Drop for StringPtr {
         fn drop(&mut self) {
-            unsafe { lib_ruby_parser__internal__containers__string_ptr__drop(&mut self.blob) }
+            unsafe { lib_ruby_parser__external__string_ptr__drop(&mut self.blob) }
         }
     }
 
@@ -68,22 +61,18 @@ pub(crate) mod external {
 
         /// Equivalent of String::len
         pub fn len(&self) -> usize {
-            unsafe {
-                lib_ruby_parser__internal__containers__string_ptr__get_len(&self.blob) as usize
-            }
+            unsafe { lib_ruby_parser__external__string_ptr__get_len(&self.blob) as usize }
         }
 
         pub(crate) fn as_ptr(&self) -> *const u8 {
             let blob_ptr: *const StringPtrBlob = &self.blob;
             unsafe {
-                lib_ruby_parser__internal__containers__string_ptr__get_raw(
-                    blob_ptr as *mut StringPtrBlob,
-                )
+                lib_ruby_parser__external__string_ptr__get_raw(blob_ptr as *mut StringPtrBlob)
             }
         }
 
         pub(crate) fn as_mut_ptr(&mut self) -> *mut u8 {
-            unsafe { lib_ruby_parser__internal__containers__string_ptr__get_raw(&mut self.blob) }
+            unsafe { lib_ruby_parser__external__string_ptr__get_raw(&mut self.blob) }
         }
 
         pub(crate) fn into_ptr(mut self) -> *mut u8 {
@@ -130,7 +119,7 @@ pub(crate) mod external {
                 bytes.as_ptr()
             };
 
-            let blob = unsafe { lib_ruby_parser__internal__containers__string_ptr__new(ptr, len) };
+            let blob = unsafe { lib_ruby_parser__external__string_ptr__new(ptr, len) };
             Self { blob }
         }
     }

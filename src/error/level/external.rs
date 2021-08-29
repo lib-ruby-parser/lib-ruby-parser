@@ -13,34 +13,40 @@ pub struct ErrorLevel {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__error_level__new_warning() -> ErrorLevelBlob;
-    fn lib_ruby_parser__internal__containers__error_level__new_error() -> ErrorLevelBlob;
-    fn lib_ruby_parser__internal__containers__error_level__is_warning(blob: ErrorLevelBlob)
-        -> bool;
-    fn lib_ruby_parser__internal__containers__error_level__is_error(blob: ErrorLevelBlob) -> bool;
+    fn lib_ruby_parser__external__error_level__new_warning() -> ErrorLevelBlob;
+    fn lib_ruby_parser__external__error_level__new_error() -> ErrorLevelBlob;
+    fn lib_ruby_parser__external__error_level__drop(blob: *mut ErrorLevelBlob);
+    fn lib_ruby_parser__external__error_level__is_warning(blob: *const ErrorLevelBlob) -> bool;
+    fn lib_ruby_parser__external__error_level__is_error(blob: *const ErrorLevelBlob) -> bool;
+}
+
+impl Drop for ErrorLevel {
+    fn drop(&mut self) {
+        unsafe { lib_ruby_parser__external__error_level__drop(&mut self.blob) }
+    }
 }
 
 impl ErrorLevel {
     /// Constructs a warning
     pub fn warning() -> Self {
-        let blob = unsafe { lib_ruby_parser__internal__containers__error_level__new_warning() };
+        let blob = unsafe { lib_ruby_parser__external__error_level__new_warning() };
         Self { blob }
     }
 
     /// Constructs an error
     pub fn error() -> Self {
-        let blob = unsafe { lib_ruby_parser__internal__containers__error_level__new_error() };
+        let blob = unsafe { lib_ruby_parser__external__error_level__new_error() };
         Self { blob }
     }
 
     /// Returns true if `self` is a warning
     pub fn is_warning(&self) -> bool {
-        unsafe { lib_ruby_parser__internal__containers__error_level__is_warning(self.blob) }
+        unsafe { lib_ruby_parser__external__error_level__is_warning(&self.blob) }
     }
 
     /// Returns true if `self` is an error
     pub fn is_error(&self) -> bool {
-        unsafe { lib_ruby_parser__internal__containers__error_level__is_error(self.blob) }
+        unsafe { lib_ruby_parser__external__error_level__is_error(&self.blob) }
     }
 }
 

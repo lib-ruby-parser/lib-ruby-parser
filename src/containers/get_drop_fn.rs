@@ -1,85 +1,84 @@
 use crate::containers::list::external::ListBlob;
 use crate::containers::{MaybePtrBlob, PtrBlob};
 
-pub trait GetFreePtrFn {
-    fn get_free_ptr_fn() -> unsafe extern "C" fn(*mut PtrBlob);
+use crate::{
+    source::{Comment, MagicComment, SourceLine},
+    Diagnostic, Node, Token,
+};
+
+pub trait GetDropPtrFn {
+    fn get_drop_ptr_fn() -> unsafe extern "C" fn(*mut PtrBlob);
 }
 
-pub trait GetFreeMaybePtrFn {
-    fn get_maybe_free_ptr_fn() -> unsafe extern "C" fn(*mut MaybePtrBlob);
-}
-
-pub trait GetDropListInPlaceFn {
-    fn get_drop_list_in_place_fn() -> unsafe extern "C" fn(*mut ListBlob);
-}
-
-extern "C" {
-    fn lib_ruby_parser__internal__containers__ptr__of_node__free(ptr: *mut PtrBlob);
-    fn lib_ruby_parser__internal__containers__ptr__of_token__free(ptr: *mut PtrBlob);
-    fn lib_ruby_parser__internal__containers__maybe_ptr__of_node__free(ptr: *mut MaybePtrBlob);
-    fn lib_ruby_parser__internal__containers__maybe_ptr__of_token__free(ptr: *mut MaybePtrBlob);
-}
-impl GetFreePtrFn for crate::Node {
-    fn get_free_ptr_fn() -> unsafe extern "C" fn(*mut PtrBlob) {
-        lib_ruby_parser__internal__containers__ptr__of_node__free
-    }
-}
-impl GetFreeMaybePtrFn for crate::Node {
-    fn get_maybe_free_ptr_fn() -> unsafe extern "C" fn(*mut MaybePtrBlob) {
-        lib_ruby_parser__internal__containers__maybe_ptr__of_node__free
-    }
-}
-
-impl GetFreePtrFn for crate::Token {
-    fn get_free_ptr_fn() -> unsafe extern "C" fn(*mut PtrBlob) {
-        lib_ruby_parser__internal__containers__ptr__of_token__free
-    }
-}
-impl GetFreeMaybePtrFn for crate::Token {
-    fn get_maybe_free_ptr_fn() -> unsafe extern "C" fn(*mut MaybePtrBlob) {
-        lib_ruby_parser__internal__containers__maybe_ptr__of_token__free
-    }
-}
-
-macro_rules! define_list_deleter_impl {
+macro_rules! ptr_impl {
     ($t:ty, $fn_name:ident) => {
         extern "C" {
-            fn $fn_name(ptr: *mut ListBlob);
+            fn $fn_name(ptr: *mut PtrBlob);
         }
 
-        impl GetDropListInPlaceFn for $t {
-            fn get_drop_list_in_place_fn() -> unsafe extern "C" fn(*mut ListBlob) {
+        impl GetDropPtrFn for $t {
+            fn get_drop_ptr_fn() -> unsafe extern "C" fn(*mut PtrBlob) {
                 $fn_name
             }
         }
     };
 }
 
-define_list_deleter_impl!(
-    crate::Token,
-    lib_ruby_parser__internal__containers__list__of_tokens__drop
+ptr_impl!(Node, lib_ruby_parser__external__ptr__of_node__drop);
+ptr_impl!(Token, lib_ruby_parser__external__ptr__of_token__drop);
+
+pub trait GetDropMaybePtrFn {
+    fn get_drop_maybe_ptr_fn() -> unsafe extern "C" fn(*mut MaybePtrBlob);
+}
+
+macro_rules! maybe_ptr_impl {
+    ($t:ty, $fn_name:ident) => {
+        extern "C" {
+            fn $fn_name(ptr: *mut MaybePtrBlob);
+        }
+
+        impl GetDropMaybePtrFn for $t {
+            fn get_drop_maybe_ptr_fn() -> unsafe extern "C" fn(*mut MaybePtrBlob) {
+                $fn_name
+            }
+        }
+    };
+}
+
+maybe_ptr_impl!(Node, lib_ruby_parser__external__maybe_ptr__of_node__drop);
+maybe_ptr_impl!(Token, lib_ruby_parser__external__maybe_ptr__of_token__drop);
+
+pub trait GetDropListFn {
+    fn get_drop_list_fn() -> unsafe extern "C" fn(*mut ListBlob);
+}
+
+macro_rules! list_impl {
+    ($t:ty, $fn_name:ident) => {
+        extern "C" {
+            fn $fn_name(ptr: *mut ListBlob);
+        }
+
+        impl GetDropListFn for $t {
+            fn get_drop_list_fn() -> unsafe extern "C" fn(*mut ListBlob) {
+                $fn_name
+            }
+        }
+    };
+}
+
+list_impl!(Token, lib_ruby_parser__external__list__of_tokens__drop);
+list_impl!(Node, lib_ruby_parser__external__list__of_nodes__drop);
+list_impl!(u8, lib_ruby_parser__external__list__of_bytes__drop);
+list_impl!(
+    Diagnostic,
+    lib_ruby_parser__external__list__of_diagnostics__drop
 );
-define_list_deleter_impl!(
-    crate::Node,
-    lib_ruby_parser__internal__containers__list__of_nodes__drop
+list_impl!(Comment, lib_ruby_parser__external__list__of_comments__drop);
+list_impl!(
+    MagicComment,
+    lib_ruby_parser__external__list__of_magic_comments__drop
 );
-define_list_deleter_impl!(
-    u8,
-    lib_ruby_parser__internal__containers__list__of_bytes__drop
-);
-define_list_deleter_impl!(
-    crate::Diagnostic,
-    lib_ruby_parser__internal__containers__list__of_diagnostics__drop
-);
-define_list_deleter_impl!(
-    crate::source::Comment,
-    lib_ruby_parser__internal__containers__list__of_comments__drop
-);
-define_list_deleter_impl!(
-    crate::source::MagicComment,
-    lib_ruby_parser__internal__containers__list__of_magic_comments__drop
-);
-define_list_deleter_impl!(
-    crate::source::SourceLine,
-    lib_ruby_parser__internal__containers__list__of_source_lines__drop
+list_impl!(
+    SourceLine,
+    lib_ruby_parser__external__list__of_source_lines__drop
 );

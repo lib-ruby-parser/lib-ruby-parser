@@ -34,10 +34,10 @@ void drop_node_ptr(Node **node)
     free(ptr);
 }}
 
-void lib_ruby_parser__internal__containers__list__of_nodes__drop(NodeList *);
+void lib_ruby_parser__external__list__of_nodes__drop(NodeList *);
 void drop_node_list(NodeList *node_list)
 {{
-    lib_ruby_parser__internal__containers__list__of_nodes__drop(node_list);
+    lib_ruby_parser__external__list__of_nodes__drop(node_list);
 }}
 ",
         generator = file!(),

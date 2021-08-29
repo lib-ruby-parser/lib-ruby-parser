@@ -36,7 +36,7 @@ impl Decoder {
         Self { f }
     }
 
-    pub(crate) fn call(&self, encoding: String, input: Vec<u8>) -> DecoderResult {
+    pub(crate) fn call(&mut self, encoding: String, input: Vec<u8>) -> DecoderResult {
         let f = &*self.f;
         f(encoding, input)
     }
@@ -48,13 +48,13 @@ impl std::fmt::Debug for Decoder {
     }
 }
 
-pub fn decode_input(input: Vec<u8>, enc: String, decoder: &Option<Decoder>) -> DecoderResult {
+pub fn decode_input(input: Vec<u8>, enc: String, decoder: &mut Option<Decoder>) -> DecoderResult {
     match enc.to_uppercase().as_str() {
         "UTF-8" | "ASCII-8BIT" | "BINARY" => {
             return DecoderResult::Ok(input.into());
         }
         _ => {
-            if let Some(f) = decoder.as_ref() {
+            if let Some(f) = decoder.as_mut() {
                 f.call(enc, input)
             } else {
                 DecoderResult::Err(InputError::UnsupportedEncoding(enc))

@@ -21,6 +21,9 @@ pub trait MaybeDecoderAPI {
     /// Casts &self to Option<&Decoder>
     fn as_decoder(&self) -> Option<&Decoder>;
 
+    /// Casts &mut self to Option<&mut Decoder>
+    fn as_decoder_mut(&mut self) -> Option<&mut Decoder>;
+
     /// Casts self to Decoder. Panics if self is `None`
     fn into_decoder(self) -> Decoder;
 }

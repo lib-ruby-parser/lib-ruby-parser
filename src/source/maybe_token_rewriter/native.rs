@@ -25,6 +25,10 @@ impl MaybeTokenRewriterAPI for MaybeTokenRewriter {
         self.as_ref()
     }
 
+    fn as_token_rewriter_mut(&mut self) -> Option<&mut TokenRewriter> {
+        self.as_mut()
+    }
+
     fn into_token_rewriter(self) -> TokenRewriter {
         self.unwrap()
     }

@@ -47,10 +47,10 @@ extern \"C\"
     // variant drop fns
     {variant_drop_fns}
 
-    void lib_ruby_parser__internal__containers__node__drop(Node_BLOB* blob)
+    void lib_ruby_parser__external__node__drop(Node_BLOB* self_blob)
     {{
-        Node *node = (Node *)blob;
-        node->~Node();
+        Node *self = (Node *)self_blob;
+        self->~Node();
     }}
 }}
 ",
@@ -90,7 +90,7 @@ fn constructor(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String 
         .fields
         .map(&|field| {
             format!(
-                "std::move(unpacked_{field_name})",
+                "std::move({field_name})",
                 field_name = c_helpers::nodes::fields::field_name(field),
             )
         })
@@ -117,8 +117,8 @@ fn variant_predicate(node: &lib_ruby_parser_nodes::Node, options: &Options) -> S
     format!(
         "{sig}
     {{
-        const Node *node = (const Node *)blob;
-        return std::holds_alternative<{variant_name}>(node->variant);
+        const Node *self = (const Node *)self_blob;
+        return std::holds_alternative<{variant_name}>(self->variant);
     }}",
         sig = external_variant_predicate_sig(node, options),
         variant_name = node.camelcase_name,
@@ -128,8 +128,8 @@ fn variant_getter(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Stri
     format!(
         "{sig}
     {{
-        Node *node = (Node *)blob;
-        {variant_name} *variant = std::get_if<{variant_name}>(&(node->variant));
+        Node *self = (Node *)self_blob;
+        {variant_name} *variant = std::get_if<{variant_name}>(&(self->variant));
         return ({variant_name}_BLOB*)variant;
     }}",
         sig = external_variant_getter_sig(node, options),
@@ -143,8 +143,8 @@ fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
         format!(
             "{sig}
     {{
-        {variant} *variant = ({variant} *)blob;
-        {field_type}* field = &(variant->{field_name});
+        {variant} *self = ({variant} *)self_blob;
+        {field_type}* field = &(self->{field_name});
         return ({blob_type} *)field;
     }}",
             sig = external_field_getter_sig(node, field, options),
@@ -160,9 +160,9 @@ fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
         format!(
             "{sig}
     {{
-        {struct_name}* variant = ({struct_name} *)blob;
+        {struct_name}* self = ({struct_name} *)self_blob;
         {unpack_arg}
-        variant->{field_name} = std::move(unpacked_{field_name});
+        self->{field_name} = std::move({field_name});
     }}",
             sig = external_field_setter_sig(node, field, options),
             struct_name = node.camelcase_name,
@@ -177,10 +177,7 @@ fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> St
         .map(&|field| {
             let field_name = c_helpers::nodes::fields::field_name(field);
 
-            format!(
-                ".{field_name} = packed_{field_name}",
-                field_name = field_name,
-            )
+            format!(".{field_name} = {field_name}", field_name = field_name,)
         })
         .join(", ");
 
@@ -191,7 +188,7 @@ fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> St
 
     format!(
         "{sig} {{
-        {variant_name} variant = UNPACK_{variant_name}(blob);
+        {variant_name} self = UNPACK_{variant_name}(self_blob);
         {pack_fields}
         Internal{variant_name} internal = {{ {fields} }};
         return internal;
@@ -206,8 +203,8 @@ fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> St
 fn into_variant_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
     format!(
         "{sig} {{
-        Node node = UNPACK_Node(blob);
-        {variant_name} variant = std::get<{variant_name}>(std::move(node.variant));
+        Node self = UNPACK_Node(self_blob);
+        {variant_name} variant = std::get<{variant_name}>(std::move(self.variant));
         return PACK_{variant_name}(std::move(variant));
     }}",
         sig = external_into_variant_sig(node, options),
@@ -218,8 +215,8 @@ fn into_variant_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Str
 fn variant_drop_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
     format!(
         "{sig} {{
-        {struct_name} *variant = ({struct_name} *)blob;
-        variant->~{struct_name}();
+        {struct_name} *self = ({struct_name} *)self_blob;
+        self->~{struct_name}();
     }}",
         sig = external_drop_variant_sig(node, options),
         struct_name = node.camelcase_name,
@@ -232,19 +229,19 @@ fn unpack_field(field: &lib_ruby_parser_nodes::NodeField) -> String {
     match field.field_type {
         lib_ruby_parser_nodes::NodeFieldType::Node => {
             format!(
-                "NodePtr unpacked_{field_name} = std::unique_ptr<Node>((Node *)(UNPACK_Ptr({field_name}).release()));",
+                "NodePtr {field_name} = std::unique_ptr<Node>((Node *)(UNPACK_Ptr({field_name}_blob).release()));",
                 field_name = field_name
             )
         }
         lib_ruby_parser_nodes::NodeFieldType::MaybeNode { .. } => {
             format!(
-                "MaybeNodePtr unpacked_{field_name} = std::unique_ptr<Node>((Node *)(UNPACK_MaybePtr({field_name}).release()));",
+                "MaybeNodePtr {field_name} = std::unique_ptr<Node>((Node *)(UNPACK_MaybePtr({field_name}_blob).release()));",
                 field_name = field_name
             )
         }
         _ => {
             format!(
-                "{field_type} unpacked_{field_name} = {unpack}({field_name});",
+                "{field_type} {field_name} = {unpack}({field_name}_blob);",
                 field_type = c_helpers::nodes::fields::field_type(field),
                 field_name = field_name,
                 unpack = c_helpers::nodes::fields::unpack_field_fn(field)
@@ -259,19 +256,19 @@ fn pack_field(field: &lib_ruby_parser_nodes::NodeField) -> String {
     match field.field_type {
         lib_ruby_parser_nodes::NodeFieldType::Node => {
             format!(
-                "Ptr_BLOB packed_{field_name} = PACK_Ptr(Ptr((int *)(variant.{field_name}.release())));",
+                "Ptr_BLOB {field_name} = PACK_Ptr(Ptr((int *)(self.{field_name}.release())));",
                 field_name = field_name
             )
         }
         lib_ruby_parser_nodes::NodeFieldType::MaybeNode { .. } => {
             format!(
-                "MaybePtr_BLOB packed_{field_name} = PACK_MaybePtr(MaybePtr((int *)(variant.{field_name}.release())));",
+                "MaybePtr_BLOB {field_name} = PACK_MaybePtr(MaybePtr((int *)(self.{field_name}.release())));",
                 field_name = field_name
             )
         }
         _ => {
             format!(
-                "{field_type}_BLOB packed_{field_name} = {pack}(std::move(variant.{field_name}));",
+                "{field_type}_BLOB {field_name} = {pack}(std::move(self.{field_name}));",
                 field_type = c_helpers::nodes::fields::field_type(field),
                 field_name = field_name,
                 pack = c_helpers::nodes::fields::pack_field_fn(field)

@@ -24,10 +24,10 @@ fn contents(options: &Options) -> String {
 
 {variant_predicates}
 
-void lib_ruby_parser__internal__containers__diagnostic_message__drop(DiagnosticMessage_BLOB *blob)
+void lib_ruby_parser__external__diagnostic_message__drop(DiagnosticMessage_BLOB *self_blob)
 {{
-    DiagnosticMessage *message = (DiagnosticMessage *)blob;
-    drop_diagnostic_message(message);
+    DiagnosticMessage *self = (DiagnosticMessage *)self_blob;
+    drop_diagnostic_message(self);
 }}
 ",
         generator = file!(),
@@ -55,7 +55,7 @@ fn constructor(message: &Message, options: &Options) -> String {
         .fields
         .map(&|field| {
             format!(
-                ".{name} = UNPACK_{t}({name})",
+                ".{name} = UNPACK_{t}({name}_blob)",
                 name = field_name(field),
                 t = field_type(field)
             )
@@ -80,9 +80,9 @@ fn variant_getter(message: &Message, options: &Options) -> String {
     format!(
         "{sig}
 {{
-    const DiagnosticMessage *message = (const DiagnosticMessage *)blob;
-    if (message->tag == {tag_name}) {{
-        return (const {variant_name}_BLOB*)(&(message->as.{union_member}));
+    const DiagnosticMessage *self = (const DiagnosticMessage *)self_blob;
+    if (self->tag == {tag_name}) {{
+        return (const {variant_name}_BLOB*)(&(self->as.{union_member}));
     }} else {{
         return NULL;
     }}
@@ -98,8 +98,8 @@ fn field_getters(message: &Message, options: &Options) -> Vec<String> {
         format!(
             "{signature}
 {{
-    const {variant_name} *variant = (const {variant_name} *)blob;
-    return (const {blob_type} *)(&(variant->{field_name}));
+    const {variant_name} *self = (const {variant_name} *)self_blob;
+    return (const {blob_type} *)(&(self->{field_name}));
 }}",
             signature = field_getter_sig(message, field, options),
             variant_name = message.camelcase_name(),
@@ -112,7 +112,7 @@ fn variant_predicate(message: &Message, options: &Options) -> String {
     format!(
         "{signature}
 {{
-    return ((const DiagnosticMessage *)blob)->tag == {enum_tag_name};
+    return ((const DiagnosticMessage *)self_blob)->tag == {enum_tag_name};
 }}",
         signature = variant_predicate_sig(message, options),
         enum_tag_name = message.upper_name()

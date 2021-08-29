@@ -16,7 +16,7 @@ impl IntoBlob for u8 {
 
 impl<T> IntoBlob for crate::containers::ExternalPtr<T>
 where
-    T: crate::containers::get_drop_fn::GetFreePtrFn,
+    T: crate::containers::get_drop_fn::GetDropPtrFn,
 {
     type Output = crate::containers::PtrBlob;
 
@@ -29,7 +29,7 @@ where
 
 impl<T> IntoBlob for crate::containers::ExternalMaybePtr<T>
 where
-    T: crate::containers::get_drop_fn::GetFreeMaybePtrFn,
+    T: crate::containers::get_drop_fn::GetDropMaybePtrFn,
 {
     type Output = crate::containers::MaybePtrBlob;
 
@@ -52,7 +52,7 @@ impl IntoBlob for crate::Bytes {
 
 impl<T> IntoBlob for crate::containers::ExternalList<T>
 where
-    T: crate::containers::get_drop_fn::GetDropListInPlaceFn,
+    T: crate::containers::get_drop_fn::GetDropListFn,
 {
     type Output = crate::containers::ListBlob;
 

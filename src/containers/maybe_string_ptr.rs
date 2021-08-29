@@ -37,36 +37,32 @@ pub(crate) mod external {
     }
 
     extern "C" {
-        fn lib_ruby_parser__internal__containers__maybe_string_ptr__new_some(
+        fn lib_ruby_parser__external__maybe_string_ptr__new_some(
             ptr: *const u8,
             suze: u64,
         ) -> MaybeStringPtrBlob;
-        fn lib_ruby_parser__internal__containers__maybe_string_ptr__new_none() -> MaybeStringPtrBlob;
-
-        fn lib_ruby_parser__internal__containers__maybe_string_ptr__is_some(
+        fn lib_ruby_parser__external__maybe_string_ptr__new_none() -> MaybeStringPtrBlob;
+        fn lib_ruby_parser__external__maybe_string_ptr__drop(blob: *mut MaybeStringPtrBlob);
+        fn lib_ruby_parser__external__maybe_string_ptr__is_some(
             blob: *const MaybeStringPtrBlob,
         ) -> bool;
-        fn lib_ruby_parser__internal__containers__maybe_string_ptr__is_none(
+        fn lib_ruby_parser__external__maybe_string_ptr__is_none(
             blob: *const MaybeStringPtrBlob,
         ) -> bool;
-
-        fn lib_ruby_parser__internal__containers__maybe_string_ptr__drop(
-            blob: *mut MaybeStringPtrBlob,
-        );
-        fn lib_ruby_parser__internal__containers__maybe_string_ptr__get_raw(
+        fn lib_ruby_parser__external__maybe_string_ptr__get_raw(
             blob: *mut MaybeStringPtrBlob,
         ) -> *mut u8;
-        fn lib_ruby_parser__internal__containers__maybe_string_ptr__into_raw(
-            blob: *mut MaybeStringPtrBlob,
+        fn lib_ruby_parser__external__maybe_string_ptr__into_raw(
+            blob: MaybeStringPtrBlob,
         ) -> *mut u8;
-        fn lib_ruby_parser__internal__containers__maybe_string_ptr__len(
+        fn lib_ruby_parser__external__maybe_string_ptr__get_len(
             blob: *const MaybeStringPtrBlob,
         ) -> u64;
     }
 
     impl Drop for MaybeStringPtr {
         fn drop(&mut self) {
-            unsafe { lib_ruby_parser__internal__containers__maybe_string_ptr__drop(&mut self.blob) }
+            unsafe { lib_ruby_parser__external__maybe_string_ptr__drop(&mut self.blob) }
         }
     }
 
@@ -94,26 +90,23 @@ pub(crate) mod external {
     impl MaybeStringPtr {
         /// Equivalent of Option::is_some()
         pub fn is_some(&self) -> bool {
-            unsafe { lib_ruby_parser__internal__containers__maybe_string_ptr__is_some(&self.blob) }
+            unsafe { lib_ruby_parser__external__maybe_string_ptr__is_some(&self.blob) }
         }
 
         /// Equivalent of Option::is_none()
         pub fn is_none(&self) -> bool {
-            unsafe { lib_ruby_parser__internal__containers__maybe_string_ptr__is_none(&self.blob) }
+            unsafe { lib_ruby_parser__external__maybe_string_ptr__is_none(&self.blob) }
         }
 
         /// Equivalent of Option::unwrap()
-        pub fn unwrap(mut self) -> ExternalStringPtr {
+        pub fn unwrap(self) -> ExternalStringPtr {
             if self.is_some() {
                 let len = unsafe {
-                    lib_ruby_parser__internal__containers__maybe_string_ptr__len(&self.blob)
-                        as usize
+                    lib_ruby_parser__external__maybe_string_ptr__get_len(&self.blob) as usize
                 };
-                let ptr = unsafe {
-                    lib_ruby_parser__internal__containers__maybe_string_ptr__into_raw(
-                        &mut self.blob,
-                    )
-                };
+                let ptr =
+                    unsafe { lib_ruby_parser__external__maybe_string_ptr__into_raw(self.blob) };
+                std::mem::forget(self);
                 let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
                 let s = String::from_utf8(bytes).unwrap();
                 ExternalStringPtr::from(s)
@@ -126,12 +119,11 @@ pub(crate) mod external {
         pub fn as_ref(&self) -> Option<&str> {
             if self.is_some() {
                 let len = unsafe {
-                    lib_ruby_parser__internal__containers__maybe_string_ptr__len(&self.blob)
-                        as usize
+                    lib_ruby_parser__external__maybe_string_ptr__get_len(&self.blob) as usize
                 };
                 let blob_ptr: *const MaybeStringPtrBlob = &self.blob;
                 let ptr = unsafe {
-                    lib_ruby_parser__internal__containers__maybe_string_ptr__get_raw(
+                    lib_ruby_parser__external__maybe_string_ptr__get_raw(
                         blob_ptr as *mut MaybeStringPtrBlob,
                     )
                 };
@@ -147,12 +139,10 @@ pub(crate) mod external {
         pub fn as_mut(&mut self) -> Option<&mut str> {
             if self.is_some() {
                 let len = unsafe {
-                    lib_ruby_parser__internal__containers__maybe_string_ptr__len(&self.blob)
-                        as usize
+                    lib_ruby_parser__external__maybe_string_ptr__get_len(&self.blob) as usize
                 };
-                let ptr = unsafe {
-                    lib_ruby_parser__internal__containers__maybe_string_ptr__get_raw(&mut self.blob)
-                };
+                let ptr =
+                    unsafe { lib_ruby_parser__external__maybe_string_ptr__get_raw(&mut self.blob) };
                 let bytes = unsafe { std::slice::from_raw_parts_mut(ptr, len) };
                 let s = std::str::from_utf8_mut(bytes).unwrap();
                 Some(s)
@@ -180,15 +170,12 @@ pub(crate) mod external {
             let mut bytes = value.into_bytes();
             let ptr = bytes.as_mut_ptr();
             let len = bytes.len() as u64;
-            let blob = unsafe {
-                lib_ruby_parser__internal__containers__maybe_string_ptr__new_some(ptr, len)
-            };
+            let blob = unsafe { lib_ruby_parser__external__maybe_string_ptr__new_some(ptr, len) };
             Self { blob }
         }
 
         fn none() -> Self {
-            let blob =
-                unsafe { lib_ruby_parser__internal__containers__maybe_string_ptr__new_none() };
+            let blob = unsafe { lib_ruby_parser__external__maybe_string_ptr__new_none() };
             Self { blob }
         }
     }

@@ -6,241 +6,257 @@
     Ptr
 */
 
-Ptr_BLOB lib_ruby_parser__internal__containers__ptr__new(void *ptr)
+Ptr_BLOB lib_ruby_parser__external__ptr__new(void *ptr)
 {
     return PACK_Ptr(ptr);
 }
-Ptr_BLOB lib_ruby_parser__internal__containers__ptr__new_null()
+void lib_ruby_parser__external__ptr__of_node__drop(Ptr_BLOB *self_blob)
 {
-    return PACK_Ptr(NULL);
+    Ptr self = *((Ptr *)self_blob);
+    drop_node((Node *)self);
+    free(self);
 }
-void *lib_ruby_parser__internal__containers__ptr__get_raw(Ptr_BLOB *blob)
+void lib_ruby_parser__external__ptr__of_token__drop(Ptr_BLOB *self_blob)
 {
-    Ptr ptr = *((Ptr *)blob);
-    return ptr;
+    Ptr self = *((Ptr *)self_blob);
+    drop_token((Token *)self);
+    free(self);
 }
-void lib_ruby_parser__internal__containers__ptr__of_node__free(Ptr_BLOB *blob)
+void *lib_ruby_parser__external__ptr__get_raw(Ptr_BLOB *self_blob)
 {
-    Ptr ptr = *((Ptr *)blob);
-    drop_node((Node *)ptr);
-    free(ptr);
-}
-void lib_ruby_parser__internal__containers__ptr__of_token__free(Ptr_BLOB *blob)
-{
-    Ptr ptr = *((Ptr *)blob);
-    drop_token((Token *)ptr);
-    free(ptr);
+    Ptr self = *((Ptr *)self_blob);
+    return self;
 }
 
 /*
     MaybePtr
 */
-MaybePtr_BLOB lib_ruby_parser__internal__containers__maybe_ptr__new(void *ptr)
+MaybePtr_BLOB lib_ruby_parser__external__maybe_ptr__new(void *ptr)
 {
     return PACK_MaybePtr(ptr);
 }
-MaybePtr_BLOB lib_ruby_parser__internal__containers__maybe_ptr__new_null()
+MaybePtr_BLOB lib_ruby_parser__external__maybe_ptr__new_null()
 {
     return PACK_MaybePtr(NULL);
 }
-void *lib_ruby_parser__internal__containers__maybe_ptr__get_raw(MaybePtr_BLOB *blob)
+void lib_ruby_parser__external__maybe_ptr__of_node__drop(MaybePtr_BLOB *self_blob)
 {
-    MaybePtr maybe_ptr = *((MaybePtr *)blob);
-    return maybe_ptr;
-}
-void lib_ruby_parser__internal__containers__maybe_ptr__of_node__free(MaybePtr_BLOB *blob)
-{
-    MaybePtr maybe_ptr = *((MaybePtr *)blob);
-    if (maybe_ptr != NULL)
+    MaybePtr self = *((MaybePtr *)self_blob);
+    if (self != NULL)
     {
-        drop_node((Node *)maybe_ptr);
-        free(maybe_ptr);
+        drop_node((Node *)self);
+        free(self);
     }
 }
-void lib_ruby_parser__internal__containers__maybe_ptr__of_token__free(MaybePtr_BLOB *blob)
+void lib_ruby_parser__external__maybe_ptr__of_token__drop(MaybePtr_BLOB *self_blob)
 {
-    MaybePtr maybe_ptr = *((MaybePtr *)blob);
-    if (maybe_ptr != NULL)
+    MaybePtr self = *((MaybePtr *)self_blob);
+    if (self != NULL)
     {
-        drop_token((Token *)maybe_ptr);
-        free(maybe_ptr);
+        drop_token((Token *)self);
+        free(self);
     }
+}
+void *lib_ruby_parser__external__maybe_ptr__get_raw(MaybePtr_BLOB *self_blob)
+{
+    MaybePtr self = *((MaybePtr *)self_blob);
+    return self;
 }
 
 /*
     StringPtr
 */
-StringPtr_BLOB lib_ruby_parser__internal__containers__string_ptr__new(const uint8_t *ptr, uint64_t len)
+StringPtr_BLOB lib_ruby_parser__external__string_ptr__new(const uint8_t *ptr, uint64_t len)
 {
     uint8_t *new_ptr = malloc(len);
     memcpy(new_ptr, ptr, len);
     StringPtr string_ptr = {.ptr = new_ptr, .len = len};
     return PACK_StringPtr(string_ptr);
 }
-void lib_ruby_parser__internal__containers__string_ptr__drop(StringPtr_BLOB *blob)
+void lib_ruby_parser__external__string_ptr__drop(StringPtr_BLOB *self_blob)
 {
-    StringPtr *string_ptr = (StringPtr *)blob;
-    drop_string_ptr(string_ptr);
+    StringPtr *self = (StringPtr *)self_blob;
+    drop_string_ptr(self);
 }
-uint8_t *lib_ruby_parser__internal__containers__string_ptr__get_raw(StringPtr_BLOB *blob)
+uint8_t *lib_ruby_parser__external__string_ptr__get_raw(StringPtr_BLOB *self_blob)
 {
-    StringPtr *string_ptr = (StringPtr *)blob;
-    if (string_ptr->len == 0)
+    StringPtr *self = (StringPtr *)self_blob;
+    if (self->len == 0)
         return NULL;
-    return string_ptr->ptr;
+    return self->ptr;
 }
-uint64_t lib_ruby_parser__internal__containers__string_ptr__get_len(const StringPtr_BLOB *blob)
+uint64_t lib_ruby_parser__external__string_ptr__get_len(const StringPtr_BLOB *self_blob)
 {
-    StringPtr *string_ptr = (StringPtr *)blob;
-    return string_ptr->len;
+    StringPtr *self = (StringPtr *)self_blob;
+    return self->len;
 }
 
 /*
     MaybeStringPtr
 */
-MaybeStringPtr_BLOB lib_ruby_parser__internal__containers__maybe_string_ptr__new_some(const uint8_t *ptr, uint64_t len)
+MaybeStringPtr_BLOB lib_ruby_parser__external__maybe_string_ptr__new_some(const uint8_t *ptr, uint64_t len)
 {
     MaybeStringPtr maybe_string_ptr = {.ptr = malloc(len), .len = len};
     memcpy(maybe_string_ptr.ptr, ptr, len);
     return PACK_MaybeStringPtr(maybe_string_ptr);
 }
-MaybeStringPtr_BLOB lib_ruby_parser__internal__containers__maybe_string_ptr__new_none()
+MaybeStringPtr_BLOB lib_ruby_parser__external__maybe_string_ptr__new_none()
 {
     MaybeStringPtr maybe_string_ptr = {.ptr = NULL, .len = 0};
     return PACK_MaybeStringPtr(maybe_string_ptr);
 }
-bool lib_ruby_parser__internal__containers__maybe_string_ptr__is_some(const MaybeStringPtr_BLOB *blob)
+void lib_ruby_parser__external__maybe_string_ptr__drop(MaybeStringPtr_BLOB *self_blob)
 {
-    const MaybeStringPtr *maybe_string_ptr = (const MaybeStringPtr *)blob;
-    return maybe_string_ptr->ptr != NULL;
+    MaybeStringPtr *self = (MaybeStringPtr *)self_blob;
+    drop_maybe_string_ptr(self);
 }
-bool lib_ruby_parser__internal__containers__maybe_string_ptr__is_none(const MaybeStringPtr_BLOB *blob)
+bool lib_ruby_parser__external__maybe_string_ptr__is_some(const MaybeStringPtr_BLOB *self_blob)
 {
-    const MaybeStringPtr *maybe_string_ptr = (const MaybeStringPtr *)blob;
-    return maybe_string_ptr->ptr == NULL;
+    const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
+    return self->ptr != NULL;
 }
-void lib_ruby_parser__internal__containers__maybe_string_ptr__drop(MaybeStringPtr_BLOB *blob)
+bool lib_ruby_parser__external__maybe_string_ptr__is_none(const MaybeStringPtr_BLOB *self_blob)
 {
-    MaybeStringPtr *maybe_string_ptr = (MaybeStringPtr *)blob;
-    drop_maybe_string_ptr(maybe_string_ptr);
+    const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
+    return self->ptr == NULL;
 }
-uint8_t *lib_ruby_parser__internal__containers__maybe_string_ptr__get_raw(MaybeStringPtr_BLOB *blob)
+uint8_t *lib_ruby_parser__external__maybe_string_ptr__get_raw(MaybeStringPtr_BLOB *self_blob)
 {
-    MaybeStringPtr *maybe_string_ptr = (MaybeStringPtr *)blob;
-    return maybe_string_ptr->ptr;
+    MaybeStringPtr *self = (MaybeStringPtr *)self_blob;
+    return self->ptr;
 }
-uint8_t *lib_ruby_parser__internal__containers__maybe_string_ptr__into_raw(MaybeStringPtr_BLOB *blob)
+uint8_t *lib_ruby_parser__external__maybe_string_ptr__into_raw(MaybeStringPtr_BLOB self_blob)
 {
-    MaybeStringPtr *maybe_string_ptr = (MaybeStringPtr *)blob;
-    if (maybe_string_ptr->ptr == NULL)
+    MaybeStringPtr self = UNPACK_MaybeStringPtr(self_blob);
+    return self.ptr;
+}
+uint64_t lib_ruby_parser__external__maybe_string_ptr__get_len(const MaybeStringPtr_BLOB *self_blob)
+{
+    const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
+    return self->len;
+}
+
+/*
+    SharedByteList
+*/
+SharedByteList_BLOB lib_ruby_parser__external__shared_byte_list__new(const uint8_t *ptr, uint64_t len)
+{
+    SharedByteList shared_byte_list = {.ptr = ptr, .len = len};
+    return PACK_SharedByteList(shared_byte_list);
+}
+void lib_ruby_parser__external__shared_byte_list__drop(SharedByteList_BLOB *self_blob)
+{
+    (void)self_blob;
+}
+const uint8_t *lib_ruby_parser__external__shared_byte_list__get_raw(const SharedByteList_BLOB *self_blob)
+{
+    const SharedByteList *self = (const SharedByteList *)self_blob;
+    if (self->len == 0)
         return NULL;
-    uint8_t *result = (uint8_t *)(maybe_string_ptr->ptr);
-    maybe_string_ptr->ptr = NULL;
-    maybe_string_ptr->len = 0;
-    return result;
+    return self->ptr;
 }
-uint64_t lib_ruby_parser__internal__containers__maybe_string_ptr__len(const MaybeStringPtr_BLOB *blob)
+uint64_t lib_ruby_parser__external__shared_byte_list__get_len(const SharedByteList_BLOB *self_blob)
 {
-    const MaybeStringPtr *maybe_string_ptr = (const MaybeStringPtr *)blob;
-    return maybe_string_ptr->len;
+    const SharedByteList *self = (const SharedByteList *)self_blob;
+    return self->len;
 }
 
 /*
     Lists
 */
-#define LIST_IMPL(ITEM, ITEM_BLOB, LIST, LIST_BLOB, NS, drop)                                              \
-    LIST_BLOB lib_ruby_parser__internal__containers__list__##NS##__new()                                   \
-    {                                                                                                      \
-        LIST list = {.ptr = NULL, .len = 0, .capacity = 0};                                                \
-        return PACK_##LIST(list);                                                                          \
-    }                                                                                                      \
-    void lib_ruby_parser__internal__containers__list__##NS##__drop(LIST_BLOB *blob)                        \
-    {                                                                                                      \
-        LIST *list = (LIST *)blob;                                                                         \
-        for (uint64_t i = 0; i < list->len; i++)                                                           \
-        {                                                                                                  \
-            drop(&list->ptr[i]);                                                                           \
-        }                                                                                                  \
-        free(list->ptr);                                                                                   \
-    }                                                                                                      \
-    LIST_BLOB lib_ruby_parser__internal__containers__list__##NS##__with_capacity(uint64_t capacity)        \
-    {                                                                                                      \
-        LIST list = {.ptr = malloc(sizeof(ITEM) * capacity), .len = 0, .capacity = capacity};              \
-        return PACK_##LIST(list);                                                                          \
-    }                                                                                                      \
-    LIST_BLOB lib_ruby_parser__internal__containers__list__##NS##__from_raw(ITEM_BLOB *ptr, uint64_t len)  \
-    {                                                                                                      \
-        if (len > 0)                                                                                       \
-        {                                                                                                  \
-            LIST list = {.ptr = (ITEM *)ptr, .len = len, .capacity = len};                                 \
-            return PACK_##LIST(list);                                                                      \
-        }                                                                                                  \
-        else                                                                                               \
-        {                                                                                                  \
-            return lib_ruby_parser__internal__containers__list__##NS##__new();                             \
-        }                                                                                                  \
-    }                                                                                                      \
-    void lib_ruby_parser__internal__containers__list__##NS##__push(LIST_BLOB *blob, ITEM_BLOB item_blob)   \
-    {                                                                                                      \
-        LIST *list = (LIST *)blob;                                                                         \
-        ITEM item = UNPACK_##ITEM(item_blob);                                                              \
-        if (list->len + 1 > list->capacity)                                                                \
-        {                                                                                                  \
-            if (list->capacity == 0)                                                                       \
-            {                                                                                              \
-                list->capacity += 1;                                                                       \
-            }                                                                                              \
-            else                                                                                           \
-            {                                                                                              \
-                list->capacity *= 2;                                                                       \
-            }                                                                                              \
-            ITEM *old_ptr = list->ptr;                                                                     \
-            ITEM *new_ptr = malloc(sizeof(ITEM) * list->capacity);                                         \
-            memcpy(new_ptr, old_ptr, sizeof(ITEM) * list->len);                                            \
-            list->ptr = new_ptr;                                                                           \
-            free(old_ptr);                                                                                 \
-        }                                                                                                  \
-        list->ptr[list->len] = item;                                                                       \
-        list->len++;                                                                                       \
-    }                                                                                                      \
-    ITEM_BLOB lib_ruby_parser__internal__containers__list__##NS##__remove(LIST_BLOB *blob, uint64_t index) \
-    {                                                                                                      \
-        LIST *list = (LIST *)blob;                                                                         \
-        ITEM item = list->ptr[index];                                                                      \
-        memmove(list->ptr + index, list->ptr + index + 1, sizeof(ITEM) * (list->len - index - 1));         \
-        list->len--;                                                                                       \
-        return PACK_##ITEM(item);                                                                          \
-    }                                                                                                      \
-    void lib_ruby_parser__internal__containers__list__##NS##__shrink_to_fit(LIST_BLOB *blob)               \
-    {                                                                                                      \
-        LIST *list = (LIST *)blob;                                                                         \
-                                                                                                           \
-        uint64_t new_len = list->len;                                                                      \
-        uint64_t new_capacity = list->len;                                                                 \
-                                                                                                           \
-        ITEM *new_ptr = malloc(sizeof(ITEM) * new_capacity);                                               \
-        memcpy(new_ptr, list->ptr, sizeof(ITEM) * new_len);                                                \
-                                                                                                           \
-        ITEM *old_ptr = list->ptr;                                                                         \
-        list->ptr = new_ptr;                                                                               \
-        list->len = new_len;                                                                               \
-        list->capacity = new_capacity;                                                                     \
-        free(old_ptr);                                                                                     \
-    }                                                                                                      \
-    ITEM_BLOB *lib_ruby_parser__internal__containers__list__##NS##__as_ptr(LIST_BLOB *blob)                \
-    {                                                                                                      \
-        LIST *list = (LIST *)blob;                                                                         \
-        return (ITEM_BLOB *)(list->ptr);                                                                   \
-    }                                                                                                      \
-    uint64_t lib_ruby_parser__internal__containers__list__##NS##__len(const LIST_BLOB *blob)               \
-    {                                                                                                      \
-        const LIST *list = (const LIST *)blob;                                                             \
-        return list->len;                                                                                  \
-    }                                                                                                      \
-    uint64_t lib_ruby_parser__internal__containers__list__##NS##__capacity(const LIST_BLOB *blob)          \
-    {                                                                                                      \
-        const LIST *list = (const LIST *)blob;                                                             \
-        return list->capacity;                                                                             \
+#define LIST_IMPL(ITEM, ITEM_BLOB, LIST, LIST_BLOB, NS, drop)                                       \
+    LIST_BLOB lib_ruby_parser__external__list__##NS##__new()                                        \
+    {                                                                                               \
+        LIST list = {.ptr = NULL, .len = 0, .capacity = 0};                                         \
+        return PACK_##LIST(list);                                                                   \
+    }                                                                                               \
+    void lib_ruby_parser__external__list__##NS##__drop(LIST_BLOB *self_blob)                        \
+    {                                                                                               \
+        LIST *self = (LIST *)self_blob;                                                             \
+        for (uint64_t i = 0; i < self->len; i++)                                                    \
+        {                                                                                           \
+            drop(&self->ptr[i]);                                                                    \
+        }                                                                                           \
+        free(self->ptr);                                                                            \
+    }                                                                                               \
+    LIST_BLOB lib_ruby_parser__external__list__##NS##__with_capacity(uint64_t capacity)             \
+    {                                                                                               \
+        LIST list = {.ptr = malloc(sizeof(ITEM) * capacity), .len = 0, .capacity = capacity};       \
+        return PACK_##LIST(list);                                                                   \
+    }                                                                                               \
+    LIST_BLOB lib_ruby_parser__external__list__##NS##__from_raw(ITEM_BLOB *ptr, uint64_t len)       \
+    {                                                                                               \
+        if (len > 0)                                                                                \
+        {                                                                                           \
+            LIST list = {.ptr = (ITEM *)ptr, .len = len, .capacity = len};                          \
+            return PACK_##LIST(list);                                                               \
+        }                                                                                           \
+        else                                                                                        \
+        {                                                                                           \
+            return lib_ruby_parser__external__list__##NS##__new();                                  \
+        }                                                                                           \
+    }                                                                                               \
+    void lib_ruby_parser__external__list__##NS##__push(LIST_BLOB *self_blob, ITEM_BLOB item_blob)   \
+    {                                                                                               \
+        LIST *self = (LIST *)self_blob;                                                             \
+        ITEM item = UNPACK_##ITEM(item_blob);                                                       \
+        if (self->len + 1 > self->capacity)                                                         \
+        {                                                                                           \
+            if (self->capacity == 0)                                                                \
+            {                                                                                       \
+                self->capacity += 1;                                                                \
+            }                                                                                       \
+            else                                                                                    \
+            {                                                                                       \
+                self->capacity *= 2;                                                                \
+            }                                                                                       \
+            ITEM *old_ptr = self->ptr;                                                              \
+            ITEM *new_ptr = malloc(sizeof(ITEM) * self->capacity);                                  \
+            memcpy(new_ptr, old_ptr, sizeof(ITEM) * self->len);                                     \
+            self->ptr = new_ptr;                                                                    \
+            free(old_ptr);                                                                          \
+        }                                                                                           \
+        self->ptr[self->len] = item;                                                                \
+        self->len++;                                                                                \
+    }                                                                                               \
+    ITEM_BLOB lib_ruby_parser__external__list__##NS##__remove(LIST_BLOB *self_blob, uint64_t index) \
+    {                                                                                               \
+        LIST *self = (LIST *)self_blob;                                                             \
+        ITEM item = self->ptr[index];                                                               \
+        memmove(self->ptr + index, self->ptr + index + 1, sizeof(ITEM) * (self->len - index - 1));  \
+        self->len--;                                                                                \
+        return PACK_##ITEM(item);                                                                   \
+    }                                                                                               \
+    void lib_ruby_parser__external__list__##NS##__shrink_to_fit(LIST_BLOB *self_blob)               \
+    {                                                                                               \
+        LIST *self = (LIST *)self_blob;                                                             \
+                                                                                                    \
+        uint64_t new_len = self->len;                                                               \
+        uint64_t new_capacity = self->len;                                                          \
+                                                                                                    \
+        ITEM *new_ptr = malloc(sizeof(ITEM) * new_capacity);                                        \
+        memcpy(new_ptr, self->ptr, sizeof(ITEM) * new_len);                                         \
+                                                                                                    \
+        ITEM *old_ptr = self->ptr;                                                                  \
+        self->ptr = new_ptr;                                                                        \
+        self->len = new_len;                                                                        \
+        self->capacity = new_capacity;                                                              \
+        free(old_ptr);                                                                              \
+    }                                                                                               \
+    ITEM_BLOB *lib_ruby_parser__external__list__##NS##__as_ptr(LIST_BLOB *self_blob)                \
+    {                                                                                               \
+        LIST *self = (LIST *)self_blob;                                                             \
+        return (ITEM_BLOB *)(self->ptr);                                                            \
+    }                                                                                               \
+    uint64_t lib_ruby_parser__external__list__##NS##__get_len(const LIST_BLOB *self_blob)           \
+    {                                                                                               \
+        const LIST *self = (const LIST *)self_blob;                                                 \
+        return self->len;                                                                           \
+    }                                                                                               \
+    uint64_t lib_ruby_parser__external__list__##NS##__get_capacity(const LIST_BLOB *self_blob)      \
+    {                                                                                               \
+        const LIST *self = (const LIST *)self_blob;                                                 \
+        return self->capacity;                                                                      \
     }
 
 void drop_nothing(void *byte)
@@ -258,488 +274,496 @@ LIST_IMPL(SourceLine, SourceLine_BLOB, SourceLineList, SourceLineList_BLOB, of_s
 /*
     SourceLine
 */
-SourceLine_BLOB lib_ruby_parser__internal__containers__source_line__new(uint64_t start, uint64_t end, bool ends_with_eof)
+SourceLine_BLOB lib_ruby_parser__external__source_line__new(uint64_t start, uint64_t end, bool ends_with_eof)
 {
     SourceLine source_line = {.start = start, .end = end, .ends_with_eof = ends_with_eof};
     return PACK_SourceLine(source_line);
 }
-uint64_t lib_ruby_parser__internal__containers__source_line__get_start(const SourceLine_BLOB *blob)
+void lib_ruby_parser__external__source_line__drop(SourceLine_BLOB *self_blob)
 {
-    const SourceLine *source_line = (const SourceLine *)blob;
-    return source_line->start;
+    (void)(self_blob);
 }
-uint64_t lib_ruby_parser__internal__containers__source_line__get_end(const SourceLine_BLOB *blob)
+uint64_t lib_ruby_parser__external__source_line__get_start(const SourceLine_BLOB *self_blob)
 {
-    const SourceLine *source_line = (const SourceLine *)blob;
-    return source_line->end;
+    const SourceLine *self = (const SourceLine *)self_blob;
+    return self->start;
 }
-bool lib_ruby_parser__internal__containers__source_line__get_ends_with_eof(const SourceLine_BLOB *blob)
+uint64_t lib_ruby_parser__external__source_line__get_end(const SourceLine_BLOB *self_blob)
 {
-    const SourceLine *source_line = (const SourceLine *)blob;
-    return source_line->ends_with_eof;
+    const SourceLine *self = (const SourceLine *)self_blob;
+    return self->end;
 }
-void lib_ruby_parser__internal__containers__source_line__set_start(SourceLine_BLOB *blob, uint64_t start)
+bool lib_ruby_parser__external__source_line__get_ends_with_eof(const SourceLine_BLOB *self_blob)
 {
-    SourceLine *source_line = (SourceLine *)blob;
-    source_line->start = start;
+    const SourceLine *self = (const SourceLine *)self_blob;
+    return self->ends_with_eof;
 }
-void lib_ruby_parser__internal__containers__source_line__set_end(SourceLine_BLOB *blob, uint64_t end)
+void lib_ruby_parser__external__source_line__set_start(SourceLine_BLOB *self_blob, uint64_t start)
 {
-    SourceLine *source_line = (SourceLine *)blob;
-    source_line->end = end;
+    SourceLine *self = (SourceLine *)self_blob;
+    self->start = start;
 }
-void lib_ruby_parser__internal__containers__source_line__set_ends_with_eof(SourceLine_BLOB *blob, bool ends_with_eof)
+void lib_ruby_parser__external__source_line__set_end(SourceLine_BLOB *self_blob, uint64_t end)
 {
-    SourceLine *source_line = (SourceLine *)blob;
-    source_line->ends_with_eof = ends_with_eof;
+    SourceLine *self = (SourceLine *)self_blob;
+    self->end = end;
 }
-void lib_ruby_parser__internal__containers__source_line__drop(SourceLine_BLOB *blob)
+void lib_ruby_parser__external__source_line__set_ends_with_eof(SourceLine_BLOB *self_blob, bool ends_with_eof)
 {
-    (void)(blob);
+    SourceLine *self = (SourceLine *)self_blob;
+    self->ends_with_eof = ends_with_eof;
 }
 
 /*
     Bytes
 */
-void lib_ruby_parser__internal__containers__bytes__drop(Bytes_BLOB *blob)
+Bytes_BLOB lib_ruby_parser__external__bytes__new(ByteList_BLOB raw_blob)
 {
-    Bytes *bytes = (Bytes *)blob;
-    drop_bytes(bytes);
-}
-Bytes_BLOB lib_ruby_parser__internal__containers__bytes__new_from_byte_list(ByteList_BLOB list_blob)
-{
-    Bytes bytes = {.raw = UNPACK_ByteList(list_blob)};
+    Bytes bytes = {.raw = UNPACK_ByteList(raw_blob)};
     return PACK_Bytes(bytes);
 }
-const ByteList_BLOB *lib_ruby_parser__internal__containers__bytes__get_byte_list(const Bytes_BLOB *blob)
+void lib_ruby_parser__external__bytes__drop(Bytes_BLOB *self_blob)
 {
-    const Bytes *bytes = (const Bytes *)blob;
-    return (const ByteList_BLOB *)(&(bytes->raw));
+    Bytes *self = (Bytes *)self_blob;
+    drop_bytes(self);
 }
-void lib_ruby_parser__internal__containers__bytes__set_byte_list(Bytes_BLOB *blob, ByteList_BLOB list_blob)
+const ByteList_BLOB *lib_ruby_parser__external__bytes__get_raw(const Bytes_BLOB *self_blob)
 {
-    Bytes *bytes = (Bytes *)blob;
-    lib_ruby_parser__internal__containers__list__of_bytes__drop((ByteList_BLOB *)(&(bytes->raw)));
-    bytes->raw = UNPACK_ByteList(list_blob);
+    const Bytes *self = (const Bytes *)self_blob;
+    return (const ByteList_BLOB *)(&(self->raw));
 }
-ByteList_BLOB lib_ruby_parser__internal__containers__bytes__into_byte_list(Bytes_BLOB blob)
+void lib_ruby_parser__external__bytes__set_raw(Bytes_BLOB *self_blob, ByteList_BLOB raw_blob)
 {
-    return PACK_ByteList(UNPACK_Bytes(blob).raw);
+    Bytes *self = (Bytes *)self_blob;
+    lib_ruby_parser__external__list__of_bytes__drop((ByteList_BLOB *)(&(self->raw)));
+    self->raw = UNPACK_ByteList(raw_blob);
 }
-void lib_ruby_parser__internal__containers__bytes__push(Bytes_BLOB *blob, Byte byte)
+ByteList_BLOB lib_ruby_parser__external__bytes__into_raw(Bytes_BLOB self_blob)
 {
-    Bytes *bytes = (Bytes *)blob;
-    ByteList *byte_list = &(bytes->raw);
-    lib_ruby_parser__internal__containers__list__of_bytes__push((ByteList_BLOB *)byte_list, byte);
+    return PACK_ByteList(UNPACK_Bytes(self_blob).raw);
+}
+void lib_ruby_parser__external__bytes__push(Bytes_BLOB *self_blob, Byte_BLOB byte_blob)
+{
+    Bytes *self = (Bytes *)self_blob;
+    ByteList *byte_list = &(self->raw);
+    lib_ruby_parser__external__list__of_bytes__push((ByteList_BLOB *)byte_list, byte_blob);
 }
 
 /*
     Token
 */
-Token_BLOB lib_ruby_parser__internal__containers__token__new(uint32_t token_type,
-                                                             Bytes_BLOB token_value,
-                                                             Loc_BLOB loc,
-                                                             uint32_t lex_state_before,
-                                                             uint32_t lex_state_after)
+Token_BLOB lib_ruby_parser__external__token__new(
+    uint32_t token_type,
+    Bytes_BLOB token_value_blob,
+    Loc_BLOB loc_blob,
+    uint32_t lex_state_before,
+    uint32_t lex_state_after)
 {
     Token token = {
         .token_type = token_type,
-        .token_value = UNPACK_Bytes(token_value),
-        .loc = UNPACK_Loc(loc),
+        .token_value = UNPACK_Bytes(token_value_blob),
+        .loc = UNPACK_Loc(loc_blob),
         .lex_state_before = lex_state_before,
         .lex_state_after = lex_state_after};
     return PACK_Token(token);
 }
-uint32_t lib_ruby_parser__internal__containers__token__get_token_type(const Token_BLOB *blob)
+void lib_ruby_parser__external__token__drop(Token_BLOB *self_blob)
 {
-    const Token *token = (const Token *)blob;
-    return token->token_type;
+    Token *self = (Token *)self_blob;
+    drop_token(self);
 }
-const Bytes_BLOB *lib_ruby_parser__internal__containers__token__get_token_value(const Token_BLOB *blob)
+uint32_t lib_ruby_parser__external__token__get_token_type(const Token_BLOB *self_blob)
 {
-    const Token *token = (const Token *)blob;
-    return (Bytes_BLOB *)(&(token->token_value));
+    const Token *self = (const Token *)self_blob;
+    return self->token_type;
 }
-void lib_ruby_parser__internal__containers__token__set_token_value(Token_BLOB *blob, Bytes_BLOB token_value_blob)
+const Bytes_BLOB *lib_ruby_parser__external__token__get_token_value(const Token_BLOB *self_blob)
 {
-    Token *token = (Token *)blob;
-    drop_bytes(&(token->token_value));
-    token->token_value = UNPACK_Bytes(token_value_blob);
+    const Token *self = (const Token *)self_blob;
+    return (Bytes_BLOB *)(&(self->token_value));
 }
-Bytes_BLOB lib_ruby_parser__internal__containers__token__into_token_value(Token_BLOB blob)
+void lib_ruby_parser__external__token__set_token_value(Token_BLOB *self_blob, Bytes_BLOB token_value_blob)
 {
-    return PACK_Bytes(UNPACK_Token(blob).token_value);
+    Token *self = (Token *)self_blob;
+    drop_bytes(&(self->token_value));
+    self->token_value = UNPACK_Bytes(token_value_blob);
 }
-const Loc_BLOB *lib_ruby_parser__internal__containers__token__get_loc(const Token_BLOB *blob)
+Bytes_BLOB lib_ruby_parser__external__token__into_token_value(Token_BLOB self_blob)
 {
-    Token *token = (Token *)blob;
-    return (Loc_BLOB *)(&(token->loc));
+    return PACK_Bytes(UNPACK_Token(self_blob).token_value);
 }
-uint32_t lib_ruby_parser__internal__containers__token__get_lex_state_before(const Token_BLOB *blob)
+const Loc_BLOB *lib_ruby_parser__external__token__get_loc(const Token_BLOB *self_blob)
 {
-    Token *token = (Token *)blob;
-    return token->lex_state_before;
+    Token *self = (Token *)self_blob;
+    return (Loc_BLOB *)(&(self->loc));
 }
-uint32_t lib_ruby_parser__internal__containers__token__get_lex_state_after(const Token_BLOB *blob)
+uint32_t lib_ruby_parser__external__token__get_lex_state_before(const Token_BLOB *self_blob)
 {
-    Token *token = (Token *)blob;
-    return token->lex_state_after;
+    Token *self = (Token *)self_blob;
+    return self->lex_state_before;
 }
-void lib_ruby_parser__internal__containers__token__drop(Token_BLOB *blob)
+uint32_t lib_ruby_parser__external__token__get_lex_state_after(const Token_BLOB *self_blob)
 {
-    Token *token = (Token *)blob;
-    drop_token(token);
+    Token *self = (Token *)self_blob;
+    return self->lex_state_after;
 }
 
 /*
     CommentType
 */
-CommentType_BLOB lib_ruby_parser__internal__containers__comment_type__new_inline()
+CommentType_BLOB lib_ruby_parser__external__comment_type__new_inline()
 {
     return PACK_CommentType(INLINE);
 }
-CommentType_BLOB lib_ruby_parser__internal__containers__comment_type__new_document()
+CommentType_BLOB lib_ruby_parser__external__comment_type__new_document()
 {
     return PACK_CommentType(DOCUMENT);
 }
-CommentType_BLOB lib_ruby_parser__internal__containers__comment_type__new_unknown()
+CommentType_BLOB lib_ruby_parser__external__comment_type__new_unknown()
 {
     return PACK_CommentType(UNKNOWN);
 }
-bool lib_ruby_parser__internal__containers__comment_type__is_inline(CommentType_BLOB blob)
+void lib_ruby_parser__external__comment_type__drop(CommentType_BLOB *self_blob)
 {
-    return UNPACK_CommentType(blob) == INLINE;
+    (void)self_blob;
 }
-bool lib_ruby_parser__internal__containers__comment_type__is_document(CommentType_BLOB blob)
+bool lib_ruby_parser__external__comment_type__is_inline(const CommentType_BLOB *self_blob)
 {
-    return UNPACK_CommentType(blob) == DOCUMENT;
+    CommentType *self = (CommentType *)self_blob;
+    return *self == INLINE;
 }
-bool lib_ruby_parser__internal__containers__comment_type__is_unknown(CommentType_BLOB blob)
+bool lib_ruby_parser__external__comment_type__is_document(const CommentType_BLOB *self_blob)
 {
-    return UNPACK_CommentType(blob) == UNKNOWN;
+    CommentType *self = (CommentType *)self_blob;
+    return *self == DOCUMENT;
+}
+bool lib_ruby_parser__external__comment_type__is_unknown(const CommentType_BLOB *self_blob)
+{
+    CommentType *self = (CommentType *)self_blob;
+    return *self == UNKNOWN;
 }
 
 /*
     Comment
 */
-Comment_BLOB lib_ruby_parser__internal__containers__comment__new(Loc_BLOB location, CommentType_BLOB kind)
+Comment_BLOB lib_ruby_parser__external__comment__new(Loc_BLOB location_blob, CommentType_BLOB kind_blob)
 {
-    Comment comment = {.location = UNPACK_Loc(location), .kind = UNPACK_CommentType(kind)};
+    Comment comment = {.location = UNPACK_Loc(location_blob), .kind = UNPACK_CommentType(kind_blob)};
     return PACK_Comment(comment);
 }
-Loc_BLOB *lib_ruby_parser__internal__containers__comment__get_location(Comment_BLOB *blob)
+void lib_ruby_parser__external__comment__drop(Comment_BLOB *self_blob)
 {
-    Comment *comment = (Comment *)blob;
-    return (Loc_BLOB *)(&(comment->location));
+    (void)self_blob;
 }
-CommentType_BLOB *lib_ruby_parser__internal__containers__comment__get_kind(Comment_BLOB *blob)
+const Loc_BLOB *lib_ruby_parser__external__comment__get_location(const Comment_BLOB *self_blob)
 {
-    Comment *comment = (Comment *)blob;
-    return (CommentType_BLOB *)(&(comment->kind));
+    Comment *self = (Comment *)self_blob;
+    return (Loc_BLOB *)(&(self->location));
 }
-void lib_ruby_parser__internal__containers__comment__drop(Comment_BLOB *blob)
+const CommentType_BLOB *lib_ruby_parser__external__comment__get_kind(const Comment_BLOB *self_blob)
 {
-    (void)blob;
-    // noop
-}
-
-/*
-    ErrorLevel
-*/
-ErrorLevel_BLOB lib_ruby_parser__internal__containers__error_level__new_warning()
-{
-    return PACK_ErrorLevel(WARNING);
-}
-ErrorLevel_BLOB lib_ruby_parser__internal__containers__error_level__new_error()
-{
-    return PACK_ErrorLevel(ERROR);
-}
-bool lib_ruby_parser__internal__containers__error_level__is_warning(ErrorLevel_BLOB blob)
-{
-    return UNPACK_ErrorLevel(blob) == WARNING;
-}
-bool lib_ruby_parser__internal__containers__error_level__is_error(ErrorLevel_BLOB blob)
-{
-    return UNPACK_ErrorLevel(blob) == ERROR;
+    Comment *self = (Comment *)self_blob;
+    return (CommentType_BLOB *)(&(self->kind));
 }
 
 /*
     Loc
 */
-Loc_BLOB lib_ruby_parser__internal__containers__loc__new(uint64_t begin, uint64_t end)
+Loc_BLOB lib_ruby_parser__external__loc__new(uint64_t begin, uint64_t end)
 {
     Loc loc = {.begin = begin, .end = end};
     return PACK_Loc(loc);
 }
-uint64_t lib_ruby_parser__internal__containers__loc__begin(const Loc_BLOB *blob)
+void lib_ruby_parser__external__loc__drop(Loc_BLOB *self_blob)
 {
-    const Loc *loc = (const Loc *)blob;
-    return loc->begin;
+    (void)self_blob;
 }
-uint64_t lib_ruby_parser__internal__containers__loc__end(const Loc_BLOB *blob)
+uint64_t lib_ruby_parser__external__loc__get_begin(const Loc_BLOB *self_blob)
 {
-    const Loc *loc = (const Loc *)blob;
-    return loc->end;
+    const Loc *self = (const Loc *)self_blob;
+    return self->begin;
 }
-void lib_ruby_parser__internal__containers__loc__drop(Loc_BLOB *blob)
+uint64_t lib_ruby_parser__external__loc__get_end(const Loc_BLOB *self_blob)
 {
-    (void)blob;
-    // noop
+    const Loc *self = (const Loc *)self_blob;
+    return self->end;
 }
 
 /*
     MaybeLoc
 */
-MaybeLoc_BLOB lib_ruby_parser__internal__containers__maybe_loc__new_some(Loc_BLOB loc_blob)
+MaybeLoc_BLOB lib_ruby_parser__external__maybe_loc__new_some(Loc_BLOB loc_blob)
 {
     MaybeLoc maybe_loc = {.tag = MAYBE_LOC_SOME, .as = {.loc = UNPACK_Loc(loc_blob)}};
     return PACK_MaybeLoc(maybe_loc);
 }
-MaybeLoc_BLOB lib_ruby_parser__internal__containers__maybe_loc__new_none()
+MaybeLoc_BLOB lib_ruby_parser__external__maybe_loc__new_none()
 {
     MaybeLoc maybe_loc = {.tag = MAYBE_LOC_NONE, .as = {.nothing = {.dummy = 0}}};
     return PACK_MaybeLoc(maybe_loc);
 }
-bool lib_ruby_parser__internal__containers__maybe_loc__is_some(const MaybeLoc_BLOB *blob)
+void lib_ruby_parser__external__maybe_loc__drop(MaybeLoc_BLOB *self_blob)
 {
-    const MaybeLoc *maybe_loc = (const MaybeLoc *)blob;
-    return maybe_loc->tag == MAYBE_LOC_SOME;
+    (void)self_blob;
 }
-bool lib_ruby_parser__internal__containers__maybe_loc__is_none(const MaybeLoc_BLOB *blob)
+bool lib_ruby_parser__external__maybe_loc__is_some(const MaybeLoc_BLOB *self_blob)
 {
-    const MaybeLoc *maybe_loc = (const MaybeLoc *)blob;
-    return maybe_loc->tag == MAYBE_LOC_NONE;
+    const MaybeLoc *self = (const MaybeLoc *)self_blob;
+    return self->tag == MAYBE_LOC_SOME;
 }
-Loc_BLOB *lib_ruby_parser__internal__containers__maybe_loc__get_loc(MaybeLoc_BLOB *blob)
+bool lib_ruby_parser__external__maybe_loc__is_none(const MaybeLoc_BLOB *self_blob)
 {
-    MaybeLoc *maybe_loc = (MaybeLoc *)blob;
-    if (maybe_loc->tag == MAYBE_LOC_NONE)
+    const MaybeLoc *self = (const MaybeLoc *)self_blob;
+    return self->tag == MAYBE_LOC_NONE;
+}
+const Loc_BLOB *lib_ruby_parser__external__maybe_loc__as_loc(const MaybeLoc_BLOB *self_blob)
+{
+    MaybeLoc *self = (MaybeLoc *)self_blob;
+    if (self->tag == MAYBE_LOC_NONE)
         return NULL;
-    return (Loc_BLOB *)(&(maybe_loc->as.loc));
+    return (Loc_BLOB *)(&(self->as.loc));
 }
-Loc_BLOB lib_ruby_parser__internal__containers__maybe_loc__into_loc(MaybeLoc_BLOB blob)
+Loc_BLOB lib_ruby_parser__external__maybe_loc__into_loc(MaybeLoc_BLOB self_blob)
 {
-    return PACK_Loc(UNPACK_MaybeLoc(blob).as.loc);
-}
-void lib_ruby_parser__internal__containers__maybe_loc__drop(MaybeLoc_BLOB *blob)
-{
-    (void)blob;
-    // noop
+    return PACK_Loc(UNPACK_MaybeLoc(self_blob).as.loc);
 }
 
 /*
     MagicCommentKind
 */
-MagicCommentKind_BLOB lib_ruby_parser__internal__containers__magic_comment_kind__new_encoding()
+MagicCommentKind_BLOB lib_ruby_parser__external__magic_comment_kind__new_encoding()
 {
     return PACK_MagicCommentKind(MAGIC_COMMENT_KIND_ENCODING);
 }
-MagicCommentKind_BLOB lib_ruby_parser__internal__containers__magic_comment_kind__new_frozen_string_literal()
+MagicCommentKind_BLOB lib_ruby_parser__external__magic_comment_kind__new_frozen_string_literal()
 {
     return PACK_MagicCommentKind(MAGIC_COMMENT_KIND_FROZEN_STRING_LITERAL);
 }
-MagicCommentKind_BLOB lib_ruby_parser__internal__containers__magic_comment_kind__new_warn_indent()
+MagicCommentKind_BLOB lib_ruby_parser__external__magic_comment_kind__new_warn_indent()
 {
     return PACK_MagicCommentKind(MAGIC_COMMENT_KIND_WARN_INDENT);
 }
-MagicCommentKind_BLOB lib_ruby_parser__internal__containers__magic_comment_kind__new_shareable_constant_value()
+MagicCommentKind_BLOB lib_ruby_parser__external__magic_comment_kind__new_shareable_constant_value()
 {
     return PACK_MagicCommentKind(MAGIC_COMMENT_KIND_SHAREABLE_CONSTANT_VALUE);
 }
-
-bool lib_ruby_parser__internal__containers__magic_comment_kind__is_encoding(MagicCommentKind_BLOB blob)
+void lib_ruby_parser__external__magic_comment_kind__drop(MagicCommentKind_BLOB *self_blob)
 {
-    return UNPACK_MagicCommentKind(blob) == MAGIC_COMMENT_KIND_ENCODING;
+    (void)self_blob;
 }
-bool lib_ruby_parser__internal__containers__magic_comment_kind__is_frozen_string_literal(MagicCommentKind_BLOB blob)
+bool lib_ruby_parser__external__magic_comment_kind__is_encoding(const MagicCommentKind_BLOB *self_blob)
 {
-    return UNPACK_MagicCommentKind(blob) == MAGIC_COMMENT_KIND_FROZEN_STRING_LITERAL;
+    const MagicCommentKind *self = (const MagicCommentKind *)self_blob;
+    return *self == MAGIC_COMMENT_KIND_ENCODING;
 }
-bool lib_ruby_parser__internal__containers__magic_comment_kind__is_warn_indent(MagicCommentKind_BLOB blob)
+bool lib_ruby_parser__external__magic_comment_kind__is_frozen_string_literal(const MagicCommentKind_BLOB *self_blob)
 {
-    return UNPACK_MagicCommentKind(blob) == MAGIC_COMMENT_KIND_WARN_INDENT;
+    const MagicCommentKind *self = (const MagicCommentKind *)self_blob;
+    return *self == MAGIC_COMMENT_KIND_FROZEN_STRING_LITERAL;
 }
-bool lib_ruby_parser__internal__containers__magic_comment_kind__is_shareable_constant_value(MagicCommentKind_BLOB blob)
+bool lib_ruby_parser__external__magic_comment_kind__is_warn_indent(const MagicCommentKind_BLOB *self_blob)
 {
-    return UNPACK_MagicCommentKind(blob) == MAGIC_COMMENT_KIND_SHAREABLE_CONSTANT_VALUE;
+    const MagicCommentKind *self = (const MagicCommentKind *)self_blob;
+    return *self == MAGIC_COMMENT_KIND_WARN_INDENT;
+}
+bool lib_ruby_parser__external__magic_comment_kind__is_shareable_constant_value(const MagicCommentKind_BLOB *self_blob)
+{
+    const MagicCommentKind *self = (const MagicCommentKind *)self_blob;
+    return *self == MAGIC_COMMENT_KIND_SHAREABLE_CONSTANT_VALUE;
 }
 
 /*
     MagicComment
 */
 
-MagicComment_BLOB lib_ruby_parser__internal__containers__magic_comment__new(MagicCommentKind_BLOB kind, Loc_BLOB key_l, Loc_BLOB value_l)
+MagicComment_BLOB lib_ruby_parser__external__magic_comment__new(
+    MagicCommentKind_BLOB kind_blob,
+    Loc_BLOB key_l_blob,
+    Loc_BLOB value_l_blob)
 {
-    MagicComment magic_comment = {.kind = UNPACK_MagicCommentKind(kind), .key_l = UNPACK_Loc(key_l), .value_l = UNPACK_Loc(value_l)};
+    MagicComment magic_comment = {
+        .kind = UNPACK_MagicCommentKind(kind_blob),
+        .key_l = UNPACK_Loc(key_l_blob),
+        .value_l = UNPACK_Loc(value_l_blob)};
     return PACK_MagicComment(magic_comment);
 }
-const MagicCommentKind_BLOB *lib_ruby_parser__internal__containers__magic_comment__get_kind(const MagicComment_BLOB *blob)
+void lib_ruby_parser__external__magic_comment__drop(MagicComment_BLOB *self_blob)
 {
-    const MagicComment *magic_comment = (const MagicComment *)blob;
-    return (const MagicCommentKind_BLOB *)(&(magic_comment->kind));
+    (void)self_blob;
 }
-const Loc_BLOB *lib_ruby_parser__internal__containers__magic_comment__get_key_l(const MagicComment_BLOB *blob)
+const MagicCommentKind_BLOB *lib_ruby_parser__external__magic_comment__get_kind(const MagicComment_BLOB *self_blob)
 {
-    const MagicComment *magic_comment = (const MagicComment *)blob;
-    return (const Loc_BLOB *)(&(magic_comment->key_l));
+    const MagicComment *self = (const MagicComment *)self_blob;
+    return (const MagicCommentKind_BLOB *)(&(self->kind));
 }
-const Loc_BLOB *lib_ruby_parser__internal__containers__magic_comment__get_value_l(const MagicComment_BLOB *blob)
+const Loc_BLOB *lib_ruby_parser__external__magic_comment__get_key_l(const MagicComment_BLOB *self_blob)
 {
-    const MagicComment *magic_comment = (const MagicComment *)blob;
-    return (const Loc_BLOB *)(&(magic_comment->value_l));
+    const MagicComment *self = (const MagicComment *)self_blob;
+    return (const Loc_BLOB *)(&(self->key_l));
 }
-void lib_ruby_parser__internal__containers__magic_comment__drop(MagicComment_BLOB *blob)
+const Loc_BLOB *lib_ruby_parser__external__magic_comment__get_value_l(const MagicComment_BLOB *self_blob)
 {
-    (void)blob;
-    // noop
+    const MagicComment *self = (const MagicComment *)self_blob;
+    return (const Loc_BLOB *)(&(self->value_l));
 }
 
 /*
-    SharedByteList
+    ErrorLevel
 */
-SharedByteList_BLOB lib_ruby_parser__internal__containers__shared_byte_list__new(const uint8_t *ptr, uint64_t len)
+ErrorLevel_BLOB lib_ruby_parser__external__error_level__new_warning()
 {
-    SharedByteList shared_byte_list = {.ptr = ptr, .len = len};
-    return PACK_SharedByteList(shared_byte_list);
+    return PACK_ErrorLevel(WARNING);
 }
-const uint8_t *lib_ruby_parser__internal__containers__shared_byte_list__get_raw(const SharedByteList_BLOB *blob)
+ErrorLevel_BLOB lib_ruby_parser__external__error_level__new_error()
 {
-    const SharedByteList *shared_byte_list = (const SharedByteList *)blob;
-    if (shared_byte_list->len == 0)
-        return NULL;
-    return shared_byte_list->ptr;
+    return PACK_ErrorLevel(ERROR);
 }
-uint64_t lib_ruby_parser__internal__containers__shared_byte_list__get_len(const SharedByteList_BLOB *blob)
+void lib_ruby_parser__external__error_level__drop(ErrorLevel_BLOB *self_blob)
 {
-    const SharedByteList *shared_byte_list = (const SharedByteList *)blob;
-    return shared_byte_list->len;
+    (void)self_blob;
+}
+bool lib_ruby_parser__external__error_level__is_warning(const ErrorLevel_BLOB *self_blob)
+{
+    const ErrorLevel *self = (const ErrorLevel *)self_blob;
+    return *self == WARNING;
+}
+bool lib_ruby_parser__external__error_level__is_error(const ErrorLevel_BLOB *self_blob)
+{
+    const ErrorLevel *self = (const ErrorLevel *)self_blob;
+    return *self == ERROR;
 }
 
 /*
     Diagnostic
 */
-Diagnostic_BLOB lib_ruby_parser__internal__containers__diagnostic__new(ErrorLevel_BLOB level, DiagnosticMessage_BLOB message, Loc_BLOB loc)
+Diagnostic_BLOB lib_ruby_parser__external__diagnostic__new(
+    ErrorLevel_BLOB level_blob,
+    DiagnosticMessage_BLOB message_blob,
+    Loc_BLOB loc_blob)
 {
-    Diagnostic diagnostic = {.level = UNPACK_ErrorLevel(level), .message = UNPACK_DiagnosticMessage(message), .loc = UNPACK_Loc(loc)};
+    Diagnostic diagnostic = {
+        .level = UNPACK_ErrorLevel(level_blob),
+        .message = UNPACK_DiagnosticMessage(message_blob),
+        .loc = UNPACK_Loc(loc_blob)};
     return PACK_Diagnostic(diagnostic);
 }
-const ErrorLevel_BLOB *lib_ruby_parser__internal__containers__diagnostic__get_level(const Diagnostic_BLOB *blob)
+void lib_ruby_parser__external__diagnostic__drop(Diagnostic_BLOB *self_blob)
 {
-    const Diagnostic *diagnostic = (const Diagnostic *)blob;
-    return (const ErrorLevel_BLOB *)(&(diagnostic->level));
+    Diagnostic *self = (Diagnostic *)self_blob;
+    drop_diagnostic(self);
 }
-const DiagnosticMessage_BLOB *lib_ruby_parser__internal__containers__diagnostic__get_message(const Diagnostic_BLOB *blob)
+const ErrorLevel_BLOB *lib_ruby_parser__external__diagnostic__get_level(const Diagnostic_BLOB *self_blob)
 {
-    const Diagnostic *diagnostic = (const Diagnostic *)blob;
-    return (const DiagnosticMessage_BLOB *)(&(diagnostic->message));
+    const Diagnostic *self = (const Diagnostic *)self_blob;
+    return (const ErrorLevel_BLOB *)(&(self->level));
 }
-const Loc_BLOB *lib_ruby_parser__internal__containers__diagnostic__get_loc(const Diagnostic_BLOB *blob)
+const DiagnosticMessage_BLOB *lib_ruby_parser__external__diagnostic__get_message(const Diagnostic_BLOB *self_blob)
 {
-    const Diagnostic *diagnostic = (const Diagnostic *)blob;
-    return (const Loc_BLOB *)(&(diagnostic->loc));
+    const Diagnostic *self = (const Diagnostic *)self_blob;
+    return (const DiagnosticMessage_BLOB *)(&(self->message));
 }
-void lib_ruby_parser__internal__containers__diagnostic__drop(Diagnostic_BLOB *blob)
+const Loc_BLOB *lib_ruby_parser__external__diagnostic__get_loc(const Diagnostic_BLOB *self_blob)
 {
-    Diagnostic *diagnostic = (Diagnostic *)blob;
-    drop_diagnostic(diagnostic);
+    const Diagnostic *self = (const Diagnostic *)self_blob;
+    return (const Loc_BLOB *)(&(self->loc));
 }
 
 /*
     InputError
 */
 
-InputError_BLOB lib_ruby_parser__internal__containers__input_error__new_unsupported_encoding(StringPtr_BLOB err)
+InputError_BLOB lib_ruby_parser__external__input_error__new_unsupported_encoding(StringPtr_BLOB err_blob)
 {
-    InputError input_error = {.tag = UNSUPPORTED_ENCODING, .as = {.unsupported_encoding = UNPACK_StringPtr(err)}};
+    InputError input_error = {.tag = UNSUPPORTED_ENCODING, .as = {.unsupported_encoding = UNPACK_StringPtr(err_blob)}};
     return PACK_InputError(input_error);
 }
-InputError_BLOB lib_ruby_parser__internal__containers__input_error__new_decoding_error(StringPtr_BLOB err)
+InputError_BLOB lib_ruby_parser__external__input_error__new_decoding_error(StringPtr_BLOB err_blob)
 {
-    InputError input_error = {.tag = DECODING_ERROR, .as = {.decoding_error = UNPACK_StringPtr(err)}};
-    return PACK_InputError(input_error);
+    InputError self = {.tag = DECODING_ERROR, .as = {.decoding_error = UNPACK_StringPtr(err_blob)}};
+    return PACK_InputError(self);
 }
-bool lib_ruby_parser__internal__containers__input_error__is_unsupported_encoding(const InputError_BLOB *blob)
+void lib_ruby_parser__external__input_error__drop(InputError_BLOB *self_blob)
 {
-    const InputError *input_error = (const InputError *)blob;
-    return input_error->tag == UNSUPPORTED_ENCODING;
+    InputError *self = (InputError *)self_blob;
+    drop_input_error(self);
 }
-bool lib_ruby_parser__internal__containers__input_error__is_decoding_error(const InputError_BLOB *blob)
+bool lib_ruby_parser__external__input_error__is_unsupported_encoding(const InputError_BLOB *self_blob)
 {
-    const InputError *input_error = (const InputError *)blob;
-    return input_error->tag == DECODING_ERROR;
+    const InputError *self = (const InputError *)self_blob;
+    return self->tag == UNSUPPORTED_ENCODING;
 }
-const StringPtr_BLOB *lib_ruby_parser__internal__containers__input_error__get_unsupported_encoding(const InputError_BLOB *blob)
+bool lib_ruby_parser__external__input_error__is_decoding_error(const InputError_BLOB *self_blob)
 {
-    const InputError *input_error = (const InputError *)blob;
-    if (input_error->tag == UNSUPPORTED_ENCODING)
-        return (const StringPtr_BLOB *)(&(input_error->as.unsupported_encoding));
+    const InputError *self = (const InputError *)self_blob;
+    return self->tag == DECODING_ERROR;
+}
+const StringPtr_BLOB *lib_ruby_parser__external__input_error__get_unsupported_encoding(const InputError_BLOB *self_blob)
+{
+    const InputError *self = (const InputError *)self_blob;
+    if (self->tag == UNSUPPORTED_ENCODING)
+        return (const StringPtr_BLOB *)(&(self->as.unsupported_encoding));
     return NULL;
 }
-const StringPtr_BLOB *lib_ruby_parser__internal__containers__input_error__get_decoding_error(const InputError_BLOB *blob)
+const StringPtr_BLOB *lib_ruby_parser__external__input_error__get_decoding_error(const InputError_BLOB *self_blob)
 {
-    const InputError *input_error = (const InputError *)blob;
-    if (input_error->tag == DECODING_ERROR)
-        return (const StringPtr_BLOB *)(&(input_error->as.decoding_error));
+    const InputError *self = (const InputError *)self_blob;
+    if (self->tag == DECODING_ERROR)
+        return (const StringPtr_BLOB *)(&(self->as.decoding_error));
     return NULL;
-}
-void lib_ruby_parser__internal__containers__input_error__drop(InputError_BLOB *blob)
-{
-    InputError *input_error = (InputError *)blob;
-    drop_input_error(input_error);
 }
 
 /*
     DecoderResult
 */
-DecoderResult_BLOB lib_ruby_parser__internal__containers__decoder_result__new_ok(ByteList_BLOB byte_list)
+DecoderResult_BLOB lib_ruby_parser__external__decoder_result__new_ok(ByteList_BLOB byte_list_blob)
 {
-    DecoderResult decoder_result = {.tag = DECODE_OK, .as = {.ok = UNPACK_ByteList(byte_list)}};
+    DecoderResult decoder_result = {.tag = DECODE_OK, .as = {.ok = UNPACK_ByteList(byte_list_blob)}};
     return PACK_DecoderResult(decoder_result);
 }
-DecoderResult_BLOB lib_ruby_parser__internal__containers__decoder_result__new_err(InputError_BLOB input_error)
+DecoderResult_BLOB lib_ruby_parser__external__decoder_result__new_err(InputError_BLOB input_error_blob)
 {
-    DecoderResult decoder_result = {.tag = DECODE_ERR, .as = {.err = UNPACK_InputError(input_error)}};
-    return PACK_DecoderResult(decoder_result);
+    DecoderResult self = {.tag = DECODE_ERR, .as = {.err = UNPACK_InputError(input_error_blob)}};
+    return PACK_DecoderResult(self);
 }
-bool lib_ruby_parser__internal__containers__decoder_result_is_ok(const DecoderResult_BLOB *blob)
+void lib_ruby_parser__external__decoder_result__drop(DecoderResult_BLOB *self_blob)
 {
-    const DecoderResult *decoder_result = (const DecoderResult *)blob;
-    return decoder_result->tag == DECODE_OK;
+    DecoderResult *self = (DecoderResult *)self_blob;
+    drop_decoder_result(self);
 }
-bool lib_ruby_parser__internal__containers__decoder_result_is_err(const DecoderResult_BLOB *blob)
+bool lib_ruby_parser__external__decoder_result_is_ok(const DecoderResult_BLOB *self_blob)
 {
-    const DecoderResult *decoder_result = (const DecoderResult *)blob;
-    return decoder_result->tag == DECODE_ERR;
+    const DecoderResult *self = (const DecoderResult *)self_blob;
+    return self->tag == DECODE_OK;
 }
-ByteList_BLOB lib_ruby_parser__internal__containers__decoder_result_into_ok(DecoderResult_BLOB blob)
+bool lib_ruby_parser__external__decoder_result_is_err(const DecoderResult_BLOB *self_blob)
 {
-    return PACK_ByteList(UNPACK_DecoderResult(blob).as.ok);
+    const DecoderResult *self = (const DecoderResult *)self_blob;
+    return self->tag == DECODE_ERR;
 }
-InputError_BLOB lib_ruby_parser__internal__containers__decoder_result_into_err(DecoderResult_BLOB blob)
+ByteList_BLOB lib_ruby_parser__external__decoder_result_into_ok(DecoderResult_BLOB self_blob)
 {
-    return PACK_InputError(UNPACK_DecoderResult(blob).as.err);
+    return PACK_ByteList(UNPACK_DecoderResult(self_blob).as.ok);
 }
-const ByteList_BLOB *lib_ruby_parser__internal__containers__decoder_result_as_ok(const DecoderResult_BLOB *blob)
+InputError_BLOB lib_ruby_parser__external__decoder_result_into_err(DecoderResult_BLOB self_blob)
 {
-    const DecoderResult *decoder_result = (const DecoderResult *)blob;
-    return (const ByteList_BLOB *)(&(decoder_result->as.ok));
+    return PACK_InputError(UNPACK_DecoderResult(self_blob).as.err);
 }
-const InputError_BLOB *lib_ruby_parser__internal__containers__decoder_result_as_err(const DecoderResult_BLOB *blob)
+const ByteList_BLOB *lib_ruby_parser__external__decoder_result_as_ok(const DecoderResult_BLOB *self_blob)
 {
-    const DecoderResult *decoder_result = (const DecoderResult *)blob;
-    return (const InputError_BLOB *)(&(decoder_result->as.err));
+    const DecoderResult *self = (const DecoderResult *)self_blob;
+    return (const ByteList_BLOB *)(&(self->as.ok));
 }
-void lib_ruby_parser__internal__containers__decoder_result__drop(DecoderResult_BLOB *blob)
+const InputError_BLOB *lib_ruby_parser__external__decoder_result_as_err(const DecoderResult_BLOB *self_blob)
 {
-    DecoderResult *decoder_result = (DecoderResult *)blob;
-    drop_decoder_result(decoder_result);
+    const DecoderResult *self = (const DecoderResult *)self_blob;
+    return (const InputError_BLOB *)(&(self->as.err));
 }
 
 /*
     Decoder
 */
-DecoderResult_BLOB lib_ruby_parser__internal__containers__decoder__call(
-    const Decoder_BLOB *blob,
+DecoderResult_BLOB lib_ruby_parser__external__decoder__call(
+    Decoder_BLOB *self_blob,
     StringPtr_BLOB encoding_blob,
     ByteList_BLOB input_blob)
 {
@@ -750,71 +774,87 @@ DecoderResult_BLOB lib_ruby_parser__internal__containers__decoder__call(
     drop_byte_list(&input);
 
     // call dummy decoder
-    const Decoder *decoder = (const Decoder *)blob;
-    return PACK_DecoderResult(decoder->f());
+    Decoder *self = (Decoder *)self_blob;
+    return PACK_DecoderResult(self->f());
 }
-void lib_ruby_parser__internal__containers__decoder_drop(Decoder_BLOB *blob)
+void lib_ruby_parser__external__decoder_drop(Decoder_BLOB *self_blob)
 {
-    (void)blob;
+    (void)self_blob;
 }
-Decoder_BLOB lib_ruby_parser__internal__containers__decoder__new(dummy_decoder_t f)
+Decoder_BLOB lib_ruby_parser__external__decoder__new(dummy_decoder_t f)
 {
     Decoder decoder = {.f = f};
     return PACK_Decoder(decoder);
 }
 
 /*
+    RewriteAction
+*/
+void lib_ruby_parser__external__rewrite_action__drop(RewriteAction_BLOB *self_blob)
+{
+    (void)self_blob;
+}
+bool lib_ruby_parser__external__rewrite_action__is_drop(const RewriteAction_BLOB *self_blob)
+{
+    const RewriteAction *self = (const RewriteAction *)self_blob;
+    return *self == REWRITE_ACTION_DROP;
+}
+bool lib_ruby_parser__external__rewrite_action__is_keep(const RewriteAction_BLOB *self_blob)
+{
+    const RewriteAction *self = (const RewriteAction *)self_blob;
+    return *self == REWRITE_ACTION_KEEP;
+}
+
+/*
+    LexStateAction
+*/
+void lib_ruby_parser__external__lex_state_action__drop(LexStateAction_BLOB *self_blob)
+{
+    (void)self_blob;
+}
+bool lib_ruby_parser__external__lex_state_action__is_set(const LexStateAction_BLOB *self_blob)
+{
+    const LexStateAction *self = (const LexStateAction *)self_blob;
+    return self->tag == LEX_STATE_SET;
+}
+bool lib_ruby_parser__external__lex_state_action__is_keep(const LexStateAction_BLOB *self_blob)
+{
+    const LexStateAction *self = (const LexStateAction *)self_blob;
+    return self->tag == LEX_STATE_KEEP;
+}
+int32_t lib_ruby_parser__external__lex_state_action__get_next_state(const LexStateAction_BLOB *self_blob)
+{
+    const LexStateAction *self = (const LexStateAction *)self_blob;
+    return self->as.set;
+}
+
+/*
+    TokenRewriterResult
+*/
+void lib_ruby_parser__external__token_rewriter_result__drop(TokenRewriterResult_BLOB *self_blob)
+{
+    TokenRewriterResult *self = (TokenRewriterResult *)self_blob;
+    drop_token_rewriter_result(self);
+}
+InternalTokenRewriterResult lib_ruby_parser__external__token_rewriter_result__into_internal(TokenRewriterResult_BLOB self_blob)
+{
+    TokenRewriterResult self = UNPACK_TokenRewriterResult(self_blob);
+    InternalTokenRewriterResult internal = {
+        .token_action = PACK_RewriteAction(self.token_action),
+        .lex_state_action = PACK_LexStateAction(self.lex_state_action),
+        .rewritten_token = PACK_Ptr(self.rewritten_token)};
+    return internal;
+}
+
+/*
     TokenRewriter
 */
-bool lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__is_drop(const RewriteAction_BLOB *blob)
+void lib_ruby_parser__external__token_rewriter__drop(TokenRewriter_BLOB *self_blob)
 {
-    const RewriteAction *rewrite_action = (const RewriteAction *)blob;
-    return *rewrite_action == REWRITE_ACTION_DROP;
+    (void)self_blob;
 }
-bool lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__is_keep(const RewriteAction_BLOB *blob)
-{
-    const RewriteAction *rewrite_action = (const RewriteAction *)blob;
-    return *rewrite_action == REWRITE_ACTION_KEEP;
-}
-void lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__drop(RewriteAction_BLOB *blob)
-{
-    (void)blob;
-}
-bool lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__is_set(const LexStateAction_BLOB *blob)
-{
-    const LexStateAction *lex_state_action = (const LexStateAction *)blob;
-    return lex_state_action->tag == LEX_STATE_SET;
-}
-bool lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__is_keep(const LexStateAction_BLOB *blob)
-{
-    const LexStateAction *lex_state_action = (const LexStateAction *)blob;
-    return lex_state_action->tag == LEX_STATE_KEEP;
-}
-void lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__drop(LexStateAction_BLOB *blob)
-{
-    (void)blob;
-}
-int32_t lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__get_next_state(const LexStateAction_BLOB *blob)
-{
-    const LexStateAction *lex_state_action = (const LexStateAction *)blob;
-    return lex_state_action->as.set;
-}
-InternalTokenRewriterResult lib_ruby_parser__internal__containers__token_rewriter__result__into_internal(TokenRewriterResult_BLOB blob)
-{
-    TokenRewriterResult input = UNPACK_TokenRewriterResult(blob);
-    InternalTokenRewriterResult output = {
-        .token_action = PACK_RewriteAction(input.token_action),
-        .lex_state_action = PACK_LexStateAction(input.lex_state_action),
-        .rewritten_token = PACK_Ptr(input.rewritten_token)};
-    return output;
-}
-void lib_ruby_parser__internal__containers__token_rewriter__result__drop(TokenRewriterResult_BLOB *blob)
-{
-    TokenRewriterResult *result = (TokenRewriterResult *)blob;
-    drop_token_rewriter_result(result);
-}
-TokenRewriterResult_BLOB lib_ruby_parser__internal__containers__token_rewriter__call(
-    const TokenRewriter_BLOB *blob,
+TokenRewriterResult_BLOB lib_ruby_parser__external__token_rewriter__call(
+    TokenRewriter_BLOB *self_blob,
     Ptr_BLOB token_blob,
     SharedByteList_BLOB input_blob)
 {
@@ -822,24 +862,20 @@ TokenRewriterResult_BLOB lib_ruby_parser__internal__containers__token_rewriter__
     (void)input_blob;
 
     // call dummy token_rewriter
-    const TokenRewriter *token_rewriter = (const TokenRewriter *)blob;
-    TokenRewriterResult result = token_rewriter->rewrite_f(token, token_rewriter->build_new_token_f);
+    TokenRewriter *self = (TokenRewriter *)self_blob;
+    TokenRewriterResult result = self->rewrite_f(token, self->build_new_token_f);
     return PACK_TokenRewriterResult(result);
 }
-void lib_ruby_parser__internal__containers__token_rewriter__drop(TokenRewriter_BLOB *blob)
-{
-    (void)blob;
-}
 // Test APIs
-TokenRewriter_BLOB lib_ruby_parser__internal__containers__token_rewriter__new_keep(build_new_token_t build_new_token_f)
+TokenRewriter_BLOB lib_ruby_parser__external__token_rewriter__new_keep(build_new_token_t build_new_token_f)
 {
     return PACK_TokenRewriter(__keep_token_rewriter(build_new_token_f));
 }
-TokenRewriter_BLOB lib_ruby_parser__internal__containers__token_rewriter__new_drop(build_new_token_t build_new_token_f)
+TokenRewriter_BLOB lib_ruby_parser__external__token_rewriter__new_drop(build_new_token_t build_new_token_f)
 {
     return PACK_TokenRewriter(__drop_token_rewriter(build_new_token_f));
 }
-TokenRewriter_BLOB lib_ruby_parser__internal__containers__token_rewriter__new_rewrite(
+TokenRewriter_BLOB lib_ruby_parser__external__token_rewriter__new_rewrite(
     build_new_token_t build_new_token_f)
 {
     return PACK_TokenRewriter(__rewriter_token_rewriter(build_new_token_f));
@@ -848,260 +884,262 @@ TokenRewriter_BLOB lib_ruby_parser__internal__containers__token_rewriter__new_re
 /*
     MaybeDecoder
 */
-MaybeDecoder_BLOB lib_ruby_parser__internal__containers__maybe_decoder__new_some(Decoder_BLOB blob)
+MaybeDecoder_BLOB lib_ruby_parser__external__maybe_decoder__new_some(Decoder_BLOB decoder_blob)
 {
-    MaybeDecoder maybe_decoder = {.tag = MAYBE_DECODER_SOME, .as = {.decoder = UNPACK_Decoder(blob)}};
+    MaybeDecoder maybe_decoder = {.tag = MAYBE_DECODER_SOME, .as = {.decoder = UNPACK_Decoder(decoder_blob)}};
     return PACK_MaybeDecoder(maybe_decoder);
 }
-MaybeDecoder_BLOB lib_ruby_parser__internal__containers__maybe_decoder__new_none()
+MaybeDecoder_BLOB lib_ruby_parser__external__maybe_decoder__new_none()
 {
     MaybeDecoder maybe_decoder = {.tag = MAYBE_DECODER_NONE, .as = {.nothing = {.dummy = 42}}};
     return PACK_MaybeDecoder(maybe_decoder);
 }
-bool lib_ruby_parser__internal__containers__maybe_decoder__is_some(const MaybeDecoder_BLOB *blob)
+void lib_ruby_parser__external__maybe_decoder__drop(MaybeDecoder_BLOB *self_blob)
 {
-    const MaybeDecoder *maybe_decoder = (const MaybeDecoder *)blob;
-    return maybe_decoder->tag == MAYBE_DECODER_SOME;
+    (void)self_blob;
 }
-bool lib_ruby_parser__internal__containers__maybe_decoder__is_none(const MaybeDecoder_BLOB *blob)
+bool lib_ruby_parser__external__maybe_decoder__is_some(const MaybeDecoder_BLOB *self_blob)
 {
-    const MaybeDecoder *maybe_decoder = (const MaybeDecoder *)blob;
-    return maybe_decoder->tag == MAYBE_DECODER_NONE;
+    const MaybeDecoder *self = (const MaybeDecoder *)self_blob;
+    return self->tag == MAYBE_DECODER_SOME;
 }
-const Decoder_BLOB *lib_ruby_parser__internal__containers__maybe_decoder__as_decoder(const MaybeDecoder_BLOB *blob)
+bool lib_ruby_parser__external__maybe_decoder__is_none(const MaybeDecoder_BLOB *self_blob)
 {
-    const MaybeDecoder *maybe_decoder = (const MaybeDecoder *)blob;
-    if (maybe_decoder->tag == MAYBE_DECODER_SOME)
-        return (const Decoder_BLOB *)(&(maybe_decoder->as.decoder));
+    const MaybeDecoder *self = (const MaybeDecoder *)self_blob;
+    return self->tag == MAYBE_DECODER_NONE;
+}
+const Decoder_BLOB *lib_ruby_parser__external__maybe_decoder__as_decoder(const MaybeDecoder_BLOB *self_blob)
+{
+    const MaybeDecoder *self = (const MaybeDecoder *)self_blob;
+    if (self->tag == MAYBE_DECODER_SOME)
+        return (const Decoder_BLOB *)(&(self->as.decoder));
     return NULL;
 }
-Decoder_BLOB lib_ruby_parser__internal__containers__maybe_decoder__into_decoder(MaybeDecoder_BLOB blob)
+Decoder_BLOB lib_ruby_parser__external__maybe_decoder__into_decoder(MaybeDecoder_BLOB self_blob)
 {
-    return PACK_Decoder(UNPACK_MaybeDecoder(blob).as.decoder);
-}
-void lib_ruby_parser__internal__containers__maybe_decoder__drop(MaybeDecoder_BLOB *blob)
-{
-    (void)blob;
+    return PACK_Decoder(UNPACK_MaybeDecoder(self_blob).as.decoder);
 }
 
 /*
     MaybeTokenRewriter
 */
-MaybeTokenRewriter_BLOB lib_ruby_parser__internal__containers__maybe_token_rewriter__new_some(TokenRewriter_BLOB blob)
+MaybeTokenRewriter_BLOB lib_ruby_parser__external__maybe_token_rewriter__new_some(TokenRewriter_BLOB token_rewriter_blob)
 {
-    MaybeTokenRewriter maybe_token_rewriter = {.tag = MAYBE_TOKEN_REWRITER_SOME, .as = {.token_rewriter = UNPACK_TokenRewriter(blob)}};
+    MaybeTokenRewriter maybe_token_rewriter = {
+        .tag = MAYBE_TOKEN_REWRITER_SOME,
+        .as = {.token_rewriter = UNPACK_TokenRewriter(token_rewriter_blob)}};
     return PACK_MaybeTokenRewriter(maybe_token_rewriter);
 }
-MaybeTokenRewriter_BLOB lib_ruby_parser__internal__containers__maybe_token_rewriter__new_none()
+MaybeTokenRewriter_BLOB lib_ruby_parser__external__maybe_token_rewriter__new_none()
 {
     MaybeTokenRewriter maybe_token_rewriter = {.tag = MAYBE_TOKEN_REWRITER_NONE, .as = {.nothing = {.dummy = 42}}};
     return PACK_MaybeTokenRewriter(maybe_token_rewriter);
 }
-bool lib_ruby_parser__internal__containers__maybe_token_rewriter__is_some(const MaybeTokenRewriter_BLOB *blob)
+void lib_ruby_parser__external__maybe_token_rewriter__drop(MaybeTokenRewriter_BLOB *self_blob)
 {
-    const MaybeTokenRewriter *maybe_token_rewriter = (const MaybeTokenRewriter *)blob;
-    return maybe_token_rewriter->tag == MAYBE_TOKEN_REWRITER_SOME;
+    (void)self_blob;
 }
-bool lib_ruby_parser__internal__containers__maybe_token_rewriter__is_none(const MaybeTokenRewriter_BLOB *blob)
+bool lib_ruby_parser__external__maybe_token_rewriter__is_some(const MaybeTokenRewriter_BLOB *self_blob)
 {
-    const MaybeTokenRewriter *maybe_token_rewriter = (const MaybeTokenRewriter *)blob;
-    return maybe_token_rewriter->tag == MAYBE_TOKEN_REWRITER_NONE;
+    const MaybeTokenRewriter *self = (const MaybeTokenRewriter *)self_blob;
+    return self->tag == MAYBE_TOKEN_REWRITER_SOME;
 }
-const TokenRewriter_BLOB *lib_ruby_parser__internal__containers__maybe_token_rewriter__as_token_rewriter(const MaybeTokenRewriter_BLOB *blob)
+bool lib_ruby_parser__external__maybe_token_rewriter__is_none(const MaybeTokenRewriter_BLOB *self_blob)
 {
-    const MaybeTokenRewriter *maybe_token_rewriter = (const MaybeTokenRewriter *)blob;
-    if (maybe_token_rewriter->tag == MAYBE_TOKEN_REWRITER_SOME)
-        return (const TokenRewriter_BLOB *)(&(maybe_token_rewriter->as.token_rewriter));
+    const MaybeTokenRewriter *self = (const MaybeTokenRewriter *)self_blob;
+    return self->tag == MAYBE_TOKEN_REWRITER_NONE;
+}
+const TokenRewriter_BLOB *lib_ruby_parser__external__maybe_token_rewriter__as_token_rewriter(const MaybeTokenRewriter_BLOB *self_blob)
+{
+    const MaybeTokenRewriter *self = (const MaybeTokenRewriter *)self_blob;
+    if (self->tag == MAYBE_TOKEN_REWRITER_SOME)
+        return (const TokenRewriter_BLOB *)(&(self->as.token_rewriter));
     return NULL;
 }
-TokenRewriter_BLOB lib_ruby_parser__internal__containers__maybe_token_rewriter__into_token_rewriter(MaybeTokenRewriter_BLOB blob)
+TokenRewriter_BLOB lib_ruby_parser__external__maybe_token_rewriter__into_token_rewriter(MaybeTokenRewriter_BLOB self_blob)
 {
-    return PACK_TokenRewriter(UNPACK_MaybeTokenRewriter(blob).as.token_rewriter);
-}
-void lib_ruby_parser__internal__containers__maybe_token_rewriter__drop(MaybeTokenRewriter_BLOB *blob)
-{
-    (void)blob;
+    return PACK_TokenRewriter(UNPACK_MaybeTokenRewriter(self_blob).as.token_rewriter);
 }
 
 /*
     ParserOptions
 */
-ParserOptions_BLOB lib_ruby_parser__internal__containers__parser_options__new(
-    StringPtr_BLOB buffer_name,
+ParserOptions_BLOB lib_ruby_parser__external__parser_options__new(
+    StringPtr_BLOB buffer_name_blob,
     uint8_t debug,
-    MaybeDecoder_BLOB decoder,
-    MaybeTokenRewriter_BLOB token_rewriter,
+    MaybeDecoder_BLOB decoder_blob,
+    MaybeTokenRewriter_BLOB token_rewriter_blob,
     bool record_tokens)
 {
     ParserOptions options = {
-        .buffer_name = UNPACK_StringPtr(buffer_name),
+        .buffer_name = UNPACK_StringPtr(buffer_name_blob),
         .debug = debug,
-        .decoder = UNPACK_MaybeDecoder(decoder),
-        .token_rewriter = UNPACK_MaybeTokenRewriter(token_rewriter),
+        .decoder = UNPACK_MaybeDecoder(decoder_blob),
+        .token_rewriter = UNPACK_MaybeTokenRewriter(token_rewriter_blob),
         .record_tokens = record_tokens};
     return PACK_ParserOptions(options);
 }
-void lib_ruby_parser__internal__containers__parser_options__drop(ParserOptions_BLOB *blob)
+void lib_ruby_parser__external__parser_options__drop(ParserOptions_BLOB *self_blob)
 {
-    ParserOptions *options = (ParserOptions *)blob;
+    ParserOptions *options = (ParserOptions *)self_blob;
     drop_string_ptr(&(options->buffer_name));
 }
-InternalParserOptions lib_ruby_parser__internal__containers__parser_options__into_internal(ParserOptions_BLOB blob)
+InternalParserOptions lib_ruby_parser__external__parser_options__into_internal(ParserOptions_BLOB self_blob)
 {
-    ParserOptions input = UNPACK_ParserOptions(blob);
-    InternalParserOptions output = {
-        .buffer_name = PACK_StringPtr(input.buffer_name),
-        .debug = input.debug,
-        .decoder = PACK_MaybeDecoder(input.decoder),
-        .token_rewriter = PACK_MaybeTokenRewriter(input.token_rewriter),
-        .record_tokens = input.record_tokens};
-    return output;
+    ParserOptions self = UNPACK_ParserOptions(self_blob);
+    InternalParserOptions internal = {
+        .buffer_name = PACK_StringPtr(self.buffer_name),
+        .debug = self.debug,
+        .decoder = PACK_MaybeDecoder(self.decoder),
+        .token_rewriter = PACK_MaybeTokenRewriter(self.token_rewriter),
+        .record_tokens = self.record_tokens};
+    return internal;
 }
-const StringPtr_BLOB *lib_ruby_parser__internal__containers__parser_options__get_buffer_name(const ParserOptions_BLOB *blob)
+const StringPtr_BLOB *lib_ruby_parser__external__parser_options__get_buffer_name(const ParserOptions_BLOB *self_blob)
 {
-    const ParserOptions *options = (const ParserOptions *)blob;
-    return (const StringPtr_BLOB *)(&(options->buffer_name));
+    const ParserOptions *self = (const ParserOptions *)self_blob;
+    return (const StringPtr_BLOB *)(&(self->buffer_name));
 }
-uint8_t lib_ruby_parser__internal__containers__parser_options__get_debug(const ParserOptions_BLOB *blob)
+uint8_t lib_ruby_parser__external__parser_options__get_debug(const ParserOptions_BLOB *self_blob)
 {
-    const ParserOptions *options = (const ParserOptions *)blob;
-    return options->debug;
+    const ParserOptions *self = (const ParserOptions *)self_blob;
+    return self->debug;
 }
-const MaybeDecoder_BLOB *lib_ruby_parser__internal__containers__parser_options__get_decoder(const ParserOptions_BLOB *blob)
+const MaybeDecoder_BLOB *lib_ruby_parser__external__parser_options__get_decoder(const ParserOptions_BLOB *self_blob)
 {
-    const ParserOptions *options = (const ParserOptions *)blob;
-    return (const MaybeDecoder_BLOB *)(&(options->decoder));
+    const ParserOptions *self = (const ParserOptions *)self_blob;
+    return (const MaybeDecoder_BLOB *)(&(self->decoder));
 }
-const MaybeTokenRewriter_BLOB *lib_ruby_parser__internal__containers__parser_options__get_token_rewriter(const ParserOptions_BLOB *blob)
+const MaybeTokenRewriter_BLOB *lib_ruby_parser__external__parser_options__get_token_rewriter(const ParserOptions_BLOB *self_blob)
 {
-    const ParserOptions *options = (const ParserOptions *)blob;
-    return (const MaybeTokenRewriter_BLOB *)(&(options->token_rewriter));
+    const ParserOptions *self = (const ParserOptions *)self_blob;
+    return (const MaybeTokenRewriter_BLOB *)(&(self->token_rewriter));
 }
-bool lib_ruby_parser__internal__containers__parser_options__get_record_tokens(const ParserOptions_BLOB *blob)
+bool lib_ruby_parser__external__parser_options__get_record_tokens(const ParserOptions_BLOB *self_blob)
 {
-    const ParserOptions *options = (const ParserOptions *)blob;
-    return options->record_tokens;
+    const ParserOptions *self = (const ParserOptions *)self_blob;
+    return self->record_tokens;
 }
 
 // DecodedInput
-DecodedInput_BLOB lib_ruby_parser__internal__containers__decoded_input__new(
-    StringPtr_BLOB name,
-    SourceLineList_BLOB lines,
-    ByteList_BLOB bytes)
+DecodedInput_BLOB lib_ruby_parser__external__decoded_input__new(
+    StringPtr_BLOB name_blob,
+    SourceLineList_BLOB lines_blob,
+    ByteList_BLOB bytes_blob)
 {
     DecodedInput decoded_input = {
-        .name = UNPACK_StringPtr(name),
-        .lines = UNPACK_SourceLineList(lines),
-        .bytes = UNPACK_ByteList(bytes)};
+        .name = UNPACK_StringPtr(name_blob),
+        .lines = UNPACK_SourceLineList(lines_blob),
+        .bytes = UNPACK_ByteList(bytes_blob)};
     return PACK_DecodedInput(decoded_input);
 }
-void lib_ruby_parser__internal__containers__decoded_input__drop(DecodedInput_BLOB *blob)
+void lib_ruby_parser__external__decoded_input__drop(DecodedInput_BLOB *self_blob)
 {
-    DecodedInput *decoded_input = (DecodedInput *)blob;
-    drop_decoded_input(decoded_input);
+    DecodedInput *self = (DecodedInput *)self_blob;
+    drop_decoded_input(self);
 }
-const StringPtr_BLOB *lib_ruby_parser__internal__containers__decoded_input__get_name(const DecodedInput_BLOB *blob)
+const StringPtr_BLOB *lib_ruby_parser__external__decoded_input__get_name(const DecodedInput_BLOB *self_blob)
 {
-    const DecodedInput *decoded_input = (const DecodedInput *)blob;
-    return (const StringPtr_BLOB *)(&(decoded_input->name));
+    const DecodedInput *self = (const DecodedInput *)self_blob;
+    return (const StringPtr_BLOB *)(&(self->name));
 }
-const SourceLineList_BLOB *lib_ruby_parser__internal__containers__decoded_input__get_lines(const DecodedInput_BLOB *blob)
+const SourceLineList_BLOB *lib_ruby_parser__external__decoded_input__get_lines(const DecodedInput_BLOB *self_blob)
 {
-    const DecodedInput *decoded_input = (const DecodedInput *)blob;
-    return (const SourceLineList_BLOB *)(&(decoded_input->lines));
+    const DecodedInput *self = (const DecodedInput *)self_blob;
+    return (const SourceLineList_BLOB *)(&(self->lines));
 }
-const ByteList_BLOB *lib_ruby_parser__internal__containers__decoded_input__get_bytes(const DecodedInput_BLOB *blob)
+const ByteList_BLOB *lib_ruby_parser__external__decoded_input__get_bytes(const DecodedInput_BLOB *self_blob)
 {
-    const DecodedInput *decoded_input = (const DecodedInput *)blob;
-    return (const ByteList_BLOB *)(&(decoded_input->bytes));
+    const DecodedInput *self = (const DecodedInput *)self_blob;
+    return (const ByteList_BLOB *)(&(self->bytes));
 }
-void lib_ruby_parser__internal__containers__decoded_input__set_name(DecodedInput_BLOB *blob, StringPtr_BLOB name)
+void lib_ruby_parser__external__decoded_input__set_name(DecodedInput_BLOB *self_blob, StringPtr_BLOB name)
 {
-    DecodedInput *decoded_input = (DecodedInput *)blob;
-    drop_string_ptr(&(decoded_input->name));
-    decoded_input->name = UNPACK_StringPtr(name);
+    DecodedInput *self = (DecodedInput *)self_blob;
+    drop_string_ptr(&(self->name));
+    self->name = UNPACK_StringPtr(name);
 }
-void lib_ruby_parser__internal__containers__decoded_input__set_lines(DecodedInput_BLOB *blob, SourceLineList_BLOB lines)
+void lib_ruby_parser__external__decoded_input__set_lines(DecodedInput_BLOB *self_blob, SourceLineList_BLOB lines)
 {
-    DecodedInput *decoded_input = (DecodedInput *)blob;
-    drop_source_line_list(&(decoded_input->lines));
-    decoded_input->lines = UNPACK_SourceLineList(lines);
+    DecodedInput *self = (DecodedInput *)self_blob;
+    drop_source_line_list(&(self->lines));
+    self->lines = UNPACK_SourceLineList(lines);
 }
-void lib_ruby_parser__internal__containers__decoded_input__set_bytes(DecodedInput_BLOB *blob, ByteList_BLOB bytes)
+void lib_ruby_parser__external__decoded_input__set_bytes(DecodedInput_BLOB *self_blob, ByteList_BLOB bytes)
 {
-    DecodedInput *decoded_input = (DecodedInput *)blob;
-    drop_byte_list(&(decoded_input->bytes));
-    decoded_input->bytes = UNPACK_ByteList(bytes);
+    DecodedInput *self = (DecodedInput *)self_blob;
+    drop_byte_list(&(self->bytes));
+    self->bytes = UNPACK_ByteList(bytes);
 }
-ByteList_BLOB lib_ruby_parser__internal__containers__decoded_input__into_bytes(DecodedInput_BLOB blob)
+ByteList_BLOB lib_ruby_parser__external__decoded_input__into_bytes(DecodedInput_BLOB self_blob)
 {
-    DecodedInput decoded_input = UNPACK_DecodedInput(blob);
-    drop_string_ptr(&(decoded_input.name));
-    drop_source_line_list(&(decoded_input.lines));
-    return PACK_ByteList(decoded_input.bytes);
+    DecodedInput self = UNPACK_DecodedInput(self_blob);
+    drop_string_ptr(&(self.name));
+    drop_source_line_list(&(self.lines));
+    return PACK_ByteList(self.bytes);
 }
-ByteList_BLOB lib_ruby_parser__internal__containers__decoded_input__take_bytes(DecodedInput_BLOB *blob)
+ByteList_BLOB lib_ruby_parser__external__decoded_input__take_bytes(DecodedInput_BLOB *self_blob)
 {
-    DecodedInput *decoded_input = (DecodedInput *)blob;
-    ByteList bytes = decoded_input->bytes;
+    DecodedInput *self = (DecodedInput *)self_blob;
+    ByteList bytes = self->bytes;
     ByteList empty = {.ptr = NULL, .len = 0, .capacity = 0};
-    decoded_input->bytes = empty;
+    self->bytes = empty;
     return PACK_ByteList(bytes);
 }
 
 /*
     ParserResult
 */
-ParserResult_BLOB lib_ruby_parser__internal__containers__parser_result__new(
-    MaybePtr_BLOB ast,
-    TokenList_BLOB tokens,
-    DiagnosticList_BLOB diagnostics,
-    CommentList_BLOB comments,
-    MagicCommentList_BLOB magic_comments,
-    DecodedInput_BLOB input)
+ParserResult_BLOB lib_ruby_parser__external__parser_result__new(
+    MaybePtr_BLOB ast_blob,
+    TokenList_BLOB tokens_blob,
+    DiagnosticList_BLOB diagnostics_blob,
+    CommentList_BLOB comments_blob,
+    MagicCommentList_BLOB magic_comments_blob,
+    DecodedInput_BLOB input_blob)
 {
     ParserResult parser_result = {
-        .ast = UNPACK_MaybePtr(ast),
-        .tokens = UNPACK_TokenList(tokens),
-        .diagnostics = UNPACK_DiagnosticList(diagnostics),
-        .comments = UNPACK_CommentList(comments),
-        .magic_comments = UNPACK_MagicCommentList(magic_comments),
-        .input = UNPACK_DecodedInput(input),
+        .ast = UNPACK_MaybePtr(ast_blob),
+        .tokens = UNPACK_TokenList(tokens_blob),
+        .diagnostics = UNPACK_DiagnosticList(diagnostics_blob),
+        .comments = UNPACK_CommentList(comments_blob),
+        .magic_comments = UNPACK_MagicCommentList(magic_comments_blob),
+        .input = UNPACK_DecodedInput(input_blob),
     };
     return PACK_ParserResult(parser_result);
 }
-void lib_ruby_parser__internal__containers__parser_result__drop(ParserResult_BLOB *blob)
+void lib_ruby_parser__external__parser_result__drop(ParserResult_BLOB *self_blob)
 {
-    ParserResult *parser_result = (ParserResult *)blob;
-    drop_parser_result(parser_result);
+    ParserResult *self = (ParserResult *)self_blob;
+    drop_parser_result(self);
 }
-const MaybePtr_BLOB *lib_ruby_parser__internal__containers__parser_result__get_ast(const ParserResult_BLOB *blob)
+const MaybePtr_BLOB *lib_ruby_parser__external__parser_result__get_ast(const ParserResult_BLOB *self_blob)
 {
-    const ParserResult *parser_result = (const ParserResult *)blob;
-    return (const MaybePtr_BLOB *)(&(parser_result->ast));
+    const ParserResult *self = (const ParserResult *)self_blob;
+    return (const MaybePtr_BLOB *)(&(self->ast));
 }
-const TokenList_BLOB *lib_ruby_parser__internal__containers__parser_result__get_tokens(const ParserResult_BLOB *blob)
+const TokenList_BLOB *lib_ruby_parser__external__parser_result__get_tokens(const ParserResult_BLOB *self_blob)
 {
-    const ParserResult *parser_result = (const ParserResult *)blob;
-    return (const TokenList_BLOB *)(&(parser_result->tokens));
+    const ParserResult *self = (const ParserResult *)self_blob;
+    return (const TokenList_BLOB *)(&(self->tokens));
 }
-const DiagnosticList_BLOB *lib_ruby_parser__internal__containers__parser_result__get_diagnostics(const ParserResult_BLOB *blob)
+const DiagnosticList_BLOB *lib_ruby_parser__external__parser_result__get_diagnostics(const ParserResult_BLOB *self_blob)
 {
-    const ParserResult *parser_result = (const ParserResult *)blob;
-    return (const DiagnosticList_BLOB *)(&(parser_result->diagnostics));
+    const ParserResult *self = (const ParserResult *)self_blob;
+    return (const DiagnosticList_BLOB *)(&(self->diagnostics));
 }
-const CommentList_BLOB *lib_ruby_parser__internal__containers__parser_result__get_comments(const ParserResult_BLOB *blob)
+const CommentList_BLOB *lib_ruby_parser__external__parser_result__get_comments(const ParserResult_BLOB *self_blob)
 {
-    const ParserResult *parser_result = (const ParserResult *)blob;
-    return (const CommentList_BLOB *)(&(parser_result->comments));
+    const ParserResult *self = (const ParserResult *)self_blob;
+    return (const CommentList_BLOB *)(&(self->comments));
 }
-const MagicCommentList_BLOB *lib_ruby_parser__internal__containers__parser_result__get_magic_comments(const ParserResult_BLOB *blob)
+const MagicCommentList_BLOB *lib_ruby_parser__external__parser_result__get_magic_comments(const ParserResult_BLOB *self_blob)
 {
-    const ParserResult *parser_result = (const ParserResult *)blob;
-    return (const MagicCommentList_BLOB *)(&(parser_result->magic_comments));
+    const ParserResult *self = (const ParserResult *)self_blob;
+    return (const MagicCommentList_BLOB *)(&(self->magic_comments));
 }
-const DecodedInput_BLOB *lib_ruby_parser__internal__containers__parser_result__get_input(const ParserResult_BLOB *blob)
+const DecodedInput_BLOB *lib_ruby_parser__external__parser_result__get_input(const ParserResult_BLOB *self_blob)
 {
-    const ParserResult *parser_result = (const ParserResult *)blob;
-    return (const DecodedInput_BLOB *)(&(parser_result->input));
+    const ParserResult *self = (const ParserResult *)self_blob;
+    return (const DecodedInput_BLOB *)(&(self->input));
 }

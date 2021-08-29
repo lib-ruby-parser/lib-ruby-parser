@@ -301,6 +301,14 @@ public:
     Kind kind;
     int32_t next_state;
 
+    LexStateAction(Kind kind, int32_t next_state);
+
+    LexStateAction(const LexStateAction &) = delete;
+    LexStateAction &operator=(const LexStateAction &other) = delete;
+
+    LexStateAction(LexStateAction &&) = default;
+    LexStateAction &operator=(LexStateAction &&other) = default;
+
     static LexStateAction NewKeep();
     static LexStateAction NewSet(int32_t next_state);
 };

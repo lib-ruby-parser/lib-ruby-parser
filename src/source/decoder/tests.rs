@@ -33,7 +33,7 @@ mod dummy_decoder {
     type ExternDecodeFn = extern "C" fn() -> DecoderResultBlob;
 
     extern "C" {
-        fn lib_ruby_parser__internal__containers__decoder__new(f: ExternDecodeFn) -> DecoderBlob;
+        fn lib_ruby_parser__external__decoder__new(f: ExternDecodeFn) -> DecoderBlob;
     }
 
     extern "C" fn decode_ok() -> DecoderResultBlob {
@@ -45,15 +45,11 @@ mod dummy_decoder {
     }
 
     pub(crate) fn dummy_ok_decoder() -> Decoder {
-        Decoder::from_blob(unsafe {
-            lib_ruby_parser__internal__containers__decoder__new(decode_ok)
-        })
+        Decoder::from_blob(unsafe { lib_ruby_parser__external__decoder__new(decode_ok) })
     }
 
     pub(crate) fn dummy_err_decoder() -> Decoder {
-        Decoder::from_blob(unsafe {
-            lib_ruby_parser__internal__containers__decoder__new(decode_err)
-        })
+        Decoder::from_blob(unsafe { lib_ruby_parser__external__decoder__new(decode_err) })
     }
 }
 
@@ -81,7 +77,7 @@ mod dummy_decoder {
 
 use dummy_decoder::{dummy_err_decoder, dummy_ok_decoder};
 
-fn call_dummy_decoder(decoder: Decoder) -> DecoderResult {
+fn call_dummy_decoder(mut decoder: Decoder) -> DecoderResult {
     // it's dummy, so encoding/input doesn't matter
     let encoding = StringPtr::from("UTF-8");
     let input = List::<u8>::from(vec![b'2', b'+', b'2']);

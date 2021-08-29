@@ -21,6 +21,9 @@ pub trait MaybeTokenRewriterAPI {
     /// Casts &self to Option<&TokenRewriter>
     fn as_token_rewriter(&self) -> Option<&TokenRewriter>;
 
+    /// Casts &mut self to Option<&mut TokenRewriter>
+    fn as_token_rewriter_mut(&mut self) -> Option<&mut TokenRewriter>;
+
     /// Casts self to TokenRewriter. Panics if self is `None`
     fn into_token_rewriter(self) -> TokenRewriter;
 }

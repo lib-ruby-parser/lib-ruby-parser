@@ -17,16 +17,23 @@ pub(crate) mod external {
     }
 
     extern "C" {
-        fn lib_ruby_parser__internal__containers__shared_byte_list__new(
+        fn lib_ruby_parser__external__shared_byte_list__new(
             ptr: *const u8,
             len: u64,
         ) -> SharedByteListBlob;
-        fn lib_ruby_parser__internal__containers__shared_byte_list__get_raw(
+        fn lib_ruby_parser__external__shared_byte_list__drop(blob: *mut SharedByteListBlob);
+        fn lib_ruby_parser__external__shared_byte_list__get_raw(
             blob: *const SharedByteListBlob,
         ) -> *const u8;
-        fn lib_ruby_parser__internal__containers__shared_byte_list__get_len(
+        fn lib_ruby_parser__external__shared_byte_list__get_len(
             blob: *const SharedByteListBlob,
         ) -> u64;
+    }
+
+    impl Drop for SharedByteList {
+        fn drop(&mut self) {
+            unsafe { lib_ruby_parser__external__shared_byte_list__drop(&mut self.blob) }
+        }
     }
 
     impl std::fmt::Debug for SharedByteList {
@@ -51,22 +58,17 @@ pub(crate) mod external {
 
     impl SharedByteList {
         pub(crate) fn from_raw(ptr: *const u8, len: usize) -> Self {
-            let blob = unsafe {
-                lib_ruby_parser__internal__containers__shared_byte_list__new(ptr, len as u64)
-            };
+            let blob = unsafe { lib_ruby_parser__external__shared_byte_list__new(ptr, len as u64) };
             Self { blob }
         }
 
         pub(crate) fn as_ptr(&self) -> *const u8 {
-            unsafe { lib_ruby_parser__internal__containers__shared_byte_list__get_raw(&self.blob) }
+            unsafe { lib_ruby_parser__external__shared_byte_list__get_raw(&self.blob) }
         }
 
         /// Equivalent of std::slice::len
         pub fn len(&self) -> usize {
-            unsafe {
-                lib_ruby_parser__internal__containers__shared_byte_list__get_len(&self.blob)
-                    as usize
-            }
+            unsafe { lib_ruby_parser__external__shared_byte_list__get_len(&self.blob) as usize }
         }
     }
 

@@ -18,28 +18,28 @@ use crate::error::message::{DiagnosticMessage, DiagnosticMessageBlob};
 use crate::loc::{Loc, LocBlob};
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__diagnostic__new(
+    fn lib_ruby_parser__external__diagnostic__new(
         level: ErrorLevelBlob,
         message: DiagnosticMessageBlob,
         loc: LocBlob,
     ) -> DiagnosticBlob;
-    fn lib_ruby_parser__internal__containers__diagnostic__get_level(
+    fn lib_ruby_parser__external__diagnostic__drop(blob: *mut DiagnosticBlob);
+    fn lib_ruby_parser__external__diagnostic__get_level(
         blob: *const DiagnosticBlob,
     ) -> *const ErrorLevelBlob;
-    fn lib_ruby_parser__internal__containers__diagnostic__get_message(
+    fn lib_ruby_parser__external__diagnostic__get_message(
         blob: *const DiagnosticBlob,
     ) -> *const DiagnosticMessageBlob;
-    fn lib_ruby_parser__internal__containers__diagnostic__get_loc(
+    fn lib_ruby_parser__external__diagnostic__get_loc(
         blob: *const DiagnosticBlob,
     ) -> *const LocBlob;
-    fn lib_ruby_parser__internal__containers__diagnostic__drop(blob: *mut DiagnosticBlob);
 }
 
 impl Diagnostic {
     /// Construncts an instance of `Diagnostic`
     pub fn new(level: ErrorLevel, message: DiagnosticMessage, loc: Loc) -> Self {
         let blob = unsafe {
-            lib_ruby_parser__internal__containers__diagnostic__new(
+            lib_ruby_parser__external__diagnostic__new(
                 level.into_blob(),
                 message.into_blob(),
                 loc.into_blob(),
@@ -51,8 +51,7 @@ impl Diagnostic {
     /// Returns `level` field
     pub fn level(&self) -> &ErrorLevel {
         unsafe {
-            (lib_ruby_parser__internal__containers__diagnostic__get_level(&self.blob)
-                as *const ErrorLevel)
+            (lib_ruby_parser__external__diagnostic__get_level(&self.blob) as *const ErrorLevel)
                 .as_ref()
                 .unwrap()
         }
@@ -61,7 +60,7 @@ impl Diagnostic {
     /// Returns `message` field
     pub fn message(&self) -> &DiagnosticMessage {
         unsafe {
-            (lib_ruby_parser__internal__containers__diagnostic__get_message(&self.blob)
+            (lib_ruby_parser__external__diagnostic__get_message(&self.blob)
                 as *const DiagnosticMessage)
                 .as_ref()
                 .unwrap()
@@ -71,7 +70,7 @@ impl Diagnostic {
     /// Returns `loc` field
     pub fn loc(&self) -> &Loc {
         unsafe {
-            (lib_ruby_parser__internal__containers__diagnostic__get_loc(&self.blob) as *const Loc)
+            (lib_ruby_parser__external__diagnostic__get_loc(&self.blob) as *const Loc)
                 .as_ref()
                 .unwrap()
         }
@@ -108,6 +107,6 @@ impl PartialEq for Diagnostic {
 
 impl Drop for Diagnostic {
     fn drop(&mut self) {
-        unsafe { lib_ruby_parser__internal__containers__diagnostic__drop(&mut self.blob) }
+        unsafe { lib_ruby_parser__external__diagnostic__drop(&mut self.blob) }
     }
 }

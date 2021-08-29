@@ -21,42 +21,24 @@ pub struct RewriteAction {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__is_drop(
-        blob: *const RewriteActionBlob,
-    ) -> bool;
-    fn lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__is_keep(
-        blob: *const RewriteActionBlob,
-    ) -> bool;
-    fn lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__drop(
-        blob: *mut RewriteActionBlob,
-    );
+    fn lib_ruby_parser__external__rewrite_action__drop(blob: *mut RewriteActionBlob);
+    fn lib_ruby_parser__external__rewrite_action__is_drop(blob: *const RewriteActionBlob) -> bool;
+    fn lib_ruby_parser__external__rewrite_action__is_keep(blob: *const RewriteActionBlob) -> bool;
 }
 
 impl Drop for RewriteAction {
     fn drop(&mut self) {
-        unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__drop(
-                &mut self.blob,
-            )
-        }
+        unsafe { lib_ruby_parser__external__rewrite_action__drop(&mut self.blob) }
     }
 }
 
 impl RewriteAction {
     pub(crate) fn is_drop(&self) -> bool {
-        unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__is_drop(
-                &self.blob,
-            )
-        }
+        unsafe { lib_ruby_parser__external__rewrite_action__is_drop(&self.blob) }
     }
 
     pub(crate) fn is_keep(&self) -> bool {
-        unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__rewrite_action__is_keep(
-                &self.blob,
-            )
-        }
+        unsafe { lib_ruby_parser__external__rewrite_action__is_keep(&self.blob) }
     }
 }
 
@@ -99,53 +81,34 @@ pub struct LexStateAction {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__is_set(
+    fn lib_ruby_parser__external__lex_state_action__drop(blob: *mut LexStateActionBlob);
+    fn lib_ruby_parser__external__lex_state_action__is_set(blob: *const LexStateActionBlob)
+        -> bool;
+    fn lib_ruby_parser__external__lex_state_action__is_keep(
         blob: *const LexStateActionBlob,
     ) -> bool;
-    fn lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__is_keep(
-        blob: *const LexStateActionBlob,
-    ) -> bool;
-    fn lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__drop(
-        blob: *mut LexStateActionBlob,
-    );
-    fn lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__get_next_state(
+    fn lib_ruby_parser__external__lex_state_action__get_next_state(
         blob: *const LexStateActionBlob,
     ) -> i32;
 }
 
 impl Drop for LexStateAction {
     fn drop(&mut self) {
-        unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__drop(
-                &mut self.blob,
-            )
-        }
+        unsafe { lib_ruby_parser__external__lex_state_action__drop(&mut self.blob) }
     }
 }
 
 impl LexStateAction {
     pub(crate) fn is_set(&self) -> bool {
-        unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__is_set(
-                &self.blob,
-            )
-        }
+        unsafe { lib_ruby_parser__external__lex_state_action__is_set(&self.blob) }
     }
 
     pub(crate) fn is_keep(&self) -> bool {
-        unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__is_keep(
-                &self.blob,
-            )
-        }
+        unsafe { lib_ruby_parser__external__lex_state_action__is_keep(&self.blob) }
     }
 
     pub(crate) fn next_state(&self) -> i32 {
-        unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__lex_state_action__get_next_state(
-                &self.blob,
-            )
-        }
+        unsafe { lib_ruby_parser__external__lex_state_action__get_next_state(&self.blob) }
     }
 }
 
@@ -192,27 +155,22 @@ pub struct TokenRewriterResult {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__token_rewriter__result__into_internal(
+    fn lib_ruby_parser__external__token_rewriter_result__drop(blob: *mut TokenRewriterResultBlob);
+    fn lib_ruby_parser__external__token_rewriter_result__into_internal(
         blob: TokenRewriterResultBlob,
     ) -> InternalTokenRewriterResult;
-    fn lib_ruby_parser__internal__containers__token_rewriter__result__drop(
-        blob: *mut TokenRewriterResultBlob,
-    );
 }
 
 impl Drop for TokenRewriterResult {
     fn drop(&mut self) {
-        unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__result__drop(&mut self.blob)
-        }
+        unsafe { lib_ruby_parser__external__token_rewriter_result__drop(&mut self.blob) }
     }
 }
 
 impl TokenRewriterResult {
     pub(crate) fn into_internal(self) -> InternalTokenRewriterResult {
-        let internal = unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__result__into_internal(self.blob)
-        };
+        let internal =
+            unsafe { lib_ruby_parser__external__token_rewriter_result__into_internal(self.blob) };
         std::mem::forget(self);
         internal
     }
@@ -249,18 +207,25 @@ pub struct TokenRewriter {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__token_rewriter__call(
-        blob: *const TokenRewriterBlob,
+    fn lib_ruby_parser__external__token_rewriter__drop(blob: *mut TokenRewriterBlob);
+    fn lib_ruby_parser__external__token_rewriter__call(
+        blob: *mut TokenRewriterBlob,
         token: PtrBlob,
         input: SharedByteListBlob,
     ) -> TokenRewriterResultBlob;
 }
 
+impl Drop for TokenRewriter {
+    fn drop(&mut self) {
+        unsafe { lib_ruby_parser__external__token_rewriter__drop(&mut self.blob) }
+    }
+}
+
 impl TokenRewriter {
-    pub(crate) fn call(&self, token: Ptr<Token>, input: SharedByteList) -> TokenRewriterResult {
+    pub(crate) fn call(&mut self, token: Ptr<Token>, input: SharedByteList) -> TokenRewriterResult {
         TokenRewriterResult::from_blob(unsafe {
-            lib_ruby_parser__internal__containers__token_rewriter__call(
-                &self.blob,
+            lib_ruby_parser__external__token_rewriter__call(
+                &mut self.blob,
                 token.into_blob(),
                 input.into_blob(),
             )

@@ -108,12 +108,12 @@ extern \"C\"
 {{
     {extern_fns}
 
-    fn lib_ruby_parser__internal__containers__node__drop(blob: *mut NodeBlob);
+    fn lib_ruby_parser__external__node__drop(blob: *mut NodeBlob);
 }}
 
 impl Drop for Node {{
     fn drop(&mut self) {{
-        unsafe {{ lib_ruby_parser__internal__containers__node__drop(&mut self.blob) }}
+        unsafe {{ lib_ruby_parser__external__node__drop(&mut self.blob) }}
     }}
 }}
 ",

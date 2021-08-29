@@ -21,37 +21,35 @@ pub struct ParserOptions {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__parser_options__new(
+    fn lib_ruby_parser__external__parser_options__new(
         buffer_name: StringPtrBlob,
         debug: u8,
         decoder: MaybeDecoderBlob,
         token_rewriter: MaybeTokenRewriterBlob,
         record_tokens: bool,
     ) -> ParserOptionsBlob;
-    fn lib_ruby_parser__internal__containers__parser_options__drop(blob: *mut ParserOptionsBlob);
-    fn lib_ruby_parser__internal__containers__parser_options__into_internal(
+    fn lib_ruby_parser__external__parser_options__drop(blob: *mut ParserOptionsBlob);
+    fn lib_ruby_parser__external__parser_options__into_internal(
         blob: ParserOptionsBlob,
     ) -> InternalParserOptions;
-    fn lib_ruby_parser__internal__containers__parser_options__get_buffer_name(
+    fn lib_ruby_parser__external__parser_options__get_buffer_name(
         blob: *const ParserOptionsBlob,
     ) -> *const StringPtrBlob;
-    fn lib_ruby_parser__internal__containers__parser_options__get_debug(
-        blob: *const ParserOptionsBlob,
-    ) -> u8;
-    fn lib_ruby_parser__internal__containers__parser_options__get_decoder(
+    fn lib_ruby_parser__external__parser_options__get_debug(blob: *const ParserOptionsBlob) -> u8;
+    fn lib_ruby_parser__external__parser_options__get_decoder(
         blob: *const ParserOptionsBlob,
     ) -> *const MaybeDecoderBlob;
-    fn lib_ruby_parser__internal__containers__parser_options__get_token_rewriter(
+    fn lib_ruby_parser__external__parser_options__get_token_rewriter(
         blob: *const ParserOptionsBlob,
     ) -> *const MaybeTokenRewriterBlob;
-    fn lib_ruby_parser__internal__containers__parser_options__get_record_tokens(
+    fn lib_ruby_parser__external__parser_options__get_record_tokens(
         blob: *const ParserOptionsBlob,
     ) -> bool;
 }
 
 impl Drop for ParserOptions {
     fn drop(&mut self) {
-        unsafe { lib_ruby_parser__internal__containers__parser_options__drop(&mut self.blob) }
+        unsafe { lib_ruby_parser__external__parser_options__drop(&mut self.blob) }
     }
 }
 
@@ -65,7 +63,7 @@ impl ParserOptions {
         record_tokens: bool,
     ) -> Self {
         let blob = unsafe {
-            lib_ruby_parser__internal__containers__parser_options__new(
+            lib_ruby_parser__external__parser_options__new(
                 buffer_name.into_blob(),
                 debug,
                 decoder.into_blob(),
@@ -78,18 +76,18 @@ impl ParserOptions {
 
     pub(crate) fn buffer_name(&self) -> &StringPtr {
         unsafe {
-            (lib_ruby_parser__internal__containers__parser_options__get_buffer_name(&self.blob)
+            (lib_ruby_parser__external__parser_options__get_buffer_name(&self.blob)
                 as *const StringPtr)
                 .as_ref()
                 .unwrap()
         }
     }
     pub(crate) fn debug(&self) -> debug_level::Type {
-        unsafe { lib_ruby_parser__internal__containers__parser_options__get_debug(&self.blob) }
+        unsafe { lib_ruby_parser__external__parser_options__get_debug(&self.blob) }
     }
     pub(crate) fn decoder(&self) -> &MaybeDecoder {
         unsafe {
-            (lib_ruby_parser__internal__containers__parser_options__get_decoder(&self.blob)
+            (lib_ruby_parser__external__parser_options__get_decoder(&self.blob)
                 as *const MaybeDecoder)
                 .as_ref()
                 .unwrap()
@@ -97,16 +95,14 @@ impl ParserOptions {
     }
     pub(crate) fn token_rewriter(&self) -> &MaybeTokenRewriter {
         unsafe {
-            (lib_ruby_parser__internal__containers__parser_options__get_token_rewriter(&self.blob)
+            (lib_ruby_parser__external__parser_options__get_token_rewriter(&self.blob)
                 as *const MaybeTokenRewriter)
                 .as_ref()
                 .unwrap()
         }
     }
     pub(crate) fn record_tokens(&self) -> bool {
-        unsafe {
-            lib_ruby_parser__internal__containers__parser_options__get_record_tokens(&self.blob)
-        }
+        unsafe { lib_ruby_parser__external__parser_options__get_record_tokens(&self.blob) }
     }
 }
 
@@ -124,10 +120,6 @@ impl std::fmt::Debug for ParserOptions {
 
 impl From<ParserOptions> for InternalParserOptions {
     fn from(options: ParserOptions) -> Self {
-        unsafe {
-            lib_ruby_parser__internal__containers__parser_options__into_internal(
-                options.into_blob(),
-            )
-        }
+        unsafe { lib_ruby_parser__external__parser_options__into_internal(options.into_blob()) }
     }
 }

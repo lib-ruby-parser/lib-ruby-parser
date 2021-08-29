@@ -6780,7 +6780,7 @@ impl Parser {
     fn next_token(&mut self) -> Ptr<Token> {
         let mut token = self.yylex();
 
-        if let Some(token_rewriter) = self.token_rewriter.as_token_rewriter() {
+        if let Some(token_rewriter) = self.token_rewriter.as_token_rewriter_mut() {
             let InternalTokenRewriterResult { rewritten_token, token_action, lex_state_action } =
                 token_rewriter.call(token, self.yylexer.buffer.input.as_shared_bytes()).into_internal();
 

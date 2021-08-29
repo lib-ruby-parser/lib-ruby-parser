@@ -14,9 +14,45 @@ IMPL_BLOB(ByteList);
 
 // Ptr
 IMPL_BLOB(Ptr);
+std::unique_ptr<Node> UNPACK_NodePtr(Ptr_BLOB blob)
+{
+    Ptr ptr = UNPACK_Ptr(blob);
+    return std::unique_ptr<Node>((Node *)(ptr.release()));
+}
+Ptr_BLOB PACK_NodePtr(std::unique_ptr<Node> ptr)
+{
+    return PACK_Ptr(std::unique_ptr<int>((int *)(ptr.release())));
+}
+std::unique_ptr<Token> UNPACK_TokenPtr(Ptr_BLOB blob)
+{
+    Ptr ptr = UNPACK_Ptr(blob);
+    return std::unique_ptr<Token>((Token *)(ptr.release()));
+}
+Ptr_BLOB PACK_TokenPtr(std::unique_ptr<Token> ptr)
+{
+    return PACK_Ptr(std::unique_ptr<int>((int *)(ptr.release())));
+}
 
 // MaybePtr
 IMPL_BLOB(MaybePtr);
+std::unique_ptr<Node> UNPACK_MaybeNodePtr(MaybePtr_BLOB blob)
+{
+    Ptr ptr = UNPACK_MaybePtr(blob);
+    return std::unique_ptr<Node>((Node *)(ptr.release()));
+}
+MaybePtr_BLOB PACK_MaybeNodePtr(std::unique_ptr<Node> ptr)
+{
+    return PACK_MaybePtr(std::unique_ptr<int>((int *)(ptr.release())));
+}
+std::unique_ptr<Token> UNPACK_MaybeTokenPtr(MaybePtr_BLOB blob)
+{
+    Ptr ptr = UNPACK_MaybePtr(blob);
+    return std::unique_ptr<Token>((Token *)(ptr.release()));
+}
+MaybePtr_BLOB PACK_MaybeTokenPtr(std::unique_ptr<Token> ptr)
+{
+    return PACK_MaybePtr(std::unique_ptr<int>((int *)(ptr.release())));
+}
 
 // StringPtr
 IMPL_BLOB(StringPtr);

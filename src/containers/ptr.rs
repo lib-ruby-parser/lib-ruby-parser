@@ -1,5 +1,5 @@
 #[cfg(feature = "compile-with-external-structures")]
-use crate::containers::get_drop_fn::GetFreePtrFn;
+use crate::containers::get_drop_fn::GetDropPtrFn;
 
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
@@ -16,7 +16,7 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
-    use super::GetFreePtrFn;
+    use super::GetDropPtrFn;
 
     // use crate::containers::deleter::{Deleter, GetDeleter};
     use std::ops::Deref;
@@ -33,22 +33,21 @@ pub(crate) mod external {
 
     /// C-compatible not-null pointer
     #[repr(C)]
-    pub struct Ptr<T: GetFreePtrFn> {
+    pub struct Ptr<T: GetDropPtrFn> {
         pub(crate) blob: PtrBlob,
         _t: std::marker::PhantomData<T>,
     }
 
-    impl<T: GetFreePtrFn> Drop for Ptr<T> {
+    impl<T: GetDropPtrFn> Drop for Ptr<T> {
         fn drop(&mut self) {
-            let free_ptr_fn = T::get_free_ptr_fn();
-            let blob_ptr: *mut PtrBlob = &mut self.blob;
-            unsafe { free_ptr_fn(blob_ptr) };
+            let drop_ptr_fn = T::get_drop_ptr_fn();
+            unsafe { drop_ptr_fn(&mut self.blob) };
         }
     }
 
     impl<T> std::fmt::Debug for Ptr<T>
     where
-        T: std::fmt::Debug + GetFreePtrFn,
+        T: std::fmt::Debug + GetDropPtrFn,
     {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             std::fmt::Debug::fmt(&**self, f)
@@ -57,18 +56,18 @@ pub(crate) mod external {
 
     impl<T> PartialEq for Ptr<T>
     where
-        T: PartialEq + GetFreePtrFn,
+        T: PartialEq + GetDropPtrFn,
     {
         fn eq(&self, other: &Self) -> bool {
             PartialEq::eq(self.as_ref(), other.as_ref())
         }
     }
 
-    impl<T> Eq for Ptr<T> where T: PartialEq + GetFreePtrFn {}
+    impl<T> Eq for Ptr<T> where T: PartialEq + GetDropPtrFn {}
 
     impl<T> Clone for Ptr<T>
     where
-        T: Clone + GetFreePtrFn,
+        T: Clone + GetDropPtrFn,
     {
         fn clone(&self) -> Self {
             let value = self.as_ref().clone();
@@ -76,7 +75,7 @@ pub(crate) mod external {
         }
     }
 
-    impl<T: GetFreePtrFn> Deref for Ptr<T> {
+    impl<T: GetDropPtrFn> Deref for Ptr<T> {
         type Target = T;
 
         fn deref(&self) -> &Self::Target {
@@ -84,32 +83,30 @@ pub(crate) mod external {
         }
     }
 
-    impl<T: GetFreePtrFn> DerefMut for Ptr<T> {
+    impl<T: GetDropPtrFn> DerefMut for Ptr<T> {
         fn deref_mut(&mut self) -> &mut Self::Target {
             unsafe { &mut *self.as_mut_ptr() }
         }
     }
 
-    impl<T: GetFreePtrFn> AsRef<T> for Ptr<T> {
+    impl<T: GetDropPtrFn> AsRef<T> for Ptr<T> {
         fn as_ref(&self) -> &T {
             unsafe { self.as_ptr().as_ref().unwrap() }
         }
     }
 
-    impl<T: GetFreePtrFn> AsMut<T> for Ptr<T> {
+    impl<T: GetDropPtrFn> AsMut<T> for Ptr<T> {
         fn as_mut(&mut self) -> &mut T {
             unsafe { self.as_mut_ptr().as_mut().unwrap() }
         }
     }
 
     extern "C" {
-        fn lib_ruby_parser__internal__containers__ptr__new(ptr: *mut c_void) -> PtrBlob;
-        fn lib_ruby_parser__internal__containers__ptr__get_raw(
-            ptr_blob: *mut PtrBlob,
-        ) -> *mut c_void;
+        fn lib_ruby_parser__external__ptr__new(ptr: *mut c_void) -> PtrBlob;
+        fn lib_ruby_parser__external__ptr__get_raw(ptr_blob: *mut PtrBlob) -> *mut c_void;
     }
 
-    impl<T: GetFreePtrFn> Ptr<T> {
+    impl<T: GetDropPtrFn> Ptr<T> {
         /// Constructs a pointer with a given value
         pub fn new(t: T) -> Self {
             let ptr = Box::into_raw(Box::new(t));
@@ -119,8 +116,7 @@ pub(crate) mod external {
         /// Constructs a pointer from a given raw pointer
         pub(crate) fn from_raw(ptr: *mut T) -> Self {
             debug_assert!(!ptr.is_null());
-            let blob =
-                unsafe { lib_ruby_parser__internal__containers__ptr__new(ptr as *mut c_void) };
+            let blob = unsafe { lib_ruby_parser__external__ptr__new(ptr as *mut c_void) };
             Self {
                 blob,
                 _t: std::marker::PhantomData,
@@ -137,26 +133,23 @@ pub(crate) mod external {
         /// Returns borrowed raw pointer stored in Ptr
         pub(crate) fn as_ptr(&self) -> *const T {
             let ptr_blob: *const PtrBlob = &self.blob;
-            unsafe {
-                lib_ruby_parser__internal__containers__ptr__get_raw(ptr_blob as *mut PtrBlob)
-                    as *const T
-            }
+            unsafe { lib_ruby_parser__external__ptr__get_raw(ptr_blob as *mut PtrBlob) as *const T }
         }
 
         pub(crate) fn as_mut_ptr(&mut self) -> *mut T {
             let ptr_blob: *mut PtrBlob = &mut self.blob;
-            unsafe { lib_ruby_parser__internal__containers__ptr__get_raw(ptr_blob) as *mut T }
+            unsafe { lib_ruby_parser__external__ptr__get_raw(ptr_blob) as *mut T }
         }
     }
 
-    impl<T: GetFreePtrFn> From<Box<T>> for Ptr<T> {
+    impl<T: GetDropPtrFn> From<Box<T>> for Ptr<T> {
         fn from(boxed: Box<T>) -> Self {
             Self::from_raw(Box::into_raw(boxed))
         }
     }
 
     use super::UnPtr;
-    impl<T: Sized + GetFreePtrFn> UnPtr<T> for Ptr<T> {
+    impl<T: Sized + GetDropPtrFn> UnPtr<T> for Ptr<T> {
         fn unptr(self) -> T {
             *unsafe { Box::from_raw(self.into_raw()) }
         }
@@ -166,7 +159,7 @@ pub(crate) mod external {
     mod tests {
         use std::ffi::c_void;
 
-        use super::{GetFreePtrFn, Ptr, PtrBlob, UnPtr};
+        use super::{GetDropPtrFn, Ptr, PtrBlob, UnPtr};
 
         #[derive(Debug, PartialEq)]
         struct Foo {
@@ -181,8 +174,8 @@ pub(crate) mod external {
             }
         }
 
-        impl GetFreePtrFn for Foo {
-            fn get_free_ptr_fn() -> unsafe extern "C" fn(*mut PtrBlob) {
+        impl GetDropPtrFn for Foo {
+            fn get_drop_ptr_fn() -> unsafe extern "C" fn(*mut PtrBlob) {
                 drop_ptr_of_foo
             }
         }

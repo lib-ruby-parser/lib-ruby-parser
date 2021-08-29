@@ -91,7 +91,7 @@ impl Input {
         let new_input = decode_input(
             self.decoded.take_bytes(),
             StringPtr::from(encoding),
-            &self.decoder,
+            &mut self.decoder,
         )
         .into_result()?;
         self.update_bytes(new_input);

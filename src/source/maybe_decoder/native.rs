@@ -25,6 +25,10 @@ impl MaybeDecoderAPI for MaybeDecoder {
         self.as_ref()
     }
 
+    fn as_decoder_mut(&mut self) -> Option<&mut Decoder> {
+        self.as_mut()
+    }
+
     fn into_decoder(self) -> Decoder {
         self.unwrap()
     }

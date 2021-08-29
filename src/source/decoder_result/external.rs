@@ -18,66 +18,53 @@ pub struct DecoderResult {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__decoder_result__new_ok(
-        byte_list: ListBlob,
-    ) -> DecoderResultBlob;
-    fn lib_ruby_parser__internal__containers__decoder_result__new_err(
+    fn lib_ruby_parser__external__decoder_result__new_ok(byte_list: ListBlob) -> DecoderResultBlob;
+    fn lib_ruby_parser__external__decoder_result__new_err(
         input_error: InputErrorBlob,
     ) -> DecoderResultBlob;
-    fn lib_ruby_parser__internal__containers__decoder_result_is_ok(
-        blob: *const DecoderResultBlob,
-    ) -> bool;
-    fn lib_ruby_parser__internal__containers__decoder_result_is_err(
-        blob: *const DecoderResultBlob,
-    ) -> bool;
-    fn lib_ruby_parser__internal__containers__decoder_result_into_ok(
-        blob: DecoderResultBlob,
-    ) -> ListBlob;
-    fn lib_ruby_parser__internal__containers__decoder_result_into_err(
+    fn lib_ruby_parser__external__decoder_result__drop(blob: *mut DecoderResultBlob);
+    fn lib_ruby_parser__external__decoder_result_is_ok(blob: *const DecoderResultBlob) -> bool;
+    fn lib_ruby_parser__external__decoder_result_is_err(blob: *const DecoderResultBlob) -> bool;
+    fn lib_ruby_parser__external__decoder_result_into_ok(blob: DecoderResultBlob) -> ListBlob;
+    fn lib_ruby_parser__external__decoder_result_into_err(
         blob: DecoderResultBlob,
     ) -> InputErrorBlob;
-    fn lib_ruby_parser__internal__containers__decoder_result_as_ok(
+    fn lib_ruby_parser__external__decoder_result_as_ok(
         blob: *const DecoderResultBlob,
     ) -> *const ListBlob;
-    fn lib_ruby_parser__internal__containers__decoder_result_as_err(
+    fn lib_ruby_parser__external__decoder_result_as_err(
         blob: *const DecoderResultBlob,
     ) -> *const InputErrorBlob;
-    fn lib_ruby_parser__internal__containers__decoder_result__drop(blob: *mut DecoderResultBlob);
 }
 
 impl Drop for DecoderResult {
     fn drop(&mut self) {
-        unsafe { lib_ruby_parser__internal__containers__decoder_result__drop(&mut self.blob) }
+        unsafe { lib_ruby_parser__external__decoder_result__drop(&mut self.blob) }
     }
 }
 
 impl DecoderResult {
     pub(crate) fn new_ok(output: List<u8>) -> Self {
-        let blob = unsafe {
-            lib_ruby_parser__internal__containers__decoder_result__new_ok(output.into_blob())
-        };
+        let blob = unsafe { lib_ruby_parser__external__decoder_result__new_ok(output.into_blob()) };
         Self { blob }
     }
 
     pub(crate) fn new_err(err: InputError) -> Self {
-        let blob = unsafe {
-            lib_ruby_parser__internal__containers__decoder_result__new_err(err.into_blob())
-        };
+        let blob = unsafe { lib_ruby_parser__external__decoder_result__new_err(err.into_blob()) };
         Self { blob }
     }
 
     pub(crate) fn is_ok(&self) -> bool {
-        unsafe { lib_ruby_parser__internal__containers__decoder_result_is_ok(&self.blob) }
+        unsafe { lib_ruby_parser__external__decoder_result_is_ok(&self.blob) }
     }
 
     pub(crate) fn is_err(&self) -> bool {
-        unsafe { lib_ruby_parser__internal__containers__decoder_result_is_err(&self.blob) }
+        unsafe { lib_ruby_parser__external__decoder_result_is_err(&self.blob) }
     }
 
     pub(crate) fn as_ok(&self) -> &List<u8> {
         unsafe {
-            (lib_ruby_parser__internal__containers__decoder_result_as_ok(&self.blob)
-                as *const List<u8>)
+            (lib_ruby_parser__external__decoder_result_as_ok(&self.blob) as *const List<u8>)
                 .as_ref()
                 .unwrap()
         }
@@ -85,23 +72,21 @@ impl DecoderResult {
 
     pub(crate) fn as_err(&self) -> &InputError {
         unsafe {
-            (lib_ruby_parser__internal__containers__decoder_result_as_err(&self.blob)
-                as *const InputError)
+            (lib_ruby_parser__external__decoder_result_as_err(&self.blob) as *const InputError)
                 .as_ref()
                 .unwrap()
         }
     }
 
     pub(crate) fn unwrap_ok(self) -> List<u8> {
-        let list_blob =
-            unsafe { lib_ruby_parser__internal__containers__decoder_result_into_ok(self.blob) };
+        let list_blob = unsafe { lib_ruby_parser__external__decoder_result_into_ok(self.blob) };
         std::mem::forget(self);
         List::<u8>::from_blob(list_blob)
     }
 
     pub(crate) fn unwrap_err(self) -> InputError {
         let input_error_blob =
-            unsafe { lib_ruby_parser__internal__containers__decoder_result_into_err(self.blob) };
+            unsafe { lib_ruby_parser__external__decoder_result_into_err(self.blob) };
         std::mem::forget(self);
         InputError::from_blob(input_error_blob)
     }

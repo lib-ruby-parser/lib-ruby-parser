@@ -71,26 +71,22 @@ DecoderResult::Err::Err(InputError error) : error(std::move(error)) {}
 DecoderResult::DecoderResult(DecoderResult::variant_t variant) : variant(std::move(variant)) {}
 
 // TokenRewriter
+LexStateAction::LexStateAction(Kind kind, int32_t next_state) : kind(kind), next_state(next_state) {}
+
 LexStateAction LexStateAction::NewKeep()
 {
-    LexStateAction result;
-    result.kind = LexStateAction::Kind::KEEP;
-    result.next_state = 0;
-    return result;
+    return LexStateAction(LexStateAction::Kind::KEEP, 0);
 }
 LexStateAction LexStateAction::NewSet(int32_t next_state)
 {
-    LexStateAction result;
-    result.kind = LexStateAction::Kind::SET;
-    result.next_state = next_state;
-    return result;
+    return LexStateAction(LexStateAction::Kind::SET, next_state);
 }
 
 TokenRewriterResult::TokenRewriterResult(std::unique_ptr<Token> rewritten_token,
                                          RewriteAction token_action,
                                          LexStateAction lex_state_action) : rewritten_token(std::move(rewritten_token)),
                                                                             token_action(token_action),
-                                                                            lex_state_action(lex_state_action) {}
+                                                                            lex_state_action(std::move(lex_state_action)) {}
 
 TokenRewriter::TokenRewriter(rewrite_token_t rewrite_f,
                              build_new_token_t build_new_token_f) : rewrite_f(rewrite_f),

@@ -16,31 +16,28 @@ pub struct MaybeTokenRewriter {
 }
 
 extern "C" {
-    fn lib_ruby_parser__internal__containers__maybe_token_rewriter__new_some(
+    fn lib_ruby_parser__external__maybe_token_rewriter__new_some(
         blob: TokenRewriterBlob,
     ) -> MaybeTokenRewriterBlob;
-    fn lib_ruby_parser__internal__containers__maybe_token_rewriter__new_none(
-    ) -> MaybeTokenRewriterBlob;
-    fn lib_ruby_parser__internal__containers__maybe_token_rewriter__is_some(
+    fn lib_ruby_parser__external__maybe_token_rewriter__new_none() -> MaybeTokenRewriterBlob;
+    fn lib_ruby_parser__external__maybe_token_rewriter__drop(blob: *mut MaybeTokenRewriterBlob);
+    fn lib_ruby_parser__external__maybe_token_rewriter__is_some(
         blob: *const MaybeTokenRewriterBlob,
     ) -> bool;
-    fn lib_ruby_parser__internal__containers__maybe_token_rewriter__is_none(
+    fn lib_ruby_parser__external__maybe_token_rewriter__is_none(
         blob: *const MaybeTokenRewriterBlob,
     ) -> bool;
-    fn lib_ruby_parser__internal__containers__maybe_token_rewriter__as_token_rewriter(
+    fn lib_ruby_parser__external__maybe_token_rewriter__as_token_rewriter(
         blob: *const MaybeTokenRewriterBlob,
     ) -> *const TokenRewriterBlob;
-    fn lib_ruby_parser__internal__containers__maybe_token_rewriter__into_token_rewriter(
+    fn lib_ruby_parser__external__maybe_token_rewriter__into_token_rewriter(
         blob: MaybeTokenRewriterBlob,
     ) -> TokenRewriterBlob;
-    fn lib_ruby_parser__internal__containers__maybe_token_rewriter__drop(
-        blob: *mut MaybeTokenRewriterBlob,
-    );
 }
 
 impl Drop for MaybeTokenRewriter {
     fn drop(&mut self) {
-        unsafe { lib_ruby_parser__internal__containers__maybe_token_rewriter__drop(&mut self.blob) }
+        unsafe { lib_ruby_parser__external__maybe_token_rewriter__drop(&mut self.blob) }
     }
 }
 
@@ -49,41 +46,43 @@ impl MaybeTokenRewriter {}
 impl MaybeTokenRewriterAPI for MaybeTokenRewriter {
     fn new_some(token_rewriter: TokenRewriter) -> Self {
         let blob = unsafe {
-            lib_ruby_parser__internal__containers__maybe_token_rewriter__new_some(
-                token_rewriter.into_blob(),
-            )
+            lib_ruby_parser__external__maybe_token_rewriter__new_some(token_rewriter.into_blob())
         };
         Self { blob }
     }
 
     fn new_none() -> Self {
-        let blob =
-            unsafe { lib_ruby_parser__internal__containers__maybe_token_rewriter__new_none() };
+        let blob = unsafe { lib_ruby_parser__external__maybe_token_rewriter__new_none() };
         Self { blob }
     }
 
     fn is_some(&self) -> bool {
-        unsafe { lib_ruby_parser__internal__containers__maybe_token_rewriter__is_some(&self.blob) }
+        unsafe { lib_ruby_parser__external__maybe_token_rewriter__is_some(&self.blob) }
     }
 
     fn is_none(&self) -> bool {
-        unsafe { lib_ruby_parser__internal__containers__maybe_token_rewriter__is_none(&self.blob) }
+        unsafe { lib_ruby_parser__external__maybe_token_rewriter__is_none(&self.blob) }
     }
 
     fn as_token_rewriter(&self) -> Option<&TokenRewriter> {
         unsafe {
-            (lib_ruby_parser__internal__containers__maybe_token_rewriter__as_token_rewriter(
-                &self.blob,
-            ) as *const TokenRewriter)
+            (lib_ruby_parser__external__maybe_token_rewriter__as_token_rewriter(&self.blob)
+                as *const TokenRewriter)
                 .as_ref()
+        }
+    }
+
+    fn as_token_rewriter_mut(&mut self) -> Option<&mut TokenRewriter> {
+        unsafe {
+            (lib_ruby_parser__external__maybe_token_rewriter__as_token_rewriter(&mut self.blob)
+                as *mut TokenRewriter)
+                .as_mut()
         }
     }
 
     fn into_token_rewriter(self) -> TokenRewriter {
         let token_rewriter = TokenRewriter::from_blob(unsafe {
-            lib_ruby_parser__internal__containers__maybe_token_rewriter__into_token_rewriter(
-                self.blob,
-            )
+            lib_ruby_parser__external__maybe_token_rewriter__into_token_rewriter(self.blob)
         });
         std::mem::forget(self);
         token_rewriter
