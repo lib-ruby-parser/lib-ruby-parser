@@ -102,7 +102,7 @@ fn variant(node: &lib_ruby_parser_nodes::Node) -> String {
 }
 fn print_size(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
-        "std::cout << \"LIB_RUBY_PARSER_NODE_{upper}_SIZE = \" << sizeof({struct_name}) << \"\\n\";",
+        "std::cout << \"LIB_RUBY_PARSER_NODE_{upper}_SIZE=\" << sizeof({struct_name}) << \"\\n\";",
         upper = node.upper_name(),
         struct_name = node.camelcase_name
     )

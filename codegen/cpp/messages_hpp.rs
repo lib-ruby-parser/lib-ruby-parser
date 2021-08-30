@@ -111,7 +111,7 @@ fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
 
 fn print_size(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
-        "std::cout << \"LIB_RUBY_PARSER_MESSAGE_{upper}_SIZE = \" << sizeof({struct_name}) << \"\\n\";",
+        "std::cout << \"LIB_RUBY_PARSER_MESSAGE_{upper}_SIZE=\" << sizeof({struct_name}) << \"\\n\";",
         upper = message.upper_name(),
         struct_name = message.camelcase_name()
     )
