@@ -6,26 +6,9 @@ pub use visit_gen::Observer;
 
 use crate::Node;
 
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type Ptr<T> = ExternalPtr<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type Ptr<T> = Box<T>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalMaybePtr;
-#[cfg(feature = "compile-with-external-structures")]
-type MaybePtr<T> = ExternalMaybePtr<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type MaybePtr<T> = Option<Box<T>>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
+crate::use_native_or_external!(Ptr);
+crate::use_native_or_external!(MaybePtr);
+crate::use_native_or_external!(List);
 
 /// Generic visitor of `Node`.
 ///

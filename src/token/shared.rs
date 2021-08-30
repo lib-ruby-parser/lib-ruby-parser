@@ -1,12 +1,7 @@
 use super::Token;
 use crate::parser::token_name;
 
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
+crate::use_native_or_external!(List);
 
 impl std::fmt::Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

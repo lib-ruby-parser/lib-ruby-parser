@@ -1,9 +1,4 @@
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalStringPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type StringPtr = ExternalStringPtr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type StringPtr = String;
+crate::use_native_or_external!(StringPtr);
 
 use crate::debug_level;
 use crate::source::maybe_token_rewriter::MaybeTokenRewriter;

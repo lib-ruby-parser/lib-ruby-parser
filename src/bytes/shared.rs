@@ -1,9 +1,4 @@
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
+crate::use_native_or_external!(List);
 
 use super::Bytes;
 

@@ -9,7 +9,7 @@ pub(crate) struct SourceLineBlob {
 /// Representation of a source line in a source file
 #[repr(C)]
 pub struct SourceLine {
-    blob: SourceLineBlob,
+    pub(crate) blob: SourceLineBlob,
 }
 
 extern "C" {

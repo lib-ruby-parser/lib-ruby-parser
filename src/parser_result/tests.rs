@@ -1,5 +1,4 @@
 use super::ParserResult;
-use crate::containers::helpers::MaybePtrAPI;
 use crate::source::{CommentType, MagicCommentKind, SourceLine};
 use crate::{
     source::Comment, source::DecodedInput, source::MagicComment, Bytes, Diagnostic,
@@ -7,19 +6,8 @@ use crate::{
 };
 use crate::{ErrorLevel, LexState};
 
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalMaybePtr;
-#[cfg(feature = "compile-with-external-structures")]
-type MaybePtr<T> = ExternalMaybePtr<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type MaybePtr<T> = Option<Box<T>>;
+crate::use_native_or_external!(MaybePtr);
+crate::use_native_or_external!(List);
 
 fn ast() -> MaybePtr<Node> {
     MaybePtr::some(Node::make_retry(Loc::new(1, 2)))

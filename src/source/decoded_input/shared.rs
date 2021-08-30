@@ -1,16 +1,5 @@
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalSharedByteList;
-#[cfg(feature = "compile-with-external-structures")]
-type SharedByteList = ExternalSharedByteList;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type SharedByteList<'a> = &'a [u8];
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
+crate::use_native_or_external!(List);
+crate::use_native_or_external!(SharedByteList);
 
 use super::DecodedInput;
 use crate::source::SourceLine;

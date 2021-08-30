@@ -1,30 +1,7 @@
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalMaybePtr;
-#[cfg(feature = "compile-with-external-structures")]
-type MaybePtr<T> = ExternalMaybePtr<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type MaybePtr<T> = Option<Box<T>>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalMaybeStringPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type MaybeStringPtr = ExternalMaybeStringPtr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type MaybeStringPtr = Option<String>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalStringPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type StringPtr = ExternalStringPtr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type StringPtr = String;
+crate::use_native_or_external!(MaybePtr);
+crate::use_native_or_external!(StringPtr);
+crate::use_native_or_external!(MaybeStringPtr);
+crate::use_native_or_external!(List);
 
 use crate::Bytes;
 use crate::Loc;

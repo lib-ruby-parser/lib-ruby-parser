@@ -1,9 +1,4 @@
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type Ptr<T> = ExternalPtr<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type Ptr<T> = Box<T>;
+crate::use_native_or_external!(Ptr);
 
 use super::{LexStateAction, RewriteAction};
 use crate::Token;

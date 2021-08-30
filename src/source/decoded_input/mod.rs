@@ -14,5 +14,4 @@ mod shared;
 mod tests;
 
 #[cfg(feature = "compile-with-external-structures")]
-#[allow(unused_imports)]
 pub(crate) use external::DecodedInputBlob;

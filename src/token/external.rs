@@ -12,7 +12,7 @@ pub(crate) struct TokenBlob {
 /// Byte sequence based on external implementation
 #[repr(C)]
 pub struct Token {
-    blob: TokenBlob,
+    pub(crate) blob: TokenBlob,
 }
 
 impl Clone for Token {

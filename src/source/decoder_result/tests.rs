@@ -1,19 +1,7 @@
+crate::use_native_or_external!(StringPtr);
+crate::use_native_or_external!(List);
+
 use super::DecoderResult;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalStringPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type StringPtr = ExternalStringPtr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type StringPtr = String;
-
 use crate::source::InputError;
 
 #[test]

@@ -14,7 +14,7 @@ pub(crate) struct CommentBlob {
 /// A struct that represents a comment in Ruby
 #[repr(C)]
 pub struct Comment {
-    blob: CommentBlob,
+    pub(crate) blob: CommentBlob,
 }
 
 extern "C" {

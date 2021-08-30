@@ -1,12 +1,7 @@
-use super::DecodedInput;
+crate::use_native_or_external!(List);
 
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
+use super::DecodedInput;
 use crate::source::SourceLine;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
 
 #[test]
 fn test_new() {

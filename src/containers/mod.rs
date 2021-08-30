@@ -41,7 +41,6 @@ pub(crate) use ptr::external::PtrBlob;
 #[cfg(feature = "compile-with-external-structures")]
 pub use shared_byte_list::external::SharedByteList as ExternalSharedByteList;
 #[cfg(feature = "compile-with-external-structures")]
-#[allow(unused_imports)]
 pub(crate) use shared_byte_list::external::SharedByteListBlob;
 #[cfg(feature = "compile-with-external-structures")]
 pub use string_ptr::external::StringPtr as ExternalStringPtr;
@@ -52,3 +51,6 @@ pub(crate) use string_ptr::external::StringPtrBlob;
 pub(crate) mod into_blob;
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) use into_blob::IntoBlob;
+
+mod use_native_or_external;
+pub(crate) use use_native_or_external::use_native_or_external;

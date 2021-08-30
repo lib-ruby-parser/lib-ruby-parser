@@ -89,3 +89,4 @@ pub mod debug_level;
 
 /// Module with generic containers
 pub mod containers;
+pub(crate) use containers::use_native_or_external;

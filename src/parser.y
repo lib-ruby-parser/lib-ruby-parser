@@ -49,33 +49,10 @@
 
 %code use {
 
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type Ptr<T> = ExternalPtr<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type Ptr<T> = Box<T>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalMaybePtr;
-#[cfg(feature = "compile-with-external-structures")]
-type MaybePtr<T> = ExternalMaybePtr<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type MaybePtr<T> = Option<Box<T>>;
-
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalStringPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type StringPtr = ExternalStringPtr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type StringPtr = String;
+crate::use_native_or_external!(Ptr);
+crate::use_native_or_external!(MaybePtr);
+crate::use_native_or_external!(StringPtr);
+crate::use_native_or_external!(List);
 
 use crate::{ParserOptions, ParserResult};
 use crate::{Token};
@@ -92,7 +69,6 @@ use crate::error::Diagnostics;
 use crate::source::maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI};
 use crate::source::token_rewriter::InternalTokenRewriterResult;
 use crate::debug_level;
-use crate::containers::helpers::{PtrAPI, MaybePtrAPI};
 use crate::Loc;
 use crate::parser_options::InternalParserOptions;
 

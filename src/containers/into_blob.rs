@@ -232,3 +232,83 @@ impl IntoBlob for crate::source::DecodedInput {
         blob
     }
 }
+
+impl IntoBlob for crate::ParserResult {
+    type Output = crate::parser_result::ParserResultBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+
+impl IntoBlob for crate::source::Comment {
+    type Output = crate::source::CommentBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+
+impl IntoBlob for crate::source::MagicComment {
+    type Output = crate::source::MagicCommentBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+
+impl IntoBlob for crate::source::SourceLine {
+    type Output = crate::source::SourceLineBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+
+impl IntoBlob for crate::source::token_rewriter::LexStateAction {
+    type Output = crate::source::token_rewriter::LexStateActionBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+
+impl IntoBlob for crate::source::token_rewriter::RewriteAction {
+    type Output = crate::source::token_rewriter::RewriteActionBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+
+impl IntoBlob for crate::source::token_rewriter::TokenRewriterResult {
+    type Output = crate::source::token_rewriter::TokenRewriterResultBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+
+impl IntoBlob for crate::Token {
+    type Output = crate::token::TokenBlob;
+
+    fn into_blob(self) -> Self::Output {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}

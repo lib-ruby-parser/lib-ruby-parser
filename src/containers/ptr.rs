@@ -1,6 +1,3 @@
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::get_drop_fn::GetDropPtrFn;
-
 #[cfg(not(feature = "compile-with-external-structures"))]
 pub(crate) mod rust {
     /// Rust-compatible not-null pointer
@@ -16,7 +13,7 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
-    use super::GetDropPtrFn;
+    use crate::containers::get_drop_fn::GetDropPtrFn;
 
     // use crate::containers::deleter::{Deleter, GetDeleter};
     use std::ops::Deref;

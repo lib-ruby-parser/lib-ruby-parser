@@ -1,11 +1,6 @@
 use super::InputError;
 
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalStringPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type StringPtr = ExternalStringPtr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type StringPtr = String;
+crate::use_native_or_external!(StringPtr);
 
 #[test]
 fn test_unsupported_encoding() {

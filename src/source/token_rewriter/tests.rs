@@ -1,17 +1,7 @@
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type Ptr<T> = ExternalPtr<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type Ptr<T> = Box<T>;
+crate::use_native_or_external!(Ptr);
+crate::use_native_or_external!(List);
 
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalList;
 use crate::source::token_rewriter::InternalTokenRewriterResult;
-#[cfg(feature = "compile-with-external-structures")]
-type List<T> = ExternalList<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type List<T> = Vec<T>;
 
 use super::{TokenRewriter, TokenRewriterResult};
 use crate::Bytes;

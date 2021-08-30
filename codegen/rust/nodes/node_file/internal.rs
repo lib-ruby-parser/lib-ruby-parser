@@ -48,60 +48,34 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
         imports.push("use crate::Bytes;");
     }
 
-    enum ImportType {
-        External,
-        Native,
-    }
-    use ImportType::*;
-
-    let mut push_import = |import_type: ImportType, s: &'static str| {
-        match import_type {
-            External => imports.push("#[cfg(feature = \"compile-with-external-structures\")]"),
-            Native => imports.push("#[cfg(not(feature = \"compile-with-external-structures\"))]"),
-        };
-        imports.push(s);
-    };
-
     if has_field(NodeFieldType::MaybeNode {
         regexp_options: true,
     }) || has_field(NodeFieldType::MaybeNode {
         regexp_options: false,
     }) {
-        push_import(External, "use crate::containers::ExternalMaybePtr;");
-        push_import(External, "type MaybePtr<T> = ExternalMaybePtr<T>;");
-        push_import(Native, "type MaybePtr<T> = Option<Box<T>>;");
+        imports.push("crate::use_native_or_external!(MaybePtr);");
     }
 
     if has_field(NodeFieldType::Node) {
-        push_import(External, "use crate::containers::ExternalPtr;");
-        push_import(External, "type Ptr<T> = ExternalPtr<T>;");
-        push_import(Native, "type Ptr<T> = Box<T>;");
+        imports.push("crate::use_native_or_external!(Ptr);");
     }
 
     if has_field(NodeFieldType::Nodes) {
-        push_import(External, "use crate::containers::ExternalList;");
-        push_import(External, "type List<T> = ExternalList<T>;");
-        push_import(Native, "type List<T> = Vec<T>;");
+        imports.push("crate::use_native_or_external!(List);");
     }
 
     if has_field(NodeFieldType::MaybeLoc) {
-        push_import(External, "use crate::containers::ExternalMaybeLoc;");
-        push_import(External, "type MaybeLoc = ExternalMaybeLoc;");
-        push_import(Native, "type MaybeLoc = Option<Loc>;");
+        imports.push("crate::use_native_or_external!(MaybeLoc);");
     }
 
     if has_field(NodeFieldType::Str { raw: true }) || has_field(NodeFieldType::Str { raw: false }) {
-        push_import(External, "use crate::containers::ExternalStringPtr;");
-        push_import(External, "type StringPtr = ExternalStringPtr;");
-        push_import(Native, "type StringPtr = String;")
+        imports.push("crate::use_native_or_external!(StringPtr);");
     }
 
     if has_field(NodeFieldType::MaybeStr { chars: true })
         || has_field(NodeFieldType::MaybeStr { chars: false })
     {
-        push_import(External, "use crate::containers::ExternalMaybeStringPtr;");
-        push_import(External, "type MaybeStringPtr = ExternalMaybeStringPtr;");
-        push_import(Native, "type MaybeStringPtr = Option<String>;")
+        imports.push("crate::use_native_or_external!(MaybeStringPtr);");
     }
 
     imports

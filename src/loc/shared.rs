@@ -2,12 +2,7 @@ use super::Loc;
 use crate::source::DecodedInput;
 use std::convert::TryInto;
 
-#[cfg(feature = "compile-with-external-structures")]
-use crate::containers::ExternalMaybeLoc;
-#[cfg(feature = "compile-with-external-structures")]
-type MaybeLoc = ExternalMaybeLoc;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type MaybeLoc = Option<Loc>;
+crate::use_native_or_external!(MaybeLoc);
 
 impl Loc {
     /// Converts location to a range
