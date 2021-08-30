@@ -7,8 +7,6 @@ pub use native::MagicComment;
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::MagicComment;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use external::MagicCommentBlob;
 
 mod shared;
 

@@ -13,20 +13,10 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
+    use crate::blobs::PtrBlob;
     use crate::containers::get_drop_fn::GetDropPtrFn;
-
-    // use crate::containers::deleter::{Deleter, GetDeleter};
     use std::ops::Deref;
     use std::{ffi::c_void, ops::DerefMut};
-
-    use crate::containers::size::PTR_SIZE;
-
-    /// PtrBlob, exposed only because it's used in some pub trait
-    #[repr(C)]
-    #[derive(Debug, Clone, Copy)]
-    pub struct PtrBlob {
-        blob: [u8; PTR_SIZE],
-    }
 
     /// C-compatible not-null pointer
     #[repr(C)]

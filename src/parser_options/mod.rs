@@ -7,8 +7,6 @@ pub use native::ParserOptions;
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::ParserOptions;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use external::ParserOptionsBlob;
 
 mod internal;
 pub(crate) use internal::InternalParserOptions;

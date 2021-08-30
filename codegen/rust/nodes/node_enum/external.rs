@@ -14,7 +14,6 @@ fn contents() -> String {
 
 use crate::nodes::InnerNode;
 use crate::nodes::*;
-use crate::containers::size::NODE_SIZE;
 
 use crate::Loc;
 use crate::Bytes;
@@ -25,25 +24,15 @@ use crate::containers::ExternalMaybeLoc as MaybeLoc;
 use crate::containers::ExternalStringPtr as StringPtr;
 use crate::containers::ExternalMaybeStringPtr as MaybeStringPtr;
 
-use crate::loc::LocBlob;
-use crate::bytes::BytesBlob;
-use crate::containers::MaybePtrBlob;
-use crate::containers::PtrBlob;
-use crate::containers::ListBlob;
-use crate::containers::MaybeLocBlob;
-use crate::containers::StringPtrBlob;
-use crate::containers::MaybeStringPtrBlob;
+use crate::blobs::{{
+    LocBlob, BytesBlob, MaybePtrBlob, PtrBlob, ListBlob,
+    MaybeLocBlob, StringPtrBlob, MaybeStringPtrBlob, NodeBlob
+}};
 
 use crate::containers::IntoBlob;
 
 type Byte = u8;
 type ByteBlob = u8;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct NodeBlob {{
-    blob: [u8; NODE_SIZE],
-}}
 
 /// Generic combination of all known nodes.
 #[repr(C)]
@@ -103,7 +92,7 @@ impl Node {{
     {into_variant_fns}
 }}
 
-use crate::nodes::blobs::*;
+use crate::blobs::nodes::*;
 extern \"C\"
 {{
     {extern_fns}
@@ -320,7 +309,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
         result.push(format!(
             "fn {name}(blob_ptr: *const NodeBlob) -> *mut {node_type}Blob;",
             name = extern_variant_getter_name(node),
-            node_type = struct_name(node)
+            node_type = node.camelcase_name
         ))
     }
 
@@ -329,7 +318,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
         let line = format!(
             "fn {fn_name}(blob: NodeBlob) -> {struct_name}Blob;",
             fn_name = extern_into_variant_name(node),
-            struct_name = struct_name(node)
+            struct_name = node.camelcase_name
         );
         result.push(line);
     }

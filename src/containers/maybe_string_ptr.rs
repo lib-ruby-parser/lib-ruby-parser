@@ -21,14 +21,8 @@ pub(crate) mod rust {
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
     use super::MaybeStringPtrAPI;
-    use crate::containers::size::MAYBE_STRING_PTR_SIZE;
+    use crate::blobs::MaybeStringPtrBlob;
     use crate::containers::ExternalStringPtr;
-
-    #[repr(C)]
-    #[derive(Debug, Clone, Copy)]
-    pub(crate) struct MaybeStringPtrBlob {
-        blob: [u8; MAYBE_STRING_PTR_SIZE],
-    }
 
     /// C-compatible nullable MaybeString container
     #[repr(C)]

@@ -1,10 +1,4 @@
-use crate::containers::size::MAGIC_COMMENT_KIND_SIZE;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct MagicCommentKindBlob {
-    blob: [u8; MAGIC_COMMENT_KIND_SIZE],
-}
+use crate::blobs::MagicCommentKindBlob;
 
 /// An enum of all magic comment kinds
 #[repr(C)]

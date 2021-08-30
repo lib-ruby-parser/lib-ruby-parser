@@ -2,13 +2,7 @@
 pub(crate) mod external {
     use std::ops::Deref;
 
-    use crate::containers::size::SHARED_BYTE_LIST_SIZE;
-
-    #[repr(C)]
-    #[derive(Debug, Clone, Copy)]
-    pub struct SharedByteListBlob {
-        blob: [u8; SHARED_BYTE_LIST_SIZE],
-    }
+    use crate::blobs::SharedByteListBlob;
 
     /// C-compatible shared list
     #[repr(C)]

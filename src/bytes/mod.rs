@@ -7,8 +7,6 @@ pub use native::Bytes;
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::Bytes;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use external::BytesBlob;
 
 mod shared;
 

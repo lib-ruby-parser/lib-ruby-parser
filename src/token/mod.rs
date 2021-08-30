@@ -7,8 +7,6 @@ pub use native::Token;
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::Token;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use external::TokenBlob;
 
 mod shared;
 

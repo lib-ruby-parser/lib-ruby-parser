@@ -1,13 +1,7 @@
-use crate::containers::size::MAYBE_TOKEN_REWRITER_SIZE;
+use crate::blobs::{MaybeTokenRewriterBlob, TokenRewriterBlob};
 use crate::containers::IntoBlob;
 use crate::source::maybe_token_rewriter::MaybeTokenRewriterAPI;
-use crate::source::token_rewriter::{TokenRewriter, TokenRewriterBlob};
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct MaybeTokenRewriterBlob {
-    blob: [u8; MAYBE_TOKEN_REWRITER_SIZE],
-}
+use crate::source::token_rewriter::TokenRewriter;
 
 /// Custom token_rewriter, a wrapper around a function
 #[repr(C)]

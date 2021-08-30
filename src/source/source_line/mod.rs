@@ -7,8 +7,6 @@ pub use native::SourceLine;
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::SourceLine;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use external::SourceLineBlob;
 
 mod shared;
 

@@ -1,11 +1,5 @@
-use crate::containers::size::BYTES_SIZE;
+use crate::blobs::BytesBlob;
 use crate::containers::IntoBlob;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct BytesBlob {
-    blob: [u8; BYTES_SIZE],
-}
 
 /// Byte sequence based on external implementation
 #[repr(C)]
@@ -13,7 +7,8 @@ pub struct Bytes {
     pub(crate) blob: BytesBlob,
 }
 
-use crate::containers::list::external::{List, ListBlob};
+use crate::blobs::ListBlob;
+use crate::containers::list::external::List;
 
 extern "C" {
     fn lib_ruby_parser__external__bytes__new(list_blob: ListBlob) -> BytesBlob;

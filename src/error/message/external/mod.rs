@@ -1,10 +1,4 @@
-use crate::containers::size::DIAGNOSTIC_MESSAGE_SIZE;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct DiagnosticMessageBlob {
-    blob: [u8; DIAGNOSTIC_MESSAGE_SIZE],
-}
+use crate::blobs::DiagnosticMessageBlob;
 
 /// Enum of all possible diagnostic message (both warnings and errors)
 #[repr(C)]

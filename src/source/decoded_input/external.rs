@@ -1,14 +1,6 @@
-use crate::containers::size::DECODED_INPUT_SIZE;
-use crate::containers::{
-    ExternalList as List, ExternalStringPtr as StringPtr, IntoBlob, ListBlob, StringPtrBlob,
-};
+use crate::blobs::{DecodedInputBlob, ListBlob, StringPtrBlob};
+use crate::containers::{ExternalList as List, ExternalStringPtr as StringPtr, IntoBlob};
 use crate::source::SourceLine;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct DecodedInputBlob {
-    blob: [u8; DECODED_INPUT_SIZE],
-}
 
 /// Decoded input
 #[repr(C)]

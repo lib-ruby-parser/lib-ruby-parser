@@ -1,26 +1,20 @@
-use crate::containers::size::DECODER_SIZE;
+use crate::blobs::DecoderBlob;
+use crate::blobs::DecoderResultBlob;
+use crate::blobs::ListBlob;
+use crate::blobs::StringPtrBlob;
 use crate::containers::ExternalList as List;
 use crate::containers::ExternalStringPtr as StringPtr;
 use crate::containers::IntoBlob;
-use crate::containers::ListBlob;
-use crate::containers::StringPtrBlob;
 use crate::source::DecoderResult;
-use crate::source::DecoderResultBlob;
 use crate::source::InputError;
 use crate::source::MaybeDecoder;
 use crate::source::MaybeDecoderAPI;
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct DecoderBlob {
-    blob: [u8; DECODER_SIZE],
-}
-
 #[cfg(test)]
 impl Default for DecoderBlob {
     fn default() -> Self {
-        let blob: [u8; DECODER_SIZE] = [0; DECODER_SIZE];
-        Self { blob }
+        let bytes: [u8; std::mem::size_of::<Self>()] = [0; std::mem::size_of::<Self>()];
+        Self { bytes }
     }
 }
 

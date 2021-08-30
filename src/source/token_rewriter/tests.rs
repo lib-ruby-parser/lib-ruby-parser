@@ -26,7 +26,8 @@ fn rewritten_token() -> Ptr<Token> {
 mod dummy_rewriter {
     use super::rewritten_token;
     use super::{Ptr, Token};
-    use crate::source::token_rewriter::{TokenRewriter, TokenRewriterBlob};
+    use crate::blobs::TokenRewriterBlob;
+    use crate::source::token_rewriter::TokenRewriter;
 
     extern "C" {
         fn lib_ruby_parser__external__token_rewriter__new_keep(

@@ -1,20 +1,12 @@
-use crate::containers::size::PARSER_RESULT_SIZE;
-use crate::containers::{
-    ExternalList as List, ExternalMaybePtr as MaybePtr, IntoBlob, ListBlob, MaybePtrBlob,
-};
+use crate::blobs::{DecodedInputBlob, ListBlob, MaybePtrBlob, ParserResultBlob};
+use crate::containers::{ExternalList as List, ExternalMaybePtr as MaybePtr, IntoBlob};
 
 use crate::source::Comment;
+use crate::source::DecodedInput;
 use crate::source::MagicComment;
-use crate::source::{DecodedInput, DecodedInputBlob};
 use crate::Diagnostic;
 use crate::Node;
 use crate::Token;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct ParserResultBlob {
-    blob: [u8; PARSER_RESULT_SIZE],
-}
 
 /// Combination of all data that `Parser` can give you
 #[repr(C)]

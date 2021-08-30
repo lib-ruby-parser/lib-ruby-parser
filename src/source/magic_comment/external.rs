@@ -1,17 +1,11 @@
 use crate::source::MagicCommentKind;
 use crate::Loc;
 
-use crate::containers::size::MAGIC_COMMENT_SIZE;
-use crate::loc::LocBlob;
-use crate::source::magic_comment_kind::MagicCommentKindBlob;
+use crate::blobs::LocBlob;
+use crate::blobs::MagicCommentBlob;
+use crate::blobs::MagicCommentKindBlob;
 
 use crate::containers::IntoBlob;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct MagicCommentBlob {
-    blob: [u8; MAGIC_COMMENT_SIZE],
-}
 
 /// An enum of all magic comment kinds
 #[repr(C)]

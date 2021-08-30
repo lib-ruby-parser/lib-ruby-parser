@@ -1,15 +1,9 @@
 use crate::source::CommentType;
 use crate::Loc;
 
-use crate::containers::size::COMMENT_SIZE;
-use crate::loc::LocBlob;
-use crate::source::comment_type::CommentTypeBlob;
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-pub(crate) struct CommentBlob {
-    blob: [u8; COMMENT_SIZE],
-}
+use crate::blobs::CommentBlob;
+use crate::blobs::CommentTypeBlob;
+use crate::blobs::LocBlob;
 
 /// A struct that represents a comment in Ruby
 #[repr(C)]

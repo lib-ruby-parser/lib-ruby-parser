@@ -30,14 +30,8 @@ pub(crate) mod rust {
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
     use super::{Loc, MaybeLocAPI};
-    use crate::containers::size::MAYBE_LOC_SIZE;
-    use crate::loc::LocBlob;
-
-    #[repr(C)]
-    #[derive(Clone, Copy)]
-    pub(crate) struct MaybeLocBlob {
-        blob: [u8; MAYBE_LOC_SIZE],
-    }
+    use crate::blobs::LocBlob;
+    use crate::blobs::MaybeLocBlob;
 
     /// C-compatible Option<Loc>
     #[repr(C)]

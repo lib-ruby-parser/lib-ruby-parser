@@ -14,20 +14,14 @@ fn contents(node: &lib_ruby_parser_nodes::Node) -> String {
 
 {imports}
 
-use crate::containers::size::NODE_{upper}_SIZE;
 use super::internal::Internal{struct_name};
 use crate::containers::IntoBlob;
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub(crate) struct {struct_name}Blob {{
-    blob: [u8; NODE_{upper}_SIZE],
-}}
+use crate::blobs::nodes::{blob_name};
 
 {comment}
 #[repr(C)]
 pub struct {struct_name} {{
-    pub(crate) blob: {struct_name}Blob
+    pub(crate) blob: {blob_name}
 }}
 
 impl std::fmt::Debug for {struct_name} {{
@@ -85,7 +79,7 @@ impl Drop for {struct_name} {{
 }}
 ",
         generator = file!(),
-        upper = node.upper_name(),
+        blob_name = format!("{}Blob", node.camelcase_name),
         imports = imports(&node).join("\n"),
         comment = node.render_comment("///", 0),
         struct_name = struct_name(node),
@@ -101,7 +95,7 @@ impl Drop for {struct_name} {{
         // trait impls
         debug_impl = debug_impl(&node),
         partial_eq_impl = partial_eq_impl(&node),
-        external_drop_variant_name = external_drop_variant_name(node)
+        external_drop_variant_name = external_drop_variant_name(node),
     )
 }
 
@@ -116,7 +110,7 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
     imports.push("use crate::nodes::InnerNode;");
     imports.push("use crate::nodes::InspectVec;");
     imports.push("use crate::Loc;");
-    imports.push("use crate::loc::LocBlob;");
+    imports.push("use crate::blobs::LocBlob;");
 
     let has_field = |field_type: lib_ruby_parser_nodes::NodeFieldType| {
         node.fields.any_field_has_type(field_type)
@@ -136,7 +130,7 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::StringValue) {
         imports.push("use crate::Bytes;");
-        imports.push("use crate::bytes::BytesBlob;");
+        imports.push("use crate::blobs::BytesBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode {
@@ -145,36 +139,36 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
         regexp_options: false,
     }) {
         imports.push("use crate::containers::ExternalMaybePtr as MaybePtr;");
-        imports.push("use crate::containers::MaybePtrBlob;");
+        imports.push("use crate::blobs::MaybePtrBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::Node) {
         imports.push("use crate::containers::ExternalPtr as Ptr;");
-        imports.push("use crate::containers::PtrBlob;");
+        imports.push("use crate::blobs::PtrBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::Nodes) {
         imports.push("use crate::containers::ExternalList as List;");
-        imports.push("use crate::containers::ListBlob;");
+        imports.push("use crate::blobs::ListBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeLoc) {
         imports.push("use crate::containers::ExternalMaybeLoc as MaybeLoc;");
-        imports.push("use crate::containers::MaybeLocBlob;");
+        imports.push("use crate::blobs::MaybeLocBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::Str { raw: true })
         || has_field(lib_ruby_parser_nodes::NodeFieldType::Str { raw: false })
     {
         imports.push("use crate::containers::ExternalStringPtr as StringPtr;");
-        imports.push("use crate::containers::StringPtrBlob;");
+        imports.push("use crate::blobs::StringPtrBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: false })
         || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: true })
     {
         imports.push("use crate::containers::ExternalMaybeStringPtr as MaybeStringPtr;");
-        imports.push("use crate::containers::MaybeStringPtrBlob;");
+        imports.push("use crate::blobs::MaybeStringPtrBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::U8) {
@@ -297,16 +291,16 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
         node.fields
             .flat_map(&|field| {
                 let getter = format!(
-                    "fn {getter_name}(blob: *const {struct_name}Blob) -> *mut {field_blob_type};",
+                    "fn {getter_name}(blob: *const {blob_name}) -> *mut {field_blob_type};",
                     getter_name = external_field_getter_name(node, field),
-                    struct_name = struct_name(node),
+                    blob_name = format!("{}Blob", node.camelcase_name),
                     field_blob_type = helpers::blob_type(field)
                 );
 
                 let setter = format!(
-                    "fn {setter_name}(blob: *mut {struct_name}Blob, blob: {field_blob_type});",
+                    "fn {setter_name}(blob: *mut {blob_name}, blob: {field_blob_type});",
                     setter_name = external_field_setter_name(node, field),
-                    struct_name = struct_name(node),
+                    blob_name = format!("{}Blob", node.camelcase_name),
                     field_blob_type = helpers::blob_type(field)
                 );
 
@@ -319,8 +313,9 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     // into_internal fn
     {
         let line = format!(
-            "fn {fn_name}(blob: {struct_name}Blob) -> Internal{struct_name};",
+            "fn {fn_name}(blob: {blob_name}) -> Internal{struct_name};",
             fn_name = external_into_internal_name(node),
+            blob_name = format!("{}Blob", node.camelcase_name),
             struct_name = struct_name(node)
         );
         result.push(line);
@@ -329,9 +324,9 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     // drop fn
     {
         let line = format!(
-            "fn {fn_name}(blob: *mut {struct_name}Blob);",
+            "fn {fn_name}(blob: *mut {blob_name});",
             fn_name = external_drop_variant_name(node),
-            struct_name = struct_name(node)
+            blob_name = format!("{}Blob", node.camelcase_name),
         );
         result.push(line);
     }

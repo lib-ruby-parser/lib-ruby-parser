@@ -1,18 +1,12 @@
-use crate::containers::ExternalStringPtr as StringPtr;
-use crate::debug_level;
-use crate::source::maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterBlob};
-
 use super::InternalParserOptions;
-use crate::containers::size::PARSER_OPTIONS_SIZE;
+use crate::blobs::ParserOptionsBlob;
+use crate::blobs::StringPtrBlob;
+use crate::blobs::{MaybeDecoderBlob, MaybeTokenRewriterBlob};
+use crate::containers::ExternalStringPtr as StringPtr;
 use crate::containers::IntoBlob;
-use crate::containers::StringPtrBlob;
-use crate::source::{MaybeDecoder, MaybeDecoderBlob};
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct ParserOptionsBlob {
-    blob: [u8; PARSER_OPTIONS_SIZE],
-}
+use crate::debug_level;
+use crate::source::maybe_token_rewriter::MaybeTokenRewriter;
+use crate::source::MaybeDecoder;
 
 /// Configuration of the parser
 #[repr(C)]

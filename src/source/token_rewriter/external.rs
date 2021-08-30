@@ -1,18 +1,10 @@
 use super::InternalTokenRewriterResult;
-use crate::containers::size::{
-    LEX_STATE_ACTION_SIZE, REWRITE_ACTION_SIZE, TOKEN_REWRITER_RESULT_SIZE, TOKEN_REWRITER_SIZE,
+use crate::blobs::{
+    LexStateActionBlob, RewriteActionBlob, TokenRewriterBlob, TokenRewriterResultBlob,
 };
-use crate::containers::{
-    ExternalPtr as Ptr, ExternalSharedByteList as SharedByteList, IntoBlob, PtrBlob,
-    SharedByteListBlob,
-};
+use crate::blobs::{PtrBlob, SharedByteListBlob};
+use crate::containers::{ExternalPtr as Ptr, ExternalSharedByteList as SharedByteList, IntoBlob};
 use crate::Token;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct RewriteActionBlob {
-    blob: [u8; REWRITE_ACTION_SIZE],
-}
 
 /// Enum of what token rewriter should do with a token.
 #[repr(C)]
@@ -66,12 +58,6 @@ impl std::fmt::Debug for RewriteAction {
             panic!("Unknown RewriteAction variant")
         }
     }
-}
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct LexStateActionBlob {
-    blob: [u8; LEX_STATE_ACTION_SIZE],
 }
 
 /// Enum of what token rewriter should do with the state of the lexer
@@ -142,12 +128,6 @@ impl PartialEq for LexStateAction {
 
 impl Eq for LexStateAction {}
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct TokenRewriterResultBlob {
-    blob: [u8; TOKEN_REWRITER_RESULT_SIZE],
-}
-
 /// Output of the token rewriter
 #[repr(C)]
 pub struct TokenRewriterResult {
@@ -186,17 +166,11 @@ impl std::fmt::Debug for TokenRewriterResult {
     }
 }
 
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct TokenRewriterBlob {
-    blob: [u8; TOKEN_REWRITER_SIZE],
-}
-
 #[cfg(test)]
 impl Default for TokenRewriterBlob {
     fn default() -> Self {
-        let blob: [u8; TOKEN_REWRITER_SIZE] = [0; TOKEN_REWRITER_SIZE];
-        Self { blob }
+        let bytes: [u8; std::mem::size_of::<Self>()] = [0; std::mem::size_of::<Self>()];
+        Self { bytes }
     }
 }
 

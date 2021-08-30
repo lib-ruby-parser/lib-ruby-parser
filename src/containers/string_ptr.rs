@@ -1,13 +1,7 @@
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
-    use crate::containers::size::STRING_PTR_SIZE;
+    use crate::blobs::StringPtrBlob;
     use std::ops::Deref;
-
-    #[repr(C)]
-    #[derive(Debug, Clone, Copy)]
-    pub struct StringPtrBlob {
-        blob: [u8; STRING_PTR_SIZE],
-    }
 
     /// C-compatible list
     #[repr(C)]

@@ -1,5 +1,4 @@
-use crate::containers::list::external::ListBlob;
-use crate::containers::{MaybePtrBlob, PtrBlob};
+use crate::blobs::{ListBlob, MaybePtrBlob, PtrBlob};
 
 use crate::{
     source::{Comment, MagicComment, SourceLine},

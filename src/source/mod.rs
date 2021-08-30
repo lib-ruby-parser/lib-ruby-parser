@@ -28,20 +28,3 @@ pub use magic_comment::MagicComment;
 pub use magic_comment_kind::MagicCommentKind;
 pub use maybe_decoder::{MaybeDecoder, MaybeDecoderAPI};
 pub use source_line::SourceLine;
-
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use comment::CommentBlob;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use decoded_input::DecodedInputBlob;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use decoder::DecoderBlob;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use decoder_result::DecoderResultBlob;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use input_error::InputErrorBlob;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use magic_comment::MagicCommentBlob;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use maybe_decoder::MaybeDecoderBlob;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use source_line::SourceLineBlob;

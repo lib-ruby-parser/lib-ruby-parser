@@ -13,17 +13,11 @@ fn contents() -> String {
 pub(crate) mod internal {{
     {internal_uses}
 }}
-
-#[cfg(feature = \"compile-with-external-structures\")]
-pub(crate) mod blobs {{
-    {blob_uses}
-}}
 ",
         generator = file!(),
         mods = nodes.map(&mod_).join("\n"),
         uses = nodes.map(&use_).join("\n"),
         internal_uses = nodes.map(&internal_use).join("\n    "),
-        blob_uses = nodes.map(&blob_use).join("\n    ")
     )
 }
 
@@ -45,14 +39,6 @@ fn internal_use(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "#[allow(unused_imports)]
     pub(crate) use super::{mod_name}::Internal{struct_name} as {struct_name};",
-        mod_name = filename(node),
-        struct_name = struct_name(node)
-    )
-}
-
-fn blob_use(node: &lib_ruby_parser_nodes::Node) -> String {
-    format!(
-        "pub(crate) use super::{mod_name}::{struct_name}Blob;",
         mod_name = filename(node),
         struct_name = struct_name(node)
     )

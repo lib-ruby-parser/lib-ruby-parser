@@ -1,10 +1,4 @@
-use crate::containers::size::LOC_SIZE;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct LocBlob {
-    blob: [u8; LOC_SIZE],
-}
+use crate::blobs::LocBlob;
 
 /// Byte sequence based on external implementation
 #[repr(C)]

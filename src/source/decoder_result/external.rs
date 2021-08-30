@@ -1,15 +1,9 @@
-use crate::containers::size::DECODER_RESULT_SIZE;
+use crate::blobs::DecoderResultBlob;
+use crate::blobs::InputErrorBlob;
+use crate::blobs::ListBlob;
 use crate::containers::ExternalList as List;
 use crate::containers::IntoBlob;
-use crate::containers::ListBlob;
 use crate::source::InputError;
-use crate::source::InputErrorBlob;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct DecoderResultBlob {
-    blob: [u8; DECODER_RESULT_SIZE],
-}
 
 /// Result that is returned from decoding function
 #[repr(C)]

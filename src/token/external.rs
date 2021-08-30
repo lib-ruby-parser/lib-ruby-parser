@@ -1,13 +1,8 @@
-use crate::containers::size::TOKEN_SIZE;
+use crate::blobs::BytesBlob;
+use crate::blobs::LocBlob;
+use crate::blobs::TokenBlob;
 use crate::containers::IntoBlob;
-use crate::loc::LocBlob;
 use crate::{Bytes, LexState, Loc};
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct TokenBlob {
-    blob: [u8; TOKEN_SIZE],
-}
 
 /// Byte sequence based on external implementation
 #[repr(C)]
@@ -45,7 +40,6 @@ impl Drop for Token {
     }
 }
 
-use crate::bytes::BytesBlob;
 extern "C" {
     fn lib_ruby_parser__external__token__new(
         token_type: i32,

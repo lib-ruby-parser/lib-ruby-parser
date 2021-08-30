@@ -1,13 +1,7 @@
-use crate::containers::size::INPUT_ERROR_SIZE;
+use crate::blobs::InputErrorBlob;
+use crate::blobs::StringPtrBlob;
 use crate::containers::ExternalStringPtr as StringPtr;
 use crate::containers::IntoBlob;
-use crate::containers::StringPtrBlob;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct InputErrorBlob {
-    blob: [u8; INPUT_ERROR_SIZE],
-}
 
 /// An enum with all possible kinds of errors that can be returned
 /// from a decoder

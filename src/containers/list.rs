@@ -18,15 +18,8 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
+    use crate::blobs::ListBlob;
     use crate::containers::get_drop_fn::GetDropListFn;
-
-    use crate::containers::size::LIST_SIZE;
-
-    #[repr(C)]
-    #[derive(Debug, Clone, Copy)]
-    pub struct ListBlob {
-        blob: [u8; LIST_SIZE],
-    }
 
     /// C-compatible list
     #[repr(C)]

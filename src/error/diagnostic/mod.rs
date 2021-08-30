@@ -7,8 +7,6 @@ pub use native::Diagnostic;
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::Diagnostic;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use external::DiagnosticBlob;
 
 mod shared;
 pub(crate) use shared::Diagnostics;

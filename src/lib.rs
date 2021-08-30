@@ -90,3 +90,7 @@ pub mod debug_level;
 /// Module with generic containers
 pub mod containers;
 pub(crate) use containers::use_native_or_external;
+
+/// Module with blobs, based on provided sizes
+#[cfg(feature = "compile-with-external-structures")]
+pub mod blobs;

@@ -17,19 +17,10 @@ pub(crate) mod rust {
 
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
-    use std::ffi::c_void;
-
+    use crate::blobs::MaybePtrBlob;
     use crate::containers::get_drop_fn::{GetDropMaybePtrFn, GetDropPtrFn};
     use crate::containers::ExternalPtr;
-
-    use crate::containers::size::MAYBE_PTR_SIZE;
-
-    /// MaybePtrBlob, exposed only because it's used in some pub trait
-    #[repr(C)]
-    #[derive(Clone, Copy, Debug)]
-    pub struct MaybePtrBlob {
-        blob: [u8; MAYBE_PTR_SIZE],
-    }
+    use std::ffi::c_void;
 
     /// C-compatible nullable pointer
     #[repr(C)]

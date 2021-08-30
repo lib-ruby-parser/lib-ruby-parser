@@ -1,10 +1,4 @@
-use crate::containers::size::ERROR_LEVEL_SIZE;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct ErrorLevelBlob {
-    blob: [u8; ERROR_LEVEL_SIZE],
-}
+use crate::blobs::ErrorLevelBlob;
 
 /// Byte sequence based on external implementation
 #[repr(C)]

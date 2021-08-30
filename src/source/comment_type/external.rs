@@ -1,10 +1,4 @@
-use crate::containers::size::COMMENT_TYPE_SIZE;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct CommentTypeBlob {
-    blob: [u8; COMMENT_TYPE_SIZE],
-}
+use crate::blobs::CommentTypeBlob;
 
 /// Enum of all possible comment types
 #[repr(C)]

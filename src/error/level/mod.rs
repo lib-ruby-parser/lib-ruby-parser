@@ -7,8 +7,6 @@ pub use native::ErrorLevel;
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::ErrorLevel;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use external::ErrorLevelBlob;
 
 mod shared;
 

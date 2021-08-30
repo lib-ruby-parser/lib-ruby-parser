@@ -7,8 +7,6 @@ pub use native::DiagnosticMessage;
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::DiagnosticMessage;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use external::DiagnosticMessageBlob;
 
 mod render;
 

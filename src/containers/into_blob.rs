@@ -18,7 +18,7 @@ impl<T> IntoBlob for crate::containers::ExternalPtr<T>
 where
     T: crate::containers::get_drop_fn::GetDropPtrFn,
 {
-    type Output = crate::containers::PtrBlob;
+    type Output = crate::blobs::PtrBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -31,7 +31,7 @@ impl<T> IntoBlob for crate::containers::ExternalMaybePtr<T>
 where
     T: crate::containers::get_drop_fn::GetDropMaybePtrFn,
 {
-    type Output = crate::containers::MaybePtrBlob;
+    type Output = crate::blobs::MaybePtrBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -41,7 +41,7 @@ where
 }
 
 impl IntoBlob for crate::Bytes {
-    type Output = crate::bytes::BytesBlob;
+    type Output = crate::blobs::BytesBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -54,7 +54,7 @@ impl<T> IntoBlob for crate::containers::ExternalList<T>
 where
     T: crate::containers::get_drop_fn::GetDropListFn,
 {
-    type Output = crate::containers::ListBlob;
+    type Output = crate::blobs::ListBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -64,7 +64,7 @@ where
 }
 
 impl IntoBlob for crate::Loc {
-    type Output = crate::loc::LocBlob;
+    type Output = crate::blobs::LocBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -74,7 +74,7 @@ impl IntoBlob for crate::Loc {
 }
 
 impl IntoBlob for crate::containers::ExternalMaybeLoc {
-    type Output = crate::containers::MaybeLocBlob;
+    type Output = crate::blobs::MaybeLocBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -84,7 +84,7 @@ impl IntoBlob for crate::containers::ExternalMaybeLoc {
 }
 
 impl IntoBlob for crate::containers::ExternalStringPtr {
-    type Output = crate::containers::StringPtrBlob;
+    type Output = crate::blobs::StringPtrBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -94,7 +94,7 @@ impl IntoBlob for crate::containers::ExternalStringPtr {
 }
 
 impl IntoBlob for crate::containers::ExternalMaybeStringPtr {
-    type Output = crate::containers::MaybeStringPtrBlob;
+    type Output = crate::blobs::MaybeStringPtrBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -104,7 +104,7 @@ impl IntoBlob for crate::containers::ExternalMaybeStringPtr {
 }
 
 impl IntoBlob for crate::Diagnostic {
-    type Output = crate::error::diagnostic::DiagnosticBlob;
+    type Output = crate::blobs::DiagnosticBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -114,7 +114,7 @@ impl IntoBlob for crate::Diagnostic {
 }
 
 impl IntoBlob for crate::ErrorLevel {
-    type Output = crate::error::level::ErrorLevelBlob;
+    type Output = crate::blobs::ErrorLevelBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -124,7 +124,7 @@ impl IntoBlob for crate::ErrorLevel {
 }
 
 impl IntoBlob for crate::source::MagicCommentKind {
-    type Output = crate::source::magic_comment_kind::MagicCommentKindBlob;
+    type Output = crate::blobs::MagicCommentKindBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -134,7 +134,7 @@ impl IntoBlob for crate::source::MagicCommentKind {
 }
 
 impl IntoBlob for crate::error::DiagnosticMessage {
-    type Output = crate::error::message::DiagnosticMessageBlob;
+    type Output = crate::blobs::DiagnosticMessageBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -144,7 +144,7 @@ impl IntoBlob for crate::error::DiagnosticMessage {
 }
 
 impl IntoBlob for crate::source::InputError {
-    type Output = crate::source::InputErrorBlob;
+    type Output = crate::blobs::InputErrorBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -154,7 +154,7 @@ impl IntoBlob for crate::source::InputError {
 }
 
 impl IntoBlob for crate::source::DecoderResult {
-    type Output = crate::source::DecoderResultBlob;
+    type Output = crate::blobs::DecoderResultBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -164,7 +164,7 @@ impl IntoBlob for crate::source::DecoderResult {
 }
 
 impl IntoBlob for crate::containers::ExternalSharedByteList {
-    type Output = crate::containers::SharedByteListBlob;
+    type Output = crate::blobs::SharedByteListBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -174,7 +174,7 @@ impl IntoBlob for crate::containers::ExternalSharedByteList {
 }
 
 impl IntoBlob for crate::source::Decoder {
-    type Output = crate::source::DecoderBlob;
+    type Output = crate::blobs::DecoderBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -184,7 +184,7 @@ impl IntoBlob for crate::source::Decoder {
 }
 
 impl IntoBlob for crate::source::MaybeDecoder {
-    type Output = crate::source::MaybeDecoderBlob;
+    type Output = crate::blobs::MaybeDecoderBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -194,7 +194,7 @@ impl IntoBlob for crate::source::MaybeDecoder {
 }
 
 impl IntoBlob for crate::source::token_rewriter::TokenRewriter {
-    type Output = crate::source::token_rewriter::TokenRewriterBlob;
+    type Output = crate::blobs::TokenRewriterBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -204,7 +204,7 @@ impl IntoBlob for crate::source::token_rewriter::TokenRewriter {
 }
 
 impl IntoBlob for crate::source::maybe_token_rewriter::MaybeTokenRewriter {
-    type Output = crate::source::maybe_token_rewriter::MaybeTokenRewriterBlob;
+    type Output = crate::blobs::MaybeTokenRewriterBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -214,7 +214,7 @@ impl IntoBlob for crate::source::maybe_token_rewriter::MaybeTokenRewriter {
 }
 
 impl IntoBlob for crate::ParserOptions {
-    type Output = crate::parser_options::ParserOptionsBlob;
+    type Output = crate::blobs::ParserOptionsBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -224,7 +224,7 @@ impl IntoBlob for crate::ParserOptions {
 }
 
 impl IntoBlob for crate::source::DecodedInput {
-    type Output = crate::source::DecodedInputBlob;
+    type Output = crate::blobs::DecodedInputBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -234,7 +234,7 @@ impl IntoBlob for crate::source::DecodedInput {
 }
 
 impl IntoBlob for crate::ParserResult {
-    type Output = crate::parser_result::ParserResultBlob;
+    type Output = crate::blobs::ParserResultBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -244,7 +244,7 @@ impl IntoBlob for crate::ParserResult {
 }
 
 impl IntoBlob for crate::source::Comment {
-    type Output = crate::source::CommentBlob;
+    type Output = crate::blobs::CommentBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -254,7 +254,7 @@ impl IntoBlob for crate::source::Comment {
 }
 
 impl IntoBlob for crate::source::MagicComment {
-    type Output = crate::source::MagicCommentBlob;
+    type Output = crate::blobs::MagicCommentBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -264,7 +264,7 @@ impl IntoBlob for crate::source::MagicComment {
 }
 
 impl IntoBlob for crate::source::SourceLine {
-    type Output = crate::source::SourceLineBlob;
+    type Output = crate::blobs::SourceLineBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -274,7 +274,7 @@ impl IntoBlob for crate::source::SourceLine {
 }
 
 impl IntoBlob for crate::source::token_rewriter::LexStateAction {
-    type Output = crate::source::token_rewriter::LexStateActionBlob;
+    type Output = crate::blobs::LexStateActionBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -284,7 +284,7 @@ impl IntoBlob for crate::source::token_rewriter::LexStateAction {
 }
 
 impl IntoBlob for crate::source::token_rewriter::RewriteAction {
-    type Output = crate::source::token_rewriter::RewriteActionBlob;
+    type Output = crate::blobs::RewriteActionBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -294,7 +294,7 @@ impl IntoBlob for crate::source::token_rewriter::RewriteAction {
 }
 
 impl IntoBlob for crate::source::token_rewriter::TokenRewriterResult {
-    type Output = crate::source::token_rewriter::TokenRewriterResultBlob;
+    type Output = crate::blobs::TokenRewriterResultBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;
@@ -304,7 +304,7 @@ impl IntoBlob for crate::source::token_rewriter::TokenRewriterResult {
 }
 
 impl IntoBlob for crate::Token {
-    type Output = crate::token::TokenBlob;
+    type Output = crate::blobs::TokenBlob;
 
     fn into_blob(self) -> Self::Output {
         let blob = self.blob;

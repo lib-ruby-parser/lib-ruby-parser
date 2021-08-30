@@ -3,7 +3,7 @@ use crate::source::Decoder;
 
 #[cfg(feature = "compile-with-external-structures")]
 fn decoder() -> Decoder {
-    use crate::source::DecoderBlob;
+    use crate::blobs::DecoderBlob;
     Decoder::from_blob(DecoderBlob::default())
 }
 

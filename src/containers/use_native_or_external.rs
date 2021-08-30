@@ -78,6 +78,7 @@ macro_rules! use_native_or_external {
         #[cfg(feature = "compile-with-external-structures")]
         type MaybeLoc = ExternalMaybeLoc;
         #[cfg(not(feature = "compile-with-external-structures"))]
+        #[allow(unused_qualifications)]
         type MaybeLoc = Option<crate::Loc>;
 
         #[allow(unused_imports)]

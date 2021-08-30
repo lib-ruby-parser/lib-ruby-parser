@@ -15,8 +15,3 @@ pub(crate) use internal::InternalTokenRewriterResult;
 
 #[cfg(test)]
 mod tests;
-
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use external::{
-    LexStateActionBlob, RewriteActionBlob, TokenRewriterBlob, TokenRewriterResultBlob,
-};

@@ -1,13 +1,7 @@
-use crate::containers::size::MAYBE_DECODER_SIZE;
+use crate::blobs::{DecoderBlob, MaybeDecoderBlob};
 use crate::containers::IntoBlob;
 use crate::source::maybe_decoder::MaybeDecoderAPI;
-use crate::source::{Decoder, DecoderBlob};
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct MaybeDecoderBlob {
-    blob: [u8; MAYBE_DECODER_SIZE],
-}
+use crate::source::Decoder;
 
 /// Custom decoder, a wrapper around a function
 #[repr(C)]

@@ -7,8 +7,6 @@ pub use native::ParserResult;
 mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::ParserResult;
-#[cfg(feature = "compile-with-external-structures")]
-pub(crate) use external::ParserResultBlob;
 
 mod shared;
 

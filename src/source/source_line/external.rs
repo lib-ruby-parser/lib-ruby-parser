@@ -1,10 +1,4 @@
-use crate::containers::size::SOURCE_LINE_SIZE;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct SourceLineBlob {
-    blob: [u8; SOURCE_LINE_SIZE],
-}
+use crate::blobs::SourceLineBlob;
 
 /// Representation of a source line in a source file
 #[repr(C)]

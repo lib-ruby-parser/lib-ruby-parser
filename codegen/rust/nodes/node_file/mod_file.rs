@@ -7,8 +7,6 @@ fn contents(node: &lib_ruby_parser_nodes::Node) -> String {
 mod external;
 #[cfg(feature = \"compile-with-external-structures\")]
 pub use external::{struct_name};
-#[cfg(feature = \"compile-with-external-structures\")]
-pub(crate) use external::{struct_name}Blob;
 
 #[cfg(not(feature = \"compile-with-external-structures\"))]
 mod native;

@@ -16,8 +16,9 @@ fn decoding_error() -> InputError {
 #[cfg(feature = "compile-with-external-structures")]
 mod dummy_decoder {
     use super::{decoded_output, decoding_error};
+    use crate::blobs::{DecoderBlob, DecoderResultBlob};
     use crate::containers::IntoBlob;
-    use crate::source::{Decoder, DecoderBlob, DecoderResult, DecoderResultBlob};
+    use crate::source::{Decoder, DecoderResult};
 
     type ExternDecodeFn = extern "C" fn() -> DecoderResultBlob;
 

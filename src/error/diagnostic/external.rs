@@ -1,21 +1,14 @@
-use crate::containers::size::DIAGNOSTIC_SIZE;
+use crate::blobs::{DiagnosticBlob, DiagnosticMessageBlob, ErrorLevelBlob, LocBlob};
 use crate::containers::IntoBlob;
-
-#[repr(C)]
-#[derive(Clone, Copy)]
-pub(crate) struct DiagnosticBlob {
-    blob: [u8; DIAGNOSTIC_SIZE],
-}
+use crate::error::level::ErrorLevel;
+use crate::error::message::DiagnosticMessage;
+use crate::loc::Loc;
 
 /// Diagnostic message that comes from the parser when there's an error or warning
 #[repr(C)]
 pub struct Diagnostic {
     pub(crate) blob: DiagnosticBlob,
 }
-
-use crate::error::level::{ErrorLevel, ErrorLevelBlob};
-use crate::error::message::{DiagnosticMessage, DiagnosticMessageBlob};
-use crate::loc::{Loc, LocBlob};
 
 extern "C" {
     fn lib_ruby_parser__external__diagnostic__new(
