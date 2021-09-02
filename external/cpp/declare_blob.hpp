@@ -28,16 +28,6 @@
             {                                                  \
             }                                                  \
         };                                                     \
-    }                                                          \
-    inline VALUE UNPACK_##VALUE(VALUE##_BLOB blob)             \
-    {                                                          \
-        VALUE##_BLOB_UNION u = {.as_blob = blob};              \
-        return std::move(u.as_value);                          \
-    }                                                          \
-    inline VALUE##_BLOB PACK_##VALUE(VALUE value)              \
-    {                                                          \
-        VALUE##_BLOB_UNION u = {.as_value = std::move(value)}; \
-        return u.as_blob;                                      \
     }
 
 #endif // LIB_RUBY_PARSER_EXTERNAL_CPP_DECLARE_BLOB_HPP

@@ -28,8 +28,18 @@ pub(crate) fn codegen() {
 }
 
 fn node_blob(node: &lib_ruby_parser_nodes::Node) -> String {
-    format!("DECLARE_BLOB_FOR({});", node.camelcase_name)
+    format!(
+        "DECLARE_BLOB_FOR({node_struct});
+#define UNPACK_{node_struct}(blob) (({node_struct}_BLOB_UNION){{.as_blob = blob}}).as_value
+#define PACK_{node_struct}(value) (({node_struct}_BLOB_UNION){{.as_value = value}}).as_blob",
+        node_struct = node.camelcase_name
+    )
 }
 fn message_blob(message: &lib_ruby_parser_nodes::Message) -> String {
-    format!("DECLARE_BLOB_FOR({});", message.camelcase_name())
+    format!(
+        "DECLARE_BLOB_FOR({message_struct});
+#define UNPACK_{message_struct}(blob) (({message_struct}_BLOB_UNION){{.as_blob = blob}}).as_value
+#define PACK_{message_struct}(value) (({message_struct}_BLOB_UNION){{.as_value = value}}).as_blob",
+        message_struct = message.camelcase_name()
+    )
 }

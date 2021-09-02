@@ -31,8 +31,7 @@ extern "C"
     */
     MaybePtr_BLOB lib_ruby_parser__external__maybe_ptr__new(void *raw)
     {
-        MaybePtr self = std::unique_ptr<int>((int *)raw);
-        return PACK_MaybePtr(std::move(self));
+        return PACK_MaybePtr(std::unique_ptr<int>((int *)raw));
     }
     MaybePtr_BLOB lib_ruby_parser__external__maybe_ptr__new_null()
     {
@@ -842,9 +841,9 @@ extern "C"
     {
         TokenRewriterResult self = UNPACK_TokenRewriterResult(self_blob);
         InternalTokenRewriterResult output = {
+            .rewritten_token = PACK_TokenPtr(std::move(self.rewritten_token)),
             .token_action = PACK_RewriteAction(self.token_action),
-            .lex_state_action = PACK_LexStateAction(std::move(self.lex_state_action)),
-            .rewritten_token = PACK_TokenPtr(std::move(self.rewritten_token))};
+            .lex_state_action = PACK_LexStateAction(std::move(self.lex_state_action))};
         return output;
     }
 
