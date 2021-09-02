@@ -23,7 +23,7 @@
         VALUE##_BLOB_UNION u = {.as_blob = blob};             \
         return u.as_value;                                    \
     }                                                         \
-    VALUE##_BLOB PACK_##VALUE(VALUE value)                    \
+    inline VALUE##_BLOB PACK_##VALUE(VALUE value)             \
     {                                                         \
         VALUE##_BLOB_UNION u = {.as_value = value};           \
         return u.as_blob;                                     \
