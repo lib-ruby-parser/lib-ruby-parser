@@ -2,8 +2,6 @@ CFLAGS += -g -Wall -Wextra -fPIE
 
 OBJECTS = \
 	structs.o \
-	blobs.o \
-	blobs_gen.o \
 	nodes.o \
 	messages.o \
 	bindings.o \

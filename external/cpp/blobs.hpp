@@ -5,19 +5,53 @@
 #include "declare_blob.hpp"
 
 typedef uint8_t Byte_BLOB;
-Byte UNPACK_Byte(Byte_BLOB blob);
-Byte_BLOB PACK_Byte(Byte byte);
+inline Byte UNPACK_Byte(Byte_BLOB blob)
+{
+    return blob;
+}
+inline Byte_BLOB PACK_Byte(Byte byte)
+{
+    return byte;
+}
 DECLARE_BLOB_FOR(ByteList);
 DECLARE_BLOB_FOR(Ptr);
-std::unique_ptr<Node> UNPACK_NodePtr(Ptr_BLOB blob);
-Ptr_BLOB PACK_NodePtr(std::unique_ptr<Node> ptr);
-std::unique_ptr<Token> UNPACK_TokenPtr(Ptr_BLOB blob);
-Ptr_BLOB PACK_TokenPtr(std::unique_ptr<Token> ptr);
+inline std::unique_ptr<Node> UNPACK_NodePtr(Ptr_BLOB blob)
+{
+    Ptr ptr = UNPACK_Ptr(blob);
+    return std::unique_ptr<Node>((Node *)(ptr.release()));
+}
+inline Ptr_BLOB PACK_NodePtr(std::unique_ptr<Node> ptr)
+{
+    return PACK_Ptr(std::unique_ptr<int>((int *)(ptr.release())));
+}
+inline std::unique_ptr<Token> UNPACK_TokenPtr(Ptr_BLOB blob)
+{
+    Ptr ptr = UNPACK_Ptr(blob);
+    return std::unique_ptr<Token>((Token *)(ptr.release()));
+}
+inline Ptr_BLOB PACK_TokenPtr(std::unique_ptr<Token> ptr)
+{
+    return PACK_Ptr(std::unique_ptr<int>((int *)(ptr.release())));
+}
 DECLARE_BLOB_FOR(MaybePtr);
-std::unique_ptr<Node> UNPACK_MaybeNodePtr(MaybePtr_BLOB blob);
-MaybePtr_BLOB PACK_MaybeNodePtr(std::unique_ptr<Node> ptr);
-std::unique_ptr<Token> UNPACK_MaybeTokenPtr(MaybePtr_BLOB blob);
-MaybePtr_BLOB PACK_MaybeTokenPtr(std::unique_ptr<Token> ptr);
+inline std::unique_ptr<Node> UNPACK_MaybeNodePtr(MaybePtr_BLOB blob)
+{
+    Ptr ptr = UNPACK_MaybePtr(blob);
+    return std::unique_ptr<Node>((Node *)(ptr.release()));
+}
+inline MaybePtr_BLOB PACK_MaybeNodePtr(std::unique_ptr<Node> ptr)
+{
+    return PACK_MaybePtr(std::unique_ptr<int>((int *)(ptr.release())));
+}
+inline std::unique_ptr<Token> UNPACK_MaybeTokenPtr(MaybePtr_BLOB blob)
+{
+    Ptr ptr = UNPACK_MaybePtr(blob);
+    return std::unique_ptr<Token>((Token *)(ptr.release()));
+}
+inline MaybePtr_BLOB PACK_MaybeTokenPtr(std::unique_ptr<Token> ptr)
+{
+    return PACK_MaybePtr(std::unique_ptr<int>((int *)(ptr.release())));
+}
 DECLARE_BLOB_FOR(StringPtr);
 DECLARE_BLOB_FOR(MaybeStringPtr);
 DECLARE_BLOB_FOR(SharedByteList);

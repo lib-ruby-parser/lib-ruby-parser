@@ -2,8 +2,6 @@ CXXFLAGS += -g -Wall -Wextra -std=c++17 -fPIC
 
 OBJECTS = \
 	structs.o \
-	blobs.o \
-	blobs_gen.o \
 	nodes.o \
 	messages.o \
 	bindings.o \

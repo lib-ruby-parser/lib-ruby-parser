@@ -5,8 +5,14 @@
 #include "declare_blob.h"
 
 typedef uint8_t Byte_BLOB;
-Byte UNPACK_Byte(Byte_BLOB blob);
-Byte_BLOB PACK_Byte(Byte byte);
+inline Byte UNPACK_Byte(Byte_BLOB blob)
+{
+    return blob;
+}
+inline Byte_BLOB PACK_Byte(Byte byte)
+{
+    return byte;
+}
 DECLARE_BLOB_FOR(ByteList);
 DECLARE_BLOB_FOR(Ptr);
 DECLARE_BLOB_FOR(MaybePtr);

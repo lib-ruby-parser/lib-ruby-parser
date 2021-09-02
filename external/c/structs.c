@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include "structs.h"
-#include "impl_blob.h"
 #include "messages.h"
 
 // Byte

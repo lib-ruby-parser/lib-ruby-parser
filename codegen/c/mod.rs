@@ -10,7 +10,6 @@ mod nodes_h;
 
 mod bindings_h;
 
-mod blobs_gen_c;
 mod blobs_gen_h;
 
 pub(crate) fn codegen() {
@@ -29,7 +28,6 @@ pub(crate) fn codegen() {
     bindings_h::codegen(&options);
 
     blobs_gen_h::codegen();
-    blobs_gen_c::codegen();
 }
 
 pub(crate) fn codegen_options() -> lib_ruby_parser_bindings::Options {
