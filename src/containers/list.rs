@@ -177,8 +177,8 @@ pub(crate) mod external {
                     unsafe { $capacity(&self.blob) as usize }
                 }
 
-                #[allow(dead_code)]
-                pub(crate) fn from_blob(blob: ListBlob) -> Self {
+                /// Creates List from ListBlob
+                pub fn from_blob(blob: ListBlob) -> Self {
                     Self {
                         blob,
                         _t: std::marker::PhantomData,

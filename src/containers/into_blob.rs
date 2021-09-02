@@ -1,6 +1,9 @@
-pub(crate) trait IntoBlob {
+/// Generic trait to convert objects to blobs
+pub trait IntoBlob {
+    /// Blob type
     type Output: Sized;
 
+    /// Converts `self` to associated blob type
     fn into_blob(self) -> Self::Output
     where
         Self: Sized;

@@ -68,6 +68,11 @@ impl ParserOptions {
         Self { blob }
     }
 
+    /// Creates ParserOptions from ParserOptionsBlob
+    pub fn from_blob(blob: ParserOptionsBlob) -> Self {
+        Self { blob }
+    }
+
     pub(crate) fn buffer_name(&self) -> &StringPtr {
         unsafe {
             (lib_ruby_parser__external__parser_options__get_buffer_name(&self.blob)

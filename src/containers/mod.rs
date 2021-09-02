@@ -50,7 +50,7 @@ pub use string_ptr::external::StringPtr as ExternalStringPtr;
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod into_blob;
 #[cfg(feature = "compile-with-external-structures")]
-pub(crate) use into_blob::IntoBlob;
+pub use into_blob::IntoBlob;
 
 mod use_native_or_external;
 pub(crate) use use_native_or_external::use_native_or_external;
