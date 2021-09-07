@@ -10,7 +10,7 @@ crate::use_native_or_external!(MaybePtr);
 crate::use_native_or_external!(List);
 
 fn ast() -> MaybePtr<Node> {
-    MaybePtr::some(Node::make_retry(Loc::new(1, 2)))
+    MaybePtr::some(Node::new_retry(Loc::new(1, 2)))
 }
 
 fn tokens() -> List<Token> {

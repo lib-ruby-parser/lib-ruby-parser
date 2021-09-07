@@ -2,7 +2,7 @@ use super::Diagnostic;
 use crate::{DiagnosticMessage, ErrorLevel, Loc};
 crate::use_native_or_external!(List);
 
-fn make_diagnostic() -> Diagnostic {
+fn new_diagnostic() -> Diagnostic {
     Diagnostic::new(
         ErrorLevel::error(),
         DiagnosticMessage::new_alias_nth_ref(),
@@ -12,24 +12,24 @@ fn make_diagnostic() -> Diagnostic {
 
 #[test]
 fn test_new() {
-    let diagnostic = make_diagnostic();
+    let diagnostic = new_diagnostic();
     drop(diagnostic)
 }
 
 #[test]
 fn test_get_level() {
-    assert!(make_diagnostic().level().is_error())
+    assert!(new_diagnostic().level().is_error())
 }
 
 #[test]
 fn test_get_message() {
-    assert!(make_diagnostic().message().is_alias_nth_ref())
+    assert!(new_diagnostic().message().is_alias_nth_ref())
 }
 
 #[test]
 fn test_get_loc() {
-    assert_eq!(make_diagnostic().loc().begin(), 1);
-    assert_eq!(make_diagnostic().loc().end(), 2)
+    assert_eq!(new_diagnostic().loc().begin(), 1);
+    assert_eq!(new_diagnostic().loc().end(), 2)
 }
 
 #[test]

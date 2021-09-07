@@ -324,7 +324,7 @@ pub(crate) mod external {
 
             #[cfg(test)]
             mod tests {
-                use super::{make_one, List as GenericList, ListAPI};
+                use super::{new_item, List as GenericList, ListAPI};
                 use std::ops::{Deref, DerefMut};
                 type List = GenericList<$t>;
 
@@ -343,7 +343,7 @@ pub(crate) mod external {
                 fn list_with_items(n: usize) -> List {
                     let mut list = List::new();
                     for _ in 0..n {
-                        list.push(make_one());
+                        list.push(new_item());
                     }
                     list
                 }
@@ -351,7 +351,7 @@ pub(crate) mod external {
                 fn vec_with_items(n: usize) -> Vec<$t> {
                     let mut list = vec![];
                     for _ in 0..n {
-                        list.push(make_one());
+                        list.push(new_item());
                     }
                     list
                 }
@@ -370,17 +370,17 @@ pub(crate) mod external {
                 #[test]
                 fn test_push() {
                     let mut list = List::with_capacity(10);
-                    list.push(make_one());
+                    list.push(new_item());
                 }
 
                 #[test]
                 fn test_remove() {
                     let mut list = list_with_items(10);
 
-                    assert_eq!(list.remove(0), make_one());
+                    assert_eq!(list.remove(0), new_item());
                     assert_eq!(list.len(), 9);
 
-                    assert_eq!(list.remove(3), make_one());
+                    assert_eq!(list.remove(3), new_item());
                     assert_eq!(list.len(), 8);
                 }
 
@@ -389,8 +389,8 @@ pub(crate) mod external {
                     let mut list = List::new();
                     assert_eq!(list.as_ptr(), std::ptr::null_mut());
 
-                    list.push(make_one());
-                    assert_eq!(unsafe { &*list.as_ptr() }, &make_one());
+                    list.push(new_item());
+                    assert_eq!(unsafe { &*list.as_ptr() }, &new_item());
                 }
 
                 #[test]
@@ -435,8 +435,8 @@ pub(crate) mod external {
                     let mut list = List::new();
                     // assert_eq!(list.clone().len(), 0);
 
-                    list.push(make_one());
-                    list.push(make_one());
+                    list.push(new_item());
+                    list.push(new_item());
                     let copy = list.clone();
                     assert_eq!(copy.len(), 2);
                     drop(copy);
@@ -456,8 +456,8 @@ pub(crate) mod external {
                     let mut vec = vec![];
                     assert_eq!(list.deref(), &vec);
 
-                    list.push(make_one());
-                    vec.push(make_one());
+                    list.push(new_item());
+                    vec.push(new_item());
                     assert_eq!(list.deref(), &vec);
                 }
 
@@ -467,17 +467,17 @@ pub(crate) mod external {
                     let mut vec = vec![];
                     assert_eq!(list.deref_mut(), &vec);
 
-                    list.push(make_one());
-                    vec.push(make_one());
+                    list.push(new_item());
+                    vec.push(new_item());
                     assert_eq!(list.deref_mut(), &vec);
                 }
 
                 #[test]
                 fn test_fmt() {
                     let mut list = List::new();
-                    list.push(make_one());
+                    list.push(new_item());
 
-                    let vec = vec![make_one()];
+                    let vec = vec![new_item()];
                     let slice = &vec;
                     assert_eq!(format!("{:?}", list), format!("{:?}", slice));
                 }
@@ -504,17 +504,17 @@ pub(crate) mod external {
                 #[test]
                 fn test_index() {
                     let mut list = List::new();
-                    list.push(make_one());
+                    list.push(new_item());
 
-                    assert_eq!(list[0], make_one());
+                    assert_eq!(list[0], new_item());
                 }
 
                 #[test]
                 fn test_take_first() {
                     let mut list = List::new();
-                    list.push(make_one());
+                    list.push(new_item());
 
-                    assert_eq!(list.take_first(), make_one());
+                    assert_eq!(list.take_first(), new_item());
                 }
 
                 #[test]
@@ -527,8 +527,8 @@ pub(crate) mod external {
 
     mod of_nodes {
         #[cfg(test)]
-        fn make_one() -> crate::Node {
-            crate::Node::make_true(crate::Loc::default())
+        fn new_item() -> crate::Node {
+            crate::Node::new_true(crate::Loc::default())
         }
 
         gen_list_impl_for!(
@@ -546,7 +546,7 @@ pub(crate) mod external {
     }
     mod of_diagnostics {
         #[cfg(test)]
-        fn make_one() -> crate::Diagnostic {
+        fn new_item() -> crate::Diagnostic {
             crate::Diagnostic::new(
                 crate::ErrorLevel::warning(),
                 crate::DiagnosticMessage::new_alias_nth_ref(),
@@ -569,7 +569,7 @@ pub(crate) mod external {
     }
     mod of_comments {
         #[cfg(test)]
-        fn make_one() -> crate::source::Comment {
+        fn new_item() -> crate::source::Comment {
             crate::source::Comment::make(
                 crate::Loc::new(1, 2),
                 crate::source::CommentType::unknown(),
@@ -591,7 +591,7 @@ pub(crate) mod external {
     }
     mod of_magic_comments {
         #[cfg(test)]
-        fn make_one() -> crate::source::MagicComment {
+        fn new_item() -> crate::source::MagicComment {
             crate::source::MagicComment::new(
                 crate::source::MagicCommentKind::encoding(),
                 crate::Loc::default(),
@@ -614,7 +614,7 @@ pub(crate) mod external {
     }
     mod of_tokens {
         #[cfg(test)]
-        fn make_one() -> crate::Token {
+        fn new_item() -> crate::Token {
             crate::Token::new(
                 crate::Lexer::tINTEGER,
                 crate::Bytes::empty(),
@@ -639,7 +639,7 @@ pub(crate) mod external {
     }
     mod of_source_lines {
         #[cfg(test)]
-        fn make_one() -> crate::source::SourceLine {
+        fn new_item() -> crate::source::SourceLine {
             crate::source::SourceLine::new(1, 2, false)
         }
 
@@ -658,7 +658,7 @@ pub(crate) mod external {
     }
     mod of_u8 {
         #[cfg(test)]
-        fn make_one() -> u8 {
+        fn new_item() -> u8 {
             42
         }
 

@@ -15,52 +15,52 @@ use crate::{{Node, Loc, Bytes}};
 #[allow(unused_imports)]
 use super::{struct_name};
 
-fn make_loc() -> Loc {{
+fn new_loc() -> Loc {{
     Loc::new(1, 2)
 }}
 
 #[allow(dead_code)]
-fn make_maybe_loc() -> MaybeLoc {{
-    MaybeLoc::some(make_loc())
+fn new_maybe_loc() -> MaybeLoc {{
+    MaybeLoc::some(new_loc())
 }}
 
 #[allow(dead_code)]
-fn make_node() -> Node {{
-    Node::make_retry(make_loc())
+fn new_node() -> Node {{
+    Node::new_retry(new_loc())
 }}
 
 #[allow(dead_code)]
-fn make_node_ptr() -> Ptr<Node> {{
-    Ptr::new(make_node())
+fn new_node_ptr() -> Ptr<Node> {{
+    Ptr::new(new_node())
 }}
 
 #[allow(dead_code)]
-fn make_maybe_node_ptr() -> MaybePtr<Node> {{
-    MaybePtr::some(make_node())
+fn new_maybe_node_ptr() -> MaybePtr<Node> {{
+    MaybePtr::some(new_node())
 }}
 
 #[allow(dead_code)]
-fn make_string_ptr() -> StringPtr {{
+fn new_string_ptr() -> StringPtr {{
     StringPtr::from(\"foo\")
 }}
 
 #[allow(dead_code)]
-fn make_maybe_string_ptr() -> MaybeStringPtr {{
+fn new_maybe_string_ptr() -> MaybeStringPtr {{
     MaybeStringPtr::from(Some(String::from(\"foo\")))
 }}
 
 #[allow(dead_code)]
-fn make_node_list() -> List<Node> {{
-    List::from(vec![make_node()])
+fn new_node_list() -> List<Node> {{
+    List::from(vec![new_node()])
 }}
 
 #[allow(dead_code)]
-fn make_u8() -> u8 {{
+fn new_u8() -> u8 {{
     42
 }}
 
 #[allow(dead_code)]
-fn make_bytes() -> Bytes {{
+fn new_bytes() -> Bytes {{
     Bytes::new(vec![1, 2, 3])
 }}
 
@@ -105,12 +105,12 @@ pub(crate) fn codegen(node: &lib_ruby_parser_nodes::Node) {
 fn constructor(node: &lib_ruby_parser_nodes::Node) -> String {
     let arglist = node
         .fields
-        .map(&|field| format!("{}()", make_field_fn(field)))
+        .map(&|field| format!("{}()", new_field_fn(field)))
         .join(", ");
 
     format!(
-        "fn make_test_node() -> Node {{
-    Node::make_{lower_name}({arglist})
+        "fn new_test_node() -> Node {{
+    Node::new_{lower_name}({arglist})
 }}",
         lower_name = node.lower_name(),
         arglist = arglist
@@ -121,7 +121,7 @@ fn test_constructor(_node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "#[test]
 fn test_constructor() {{
-    let node = make_test_node();
+    let node = new_test_node();
     drop(node);
 }}
 "
@@ -139,7 +139,7 @@ fn test_is(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "#[test]
 fn test_is() {{
-    let node = make_test_node();
+    let node = new_test_node();
     assert!(node.is_{lower}());
 
     {other_assertions}
@@ -184,7 +184,7 @@ fn test_debug(node: &lib_ruby_parser_nodes::Node) -> String {
         "#[test]
 fn test_debug() {{
     assert_eq!(
-        format!(\"{{:?}}\", make_test_node()),
+        format!(\"{{:?}}\", new_test_node()),
         \"{node_type}({node_type} {{ {fields} }})\"
     )
 }}
@@ -197,9 +197,9 @@ fn test_partial_eq(_node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "#[test]
 fn test_partial_eq() {{
-    let node = make_test_node();
-    let same = make_test_node();
-    let other = Node::make_retry(Loc::new(100, 200));
+    let node = new_test_node();
+    let same = new_test_node();
+    let other = Node::new_retry(Loc::new(100, 200));
 
     assert_eq!(node, same);
     assert_ne!(node, other);
@@ -211,7 +211,7 @@ fn test_clone(_node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "#[test]
 fn test_clone() {{
-    let node = make_test_node();
+    let node = new_test_node();
     assert_eq!(
         node,
         node.clone()
@@ -225,7 +225,7 @@ fn test_getters(node: &lib_ruby_parser_nodes::Node) -> String {
         .fields
         .map(&|field| {
             let lhs = format!("variant.get_{}()", field.field_name);
-            let rhs = format!("&{}()", make_field_fn(field));
+            let rhs = format!("&{}()", new_field_fn(field));
 
             format!("assert_eq!({}, {});", lhs, rhs)
         })
@@ -234,7 +234,7 @@ fn test_getters(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "#[test]
 fn test_getters() {{
-    let node = make_test_node();
+    let node = new_test_node();
     let variant = node.into_{lower}();
 
     {assertions}
@@ -251,11 +251,11 @@ fn test_setters(node: &lib_ruby_parser_nodes::Node) -> String {
             let set_field = format!(
                 "variant.set_{}({}())",
                 field.field_name,
-                make_field_fn(field)
+                new_field_fn(field)
             );
 
             let lhs = format!("variant.get_{}()", field.field_name);
-            let rhs = format!("&{}()", make_field_fn(field));
+            let rhs = format!("&{}()", new_field_fn(field));
 
             format!(
                 "{set_field};
@@ -270,7 +270,7 @@ fn test_setters(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "#[test]
 fn test_setters() {{
-    let node = make_test_node();
+    let node = new_test_node();
     let mut variant = node.into_{lower}();
 
     {assertions}
@@ -285,9 +285,9 @@ fn test_into_internal(node: &lib_ruby_parser_nodes::Node) -> String {
         .fields
         .map(&|field| {
             format!(
-                "assert_eq!(&internal.{field_name}, &{make_field_fn}());",
+                "assert_eq!(&internal.{field_name}, &{new_field_fn}());",
                 field_name = node_field_name(field),
-                make_field_fn = make_field_fn(field)
+                new_field_fn = new_field_fn(field)
             )
         })
         .join("\n    ");
@@ -295,7 +295,7 @@ fn test_into_internal(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "#[test]
 fn test_into_internal() {{
-    let node = make_test_node();
+    let node = new_test_node();
     let variant = node.into_{lower}();
     let internal = variant.into_internal();
 
@@ -307,19 +307,19 @@ fn test_into_internal() {{
     )
 }
 
-fn make_field_fn(field: &lib_ruby_parser_nodes::NodeField) -> String {
+fn new_field_fn(field: &lib_ruby_parser_nodes::NodeField) -> String {
     use lib_ruby_parser_nodes::NodeFieldType;
 
     match field.field_type {
-        NodeFieldType::Node => "make_node_ptr",
-        NodeFieldType::Nodes => "make_node_list",
-        NodeFieldType::MaybeNode { .. } => "make_maybe_node_ptr",
-        NodeFieldType::Loc => "make_loc",
-        NodeFieldType::MaybeLoc => "make_maybe_loc",
-        NodeFieldType::Str { .. } => "make_string_ptr",
-        NodeFieldType::MaybeStr { .. } => "make_maybe_string_ptr",
-        NodeFieldType::StringValue => "make_bytes",
-        NodeFieldType::U8 => "make_u8",
+        NodeFieldType::Node => "new_node_ptr",
+        NodeFieldType::Nodes => "new_node_list",
+        NodeFieldType::MaybeNode { .. } => "new_maybe_node_ptr",
+        NodeFieldType::Loc => "new_loc",
+        NodeFieldType::MaybeLoc => "new_maybe_loc",
+        NodeFieldType::Str { .. } => "new_string_ptr",
+        NodeFieldType::MaybeStr { .. } => "new_maybe_string_ptr",
+        NodeFieldType::StringValue => "new_bytes",
+        NodeFieldType::U8 => "new_u8",
     }
     .to_string()
 }

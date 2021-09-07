@@ -26,8 +26,8 @@ impl Node {{
         }}
     }}
 
-    // make_<node> FNs
-    {make_fns}
+    // new_<node> FNs
+    {new_fns}
 
     {getters}
 }}
@@ -35,7 +35,7 @@ impl Node {{
         generator = file!(),
         variants = nodes.map(&variant).join(",\n    "),
         match_branches = nodes.map(&match_branch).join("\n            "),
-        make_fns = nodes.map(&make_fn).join("\n    "),
+        new_fns = nodes.map(&new_fn).join("\n    "),
         getters = nodes.map(&getter).join("\n    ")
     )
 }
@@ -86,7 +86,7 @@ fn getter(node: &lib_ruby_parser_nodes::Node) -> String {
     )
 }
 
-fn make_fn(node: &lib_ruby_parser_nodes::Node) -> String {
+fn new_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     let arglist = node
         .fields
         .map(&|field| {
@@ -102,7 +102,7 @@ fn make_fn(node: &lib_ruby_parser_nodes::Node) -> String {
 
     format!(
         "/// Constructs `Node::{node_type}` variant
-    pub(crate) fn make_{lower_node_type}({arglist}) -> Self {{
+    pub(crate) fn new_{lower_node_type}({arglist}) -> Self {{
         Self::{node_type}({node_type} {{ {fields} }})
     }}",
         node_type = struct_name(node),

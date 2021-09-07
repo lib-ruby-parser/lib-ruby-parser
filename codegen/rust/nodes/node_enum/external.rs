@@ -75,7 +75,7 @@ impl Node {{
         panic!(\"bug: unknown node type\")
     }}
 
-    // make_<node> FNs
+    // new_<node> FNs
     {constructors}
 
     // is_<node> FNs
@@ -157,7 +157,7 @@ fn clone_impl(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
 
             format!(
                 "if let Some(inner) = self.as_{lower}() {{
-            Self::make_{lower}({clone_fields})
+            Self::new_{lower}({clone_fields})
         }}",
                 lower = node.lower_name(),
                 clone_fields = clone_fields
@@ -223,7 +223,7 @@ fn constructor(node: &lib_ruby_parser_nodes::Node) -> String {
 
     format!(
         "/// Constructs `Node::{node_type}` variant
-    pub(crate) fn make_{lower_node_type}({arglist}) -> Self {{
+    pub(crate) fn new_{lower_node_type}({arglist}) -> Self {{
         let blob = unsafe {{ {extern_constructor}({fields}) }};
         Self {{ blob }}
     }}",
