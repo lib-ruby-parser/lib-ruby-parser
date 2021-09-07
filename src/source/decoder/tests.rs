@@ -16,21 +16,20 @@ fn decoding_error() -> InputError {
 #[cfg(feature = "compile-with-external-structures")]
 mod dummy_decoder {
     use super::{decoded_output, decoding_error};
-    use crate::blobs::{DecoderBlob, DecoderResultBlob};
-    use crate::containers::IntoBlob;
+    use crate::blobs::{Blob, HasBlob};
     use crate::source::{Decoder, DecoderResult};
 
-    type ExternDecodeFn = extern "C" fn() -> DecoderResultBlob;
+    type ExternDecodeFn = extern "C" fn() -> Blob<DecoderResult>;
 
     extern "C" {
-        fn lib_ruby_parser__external__decoder__new(f: ExternDecodeFn) -> DecoderBlob;
+        fn lib_ruby_parser__external__decoder__new(f: ExternDecodeFn) -> Blob<Decoder>;
     }
 
-    extern "C" fn decode_ok() -> DecoderResultBlob {
+    extern "C" fn decode_ok() -> Blob<DecoderResult> {
         DecoderResult::new_ok(decoded_output()).into_blob()
     }
 
-    extern "C" fn decode_err() -> DecoderResultBlob {
+    extern "C" fn decode_err() -> Blob<DecoderResult> {
         DecoderResult::new_err(decoding_error()).into_blob()
     }
 

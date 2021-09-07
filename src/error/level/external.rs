@@ -1,17 +1,17 @@
-use crate::blobs::ErrorLevelBlob;
+use crate::blobs::Blob;
 
 /// Byte sequence based on external implementation
 #[repr(C)]
 pub struct ErrorLevel {
-    pub(crate) blob: ErrorLevelBlob,
+    pub(crate) blob: Blob<ErrorLevel>,
 }
 
 extern "C" {
-    fn lib_ruby_parser__external__error_level__new_warning() -> ErrorLevelBlob;
-    fn lib_ruby_parser__external__error_level__new_error() -> ErrorLevelBlob;
-    fn lib_ruby_parser__external__error_level__drop(blob: *mut ErrorLevelBlob);
-    fn lib_ruby_parser__external__error_level__is_warning(blob: *const ErrorLevelBlob) -> bool;
-    fn lib_ruby_parser__external__error_level__is_error(blob: *const ErrorLevelBlob) -> bool;
+    fn lib_ruby_parser__external__error_level__new_warning() -> Blob<ErrorLevel>;
+    fn lib_ruby_parser__external__error_level__new_error() -> Blob<ErrorLevel>;
+    fn lib_ruby_parser__external__error_level__drop(blob: *mut Blob<ErrorLevel>);
+    fn lib_ruby_parser__external__error_level__is_warning(blob: *const Blob<ErrorLevel>) -> bool;
+    fn lib_ruby_parser__external__error_level__is_error(blob: *const Blob<ErrorLevel>) -> bool;
 }
 
 impl Drop for ErrorLevel {

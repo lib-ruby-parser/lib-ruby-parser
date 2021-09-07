@@ -1,34 +1,29 @@
+use crate::blobs::{Blob, HasBlob};
 use crate::source::MagicCommentKind;
 use crate::Loc;
-
-use crate::blobs::LocBlob;
-use crate::blobs::MagicCommentBlob;
-use crate::blobs::MagicCommentKindBlob;
-
-use crate::containers::IntoBlob;
 
 /// An enum of all magic comment kinds
 #[repr(C)]
 pub struct MagicComment {
-    pub(crate) blob: MagicCommentBlob,
+    pub(crate) blob: Blob<MagicComment>,
 }
 
 extern "C" {
     fn lib_ruby_parser__external__magic_comment__new(
-        kind: MagicCommentKindBlob,
-        key_l: LocBlob,
-        value_l: LocBlob,
-    ) -> MagicCommentBlob;
-    fn lib_ruby_parser__external__magic_comment__drop(blob: *mut MagicCommentBlob);
+        kind: Blob<MagicCommentKind>,
+        key_l: Blob<Loc>,
+        value_l: Blob<Loc>,
+    ) -> Blob<MagicComment>;
+    fn lib_ruby_parser__external__magic_comment__drop(blob: *mut Blob<MagicComment>);
     fn lib_ruby_parser__external__magic_comment__get_kind(
-        blob: *const MagicCommentBlob,
-    ) -> *const MagicCommentKindBlob;
+        blob: *const Blob<MagicComment>,
+    ) -> *const Blob<MagicCommentKind>;
     fn lib_ruby_parser__external__magic_comment__get_key_l(
-        blob: *const MagicCommentBlob,
-    ) -> *const LocBlob;
+        blob: *const Blob<MagicComment>,
+    ) -> *const Blob<Loc>;
     fn lib_ruby_parser__external__magic_comment__get_value_l(
-        blob: *const MagicCommentBlob,
-    ) -> *const LocBlob;
+        blob: *const Blob<MagicComment>,
+    ) -> *const Blob<Loc>;
 }
 
 impl MagicComment {

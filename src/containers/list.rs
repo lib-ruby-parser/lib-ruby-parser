@@ -28,7 +28,7 @@ pub(crate) mod external {
         T: GetDropListFn,
     {
         pub(crate) blob: ListBlob,
-        _t: std::marker::PhantomData<T>,
+        pub(crate) _t: std::marker::PhantomData<T>,
     }
 
     impl<T> Drop for List<T>
@@ -65,18 +65,6 @@ pub(crate) mod external {
         }
     }
 
-    impl<T: GetDropListFn> From<ListBlob> for List<T> {
-        fn from(blob: ListBlob) -> Self {
-            unsafe { std::mem::transmute(blob) }
-        }
-    }
-
-    impl<T: GetDropListFn> From<List<T>> for ListBlob {
-        fn from(list: List<T>) -> Self {
-            unsafe { std::mem::transmute(list) }
-        }
-    }
-
     impl<T: GetDropListFn> IntoIterator for List<T>
     where
         Vec<T>: From<List<T>>,
@@ -107,6 +95,7 @@ pub(crate) mod external {
             $capacity:ident
         ) => {
             use super::{List, ListAPI, ListBlob};
+            use crate::blobs::HasBlob;
 
             extern "C" {
                 fn $new() -> ListBlob;
@@ -175,14 +164,6 @@ pub(crate) mod external {
                 /// Equivalent of Vec::capacity
                 pub fn capacity(&self) -> usize {
                     unsafe { $capacity(&self.blob) as usize }
-                }
-
-                /// Creates List from ListBlob
-                pub fn from_blob(blob: ListBlob) -> Self {
-                    Self {
-                        blob,
-                        _t: std::marker::PhantomData,
-                    }
                 }
             }
 

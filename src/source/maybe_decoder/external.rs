@@ -1,26 +1,27 @@
-use crate::blobs::{DecoderBlob, MaybeDecoderBlob};
-use crate::containers::IntoBlob;
+use crate::blobs::{Blob, HasBlob};
 use crate::source::maybe_decoder::MaybeDecoderAPI;
 use crate::source::Decoder;
 
 /// Custom decoder, a wrapper around a function
 #[repr(C)]
 pub struct MaybeDecoder {
-    pub(crate) blob: MaybeDecoderBlob,
+    pub(crate) blob: Blob<MaybeDecoder>,
 }
 
 extern "C" {
-    fn lib_ruby_parser__external__maybe_decoder__new_some(blob: DecoderBlob) -> MaybeDecoderBlob;
-    fn lib_ruby_parser__external__maybe_decoder__new_none() -> MaybeDecoderBlob;
-    fn lib_ruby_parser__external__maybe_decoder__drop(blob: *mut MaybeDecoderBlob);
-    fn lib_ruby_parser__external__maybe_decoder__is_some(blob: *const MaybeDecoderBlob) -> bool;
-    fn lib_ruby_parser__external__maybe_decoder__is_none(blob: *const MaybeDecoderBlob) -> bool;
+    fn lib_ruby_parser__external__maybe_decoder__new_some(
+        blob: Blob<Decoder>,
+    ) -> Blob<MaybeDecoder>;
+    fn lib_ruby_parser__external__maybe_decoder__new_none() -> Blob<MaybeDecoder>;
+    fn lib_ruby_parser__external__maybe_decoder__drop(blob: *mut Blob<MaybeDecoder>);
+    fn lib_ruby_parser__external__maybe_decoder__is_some(blob: *const Blob<MaybeDecoder>) -> bool;
+    fn lib_ruby_parser__external__maybe_decoder__is_none(blob: *const Blob<MaybeDecoder>) -> bool;
     fn lib_ruby_parser__external__maybe_decoder__as_decoder(
-        blob: *const MaybeDecoderBlob,
-    ) -> *const DecoderBlob;
+        blob: *const Blob<MaybeDecoder>,
+    ) -> *const Blob<Decoder>;
     fn lib_ruby_parser__external__maybe_decoder__into_decoder(
-        blob: MaybeDecoderBlob,
-    ) -> DecoderBlob;
+        blob: Blob<MaybeDecoder>,
+    ) -> Blob<Decoder>;
 }
 
 impl Drop for MaybeDecoder {

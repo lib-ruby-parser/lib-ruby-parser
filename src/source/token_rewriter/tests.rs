@@ -26,19 +26,19 @@ fn rewritten_token() -> Ptr<Token> {
 mod dummy_rewriter {
     use super::rewritten_token;
     use super::{Ptr, Token};
-    use crate::blobs::TokenRewriterBlob;
+    use crate::blobs::{Blob, HasBlob};
     use crate::source::token_rewriter::TokenRewriter;
 
     extern "C" {
         fn lib_ruby_parser__external__token_rewriter__new_keep(
             token_f: extern "C" fn() -> Ptr<Token>,
-        ) -> TokenRewriterBlob;
+        ) -> Blob<TokenRewriter>;
         fn lib_ruby_parser__external__token_rewriter__new_drop(
             token_f: extern "C" fn() -> Ptr<Token>,
-        ) -> TokenRewriterBlob;
+        ) -> Blob<TokenRewriter>;
         fn lib_ruby_parser__external__token_rewriter__new_rewrite(
             token_f: extern "C" fn() -> Ptr<Token>,
-        ) -> TokenRewriterBlob;
+        ) -> Blob<TokenRewriter>;
     }
 
     extern "C" fn token_f() -> Ptr<Token> {

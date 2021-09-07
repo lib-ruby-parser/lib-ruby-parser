@@ -1,4 +1,4 @@
-use crate::codegen::rust::nodes::helpers::{blob_type, field_type, node_field_name, struct_name};
+use crate::codegen::rust::nodes::helpers::{field_type, node_field_name, struct_name};
 
 use lib_ruby_parser_bindings::helpers::nodes::{
     constructor::name as extern_constructor_name, into_variant::name as extern_into_variant_name,
@@ -24,20 +24,12 @@ use crate::containers::ExternalMaybeLoc as MaybeLoc;
 use crate::containers::ExternalStringPtr as StringPtr;
 use crate::containers::ExternalMaybeStringPtr as MaybeStringPtr;
 
-use crate::blobs::{{
-    LocBlob, BytesBlob, MaybePtrBlob, PtrBlob, ListBlob,
-    MaybeLocBlob, StringPtrBlob, MaybeStringPtrBlob, NodeBlob
-}};
-
-use crate::containers::IntoBlob;
-
-type Byte = u8;
-type ByteBlob = u8;
+use crate::blobs::{{HasBlob, Blob}};
 
 /// Generic combination of all known nodes.
 #[repr(C)]
 pub struct Node {{
-    pub(crate) blob: NodeBlob,
+    pub(crate) blob: Blob<Node>,
 }}
 
 impl std::fmt::Debug for Node {{
@@ -55,16 +47,6 @@ impl Clone for Node {{
 impl PartialEq for Node {{
     fn eq(&self, other: &Self) -> bool {{
         {partial_eq_impl}
-    }}
-}}
-
-impl IntoBlob for Node {{
-    type Output = NodeBlob;
-
-    fn into_blob(self) -> Self::Output {{
-        let blob = self.blob;
-        std::mem::forget(self);
-        blob
     }}
 }}
 
@@ -92,12 +74,11 @@ impl Node {{
     {into_variant_fns}
 }}
 
-use crate::blobs::nodes::*;
 extern \"C\"
 {{
     {extern_fns}
 
-    fn lib_ruby_parser__external__node__drop(blob: *mut NodeBlob);
+    fn lib_ruby_parser__external__node__drop(blob: *mut Blob<Node>);
 }}
 
 impl Drop for Node {{
@@ -287,10 +268,10 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     {
         let ctor_args = node
             .fields
-            .map(&|field| format!("{}: {}", node_field_name(field), blob_type(field)))
+            .map(&|field| format!("{}: Blob<{}>", node_field_name(field), field_type(field)))
             .join(", ");
         result.push(format!(
-            "fn {name}({ctor_args}) -> NodeBlob;",
+            "fn {name}({ctor_args}) -> Blob<Node>;",
             name = extern_constructor_name(node),
             ctor_args = ctor_args,
         ));
@@ -299,7 +280,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     // variant predicates
     {
         result.push(format!(
-            "fn {name}(blob_ptr: *const NodeBlob) -> bool;",
+            "fn {name}(blob_ptr: *const Blob<Node>) -> bool;",
             name = extern_variant_predicate_name(node)
         ))
     }
@@ -307,18 +288,18 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     // variant getters
     {
         result.push(format!(
-            "fn {name}(blob_ptr: *const NodeBlob) -> *mut {node_type}Blob;",
+            "fn {name}(blob_ptr: *const Blob<Node>) -> *mut Blob<{node_type}>;",
             name = extern_variant_getter_name(node),
-            node_type = node.camelcase_name
+            node_type = struct_name(node)
         ))
     }
 
     // into_internal fn
     {
         let line = format!(
-            "fn {fn_name}(blob: NodeBlob) -> {struct_name}Blob;",
+            "fn {fn_name}(blob: Blob<Node>) -> Blob<{struct_name}>;",
             fn_name = extern_into_variant_name(node),
-            struct_name = node.camelcase_name
+            struct_name = struct_name(node)
         );
         result.push(line);
     }

@@ -1,5 +1,4 @@
-use crate::blobs::{DiagnosticBlob, DiagnosticMessageBlob, ErrorLevelBlob, LocBlob};
-use crate::containers::IntoBlob;
+use crate::blobs::{Blob, HasBlob};
 use crate::error::level::ErrorLevel;
 use crate::error::message::DiagnosticMessage;
 use crate::loc::Loc;
@@ -7,25 +6,25 @@ use crate::loc::Loc;
 /// Diagnostic message that comes from the parser when there's an error or warning
 #[repr(C)]
 pub struct Diagnostic {
-    pub(crate) blob: DiagnosticBlob,
+    pub(crate) blob: Blob<Diagnostic>,
 }
 
 extern "C" {
     fn lib_ruby_parser__external__diagnostic__new(
-        level: ErrorLevelBlob,
-        message: DiagnosticMessageBlob,
-        loc: LocBlob,
-    ) -> DiagnosticBlob;
-    fn lib_ruby_parser__external__diagnostic__drop(blob: *mut DiagnosticBlob);
+        level: Blob<ErrorLevel>,
+        message: Blob<DiagnosticMessage>,
+        loc: Blob<Loc>,
+    ) -> Blob<Diagnostic>;
+    fn lib_ruby_parser__external__diagnostic__drop(blob: *mut Blob<Diagnostic>);
     fn lib_ruby_parser__external__diagnostic__get_level(
-        blob: *const DiagnosticBlob,
-    ) -> *const ErrorLevelBlob;
+        blob: *const Blob<Diagnostic>,
+    ) -> *const Blob<ErrorLevel>;
     fn lib_ruby_parser__external__diagnostic__get_message(
-        blob: *const DiagnosticBlob,
-    ) -> *const DiagnosticMessageBlob;
+        blob: *const Blob<Diagnostic>,
+    ) -> *const Blob<DiagnosticMessage>;
     fn lib_ruby_parser__external__diagnostic__get_loc(
-        blob: *const DiagnosticBlob,
-    ) -> *const LocBlob;
+        blob: *const Blob<Diagnostic>,
+    ) -> *const Blob<Loc>;
 }
 
 impl Diagnostic {

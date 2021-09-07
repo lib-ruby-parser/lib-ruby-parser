@@ -1,26 +1,25 @@
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
+    use crate::blobs::Blob;
     use std::ops::Deref;
-
-    use crate::blobs::SharedByteListBlob;
 
     /// C-compatible shared list
     #[repr(C)]
     pub struct SharedByteList {
-        pub(crate) blob: SharedByteListBlob,
+        pub(crate) blob: Blob<SharedByteList>,
     }
 
     extern "C" {
         fn lib_ruby_parser__external__shared_byte_list__new(
             ptr: *const u8,
             len: u64,
-        ) -> SharedByteListBlob;
-        fn lib_ruby_parser__external__shared_byte_list__drop(blob: *mut SharedByteListBlob);
+        ) -> Blob<SharedByteList>;
+        fn lib_ruby_parser__external__shared_byte_list__drop(blob: *mut Blob<SharedByteList>);
         fn lib_ruby_parser__external__shared_byte_list__get_raw(
-            blob: *const SharedByteListBlob,
+            blob: *const Blob<SharedByteList>,
         ) -> *const u8;
         fn lib_ruby_parser__external__shared_byte_list__get_len(
-            blob: *const SharedByteListBlob,
+            blob: *const Blob<SharedByteList>,
         ) -> u64;
     }
 

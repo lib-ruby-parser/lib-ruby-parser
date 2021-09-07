@@ -1,35 +1,33 @@
-use crate::blobs::InputErrorBlob;
-use crate::blobs::StringPtrBlob;
+use crate::blobs::{Blob, HasBlob};
 use crate::containers::ExternalStringPtr as StringPtr;
-use crate::containers::IntoBlob;
 
 /// An enum with all possible kinds of errors that can be returned
 /// from a decoder
 #[repr(C)]
 pub struct InputError {
-    pub(crate) blob: InputErrorBlob,
+    pub(crate) blob: Blob<InputError>,
 }
 
 extern "C" {
     fn lib_ruby_parser__external__input_error__new_unsupported_encoding(
-        err: StringPtrBlob,
-    ) -> InputErrorBlob;
+        err: Blob<StringPtr>,
+    ) -> Blob<InputError>;
     fn lib_ruby_parser__external__input_error__new_decoding_error(
-        err: StringPtrBlob,
-    ) -> InputErrorBlob;
-    fn lib_ruby_parser__external__input_error__drop(blob: *mut InputErrorBlob);
+        err: Blob<StringPtr>,
+    ) -> Blob<InputError>;
+    fn lib_ruby_parser__external__input_error__drop(blob: *mut Blob<InputError>);
     fn lib_ruby_parser__external__input_error__is_unsupported_encoding(
-        blob: *const InputErrorBlob,
+        blob: *const Blob<InputError>,
     ) -> bool;
     fn lib_ruby_parser__external__input_error__is_decoding_error(
-        blob: *const InputErrorBlob,
+        blob: *const Blob<InputError>,
     ) -> bool;
     fn lib_ruby_parser__external__input_error__get_unsupported_encoding(
-        blob: *const InputErrorBlob,
-    ) -> *const StringPtrBlob;
+        blob: *const Blob<InputError>,
+    ) -> *const Blob<StringPtr>;
     fn lib_ruby_parser__external__input_error__get_decoding_error(
-        blob: *const InputErrorBlob,
-    ) -> *const StringPtrBlob;
+        blob: *const Blob<InputError>,
+    ) -> *const Blob<StringPtr>;
 }
 
 impl Drop for InputError {
@@ -98,10 +96,6 @@ impl InputError {
                 .as_ref()
                 .unwrap()
         }
-    }
-
-    pub(crate) fn from_blob(blob: InputErrorBlob) -> Self {
-        Self { blob }
     }
 }
 

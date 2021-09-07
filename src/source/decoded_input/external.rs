@@ -1,45 +1,47 @@
-use crate::blobs::{DecodedInputBlob, ListBlob, StringPtrBlob};
-use crate::containers::{ExternalList as List, ExternalStringPtr as StringPtr, IntoBlob};
+use crate::blobs::{Blob, HasBlob};
+use crate::containers::{ExternalList as List, ExternalStringPtr as StringPtr};
 use crate::source::SourceLine;
 
 /// Decoded input
 #[repr(C)]
 pub struct DecodedInput {
-    pub(crate) blob: DecodedInputBlob,
+    pub(crate) blob: Blob<DecodedInput>,
 }
 
 extern "C" {
     fn lib_ruby_parser__external__decoded_input__new(
-        name: StringPtrBlob,
-        lines: ListBlob,
-        bytes: ListBlob,
-    ) -> DecodedInputBlob;
-    fn lib_ruby_parser__external__decoded_input__drop(blob: *mut DecodedInputBlob);
+        name: Blob<StringPtr>,
+        lines: Blob<List<SourceLine>>,
+        bytes: Blob<List<u8>>,
+    ) -> Blob<DecodedInput>;
+    fn lib_ruby_parser__external__decoded_input__drop(blob: *mut Blob<DecodedInput>);
     fn lib_ruby_parser__external__decoded_input__get_name(
-        blob: *const DecodedInputBlob,
-    ) -> *const StringPtrBlob;
+        blob: *const Blob<DecodedInput>,
+    ) -> *const Blob<StringPtr>;
     fn lib_ruby_parser__external__decoded_input__get_lines(
-        blob: *const DecodedInputBlob,
-    ) -> *const ListBlob;
+        blob: *const Blob<DecodedInput>,
+    ) -> *const Blob<List<SourceLine>>;
     fn lib_ruby_parser__external__decoded_input__get_bytes(
-        blob: *const DecodedInputBlob,
-    ) -> *const ListBlob;
+        blob: *const Blob<DecodedInput>,
+    ) -> *const Blob<List<u8>>;
     fn lib_ruby_parser__external__decoded_input__set_name(
-        blob: *mut DecodedInputBlob,
-        name: StringPtrBlob,
+        blob: *mut Blob<DecodedInput>,
+        name: Blob<StringPtr>,
     );
     fn lib_ruby_parser__external__decoded_input__set_lines(
-        blob: *mut DecodedInputBlob,
-        lines: ListBlob,
+        blob: *mut Blob<DecodedInput>,
+        lines: Blob<List<SourceLine>>,
     );
     fn lib_ruby_parser__external__decoded_input__set_bytes(
-        blob: *mut DecodedInputBlob,
-        bytes: ListBlob,
+        blob: *mut Blob<DecodedInput>,
+        bytes: Blob<List<u8>>,
     );
-    fn lib_ruby_parser__external__decoded_input__into_bytes(blob: DecodedInputBlob) -> ListBlob;
+    fn lib_ruby_parser__external__decoded_input__into_bytes(
+        blob: Blob<DecodedInput>,
+    ) -> Blob<List<u8>>;
     fn lib_ruby_parser__external__decoded_input__take_bytes(
-        blob: *mut DecodedInputBlob,
-    ) -> ListBlob;
+        blob: *mut Blob<DecodedInput>,
+    ) -> Blob<List<u8>>;
 }
 
 impl Drop for DecodedInput {

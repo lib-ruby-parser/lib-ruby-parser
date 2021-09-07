@@ -3,8 +3,8 @@ use crate::source::token_rewriter::TokenRewriter;
 
 #[cfg(feature = "compile-with-external-structures")]
 fn decoder() -> TokenRewriter {
-    use crate::blobs::TokenRewriterBlob;
-    TokenRewriter::from_blob(TokenRewriterBlob::default())
+    use crate::blobs::{Blob, HasBlob};
+    TokenRewriter::from_blob(Blob::<TokenRewriter>::zeroed())
 }
 
 #[cfg(not(feature = "compile-with-external-structures"))]

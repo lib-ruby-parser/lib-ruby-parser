@@ -1,27 +1,26 @@
 use crate::source::CommentType;
 use crate::Loc;
 
-use crate::blobs::CommentBlob;
-use crate::blobs::CommentTypeBlob;
-use crate::blobs::LocBlob;
+use crate::blobs::Blob;
 
 /// A struct that represents a comment in Ruby
 #[repr(C)]
 pub struct Comment {
-    pub(crate) blob: CommentBlob,
+    pub(crate) blob: Blob<Comment>,
 }
 
 extern "C" {
     fn lib_ruby_parser__external__comment__new(
-        location: LocBlob,
-        kind: CommentTypeBlob,
-    ) -> CommentBlob;
-    fn lib_ruby_parser__external__comment__drop(blob: *mut CommentBlob);
-    fn lib_ruby_parser__external__comment__get_location(blob: *const CommentBlob)
-        -> *const LocBlob;
+        location: Blob<Loc>,
+        kind: Blob<CommentType>,
+    ) -> Blob<Comment>;
+    fn lib_ruby_parser__external__comment__drop(blob: *mut Blob<Comment>);
+    fn lib_ruby_parser__external__comment__get_location(
+        blob: *const Blob<Comment>,
+    ) -> *const Blob<Loc>;
     fn lib_ruby_parser__external__comment__get_kind(
-        blob: *const CommentBlob,
-    ) -> *const CommentTypeBlob;
+        blob: *const Blob<Comment>,
+    ) -> *const Blob<CommentType>;
 }
 
 impl Comment {

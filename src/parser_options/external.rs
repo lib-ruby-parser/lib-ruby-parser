@@ -1,9 +1,6 @@
 use super::InternalParserOptions;
-use crate::blobs::ParserOptionsBlob;
-use crate::blobs::StringPtrBlob;
-use crate::blobs::{MaybeDecoderBlob, MaybeTokenRewriterBlob};
+use crate::blobs::{Blob, HasBlob};
 use crate::containers::ExternalStringPtr as StringPtr;
-use crate::containers::IntoBlob;
 use crate::debug_level;
 use crate::source::maybe_token_rewriter::MaybeTokenRewriter;
 use crate::source::MaybeDecoder;
@@ -11,33 +8,34 @@ use crate::source::MaybeDecoder;
 /// Configuration of the parser
 #[repr(C)]
 pub struct ParserOptions {
-    pub(crate) blob: ParserOptionsBlob,
+    pub(crate) blob: Blob<ParserOptions>,
 }
 
 extern "C" {
     fn lib_ruby_parser__external__parser_options__new(
-        buffer_name: StringPtrBlob,
+        buffer_name: Blob<StringPtr>,
         debug: u8,
-        decoder: MaybeDecoderBlob,
-        token_rewriter: MaybeTokenRewriterBlob,
+        decoder: Blob<MaybeDecoder>,
+        token_rewriter: Blob<MaybeTokenRewriter>,
         record_tokens: bool,
-    ) -> ParserOptionsBlob;
-    fn lib_ruby_parser__external__parser_options__drop(blob: *mut ParserOptionsBlob);
+    ) -> Blob<ParserOptions>;
+    fn lib_ruby_parser__external__parser_options__drop(blob: *mut Blob<ParserOptions>);
     fn lib_ruby_parser__external__parser_options__into_internal(
-        blob: ParserOptionsBlob,
+        blob: Blob<ParserOptions>,
     ) -> InternalParserOptions;
     fn lib_ruby_parser__external__parser_options__get_buffer_name(
-        blob: *const ParserOptionsBlob,
-    ) -> *const StringPtrBlob;
-    fn lib_ruby_parser__external__parser_options__get_debug(blob: *const ParserOptionsBlob) -> u8;
+        blob: *const Blob<ParserOptions>,
+    ) -> *const Blob<StringPtr>;
+    fn lib_ruby_parser__external__parser_options__get_debug(blob: *const Blob<ParserOptions>)
+        -> u8;
     fn lib_ruby_parser__external__parser_options__get_decoder(
-        blob: *const ParserOptionsBlob,
-    ) -> *const MaybeDecoderBlob;
+        blob: *const Blob<ParserOptions>,
+    ) -> *const Blob<MaybeDecoder>;
     fn lib_ruby_parser__external__parser_options__get_token_rewriter(
-        blob: *const ParserOptionsBlob,
-    ) -> *const MaybeTokenRewriterBlob;
+        blob: *const Blob<ParserOptions>,
+    ) -> *const Blob<MaybeTokenRewriter>;
     fn lib_ruby_parser__external__parser_options__get_record_tokens(
-        blob: *const ParserOptionsBlob,
+        blob: *const Blob<ParserOptions>,
     ) -> bool;
 }
 
@@ -65,11 +63,6 @@ impl ParserOptions {
                 record_tokens,
             )
         };
-        Self { blob }
-    }
-
-    /// Creates ParserOptions from ParserOptionsBlob
-    pub fn from_blob(blob: ParserOptionsBlob) -> Self {
         Self { blob }
     }
 

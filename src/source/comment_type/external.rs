@@ -1,19 +1,20 @@
-use crate::blobs::CommentTypeBlob;
+use crate::blobs::Blob;
 
 /// Enum of all possible comment types
 #[repr(C)]
 pub struct CommentType {
-    pub(crate) blob: CommentTypeBlob,
+    pub(crate) blob: Blob<CommentType>,
 }
 
 extern "C" {
-    fn lib_ruby_parser__external__comment_type__new_inline() -> CommentTypeBlob;
-    fn lib_ruby_parser__external__comment_type__new_document() -> CommentTypeBlob;
-    fn lib_ruby_parser__external__comment_type__new_unknown() -> CommentTypeBlob;
-    fn lib_ruby_parser__external__comment_type__drop(blob: &mut CommentTypeBlob);
-    fn lib_ruby_parser__external__comment_type__is_inline(blob: *const CommentTypeBlob) -> bool;
-    fn lib_ruby_parser__external__comment_type__is_document(blob: *const CommentTypeBlob) -> bool;
-    fn lib_ruby_parser__external__comment_type__is_unknown(blob: *const CommentTypeBlob) -> bool;
+    fn lib_ruby_parser__external__comment_type__new_inline() -> Blob<CommentType>;
+    fn lib_ruby_parser__external__comment_type__new_document() -> Blob<CommentType>;
+    fn lib_ruby_parser__external__comment_type__new_unknown() -> Blob<CommentType>;
+    fn lib_ruby_parser__external__comment_type__drop(blob: &mut Blob<CommentType>);
+    fn lib_ruby_parser__external__comment_type__is_inline(blob: *const Blob<CommentType>) -> bool;
+    fn lib_ruby_parser__external__comment_type__is_document(blob: *const Blob<CommentType>)
+        -> bool;
+    fn lib_ruby_parser__external__comment_type__is_unknown(blob: *const Blob<CommentType>) -> bool;
 }
 
 impl Drop for CommentType {

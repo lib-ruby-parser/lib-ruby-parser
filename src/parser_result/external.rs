@@ -1,5 +1,5 @@
-use crate::blobs::{DecodedInputBlob, ListBlob, MaybePtrBlob, ParserResultBlob};
-use crate::containers::{ExternalList as List, ExternalMaybePtr as MaybePtr, IntoBlob};
+use crate::blobs::{Blob, HasBlob};
+use crate::containers::{ExternalList as List, ExternalMaybePtr as MaybePtr};
 
 use crate::source::Comment;
 use crate::source::DecodedInput;
@@ -11,37 +11,37 @@ use crate::Token;
 /// Combination of all data that `Parser` can give you
 #[repr(C)]
 pub struct ParserResult {
-    pub(crate) blob: ParserResultBlob,
+    pub(crate) blob: Blob<ParserResult>,
 }
 
 extern "C" {
     fn lib_ruby_parser__external__parser_result__new(
-        ast: MaybePtrBlob,
-        tokens: ListBlob,
-        diagnostics: ListBlob,
-        comments: ListBlob,
-        magic_comments: ListBlob,
-        input: DecodedInputBlob,
-    ) -> ParserResultBlob;
-    fn lib_ruby_parser__external__parser_result__drop(blob: *mut ParserResultBlob);
+        ast: Blob<MaybePtr<Node>>,
+        tokens: Blob<List<Token>>,
+        diagnostics: Blob<List<Diagnostic>>,
+        comments: Blob<List<Comment>>,
+        magic_comments: Blob<List<MagicComment>>,
+        input: Blob<DecodedInput>,
+    ) -> Blob<ParserResult>;
+    fn lib_ruby_parser__external__parser_result__drop(blob: *mut Blob<ParserResult>);
     fn lib_ruby_parser__external__parser_result__get_ast(
-        blob: *const ParserResultBlob,
-    ) -> *const MaybePtrBlob;
+        blob: *const Blob<ParserResult>,
+    ) -> *const Blob<MaybePtr<Node>>;
     fn lib_ruby_parser__external__parser_result__get_tokens(
-        blob: *const ParserResultBlob,
-    ) -> *const ListBlob;
+        blob: *const Blob<ParserResult>,
+    ) -> *const Blob<List<Token>>;
     fn lib_ruby_parser__external__parser_result__get_diagnostics(
-        blob: *const ParserResultBlob,
-    ) -> *const ListBlob;
+        blob: *const Blob<ParserResult>,
+    ) -> *const Blob<List<Diagnostic>>;
     fn lib_ruby_parser__external__parser_result__get_comments(
-        blob: *const ParserResultBlob,
-    ) -> *const ListBlob;
+        blob: *const Blob<ParserResult>,
+    ) -> *const Blob<List<Comment>>;
     fn lib_ruby_parser__external__parser_result__get_magic_comments(
-        blob: *const ParserResultBlob,
-    ) -> *const ListBlob;
+        blob: *const Blob<ParserResult>,
+    ) -> *const Blob<List<MagicComment>>;
     fn lib_ruby_parser__external__parser_result__get_input(
-        blob: *const ParserResultBlob,
-    ) -> *const DecodedInputBlob;
+        blob: *const Blob<ParserResult>,
+    ) -> *const Blob<DecodedInput>;
 }
 
 impl Drop for ParserResult {

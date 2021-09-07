@@ -1,36 +1,24 @@
-use crate::blobs::DecoderBlob;
-use crate::blobs::DecoderResultBlob;
-use crate::blobs::ListBlob;
-use crate::blobs::StringPtrBlob;
+use crate::blobs::{Blob, HasBlob};
 use crate::containers::ExternalList as List;
 use crate::containers::ExternalStringPtr as StringPtr;
-use crate::containers::IntoBlob;
 use crate::source::DecoderResult;
 use crate::source::InputError;
 use crate::source::MaybeDecoder;
 use crate::source::MaybeDecoderAPI;
 
-#[cfg(test)]
-impl Default for DecoderBlob {
-    fn default() -> Self {
-        let bytes: [u8; std::mem::size_of::<Self>()] = [0; std::mem::size_of::<Self>()];
-        Self { bytes }
-    }
-}
-
 /// Custom decoder, a wrapper around a function
 #[repr(C)]
 pub struct Decoder {
-    pub(crate) blob: DecoderBlob,
+    pub(crate) blob: Blob<Decoder>,
 }
 
 extern "C" {
     fn lib_ruby_parser__external__decoder__call(
-        blob: *mut DecoderBlob,
-        encoding: StringPtrBlob,
-        input: ListBlob,
-    ) -> DecoderResultBlob;
-    fn lib_ruby_parser__external__decoder_drop(blob: *mut DecoderBlob);
+        blob: *mut Blob<Decoder>,
+        encoding: Blob<StringPtr>,
+        input: Blob<List<u8>>,
+    ) -> Blob<DecoderResult>;
+    fn lib_ruby_parser__external__decoder_drop(blob: *mut Blob<Decoder>);
 }
 
 impl Drop for Decoder {
@@ -48,11 +36,6 @@ impl Decoder {
                 input.into_blob(),
             )
         })
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn from_blob(blob: DecoderBlob) -> Self {
-        Self { blob }
     }
 }
 

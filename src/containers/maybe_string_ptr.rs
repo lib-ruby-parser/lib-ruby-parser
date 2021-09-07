@@ -21,36 +21,36 @@ pub(crate) mod rust {
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
     use super::MaybeStringPtrAPI;
-    use crate::blobs::MaybeStringPtrBlob;
+    use crate::blobs::Blob;
     use crate::containers::ExternalStringPtr;
 
-    /// C-compatible nullable MaybeString container
+    /// C-compatible nullable string container
     #[repr(C)]
     pub struct MaybeStringPtr {
-        pub(crate) blob: MaybeStringPtrBlob,
+        pub(crate) blob: Blob<MaybeStringPtr>,
     }
 
     extern "C" {
         fn lib_ruby_parser__external__maybe_string_ptr__new_some(
             ptr: *const u8,
             suze: u64,
-        ) -> MaybeStringPtrBlob;
-        fn lib_ruby_parser__external__maybe_string_ptr__new_none() -> MaybeStringPtrBlob;
-        fn lib_ruby_parser__external__maybe_string_ptr__drop(blob: *mut MaybeStringPtrBlob);
+        ) -> Blob<MaybeStringPtr>;
+        fn lib_ruby_parser__external__maybe_string_ptr__new_none() -> Blob<MaybeStringPtr>;
+        fn lib_ruby_parser__external__maybe_string_ptr__drop(blob: *mut Blob<MaybeStringPtr>);
         fn lib_ruby_parser__external__maybe_string_ptr__is_some(
-            blob: *const MaybeStringPtrBlob,
+            blob: *const Blob<MaybeStringPtr>,
         ) -> bool;
         fn lib_ruby_parser__external__maybe_string_ptr__is_none(
-            blob: *const MaybeStringPtrBlob,
+            blob: *const Blob<MaybeStringPtr>,
         ) -> bool;
         fn lib_ruby_parser__external__maybe_string_ptr__get_raw(
-            blob: *mut MaybeStringPtrBlob,
+            blob: *mut Blob<MaybeStringPtr>,
         ) -> *mut u8;
         fn lib_ruby_parser__external__maybe_string_ptr__into_raw(
-            blob: MaybeStringPtrBlob,
+            blob: Blob<MaybeStringPtr>,
         ) -> *mut u8;
         fn lib_ruby_parser__external__maybe_string_ptr__get_len(
-            blob: *const MaybeStringPtrBlob,
+            blob: *const Blob<MaybeStringPtr>,
         ) -> u64;
     }
 
@@ -115,10 +115,10 @@ pub(crate) mod external {
                 let len = unsafe {
                     lib_ruby_parser__external__maybe_string_ptr__get_len(&self.blob) as usize
                 };
-                let blob_ptr: *const MaybeStringPtrBlob = &self.blob;
+                let blob_ptr: *const Blob<MaybeStringPtr> = &self.blob;
                 let ptr = unsafe {
                     lib_ruby_parser__external__maybe_string_ptr__get_raw(
-                        blob_ptr as *mut MaybeStringPtrBlob,
+                        blob_ptr as *mut Blob<MaybeStringPtr>,
                     )
                 };
                 let bytes = unsafe { std::slice::from_raw_parts(ptr, len) };

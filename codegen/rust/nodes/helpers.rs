@@ -11,24 +11,7 @@ pub(crate) fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
         NodeFieldType::Str { .. } => "StringPtr",
         NodeFieldType::MaybeStr { .. } => "MaybeStringPtr",
         NodeFieldType::StringValue => "Bytes",
-        NodeFieldType::U8 => "Byte",
-    }
-}
-
-#[allow(dead_code)]
-pub(crate) fn blob_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
-    use lib_ruby_parser_nodes::NodeFieldType;
-
-    match field.field_type {
-        NodeFieldType::Node => "PtrBlob",
-        NodeFieldType::Nodes => "ListBlob",
-        NodeFieldType::MaybeNode { .. } => "MaybePtrBlob",
-        NodeFieldType::Loc => "LocBlob",
-        NodeFieldType::MaybeLoc => "MaybeLocBlob",
-        NodeFieldType::Str { .. } => "StringPtrBlob",
-        NodeFieldType::MaybeStr { .. } => "MaybeStringPtrBlob",
-        NodeFieldType::StringValue => "BytesBlob",
-        NodeFieldType::U8 => "ByteBlob",
+        NodeFieldType::U8 => "u8",
     }
 }
 

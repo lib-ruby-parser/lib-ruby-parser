@@ -1,19 +1,21 @@
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
-    use crate::blobs::StringPtrBlob;
+    use crate::blobs::Blob;
     use std::ops::Deref;
 
     /// C-compatible list
     #[repr(C)]
     pub struct StringPtr {
-        pub(crate) blob: StringPtrBlob,
+        pub(crate) blob: Blob<StringPtr>,
     }
 
     extern "C" {
-        fn lib_ruby_parser__external__string_ptr__new(ptr: *const u8, len: u64) -> StringPtrBlob;
-        fn lib_ruby_parser__external__string_ptr__drop(blob: *mut StringPtrBlob);
-        fn lib_ruby_parser__external__string_ptr__get_raw(blob_ptr: *mut StringPtrBlob) -> *mut u8;
-        fn lib_ruby_parser__external__string_ptr__get_len(blob: *const StringPtrBlob) -> u64;
+        fn lib_ruby_parser__external__string_ptr__new(ptr: *const u8, len: u64) -> Blob<StringPtr>;
+        fn lib_ruby_parser__external__string_ptr__drop(blob: *mut Blob<StringPtr>);
+        fn lib_ruby_parser__external__string_ptr__get_raw(
+            blob_ptr: *mut Blob<StringPtr>,
+        ) -> *mut u8;
+        fn lib_ruby_parser__external__string_ptr__get_len(blob: *const Blob<StringPtr>) -> u64;
     }
 
     impl Drop for StringPtr {
@@ -59,9 +61,9 @@ pub(crate) mod external {
         }
 
         pub(crate) fn as_ptr(&self) -> *const u8 {
-            let blob_ptr: *const StringPtrBlob = &self.blob;
+            let blob_ptr: *const Blob<StringPtr> = &self.blob;
             unsafe {
-                lib_ruby_parser__external__string_ptr__get_raw(blob_ptr as *mut StringPtrBlob)
+                lib_ruby_parser__external__string_ptr__get_raw(blob_ptr as *mut Blob<StringPtr>)
             }
         }
 

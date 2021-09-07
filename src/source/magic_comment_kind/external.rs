@@ -1,30 +1,30 @@
-use crate::blobs::MagicCommentKindBlob;
+use crate::blobs::Blob;
 
 /// An enum of all magic comment kinds
 #[repr(C)]
 pub struct MagicCommentKind {
-    pub(crate) blob: MagicCommentKindBlob,
+    pub(crate) blob: Blob<MagicCommentKind>,
 }
 
 extern "C" {
-    fn lib_ruby_parser__external__magic_comment_kind__new_encoding() -> MagicCommentKindBlob;
+    fn lib_ruby_parser__external__magic_comment_kind__new_encoding() -> Blob<MagicCommentKind>;
     fn lib_ruby_parser__external__magic_comment_kind__new_frozen_string_literal(
-    ) -> MagicCommentKindBlob;
-    fn lib_ruby_parser__external__magic_comment_kind__new_warn_indent() -> MagicCommentKindBlob;
+    ) -> Blob<MagicCommentKind>;
+    fn lib_ruby_parser__external__magic_comment_kind__new_warn_indent() -> Blob<MagicCommentKind>;
     fn lib_ruby_parser__external__magic_comment_kind__new_shareable_constant_value(
-    ) -> MagicCommentKindBlob;
-    fn lib_ruby_parser__external__magic_comment_kind__drop(blob: *mut MagicCommentKindBlob);
+    ) -> Blob<MagicCommentKind>;
+    fn lib_ruby_parser__external__magic_comment_kind__drop(blob: *mut Blob<MagicCommentKind>);
     fn lib_ruby_parser__external__magic_comment_kind__is_encoding(
-        blob: *const MagicCommentKindBlob,
+        blob: *const Blob<MagicCommentKind>,
     ) -> bool;
     fn lib_ruby_parser__external__magic_comment_kind__is_frozen_string_literal(
-        blob: *const MagicCommentKindBlob,
+        blob: *const Blob<MagicCommentKind>,
     ) -> bool;
     fn lib_ruby_parser__external__magic_comment_kind__is_warn_indent(
-        blob: *const MagicCommentKindBlob,
+        blob: *const Blob<MagicCommentKind>,
     ) -> bool;
     fn lib_ruby_parser__external__magic_comment_kind__is_shareable_constant_value(
-        blob: *const MagicCommentKindBlob,
+        blob: *const Blob<MagicCommentKind>,
     ) -> bool;
 }
 

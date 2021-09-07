@@ -26,7 +26,7 @@ pub(crate) mod external {
     #[repr(C)]
     pub struct MaybePtr<T: GetDropMaybePtrFn> {
         pub(crate) blob: MaybePtrBlob,
-        _t: std::marker::PhantomData<T>,
+        pub(crate) _t: std::marker::PhantomData<T>,
     }
 
     impl<T: GetDropMaybePtrFn> Drop for MaybePtr<T> {

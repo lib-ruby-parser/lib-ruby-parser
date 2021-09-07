@@ -20,7 +20,6 @@ pub(crate) fn codegen() {
 fn blobs() -> String {
     let mut messages = vec![];
     let mut nodes = vec![];
-    let mut other = vec![];
 
     for size in sizes() {
         let size_name = size.name.clone();
@@ -34,7 +33,7 @@ fn blobs() -> String {
             let struct_name = struct_name.strip_prefix("Message").unwrap().to_owned();
             messages.push((struct_name, size_name));
         } else {
-            other.push((struct_name, size_name));
+            // ignore
         }
     }
 
@@ -42,6 +41,7 @@ fn blobs() -> String {
         "/// Mod with node blobs
 pub mod nodes {{
     use super::size;
+    use crate::nodes::*;
 
     {node_blobs}
 }}
@@ -49,15 +49,13 @@ pub mod nodes {{
 /// Mod with message blobs
 pub mod messages {{
     use super::size;
+    use crate::error::message::variants::*;
 
     {message_blobs}
 }}
-
-{other_blobs}
 ",
         node_blobs = map_blobs(nodes, &blob_code).join("\n    "),
         message_blobs = map_blobs(messages, &blob_code).join("\n    "),
-        other_blobs = map_blobs(other, &blob_code).join("\n"),
     )
 }
 
@@ -72,14 +70,26 @@ fn camelcase(capitalized_name: &str) -> String {
 fn map_blobs(blobs: Vec<(String, String)>, f: &dyn Fn(&str, &str) -> String) -> Vec<String> {
     blobs
         .into_iter()
-        .map(|(blob_name, size_name)| f(&blob_name, &size_name))
+        .map(|(struct_name, size_name)| f(&struct_name, &size_name))
         .collect()
 }
 
-fn blob_code(blob_name: &str, size_name: &str) -> String {
+fn blob_code(struct_name: &str, size_name: &str) -> String {
+    let blob_name = format!("{}Blob", struct_name);
+    let struct_name = match struct_name {
+        "Self" => "Self_",
+        other => other,
+    };
+
     format!(
-        "declare_blob!(\"Blob of the `{blob_name}`\", {blob_name}Blob, size::{size_name});",
-        blob_name = blob_name,
-        size_name = size_name
+        "declare_blob!(
+        size = size::{size_name},
+        value = {struct_name},
+        blob = {blob_name},
+        doc = \"Blob of the `{struct_name}`\"
+    );",
+        size_name = size_name,
+        struct_name = struct_name,
+        blob_name = blob_name
     )
 }

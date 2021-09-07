@@ -1,32 +1,31 @@
-use crate::blobs::{MaybeTokenRewriterBlob, TokenRewriterBlob};
-use crate::containers::IntoBlob;
+use crate::blobs::{Blob, HasBlob};
 use crate::source::maybe_token_rewriter::MaybeTokenRewriterAPI;
 use crate::source::token_rewriter::TokenRewriter;
 
 /// Custom token_rewriter, a wrapper around a function
 #[repr(C)]
 pub struct MaybeTokenRewriter {
-    pub(crate) blob: MaybeTokenRewriterBlob,
+    pub(crate) blob: Blob<MaybeTokenRewriter>,
 }
 
 extern "C" {
     fn lib_ruby_parser__external__maybe_token_rewriter__new_some(
-        blob: TokenRewriterBlob,
-    ) -> MaybeTokenRewriterBlob;
-    fn lib_ruby_parser__external__maybe_token_rewriter__new_none() -> MaybeTokenRewriterBlob;
-    fn lib_ruby_parser__external__maybe_token_rewriter__drop(blob: *mut MaybeTokenRewriterBlob);
+        blob: Blob<TokenRewriter>,
+    ) -> Blob<MaybeTokenRewriter>;
+    fn lib_ruby_parser__external__maybe_token_rewriter__new_none() -> Blob<MaybeTokenRewriter>;
+    fn lib_ruby_parser__external__maybe_token_rewriter__drop(blob: *mut Blob<MaybeTokenRewriter>);
     fn lib_ruby_parser__external__maybe_token_rewriter__is_some(
-        blob: *const MaybeTokenRewriterBlob,
+        blob: *const Blob<MaybeTokenRewriter>,
     ) -> bool;
     fn lib_ruby_parser__external__maybe_token_rewriter__is_none(
-        blob: *const MaybeTokenRewriterBlob,
+        blob: *const Blob<MaybeTokenRewriter>,
     ) -> bool;
     fn lib_ruby_parser__external__maybe_token_rewriter__as_token_rewriter(
-        blob: *const MaybeTokenRewriterBlob,
-    ) -> *const TokenRewriterBlob;
+        blob: *const Blob<MaybeTokenRewriter>,
+    ) -> *const Blob<TokenRewriter>;
     fn lib_ruby_parser__external__maybe_token_rewriter__into_token_rewriter(
-        blob: MaybeTokenRewriterBlob,
-    ) -> TokenRewriterBlob;
+        blob: Blob<MaybeTokenRewriter>,
+    ) -> Blob<TokenRewriter>;
 }
 
 impl Drop for MaybeTokenRewriter {

@@ -1,21 +1,20 @@
 use super::InternalTokenRewriterResult;
-use crate::blobs::{
-    LexStateActionBlob, RewriteActionBlob, TokenRewriterBlob, TokenRewriterResultBlob,
-};
-use crate::blobs::{PtrBlob, SharedByteListBlob};
-use crate::containers::{ExternalPtr as Ptr, ExternalSharedByteList as SharedByteList, IntoBlob};
+use crate::blobs::{Blob, HasBlob};
+use crate::containers::{ExternalPtr as Ptr, ExternalSharedByteList as SharedByteList};
 use crate::Token;
 
 /// Enum of what token rewriter should do with a token.
 #[repr(C)]
 pub struct RewriteAction {
-    pub(crate) blob: RewriteActionBlob,
+    pub(crate) blob: Blob<RewriteAction>,
 }
 
 extern "C" {
-    fn lib_ruby_parser__external__rewrite_action__drop(blob: *mut RewriteActionBlob);
-    fn lib_ruby_parser__external__rewrite_action__is_drop(blob: *const RewriteActionBlob) -> bool;
-    fn lib_ruby_parser__external__rewrite_action__is_keep(blob: *const RewriteActionBlob) -> bool;
+    fn lib_ruby_parser__external__rewrite_action__drop(blob: *mut Blob<RewriteAction>);
+    fn lib_ruby_parser__external__rewrite_action__is_drop(blob: *const Blob<RewriteAction>)
+        -> bool;
+    fn lib_ruby_parser__external__rewrite_action__is_keep(blob: *const Blob<RewriteAction>)
+        -> bool;
 }
 
 impl Drop for RewriteAction {
@@ -63,18 +62,19 @@ impl std::fmt::Debug for RewriteAction {
 /// Enum of what token rewriter should do with the state of the lexer
 #[repr(C)]
 pub struct LexStateAction {
-    pub(crate) blob: LexStateActionBlob,
+    pub(crate) blob: Blob<LexStateAction>,
 }
 
 extern "C" {
-    fn lib_ruby_parser__external__lex_state_action__drop(blob: *mut LexStateActionBlob);
-    fn lib_ruby_parser__external__lex_state_action__is_set(blob: *const LexStateActionBlob)
-        -> bool;
+    fn lib_ruby_parser__external__lex_state_action__drop(blob: *mut Blob<LexStateAction>);
+    fn lib_ruby_parser__external__lex_state_action__is_set(
+        blob: *const Blob<LexStateAction>,
+    ) -> bool;
     fn lib_ruby_parser__external__lex_state_action__is_keep(
-        blob: *const LexStateActionBlob,
+        blob: *const Blob<LexStateAction>,
     ) -> bool;
     fn lib_ruby_parser__external__lex_state_action__get_next_state(
-        blob: *const LexStateActionBlob,
+        blob: *const Blob<LexStateAction>,
     ) -> i32;
 }
 
@@ -131,13 +131,13 @@ impl Eq for LexStateAction {}
 /// Output of the token rewriter
 #[repr(C)]
 pub struct TokenRewriterResult {
-    pub(crate) blob: TokenRewriterResultBlob,
+    pub(crate) blob: Blob<TokenRewriterResult>,
 }
 
 extern "C" {
-    fn lib_ruby_parser__external__token_rewriter_result__drop(blob: *mut TokenRewriterResultBlob);
+    fn lib_ruby_parser__external__token_rewriter_result__drop(blob: *mut Blob<TokenRewriterResult>);
     fn lib_ruby_parser__external__token_rewriter_result__into_internal(
-        blob: TokenRewriterResultBlob,
+        blob: Blob<TokenRewriterResult>,
     ) -> InternalTokenRewriterResult;
 }
 
@@ -154,10 +154,6 @@ impl TokenRewriterResult {
         std::mem::forget(self);
         internal
     }
-
-    pub(crate) fn from_blob(blob: TokenRewriterResultBlob) -> Self {
-        Self { blob }
-    }
 }
 
 impl std::fmt::Debug for TokenRewriterResult {
@@ -166,27 +162,19 @@ impl std::fmt::Debug for TokenRewriterResult {
     }
 }
 
-#[cfg(test)]
-impl Default for TokenRewriterBlob {
-    fn default() -> Self {
-        let bytes: [u8; std::mem::size_of::<Self>()] = [0; std::mem::size_of::<Self>()];
-        Self { bytes }
-    }
-}
-
 /// Output of the token rewriter
 #[repr(C)]
 pub struct TokenRewriter {
-    pub(crate) blob: TokenRewriterBlob,
+    pub(crate) blob: Blob<TokenRewriter>,
 }
 
 extern "C" {
-    fn lib_ruby_parser__external__token_rewriter__drop(blob: *mut TokenRewriterBlob);
+    fn lib_ruby_parser__external__token_rewriter__drop(blob: *mut Blob<TokenRewriter>);
     fn lib_ruby_parser__external__token_rewriter__call(
-        blob: *mut TokenRewriterBlob,
-        token: PtrBlob,
-        input: SharedByteListBlob,
-    ) -> TokenRewriterResultBlob;
+        blob: *mut Blob<TokenRewriter>,
+        token: Blob<Ptr<Token>>,
+        input: Blob<SharedByteList>,
+    ) -> Blob<TokenRewriterResult>;
 }
 
 impl Drop for TokenRewriter {
@@ -204,10 +192,5 @@ impl TokenRewriter {
                 input.into_blob(),
             )
         })
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn from_blob(blob: TokenRewriterBlob) -> Self {
-        Self { blob }
     }
 }

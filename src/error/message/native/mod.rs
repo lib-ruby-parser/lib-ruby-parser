@@ -1,6 +1,6 @@
 mod constructors;
 mod enum_;
 mod predicates;
-mod variants;
+pub mod variants;
 
 pub use enum_::DiagnosticMessage;

@@ -1,9 +1,9 @@
-use crate::blobs::SourceLineBlob;
+use crate::blobs::Blob;
 
 /// Representation of a source line in a source file
 #[repr(C)]
 pub struct SourceLine {
-    pub(crate) blob: SourceLineBlob,
+    pub(crate) blob: Blob<SourceLine>,
 }
 
 extern "C" {
@@ -11,18 +11,18 @@ extern "C" {
         start: u64,
         end: u64,
         ends_with_eof: bool,
-    ) -> SourceLineBlob;
-    fn lib_ruby_parser__external__source_line__drop(blob: *mut SourceLineBlob);
-    fn lib_ruby_parser__external__source_line__get_start(blob: *const SourceLineBlob) -> u64;
-    fn lib_ruby_parser__external__source_line__get_end(blob: *const SourceLineBlob) -> u64;
+    ) -> Blob<SourceLine>;
+    fn lib_ruby_parser__external__source_line__drop(blob: *mut Blob<SourceLine>);
+    fn lib_ruby_parser__external__source_line__get_start(blob: *const Blob<SourceLine>) -> u64;
+    fn lib_ruby_parser__external__source_line__get_end(blob: *const Blob<SourceLine>) -> u64;
     fn lib_ruby_parser__external__source_line__get_ends_with_eof(
-        blob: *const SourceLineBlob,
+        blob: *const Blob<SourceLine>,
     ) -> bool;
 
-    fn lib_ruby_parser__external__source_line__set_start(blob: *mut SourceLineBlob, start: u64);
-    fn lib_ruby_parser__external__source_line__set_end(blob: *mut SourceLineBlob, end: u64);
+    fn lib_ruby_parser__external__source_line__set_start(blob: *mut Blob<SourceLine>, start: u64);
+    fn lib_ruby_parser__external__source_line__set_end(blob: *mut Blob<SourceLine>, end: u64);
     fn lib_ruby_parser__external__source_line__set_ends_with_eof(
-        blob: *mut SourceLineBlob,
+        blob: *mut Blob<SourceLine>,
         ends_with_eof: bool,
     );
 }

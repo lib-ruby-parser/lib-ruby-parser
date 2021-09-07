@@ -15,8 +15,7 @@ fn contents(node: &lib_ruby_parser_nodes::Node) -> String {
 {imports}
 
 use super::internal::Internal{struct_name};
-use crate::containers::IntoBlob;
-use crate::blobs::nodes::{blob_name};
+use crate::blobs::{{HasBlob, Blob}};
 
 {comment}
 #[repr(C)]
@@ -79,7 +78,7 @@ impl Drop for {struct_name} {{
 }}
 ",
         generator = file!(),
-        blob_name = format!("{}Blob", node.camelcase_name),
+        blob_name = format!("Blob<{}>", struct_name(node)),
         imports = imports(&node).join("\n"),
         comment = node.render_comment("///", 0),
         struct_name = struct_name(node),
@@ -110,7 +109,6 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
     imports.push("use crate::nodes::InnerNode;");
     imports.push("use crate::nodes::InspectVec;");
     imports.push("use crate::Loc;");
-    imports.push("use crate::blobs::LocBlob;");
 
     let has_field = |field_type: lib_ruby_parser_nodes::NodeFieldType| {
         node.fields.any_field_has_type(field_type)
@@ -130,7 +128,6 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::StringValue) {
         imports.push("use crate::Bytes;");
-        imports.push("use crate::blobs::BytesBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode {
@@ -139,41 +136,30 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
         regexp_options: false,
     }) {
         imports.push("use crate::containers::ExternalMaybePtr as MaybePtr;");
-        imports.push("use crate::blobs::MaybePtrBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::Node) {
         imports.push("use crate::containers::ExternalPtr as Ptr;");
-        imports.push("use crate::blobs::PtrBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::Nodes) {
         imports.push("use crate::containers::ExternalList as List;");
-        imports.push("use crate::blobs::ListBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeLoc) {
         imports.push("use crate::containers::ExternalMaybeLoc as MaybeLoc;");
-        imports.push("use crate::blobs::MaybeLocBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::Str { raw: true })
         || has_field(lib_ruby_parser_nodes::NodeFieldType::Str { raw: false })
     {
         imports.push("use crate::containers::ExternalStringPtr as StringPtr;");
-        imports.push("use crate::blobs::StringPtrBlob;");
     }
 
     if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: false })
         || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: true })
     {
         imports.push("use crate::containers::ExternalMaybeStringPtr as MaybeStringPtr;");
-        imports.push("use crate::blobs::MaybeStringPtrBlob;");
-    }
-
-    if has_field(lib_ruby_parser_nodes::NodeFieldType::U8) {
-        imports.push("type Byte = u8;");
-        imports.push("type ByteBlob = u8;");
     }
 
     imports
@@ -291,17 +277,17 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
         node.fields
             .flat_map(&|field| {
                 let getter = format!(
-                    "fn {getter_name}(blob: *const {blob_name}) -> *mut {field_blob_type};",
+                    "fn {getter_name}(blob: *const Blob<{node_type}>) -> *mut Blob<{field_type}>;",
                     getter_name = external_field_getter_name(node, field),
-                    blob_name = format!("{}Blob", node.camelcase_name),
-                    field_blob_type = helpers::blob_type(field)
+                    node_type = struct_name(node),
+                    field_type = helpers::field_type(field)
                 );
 
                 let setter = format!(
-                    "fn {setter_name}(blob: *mut {blob_name}, blob: {field_blob_type});",
+                    "fn {setter_name}(blob: *mut Blob<{node_type}>, blob: Blob<{field_type}>);",
                     setter_name = external_field_setter_name(node, field),
-                    blob_name = format!("{}Blob", node.camelcase_name),
-                    field_blob_type = helpers::blob_type(field)
+                    node_type = struct_name(node),
+                    field_type = helpers::field_type(field)
                 );
 
                 vec![getter, setter]
@@ -313,9 +299,8 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     // into_internal fn
     {
         let line = format!(
-            "fn {fn_name}(blob: {blob_name}) -> Internal{struct_name};",
+            "fn {fn_name}(blob: Blob<{struct_name}>) -> Internal{struct_name};",
             fn_name = external_into_internal_name(node),
-            blob_name = format!("{}Blob", node.camelcase_name),
             struct_name = struct_name(node)
         );
         result.push(line);
@@ -324,9 +309,9 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     // drop fn
     {
         let line = format!(
-            "fn {fn_name}(blob: *mut {blob_name});",
+            "fn {fn_name}(blob: *mut Blob<{struct_name}>);",
             fn_name = external_drop_variant_name(node),
-            blob_name = format!("{}Blob", node.camelcase_name),
+            struct_name = struct_name(node),
         );
         result.push(line);
     }

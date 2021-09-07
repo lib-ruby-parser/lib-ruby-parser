@@ -4,6 +4,7 @@ pub(crate) trait MaybeLocAPI {
     fn some(loc: Loc) -> Self
     where
         Self: Sized;
+
     fn none() -> Self
     where
         Self: Sized;
@@ -30,25 +31,24 @@ pub(crate) mod rust {
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
     use super::{Loc, MaybeLocAPI};
-    use crate::blobs::LocBlob;
-    use crate::blobs::MaybeLocBlob;
+    use crate::blobs::{Blob, HasBlob};
 
     /// C-compatible Option<Loc>
     #[repr(C)]
     pub struct MaybeLoc {
-        pub(crate) blob: MaybeLocBlob,
+        pub(crate) blob: Blob<MaybeLoc>,
     }
 
     extern "C" {
-        fn lib_ruby_parser__external__maybe_loc__new_some(loc_blob: LocBlob) -> MaybeLocBlob;
-        fn lib_ruby_parser__external__maybe_loc__new_none() -> MaybeLocBlob;
-        fn lib_ruby_parser__external__maybe_loc__drop(blob: *mut MaybeLocBlob);
-        fn lib_ruby_parser__external__maybe_loc__is_some(blob: *const MaybeLocBlob) -> bool;
-        fn lib_ruby_parser__external__maybe_loc__is_none(blob: *const MaybeLocBlob) -> bool;
+        fn lib_ruby_parser__external__maybe_loc__new_some(loc_blob: Blob<Loc>) -> Blob<MaybeLoc>;
+        fn lib_ruby_parser__external__maybe_loc__new_none() -> Blob<MaybeLoc>;
+        fn lib_ruby_parser__external__maybe_loc__drop(blob: *mut Blob<MaybeLoc>);
+        fn lib_ruby_parser__external__maybe_loc__is_some(blob: *const Blob<MaybeLoc>) -> bool;
+        fn lib_ruby_parser__external__maybe_loc__is_none(blob: *const Blob<MaybeLoc>) -> bool;
         fn lib_ruby_parser__external__maybe_loc__as_loc(
-            blob: *const MaybeLocBlob,
-        ) -> *const LocBlob;
-        fn lib_ruby_parser__external__maybe_loc__into_loc(blob: MaybeLocBlob) -> LocBlob;
+            blob: *const Blob<MaybeLoc>,
+        ) -> *const Blob<Loc>;
+        fn lib_ruby_parser__external__maybe_loc__into_loc(blob: Blob<MaybeLoc>) -> Blob<Loc>;
     }
 
     impl MaybeLocAPI for MaybeLoc {
@@ -75,8 +75,7 @@ pub(crate) mod external {
         }
 
         unsafe fn into_loc(self) -> Loc {
-            let loc_blob = lib_ruby_parser__external__maybe_loc__into_loc(self.blob);
-            Loc { blob: loc_blob }
+            Loc::from_blob(lib_ruby_parser__external__maybe_loc__into_loc(self.blob))
         }
     }
 

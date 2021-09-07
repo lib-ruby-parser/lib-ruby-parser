@@ -1,34 +1,35 @@
-use crate::blobs::DecoderResultBlob;
-use crate::blobs::InputErrorBlob;
-use crate::blobs::ListBlob;
+use crate::blobs::{Blob, HasBlob};
 use crate::containers::ExternalList as List;
-use crate::containers::IntoBlob;
 use crate::source::InputError;
 
 /// Result that is returned from decoding function
 #[repr(C)]
 pub struct DecoderResult {
-    pub(crate) blob: DecoderResultBlob,
+    pub(crate) blob: Blob<DecoderResult>,
 }
 
 extern "C" {
-    fn lib_ruby_parser__external__decoder_result__new_ok(byte_list: ListBlob) -> DecoderResultBlob;
+    fn lib_ruby_parser__external__decoder_result__new_ok(
+        byte_list: Blob<List<u8>>,
+    ) -> Blob<DecoderResult>;
     fn lib_ruby_parser__external__decoder_result__new_err(
-        input_error: InputErrorBlob,
-    ) -> DecoderResultBlob;
-    fn lib_ruby_parser__external__decoder_result__drop(blob: *mut DecoderResultBlob);
-    fn lib_ruby_parser__external__decoder_result_is_ok(blob: *const DecoderResultBlob) -> bool;
-    fn lib_ruby_parser__external__decoder_result_is_err(blob: *const DecoderResultBlob) -> bool;
-    fn lib_ruby_parser__external__decoder_result_into_ok(blob: DecoderResultBlob) -> ListBlob;
+        input_error: Blob<InputError>,
+    ) -> Blob<DecoderResult>;
+    fn lib_ruby_parser__external__decoder_result__drop(blob: *mut Blob<DecoderResult>);
+    fn lib_ruby_parser__external__decoder_result_is_ok(blob: *const Blob<DecoderResult>) -> bool;
+    fn lib_ruby_parser__external__decoder_result_is_err(blob: *const Blob<DecoderResult>) -> bool;
+    fn lib_ruby_parser__external__decoder_result_into_ok(
+        blob: Blob<DecoderResult>,
+    ) -> Blob<List<u8>>;
     fn lib_ruby_parser__external__decoder_result_into_err(
-        blob: DecoderResultBlob,
-    ) -> InputErrorBlob;
+        blob: Blob<DecoderResult>,
+    ) -> Blob<InputError>;
     fn lib_ruby_parser__external__decoder_result_as_ok(
-        blob: *const DecoderResultBlob,
-    ) -> *const ListBlob;
+        blob: *const Blob<DecoderResult>,
+    ) -> *const Blob<List<u8>>;
     fn lib_ruby_parser__external__decoder_result_as_err(
-        blob: *const DecoderResultBlob,
-    ) -> *const InputErrorBlob;
+        blob: *const Blob<DecoderResult>,
+    ) -> *const Blob<InputError>;
 }
 
 impl Drop for DecoderResult {
@@ -103,10 +104,6 @@ impl DecoderResult {
         } else {
             panic!("Unknown DecoderResult variant")
         }
-    }
-
-    pub(crate) fn from_blob(blob: DecoderResultBlob) -> Self {
-        Self { blob }
     }
 }
 

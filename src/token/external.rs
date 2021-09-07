@@ -1,13 +1,10 @@
-use crate::blobs::BytesBlob;
-use crate::blobs::LocBlob;
-use crate::blobs::TokenBlob;
-use crate::containers::IntoBlob;
+use crate::blobs::{Blob, HasBlob};
 use crate::{Bytes, LexState, Loc};
 
 /// Byte sequence based on external implementation
 #[repr(C)]
 pub struct Token {
-    pub(crate) blob: TokenBlob,
+    pub(crate) blob: Blob<Self>,
 }
 
 impl Clone for Token {
@@ -43,24 +40,24 @@ impl Drop for Token {
 extern "C" {
     fn lib_ruby_parser__external__token__new(
         token_type: i32,
-        token_value: BytesBlob,
-        loc: LocBlob,
+        token_value: Blob<Bytes>,
+        loc: Blob<Loc>,
         lex_state_before: i32,
         lex_state_after: i32,
-    ) -> TokenBlob;
-    fn lib_ruby_parser__external__token__drop(blob: *mut TokenBlob);
-    fn lib_ruby_parser__external__token__get_token_type(blob: *const TokenBlob) -> i32;
+    ) -> Blob<Token>;
+    fn lib_ruby_parser__external__token__drop(blob: *mut Blob<Token>);
+    fn lib_ruby_parser__external__token__get_token_type(blob: *const Blob<Token>) -> i32;
     fn lib_ruby_parser__external__token__get_token_value(
-        blob: *const TokenBlob,
-    ) -> *const BytesBlob;
+        blob: *const Blob<Token>,
+    ) -> *const Blob<Bytes>;
     fn lib_ruby_parser__external__token__set_token_value(
-        blob: *mut TokenBlob,
-        bytes_blob: BytesBlob,
+        blob: *mut Blob<Token>,
+        bytes_blob: Blob<Bytes>,
     );
-    fn lib_ruby_parser__external__token__into_token_value(blob: TokenBlob) -> BytesBlob;
-    fn lib_ruby_parser__external__token__get_loc(blob: *const TokenBlob) -> *const LocBlob;
-    fn lib_ruby_parser__external__token__get_lex_state_before(blob: *const TokenBlob) -> i32;
-    fn lib_ruby_parser__external__token__get_lex_state_after(blob: *const TokenBlob) -> i32;
+    fn lib_ruby_parser__external__token__into_token_value(blob: Blob<Token>) -> Blob<Bytes>;
+    fn lib_ruby_parser__external__token__get_loc(blob: *const Blob<Token>) -> *const Blob<Loc>;
+    fn lib_ruby_parser__external__token__get_lex_state_before(blob: *const Blob<Token>) -> i32;
+    fn lib_ruby_parser__external__token__get_lex_state_after(blob: *const Blob<Token>) -> i32;
 }
 
 impl Token {

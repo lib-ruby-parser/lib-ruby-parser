@@ -1,16 +1,16 @@
-use crate::blobs::LocBlob;
+use crate::blobs::Blob;
 
 /// Byte sequence based on external implementation
 #[repr(C)]
 pub struct Loc {
-    pub(crate) blob: LocBlob,
+    pub(crate) blob: Blob<Loc>,
 }
 
 extern "C" {
-    fn lib_ruby_parser__external__loc__new(begin: u64, end: u64) -> LocBlob;
-    fn lib_ruby_parser__external__loc__drop(blob: *mut LocBlob);
-    fn lib_ruby_parser__external__loc__get_begin(blob: *const LocBlob) -> u64;
-    fn lib_ruby_parser__external__loc__get_end(blob: *const LocBlob) -> u64;
+    fn lib_ruby_parser__external__loc__new(begin: u64, end: u64) -> Blob<Loc>;
+    fn lib_ruby_parser__external__loc__drop(blob: *mut Blob<Loc>);
+    fn lib_ruby_parser__external__loc__get_begin(blob: *const Blob<Loc>) -> u64;
+    fn lib_ruby_parser__external__loc__get_end(blob: *const Blob<Loc>) -> u64;
 }
 
 impl Loc {
