@@ -18,8 +18,8 @@ void drop_diagnostic_message(DiagnosticMessage *message)
 }}
 ",
         generator = file!(),
-        drop_fns = messages.map(&drop_fn).join("\n\n"),
-        drop_branches = messages.map(&drop_branch).join("\n        ")
+        drop_fns = messages.map(drop_fn).join("\n\n"),
+        drop_branches = messages.map(drop_branch).join("\n        ")
     )
 }
 
@@ -28,7 +28,7 @@ pub(crate) fn codegen() {
 }
 
 fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
-    let mut drop_fields = message.fields.map(&|field| {
+    let mut drop_fields = message.fields.map(|field| {
         let drop_fn_name = match field.field_type {
             lib_ruby_parser_nodes::MessageFieldType::Str => "drop_string_ptr",
             lib_ruby_parser_nodes::MessageFieldType::Byte => "drop_byte",

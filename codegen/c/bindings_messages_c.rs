@@ -32,16 +32,16 @@ void lib_ruby_parser__external__diagnostic_message__drop(DiagnosticMessage_BLOB 
 ",
         generator = file!(),
         constructors = messages
-            .map(&|message| constructor(message, options))
+            .map(|message| constructor(message, options))
             .join("\n\n"),
         variant_getters = messages
-            .map(&|message| variant_getter(message, options))
+            .map(|message| variant_getter(message, options))
             .join("\n\n"),
         field_getters = messages
-            .flat_map(&|message| field_getters(message, options))
+            .flat_map(|message| field_getters(message, options))
             .join("\n\n"),
         variant_predicates = messages
-            .map(&|message| variant_predicate(message, options))
+            .map(|message| variant_predicate(message, options))
             .join("\n\n")
     )
 }
@@ -53,7 +53,7 @@ pub(crate) fn codegen(options: &Options) {
 fn constructor(message: &Message, options: &Options) -> String {
     let initializer_list = message
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 ".{name} = UNPACK_{t}({name}_blob)",
                 name = field_name(field),
@@ -94,7 +94,7 @@ fn variant_getter(message: &Message, options: &Options) -> String {
     )
 }
 fn field_getters(message: &Message, options: &Options) -> Vec<String> {
-    message.fields.map(&|field| {
+    message.fields.map(|field| {
         format!(
             "{signature}
 {{

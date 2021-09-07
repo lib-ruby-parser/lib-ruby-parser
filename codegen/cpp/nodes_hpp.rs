@@ -48,9 +48,9 @@ void drop_node_list(NodeList *node_list);
 #endif // LIB_RUBY_PARSER_EXTERNAL_C_NODES_HPP
 ",
         generator = file!(),
-        structs = nodes.map(&struct_declaration).join("\n\n"),
-        variants = nodes.map(&variant).join(",\n    "),
-        print_sizes = nodes.map(&print_size).join(" \\\n    "),
+        structs = nodes.map(struct_declaration).join("\n\n"),
+        variants = nodes.map(variant).join(",\n    "),
+        print_sizes = nodes.map(print_size).join(" \\\n    "),
     )
 }
 
@@ -59,7 +59,7 @@ pub(crate) fn codegen() {
 }
 
 fn struct_declaration(node: &lib_ruby_parser_nodes::Node) -> String {
-    let fields = node.fields.map(&|field| {
+    let fields = node.fields.map(|field| {
         format!(
             "{} {};",
             cpp_helpers::nodes::field_type(field),
@@ -69,7 +69,7 @@ fn struct_declaration(node: &lib_ruby_parser_nodes::Node) -> String {
 
     let constructor_args = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "{} {}",
                 cpp_helpers::nodes::field_type(field),

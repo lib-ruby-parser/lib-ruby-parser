@@ -16,9 +16,9 @@ fn contents() -> String {
 ",
         generator = file!(),
         // blobs
-        node_blobs = lib_ruby_parser_nodes::nodes().map(&node_blob).join("\n"),
+        node_blobs = lib_ruby_parser_nodes::nodes().map(node_blob).join("\n"),
         message_blobs = lib_ruby_parser_nodes::messages()
-            .map(&message_blob)
+            .map(message_blob)
             .join("\n"),
     )
 }

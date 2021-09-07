@@ -15,7 +15,7 @@ impl Clone for DiagnosticMessage {{
 }}
 ",
         generator = file!(),
-        branches = messages.map(&branch).join(" else ")
+        branches = messages.map(branch).join(" else ")
     )
 }
 
@@ -32,7 +32,7 @@ fn branch(message: &lib_ruby_parser_nodes::Message) -> String {
 
     let arglist = message
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "variant.get_{field_name}().clone()",
                 field_name = field.name

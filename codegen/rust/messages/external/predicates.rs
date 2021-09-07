@@ -18,8 +18,8 @@ impl DiagnosticMessage {{
 }}
 ",
         generator = file!(),
-        extern_predicates = messages.map(&extern_predicate).join("\n    "),
-        foreign_predicates = messages.map(&foreign_predicate).join("\n    "),
+        extern_predicates = messages.map(extern_predicate).join("\n    "),
+        foreign_predicates = messages.map(foreign_predicate).join("\n    "),
     )
 }
 

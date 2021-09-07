@@ -15,9 +15,9 @@ pub(crate) mod internal {{
 }}
 ",
         generator = file!(),
-        mods = nodes.map(&mod_).join("\n"),
-        uses = nodes.map(&use_).join("\n"),
-        internal_uses = nodes.map(&internal_use).join("\n    "),
+        mods = nodes.map(mod_).join("\n"),
+        uses = nodes.map(use_).join("\n"),
+        internal_uses = nodes.map(internal_use).join("\n    "),
     )
 }
 

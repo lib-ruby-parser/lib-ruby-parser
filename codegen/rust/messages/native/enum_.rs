@@ -14,7 +14,7 @@ pub enum DiagnosticMessage {{
 }}
 ",
         generator = file!(),
-        all_variants = sections.map(&section_variants).join(",\n    ")
+        all_variants = sections.map(section_variants).join(",\n    ")
     )
 }
 
@@ -25,7 +25,7 @@ pub(crate) fn codegen() {
 fn section_variants(section: &lib_ruby_parser_nodes::Section) -> String {
     let variants = section
         .messages
-        .map(&|message| format!("{variant}({variant})", variant = message.camelcase_name));
+        .map(|message| format!("{variant}({variant})", variant = message.camelcase_name));
 
     format!(
         "// {section_name}

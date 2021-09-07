@@ -54,10 +54,10 @@ void drop_diagnostic(Diagnostic *);
 
 #endif // LIB_RUBY_PARSER_EXTERNAL_CPP_SHARED_MESSAGES_HPP",
         generator = file!(),
-        classes = messages.map(&class).join("\n\n"),
-        variants = messages.map(&variant).join(",\n    "),
-        drop_fns = messages.map(&drop_fn).join("\n"),
-        print_sizes = messages.map(&print_size).join(" \\\n    ")
+        classes = messages.map(class).join("\n\n"),
+        variants = messages.map(variant).join(",\n    "),
+        drop_fns = messages.map(drop_fn).join("\n"),
+        print_sizes = messages.map(print_size).join(" \\\n    ")
     )
 }
 
@@ -68,7 +68,7 @@ pub(crate) fn codegen() {
 fn class(message: &lib_ruby_parser_nodes::Message) -> String {
     let fields_declaration = message
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "{t} {name};",
                 t = helpers::messages::field_type(field),

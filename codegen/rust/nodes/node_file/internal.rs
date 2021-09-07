@@ -14,7 +14,7 @@ pub(crate) struct Internal{struct_name} {{
         generator = file!(),
         imports = imports(&node).join("\n"),
         struct_name = struct_name(node),
-        fields_declaration = node.fields.map(&field_declaration).join("\n    "),
+        fields_declaration = node.fields.map(field_declaration).join("\n    "),
     )
 }
 

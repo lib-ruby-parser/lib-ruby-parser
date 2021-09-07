@@ -11,7 +11,7 @@ impl DiagnosticMessage {{
 }}
 ",
         generator = file!(),
-        predicates = messages.map(&predicate).join("\n    ")
+        predicates = messages.map(predicate).join("\n    ")
     )
 }
 

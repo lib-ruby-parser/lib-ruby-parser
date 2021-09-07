@@ -32,7 +32,7 @@ void drop_node_list(NodeList *node_list)
 }}
 ",
         generator = file!(),
-        cpp_constructors = nodes.map(&cpp_constructor).join("\n"),
+        cpp_constructors = nodes.map(cpp_constructor).join("\n"),
     )
 }
 
@@ -43,7 +43,7 @@ pub(crate) fn codegen() {
 fn cpp_constructor(node: &lib_ruby_parser_nodes::Node) -> String {
     let constructor_args = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "{} {}",
                 cpp_helpers::nodes::field_type(field),
@@ -54,7 +54,7 @@ fn cpp_constructor(node: &lib_ruby_parser_nodes::Node) -> String {
 
     let member_initialize_list = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "{name}(std::move({name}))",
                 name = cpp_helpers::nodes::field_name(field)

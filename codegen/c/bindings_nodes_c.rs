@@ -53,22 +53,20 @@ void lib_ruby_parser__external__node__drop(Node_BLOB* self_blob)
 }}
 ",
         generator = file!(),
-        constructors = nodes.map(&|node| constructor(node, options)).join("\n"),
+        constructors = nodes.map(|node| constructor(node, options)).join("\n"),
         variant_predicates = nodes
-            .map(&|node| variant_predicate(node, options))
+            .map(|node| variant_predicate(node, options))
             .join("\n"),
-        variant_getters = nodes.map(&|node| variant_getter(node, options)).join("\n"),
+        variant_getters = nodes.map(|node| variant_getter(node, options)).join("\n"),
         field_getters = nodes
-            .flat_map(&|node| field_getters(node, options))
+            .flat_map(|node| field_getters(node, options))
             .join("\n"),
         field_setters = nodes
-            .flat_map(&|node| field_setters(node, options))
+            .flat_map(|node| field_setters(node, options))
             .join("\n"),
-        into_internal_fns = nodes
-            .map(&|node| into_internal_fn(node, options))
-            .join("\n"),
-        into_variant_fns = nodes.map(&|node| into_variant_fn(node, options)).join("\n"),
-        variant_drop_fns = nodes.map(&|node| variant_drop_fn(node, options)).join("\n"),
+        into_internal_fns = nodes.map(|node| into_internal_fn(node, options)).join("\n"),
+        into_variant_fns = nodes.map(|node| into_variant_fn(node, options)).join("\n"),
+        variant_drop_fns = nodes.map(|node| variant_drop_fn(node, options)).join("\n"),
     )
 }
 
@@ -79,7 +77,7 @@ pub(crate) fn codegen(options: &Options) {
 fn constructor(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
     let fields = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 ".{field_name} = {unpack}({field_name}_blob)",
                 field_name = helpers::nodes::fields::field_name(field),
@@ -128,7 +126,7 @@ fn variant_getter(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Stri
     )
 }
 fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<String> {
-    node.fields.map(&|field| {
+    node.fields.map(|field| {
         let field_type = helpers::nodes::fields::field_type(field);
 
         format!(
@@ -147,7 +145,7 @@ fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
     })
 }
 fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<String> {
-    node.fields.map(&|field| {
+    node.fields.map(|field| {
         let drop_old_value_fn = match field.field_type {
             lib_ruby_parser_nodes::NodeFieldType::Node => "drop_node_ptr",
             lib_ruby_parser_nodes::NodeFieldType::Nodes => "drop_node_list",
@@ -180,7 +178,7 @@ fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
 fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
     let fields = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             let field_name = helpers::nodes::fields::field_name(field);
 
             format!(

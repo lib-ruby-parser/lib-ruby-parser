@@ -33,10 +33,10 @@ impl Node {{
 }}
 ",
         generator = file!(),
-        variants = nodes.map(&variant).join(",\n    "),
-        match_branches = nodes.map(&match_branch).join("\n            "),
-        new_fns = nodes.map(&new_fn).join("\n    "),
-        getters = nodes.map(&getter).join("\n    ")
+        variants = nodes.map(variant).join(",\n    "),
+        match_branches = nodes.map(match_branch).join("\n            "),
+        new_fns = nodes.map(new_fn).join("\n    "),
+        getters = nodes.map(getter).join("\n    ")
     )
 }
 
@@ -89,7 +89,7 @@ fn getter(node: &lib_ruby_parser_nodes::Node) -> String {
 fn new_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     let arglist = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "{name}: {t}",
                 name = node_field_name(field),
@@ -98,7 +98,7 @@ fn new_fn(node: &lib_ruby_parser_nodes::Node) -> String {
         })
         .join(", ");
 
-    let fields = node.fields.map(&|field| node_field_name(field)).join(", ");
+    let fields = node.fields.map(|field| node_field_name(field)).join(", ");
 
     format!(
         "/// Constructs `Node::{node_type}` variant

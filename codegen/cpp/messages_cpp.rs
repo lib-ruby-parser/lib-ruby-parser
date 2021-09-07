@@ -25,8 +25,8 @@ void drop_diagnostic_message(DiagnosticMessage *message)
 }}
 ",
         generator = file!(),
-        cpp_constructors = messages.map(&cpp_constructor).join("\n"),
-        drop_fns = messages.map(&drop_fn).join("\n\n"),
+        cpp_constructors = messages.map(cpp_constructor).join("\n"),
+        drop_fns = messages.map(drop_fn).join("\n\n"),
     )
 }
 
@@ -35,7 +35,7 @@ pub(crate) fn codegen() {
 }
 
 fn cpp_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
-    let initializer_list = message.fields.map(&|field| {
+    let initializer_list = message.fields.map(|field| {
         format!(
             "{name}(std::move({name}))",
             name = helpers::messages::field_name(field)

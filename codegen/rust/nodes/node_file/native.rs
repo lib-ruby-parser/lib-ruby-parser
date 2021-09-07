@@ -50,13 +50,13 @@ impl InnerNode for {struct_name} {{
         imports = imports(&node).join("\n"),
         comment = node.render_comment("///", 0),
         struct_name = struct_name(node),
-        fields_declaration = node.fields.map(&field_declaration).join("\n\n"),
-        inspected_children = node.fields.map(&inspect_field).join("\n        "),
+        fields_declaration = node.fields.map(field_declaration).join("\n\n"),
+        inspected_children = node.fields.map(inspect_field).join("\n        "),
         str_type = node.wqp_name,
-        print_with_locs = node.fields.flat_map(&print_with_locs).join("\n        "),
-        getters = node.fields.map(&getter).join("\n\n    "),
-        setters = node.fields.map(&setter).join("\n\n    "),
-        field_names = node.fields.map(&|field| node_field_name(field)).join(", ")
+        print_with_locs = node.fields.flat_map(print_with_locs).join("\n        "),
+        getters = node.fields.map(getter).join("\n\n    "),
+        setters = node.fields.map(setter).join("\n\n    "),
+        field_names = node.fields.map(|field| node_field_name(field)).join(", ")
     )
 }
 

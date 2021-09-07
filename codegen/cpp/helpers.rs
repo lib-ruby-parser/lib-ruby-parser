@@ -16,7 +16,7 @@ pub(crate) mod messages {
     pub(crate) fn constructor_arglist(message: &lib_ruby_parser_nodes::Message) -> String {
         message
             .fields
-            .map(&|field| {
+            .map(|field| {
                 format!(
                     "{t} {name}",
                     t = field_type(field),

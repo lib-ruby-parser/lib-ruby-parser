@@ -82,12 +82,12 @@ impl Drop for {struct_name} {{
         imports = imports(&node).join("\n"),
         comment = node.render_comment("///", 0),
         struct_name = struct_name(node),
-        inspected_children = node.fields.map(&inspect_field).join("\n        "),
+        inspected_children = node.fields.map(inspect_field).join("\n        "),
         str_type = node.wqp_name,
-        print_with_locs = node.fields.flat_map(&print_with_locs).join("\n        "),
+        print_with_locs = node.fields.flat_map(print_with_locs).join("\n        "),
         getters = node
             .fields
-            .map(&|field| getter(node, field))
+            .map(|field| getter(node, field))
             .join("\n\n    "),
         external_into_internal_name = external_into_internal_name(node),
         extern_fns = extern_fns(&node).join("\n    "),
@@ -275,7 +275,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     // Field getters
     {
         node.fields
-            .flat_map(&|field| {
+            .flat_map(|field| {
                 let getter = format!(
                     "fn {getter_name}(blob: *const Blob<{node_type}>) -> *mut Blob<{field_type}>;",
                     getter_name = external_field_getter_name(node, field),
@@ -337,7 +337,7 @@ fn debug_impl(node: &lib_ruby_parser_nodes::Node) -> String {
 }
 fn partial_eq_impl(node: &lib_ruby_parser_nodes::Node) -> String {
     node.fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "self.get_{field_name}() == other.get_{field_name}()",
                 field_name = field.field_name

@@ -41,7 +41,7 @@ void drop_node_list(NodeList *node_list)
 }}
 ",
         generator = file!(),
-        drop_variant_fns = nodes.map(&drop_variant_fn).join("\n"),
+        drop_variant_fns = nodes.map(drop_variant_fn).join("\n"),
         drop_node = drop_node(&nodes)
     )
 }
@@ -53,7 +53,7 @@ pub(crate) fn codegen() {
 fn drop_variant_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     let drop_fields = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             let fn_name = match field.field_type {
                 lib_ruby_parser_nodes::NodeFieldType::Node => "drop_node_ptr",
                 lib_ruby_parser_nodes::NodeFieldType::Nodes => "drop_node_list",
@@ -88,7 +88,7 @@ fn drop_variant_fn(node: &lib_ruby_parser_nodes::Node) -> String {
 
 fn drop_node(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
     let branches = nodes
-        .map(&|node| {
+        .map(|node| {
             format!(
                 "case {tag_name}:
             drop_node_{lower}(&(node->as.{member_name}));

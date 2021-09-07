@@ -12,7 +12,7 @@ impl DiagnosticMessage {{
 }}
 ",
         generator = file!(),
-        constructors = messages.map(&constructor).join("\n    ")
+        constructors = messages.map(constructor).join("\n    ")
     )
 }
 
@@ -23,7 +23,7 @@ pub(crate) fn codegen() {
 fn constructor(message: &lib_ruby_parser_nodes::Message) -> String {
     let arglist = message
         .fields
-        .map(&|field| {
+        .map(|field| {
             let field_type = match field.field_type {
                 lib_ruby_parser_nodes::MessageFieldType::Str => "String",
                 lib_ruby_parser_nodes::MessageFieldType::Byte => "u8",
@@ -39,7 +39,7 @@ fn constructor(message: &lib_ruby_parser_nodes::Message) -> String {
 
     let fields = message
         .fields
-        .map(&|field| format!("{}", field.name))
+        .map(|field| format!("{}", field.name))
         .join(", ");
 
     format!(

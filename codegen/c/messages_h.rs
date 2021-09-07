@@ -42,11 +42,11 @@ void drop_diagnostic(Diagnostic *);
 #endif // LIB_RUBY_PARSER_EXTERNAL_C_SHARED_MESSAGES_H
 ",
         generator = file!(),
-        structs = messages.map(&struct_definition).join("\n\n"),
-        enum_variants = messages.map(&enum_variant).join(",\n        "),
-        union_members = messages.map(&union_member).join("\n        "),
-        drop_fns = messages.map(&drop_fn).join("\n"),
-        print_sizes = messages.map(&print_size).join(" \\\n    ")
+        structs = messages.map(struct_definition).join("\n\n"),
+        enum_variants = messages.map(enum_variant).join(",\n        "),
+        union_members = messages.map(union_member).join("\n        "),
+        drop_fns = messages.map(drop_fn).join("\n"),
+        print_sizes = messages.map(print_size).join(" \\\n    ")
     )
 }
 
@@ -56,7 +56,7 @@ pub(crate) fn codegen() {
 
 fn struct_definition(message: &lib_ruby_parser_nodes::Message) -> String {
     let fields_declaration = {
-        let decls = message.fields.map(&|field| {
+        let decls = message.fields.map(|field| {
             let type_name = helpers::messages::fields::field_type(field);
             format!("{t} {name};", t = type_name, name = field_name(field))
         });

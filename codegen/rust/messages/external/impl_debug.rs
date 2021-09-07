@@ -15,7 +15,7 @@ impl std::fmt::Debug for DiagnosticMessage {{
 }}
 ",
         generator = file!(),
-        branches = messages.map(&branch).join(" else ")
+        branches = messages.map(branch).join(" else ")
     )
 }
 

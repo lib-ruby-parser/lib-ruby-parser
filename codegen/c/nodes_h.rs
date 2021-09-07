@@ -43,11 +43,11 @@ void drop_node_list(NodeList *node_list);
 #endif // LIB_RUBY_PARSER_EXTERNAL_C_NODES_H
 ",
         generator = file!(),
-        structs = nodes.map(&struct_declaration).join("\n\n"),
-        enum_variants = nodes.map(&enum_variant).join(",\n    "),
-        union_members = nodes.map(&union_member).join("\n        "),
-        print_sizes = nodes.map(&print_size).join(" \\\n    "),
-        drop_fns = nodes.map(&drop_fn).join("\n")
+        structs = nodes.map(struct_declaration).join("\n\n"),
+        enum_variants = nodes.map(enum_variant).join(",\n    "),
+        union_members = nodes.map(union_member).join("\n        "),
+        print_sizes = nodes.map(print_size).join(" \\\n    "),
+        drop_fns = nodes.map(drop_fn).join("\n")
     )
 }
 
@@ -56,7 +56,7 @@ pub(crate) fn codegen() {
 }
 
 fn struct_declaration(node: &lib_ruby_parser_nodes::Node) -> String {
-    let fields = node.fields.map(&|field| {
+    let fields = node.fields.map(|field| {
         format!(
             "{} {};",
             helpers::nodes::fields::field_type(field),

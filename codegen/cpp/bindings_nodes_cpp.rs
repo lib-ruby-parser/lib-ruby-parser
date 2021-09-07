@@ -56,27 +56,27 @@ extern \"C\"
 ",
         generator = file!(),
         // impl
-        constructors = nodes.map(&|node| constructor(node, options)).join("\n    "),
+        constructors = nodes.map(|node| constructor(node, options)).join("\n    "),
         variant_predicates = nodes
-            .map(&|node| variant_predicate(node, options))
+            .map(|node| variant_predicate(node, options))
             .join("\n    "),
         variant_getters = nodes
-            .map(&|node| variant_getter(node, options))
+            .map(|node| variant_getter(node, options))
             .join("\n    "),
         field_getters = nodes
-            .flat_map(&|node| field_getters(node, options))
+            .flat_map(|node| field_getters(node, options))
             .join("\n    "),
         field_setters = nodes
-            .flat_map(&|node| field_setters(node, options))
+            .flat_map(|node| field_setters(node, options))
             .join("\n    "),
         into_internal_fns = nodes
-            .map(&|node| into_internal_fn(node, options))
+            .map(|node| into_internal_fn(node, options))
             .join("\n    "),
         into_variant_fns = nodes
-            .map(&|node| into_variant_fn(node, options))
+            .map(|node| into_variant_fn(node, options))
             .join("\n    "),
         variant_drop_fns = nodes
-            .map(&|node| variant_drop_fn(node, options))
+            .map(|node| variant_drop_fn(node, options))
             .join("\n    "),
     )
 }
@@ -88,7 +88,7 @@ pub(crate) fn codegen(options: &Options) {
 fn constructor(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
     let arglist = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "std::move({field_name})",
                 field_name = cpp_helpers::nodes::field_name(field),
@@ -98,7 +98,7 @@ fn constructor(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String 
 
     let unpack_fields = node
         .fields
-        .map(&|field| unpack_field(field))
+        .map(|field| unpack_field(field))
         .join("\n        ");
 
     format!(
@@ -137,7 +137,7 @@ fn variant_getter(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Stri
     )
 }
 fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<String> {
-    node.fields.map(&|field| {
+    node.fields.map(|field| {
         let field_type = cpp_helpers::nodes::field_type(field);
 
         format!(
@@ -156,7 +156,7 @@ fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
     })
 }
 fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<String> {
-    node.fields.map(&|field| {
+    node.fields.map(|field| {
         format!(
             "{sig}
     {{
@@ -174,7 +174,7 @@ fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
 fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
     let fields = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             let field_name = cpp_helpers::nodes::field_name(field);
 
             format!(".{field_name} = {field_name}", field_name = field_name,)
@@ -183,7 +183,7 @@ fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> St
 
     let pack_fields = node
         .fields
-        .map(&|field| pack_field(field))
+        .map(|field| pack_field(field))
         .join("\n        ");
 
     format!(

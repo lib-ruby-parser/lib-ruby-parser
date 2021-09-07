@@ -11,8 +11,8 @@ impl crate::DiagnosticMessage {{
 }}
 ",
         generator = file!(),
-        variants = messages.map(&variant).join("\n\n"),
-        as_variant_fns = messages.map(&as_variant_fn).join("\n    ")
+        variants = messages.map(variant).join("\n\n"),
+        as_variant_fns = messages.map(as_variant_fn).join("\n    ")
     )
 }
 
@@ -23,7 +23,7 @@ pub(crate) fn codegen() {
 fn variant(message: &lib_ruby_parser_nodes::Message) -> String {
     let fields = message
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "{comment}
     pub {field_name}: {field_type},",
@@ -36,7 +36,7 @@ fn variant(message: &lib_ruby_parser_nodes::Message) -> String {
 
     let getters = message
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "/// Returns `{field_name}` field
     pub fn get_{field_name}(&self) -> &{field_type} {{

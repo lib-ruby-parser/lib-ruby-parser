@@ -17,7 +17,7 @@ fn new_byte() -> u8 {{
 }}
 ",
         generator = file!(),
-        tests = messages.map(&message_test).join("\n"),
+        tests = messages.map(message_test).join("\n"),
     )
 }
 
@@ -28,7 +28,7 @@ pub(crate) fn codegen() {
 fn message_test(message: &lib_ruby_parser_nodes::Message) -> String {
     let assert_getters = message
         .fields
-        .map(&|field| {
+        .map(|field| {
             let lhs = format!("variant.get_{field_name}()", field_name = field.name);
 
             let rhs = format!("&{}()", new_field_code(field));
@@ -62,7 +62,7 @@ fn new_field_code(field: &lib_ruby_parser_nodes::MessageField) -> &str {
 fn new_message_code(message: &lib_ruby_parser_nodes::Message) -> String {
     let args = message
         .fields
-        .map(&|field| format!("{}()", new_field_code(field)))
+        .map(|field| format!("{}()", new_field_code(field)))
         .join(", ");
 
     format!(

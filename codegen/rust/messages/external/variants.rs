@@ -16,7 +16,7 @@ use crate::containers::ExternalStringPtr as StringPtr;
 {variants}
 ",
         generator = file!(),
-        variants = messages.map(&variant).join("\n\n")
+        variants = messages.map(variant).join("\n\n")
     )
 }
 
@@ -78,7 +78,7 @@ impl PartialEq for {struct_name} {{
 fn extern_getters(message: &lib_ruby_parser_nodes::Message) -> String {
     message
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "fn {name}(blob: *const Blob<{struct_name}>) -> *const Blob<{return_type}>;",
                 name = bindings_field_getter::name(message, field),
@@ -92,7 +92,7 @@ fn extern_getters(message: &lib_ruby_parser_nodes::Message) -> String {
 fn getters(message: &lib_ruby_parser_nodes::Message) -> String {
     message
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "/// Return `{field_name}` field
     pub fn get_{field_name}(&self) -> &{return_type} {{
@@ -111,7 +111,7 @@ fn getters(message: &lib_ruby_parser_nodes::Message) -> String {
 fn debug_fields(message: &lib_ruby_parser_nodes::Message) -> String {
     message
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 ".field(\"{field_name}\", self.get_{field_name}())",
                 field_name = field.name
@@ -120,7 +120,7 @@ fn debug_fields(message: &lib_ruby_parser_nodes::Message) -> String {
         .join("\n            ")
 }
 fn compare_fields(message: &lib_ruby_parser_nodes::Message) -> String {
-    let checks = message.fields.map(&|field| {
+    let checks = message.fields.map(|field| {
         format!(
             "self.get_{field_name}() == other.get_{field_name}()",
             field_name = field.name

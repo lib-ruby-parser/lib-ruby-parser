@@ -105,7 +105,7 @@ pub(crate) fn codegen(node: &lib_ruby_parser_nodes::Node) {
 fn constructor(node: &lib_ruby_parser_nodes::Node) -> String {
     let arglist = node
         .fields
-        .map(&|field| format!("{}()", new_field_fn(field)))
+        .map(|field| format!("{}()", new_field_fn(field)))
         .join(", ");
 
     format!(
@@ -128,7 +128,7 @@ fn test_constructor() {{
     )
 }
 fn test_is(node: &lib_ruby_parser_nodes::Node) -> String {
-    let mut others = lib_ruby_parser_nodes::nodes().map(&|node| node.lower_name());
+    let mut others = lib_ruby_parser_nodes::nodes().map(|node| node.lower_name());
     others.retain(|e| e != &node.lower_name());
     let other_assertions = others
         .iter()
@@ -162,7 +162,7 @@ fn test_debug(node: &lib_ruby_parser_nodes::Node) -> String {
 
     let fields = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             let key = node_field_name(field);
             use lib_ruby_parser_nodes::NodeFieldType;
             let value = match field.field_type {
@@ -223,7 +223,7 @@ fn test_clone() {{
 fn test_getters(node: &lib_ruby_parser_nodes::Node) -> String {
     let assertions = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             let lhs = format!("variant.get_{}()", field.field_name);
             let rhs = format!("&{}()", new_field_fn(field));
 
@@ -247,7 +247,7 @@ fn test_getters() {{
 fn test_setters(node: &lib_ruby_parser_nodes::Node) -> String {
     let assertions = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             let set_field = format!(
                 "variant.set_{}({}())",
                 field.field_name,
@@ -283,7 +283,7 @@ fn test_setters() {{
 fn test_into_internal(node: &lib_ruby_parser_nodes::Node) -> String {
     let assertions = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "assert_eq!(&internal.{field_name}, &{new_field_fn}());",
                 field_name = node_field_name(field),

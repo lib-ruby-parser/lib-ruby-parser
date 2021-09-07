@@ -93,14 +93,14 @@ impl Drop for Node {{
         clone_impl = clone_impl(&nodes),
         partial_eq_impl = partial_eq_impl(&nodes),
         // fns
-        inner_ref = nodes.map(&inner_ref).join("\n        "),
-        constructors = nodes.map(&constructor).join("\n    "),
-        is_variant_fns = nodes.map(&is_variant_fn).join("\n    "),
-        as_variant_fns = nodes.map(&as_variant_fn).join("\n    "),
-        as_variant_mut_fns = nodes.map(&as_variant_mut_fn).join("\n    "),
-        into_variant_fns = nodes.map(&into_variant_fn).join("\n    "),
+        inner_ref = nodes.map(inner_ref).join("\n        "),
+        constructors = nodes.map(constructor).join("\n    "),
+        is_variant_fns = nodes.map(is_variant_fn).join("\n    "),
+        as_variant_fns = nodes.map(as_variant_fn).join("\n    "),
+        as_variant_mut_fns = nodes.map(as_variant_mut_fn).join("\n    "),
+        into_variant_fns = nodes.map(into_variant_fn).join("\n    "),
         // extern fns
-        extern_fns = nodes.flat_map(&extern_fns).join("\n    ")
+        extern_fns = nodes.flat_map(extern_fns).join("\n    ")
     )
 }
 
@@ -110,7 +110,7 @@ pub(crate) fn codegen() {
 
 fn debug_impl(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
     let branches = nodes
-        .map(&|node| {
+        .map(|node| {
             format!(
                 "if let Some(inner) = self.as_{lower}() {{
             write!(f, \"{struct_name}({{:?}})\", inner)
@@ -130,10 +130,10 @@ fn debug_impl(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
 }
 fn clone_impl(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
     let branches = nodes
-        .map(&|node| {
+        .map(|node| {
             let clone_fields = node
                 .fields
-                .map(&|field| format!("inner.get_{}().clone()", field.field_name))
+                .map(|field| format!("inner.get_{}().clone()", field.field_name))
                 .join(", ");
 
             format!(
@@ -155,7 +155,7 @@ fn clone_impl(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
 }
 fn partial_eq_impl(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
     let branches = nodes
-        .map(&|node| {
+        .map(|node| {
             format!(
                 "if let Some(lhs) = self.as_{lower}() {{
             if let Some(rhs) = other.as_{lower}() {{
@@ -188,7 +188,7 @@ fn inner_ref(node: &lib_ruby_parser_nodes::Node) -> String {
 fn constructor(node: &lib_ruby_parser_nodes::Node) -> String {
     let arglist = node
         .fields
-        .map(&|field| {
+        .map(|field| {
             format!(
                 "{name}: {t}",
                 name = node_field_name(field),
@@ -199,7 +199,7 @@ fn constructor(node: &lib_ruby_parser_nodes::Node) -> String {
 
     let fields = node
         .fields
-        .map(&|field| format!("{}.into_blob()", node_field_name(field)))
+        .map(|field| format!("{}.into_blob()", node_field_name(field)))
         .join(", ");
 
     format!(
@@ -268,7 +268,7 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     {
         let ctor_args = node
             .fields
-            .map(&|field| format!("{}: Blob<{}>", node_field_name(field), field_type(field)))
+            .map(|field| format!("{}: Blob<{}>", node_field_name(field), field_type(field)))
             .join(", ");
         result.push(format!(
             "fn {name}({ctor_args}) -> Blob<Node>;",

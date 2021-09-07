@@ -20,8 +20,8 @@ impl DiagnosticMessage {{
 
 ",
         generator = file!(),
-        extern_constructors = messages.map(&extern_constructor).join("\n    "),
-        foreign_constructors = messages.map(&foreign_constructor).join("\n    "),
+        extern_constructors = messages.map(extern_constructor).join("\n    "),
+        foreign_constructors = messages.map(foreign_constructor).join("\n    "),
     )
 }
 
@@ -32,7 +32,7 @@ pub(crate) fn codegen() {
 fn extern_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
     let arglist = message
         .fields
-        .map(&|field| {
+        .map(|field| {
             let field_type = match field.field_type {
                 lib_ruby_parser_nodes::MessageFieldType::Str => "Blob<StringPtr>",
                 lib_ruby_parser_nodes::MessageFieldType::Byte => "u8",
@@ -56,7 +56,7 @@ fn extern_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
 fn foreign_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
     let rust_arglist = message
         .fields
-        .map(&|field| {
+        .map(|field| {
             let field_type = match field.field_type {
                 lib_ruby_parser_nodes::MessageFieldType::Str => "StringPtr",
                 lib_ruby_parser_nodes::MessageFieldType::Byte => "u8",
@@ -72,7 +72,7 @@ fn foreign_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
 
     let extern_arglist = message
         .fields
-        .map(&|field| match field.field_type {
+        .map(|field| match field.field_type {
             lib_ruby_parser_nodes::MessageFieldType::Str => {
                 format!("{name}.into_blob()", name = field.name)
             }
