@@ -50,7 +50,7 @@ fn cpp_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
 
     format!(
         "{name}::{name}({constructor_arglist}){initializer_list} {{}}",
-        name = message.camelcase_name(),
+        name = message.camelcase_name,
         constructor_arglist = helpers::messages::constructor_arglist(message),
         initializer_list = initializer_list
     )
@@ -63,6 +63,6 @@ fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
     variant->~{struct_name}();
 }}",
         lower = message.lower_name(),
-        struct_name = message.camelcase_name(),
+        struct_name = message.camelcase_name,
     )
 }

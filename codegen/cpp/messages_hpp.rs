@@ -91,21 +91,21 @@ public:
     {name}({name} &&) = default;
     {name} &operator=({name} &&other) = default;
 }};",
-        name = message.camelcase_name(),
+        name = message.camelcase_name,
         constructor_arglist = helpers::messages::constructor_arglist(message),
         fields_declaration = fields_declaration
     )
 }
 
 fn variant(message: &lib_ruby_parser_nodes::Message) -> String {
-    message.camelcase_name()
+    message.camelcase_name.to_string()
 }
 
 fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "void drop_message_{variant}({struct_name}* variant);",
         variant = message.lower_name(),
-        struct_name = message.camelcase_name()
+        struct_name = message.camelcase_name
     )
 }
 
@@ -113,6 +113,6 @@ fn print_size(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "std::cout << \"LIB_RUBY_PARSER_MESSAGE_{upper}_SIZE=\" << sizeof({struct_name}) << \"\\n\";",
         upper = message.upper_name(),
-        struct_name = message.camelcase_name()
+        struct_name = message.camelcase_name
     )
 }

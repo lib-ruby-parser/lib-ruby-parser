@@ -47,7 +47,7 @@ fn constructor(message: &lib_ruby_parser_nodes::Message) -> String {
     pub fn new_{fn_name}({arglist}) -> Self {{
         Self::{variant_name}({variant_name} {{ {fields} }})
     }}",
-        variant_name = message.camelcase_name(),
+        variant_name = message.camelcase_name,
         fn_name = message.lower_name(),
         arglist = arglist,
         fields = fields

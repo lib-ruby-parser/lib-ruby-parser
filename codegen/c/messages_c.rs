@@ -49,7 +49,7 @@ fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
     {drop_fields}
 }}",
         variant = message.lower_name(),
-        struct_name = message.camelcase_name(),
+        struct_name = message.camelcase_name,
         drop_fields = drop_fields.join("\n    ")
     )
 }

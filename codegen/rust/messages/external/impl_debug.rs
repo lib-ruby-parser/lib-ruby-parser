@@ -29,6 +29,6 @@ fn branch(message: &lib_ruby_parser_nodes::Message) -> String {
             write!(f, \"{struct_name}({{:?}})\", inner)
         }}",
         message_type = message.lower_name(),
-        struct_name = message.camelcase_name(),
+        struct_name = message.camelcase_name,
     )
 }

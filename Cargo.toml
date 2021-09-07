@@ -47,8 +47,8 @@ jemallocator = {version = "0.3.2", optional = true}
 pprof = {version = "0.5.0", features = ["flamegraph"], optional = true}
 
 [build-dependencies]
-lib-ruby-parser-bindings = {git = "https://github.com/lib-ruby-parser/lib-ruby-parser-bindings", optional = true}
-lib-ruby-parser-nodes = {version = "0.23.0", optional = true}
+lib-ruby-parser-bindings = {version = "0.4.0", optional = true}
+lib-ruby-parser-nodes = {version = "0.24.0", optional = true}
 rust-bison-skeleton = {version = "0.29.0", optional = true}
 
 [profile.dev]

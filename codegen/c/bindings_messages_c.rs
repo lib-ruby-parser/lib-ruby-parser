@@ -70,7 +70,7 @@ fn constructor(message: &Message, options: &Options) -> String {
     return PACK_DiagnosticMessage(message);
 }}",
             signature = constructor_sig(message, options),
-            inner_t = message.camelcase_name(),
+            inner_t = message.camelcase_name,
             initializer_list = initializer_list,
             enum_tag_name = message.upper_name(),
             union_variant_name = message.lower_name()
@@ -89,7 +89,7 @@ fn variant_getter(message: &Message, options: &Options) -> String {
 }}",
         sig = variant_getter_sig(message, options),
         tag_name = message.upper_name(),
-        variant_name = message.camelcase_name(),
+        variant_name = message.camelcase_name,
         union_member = message.lower_name()
     )
 }
@@ -102,7 +102,7 @@ fn field_getters(message: &Message, options: &Options) -> Vec<String> {
     return (const {blob_type} *)(&(self->{field_name}));
 }}",
             signature = field_getter_sig(message, field, options),
-            variant_name = message.camelcase_name(),
+            variant_name = message.camelcase_name,
             field_name = field_name(field),
             blob_type = blob_type(field),
         )

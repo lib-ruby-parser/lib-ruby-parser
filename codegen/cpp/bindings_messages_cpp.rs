@@ -71,7 +71,7 @@ fn constructor(message: &lib_ruby_parser_nodes::Message, options: &Options) -> S
         return PACK_DiagnosticMessage(DiagnosticMessage({inner_t}({arglist})));
     }}",
         sig = constructor_sig(message, options),
-        inner_t = message.camelcase_name(),
+        inner_t = message.camelcase_name,
         arglist = arglist
     )
 }
@@ -84,7 +84,7 @@ fn variant_getter(message: &lib_ruby_parser_nodes::Message, options: &Options) -
         return (const {variant_name}_BLOB*)variant;
     }}",
         sig = variant_getter_sig(message, options),
-        variant_name = message.camelcase_name(),
+        variant_name = message.camelcase_name,
     )
 }
 fn field_getters(message: &lib_ruby_parser_nodes::Message, options: &Options) -> Vec<String> {
@@ -96,7 +96,7 @@ fn field_getters(message: &lib_ruby_parser_nodes::Message, options: &Options) ->
         return (const {blob_type} *)(&(self->{field_name}));
     }}",
             signature = field_getter_sig(message, field, options),
-            variant_name = message.camelcase_name(),
+            variant_name = message.camelcase_name,
             field_name = field_name(field),
             blob_type = cpp_helpers::messages::blob_type(field),
         )
@@ -110,6 +110,6 @@ fn variant_predicate(message: &lib_ruby_parser_nodes::Message, options: &Options
         return std::holds_alternative<{variant_name}>(self->variant);
     }}",
         signature = variant_predicate_sig(message, options),
-        variant_name = message.camelcase_name()
+        variant_name = message.camelcase_name
     )
 }

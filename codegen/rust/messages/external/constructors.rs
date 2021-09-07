@@ -88,7 +88,7 @@ pub fn new_{fn_name}({rust_arglist}) -> Self {{
     let blob = unsafe {{ {extern_constructor_name}({extern_arglist}) }};
     Self {{ blob }}
 }}",
-        variant_name = message.camelcase_name(),
+        variant_name = message.camelcase_name,
         fn_name = message.lower_name(),
         rust_arglist = rust_arglist,
         extern_constructor_name = bindings_constructor::name(message),

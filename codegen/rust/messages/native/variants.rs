@@ -59,7 +59,7 @@ impl {struct_name} {{
     {getters}
 }}",
         comment = message.render_comment("///", 0),
-        struct_name = message.camelcase_name(),
+        struct_name = message.camelcase_name,
         fields = fields,
         getters = getters
     )
@@ -74,7 +74,7 @@ fn as_variant_fn(message: &lib_ruby_parser_nodes::Message) -> String {
             _ => None
         }}
     }}",
-        variant = message.camelcase_name(),
+        variant = message.camelcase_name,
         lower = message.lower_name()
     )
 }

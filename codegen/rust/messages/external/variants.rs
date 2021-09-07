@@ -69,7 +69,7 @@ impl PartialEq for {struct_name} {{
     }}
 }}
 ",
-        struct_name = message.camelcase_name(),
+        struct_name = message.camelcase_name,
         extern_getters = extern_getters(message),
         extern_variant_getter_name = bindings_variant_getter::name(message),
         lower = message.lower_name(),
@@ -86,7 +86,7 @@ fn extern_getters(message: &lib_ruby_parser_nodes::Message) -> String {
             format!(
                 "fn {name}(blob: *const {struct_name}Blob) -> *const {return_type}Blob;",
                 name = bindings_field_getter::name(message, field),
-                struct_name = message.camelcase_name(),
+                struct_name = message.camelcase_name,
                 return_type = field_type(field)
             )
         })

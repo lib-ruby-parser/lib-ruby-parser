@@ -40,6 +40,6 @@ fn message_blob(message: &lib_ruby_parser_nodes::Message) -> String {
         "DECLARE_BLOB_FOR({message_struct});
 #define UNPACK_{message_struct}(blob) (({message_struct}_BLOB_UNION){{.as_blob = blob}}).as_value
 #define PACK_{message_struct}(value) (({message_struct}_BLOB_UNION){{.as_value = value}}).as_blob",
-        message_struct = message.camelcase_name()
+        message_struct = message.camelcase_name
     )
 }

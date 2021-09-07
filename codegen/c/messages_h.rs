@@ -72,7 +72,7 @@ fn struct_definition(message: &lib_ruby_parser_nodes::Message) -> String {
         "typedef struct {struct_name}
 {{{fields_declaration}
 }} {struct_name};",
-        struct_name = message.camelcase_name(),
+        struct_name = message.camelcase_name,
         fields_declaration = fields_declaration
     )
 }
@@ -82,7 +82,7 @@ fn enum_variant(message: &lib_ruby_parser_nodes::Message) -> String {
 fn union_member(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "{struct_name} {variant_name};",
-        struct_name = message.camelcase_name(),
+        struct_name = message.camelcase_name,
         variant_name = message.lower_name()
     )
 }
@@ -90,13 +90,13 @@ fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "void drop_message_{variant}({struct_name}* variant);",
         variant = message.lower_name(),
-        struct_name = message.camelcase_name()
+        struct_name = message.camelcase_name
     )
 }
 fn print_size(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "printf(\"LIB_RUBY_PARSER_MESSAGE_{upper}_SIZE=%lu\\n\", sizeof({struct_name}));",
         upper = message.upper_name(),
-        struct_name = message.camelcase_name()
+        struct_name = message.camelcase_name
     )
 }
