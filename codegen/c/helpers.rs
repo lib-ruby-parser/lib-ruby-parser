@@ -4,8 +4,8 @@ pub(crate) mod messages {
     pub(crate) mod fields {
         pub(crate) fn field_type(field: &lib_ruby_parser_nodes::MessageField) -> &str {
             match field.field_type {
-                lib_ruby_parser_nodes::MessageFieldType::Str => "StringPtr",
-                lib_ruby_parser_nodes::MessageFieldType::Byte => "Byte",
+                lib_ruby_parser_nodes::MessageFieldType::Str => "LIB_RUBY_PARSER_StringPtr",
+                lib_ruby_parser_nodes::MessageFieldType::Byte => "LIB_RUBY_PARSER_Byte",
             }
         }
 
@@ -29,15 +29,15 @@ pub(crate) mod nodes {
             use lib_ruby_parser_nodes::NodeFieldType;
 
             match field.field_type {
-                NodeFieldType::Node => "NodePtr",
-                NodeFieldType::Nodes => "NodeList",
-                NodeFieldType::MaybeNode { .. } => "MaybeNodePtr",
-                NodeFieldType::Loc => "Loc",
-                NodeFieldType::MaybeLoc => "MaybeLoc",
-                NodeFieldType::Str { .. } => "StringPtr",
-                NodeFieldType::MaybeStr { .. } => "MaybeStringPtr",
-                NodeFieldType::StringValue => "Bytes",
-                NodeFieldType::U8 => "Byte",
+                NodeFieldType::Node => "LIB_RUBY_PARSER_NodePtr",
+                NodeFieldType::Nodes => "LIB_RUBY_PARSER_NodeList",
+                NodeFieldType::MaybeNode { .. } => "LIB_RUBY_PARSER_MaybeNodePtr",
+                NodeFieldType::Loc => "LIB_RUBY_PARSER_Loc",
+                NodeFieldType::MaybeLoc => "LIB_RUBY_PARSER_MaybeLoc",
+                NodeFieldType::Str { .. } => "LIB_RUBY_PARSER_StringPtr",
+                NodeFieldType::MaybeStr { .. } => "LIB_RUBY_PARSER_MaybeStringPtr",
+                NodeFieldType::StringValue => "LIB_RUBY_PARSER_Bytes",
+                NodeFieldType::U8 => "LIB_RUBY_PARSER_Byte",
             }
         }
 
@@ -45,24 +45,48 @@ pub(crate) mod nodes {
             use lib_ruby_parser_nodes::NodeFieldType;
 
             match field.field_type {
-                NodeFieldType::Node => "Ptr",
-                NodeFieldType::Nodes => "NodeList",
-                NodeFieldType::MaybeNode { .. } => "MaybePtr",
-                NodeFieldType::Loc => "Loc",
-                NodeFieldType::MaybeLoc => "MaybeLoc",
-                NodeFieldType::Str { .. } => "StringPtr",
-                NodeFieldType::MaybeStr { .. } => "MaybeStringPtr",
-                NodeFieldType::StringValue => "Bytes",
-                NodeFieldType::U8 => "Byte",
+                NodeFieldType::Node => "LIB_RUBY_PARSER_Ptr",
+                NodeFieldType::Nodes => "LIB_RUBY_PARSER_NodeList",
+                NodeFieldType::MaybeNode { .. } => "LIB_RUBY_PARSER_MaybePtr",
+                NodeFieldType::Loc => "LIB_RUBY_PARSER_Loc",
+                NodeFieldType::MaybeLoc => "LIB_RUBY_PARSER_MaybeLoc",
+                NodeFieldType::Str { .. } => "LIB_RUBY_PARSER_StringPtr",
+                NodeFieldType::MaybeStr { .. } => "LIB_RUBY_PARSER_MaybeStringPtr",
+                NodeFieldType::StringValue => "LIB_RUBY_PARSER_Bytes",
+                NodeFieldType::U8 => "LIB_RUBY_PARSER_Byte",
             }
         }
 
-        pub(crate) fn pack_field_fn(field: &lib_ruby_parser_nodes::NodeField) -> String {
-            format!("PACK_{}", internal_field_type(field))
+        pub(crate) fn pack_field_fn(field: &lib_ruby_parser_nodes::NodeField) -> &str {
+            use lib_ruby_parser_nodes::NodeFieldType;
+
+            match field.field_type {
+                NodeFieldType::Node => "PACK_Ptr",
+                NodeFieldType::Nodes => "PACK_NodeList",
+                NodeFieldType::MaybeNode { .. } => "PACK_MaybePtr",
+                NodeFieldType::Loc => "PACK_Loc",
+                NodeFieldType::MaybeLoc => "PACK_MaybeLoc",
+                NodeFieldType::Str { .. } => "PACK_StringPtr",
+                NodeFieldType::MaybeStr { .. } => "PACK_MaybeStringPtr",
+                NodeFieldType::StringValue => "PACK_Bytes",
+                NodeFieldType::U8 => "PACK_Byte",
+            }
         }
 
-        pub(crate) fn unpack_field_fn(field: &lib_ruby_parser_nodes::NodeField) -> String {
-            format!("UNPACK_{}", internal_field_type(field))
+        pub(crate) fn unpack_field_fn(field: &lib_ruby_parser_nodes::NodeField) -> &str {
+            use lib_ruby_parser_nodes::NodeFieldType;
+
+            match field.field_type {
+                NodeFieldType::Node => "UNPACK_Ptr",
+                NodeFieldType::Nodes => "UNPACK_NodeList",
+                NodeFieldType::MaybeNode { .. } => "UNPACK_MaybePtr",
+                NodeFieldType::Loc => "UNPACK_Loc",
+                NodeFieldType::MaybeLoc => "UNPACK_MaybeLoc",
+                NodeFieldType::Str { .. } => "UNPACK_StringPtr",
+                NodeFieldType::MaybeStr { .. } => "UNPACK_MaybeStringPtr",
+                NodeFieldType::StringValue => "UNPACK_Bytes",
+                NodeFieldType::U8 => "UNPACK_Byte",
+            }
         }
 
         pub(crate) fn blob_type(field: &lib_ruby_parser_nodes::NodeField) -> String {
@@ -71,7 +95,7 @@ pub(crate) mod nodes {
     }
 
     pub(crate) fn enum_variant_name(node: &lib_ruby_parser_nodes::Node) -> String {
-        format!("NODE_{}", node.upper_name())
+        format!("LIB_RUBY_PARSER_NODE_{}", node.upper_name())
     }
 
     pub(crate) fn union_member_name(node: &lib_ruby_parser_nodes::Node) -> String {

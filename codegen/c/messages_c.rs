@@ -9,7 +9,7 @@ fn contents() -> String {
 
 {drop_fns}
 
-void drop_diagnostic_message(DiagnosticMessage *message)
+void LIB_RUBY_PARSER_drop_diagnostic_message(LIB_RUBY_PARSER_DiagnosticMessage *message)
 {{
     switch(message->tag)
     {{
@@ -30,8 +30,8 @@ pub(crate) fn codegen() {
 fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
     let mut drop_fields = message.fields.map(|field| {
         let drop_fn_name = match field.field_type {
-            lib_ruby_parser_nodes::MessageFieldType::Str => "drop_string_ptr",
-            lib_ruby_parser_nodes::MessageFieldType::Byte => "drop_byte",
+            lib_ruby_parser_nodes::MessageFieldType::Str => "LIB_RUBY_PARSER_drop_string_ptr",
+            lib_ruby_parser_nodes::MessageFieldType::Byte => "LIB_RUBY_PARSER_drop_byte",
         };
         format!(
             "{drop_fn_name}(&(variant->{field_name}));",
@@ -44,7 +44,7 @@ fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
     }
 
     format!(
-        "void drop_message_{variant}({struct_name}* variant)
+        "void LIB_RUBY_PARSER_drop_message_{variant}(LIB_RUBY_PARSER_{struct_name}* variant)
 {{
     {drop_fields}
 }}",
@@ -55,8 +55,8 @@ fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
 }
 fn drop_branch(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
-        "case {tag_name}:
-            drop_message_{variant}(&(message->as.{member_name}));
+        "case LIB_RUBY_PARSER_MESSAGE_{tag_name}:
+            LIB_RUBY_PARSER_drop_message_{variant}(&(message->as.{member_name}));
             break;",
         tag_name = message.upper_name(),
         member_name = message.lower_name(),

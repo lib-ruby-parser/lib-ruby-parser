@@ -1,4 +1,4 @@
-use crate::codegen::c::helpers::messages::fields::{blob_type, field_type};
+use crate::codegen::c::helpers::messages::fields::blob_type;
 use lib_ruby_parser_bindings::{
     helpers::messages::{
         constructor::sig as constructor_sig, field_getter::sig as field_getter_sig,
@@ -24,10 +24,10 @@ fn contents(options: &Options) -> String {
 
 {variant_predicates}
 
-void lib_ruby_parser__external__diagnostic_message__drop(DiagnosticMessage_BLOB *self_blob)
+void lib_ruby_parser__external__diagnostic_message__drop(LIB_RUBY_PARSER_DiagnosticMessage_BLOB *self_blob)
 {{
-    DiagnosticMessage *self = (DiagnosticMessage *)self_blob;
-    drop_diagnostic_message(self);
+    LIB_RUBY_PARSER_DiagnosticMessage *self = (LIB_RUBY_PARSER_DiagnosticMessage *)self_blob;
+    LIB_RUBY_PARSER_drop_diagnostic_message(self);
 }}
 ",
         generator = file!(),
@@ -54,10 +54,14 @@ fn constructor(message: &Message, options: &Options) -> String {
     let initializer_list = message
         .fields
         .map(|field| {
+            let unpack = match field.field_type {
+                lib_ruby_parser_nodes::MessageFieldType::Str => "UNPACK_StringPtr",
+                lib_ruby_parser_nodes::MessageFieldType::Byte => "UNPACK_Byte",
+            };
             format!(
-                ".{name} = UNPACK_{t}({name}_blob)",
+                ".{name} = {unpack}({name}_blob)",
                 name = field_name(field),
-                t = field_type(field)
+                unpack = unpack
             )
         })
         .join(", ");
@@ -65,8 +69,8 @@ fn constructor(message: &Message, options: &Options) -> String {
     format!(
             "{signature}
 {{
-    {inner_t} inner = {{ {initializer_list} }};
-    DiagnosticMessage message = {{ .tag = {enum_tag_name}, .as = {{ .{union_variant_name} = inner }} }};
+    LIB_RUBY_PARSER_{inner_t} inner = {{ {initializer_list} }};
+    LIB_RUBY_PARSER_DiagnosticMessage message = {{ .tag = LIB_RUBY_PARSER_MESSAGE_{enum_tag_name}, .as = {{ .{union_variant_name} = inner }} }};
     return PACK_DiagnosticMessage(message);
 }}",
             signature = constructor_sig(message, options),
@@ -80,9 +84,9 @@ fn variant_getter(message: &Message, options: &Options) -> String {
     format!(
         "{sig}
 {{
-    const DiagnosticMessage *self = (const DiagnosticMessage *)self_blob;
-    if (self->tag == {tag_name}) {{
-        return (const {variant_name}_BLOB*)(&(self->as.{union_member}));
+    const LIB_RUBY_PARSER_DiagnosticMessage *self = (const LIB_RUBY_PARSER_DiagnosticMessage *)self_blob;
+    if (self->tag == LIB_RUBY_PARSER_MESSAGE_{tag_name}) {{
+        return (const LIB_RUBY_PARSER_{variant_name}_BLOB*)(&(self->as.{union_member}));
     }} else {{
         return NULL;
     }}
@@ -98,7 +102,7 @@ fn field_getters(message: &Message, options: &Options) -> Vec<String> {
         format!(
             "{signature}
 {{
-    const {variant_name} *self = (const {variant_name} *)self_blob;
+    const LIB_RUBY_PARSER_{variant_name} *self = (const LIB_RUBY_PARSER_{variant_name} *)self_blob;
     return (const {blob_type} *)(&(self->{field_name}));
 }}",
             signature = field_getter_sig(message, field, options),
@@ -112,7 +116,7 @@ fn variant_predicate(message: &Message, options: &Options) -> String {
     format!(
         "{signature}
 {{
-    return ((const DiagnosticMessage *)self_blob)->tag == {enum_tag_name};
+    return ((const LIB_RUBY_PARSER_DiagnosticMessage *)self_blob)->tag == LIB_RUBY_PARSER_MESSAGE_{enum_tag_name};
 }}",
         signature = variant_predicate_sig(message, options),
         enum_tag_name = message.upper_name()

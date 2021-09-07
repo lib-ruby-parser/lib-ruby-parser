@@ -3,12 +3,12 @@
 #include "messages.h"
 
 // Byte
-void drop_byte(Byte *byte)
+void LIB_RUBY_PARSER_drop_byte(LIB_RUBY_PARSER_Byte *byte)
 {
     (void)byte;
     // noop
 }
-void drop_byte_list(ByteList *byte_list)
+void LIB_RUBY_PARSER_drop_byte_list(LIB_RUBY_PARSER_ByteList *byte_list)
 {
     free(byte_list->ptr);
 }
@@ -18,13 +18,13 @@ void drop_byte_list(ByteList *byte_list)
 // MaybePtr
 
 // StringPtr
-void drop_string_ptr(StringPtr *string_ptr)
+void LIB_RUBY_PARSER_drop_string_ptr(LIB_RUBY_PARSER_StringPtr *string_ptr)
 {
     free(string_ptr->ptr);
 }
 
 // MaybeStringPtr
-void drop_maybe_string_ptr(MaybeStringPtr *maybe_string_ptr)
+void LIB_RUBY_PARSER_drop_maybe_string_ptr(LIB_RUBY_PARSER_MaybeStringPtr *maybe_string_ptr)
 {
     if (maybe_string_ptr->ptr == NULL)
     {
@@ -38,39 +38,39 @@ void drop_maybe_string_ptr(MaybeStringPtr *maybe_string_ptr)
 // SharedByteList
 
 // SourceLine
-void drop_source_line_list(SourceLineList *source_line_list)
+void LIB_RUBY_PARSER_drop_source_line_list(LIB_RUBY_PARSER_SourceLineList *source_line_list)
 {
     free(source_line_list->ptr);
 }
 
 // Loc
-void drop_loc(Loc *loc)
+void LIB_RUBY_PARSER_drop_loc(LIB_RUBY_PARSER_Loc *loc)
 {
     (void)loc;
 }
 
 // MaybeLoc
-void drop_maybe_loc(MaybeLoc *maybe_loc)
+void LIB_RUBY_PARSER_drop_maybe_loc(LIB_RUBY_PARSER_MaybeLoc *maybe_loc)
 {
     (void)maybe_loc;
 }
 
 // Bytes
-void drop_bytes(Bytes *bytes)
+void LIB_RUBY_PARSER_drop_bytes(LIB_RUBY_PARSER_Bytes *bytes)
 {
-    drop_byte_list(&(bytes->raw));
+    LIB_RUBY_PARSER_drop_byte_list(&(bytes->raw));
 }
 
 // Token
-void drop_token(Token *token)
+void LIB_RUBY_PARSER_drop_token(LIB_RUBY_PARSER_Token *token)
 {
-    drop_bytes(&(token->token_value));
+    LIB_RUBY_PARSER_drop_bytes(&(token->token_value));
 }
-void drop_token_list(TokenList *token_list)
+void LIB_RUBY_PARSER_drop_token_list(LIB_RUBY_PARSER_TokenList *token_list)
 {
     for (uint64_t i = 0; i < token_list->len; i++)
     {
-        drop_token(&(token_list->ptr[i]));
+        LIB_RUBY_PARSER_drop_token(&(token_list->ptr[i]));
     }
     free(token_list->ptr);
 }
@@ -78,7 +78,7 @@ void drop_token_list(TokenList *token_list)
 // CommentType
 
 // Comment
-void drop_comment_list(CommentList *comment_list)
+void LIB_RUBY_PARSER_drop_comment_list(LIB_RUBY_PARSER_CommentList *comment_list)
 {
     free(comment_list->ptr);
 }
@@ -86,7 +86,7 @@ void drop_comment_list(CommentList *comment_list)
 // MagicCommentKind
 
 // MagicComment
-void drop_magic_comment_list(MagicCommentList *magic_comment_list)
+void LIB_RUBY_PARSER_drop_magic_comment_list(LIB_RUBY_PARSER_MagicCommentList *magic_comment_list)
 {
     free(magic_comment_list->ptr);
 }
@@ -94,118 +94,118 @@ void drop_magic_comment_list(MagicCommentList *magic_comment_list)
 // ErrorLevel
 
 // Diagnostic
-void drop_diagnostic(Diagnostic *diagnostic)
+void LIB_RUBY_PARSER_drop_diagnostic(LIB_RUBY_PARSER_Diagnostic *diagnostic)
 {
-    drop_diagnostic_message(&(diagnostic->message));
+    LIB_RUBY_PARSER_drop_diagnostic_message(&(diagnostic->message));
 }
-void drop_diagnostic_list(DiagnosticList *diagnostic_list)
+void LIB_RUBY_PARSER_drop_diagnostic_list(LIB_RUBY_PARSER_DiagnosticList *diagnostic_list)
 {
     for (uint64_t i = 0; i < diagnostic_list->len; i++)
     {
-        drop_diagnostic(&(diagnostic_list->ptr[i]));
+        LIB_RUBY_PARSER_drop_diagnostic(&(diagnostic_list->ptr[i]));
     }
     free(diagnostic_list->ptr);
 }
 
 // InputError
-void drop_input_error(InputError *input_error)
+void LIB_RUBY_PARSER_drop_input_error(LIB_RUBY_PARSER_InputError *input_error)
 {
     switch (input_error->tag)
     {
-    case UNSUPPORTED_ENCODING:
-        drop_string_ptr(&(input_error->as.unsupported_encoding));
+    case LIB_RUBY_PARSER_INPUT_ERROR_UNSUPPORTED_ENCODING:
+        LIB_RUBY_PARSER_drop_string_ptr(&(input_error->as.unsupported_encoding));
         break;
-    case DECODING_ERROR:
-        drop_string_ptr(&(input_error->as.decoding_error));
+    case LIB_RUBY_PARSER_INPUT_ERROR_DECODING_ERROR:
+        LIB_RUBY_PARSER_drop_string_ptr(&(input_error->as.decoding_error));
         break;
     }
 }
 
 // DecoderResult
-void drop_decoder_result(DecoderResult *decoder_result)
+void LIB_RUBY_PARSER_drop_decoder_result(LIB_RUBY_PARSER_DecoderResult *decoder_result)
 {
     switch (decoder_result->tag)
     {
-    case DECODE_OK:
-        drop_byte_list(&(decoder_result->as.ok));
+    case LIB_RUBY_PARSER_DECODER_RESULT_OK:
+        LIB_RUBY_PARSER_drop_byte_list(&(decoder_result->as.ok));
         break;
-    case DECODE_ERR:
-        drop_input_error(&(decoder_result->as.err));
+    case LIB_RUBY_PARSER_DECODER_RESULT_ERR:
+        LIB_RUBY_PARSER_drop_input_error(&(decoder_result->as.err));
         break;
     }
 }
 
 // TokenRewriter
-void drop_token_rewriter_result(TokenRewriterResult *token_rewriter_result)
+void LIB_RUBY_PARSER_drop_token_rewriter_result(LIB_RUBY_PARSER_TokenRewriterResult *token_rewriter_result)
 {
-    drop_token(token_rewriter_result->rewritten_token);
+    LIB_RUBY_PARSER_drop_token(token_rewriter_result->rewritten_token);
 }
-TokenRewriterResult __keep_token(Token *token_to_rewrite, build_new_token_t build_new_token)
+LIB_RUBY_PARSER_TokenRewriterResult __keep_token(LIB_RUBY_PARSER_Token *token_to_rewrite, LIB_RUBY_PARSER_build_new_token_t build_new_token)
 {
     (void)build_new_token;
-    TokenRewriterResult result = {
+    LIB_RUBY_PARSER_TokenRewriterResult result = {
         .rewritten_token = token_to_rewrite,
-        .lex_state_action = {.tag = LEX_STATE_KEEP},
-        .token_action = REWRITE_ACTION_KEEP};
+        .lex_state_action = {.tag = LIB_RUBY_PARSER_LEX_STATE_KEEP},
+        .token_action = LIB_RUBY_PARSER_REWRITE_ACTION_KEEP};
     return result;
 }
-TokenRewriter __keep_token_rewriter(build_new_token_t build_new_token_f)
+LIB_RUBY_PARSER_TokenRewriter __keep_token_rewriter(LIB_RUBY_PARSER_build_new_token_t build_new_token_f)
 {
-    TokenRewriter rewriter = {.build_new_token_f = build_new_token_f, .rewrite_f = __keep_token};
+    LIB_RUBY_PARSER_TokenRewriter rewriter = {.build_new_token_f = build_new_token_f, .rewrite_f = __keep_token};
     return rewriter;
 }
-TokenRewriterResult __drop_token(Token *token_to_rewrite, build_new_token_t build_new_token)
+LIB_RUBY_PARSER_TokenRewriterResult __drop_token(LIB_RUBY_PARSER_Token *token_to_rewrite, LIB_RUBY_PARSER_build_new_token_t build_new_token)
 {
-    drop_token(token_to_rewrite);
+    LIB_RUBY_PARSER_drop_token(token_to_rewrite);
     free(token_to_rewrite);
-    TokenRewriterResult result = {
+    LIB_RUBY_PARSER_TokenRewriterResult result = {
         .rewritten_token = build_new_token(),
-        .lex_state_action = {.tag = LEX_STATE_KEEP},
-        .token_action = REWRITE_ACTION_DROP};
+        .lex_state_action = {.tag = LIB_RUBY_PARSER_LEX_STATE_KEEP},
+        .token_action = LIB_RUBY_PARSER_REWRITE_ACTION_DROP};
     return result;
 }
-TokenRewriter __drop_token_rewriter(build_new_token_t build_new_token_f)
+LIB_RUBY_PARSER_TokenRewriter __drop_token_rewriter(LIB_RUBY_PARSER_build_new_token_t build_new_token_f)
 {
-    TokenRewriter rewriter = {.build_new_token_f = build_new_token_f, .rewrite_f = __drop_token};
+    LIB_RUBY_PARSER_TokenRewriter rewriter = {.build_new_token_f = build_new_token_f, .rewrite_f = __drop_token};
     return rewriter;
 }
-TokenRewriterResult __rewrite_token(Token *token_to_rewrite, build_new_token_t build_new_token)
+LIB_RUBY_PARSER_TokenRewriterResult __rewrite_token(LIB_RUBY_PARSER_Token *token_to_rewrite, LIB_RUBY_PARSER_build_new_token_t build_new_token)
 {
-    drop_token(token_to_rewrite);
+    LIB_RUBY_PARSER_drop_token(token_to_rewrite);
     free(token_to_rewrite);
-    TokenRewriterResult result = {
+    LIB_RUBY_PARSER_TokenRewriterResult result = {
         .rewritten_token = build_new_token(),
-        .lex_state_action = {.tag = LEX_STATE_KEEP},
-        .token_action = REWRITE_ACTION_KEEP};
+        .lex_state_action = {.tag = LIB_RUBY_PARSER_LEX_STATE_KEEP},
+        .token_action = LIB_RUBY_PARSER_REWRITE_ACTION_KEEP};
     return result;
 }
-TokenRewriter __rewriter_token_rewriter(build_new_token_t build_new_token_f)
+LIB_RUBY_PARSER_TokenRewriter __rewriter_token_rewriter(LIB_RUBY_PARSER_build_new_token_t build_new_token_f)
 {
-    TokenRewriter rewriter = {.build_new_token_f = build_new_token_f, .rewrite_f = __rewrite_token};
+    LIB_RUBY_PARSER_TokenRewriter rewriter = {.build_new_token_f = build_new_token_f, .rewrite_f = __rewrite_token};
     return rewriter;
 }
 
 // ParserOptions
-void drop_parser_options(ParserOptions *parser_options)
+void LIB_RUBY_PARSER_drop_parser_options(LIB_RUBY_PARSER_ParserOptions *parser_options)
 {
-    drop_string_ptr(&(parser_options->buffer_name));
+    LIB_RUBY_PARSER_drop_string_ptr(&(parser_options->buffer_name));
 }
 
 // DecodedInput
-void drop_decoded_input(DecodedInput *decoded_input)
+void LIB_RUBY_PARSER_drop_decoded_input(LIB_RUBY_PARSER_DecodedInput *decoded_input)
 {
-    drop_string_ptr(&(decoded_input->name));
-    drop_source_line_list(&(decoded_input->lines));
-    drop_byte_list(&(decoded_input->bytes));
+    LIB_RUBY_PARSER_drop_string_ptr(&(decoded_input->name));
+    LIB_RUBY_PARSER_drop_source_line_list(&(decoded_input->lines));
+    LIB_RUBY_PARSER_drop_byte_list(&(decoded_input->bytes));
 }
 
 // ParserResult
-void drop_parser_result(ParserResult *parser_result)
+void LIB_RUBY_PARSER_drop_parser_result(LIB_RUBY_PARSER_ParserResult *parser_result)
 {
-    drop_maybe_node_ptr(&(parser_result->ast));
-    drop_token_list(&(parser_result->tokens));
-    drop_diagnostic_list(&(parser_result->diagnostics));
-    drop_comment_list(&(parser_result->comments));
-    drop_magic_comment_list(&(parser_result->magic_comments));
-    drop_decoded_input(&(parser_result->input));
+    LIB_RUBY_PARSER_drop_maybe_node_ptr(&(parser_result->ast));
+    LIB_RUBY_PARSER_drop_token_list(&(parser_result->tokens));
+    LIB_RUBY_PARSER_drop_diagnostic_list(&(parser_result->diagnostics));
+    LIB_RUBY_PARSER_drop_comment_list(&(parser_result->comments));
+    LIB_RUBY_PARSER_drop_magic_comment_list(&(parser_result->magic_comments));
+    LIB_RUBY_PARSER_drop_decoded_input(&(parser_result->input));
 }

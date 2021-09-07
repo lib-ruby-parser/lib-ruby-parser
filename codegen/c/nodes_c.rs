@@ -13,29 +13,29 @@ fn contents() -> String {
 // drop variant fns
 {drop_variant_fns}
 
-void drop_node(Node *node)
+void LIB_RUBY_PARSER_drop_node(LIB_RUBY_PARSER_Node *node)
 {{
     {drop_node}
 }}
 
-void drop_maybe_node_ptr(Node **node)
+void LIB_RUBY_PARSER_drop_maybe_node_ptr(LIB_RUBY_PARSER_Node **node)
 {{
-    Node *ptr = *node;
+    LIB_RUBY_PARSER_Node *ptr = *node;
     if (ptr) {{
-        drop_node(ptr);
+        LIB_RUBY_PARSER_drop_node(ptr);
         free(ptr);
     }}
 }}
 
-void drop_node_ptr(Node **node)
+void LIB_RUBY_PARSER_drop_node_ptr(LIB_RUBY_PARSER_Node **node)
 {{
-    Node *ptr = *node;
-    drop_node(ptr);
+    LIB_RUBY_PARSER_Node *ptr = *node;
+    LIB_RUBY_PARSER_drop_node(ptr);
     free(ptr);
 }}
 
-void lib_ruby_parser__external__list__of_nodes__drop(NodeList *);
-void drop_node_list(NodeList *node_list)
+void lib_ruby_parser__external__list__of_nodes__drop(LIB_RUBY_PARSER_NodeList *);
+void LIB_RUBY_PARSER_drop_node_list(LIB_RUBY_PARSER_NodeList *node_list)
 {{
     lib_ruby_parser__external__list__of_nodes__drop(node_list);
 }}
@@ -55,17 +55,23 @@ fn drop_variant_fn(node: &lib_ruby_parser_nodes::Node) -> String {
         .fields
         .map(|field| {
             let fn_name = match field.field_type {
-                lib_ruby_parser_nodes::NodeFieldType::Node => "drop_node_ptr",
-                lib_ruby_parser_nodes::NodeFieldType::Nodes => "drop_node_list",
-                lib_ruby_parser_nodes::NodeFieldType::MaybeNode { .. } => "drop_maybe_node_ptr",
-                lib_ruby_parser_nodes::NodeFieldType::Loc => "drop_loc",
-                lib_ruby_parser_nodes::NodeFieldType::MaybeLoc => "drop_maybe_loc",
+                lib_ruby_parser_nodes::NodeFieldType::Node => "LIB_RUBY_PARSER_drop_node_ptr",
+                lib_ruby_parser_nodes::NodeFieldType::Nodes => "LIB_RUBY_PARSER_drop_node_list",
+                lib_ruby_parser_nodes::NodeFieldType::MaybeNode { .. } => {
+                    "LIB_RUBY_PARSER_drop_maybe_node_ptr"
+                }
+                lib_ruby_parser_nodes::NodeFieldType::Loc => "LIB_RUBY_PARSER_drop_loc",
+                lib_ruby_parser_nodes::NodeFieldType::MaybeLoc => "LIB_RUBY_PARSER_drop_maybe_loc",
 
-                lib_ruby_parser_nodes::NodeFieldType::Str { .. } => "drop_string_ptr",
+                lib_ruby_parser_nodes::NodeFieldType::Str { .. } => {
+                    "LIB_RUBY_PARSER_drop_string_ptr"
+                }
 
-                lib_ruby_parser_nodes::NodeFieldType::MaybeStr { .. } => "drop_maybe_string_ptr",
-                lib_ruby_parser_nodes::NodeFieldType::StringValue => "drop_bytes",
-                lib_ruby_parser_nodes::NodeFieldType::U8 => "drop_byte",
+                lib_ruby_parser_nodes::NodeFieldType::MaybeStr { .. } => {
+                    "LIB_RUBY_PARSER_drop_maybe_string_ptr"
+                }
+                lib_ruby_parser_nodes::NodeFieldType::StringValue => "LIB_RUBY_PARSER_drop_bytes",
+                lib_ruby_parser_nodes::NodeFieldType::U8 => "LIB_RUBY_PARSER_drop_byte",
             };
 
             format!(
@@ -77,7 +83,7 @@ fn drop_variant_fn(node: &lib_ruby_parser_nodes::Node) -> String {
         .join("\n    ");
 
     format!(
-        "void drop_node_{lower}({struct_name} *variant) {{
+        "void LIB_RUBY_PARSER_drop_node_{lower}(LIB_RUBY_PARSER_{struct_name} *variant) {{
     {drop_fields}
 }}",
         struct_name = node.camelcase_name,
@@ -91,7 +97,7 @@ fn drop_node(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
         .map(|node| {
             format!(
                 "case {tag_name}:
-            drop_node_{lower}(&(node->as.{member_name}));
+            LIB_RUBY_PARSER_drop_node_{lower}(&(node->as.{member_name}));
             break;",
                 tag_name = helpers::nodes::enum_variant_name(node),
                 lower = node.lower_name(),

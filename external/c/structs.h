@@ -6,65 +6,65 @@
 #include "declare_list.h"
 
 // Byte
-typedef uint8_t Byte;
-DECLARE_LIST_OF(uint8_t, ByteList);
-void drop_byte(Byte *);
-void drop_byte_list(ByteList *);
+typedef uint8_t LIB_RUBY_PARSER_Byte;
+DECLARE_LIST_OF(uint8_t, LIB_RUBY_PARSER_ByteList);
+void LIB_RUBY_PARSER_drop_byte(LIB_RUBY_PARSER_Byte *);
+void LIB_RUBY_PARSER_drop_byte_list(LIB_RUBY_PARSER_ByteList *);
 
 // Ptr
-typedef void *Ptr;
+typedef void *LIB_RUBY_PARSER_Ptr;
 
 // MaybePtr
-typedef void *MaybePtr;
+typedef void *LIB_RUBY_PARSER_MaybePtr;
 
 // StringPtr
-typedef struct StringPtr
+typedef struct LIB_RUBY_PARSER_StringPtr
 {
     uint8_t *ptr;
     uint64_t len;
-} StringPtr;
-void drop_string_ptr(StringPtr *);
+} LIB_RUBY_PARSER_StringPtr;
+void LIB_RUBY_PARSER_drop_string_ptr(LIB_RUBY_PARSER_StringPtr *);
 
 // MaybeStringPtr
-typedef struct MaybeStringPtr
+typedef struct LIB_RUBY_PARSER_MaybeStringPtr
 {
     uint8_t *ptr;
     uint64_t len;
-} MaybeStringPtr;
-void drop_maybe_string_ptr(MaybeStringPtr *maybe_string_ptr);
+} LIB_RUBY_PARSER_MaybeStringPtr;
+void LIB_RUBY_PARSER_drop_maybe_string_ptr(LIB_RUBY_PARSER_MaybeStringPtr *maybe_string_ptr);
 
 // SharedByteList
-typedef struct SharedByteList
+typedef struct LIB_RUBY_PARSER_SharedByteList
 {
     const uint8_t *ptr;
     uint64_t len;
-} SharedByteList;
+} LIB_RUBY_PARSER_SharedByteList;
 
 // SourceLine
-typedef struct SourceLine
+typedef struct LIB_RUBY_PARSER_SourceLine
 {
     uint64_t start;
     uint64_t end;
     bool ends_with_eof;
-} SourceLine;
-DECLARE_LIST_OF(SourceLine, SourceLineList);
-void drop_source_line_list(SourceLineList *source_line_list);
+} LIB_RUBY_PARSER_SourceLine;
+DECLARE_LIST_OF(LIB_RUBY_PARSER_SourceLine, LIB_RUBY_PARSER_SourceLineList);
+void LIB_RUBY_PARSER_drop_source_line_list(LIB_RUBY_PARSER_SourceLineList *source_line_list);
 
 // Loc
-typedef struct Loc
+typedef struct LIB_RUBY_PARSER_Loc
 {
     uint64_t begin;
     uint64_t end;
-} Loc;
-void drop_loc(Loc *loc);
+} LIB_RUBY_PARSER_Loc;
+void LIB_RUBY_PARSER_drop_loc(LIB_RUBY_PARSER_Loc *loc);
 
 // MaybeLoc
-typedef struct MaybeLoc
+typedef struct LIB_RUBY_PARSER_MaybeLoc
 {
     enum
     {
-        MAYBE_LOC_SOME,
-        MAYBE_LOC_NONE,
+        LIB_RUBY_PARSER_MAYBE_LOC_SOME,
+        LIB_RUBY_PARSER_MAYBE_LOC_NONE,
     } tag;
 
     union
@@ -73,168 +73,168 @@ typedef struct MaybeLoc
         {
             uint8_t dummy;
         } nothing;
-        Loc loc;
+        LIB_RUBY_PARSER_Loc loc;
     } as;
-} MaybeLoc;
-void drop_maybe_loc(MaybeLoc *maybe_loc);
+} LIB_RUBY_PARSER_MaybeLoc;
+void LIB_RUBY_PARSER_drop_maybe_loc(LIB_RUBY_PARSER_MaybeLoc *maybe_loc);
 
 // Bytes
-typedef struct Bytes
+typedef struct LIB_RUBY_PARSER_Bytes
 {
-    ByteList raw;
-} Bytes;
-void drop_bytes(Bytes *bytes);
+    LIB_RUBY_PARSER_ByteList raw;
+} LIB_RUBY_PARSER_Bytes;
+void LIB_RUBY_PARSER_drop_bytes(LIB_RUBY_PARSER_Bytes *bytes);
 
 // Token
-typedef struct Token
+typedef struct LIB_RUBY_PARSER_Token
 {
     uint32_t token_type;
-    Bytes token_value;
-    Loc loc;
+    LIB_RUBY_PARSER_Bytes token_value;
+    LIB_RUBY_PARSER_Loc loc;
     uint32_t lex_state_before;
     uint32_t lex_state_after;
-} Token;
-DECLARE_LIST_OF(Token, TokenList);
-void drop_token(Token *);
-void drop_token_list(TokenList *);
+} LIB_RUBY_PARSER_Token;
+DECLARE_LIST_OF(LIB_RUBY_PARSER_Token, LIB_RUBY_PARSER_TokenList);
+void LIB_RUBY_PARSER_drop_token(LIB_RUBY_PARSER_Token *);
+void LIB_RUBY_PARSER_drop_token_list(LIB_RUBY_PARSER_TokenList *);
 
 // CommentType
-typedef enum CommentType
+typedef enum LIB_RUBY_PARSER_CommentType
 {
-    DOCUMENT,
-    INLINE,
-    UNKNOWN,
-} CommentType;
+    LIB_RUBY_PARSER_COMMENT_TYPE_DOCUMENT,
+    LIB_RUBY_PARSER_COMMENT_TYPE_INLINE,
+    LIB_RUBY_PARSER_COMMENT_TYPE_UNKNOWN,
+} LIB_RUBY_PARSER_CommentType;
 
 // Comment
-typedef struct Comment
+typedef struct LIB_RUBY_PARSER_Comment
 {
-    Loc location;
-    CommentType kind;
-} Comment;
-DECLARE_LIST_OF(Comment, CommentList);
-void drop_comment_list(CommentList *);
+    LIB_RUBY_PARSER_Loc location;
+    LIB_RUBY_PARSER_CommentType kind;
+} LIB_RUBY_PARSER_Comment;
+DECLARE_LIST_OF(LIB_RUBY_PARSER_Comment, LIB_RUBY_PARSER_CommentList);
+void LIB_RUBY_PARSER_drop_comment_list(LIB_RUBY_PARSER_CommentList *);
 
 // MagicCommentKind
-typedef enum MagicCommentKind
+typedef enum LIB_RUBY_PARSER_MagicCommentKind
 {
-    MAGIC_COMMENT_KIND_ENCODING,
-    MAGIC_COMMENT_KIND_FROZEN_STRING_LITERAL,
-    MAGIC_COMMENT_KIND_WARN_INDENT,
-    MAGIC_COMMENT_KIND_SHAREABLE_CONSTANT_VALUE,
-} MagicCommentKind;
+    LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_ENCODING,
+    LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_FROZEN_STRING_LITERAL,
+    LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_WARN_INDENT,
+    LIB_RUBY_PARSER_MAGIC_COMMENT_KIND_SHAREABLE_CONSTANT_VALUE,
+} LIB_RUBY_PARSER_MagicCommentKind;
 
 // MagicComment
-typedef struct MagicComment
+typedef struct LIB_RUBY_PARSER_MagicComment
 {
-    MagicCommentKind kind;
-    Loc key_l;
-    Loc value_l;
-} MagicComment;
-DECLARE_LIST_OF(MagicComment, MagicCommentList);
-void drop_magic_comment_list(MagicCommentList *);
+    LIB_RUBY_PARSER_MagicCommentKind kind;
+    LIB_RUBY_PARSER_Loc key_l;
+    LIB_RUBY_PARSER_Loc value_l;
+} LIB_RUBY_PARSER_MagicComment;
+DECLARE_LIST_OF(LIB_RUBY_PARSER_MagicComment, LIB_RUBY_PARSER_MagicCommentList);
+void LIB_RUBY_PARSER_drop_magic_comment_list(LIB_RUBY_PARSER_MagicCommentList *);
 
 // ErrorLevel
-typedef enum ErrorLevel
+typedef enum LIB_RUBY_PARSER_ErrorLevel
 {
-    WARNING,
-    ERROR
-} ErrorLevel;
+    LIB_RUBY_PARSER_ERROR_LEVEL_WARNING,
+    LIB_RUBY_PARSER_ERROR_LEVEL_ERROR
+} LIB_RUBY_PARSER_ErrorLevel;
 
 // DiagnosticMessage
 #include "messages.h"
-void drop_diagnostic_list(DiagnosticList *);
+void LIB_RUBY_PARSER_drop_diagnostic_list(LIB_RUBY_PARSER_DiagnosticList *);
 
 // Node
 #include "nodes.h"
 
 // InputError
-typedef struct InputError
+typedef struct LIB_RUBY_PARSER_InputError
 {
     enum
     {
-        UNSUPPORTED_ENCODING,
-        DECODING_ERROR
+        LIB_RUBY_PARSER_INPUT_ERROR_UNSUPPORTED_ENCODING,
+        LIB_RUBY_PARSER_INPUT_ERROR_DECODING_ERROR
     } tag;
 
     union
     {
-        StringPtr unsupported_encoding;
-        StringPtr decoding_error;
+        LIB_RUBY_PARSER_StringPtr unsupported_encoding;
+        LIB_RUBY_PARSER_StringPtr decoding_error;
     } as;
-} InputError;
-void drop_input_error(InputError *);
+} LIB_RUBY_PARSER_InputError;
+void LIB_RUBY_PARSER_drop_input_error(LIB_RUBY_PARSER_InputError *);
 
 // DecoderResult
-typedef struct DecoderResult
+typedef struct LIB_RUBY_PARSER_DecoderResult
 {
     enum
     {
-        DECODE_OK,
-        DECODE_ERR
+        LIB_RUBY_PARSER_DECODER_RESULT_OK,
+        LIB_RUBY_PARSER_DECODER_RESULT_ERR
     } tag;
 
     union
     {
-        ByteList ok;
-        InputError err;
+        LIB_RUBY_PARSER_ByteList ok;
+        LIB_RUBY_PARSER_InputError err;
     } as;
-} DecoderResult;
-void drop_decoder_result(DecoderResult *);
+} LIB_RUBY_PARSER_DecoderResult;
+void LIB_RUBY_PARSER_drop_decoder_result(LIB_RUBY_PARSER_DecoderResult *);
 
 // Decoder
-typedef DecoderResult (*dummy_decoder_t)(void);
-typedef struct Decoder
+typedef LIB_RUBY_PARSER_DecoderResult (*LIB_RUBY_PARSER_dummy_decoder_t)(void);
+typedef struct LIB_RUBY_PARSER_Decoder
 {
     // Here for tests we use a dummy fn that (when called) blindly returns what's configured
-    dummy_decoder_t f;
-} Decoder;
+    LIB_RUBY_PARSER_dummy_decoder_t f;
+} LIB_RUBY_PARSER_Decoder;
 
 // TokenRewriter
-typedef enum RewriteAction
+typedef enum LIB_RUBY_PARSER_RewriteAction
 {
-    REWRITE_ACTION_DROP,
-    REWRITE_ACTION_KEEP
-} RewriteAction;
-typedef struct LexStateAction
+    LIB_RUBY_PARSER_REWRITE_ACTION_DROP,
+    LIB_RUBY_PARSER_REWRITE_ACTION_KEEP
+} LIB_RUBY_PARSER_RewriteAction;
+typedef struct LIB_RUBY_PARSER_LexStateAction
 {
     enum
     {
-        LEX_STATE_SET,
-        LEX_STATE_KEEP
+        LIB_RUBY_PARSER_LEX_STATE_SET,
+        LIB_RUBY_PARSER_LEX_STATE_KEEP
     } tag;
     union
     {
         int32_t set;
     } as;
-} LexStateAction;
-typedef struct TokenRewriterResult
+} LIB_RUBY_PARSER_LexStateAction;
+typedef struct LIB_RUBY_PARSER_TokenRewriterResult
 {
-    Token *rewritten_token;
-    RewriteAction token_action;
-    LexStateAction lex_state_action;
-} TokenRewriterResult;
-void drop_token_rewriter_result(TokenRewriterResult *);
-typedef Token *(*build_new_token_t)(void);
-typedef TokenRewriterResult (*rewrite_token_t)(Token *, build_new_token_t);
-typedef struct TokenRewriter
+    LIB_RUBY_PARSER_Token *rewritten_token;
+    LIB_RUBY_PARSER_RewriteAction token_action;
+    LIB_RUBY_PARSER_LexStateAction lex_state_action;
+} LIB_RUBY_PARSER_TokenRewriterResult;
+void LIB_RUBY_PARSER_drop_token_rewriter_result(LIB_RUBY_PARSER_TokenRewriterResult *);
+typedef LIB_RUBY_PARSER_Token *(*LIB_RUBY_PARSER_build_new_token_t)(void);
+typedef LIB_RUBY_PARSER_TokenRewriterResult (*LIB_RUBY_PARSER_rewrite_token_t)(LIB_RUBY_PARSER_Token *, LIB_RUBY_PARSER_build_new_token_t);
+typedef struct LIB_RUBY_PARSER_TokenRewriter
 {
     // Here for tests we use a dummy fn that (when called) blindly returns what's configured
-    rewrite_token_t rewrite_f;
-    build_new_token_t build_new_token_f;
-} TokenRewriter;
+    LIB_RUBY_PARSER_rewrite_token_t rewrite_f;
+    LIB_RUBY_PARSER_build_new_token_t build_new_token_f;
+} LIB_RUBY_PARSER_TokenRewriter;
 // Test APIS
-TokenRewriter __keep_token_rewriter(build_new_token_t build_new_token_f);
-TokenRewriter __drop_token_rewriter(build_new_token_t build_new_token_f);
-TokenRewriter __rewriter_token_rewriter(build_new_token_t build_new_token_f);
+LIB_RUBY_PARSER_TokenRewriter __keep_token_rewriter(LIB_RUBY_PARSER_build_new_token_t build_new_token_f);
+LIB_RUBY_PARSER_TokenRewriter __drop_token_rewriter(LIB_RUBY_PARSER_build_new_token_t build_new_token_f);
+LIB_RUBY_PARSER_TokenRewriter __rewriter_token_rewriter(LIB_RUBY_PARSER_build_new_token_t build_new_token_f);
 
 // ParserOptions
-typedef struct MaybeDecoder
+typedef struct LIB_RUBY_PARSER_MaybeDecoder
 {
     enum
     {
-        MAYBE_DECODER_SOME,
-        MAYBE_DECODER_NONE
+        LIB_RUBY_PARSER_MAYBE_DECODER_SOME,
+        LIB_RUBY_PARSER_MAYBE_DECODER_NONE
     } tag;
 
     union
@@ -243,15 +243,15 @@ typedef struct MaybeDecoder
         {
             uint8_t dummy;
         } nothing;
-        Decoder decoder;
+        LIB_RUBY_PARSER_Decoder decoder;
     } as;
-} MaybeDecoder;
-typedef struct MaybeTokenRewriter
+} LIB_RUBY_PARSER_MaybeDecoder;
+typedef struct LIB_RUBY_PARSER_MaybeTokenRewriter
 {
     enum
     {
-        MAYBE_TOKEN_REWRITER_SOME,
-        MAYBE_TOKEN_REWRITER_NONE
+        LIB_RUBY_PARSER_MAYBE_TOKEN_REWRITER_SOME,
+        LIB_RUBY_PARSER_MAYBE_TOKEN_REWRITER_NONE
     } tag;
 
     union
@@ -260,38 +260,38 @@ typedef struct MaybeTokenRewriter
         {
             uint8_t dummy;
         } nothing;
-        TokenRewriter token_rewriter;
+        LIB_RUBY_PARSER_TokenRewriter token_rewriter;
     } as;
-} MaybeTokenRewriter;
-typedef struct ParserOptions
+} LIB_RUBY_PARSER_MaybeTokenRewriter;
+typedef struct LIB_RUBY_PARSER_ParserOptions
 {
-    StringPtr buffer_name;
+    LIB_RUBY_PARSER_StringPtr buffer_name;
     uint8_t debug;
-    MaybeDecoder decoder;
-    MaybeTokenRewriter token_rewriter;
+    LIB_RUBY_PARSER_MaybeDecoder decoder;
+    LIB_RUBY_PARSER_MaybeTokenRewriter token_rewriter;
     bool record_tokens;
-} ParserOptions;
-void drop_parser_options(ParserOptions *);
+} LIB_RUBY_PARSER_ParserOptions;
+void LIB_RUBY_PARSER_drop_parser_options(LIB_RUBY_PARSER_ParserOptions *);
 
 // DecodedInput
-typedef struct DecodedInput
+typedef struct LIB_RUBY_PARSER_DecodedInput
 {
-    StringPtr name;
-    SourceLineList lines;
-    ByteList bytes;
-} DecodedInput;
-void drop_decoded_input(DecodedInput *);
+    LIB_RUBY_PARSER_StringPtr name;
+    LIB_RUBY_PARSER_SourceLineList lines;
+    LIB_RUBY_PARSER_ByteList bytes;
+} LIB_RUBY_PARSER_DecodedInput;
+void LIB_RUBY_PARSER_drop_decoded_input(LIB_RUBY_PARSER_DecodedInput *);
 
 // ParserResult
-typedef struct ParserResult
+typedef struct LIB_RUBY_PARSER_ParserResult
 {
-    Node *ast;
-    TokenList tokens;
-    DiagnosticList diagnostics;
-    CommentList comments;
-    MagicCommentList magic_comments;
-    DecodedInput input;
-} ParserResult;
-void drop_parser_result(ParserResult *);
+    LIB_RUBY_PARSER_Node *ast;
+    LIB_RUBY_PARSER_TokenList tokens;
+    LIB_RUBY_PARSER_DiagnosticList diagnostics;
+    LIB_RUBY_PARSER_CommentList comments;
+    LIB_RUBY_PARSER_MagicCommentList magic_comments;
+    LIB_RUBY_PARSER_DecodedInput input;
+} LIB_RUBY_PARSER_ParserResult;
+void LIB_RUBY_PARSER_drop_parser_result(LIB_RUBY_PARSER_ParserResult *);
 
 #endif // LIB_RUBY_PARSER_C_BINDINGS_STRUCTS

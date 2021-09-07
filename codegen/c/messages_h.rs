@@ -12,31 +12,31 @@ fn contents() -> String {
 
 {structs}
 
-typedef struct DiagnosticMessage {{
+typedef struct LIB_RUBY_PARSER_DiagnosticMessage {{
     enum {{
         {enum_variants}
     }} tag;
     union {{
         {union_members}
     }} as;
-}} DiagnosticMessage;
+}} LIB_RUBY_PARSER_DiagnosticMessage;
 
 {drop_fns}
 
-void drop_diagnostic_message(DiagnosticMessage *message);
+void LIB_RUBY_PARSER_drop_diagnostic_message(LIB_RUBY_PARSER_DiagnosticMessage *message);
 
 // Diagnostic
-typedef struct Diagnostic
+typedef struct LIB_RUBY_PARSER_Diagnostic
 {{
-    ErrorLevel level;
-    DiagnosticMessage message;
-    Loc loc;
-}} Diagnostic;
-DECLARE_LIST_OF(Diagnostic, DiagnosticList);
-void drop_diagnostic(Diagnostic *);
+    LIB_RUBY_PARSER_ErrorLevel level;
+    LIB_RUBY_PARSER_DiagnosticMessage message;
+    LIB_RUBY_PARSER_Loc loc;
+}} LIB_RUBY_PARSER_Diagnostic;
+DECLARE_LIST_OF(LIB_RUBY_PARSER_Diagnostic, LIB_RUBY_PARSER_DiagnosticList);
+void LIB_RUBY_PARSER_drop_diagnostic(LIB_RUBY_PARSER_Diagnostic *);
 
 // print-sizes macro
-#define MESSAGE_PRINT_SIZES \\
+#define LIB_RUBY_PARSER_MESSAGE_PRINT_SIZES \\
     {print_sizes}
 
 #endif // LIB_RUBY_PARSER_EXTERNAL_C_SHARED_MESSAGES_H
@@ -69,33 +69,33 @@ fn struct_definition(message: &lib_ruby_parser_nodes::Message) -> String {
     };
 
     format!(
-        "typedef struct {struct_name}
+        "typedef struct LIB_RUBY_PARSER_{struct_name}
 {{{fields_declaration}
-}} {struct_name};",
+}} LIB_RUBY_PARSER_{struct_name};",
         struct_name = message.camelcase_name,
         fields_declaration = fields_declaration
     )
 }
 fn enum_variant(message: &lib_ruby_parser_nodes::Message) -> String {
-    message.upper_name()
+    format!("LIB_RUBY_PARSER_MESSAGE_{}", message.upper_name())
 }
 fn union_member(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
-        "{struct_name} {variant_name};",
+        "LIB_RUBY_PARSER_{struct_name} {variant_name};",
         struct_name = message.camelcase_name,
         variant_name = message.lower_name()
     )
 }
 fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
-        "void drop_message_{variant}({struct_name}* variant);",
+        "void LIB_RUBY_PARSER_drop_message_{variant}(LIB_RUBY_PARSER_{struct_name}* variant);",
         variant = message.lower_name(),
         struct_name = message.camelcase_name
     )
 }
 fn print_size(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
-        "printf(\"LIB_RUBY_PARSER_MESSAGE_{upper}_SIZE=%lu\\n\", sizeof({struct_name}));",
+        "printf(\"LIB_RUBY_PARSER_MESSAGE_{upper}_SIZE=%lu\\n\", sizeof(LIB_RUBY_PARSER_{struct_name}));",
         upper = message.upper_name(),
         struct_name = message.camelcase_name
     )
