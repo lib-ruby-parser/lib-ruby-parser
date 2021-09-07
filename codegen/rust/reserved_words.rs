@@ -1,338 +1,283 @@
 use std::collections::HashMap;
 
-// FIXME: use .0
-#[derive(Clone)]
-struct RawString {
-    s: &'static str,
-}
-
-#[derive(Clone)]
 struct ReservedWord {
     name: &'static str,
-    id: RawString,
-    modifier_id: RawString,
-    state: RawString,
+    id: &'static str,
+    modifier_id: &'static str,
+    state: &'static str,
 }
 
 const RESERVED_WORDS: &[ReservedWord] = &[
     ReservedWord {
         name: "BEGIN",
-        id: RawString {
-            s: "Lexer::klBEGIN",
-        },
-        modifier_id: RawString {
-            s: "Lexer::klBEGIN",
-        },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::klBEGIN",
+        modifier_id: "Lexer::klBEGIN",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "END",
-        id: RawString { s: "Lexer::klEND" },
-        modifier_id: RawString { s: "Lexer::klEND" },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::klEND",
+        modifier_id: "Lexer::klEND",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "__ENCODING__",
-        id: RawString {
-            s: "Lexer::k__ENCODING__",
-        },
-        modifier_id: RawString {
-            s: "Lexer::k__ENCODING__",
-        },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::k__ENCODING__",
+        modifier_id: "Lexer::k__ENCODING__",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "__FILE__",
-        id: RawString {
-            s: "Lexer::k__FILE__",
-        },
-        modifier_id: RawString {
-            s: "Lexer::k__FILE__",
-        },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::k__FILE__",
+        modifier_id: "Lexer::k__FILE__",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "__LINE__",
-        id: RawString {
-            s: "Lexer::k__LINE__",
-        },
-        modifier_id: RawString {
-            s: "Lexer::k__LINE__",
-        },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::k__LINE__",
+        modifier_id: "Lexer::k__LINE__",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "alias",
-        id: RawString { s: "Lexer::kALIAS" },
-        modifier_id: RawString { s: "Lexer::kALIAS" },
-        state: RawString {
-            s: "EXPR_FNAME | EXPR_FITEM",
-        },
+        id: "Lexer::kALIAS",
+        modifier_id: "Lexer::kALIAS",
+        state: "EXPR_FNAME | EXPR_FITEM",
     },
     ReservedWord {
         name: "and",
-        id: RawString { s: "Lexer::kAND" },
-        modifier_id: RawString { s: "Lexer::kAND" },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kAND",
+        modifier_id: "Lexer::kAND",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "begin",
-        id: RawString { s: "Lexer::kBEGIN" },
-        modifier_id: RawString { s: "Lexer::kBEGIN" },
-        state: RawString { s: "EXPR_BEG" },
+        id: "Lexer::kBEGIN",
+        modifier_id: "Lexer::kBEGIN",
+        state: "EXPR_BEG",
     },
     ReservedWord {
         name: "break",
-        id: RawString { s: "Lexer::kBREAK" },
-        modifier_id: RawString { s: "Lexer::kBREAK" },
-        state: RawString { s: "EXPR_MID" },
+        id: "Lexer::kBREAK",
+        modifier_id: "Lexer::kBREAK",
+        state: "EXPR_MID",
     },
     ReservedWord {
         name: "case",
-        id: RawString { s: "Lexer::kCASE" },
-        modifier_id: RawString { s: "Lexer::kCASE" },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kCASE",
+        modifier_id: "Lexer::kCASE",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "class",
-        id: RawString { s: "Lexer::kCLASS" },
-        modifier_id: RawString { s: "Lexer::kCLASS" },
-        state: RawString { s: "EXPR_CLASS" },
+        id: "Lexer::kCLASS",
+        modifier_id: "Lexer::kCLASS",
+        state: "EXPR_CLASS",
     },
     ReservedWord {
         name: "def",
-        id: RawString { s: "Lexer::kDEF" },
-        modifier_id: RawString { s: "Lexer::kDEF" },
-        state: RawString { s: "EXPR_FNAME" },
+        id: "Lexer::kDEF",
+        modifier_id: "Lexer::kDEF",
+        state: "EXPR_FNAME",
     },
     ReservedWord {
         name: "defined?",
-        id: RawString {
-            s: "Lexer::kDEFINED",
-        },
-        modifier_id: RawString {
-            s: "Lexer::kDEFINED",
-        },
-        state: RawString { s: "EXPR_ARG" },
+        id: "Lexer::kDEFINED",
+        modifier_id: "Lexer::kDEFINED",
+        state: "EXPR_ARG",
     },
     ReservedWord {
         name: "do",
-        id: RawString { s: "Lexer::kDO" },
-        modifier_id: RawString { s: "Lexer::kDO" },
-        state: RawString { s: "EXPR_BEG" },
+        id: "Lexer::kDO",
+        modifier_id: "Lexer::kDO",
+        state: "EXPR_BEG",
     },
     ReservedWord {
         name: "else",
-        id: RawString { s: "Lexer::kELSE" },
-        modifier_id: RawString { s: "Lexer::kELSE" },
-        state: RawString { s: "EXPR_BEG" },
+        id: "Lexer::kELSE",
+        modifier_id: "Lexer::kELSE",
+        state: "EXPR_BEG",
     },
     ReservedWord {
         name: "elsif",
-        id: RawString { s: "Lexer::kELSIF" },
-        modifier_id: RawString { s: "Lexer::kELSIF" },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kELSIF",
+        modifier_id: "Lexer::kELSIF",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "end",
-        id: RawString { s: "Lexer::kEND" },
-        modifier_id: RawString { s: "Lexer::kEND" },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::kEND",
+        modifier_id: "Lexer::kEND",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "ensure",
-        id: RawString {
-            s: "Lexer::kENSURE",
-        },
-        modifier_id: RawString {
-            s: "Lexer::kENSURE",
-        },
-        state: RawString { s: "EXPR_BEG" },
+        id: "Lexer::kENSURE",
+        modifier_id: "Lexer::kENSURE",
+        state: "EXPR_BEG",
     },
     ReservedWord {
         name: "false",
-        id: RawString { s: "Lexer::kFALSE" },
-        modifier_id: RawString { s: "Lexer::kFALSE" },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::kFALSE",
+        modifier_id: "Lexer::kFALSE",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "for",
-        id: RawString { s: "Lexer::kFOR" },
-        modifier_id: RawString { s: "Lexer::kFOR" },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kFOR",
+        modifier_id: "Lexer::kFOR",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "if",
-        id: RawString { s: "Lexer::kIF" },
-        modifier_id: RawString {
-            s: "Lexer::kIF_MOD",
-        },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kIF",
+        modifier_id: "Lexer::kIF_MOD",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "in",
-        id: RawString { s: "Lexer::kIN" },
-        modifier_id: RawString { s: "Lexer::kIN" },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kIN",
+        modifier_id: "Lexer::kIN",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "module",
-        id: RawString {
-            s: "Lexer::kMODULE",
-        },
-        modifier_id: RawString {
-            s: "Lexer::kMODULE",
-        },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kMODULE",
+        modifier_id: "Lexer::kMODULE",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "next",
-        id: RawString { s: "Lexer::kNEXT" },
-        modifier_id: RawString { s: "Lexer::kNEXT" },
-        state: RawString { s: "EXPR_MID" },
+        id: "Lexer::kNEXT",
+        modifier_id: "Lexer::kNEXT",
+        state: "EXPR_MID",
     },
     ReservedWord {
         name: "nil",
-        id: RawString { s: "Lexer::kNIL" },
-        modifier_id: RawString { s: "Lexer::kNIL" },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::kNIL",
+        modifier_id: "Lexer::kNIL",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "not",
-        id: RawString { s: "Lexer::kNOT" },
-        modifier_id: RawString { s: "Lexer::kNOT" },
-        state: RawString { s: "EXPR_ARG" },
+        id: "Lexer::kNOT",
+        modifier_id: "Lexer::kNOT",
+        state: "EXPR_ARG",
     },
     ReservedWord {
         name: "or",
-        id: RawString { s: "Lexer::kOR" },
-        modifier_id: RawString { s: "Lexer::kOR" },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kOR",
+        modifier_id: "Lexer::kOR",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "redo",
-        id: RawString { s: "Lexer::kREDO" },
-        modifier_id: RawString { s: "Lexer::kREDO" },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::kREDO",
+        modifier_id: "Lexer::kREDO",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "rescue",
-        id: RawString {
-            s: "Lexer::kRESCUE",
-        },
-        modifier_id: RawString {
-            s: "Lexer::kRESCUE_MOD",
-        },
-        state: RawString { s: "EXPR_MID" },
+        id: "Lexer::kRESCUE",
+        modifier_id: "Lexer::kRESCUE_MOD",
+        state: "EXPR_MID",
     },
     ReservedWord {
         name: "retry",
-        id: RawString { s: "Lexer::kRETRY" },
-        modifier_id: RawString { s: "Lexer::kRETRY" },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::kRETRY",
+        modifier_id: "Lexer::kRETRY",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "return",
-        id: RawString {
-            s: "Lexer::kRETURN",
-        },
-        modifier_id: RawString {
-            s: "Lexer::kRETURN",
-        },
-        state: RawString { s: "EXPR_MID" },
+        id: "Lexer::kRETURN",
+        modifier_id: "Lexer::kRETURN",
+        state: "EXPR_MID",
     },
     ReservedWord {
         name: "self",
-        id: RawString { s: "Lexer::kSELF" },
-        modifier_id: RawString { s: "Lexer::kSELF" },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::kSELF",
+        modifier_id: "Lexer::kSELF",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "super",
-        id: RawString { s: "Lexer::kSUPER" },
-        modifier_id: RawString { s: "Lexer::kSUPER" },
-        state: RawString { s: "EXPR_ARG" },
+        id: "Lexer::kSUPER",
+        modifier_id: "Lexer::kSUPER",
+        state: "EXPR_ARG",
     },
     ReservedWord {
         name: "then",
-        id: RawString { s: "Lexer::kTHEN" },
-        modifier_id: RawString { s: "Lexer::kTHEN" },
-        state: RawString { s: "EXPR_BEG" },
+        id: "Lexer::kTHEN",
+        modifier_id: "Lexer::kTHEN",
+        state: "EXPR_BEG",
     },
     ReservedWord {
         name: "true",
-        id: RawString { s: "Lexer::kTRUE" },
-        modifier_id: RawString { s: "Lexer::kTRUE" },
-        state: RawString { s: "EXPR_END" },
+        id: "Lexer::kTRUE",
+        modifier_id: "Lexer::kTRUE",
+        state: "EXPR_END",
     },
     ReservedWord {
         name: "undef",
-        id: RawString { s: "Lexer::kUNDEF" },
-        modifier_id: RawString { s: "Lexer::kUNDEF" },
-        state: RawString {
-            s: "EXPR_FNAME | EXPR_FITEM",
-        },
+        id: "Lexer::kUNDEF",
+        modifier_id: "Lexer::kUNDEF",
+        state: "EXPR_FNAME | EXPR_FITEM",
     },
     ReservedWord {
         name: "unless",
-        id: RawString {
-            s: "Lexer::kUNLESS",
-        },
-        modifier_id: RawString {
-            s: "Lexer::kUNLESS_MOD",
-        },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kUNLESS",
+        modifier_id: "Lexer::kUNLESS_MOD",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "until",
-        id: RawString { s: "Lexer::kUNTIL" },
-        modifier_id: RawString {
-            s: "Lexer::kUNTIL_MOD",
-        },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kUNTIL",
+        modifier_id: "Lexer::kUNTIL_MOD",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "when",
-        id: RawString { s: "Lexer::kWHEN" },
-        modifier_id: RawString { s: "Lexer::kWHEN" },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kWHEN",
+        modifier_id: "Lexer::kWHEN",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "while",
-        id: RawString { s: "Lexer::kWHILE" },
-        modifier_id: RawString {
-            s: "Lexer::kWHILE_MOD",
-        },
-        state: RawString { s: "EXPR_VALUE" },
+        id: "Lexer::kWHILE",
+        modifier_id: "Lexer::kWHILE_MOD",
+        state: "EXPR_VALUE",
     },
     ReservedWord {
         name: "yield",
-        id: RawString { s: "Lexer::kYIELD" },
-        modifier_id: RawString { s: "Lexer::kYIELD" },
-        state: RawString { s: "EXPR_ARG" },
+        id: "Lexer::kYIELD",
+        modifier_id: "Lexer::kYIELD",
+        state: "EXPR_ARG",
     },
 ];
 
+type WordSize = usize;
+
 pub(crate) struct ReservedWordsList {
-    inner: HashMap<usize, Vec<ReservedWord>>,
+    inner: HashMap<WordSize, Vec<&'static ReservedWord>>,
 }
 
 impl ReservedWordsList {
     pub(crate) fn new() -> Self {
-        let mut inner = HashMap::<usize, Vec<ReservedWord>>::new();
+        let mut inner = HashMap::<WordSize, Vec<&'static ReservedWord>>::new();
 
         for reserved_word in RESERVED_WORDS.iter() {
-            let len = reserved_word.name.len();
-            if !inner.contains_key(&len) {
-                inner.insert(len, vec![]);
+            let word_size = reserved_word.name.len();
+            if !inner.contains_key(&word_size) {
+                inner.insert(word_size, vec![]);
             }
-            inner.get_mut(&len).unwrap().push(reserved_word.clone());
+            inner.get_mut(&word_size).unwrap().push(reserved_word);
         }
 
         Self { inner }
     }
 
-    fn to_vec_of_vecs(&self) -> Vec<Vec<ReservedWord>> {
+    fn group_by_word_size(&self) -> Vec<Vec<&'static ReservedWord>> {
         let max_len = *self.inner.keys().max().unwrap();
         (0..=max_len)
             .map(|len| {
@@ -346,56 +291,63 @@ impl ReservedWordsList {
             })
             .collect::<Vec<_>>()
     }
-
-    pub(crate) fn write(&self) {
-        std::fs::write("src/reserved_words/list.rs", self.contents()).unwrap();
-    }
-
-    fn contents(&self) -> String {
-        format!(
-            "use crate::lex_states::*;
-use crate::reserved_words::ReservedWord;
-use crate::Lexer;
-
-pub(crate) const RESERVED_WORDS: &[&[ReservedWord]] = {:#?};",
-            self
-        )
-    }
-}
-
-impl std::fmt::Debug for ReservedWordsList {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "&[
-    {}
-]",
-            self.to_vec_of_vecs()
-                .iter()
-                .map(|x| format!("&{:#?}", x))
-                .collect::<Vec<_>>()
-                .join(",\n    ")
-        )
-    }
-}
-
-impl std::fmt::Debug for ReservedWord {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ReservedWord")
-            .field("name", &self.name)
-            .field("id", &self.id)
-            .field("modifier_id", &self.modifier_id)
-            .field("state", &self.state)
-            .finish()
-    }
-}
-
-impl std::fmt::Debug for RawString {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.s)
-    }
 }
 
 pub(crate) fn codegen() {
-    ReservedWordsList::new().write();
+    std::fs::write("src/reserved_words/list.rs", contents()).unwrap();
+}
+
+fn contents() -> String {
+    let buckets = ReservedWordsList::new().group_by_word_size();
+
+    format!(
+        "// This file is autogenerated by {generator}
+
+use crate::lex_states::*;
+use crate::reserved_words::ReservedWord;
+use crate::Lexer;
+
+pub(crate) const RESERVED_WORDS: &[&[ReservedWord]] = &[
+    {buckets}
+];",
+        generator = file!(),
+        buckets = buckets
+            .into_iter()
+            .enumerate()
+            .map(|(size, bucket)| format_bucket(size, bucket))
+            .collect::<Vec<_>>()
+            .join(",\n    "),
+    )
+}
+
+fn format_bucket(size: WordSize, bucket: Vec<&'static ReservedWord>) -> String {
+    let bucket = bucket
+        .into_iter()
+        .map(format_reserved_word)
+        .collect::<Vec<_>>()
+        .join(",\n        ");
+
+    format!(
+        "// size = {size}
+    &[
+        {bucket}
+    ]",
+        size = size,
+        bucket = bucket
+    )
+}
+
+fn format_reserved_word(word: &ReservedWord) -> String {
+    format!(
+        "ReservedWord {{
+            name: \"{name}\",
+            id: {id},
+            modifier_id: {modifier_id},
+            state: {state},
+        }}",
+        name = word.name,
+        id = word.id,
+        modifier_id = word.modifier_id,
+        state = word.state,
+    )
 }
