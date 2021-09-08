@@ -13,7 +13,12 @@ struct LIB_RUBY_PARSER_Node;
 typedef struct LIB_RUBY_PARSER_Node LIB_RUBY_PARSER_Node;
 struct LIB_RUBY_PARSER_Node_BLOB;
 typedef struct LIB_RUBY_PARSER_Node_BLOB LIB_RUBY_PARSER_Node_BLOB;
-DECLARE_LIST_OF(LIB_RUBY_PARSER_Node, LIB_RUBY_PARSER_NodeList);
+typedef struct LIB_RUBY_PARSER_NodeList
+{{
+    LIB_RUBY_PARSER_Node *ptr;
+    uint64_t len;
+    uint64_t capacity;
+}} LIB_RUBY_PARSER_NodeList;
 
 typedef LIB_RUBY_PARSER_Node* LIB_RUBY_PARSER_NodePtr;
 typedef LIB_RUBY_PARSER_Node* LIB_RUBY_PARSER_MaybeNodePtr;

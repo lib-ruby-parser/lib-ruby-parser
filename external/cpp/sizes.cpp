@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include "structs.hpp"
-#include "nodes.hpp"
-#include "messages.hpp"
+
+using namespace lib_ruby_parser;
 
 int main()
 {

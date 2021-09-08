@@ -11,42 +11,45 @@ fn contents() -> String {
 
 #include <variant>
 
-{classes}
-
-typedef std::variant<
-    {variants}>
-    diagnostic_message_variant_t;
-
-class DiagnosticMessage
+namespace lib_ruby_parser
 {{
-public:
-    diagnostic_message_variant_t variant;
+    {classes}
 
-    DiagnosticMessage(diagnostic_message_variant_t variant);
+    typedef std::variant<
+        {variants}>
+        diagnostic_message_variant_t;
 
-    DiagnosticMessage(const DiagnosticMessage &) = delete;
-    DiagnosticMessage &operator=(const DiagnosticMessage &other) = delete;
+    class DiagnosticMessage
+    {{
+    public:
+        diagnostic_message_variant_t variant;
 
-    DiagnosticMessage(DiagnosticMessage &&) = default;
-    DiagnosticMessage &operator=(DiagnosticMessage &&other) = default;
-}};
+        DiagnosticMessage(diagnostic_message_variant_t variant);
 
-{drop_fns}
+        DiagnosticMessage(const DiagnosticMessage &) = delete;
+        DiagnosticMessage &operator=(const DiagnosticMessage &other) = delete;
 
-void drop_diagnostic_message(DiagnosticMessage *message);
+        DiagnosticMessage(DiagnosticMessage &&) = default;
+        DiagnosticMessage &operator=(DiagnosticMessage &&other) = default;
+    }};
 
-// Diagnostic
-class Diagnostic
-{{
-public:
-    ErrorLevel level;
-    DiagnosticMessage message;
-    Loc loc;
+    {drop_fns}
 
-    explicit Diagnostic(ErrorLevel level, DiagnosticMessage message, Loc loc);
-}};
-DECLARE_LIST_OF(Diagnostic, DiagnosticList);
-void drop_diagnostic(Diagnostic *);
+    void drop_diagnostic_message(DiagnosticMessage *message);
+
+    // Diagnostic
+    class Diagnostic
+    {{
+    public:
+        ErrorLevel level;
+        DiagnosticMessage message;
+        Loc loc;
+
+        explicit Diagnostic(ErrorLevel level, DiagnosticMessage message, Loc loc);
+    }};
+    using DiagnosticList = std::vector<Diagnostic>;
+    void drop_diagnostic(Diagnostic *);
+}}
 
 // print-sizes macro
 #define MESSAGE_PRINT_SIZES \\
@@ -54,9 +57,9 @@ void drop_diagnostic(Diagnostic *);
 
 #endif // LIB_RUBY_PARSER_EXTERNAL_CPP_SHARED_MESSAGES_HPP",
         generator = file!(),
-        classes = messages.map(class).join("\n\n"),
-        variants = messages.map(variant).join(",\n    "),
-        drop_fns = messages.map(drop_fn).join("\n"),
+        classes = messages.map(class).join("\n\n    "),
+        variants = messages.map(variant).join(",\n        "),
+        drop_fns = messages.map(drop_fn).join("\n    "),
         print_sizes = messages.map(print_size).join(" \\\n    ")
     )
 }
@@ -79,18 +82,18 @@ fn class(message: &lib_ruby_parser_nodes::Message) -> String {
 
     format!(
         "class {name}
-{{
-public:
-    {fields_declaration}
+    {{
+    public:
+        {fields_declaration}
 
-    {name}({constructor_arglist});
+        {name}({constructor_arglist});
 
-    {name}(const {name} &) = delete;
-    {name} &operator=(const {name} &other) = delete;
+        {name}(const {name} &) = delete;
+        {name} &operator=(const {name} &other) = delete;
 
-    {name}({name} &&) = default;
-    {name} &operator=({name} &&other) = default;
-}};",
+        {name}({name} &&) = default;
+        {name} &operator=({name} &&other) = default;
+    }};",
         name = message.camelcase_name,
         constructor_arglist = helpers::messages::constructor_arglist(message),
         fields_declaration = fields_declaration

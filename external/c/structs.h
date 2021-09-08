@@ -3,11 +3,16 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include "declare_list.h"
+#include <stdint.h>
 
 // Byte
 typedef uint8_t LIB_RUBY_PARSER_Byte;
-DECLARE_LIST_OF(uint8_t, LIB_RUBY_PARSER_ByteList);
+typedef struct LIB_RUBY_PARSER_ByteList
+{
+    LIB_RUBY_PARSER_Byte *ptr;
+    uint64_t len;
+    uint64_t capacity;
+} LIB_RUBY_PARSER_ByteList;
 void LIB_RUBY_PARSER_drop_byte(LIB_RUBY_PARSER_Byte *);
 void LIB_RUBY_PARSER_drop_byte_list(LIB_RUBY_PARSER_ByteList *);
 
@@ -47,7 +52,12 @@ typedef struct LIB_RUBY_PARSER_SourceLine
     uint64_t end;
     bool ends_with_eof;
 } LIB_RUBY_PARSER_SourceLine;
-DECLARE_LIST_OF(LIB_RUBY_PARSER_SourceLine, LIB_RUBY_PARSER_SourceLineList);
+typedef struct LIB_RUBY_PARSER_SourceLineList
+{
+    LIB_RUBY_PARSER_SourceLine *ptr;
+    uint64_t len;
+    uint64_t capacity;
+} LIB_RUBY_PARSER_SourceLineList;
 void LIB_RUBY_PARSER_drop_source_line_list(LIB_RUBY_PARSER_SourceLineList *source_line_list);
 
 // Loc
@@ -94,7 +104,12 @@ typedef struct LIB_RUBY_PARSER_Token
     uint32_t lex_state_before;
     uint32_t lex_state_after;
 } LIB_RUBY_PARSER_Token;
-DECLARE_LIST_OF(LIB_RUBY_PARSER_Token, LIB_RUBY_PARSER_TokenList);
+typedef struct LIB_RUBY_PARSER_TokenList
+{
+    LIB_RUBY_PARSER_Token *ptr;
+    uint64_t len;
+    uint64_t capacity;
+} LIB_RUBY_PARSER_TokenList;
 void LIB_RUBY_PARSER_drop_token(LIB_RUBY_PARSER_Token *);
 void LIB_RUBY_PARSER_drop_token_list(LIB_RUBY_PARSER_TokenList *);
 
@@ -112,7 +127,12 @@ typedef struct LIB_RUBY_PARSER_Comment
     LIB_RUBY_PARSER_Loc location;
     LIB_RUBY_PARSER_CommentType kind;
 } LIB_RUBY_PARSER_Comment;
-DECLARE_LIST_OF(LIB_RUBY_PARSER_Comment, LIB_RUBY_PARSER_CommentList);
+typedef struct LIB_RUBY_PARSER_CommentList
+{
+    LIB_RUBY_PARSER_Comment *ptr;
+    uint64_t len;
+    uint64_t capacity;
+} LIB_RUBY_PARSER_CommentList;
 void LIB_RUBY_PARSER_drop_comment_list(LIB_RUBY_PARSER_CommentList *);
 
 // MagicCommentKind
@@ -131,7 +151,12 @@ typedef struct LIB_RUBY_PARSER_MagicComment
     LIB_RUBY_PARSER_Loc key_l;
     LIB_RUBY_PARSER_Loc value_l;
 } LIB_RUBY_PARSER_MagicComment;
-DECLARE_LIST_OF(LIB_RUBY_PARSER_MagicComment, LIB_RUBY_PARSER_MagicCommentList);
+typedef struct LIB_RUBY_PARSER_MagicCommentList
+{
+    LIB_RUBY_PARSER_MagicComment *ptr;
+    uint64_t len;
+    uint64_t capacity;
+} LIB_RUBY_PARSER_MagicCommentList;
 void LIB_RUBY_PARSER_drop_magic_comment_list(LIB_RUBY_PARSER_MagicCommentList *);
 
 // ErrorLevel

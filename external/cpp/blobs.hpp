@@ -4,15 +4,11 @@
 #include "structs.hpp"
 #include "declare_blob.hpp"
 
-typedef uint8_t Byte_BLOB;
-inline Byte UNPACK_Byte(Byte_BLOB blob)
-{
-    return blob;
-}
-inline Byte_BLOB PACK_Byte(Byte byte)
-{
-    return byte;
-}
+using namespace lib_ruby_parser;
+
+using Byte_BLOB = uint8_t;
+#define UNPACK_Byte(blob) blob
+#define PACK_Byte(byte) byte
 
 DECLARE_BLOB_FOR(ByteList);
 #define UNPACK_ByteList(blob) ((ByteList_BLOB_UNION){.as_blob = blob}).as_value

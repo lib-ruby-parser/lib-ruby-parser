@@ -11,35 +11,38 @@ fn contents() -> String {
 
 #include <variant>
 
-class Node;
-typedef std::unique_ptr<Node> NodePtr;
-typedef std::unique_ptr<Node> MaybeNodePtr;
-DECLARE_LIST_OF(Node, NodeList);
-
-{structs}
-
-typedef std::variant<
-    {variants}>
-    node_variant_t;
-
-class Node
+namespace lib_ruby_parser
 {{
-public:
-    node_variant_t variant;
+    class Node;
+    typedef std::unique_ptr<Node> NodePtr;
+    typedef std::unique_ptr<Node> MaybeNodePtr;
+    using NodeList = std::vector<Node>;
 
-    Node(node_variant_t variant);
+    {structs}
 
-    Node(const Node &) = delete;
-    Node &operator=(const Node &other) = delete;
+    typedef std::variant<
+        {variants}>
+        node_variant_t;
 
-    Node(Node &&) = default;
-    Node &operator=(Node &&other) = default;
-}};
+    class Node
+    {{
+    public:
+        node_variant_t variant;
 
-void drop_node(Node *node);
-void drop_maybe_node_ptr(std::unique_ptr<Node> *node);
-void drop_node_ptr(std::unique_ptr<Node> *node);
-void drop_node_list(NodeList *node_list);
+        Node(node_variant_t variant);
+
+        Node(const Node &) = delete;
+        Node &operator=(const Node &other) = delete;
+
+        Node(Node &&) = default;
+        Node &operator=(Node &&other) = default;
+    }};
+
+    void drop_node(Node *node);
+    void drop_maybe_node_ptr(std::unique_ptr<Node> *node);
+    void drop_node_ptr(std::unique_ptr<Node> *node);
+    void drop_node_list(NodeList *node_list);
+}}
 
 // print-sizes macro
 #define NODE_PRINT_SIZES \\
@@ -48,8 +51,8 @@ void drop_node_list(NodeList *node_list);
 #endif // LIB_RUBY_PARSER_EXTERNAL_C_NODES_HPP
 ",
         generator = file!(),
-        structs = nodes.map(struct_declaration).join("\n\n"),
-        variants = nodes.map(variant).join(",\n    "),
+        structs = nodes.map(struct_declaration).join("\n\n    "),
+        variants = nodes.map(variant).join(",\n        "),
         print_sizes = nodes.map(print_size).join(" \\\n    "),
     )
 }
@@ -80,20 +83,20 @@ fn struct_declaration(node: &lib_ruby_parser_nodes::Node) -> String {
 
     format!(
         "class {class_name}
-{{
-public:
-    {fields}
+    {{
+    public:
+        {fields}
 
-    explicit {class_name}({constructor_args});
+        explicit {class_name}({constructor_args});
 
-    {class_name}(const {class_name} &) = delete;
-    {class_name} &operator=(const {class_name} &other) = delete;
+        {class_name}(const {class_name} &) = delete;
+        {class_name} &operator=(const {class_name} &other) = delete;
 
-    {class_name}({class_name} &&) = default;
-    {class_name} &operator=({class_name} &&other) = default;
-}};",
+        {class_name}({class_name} &&) = default;
+        {class_name} &operator=({class_name} &&other) = default;
+    }};",
         class_name = node.camelcase_name,
-        fields = fields.join("\n    "),
+        fields = fields.join("\n        "),
         constructor_args = constructor_args
     )
 }

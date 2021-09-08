@@ -8,31 +8,34 @@ fn contents() -> String {
 
 #include \"structs.hpp\"
 
-{cpp_constructors}
-Node::Node(node_variant_t variant): variant(std::move(variant)) {{}}
-
-void drop_node(Node *node)
+namespace lib_ruby_parser
 {{
-    node->~Node();
-}}
+    {cpp_constructors}
+    Node::Node(node_variant_t variant) : variant(std::move(variant)) {{}}
 
-void drop_maybe_node_ptr(std::unique_ptr<Node> *node)
-{{
-    node->~unique_ptr();
-}}
+    void drop_node(Node *node)
+    {{
+        node->~Node();
+    }}
 
-void drop_node_ptr(std::unique_ptr<Node> *node)
-{{
-    node->~unique_ptr();
-}}
+    void drop_maybe_node_ptr(std::unique_ptr<Node> *node)
+    {{
+        node->~unique_ptr();
+    }}
 
-void drop_node_list(NodeList *node_list)
-{{
-    node_list->~vector();
+    void drop_node_ptr(std::unique_ptr<Node> *node)
+    {{
+        node->~unique_ptr();
+    }}
+
+    void drop_node_list(NodeList *node_list)
+    {{
+        node_list->~vector();
+    }}
 }}
 ",
         generator = file!(),
-        cpp_constructors = nodes.map(cpp_constructor).join("\n"),
+        cpp_constructors = nodes.map(cpp_constructor).join("\n    "),
     )
 }
 
@@ -63,7 +66,7 @@ fn cpp_constructor(node: &lib_ruby_parser_nodes::Node) -> String {
         .join(", ");
 
     format!(
-        "{class_name}::{class_name}({constructor_args}) : {member_initialize_list} {{}};",
+        "{class_name}::{class_name}({constructor_args}) : {member_initialize_list}{{}};",
         class_name = node.camelcase_name,
         constructor_args = constructor_args,
         member_initialize_list = member_initialize_list

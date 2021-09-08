@@ -32,7 +32,12 @@ typedef struct LIB_RUBY_PARSER_Diagnostic
     LIB_RUBY_PARSER_DiagnosticMessage message;
     LIB_RUBY_PARSER_Loc loc;
 }} LIB_RUBY_PARSER_Diagnostic;
-DECLARE_LIST_OF(LIB_RUBY_PARSER_Diagnostic, LIB_RUBY_PARSER_DiagnosticList);
+typedef struct LIB_RUBY_PARSER_DiagnosticList
+{{
+    LIB_RUBY_PARSER_Diagnostic *ptr;
+    uint64_t len;
+    uint64_t capacity;
+}} LIB_RUBY_PARSER_DiagnosticList;
 void LIB_RUBY_PARSER_drop_diagnostic(LIB_RUBY_PARSER_Diagnostic *);
 
 // print-sizes macro

@@ -1,6 +1,8 @@
 #include "bindings.hpp"
 #include <iostream>
 
+using namespace lib_ruby_parser;
+
 extern "C"
 {
     /*
