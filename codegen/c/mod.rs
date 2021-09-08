@@ -11,6 +11,7 @@ mod nodes_h;
 mod bindings_h;
 
 mod blobs_gen_h;
+mod sizes_gen_h;
 
 pub(crate) fn codegen() {
     let options = codegen_options();
@@ -28,6 +29,7 @@ pub(crate) fn codegen() {
     bindings_h::codegen(&options);
 
     blobs_gen_h::codegen();
+    sizes_gen_h::codegen();
 }
 
 fn ns(s: &str) -> String {

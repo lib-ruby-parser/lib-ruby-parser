@@ -1,8 +1,7 @@
 #include <stdio.h>
 
 #include "structs.h"
-#include "nodes.h"
-#include "messages.h"
+#include "sizes_gen.h"
 
 int main()
 {
@@ -25,9 +24,9 @@ int main()
     printf("LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE=%lu\n", sizeof(LIB_RUBY_PARSER_MagicComment));
     printf("LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE=%lu\n", sizeof(LIB_RUBY_PARSER_DiagnosticMessage));
 
-    LIB_RUBY_PARSER_NODE_PRINT_SIZES
+    print_node_sizes();
 
-    LIB_RUBY_PARSER_MESSAGE_PRINT_SIZES
+    print_messages_sizes();
 
     printf("LIB_RUBY_PARSER_DIAGNOSTIC_SIZE=%lu\n", sizeof(LIB_RUBY_PARSER_Diagnostic));
     printf("LIB_RUBY_PARSER_NODE_SIZE=%lu\n", sizeof(LIB_RUBY_PARSER_Node));

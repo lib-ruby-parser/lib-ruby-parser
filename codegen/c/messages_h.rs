@@ -40,10 +40,6 @@ typedef struct LIB_RUBY_PARSER_DiagnosticList
 }} LIB_RUBY_PARSER_DiagnosticList;
 void LIB_RUBY_PARSER_drop_diagnostic(LIB_RUBY_PARSER_Diagnostic *);
 
-// print-sizes macro
-#define LIB_RUBY_PARSER_MESSAGE_PRINT_SIZES \\
-    {print_sizes}
-
 #endif // LIB_RUBY_PARSER_EXTERNAL_C_SHARED_MESSAGES_H
 ",
         generator = file!(),
@@ -51,7 +47,6 @@ void LIB_RUBY_PARSER_drop_diagnostic(LIB_RUBY_PARSER_Diagnostic *);
         enum_variants = messages.map(enum_variant).join(",\n        "),
         union_members = messages.map(union_member).join("\n        "),
         drop_fns = messages.map(drop_fn).join("\n"),
-        print_sizes = messages.map(print_size).join(" \\\n    ")
     )
 }
 
@@ -95,13 +90,6 @@ fn drop_fn(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "void LIB_RUBY_PARSER_drop_message_{variant}(LIB_RUBY_PARSER_{struct_name}* variant);",
         variant = message.lower_name(),
-        struct_name = message.camelcase_name
-    )
-}
-fn print_size(message: &lib_ruby_parser_nodes::Message) -> String {
-    format!(
-        "printf(\"LIB_RUBY_PARSER_MESSAGE_{upper}_SIZE=%lu\\n\", sizeof(LIB_RUBY_PARSER_{struct_name}));",
-        upper = message.upper_name(),
         struct_name = message.camelcase_name
     )
 }

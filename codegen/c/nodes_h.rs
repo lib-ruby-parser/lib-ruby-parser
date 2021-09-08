@@ -34,10 +34,6 @@ struct LIB_RUBY_PARSER_Node {{
     }} as;
 }};
 
-// print-sizes macro
-#define LIB_RUBY_PARSER_NODE_PRINT_SIZES \\
-    {print_sizes}
-
 {drop_fns}
 
 void LIB_RUBY_PARSER_drop_node(LIB_RUBY_PARSER_Node *node);
@@ -51,7 +47,6 @@ void LIB_RUBY_PARSER_drop_node_list(LIB_RUBY_PARSER_NodeList *node_list);
         structs = nodes.map(struct_declaration).join("\n\n"),
         enum_variants = nodes.map(enum_variant).join(",\n    "),
         union_members = nodes.map(union_member).join("\n        "),
-        print_sizes = nodes.map(print_size).join(" \\\n    "),
         drop_fns = nodes.map(drop_fn).join("\n")
     )
 }
@@ -86,14 +81,6 @@ fn union_member(node: &lib_ruby_parser_nodes::Node) -> String {
         "LIB_RUBY_PARSER_{node_type} {union_member_name};",
         node_type = node.camelcase_name,
         union_member_name = helpers::nodes::union_member_name(node)
-    )
-}
-
-fn print_size(node: &lib_ruby_parser_nodes::Node) -> String {
-    format!(
-        "printf(\"LIB_RUBY_PARSER_NODE_{upper}_SIZE=%lu\\n\", sizeof(LIB_RUBY_PARSER_{struct_name}));",
-        upper = node.upper_name(),
-        struct_name = node.camelcase_name
     )
 }
 

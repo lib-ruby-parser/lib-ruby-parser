@@ -29,33 +29,35 @@ test.rb
 tests/loc_matcher/loc_name_gen.rs
 
 # external/c
-external/c/*.o
 external/c/*.a
 external/c/*.dSYM
-external/c/sizes
-external/c/messages.h
-external/c/messages.c
-external/c/nodes.h
-external/c/nodes.c
-external/c/sizes-out
-external/c/bindings.h
+external/c/*.o
 external/c/bindings_messages.c
 external/c/bindings_nodes.c
-external/c/blobs_gen.h
+external/c/bindings.h
 external/c/blobs_gen.c
+external/c/blobs_gen.h
+external/c/messages.c
+external/c/messages.h
+external/c/nodes.c
+external/c/nodes.h
+external/c/sizes
+external/c/sizes_gen.h
+external/c/sizes-out
 
 # external/cpp
-external/cpp/*.o
 external/cpp/*.a
 external/cpp/*.dSYM
-external/cpp/sizes
-external/cpp/messages.hpp
-external/cpp/messages.cpp
-external/cpp/nodes.hpp
-external/cpp/nodes.cpp
-external/cpp/sizes-out
-external/cpp/bindings.hpp
+external/cpp/*.o
 external/cpp/bindings_messages.cpp
 external/cpp/bindings_nodes.cpp
-external/cpp/blobs_gen.hpp
+external/cpp/bindings.hpp
 external/cpp/blobs_gen.cpp
+external/cpp/blobs_gen.hpp
+external/cpp/messages.cpp
+external/cpp/messages.hpp
+external/cpp/nodes.cpp
+external/cpp/nodes.hpp
+external/cpp/sizes
+external/cpp/sizes_gen.hpp
+external/cpp/sizes-out

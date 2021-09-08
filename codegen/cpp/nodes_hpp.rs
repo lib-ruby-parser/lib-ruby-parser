@@ -44,16 +44,11 @@ namespace lib_ruby_parser
     void drop_node_list(NodeList *node_list);
 }}
 
-// print-sizes macro
-#define NODE_PRINT_SIZES \\
-    {print_sizes}
-
 #endif // LIB_RUBY_PARSER_EXTERNAL_C_NODES_HPP
 ",
         generator = file!(),
         structs = nodes.map(struct_declaration).join("\n\n    "),
         variants = nodes.map(variant).join(",\n        "),
-        print_sizes = nodes.map(print_size).join(" \\\n    "),
     )
 }
 
@@ -102,11 +97,4 @@ fn struct_declaration(node: &lib_ruby_parser_nodes::Node) -> String {
 }
 fn variant(node: &lib_ruby_parser_nodes::Node) -> String {
     node.camelcase_name.to_owned()
-}
-fn print_size(node: &lib_ruby_parser_nodes::Node) -> String {
-    format!(
-        "std::cout << \"LIB_RUBY_PARSER_NODE_{upper}_SIZE=\" << sizeof({struct_name}) << \"\\n\";",
-        upper = node.upper_name(),
-        struct_name = node.camelcase_name
-    )
 }

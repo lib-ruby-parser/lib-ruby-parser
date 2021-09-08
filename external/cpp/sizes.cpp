@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "structs.hpp"
+#include "sizes_gen.hpp"
 
 using namespace lib_ruby_parser;
 
@@ -25,9 +26,9 @@ int main()
     std::cout << "LIB_RUBY_PARSER_MAGIC_COMMENT_SIZE=" << sizeof(MagicComment) << '\n';
     std::cout << "LIB_RUBY_PARSER_DIAGNOSTIC_MESSAGE_SIZE=" << sizeof(DiagnosticMessage) << '\n';
 
-    NODE_PRINT_SIZES
+    print_node_sizes();
 
-    MESSAGE_PRINT_SIZES
+    print_messages_sizes();
 
     std::cout << "LIB_RUBY_PARSER_DIAGNOSTIC_SIZE=" << sizeof(Diagnostic) << '\n';
     std::cout << "LIB_RUBY_PARSER_NODE_SIZE=" << sizeof(Node) << '\n';
