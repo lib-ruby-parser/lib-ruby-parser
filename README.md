@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         debug: debug_level::PARSER,
         ..Default::default()
     };
-    let mut parser = Parser::new(b"2 + 2", options)?;
+    let mut parser = Parser::new(b"2 + 2".to_vec(), options);
 
     println!("{:#?}", parser.do_parse());
 
@@ -79,7 +79,11 @@ fn decode(encoding: String, input: Vec<u8>) -> DecoderResult {
     ))
 }
 
-let options = ParserOptions { decoder: Some(Box::new(decode)), debug: debug_level::PARSER, ..Default::default() };
+let options = ParserOptions {
+    decoder: Some(Decoder::new(Box::new(decode))),
+    debug: debug_level::PARSER,
+    ..Default::default()
+};
 let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3".to_vec(), options);
 let ParserResult { ast, input, .. } = parser.do_parse();
 
@@ -179,7 +183,7 @@ Time taken: 21.738944000098854 (total files: 18017)
 
 ```sh
 # Build recording executable
-RUSTFLAGS="-Cprofile-generate=$(PWD)/target/pgo/pgo.profraw" cargo build --release --all-features --example parse
+RUSTFLAGS="-Cprofile-generate=$(PWD)/target/pgo/pgo.profraw" cargo build --release --example parse
 
 # Record raw profiling data
 target/release/examples/parse --no-output "gems/repos/**/*.rb"
@@ -188,12 +192,12 @@ target/release/examples/parse --no-output "gems/repos/**/*.rb"
 llvm-profdata merge -o target/pgo/pgo.profraw/merged.profdata target/pgo/pgo.profraw
 
 # Build optimized executable
-RUSTFLAGS="-Cprofile-use=$(PWD)/target/pgo/pgo.profraw/merged.profdata" cargo build --release --all-features --example parse
+RUSTFLAGS="-Cprofile-use=$(PWD)/target/pgo/pgo.profraw/merged.profdata" cargo build --release --example parse
 ```
 
 PGO, No LTO:
 
-```
+```sh
 $ repeat 5 time target/release/examples/parse --no-output "gems/repos/**/*.rb"
 9.46s user 1.27s system 80% cpu 13.371 total
 8.51s user 0.66s system 99% cpu 9.171 total
@@ -204,7 +208,7 @@ $ repeat 5 time target/release/examples/parse --no-output "gems/repos/**/*.rb"
 
 No PGO, LTO=fat:
 
-```
+```sh
 $ repeat 5 time target/release/examples/parse --no-output "gems/repos/**/*.rb"
 9.90s user 1.29s system 80% cpu 13.917 total
 9.42s user 0.71s system 99% cpu 10.138 total

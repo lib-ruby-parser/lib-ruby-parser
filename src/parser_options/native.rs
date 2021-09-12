@@ -16,7 +16,7 @@ pub struct ParserOptions {
     /// + lib_ruby_parser::debug_level::Parser
     /// + lib_ruby_parser::debug_level::Lexer
     /// + lib_ruby_parser::debug_level::Buffer
-    /// + or a combination of them (like `Lexer | Buffer`, these value is just a bitmask)
+    /// + or a combination of them (like `Lexer | Buffer`, this value is just a bitmask)
     pub debug: debug_level::Type,
 
     /// Custom decoder that can be used if the source is encoded

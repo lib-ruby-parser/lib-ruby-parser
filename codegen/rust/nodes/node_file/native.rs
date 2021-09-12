@@ -200,12 +200,12 @@ fn print_with_locs(field: &lib_ruby_parser_nodes::NodeField) -> Vec<String> {
 
 fn getter(field: &lib_ruby_parser_nodes::NodeField) -> String {
     format!(
-        "/// Returns {field_name} field
+        "#[doc(hidden)]
     pub fn get_{method_name}(&self) -> &{return_type} {{
         &self.{field_name}
     }}
 
-    /// Returns mutable {field_name} field
+    #[doc(hidden)]
     pub fn get_{method_name}_mut(&mut self) -> &mut {return_type} {{
         &mut self.{field_name}
     }}",
@@ -217,7 +217,7 @@ fn getter(field: &lib_ruby_parser_nodes::NodeField) -> String {
 
 fn setter(field: &lib_ruby_parser_nodes::NodeField) -> String {
     format!(
-        "/// Sets {field_name} field
+        "#[doc(hidden)]
     pub fn set_{method_name}(&mut self, value: {field_type}) {{
         self.{field_name} = value;
     }}",

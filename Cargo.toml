@@ -2,11 +2,11 @@
 authors = ["Ilya Bylich <ibylich@gmail.com>"]
 description = "Ruby parser"
 edition = "2018"
-include = ["gen/**/*.rs", "src/**/*.rs", "build.rs", "Cargo.toml"]
+include = ["codegen/**/*.rs", "src/**/*.rs", "build.rs", "Cargo.toml", "README.md"]
 license = "MIT"
 name = "lib-ruby-parser"
 repository = "https://github.com/lib-ruby-parser/lib-ruby-parser"
-version = "3.0.6"
+version = "3.0.7"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -48,7 +48,7 @@ pprof = {version = "0.5.0", features = ["flamegraph"], optional = true}
 
 [build-dependencies]
 lib-ruby-parser-bindings = {version = "0.6.0", optional = true}
-lib-ruby-parser-nodes = {version = "0.25.0", optional = true}
+lib-ruby-parser-nodes = {version = "0.26.0", optional = true}
 rust-bison-skeleton = {version = "0.29.0", optional = true}
 
 [profile.dev]

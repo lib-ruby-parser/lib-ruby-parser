@@ -4,6 +4,7 @@
 #![warn(unused_qualifications)]
 #![warn(deprecated_in_future)]
 #![warn(unused_lifetimes)]
+#![doc = include_str!("../README.md")]
 
 /*!
 A Ruby parser written in Rust.
