@@ -5,13 +5,7 @@ use crate::str_term::str_types::*;
 use crate::DiagnosticMessage;
 use crate::{lex_states::*, LexState};
 
-pub(crate) trait ParsePercent {
-    fn percent_unknown(&mut self, term: &MaybeByte) -> i32;
-    fn percent_quotation(&mut self, c: &mut MaybeByte, ptok: usize) -> i32;
-    fn parse_percent(&mut self, space_seen: bool, last_state: LexState) -> i32;
-}
-
-impl ParsePercent for Lexer {
+impl Lexer {
     fn percent_unknown(&mut self, term: &MaybeByte) -> i32 {
         self.buffer.pushback(term);
         let len = self.multibyte_char_len(self.buffer.pcur);
@@ -116,7 +110,7 @@ impl ParsePercent for Lexer {
         }
     }
 
-    fn parse_percent(&mut self, space_seen: bool, last_state: LexState) -> i32 {
+    pub(crate) fn parse_percent(&mut self, space_seen: bool, last_state: LexState) -> i32 {
         let mut c: MaybeByte;
         let ptok = self.buffer.pcur;
 

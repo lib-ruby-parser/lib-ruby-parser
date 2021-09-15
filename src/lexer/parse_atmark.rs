@@ -3,12 +3,8 @@ use crate::source::buffer::*;
 use crate::DiagnosticMessage;
 use crate::{lex_states::*, LexState};
 
-pub(crate) trait ParseAtMark {
-    fn parse_atmark(&mut self, last_state: LexState) -> i32;
-}
-
-impl ParseAtMark for Lexer {
-    fn parse_atmark(&mut self, last_state: LexState) -> i32 {
+impl Lexer {
+    pub(crate) fn parse_atmark(&mut self, last_state: LexState) -> i32 {
         let ptr = self.buffer.pcur;
         let mut result: i32 = Self::tIVAR;
         let mut c = self.nextc();

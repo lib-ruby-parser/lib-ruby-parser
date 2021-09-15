@@ -1,41 +1,16 @@
 use crate::lexer::TokAdd;
-use crate::lexer::Yylval;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::Lexer;
 use crate::TokenBuf;
 use crate::{lex_states::*, DiagnosticMessage};
 
-pub(crate) trait ParseNumeric {
-    fn parse_numeric(&mut self, prefix: u8) -> i32;
-    fn parse_octal(
-        &mut self,
-        c: &mut MaybeByte,
-        nondigit: &mut Option<MaybeByte>,
-        start: usize,
-    ) -> Option<i32>;
-    fn invalid_octal(&mut self) -> i32;
-    fn trailing_uc(&mut self, nondigit: u8) -> i32;
-    fn decode_num(
-        &mut self,
-        c: MaybeByte,
-        nondigit: Option<MaybeByte>,
-        is_float: bool,
-        seen_e: bool,
-    ) -> i32;
-    fn parse_numeric_footer(&mut self, is_float: bool, seen_e: bool) -> i32;
-    fn set_number_literal(&mut self, value: &mut TokenBuf, token_type: i32, suffix: i8) -> i32;
-    fn no_digits(&mut self) -> i32;
-    fn number_literal_suffix(&mut self, mask: i8) -> i8;
-    fn set_integer_literal(&mut self, value: &mut TokenBuf, suffix: i8) -> i32;
-}
-
 const NUM_SUFFIX_R: i8 = 1 << 0;
 const NUM_SUFFIX_I: i8 = 1 << 1;
 const NUM_SUFFIX_ALL: i8 = 3;
 
-impl ParseNumeric for Lexer {
-    fn parse_numeric(&mut self, prefix: u8) -> i32 {
+impl Lexer {
+    pub(crate) fn parse_numeric(&mut self, prefix: u8) -> i32 {
         let mut c = MaybeByte::new(prefix);
 
         let mut is_float: bool = false;

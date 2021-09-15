@@ -4,19 +4,14 @@ use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::DiagnosticMessage;
 
-pub(crate) trait ParseQmark {
-    fn parse_qmark_ternary(&mut self, c: &MaybeByte) -> Result<i32, ()>;
-    fn parse_qmark(&mut self, space_seen: bool) -> Result<i32, ()>;
-}
-
-impl ParseQmark for Lexer {
+impl Lexer {
     fn parse_qmark_ternary(&mut self, c: &MaybeByte) -> Result<i32, ()> {
         self.buffer.pushback(c);
         self.lex_state.set(EXPR_VALUE);
         Ok(Self::tEH)
     }
 
-    fn parse_qmark(&mut self, space_seen: bool) -> Result<i32, ()> {
+    pub(crate) fn parse_qmark(&mut self, space_seen: bool) -> Result<i32, ()> {
         // let enc;
         let mut c;
 

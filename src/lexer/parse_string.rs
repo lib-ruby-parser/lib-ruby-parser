@@ -7,43 +7,10 @@ use crate::TokenBuf;
 use crate::{lex_states::*, DiagnosticMessage};
 use crate::{lexer::*, str_term::StringLiteral};
 
-pub(crate) trait ParseString {
-    fn take_strterm(&mut self) -> StringLiteral;
-    fn restore_strterm(&mut self, lit: StringLiteral);
-
-    fn parse_string(&mut self) -> i32;
-    fn string_term(&mut self, term: u8, func: usize) -> i32;
-    fn regx_options(&mut self) -> String;
-    fn peek_variable_name(&mut self) -> Option<i32>;
-    fn tokadd_string(
-        &mut self,
-        func: usize,
-        term: u8,
-        paren: Option<u8>,
-        nest: &mut usize,
-    ) -> Option<MaybeByte>;
-    fn flush_string_content(&mut self);
-    fn tokadd_utf8_unterminated(&mut self);
-    fn scan_hex(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize;
-    fn scan_oct(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize;
-    fn tokcopy(&mut self, n: usize);
-    fn tokaddmbc(&mut self, codepoint: usize);
-    fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool;
-    fn tokadd_utf8(&mut self, term: Option<u8>, _symbol_literal: usize, regexp_literal: usize);
-    fn simple_re_meta(&mut self, c: &MaybeByte) -> bool;
-    fn tokadd_escape_eof(&mut self) -> Result<(), ()>;
-    fn tokadd_escape(&mut self) -> Result<(), ()>;
-    fn read_escape_eof(&mut self) -> MaybeByte;
-    fn tok_hex(&mut self, numlen: &mut usize) -> MaybeByte;
-    fn read_escape(&mut self, flags: usize) -> MaybeByte;
-    fn is_ascii(&self) -> bool;
-    fn warn_space_char(&mut self, c: u8, prefix: &'static str);
-}
-
 const ESCAPE_CONTROL: usize = 1;
 const ESCAPE_META: usize = 2;
 
-impl ParseString for Lexer {
+impl Lexer {
     fn take_strterm(&mut self) -> StringLiteral {
         match self.strterm.take() {
             Some(StrTerm::StringLiteral(s)) => s,
@@ -54,7 +21,7 @@ impl ParseString for Lexer {
         self.strterm = Some(StrTerm::StringLiteral(literal));
     }
 
-    fn parse_string(&mut self) -> i32 {
+    pub(crate) fn parse_string(&mut self) -> i32 {
         let mut quote = self.take_strterm();
 
         let func = quote.func;
@@ -216,7 +183,7 @@ impl ParseString for Lexer {
         result
     }
 
-    fn peek_variable_name(&mut self) -> Option<i32> {
+    pub(crate) fn peek_variable_name(&mut self) -> Option<i32> {
         let mut c: MaybeByte;
         let mut ptr: usize = self.buffer.pcur;
 
@@ -267,7 +234,7 @@ impl ParseString for Lexer {
         None
     }
 
-    fn tokadd_string(
+    pub(crate) fn tokadd_string(
         &mut self,
         func: usize,
         term: u8,
@@ -389,7 +356,7 @@ impl ParseString for Lexer {
         Some(c)
     }
 
-    fn flush_string_content(&mut self) {
+    pub(crate) fn flush_string_content(&mut self) {
         // noop
     }
 
@@ -442,7 +409,7 @@ impl ParseString for Lexer {
         result
     }
 
-    fn tokcopy(&mut self, n: usize) {
+    pub(crate) fn tokcopy(&mut self, n: usize) {
         let substr = self
             .buffer
             .substr_at(self.buffer.pcur - n, self.buffer.pcur)
@@ -506,7 +473,12 @@ impl ParseString for Lexer {
         true
     }
 
-    fn tokadd_utf8(&mut self, term: Option<u8>, _symbol_literal: usize, regexp_literal: usize) {
+    pub(crate) fn tokadd_utf8(
+        &mut self,
+        term: Option<u8>,
+        _symbol_literal: usize,
+        regexp_literal: usize,
+    ) {
         let open_brace = b'{';
         let close_brace = b'}';
         let mut err_multiple_codepoints = false;
@@ -733,7 +705,7 @@ impl ParseString for Lexer {
         MaybeByte::new(c as u8)
     }
 
-    fn read_escape(&mut self, flags: usize) -> MaybeByte {
+    pub(crate) fn read_escape(&mut self, flags: usize) -> MaybeByte {
         let mut c;
         let mut numlen: usize = 0;
 
@@ -843,11 +815,11 @@ impl ParseString for Lexer {
         }
     }
 
-    fn is_ascii(&self) -> bool {
+    pub(crate) fn is_ascii(&self) -> bool {
         self.char_at(self.buffer.pcur - 1).is_ascii()
     }
 
-    fn warn_space_char(&mut self, c: u8, prefix: &'static str) {
+    pub(crate) fn warn_space_char(&mut self, c: u8, prefix: &'static str) {
         self.warn(
             DiagnosticMessage::new_invalid_character_syntax(format!("{}\\{}", prefix, c).into()),
             self.current_loc(),

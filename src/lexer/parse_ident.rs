@@ -5,12 +5,6 @@ use crate::source::buffer::*;
 use crate::DiagnosticMessage;
 use crate::{lex_states::*, LexState};
 
-pub(crate) trait ParseIdent {
-    fn is_identchar(&self) -> bool;
-    fn tokenize_ident(&mut self) -> Option<String>;
-    fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32;
-}
-
 fn is_var_name(ident: &str) -> bool {
     if let Some(first_char) = ident.chars().next() {
         return !first_char.is_uppercase();
@@ -18,20 +12,20 @@ fn is_var_name(ident: &str) -> bool {
     false
 }
 
-impl ParseIdent for Lexer {
-    fn is_identchar(&self) -> bool {
+impl Lexer {
+    pub(crate) fn is_identchar(&self) -> bool {
         !self.buffer.eofp
             && self
                 .buffer
                 .is_identchar(self.buffer.pcur - 1, self.buffer.pend)
     }
 
-    fn tokenize_ident(&mut self) -> Option<String> {
+    pub(crate) fn tokenize_ident(&mut self) -> Option<String> {
         self.set_yylval_name();
         self.tokenbuf.borrow_string().map(|s| s.to_string()).ok()
     }
 
-    fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32 {
+    pub(crate) fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32 {
         let mut c = c.clone();
         let mut result: i32;
         let last_state: LexState = self.lex_state.clone();

@@ -1,4 +1,4 @@
-use crate::lexer::{ParseIdent, ParseString, TokAdd, Yylval};
+use crate::lexer::TokAdd;
 use crate::maybe_byte::MaybeByte;
 use crate::source::buffer::*;
 use crate::str_term::{str_types::*, HeredocEnd, HeredocLiteral, StrTerm};
@@ -6,22 +6,10 @@ use crate::Lexer;
 use crate::TokenBuf;
 use crate::{lex_states::*, DiagnosticMessage};
 
-pub(crate) trait ParseHeredoc {
-    fn heredoc_identifier(&mut self) -> Option<i32>;
-    fn here_document(&mut self) -> i32;
-    fn compute_heredoc_end(&self) -> HeredocEnd;
-    fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32;
-    fn here_document_restore(&mut self, here: &HeredocLiteral) -> i32;
-    fn heredoc_flush_str(&mut self, str_: &TokenBuf) -> i32;
-    fn heredoc_flush(&mut self) -> i32;
-    fn heredoc_restore(&mut self, here: &HeredocLiteral);
-    fn update_heredoc_indent(&mut self, c: &MaybeByte) -> bool;
-}
-
 const TAB_WIDTH: i32 = 8;
 
-impl ParseHeredoc for Lexer {
-    fn heredoc_identifier(&mut self) -> Option<i32> {
+impl Lexer {
+    pub(crate) fn heredoc_identifier(&mut self) -> Option<i32> {
         /*
          * term_len is length of `<<"END"` except `END`,
          * in this case term_len is 4 (<, <, " and ").
@@ -124,7 +112,7 @@ impl ParseHeredoc for Lexer {
         Some(token)
     }
 
-    fn here_document(&mut self) -> i32 {
+    pub(crate) fn here_document(&mut self) -> i32 {
         let here = match self.strterm.as_ref().unwrap() {
             StrTerm::StringLiteral(_) => unreachable!("strterm must be heredoc"),
             StrTerm::HeredocLiteral(h) => h.clone(),
@@ -389,7 +377,7 @@ impl ParseHeredoc for Lexer {
         self.buffer.eofp = false;
     }
 
-    fn update_heredoc_indent(&mut self, c: &MaybeByte) -> bool {
+    pub(crate) fn update_heredoc_indent(&mut self, c: &MaybeByte) -> bool {
         if self.buffer.heredoc_line_indent == -1 {
             if *c == b'\n' {
                 self.buffer.heredoc_line_indent = 0
