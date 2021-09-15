@@ -5,7 +5,7 @@ use crate::source::buffer::*;
 use crate::DiagnosticMessage;
 
 impl Lexer {
-    fn parse_qmark_ternary(&mut self, c: &MaybeByte) -> Result<i32, ()> {
+    fn parse_qmark_ternary(&mut self, c: MaybeByte) -> Result<i32, ()> {
         self.buffer.pushback(c);
         self.lex_state.set(EXPR_VALUE);
         Ok(Self::tEH)
@@ -33,12 +33,12 @@ impl Lexer {
                     self.warn_space_char(c2, "?");
                 }
             }
-            return self.parse_qmark_ternary(&c);
+            return self.parse_qmark_ternary(c);
         }
         self.newtok();
 
         if !self.is_ascii() {
-            if self.tokadd_mbchar(&c).is_err() {
+            if self.tokadd_mbchar(c).is_err() {
                 return Ok(Self::END_OF_INPUT);
             }
         } else if (c.is_alnum() || c == b'_')
@@ -69,7 +69,7 @@ impl Lexer {
                     self.loc(start - 1, start),
                 )
             }
-            return self.parse_qmark_ternary(&c);
+            return self.parse_qmark_ternary(c);
         } else if c == b'\\' {
             if self.buffer.peek(b'u') {
                 self.nextc();
@@ -77,15 +77,15 @@ impl Lexer {
             } else if !self.buffer.is_eol() && !self.char_at(self.buffer.pcur).is_ascii() {
                 c = self.char_at(self.buffer.pcur);
                 self.nextc();
-                if self.tokadd_mbchar(&c).is_err() {
+                if self.tokadd_mbchar(c).is_err() {
                     return Ok(Self::END_OF_INPUT);
                 }
             } else {
                 let byte = self.read_escape(0);
-                self.tokadd(&byte);
+                self.tokadd(byte);
             }
         } else {
-            self.tokadd(&c);
+            self.tokadd(c);
         }
         self.tokfix();
         let yylval = self.tokenbuf.take();

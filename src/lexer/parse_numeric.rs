@@ -22,7 +22,7 @@ impl Lexer {
         self.lex_state.set(EXPR_END);
         self.newtok();
         if c == b'-' || c == b'+' {
-            self.tokadd(&c);
+            self.tokadd(c);
             c = self.nextc();
         }
         if c == b'0' {
@@ -30,7 +30,7 @@ impl Lexer {
             c = self.nextc();
             if c == b'x' || c == b'X' {
                 // hexadecimal
-                self.tokadd(&c);
+                self.tokadd(c);
                 c = self.nextc();
                 if !c.is_eof() && c.is_hexdigit() {
                     loop {
@@ -39,7 +39,7 @@ impl Lexer {
                                 break;
                             }
                             nondigit = Some(c.clone());
-                            self.tokadd(&c);
+                            self.tokadd(c);
                             c = self.nextc();
                             if c.is_eof() {
                                 break;
@@ -50,7 +50,7 @@ impl Lexer {
                             break;
                         }
                         nondigit = None;
-                        self.tokadd(&c);
+                        self.tokadd(c);
 
                         c = self.nextc();
                         if c.is_eof() {
@@ -58,7 +58,7 @@ impl Lexer {
                         }
                     }
                 }
-                self.buffer.pushback(&c);
+                self.buffer.pushback(c);
                 self.tokfix();
                 if self.toklen() == start + 1 {
                     return self.no_digits();
@@ -72,7 +72,7 @@ impl Lexer {
             }
             if c == b'b' || c == b'B' {
                 // binary
-                self.tokadd(&c);
+                self.tokadd(c);
                 c = self.nextc();
                 if c == b'0' || c == b'1' {
                     loop {
@@ -81,7 +81,7 @@ impl Lexer {
                                 break;
                             }
                             nondigit = Some(c.clone());
-                            self.tokadd(&c);
+                            self.tokadd(c);
                             c = self.nextc();
                             if c.is_eof() {
                                 break;
@@ -92,7 +92,7 @@ impl Lexer {
                             break;
                         }
                         nondigit = None;
-                        self.tokadd(&c);
+                        self.tokadd(c);
 
                         c = self.nextc();
                         if c.is_eof() {
@@ -100,7 +100,7 @@ impl Lexer {
                         }
                     }
                 }
-                self.buffer.pushback(&c);
+                self.buffer.pushback(c);
                 self.tokfix();
                 if self.toklen() == start + 1 {
                     return self.no_digits();
@@ -114,7 +114,7 @@ impl Lexer {
             }
             if c == b'd' || c == b'D' {
                 // decimal
-                self.tokadd(&c);
+                self.tokadd(c);
                 c = self.nextc();
                 if !c.is_eof() && c.is_digit() {
                     loop {
@@ -123,7 +123,7 @@ impl Lexer {
                                 break;
                             }
                             nondigit = Some(c.clone());
-                            self.tokadd(&c);
+                            self.tokadd(c);
                             c = self.nextc();
                             if c.is_eof() {
                                 break;
@@ -134,7 +134,7 @@ impl Lexer {
                             break;
                         }
                         nondigit = None;
-                        self.tokadd(&c);
+                        self.tokadd(c);
 
                         c = self.nextc();
                         if c.is_eof() {
@@ -142,7 +142,7 @@ impl Lexer {
                         }
                     }
                 }
-                self.buffer.pushback(&c);
+                self.buffer.pushback(c);
                 self.tokfix();
                 if self.toklen() == start + 1 {
                     return self.no_digits();
@@ -161,7 +161,7 @@ impl Lexer {
                 }
             }
             if c == b'o' || c == b'O' {
-                self.tokadd(&c);
+                self.tokadd(c);
                 // prefixed octal
                 c = self.nextc();
                 if c.is_eof() || c == b'_' || !c.is_digit() {
@@ -179,7 +179,7 @@ impl Lexer {
             } else if c == b'.' || c == b'e' || c == b'E' {
                 self.tokadd(b'0');
             } else {
-                self.buffer.pushback(&c);
+                self.buffer.pushback(c);
                 suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
 
                 let mut tok = self.tokenbuf.take();
@@ -193,7 +193,7 @@ impl Lexer {
                 Some(b'0') | Some(b'1') | Some(b'2') | Some(b'3') | Some(b'4') | Some(b'5')
                 | Some(b'6') | Some(b'7') | Some(b'8') | Some(b'9') => {
                     nondigit = None;
-                    self.tokadd(&c);
+                    self.tokadd(c);
                 }
 
                 Some(b'.') => {
@@ -205,21 +205,21 @@ impl Lexer {
                     } else {
                         let c0 = self.nextc();
                         if c.is_eof() || !c0.is_digit() {
-                            self.buffer.pushback(&c0);
+                            self.buffer.pushback(c0);
                             return self.decode_num(c, nondigit, is_float, seen_e);
                         }
                         c = c0;
                     }
                     seen_point = Some(self.toklen());
                     self.tokadd(b'.');
-                    self.tokadd(&c);
+                    self.tokadd(c);
                     is_float = true;
                     nondigit = None;
                 }
 
                 Some(b'e') | Some(b'E') => {
                     if let Some(nondigit_value) = &nondigit {
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         c = nondigit_value.clone();
                         return self.decode_num(c, nondigit, is_float, seen_e);
                     }
@@ -229,14 +229,14 @@ impl Lexer {
                     nondigit = Some(c.clone());
                     c = self.nextc();
                     if c != b'-' && c != b'+' && !c.is_digit() {
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         nondigit = None;
                         return self.decode_num(c, nondigit, is_float, seen_e);
                     }
-                    self.tokadd(&nondigit.clone().expect("nondigit must be set"));
+                    self.tokadd(nondigit.clone().expect("nondigit must be set"));
                     seen_e = true;
                     is_float = true;
-                    self.tokadd(&c);
+                    self.tokadd(c);
                     nondigit = if c == b'-' || c == b'+' {
                         Some(c)
                     } else {
@@ -245,7 +245,7 @@ impl Lexer {
                 }
 
                 Some(b'_') => {
-                    self.tokadd(&c);
+                    self.tokadd(c);
                     if nondigit.is_some() {
                         return self.decode_num(c, nondigit, is_float, seen_e);
                     }
@@ -271,7 +271,7 @@ impl Lexer {
                     break;
                 }
                 *nondigit = Some(c.clone());
-                self.tokadd(&*c);
+                self.tokadd(*c);
                 *c = self.nextc();
                 if c.is_eof() {
                     break;
@@ -286,7 +286,7 @@ impl Lexer {
                 return None;
             }
             *nondigit = None;
-            self.tokadd(&*c);
+            self.tokadd(*c);
 
             *c = self.nextc();
             if c.is_eof() {
@@ -331,7 +331,7 @@ impl Lexer {
         is_float: bool,
         seen_e: bool,
     ) -> i32 {
-        self.buffer.pushback(&c);
+        self.buffer.pushback(c);
         if let Some(MaybeByte::Some(byte)) = nondigit {
             self.trailing_uc(byte);
         }
@@ -410,7 +410,7 @@ impl Lexer {
                 // self.literal_flush(self.buffer.pcur);
                 return 0;
             }
-            self.buffer.pushback(&c);
+            self.buffer.pushback(c);
             break;
         }
 

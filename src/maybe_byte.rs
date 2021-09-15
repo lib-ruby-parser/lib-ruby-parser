@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) enum MaybeByte {
     Some(u8),
     EndOfInput,
@@ -165,9 +165,9 @@ impl MaybeByteNew<u8> for MaybeByte {
 
 impl PartialEq<u8> for MaybeByte {
     fn eq(&self, other: &u8) -> bool {
-        match self.to_option() {
-            Some(c) => c == *other,
-            _ => false,
+        match self {
+            MaybeByte::Some(c) => c == other,
+            MaybeByte::EndOfInput => false,
         }
     }
 }

@@ -6,7 +6,7 @@ use crate::DiagnosticMessage;
 use crate::{lex_states::*, LexState};
 
 impl Lexer {
-    fn percent_unknown(&mut self, term: &MaybeByte) -> i32 {
+    fn percent_unknown(&mut self, term: MaybeByte) -> i32 {
         self.buffer.pushback(term);
         let len = self.multibyte_char_len(self.buffer.pcur);
         match len {
@@ -27,13 +27,13 @@ impl Lexer {
         if c.is_eof() || !c.is_alnum() {
             term = c.clone();
             if !c.is_ascii() {
-                return self.percent_unknown(&term);
+                return self.percent_unknown(term);
             }
             *c = MaybeByte::new(b'Q');
         } else {
             term = self.nextc();
             if term.is_alnum() {
-                return self.percent_unknown(&term);
+                return self.percent_unknown(term);
             }
         }
 
@@ -125,7 +125,7 @@ impl Lexer {
             self.lex_state.set(EXPR_BEG);
             return Self::tOP_ASGN;
         }
-        if self.lex_state.is_spacearg(&c, space_seen)
+        if self.lex_state.is_spacearg(c, space_seen)
             || (self.lex_state.is_some(EXPR_FITEM) && c == b's')
         {
             return self.percent_quotation(&mut c, ptok);
@@ -135,14 +135,14 @@ impl Lexer {
         } else {
             EXPR_BEG
         });
-        self.buffer.pushback(&c);
+        self.buffer.pushback(c);
         self.warn_balanced(
             Self::tPERCENT,
             "%%",
             "string literal",
-            &c,
+            c,
             space_seen,
-            &last_state,
+            last_state,
         )
     }
 }

@@ -63,7 +63,7 @@ impl Lexer {
             }
         } else {
             if !self.is_identchar() {
-                self.buffer.pushback(&c);
+                self.buffer.pushback(c);
                 if (func & STR_FUNC_INDENT) != 0 {
                     self.buffer.pushback(if indent > 0 { b'~' } else { b'-' });
                 }
@@ -81,7 +81,7 @@ impl Lexer {
                     break;
                 }
             }
-            self.buffer.pushback(&c);
+            self.buffer.pushback(c);
         }
 
         len = self.buffer.pcur - (self.buffer.pbeg + offset) - quote;
@@ -182,8 +182,7 @@ impl Lexer {
 
                 if self.buffer.heredoc_indent > 0 {
                     let mut i = 0;
-                    while (ptr + i < ptr_end) && self.update_heredoc_indent(&self.char_at(ptr + i))
-                    {
+                    while (ptr + i < ptr_end) && self.update_heredoc_indent(self.char_at(ptr + i)) {
                         i += 1;
                     }
                     self.buffer.heredoc_line_indent = 0;
@@ -239,7 +238,7 @@ impl Lexer {
                 c = self.nextc();
             }
             loop {
-                self.buffer.pushback(&c);
+                self.buffer.pushback(c);
                 // enc = self.p.enc;
                 match self.tokadd_string(func, b'\n', None, &mut 0) {
                     Some(cc) => c = cc,
@@ -258,7 +257,7 @@ impl Lexer {
                     return self.heredoc_flush();
                 }
                 let cc = self.nextc();
-                self.tokadd(&cc);
+                self.tokadd(cc);
                 if self.buffer.heredoc_indent > 0 {
                     self.buffer.goto_eol();
                     return self.heredoc_flush();
@@ -377,19 +376,19 @@ impl Lexer {
         self.buffer.eofp = false;
     }
 
-    pub(crate) fn update_heredoc_indent(&mut self, c: &MaybeByte) -> bool {
+    pub(crate) fn update_heredoc_indent(&mut self, c: MaybeByte) -> bool {
         if self.buffer.heredoc_line_indent == -1 {
-            if *c == b'\n' {
+            if c == b'\n' {
                 self.buffer.heredoc_line_indent = 0
             }
-        } else if *c == b' ' {
+        } else if c == b' ' {
             self.buffer.heredoc_line_indent += 1;
             return true;
-        } else if *c == b'\t' {
+        } else if c == b'\t' {
             let w = (self.buffer.heredoc_line_indent / TAB_WIDTH) + 1;
             self.buffer.heredoc_line_indent = w * TAB_WIDTH;
             return true;
-        } else if *c != b'\n' {
+        } else if c != b'\n' {
             if self.buffer.heredoc_indent > self.buffer.heredoc_line_indent {
                 self.buffer.heredoc_indent = self.buffer.heredoc_line_indent
             }

@@ -25,15 +25,14 @@ impl Lexer {
         self.tokenbuf.borrow_string().map(|s| s.to_string()).ok()
     }
 
-    pub(crate) fn parse_ident(&mut self, c: &MaybeByte, cmd_state: bool) -> i32 {
-        let mut c = c.clone();
+    pub(crate) fn parse_ident(&mut self, mut c: MaybeByte, cmd_state: bool) -> i32 {
         let mut result: i32;
         let last_state: LexState = self.lex_state.clone();
         let ident: String;
 
         loop {
             if !c.is_ascii() { /* mb = ENC_CODERANGE_UNKNOWN */ }
-            if self.tokadd_mbchar(&c).is_err() {
+            if self.tokadd_mbchar(c).is_err() {
                 return Self::END_OF_INPUT;
             }
             c = self.nextc();
@@ -45,7 +44,7 @@ impl Lexer {
 
         if (c == b'!' || c == b'?') && !self.buffer.peek(b'=') {
             result = Self::tFID;
-            self.tokadd(&c);
+            self.tokadd(c);
         } else if c == b'='
             && self.lex_state.is_some(EXPR_FNAME)
             && (!self.buffer.peek(b'~')
@@ -53,10 +52,10 @@ impl Lexer {
                 && (!self.buffer.peek(b'=') || (self.buffer.peek_n(b'>', 1))))
         {
             result = Self::tIDENTIFIER;
-            self.tokadd(&c)
+            self.tokadd(c)
         } else {
             result = Self::tCONSTANT; /* assume provisionally */
-            self.buffer.pushback(&c)
+            self.buffer.pushback(c)
         }
         self.tokfix();
 

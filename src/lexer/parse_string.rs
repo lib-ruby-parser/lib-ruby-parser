@@ -73,7 +73,7 @@ impl Lexer {
         if c == term && quote.nest == 0 {
             if (func & STR_FUNC_QWORDS) != 0 {
                 quote.func |= STR_FUNC_TERM;
-                self.buffer.pushback(&c); /* dispatch the term at tSTRING_END */
+                self.buffer.pushback(c); /* dispatch the term at tSTRING_END */
                 self.restore_strterm(quote);
                 return Self::tSPACE;
             }
@@ -81,7 +81,7 @@ impl Lexer {
             return self.string_term(term, func);
         }
         if space {
-            self.buffer.pushback(&c);
+            self.buffer.pushback(c);
             self.restore_strterm(quote);
             return Self::tSPACE;
         }
@@ -94,7 +94,7 @@ impl Lexer {
             self.tokadd(b'#');
             c = self.nextc();
         }
-        self.buffer.pushback(&c);
+        self.buffer.pushback(c);
 
         let mut nest = quote.nest;
         let added = self.tokadd_string(func, term, paren, &mut nest);
@@ -160,12 +160,12 @@ impl Lexer {
                     result.push(ch as char);
                 }
                 _ => {
-                    self.tokadd(&c);
+                    self.tokadd(c);
                 }
             }
         }
 
-        self.buffer.pushback(&c);
+        self.buffer.pushback(c);
         if self.toklen() > 0 {
             self.tokfix();
             self.compile_error(
@@ -251,14 +251,14 @@ impl Lexer {
             }
 
             if self.buffer.heredoc_indent > 0 {
-                self.update_heredoc_indent(&c);
+                self.update_heredoc_indent(c);
             }
 
             if c == paren {
                 *nest += 1;
             } else if c == term {
                 if *nest == 0 {
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     break;
                 }
                 *nest -= 1;
@@ -268,7 +268,7 @@ impl Lexer {
             {
                 let c2 = self.char_at(self.buffer.pcur);
                 if c2 == b'$' || c2 == b'@' || c2 == b'{' {
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     break;
                 }
             } else if c == b'\\' {
@@ -292,7 +292,7 @@ impl Lexer {
                     }
                     Some(b'\\') => {
                         if (func & STR_FUNC_ESCAPE) != 0 {
-                            self.tokadd(&c)
+                            self.tokadd(c)
                         }
                     }
                     Some(b'u') => {
@@ -313,20 +313,20 @@ impl Lexer {
                     _ => {
                         if !c.is_ascii() && (func & STR_FUNC_EXPAND) == 0 {
                             self.tokadd(b'\\');
-                            self.tokadd(&c);
+                            self.tokadd(c);
                         }
                         if (func & STR_FUNC_REGEXP) != 0 {
-                            if c == term && !self.simple_re_meta(&c) {
-                                self.tokadd(&c);
+                            if c == term && !self.simple_re_meta(c) {
+                                self.tokadd(c);
                                 continue;
                             }
-                            self.buffer.pushback(&c);
+                            self.buffer.pushback(c);
                             if self.tokadd_escape().is_err() {
                                 return None;
                             }
                             continue;
                         } else if (func & STR_FUNC_EXPAND) != 0 {
-                            self.buffer.pushback(&c);
+                            self.buffer.pushback(c);
                             if (func & STR_FUNC_ESCAPE) != 0 {
                                 self.tokadd(b'\\')
                             }
@@ -338,19 +338,19 @@ impl Lexer {
                             // ignore backslashed spaces in %w
                         } else if c != term && c != paren {
                             self.tokadd(b'\\');
-                            self.buffer.pushback(&c);
+                            self.buffer.pushback(c);
                             continue;
                         }
                     }
                 }
             } else if !self.is_ascii() {
-                self.tokadd(&c);
+                self.tokadd(c);
                 continue;
             } else if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
-                self.buffer.pushback(&c);
+                self.buffer.pushback(c);
                 break;
             }
-            self.tokadd(&c);
+            self.tokadd(c);
         }
 
         Some(c)
@@ -513,7 +513,7 @@ impl Lexer {
                     second = Some(self.buffer.pcur);
                 }
                 if regexp_literal != 0 {
-                    self.tokadd(&last)
+                    self.tokadd(last)
                 }
                 if !self.tokadd_codepoint(regexp_literal, true) {
                     break;
@@ -557,20 +557,20 @@ impl Lexer {
         }
     }
 
-    fn simple_re_meta(&mut self, c: &MaybeByte) -> bool {
+    fn simple_re_meta(&mut self, c: MaybeByte) -> bool {
         matches!(
-            c.to_option(),
-            Some(b'$')
-                | Some(b'*')
-                | Some(b'+')
-                | Some(b'.')
-                | Some(b'?')
-                | Some(b'^')
-                | Some(b'|')
-                | Some(b')')
-                | Some(b']')
-                | Some(b'}')
-                | Some(b'>')
+            c,
+            MaybeByte::Some(b'$')
+                | MaybeByte::Some(b'*')
+                | MaybeByte::Some(b'+')
+                | MaybeByte::Some(b'.')
+                | MaybeByte::Some(b'?')
+                | MaybeByte::Some(b'^')
+                | MaybeByte::Some(b'|')
+                | MaybeByte::Some(b')')
+                | MaybeByte::Some(b']')
+                | MaybeByte::Some(b'}')
+                | MaybeByte::Some(b'>')
         )
     }
 
@@ -614,7 +614,7 @@ impl Lexer {
                     }
                     c = self.nextc();
                     if c != b'-' {
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         return self.tokadd_escape_eof();
                     }
                     self.tokcopy(3);
@@ -627,7 +627,7 @@ impl Lexer {
                     } else if c.is_eof() {
                         return self.tokadd_escape_eof();
                     }
-                    self.tokadd(&c);
+                    self.tokadd(c);
                     return Ok(());
                 }
 
@@ -637,7 +637,7 @@ impl Lexer {
                     }
                     c = self.nextc();
                     if c != b'-' {
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         return self.tokadd_escape_eof();
                     }
                     self.tokcopy(3);
@@ -649,7 +649,7 @@ impl Lexer {
                     } else if c.is_eof() {
                         return self.tokadd_escape_eof();
                     }
-                    self.tokadd(&c);
+                    self.tokadd(c);
                     return Ok(());
                 }
 
@@ -667,7 +667,7 @@ impl Lexer {
                     } else if c.is_eof() {
                         return self.tokadd_escape_eof();
                     }
-                    self.tokadd(&c);
+                    self.tokadd(c);
                     return Ok(());
                 }
 
@@ -722,7 +722,7 @@ impl Lexer {
 
             Some(b'0') | Some(b'1') | Some(b'2') | Some(b'3') | Some(b'4') | Some(b'5')
             | Some(b'6') | Some(b'7') | Some(b'8') | Some(b'9') => {
-                self.buffer.pushback(&c);
+                self.buffer.pushback(c);
                 let c = self.scan_oct(self.buffer.pcur, 3, &mut numlen);
                 self.buffer.pcur += numlen;
                 MaybeByte::new(c as u8)

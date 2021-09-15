@@ -5,10 +5,10 @@ pub(crate) trait TokAdd<T> {
     fn tokadd(&mut self, c: T);
 }
 
-impl TokAdd<&MaybeByte> for Lexer {
-    fn tokadd(&mut self, c: &MaybeByte) {
+impl TokAdd<MaybeByte> for Lexer {
+    fn tokadd(&mut self, c: MaybeByte) {
         match c {
-            MaybeByte::Some(c) => self.tokadd(*c),
+            MaybeByte::Some(c) => self.tokadd(c),
             MaybeByte::EndOfInput => panic!("can't emit EOF"),
         }
     }

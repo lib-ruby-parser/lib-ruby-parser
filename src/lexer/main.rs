@@ -297,13 +297,13 @@ impl Lexer {
                             }
 
                             if c == b'#' {
-                                self.buffer.pushback(&c);
+                                self.buffer.pushback(c);
                                 continue 'retrying;
                             }
 
                             if c == b'&' || c == b'.' {
                                 if self.buffer.peek(b'.') == (c == b'&') {
-                                    self.buffer.pushback(&c);
+                                    self.buffer.pushback(c);
                                     continue 'retrying;
                                 }
                             }
@@ -336,8 +336,8 @@ impl Lexer {
                             self.lex_state.set(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
-                        self.buffer.pushback(&c);
-                        if self.lex_state.is_spacearg(&c, space_seen) {
+                        self.buffer.pushback(c);
+                        if self.lex_state.is_spacearg(c, space_seen) {
                             self.warn(
                                 DiagnosticMessage::new_d_star_interpreted_as_arg_prefix(),
                                 self.current_loc(),
@@ -350,9 +350,9 @@ impl Lexer {
                                 Self::tPOW,
                                 "**",
                                 "argument prefix",
-                                &c,
+                                c,
                                 space_seen,
-                                &last_state,
+                                last_state,
                             );
                         }
                     } else {
@@ -361,8 +361,8 @@ impl Lexer {
                             self.lex_state.set(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
-                        self.buffer.pushback(&c);
-                        if self.lex_state.is_spacearg(&c, space_seen) {
+                        self.buffer.pushback(c);
+                        if self.lex_state.is_spacearg(c, space_seen) {
                             self.warn(
                                 DiagnosticMessage::new_star_interpreted_as_arg_prefix(),
                                 self.current_loc(),
@@ -375,9 +375,9 @@ impl Lexer {
                                 Self::tSTAR2,
                                 "*",
                                 "argument prefix",
-                                &c,
+                                c,
                                 space_seen,
-                                &last_state,
+                                last_state,
                             );
                         }
                     }
@@ -406,7 +406,7 @@ impl Lexer {
                     if c == b'~' {
                         return Self::tNMATCH;
                     }
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     return Self::tBANG;
                 }
 
@@ -429,7 +429,7 @@ impl Lexer {
                                 if c == b'=' && self.buffer.is_word_match("end") {
                                     break;
                                 }
-                                self.buffer.pushback(&c);
+                                self.buffer.pushback(c);
                             }
                             self.buffer.goto_eol();
                             self.comments.push(Comment::new(
@@ -451,7 +451,7 @@ impl Lexer {
                         if c == b'=' {
                             return Self::tEQQ;
                         }
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         return Self::tEQ;
                     }
                     if c == b'~' {
@@ -459,7 +459,7 @@ impl Lexer {
                     } else if c == b'>' {
                         return Self::tASSOC;
                     }
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     return Self::tEQL;
                 }
 
@@ -489,7 +489,7 @@ impl Lexer {
                         if c == b'>' {
                             return Self::tCMP;
                         }
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         return Self::tLEQ;
                     }
                     if c == b'<' {
@@ -499,17 +499,17 @@ impl Lexer {
                             self.lex_state.set(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         return self.warn_balanced(
                             Self::tLSHFT,
                             "<<",
                             "here document",
-                            &c,
+                            c,
                             space_seen,
-                            &last_state,
+                            last_state,
                         );
                     }
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     return Self::tLT;
                 }
 
@@ -532,10 +532,10 @@ impl Lexer {
                             self.lex_state.set(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         return Self::tRSHFT;
                     }
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     return Self::tGT;
                 }
 
@@ -594,7 +594,7 @@ impl Lexer {
                             self.lex_state.set(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         return Self::tANDOP;
                     } else if c == b'=' {
                         self.set_yylval_id("&=");
@@ -605,8 +605,8 @@ impl Lexer {
                         self.lex_state.set(EXPR_DOT);
                         return Self::tANDDOT;
                     }
-                    self.buffer.pushback(&c);
-                    if self.lex_state.is_spacearg(&c, space_seen) {
+                    self.buffer.pushback(c);
+                    if self.lex_state.is_spacearg(c, space_seen) {
                         if c != b':'
                             || {
                                 c = self.buffer.peekc_n(1);
@@ -631,9 +631,9 @@ impl Lexer {
                             Self::tAMPER2,
                             "&",
                             "argument prefix",
-                            &c,
+                            c,
                             space_seen,
-                            &last_state,
+                            last_state,
                         );
                     }
                     self.lex_state.set(if self.lex_state.is_after_operator() {
@@ -654,9 +654,9 @@ impl Lexer {
                             self.lex_state.set(EXPR_BEG);
                             return Self::tOP_ASGN;
                         }
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         if last_state.is_some(EXPR_BEG) {
-                            self.buffer.pushback(&Some(b'|'));
+                            self.buffer.pushback(b'|');
                             return Self::tPIPE;
                         }
                         return Self::tOROP;
@@ -671,7 +671,7 @@ impl Lexer {
                     } else {
                         EXPR_BEG | EXPR_LABEL
                     });
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     return Self::tPIPE;
                 }
 
@@ -682,7 +682,7 @@ impl Lexer {
                         if c == b'@' {
                             return Self::tUPLUS;
                         }
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         return Self::tPLUS;
                     }
                     if c == b'=' {
@@ -691,25 +691,25 @@ impl Lexer {
                         return Self::tOP_ASGN;
                     }
                     if self.lex_state.is_beg()
-                        || (self.lex_state.is_spacearg(&c, space_seen)
+                        || (self.lex_state.is_spacearg(c, space_seen)
                             && self.arg_ambiguous(b'+', self.current_loc().adjust_end(-1)))
                     {
                         self.lex_state.set(EXPR_BEG);
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         if !c.is_eof() && c.is_digit() {
                             return self.parse_numeric(b'+');
                         }
                         return Self::tUPLUS;
                     }
                     self.lex_state.set(EXPR_BEG);
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     return self.warn_balanced(
                         Self::tPLUS,
                         "+",
                         "unary operator",
-                        &c,
+                        c,
                         space_seen,
-                        &last_state,
+                        last_state,
                     );
                 }
 
@@ -720,7 +720,7 @@ impl Lexer {
                         if c == b'@' {
                             return Self::tUMINUS;
                         }
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         return Self::tMINUS;
                     }
                     if c == b'=' {
@@ -733,25 +733,25 @@ impl Lexer {
                         return Self::tLAMBDA;
                     }
                     if self.lex_state.is_beg()
-                        || (self.lex_state.is_spacearg(&c, space_seen)
+                        || (self.lex_state.is_spacearg(c, space_seen)
                             && self.arg_ambiguous(b'-', self.current_loc().adjust_end(-1)))
                     {
                         self.lex_state.set(EXPR_BEG);
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         if !c.is_eof() && c.is_digit() {
                             return Self::tUMINUS_NUM;
                         }
                         return Self::tUMINUS;
                     }
                     self.lex_state.set(EXPR_BEG);
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     return self.warn_balanced(
                         Self::tMINUS,
                         "-",
                         "unary operator",
-                        &c,
+                        c,
                         space_seen,
-                        &last_state,
+                        last_state,
                     );
                 }
 
@@ -775,10 +775,10 @@ impl Lexer {
                             }
                             return if is_beg { Self::tBDOT3 } else { Self::tDOT3 };
                         }
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         return if is_beg { Self::tBDOT2 } else { Self::tDOT2 };
                     }
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     if !c.is_eof() && c.is_digit() {
                         let prev = if self.buffer.pcur - 1 > self.buffer.pbeg {
                             self.buffer.byte_at(self.buffer.pcur - 2)
@@ -844,7 +844,7 @@ impl Lexer {
                             || self.lex_state.is_some(EXPR_CLASS)
                             || self
                                 .lex_state
-                                .is_spacearg(&MaybeByte::EndOfInput, space_seen)
+                                .is_spacearg(MaybeByte::EndOfInput, space_seen)
                         {
                             self.lex_state.set(EXPR_BEG);
                             return Self::tCOLON3;
@@ -854,14 +854,14 @@ impl Lexer {
                         return Self::tCOLON2;
                     }
                     if self.lex_state.is_end() || c.is_space() || c == Some(b'#') {
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         let result = self.warn_balanced(
                             Self::tCOLON,
                             ":",
                             "symbol literal",
-                            &c,
+                            c,
                             space_seen,
-                            &last_state,
+                            last_state,
                         );
                         self.lex_state.set(EXPR_BEG);
                         return result;
@@ -873,7 +873,7 @@ impl Lexer {
                         Some(c) if c == b'"' => {
                             self.strterm = self.new_strterm(str_dsym, c, None, None)
                         }
-                        _ => self.buffer.pushback(&c),
+                        _ => self.buffer.pushback(c),
                     }
                     self.lex_state.set(EXPR_FNAME);
                     return Self::tSYMBEG;
@@ -890,8 +890,8 @@ impl Lexer {
                         self.lex_state.set(EXPR_BEG);
                         return Self::tOP_ASGN;
                     }
-                    self.buffer.pushback(&c);
-                    if self.lex_state.is_spacearg(&c, space_seen) {
+                    self.buffer.pushback(c);
+                    if self.lex_state.is_spacearg(c, space_seen) {
                         self.arg_ambiguous(b'/', self.current_loc());
                         self.strterm = self.new_strterm(str_regexp, b'/', None, None);
                         return Self::tREGEXP_BEG;
@@ -905,9 +905,9 @@ impl Lexer {
                         Self::tDIVIDE,
                         "/",
                         "regexp literal",
-                        &c,
+                        c,
                         space_seen,
-                        &last_state,
+                        last_state,
                     );
                 }
 
@@ -923,7 +923,7 @@ impl Lexer {
                     } else {
                         EXPR_BEG
                     });
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     return Self::tCARET;
                 }
 
@@ -942,7 +942,7 @@ impl Lexer {
                     if self.lex_state.is_after_operator() {
                         c = self.nextc();
                         if c != b'@' {
-                            self.buffer.pushback(&c);
+                            self.buffer.pushback(c);
                         }
                         self.lex_state.set(EXPR_ARG);
                     } else {
@@ -991,10 +991,10 @@ impl Lexer {
                             if c == b'=' {
                                 return Self::tASET;
                             }
-                            self.buffer.pushback(&c);
+                            self.buffer.pushback(c);
                             return Self::tAREF;
                         }
-                        self.buffer.pushback(&c);
+                        self.buffer.pushback(c);
                         self.lex_state.set(EXPR_ARG | EXPR_LABEL);
                         return Self::tLBRACK2;
                     } else if self.lex_state.is_beg()
@@ -1058,7 +1058,7 @@ impl Lexer {
                             None => {}
                         }
                     }
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     return Self::tBACKSLASH;
                 }
 
@@ -1099,7 +1099,7 @@ impl Lexer {
             break;
         }
 
-        self.parse_ident(&c, cmd_state)
+        self.parse_ident(c, cmd_state)
     }
 
     fn normal_newline_leaf_label(&mut self) -> i32 {
@@ -1121,9 +1121,9 @@ impl Lexer {
         token_type: i32,
         op: &'static str,
         syn: &'static str,
-        c: &MaybeByte,
+        c: MaybeByte,
         space_seen: bool,
-        last_state: &LexState,
+        last_state: LexState,
     ) -> i32 {
         if !last_state.is_some(EXPR_CLASS | EXPR_DOT | EXPR_FNAME | EXPR_ENDFN)
             && space_seen & !c.is_space()
@@ -1201,10 +1201,9 @@ impl Lexer {
         self.lpar_beg == self.paren_nest
     }
 
-    pub(crate) fn tokadd_ident(&mut self, c: &MaybeByte) -> bool {
-        let mut c = c.clone();
+    pub(crate) fn tokadd_ident(&mut self, mut c: MaybeByte) -> bool {
         loop {
-            if self.tokadd_mbchar(&c).is_err() {
+            if self.tokadd_mbchar(c).is_err() {
                 return true;
             }
             c = self.nextc();
@@ -1214,7 +1213,7 @@ impl Lexer {
             }
         }
 
-        self.buffer.pushback(&c);
+        self.buffer.pushback(c);
         false
     }
 
@@ -1228,7 +1227,7 @@ impl Lexer {
         self.buffer.set_ptok(ptok);
     }
 
-    pub(crate) fn tokadd_mbchar(&mut self, c: &MaybeByte) -> Result<(), ()> {
+    pub(crate) fn tokadd_mbchar(&mut self, c: MaybeByte) -> Result<(), ()> {
         let mut len = match self.multibyte_char_len(self.buffer.pcur - 1) {
             Some(len) => len,
             None => return Err(()),

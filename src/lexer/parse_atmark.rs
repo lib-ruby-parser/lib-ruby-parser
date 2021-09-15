@@ -23,7 +23,7 @@ impl Lexer {
             EXPR_END
         });
         if c.is_eof() || !self.is_identchar() {
-            self.buffer.pushback(&c);
+            self.buffer.pushback(c);
             if result == Self::tIVAR {
                 self.compile_error(DiagnosticMessage::new_ivar_without_id(), self.current_loc());
             } else {
@@ -49,7 +49,7 @@ impl Lexer {
             return result;
         }
 
-        if self.tokadd_ident(&c) {
+        if self.tokadd_ident(c) {
             return Self::END_OF_INPUT;
         }
         self.tokenize_ident();

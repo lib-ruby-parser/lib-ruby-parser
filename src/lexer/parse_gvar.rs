@@ -20,10 +20,10 @@ impl Lexer {
                     self.tokadd(b'$');
                     self.tokadd(b'_');
                 } else {
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     c = MaybeByte::new(b'_');
                     self.tokadd(b'$');
-                    self.tokadd(&c);
+                    self.tokadd(c);
                     return Self::tGVAR;
                 }
             },
@@ -44,17 +44,17 @@ impl Lexer {
             | Some(b'>')        /* $>: default output handle */
             | Some(b'\"') => {  /* $": already loaded files */
                 self.tokadd(b'$');
-                self.tokadd(&c);
+                self.tokadd(c);
                 return Self::tGVAR;
             },
             Some(b'-') => {
                 self.tokadd(b'$');
-                self.tokadd(&c);
+                self.tokadd(c);
                 c = self.nextc();
                 if self.is_identchar() {
-                    if self.tokadd_mbchar(&c).is_err() { return Self::END_OF_INPUT }
+                    if self.tokadd_mbchar(c).is_err() { return Self::END_OF_INPUT }
                 } else {
-                    self.buffer.pushback(&c);
+                    self.buffer.pushback(c);
                     self.buffer.pushback(b'-');
                     return Self::tCHAR;
                 }
@@ -66,7 +66,7 @@ impl Lexer {
             | Some(b'+') => {  /* $+: string matches last paren. */
                 if last_state.is_some(EXPR_FNAME) {
                     self.tokadd(b'$');
-                    self.tokadd(&c);
+                    self.tokadd(c);
                     return Self::tGVAR
                 }
                 return Self::tBACK_REF;
@@ -82,14 +82,14 @@ impl Lexer {
             | Some(b'9') => {
                 self.tokadd(b'$');
                 loop {
-                    self.tokadd(&c);
+                    self.tokadd(c);
                     c = self.nextc();
 
                     if c.is_eof() || !c.is_digit() {
                         break;
                     }
                 }
-                self.buffer.pushback(&c);
+                self.buffer.pushback(c);
                 if last_state.is_some(EXPR_FNAME) {
                     return Self::tGVAR
                 }
@@ -102,7 +102,7 @@ impl Lexer {
                         None | Some(b' ') => self.compile_error(DiagnosticMessage::new_gvar_without_id(), self.current_loc()),
                         Some(name) => {
                             // The following line comes from MRI, but it seems to be a bug
-                            // self.buffer.pushback(&c);
+                            // self.buffer.pushback(c);
                             self.compile_error(DiagnosticMessage::new_invalid_gvar_name(name), self.current_loc());
                         }
                     }
@@ -113,7 +113,7 @@ impl Lexer {
             }
         }
 
-        if self.tokadd_ident(&c) {
+        if self.tokadd_ident(c) {
             return Self::END_OF_INPUT;
         }
         self.lex_state.set(EXPR_END);

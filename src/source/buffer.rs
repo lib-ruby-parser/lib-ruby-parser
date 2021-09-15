@@ -84,7 +84,7 @@ impl Buffer {
             _ => {}
         }
 
-        self.pushback(&c)
+        self.pushback(c)
     }
 
     pub(crate) fn nextc(&mut self) -> MaybeByte {
@@ -311,7 +311,7 @@ impl Buffer {
         self.pbeg = self.input.line_at(self.lastline).start();
         self.pend = self.pbeg + self.input.line_at(self.lastline).len();
         self.pcur = self.pend;
-        self.pushback(&MaybeByte::new(1));
+        self.pushback(1);
         self.set_ptok(self.pcur);
     }
 
@@ -352,23 +352,23 @@ impl Pushback<u8> for Buffer {
     }
 }
 
-impl Pushback<&Option<u8>> for Buffer {
-    fn pushback(&mut self, c: &Option<u8>) {
+impl Pushback<Option<u8>> for Buffer {
+    fn pushback(&mut self, c: Option<u8>) {
         match c {
-            Some(c) => self.pushback(*c),
+            Some(c) => self.pushback(c),
             None => {}
         }
     }
 }
 
-impl Pushback<&MaybeByte> for Buffer {
-    fn pushback(&mut self, c: &MaybeByte) {
-        self.pushback(&c.to_option())
+impl Pushback<MaybeByte> for Buffer {
+    fn pushback(&mut self, c: MaybeByte) {
+        self.pushback(c.to_option())
     }
 }
 
 impl Pushback<&mut MaybeByte> for Buffer {
     fn pushback(&mut self, c: &mut MaybeByte) {
-        self.pushback(&c.to_option())
+        self.pushback(c.to_option())
     }
 }

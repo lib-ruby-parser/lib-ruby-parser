@@ -41,7 +41,7 @@ impl LexState {
     pub(crate) fn is_label_possible(&self, cmd_state: bool) -> bool {
         (self.is_some(EXPR_LABEL | EXPR_ENDFN) && !cmd_state) || self.is_arg()
     }
-    pub(crate) fn is_spacearg(&self, c: &MaybeByte, space_seen: bool) -> bool {
+    pub(crate) fn is_spacearg(&self, c: MaybeByte, space_seen: bool) -> bool {
         self.is_arg() && space_seen && !c.is_space()
     }
     pub(crate) fn is_beg(&self) -> bool {
