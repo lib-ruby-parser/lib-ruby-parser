@@ -127,7 +127,7 @@ impl DecodedInput {
 
     pub(crate) fn take_bytes(&mut self) -> List<u8> {
         unsafe {
-            List::<u8>::from_blob(lib_ruby_parser__external__decoded_input__take_bytes(
+            List::from_blob(lib_ruby_parser__external__decoded_input__take_bytes(
                 &mut self.blob,
             ))
         }
@@ -136,7 +136,7 @@ impl DecodedInput {
     /// Converts itself into owned vector of bytes
     pub fn into_bytes(self) -> List<u8> {
         let bytes = unsafe {
-            List::<u8>::from_blob(lib_ruby_parser__external__decoded_input__into_bytes(
+            List::from_blob(lib_ruby_parser__external__decoded_input__into_bytes(
                 self.blob,
             ))
         };

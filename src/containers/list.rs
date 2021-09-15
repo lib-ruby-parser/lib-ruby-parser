@@ -19,25 +19,105 @@ pub(crate) mod rust {
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
     use crate::blobs::ListBlob;
-    use crate::containers::get_drop_fn::GetDropListFn;
+
+    pub trait ExternalListMember {
+        fn get_new_fn() -> unsafe extern "C" fn() -> ListBlob;
+        fn get_drop_fn() -> unsafe extern "C" fn(*mut ListBlob);
+        fn get_with_capacity_fn() -> unsafe extern "C" fn(capacity: u64) -> ListBlob;
+        fn get_from_raw_fn() -> unsafe extern "C" fn(ptr: *mut Self, size: u64) -> ListBlob;
+        fn get_push_fn() -> unsafe extern "C" fn(blob: *mut ListBlob, item: Self)
+        where
+            Self: Sized;
+        fn get_remove_fn() -> unsafe extern "C" fn(blob: *mut ListBlob, index: u64) -> Self
+        where
+            Self: Sized;
+        fn get_shrink_to_fit_fn() -> unsafe extern "C" fn(blob: *mut ListBlob);
+        fn get_as_ptr_fn() -> unsafe extern "C" fn(blob: *mut ListBlob) -> *mut Self
+        where
+            Self: Sized;
+        fn get_len_fn() -> unsafe extern "C" fn(blob: *const ListBlob) -> u64;
+        fn get_capacity_fn() -> unsafe extern "C" fn(blob: *const ListBlob) -> u64;
+    }
 
     /// C-compatible list
     #[repr(C)]
     pub struct List<T>
     where
-        T: GetDropListFn,
+        T: ExternalListMember,
     {
         pub(crate) blob: ListBlob,
         pub(crate) _t: std::marker::PhantomData<T>,
     }
 
+    use crate::blobs::HasBlob;
+
+    impl<T> List<T>
+    where
+        T: ExternalListMember,
+    {
+        /// Equivalent of Vec::new
+        pub fn new() -> Self {
+            let blob = unsafe { (T::get_new_fn())() };
+            Self::from_blob(blob)
+        }
+
+        /// Equivalent of Vec::with_capacity
+        pub fn with_capacity(capacity: usize) -> Self {
+            let blob = unsafe { (T::get_with_capacity_fn())(capacity as u64) };
+            Self::from_blob(blob)
+        }
+
+        pub(crate) fn from_raw(ptr: *mut T, size: usize) -> Self {
+            let blob = unsafe { (T::get_from_raw_fn())(ptr, size as u64) };
+            Self::from_blob(blob)
+        }
+
+        pub(crate) fn shrink_to_fit(&mut self) {
+            unsafe { (T::get_shrink_to_fit_fn())(&mut self.blob) };
+        }
+
+        /// Equivalent of Vec::push
+        pub fn push(&mut self, item: T) {
+            unsafe { (T::get_push_fn())(&mut self.blob, item) };
+        }
+
+        /// Equivalent of Vec::rmeove
+        pub fn remove(&mut self, index: usize) -> T {
+            unsafe { (T::get_remove_fn())(&mut self.blob, index as u64) }
+        }
+
+        pub(crate) fn as_ptr(&self) -> *const T {
+            let blob_ptr: *const ListBlob = &self.blob;
+            unsafe { (T::get_as_ptr_fn())(blob_ptr as *mut ListBlob) }
+        }
+
+        pub(crate) fn as_mut_ptr(&mut self) -> *mut T {
+            unsafe { (T::get_as_ptr_fn())(&mut self.blob) }
+        }
+
+        pub(crate) fn into_ptr(mut self) -> *mut T {
+            let ptr = self.as_mut_ptr();
+            std::mem::forget(self);
+            ptr
+        }
+
+        /// Equivalent of Vec::len
+        pub fn len(&self) -> usize {
+            unsafe { (T::get_len_fn())(&self.blob) as usize }
+        }
+
+        /// Equivalent of Vec::capacity
+        pub fn capacity(&self) -> usize {
+            unsafe { (T::get_capacity_fn())(&self.blob) as usize }
+        }
+    }
+
     impl<T> Drop for List<T>
     where
-        T: GetDropListFn,
+        T: ExternalListMember,
     {
         fn drop(&mut self) {
-            let drop_list_fn = T::get_drop_list_fn();
-            unsafe { drop_list_fn(&mut self.blob) }
+            unsafe { (T::get_drop_fn())(&mut self.blob) }
         }
     }
 
@@ -65,7 +145,7 @@ pub(crate) mod external {
         }
     }
 
-    impl<T: GetDropListFn> IntoIterator for List<T>
+    impl<T: ExternalListMember> IntoIterator for List<T>
     where
         Vec<T>: From<List<T>>,
     {
@@ -78,250 +158,280 @@ pub(crate) mod external {
         }
     }
 
+    impl<T> List<T>
+    where
+        T: ExternalListMember,
+    {
+        /// Equivalent of Vec::iter
+        #[allow(dead_code)]
+        fn iter(&self) -> std::slice::Iter<'_, T> {
+            self.as_ref().iter()
+        }
+    }
+
+    impl<T> Default for List<T>
+    where
+        T: ExternalListMember,
+    {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl<T> From<Vec<T>> for List<T>
+    where
+        T: ExternalListMember,
+    {
+        fn from(mut vec: Vec<T>) -> Self {
+            vec.shrink_to_fit();
+            let ptr = vec.as_mut_ptr();
+            let len = vec.len();
+            std::mem::forget(vec);
+            Self::from_raw(ptr, len)
+        }
+    }
+
+    impl<T, const N: usize> From<[T; N]> for List<T>
+    where
+        T: ExternalListMember,
+    {
+        fn from(array: [T; N]) -> Self {
+            Self::from(Vec::<T>::from(array))
+        }
+    }
+
+    impl<T, const N: usize> From<&[T; N]> for List<T>
+    where
+        T: ExternalListMember + Clone,
+    {
+        fn from(array: &[T; N]) -> Self {
+            Self::from(Vec::<T>::from(array.to_owned()))
+        }
+    }
+
+    impl<T> Clone for List<T>
+    where
+        T: ExternalListMember + Clone,
+    {
+        fn clone(&self) -> Self {
+            let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<T>>();
+            let copy = Self::from(copied);
+            drop(copy);
+
+            let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<T>>();
+            let copy = Self::from(copied);
+            copy
+        }
+    }
+
+    impl<T> From<List<T>> for Vec<T>
+    where
+        T: ExternalListMember,
+    {
+        fn from(mut list: List<T>) -> Self {
+            list.shrink_to_fit();
+            let len = list.len();
+            let ptr = list.into_ptr();
+            unsafe { Vec::from_raw_parts(ptr, len, len) }
+        }
+    }
+
+    impl<T> std::ops::Deref for List<T>
+    where
+        T: ExternalListMember,
+    {
+        type Target = [T];
+
+        fn deref(&self) -> &[T] {
+            unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
+        }
+    }
+
+    impl<T> std::ops::DerefMut for List<T>
+    where
+        T: ExternalListMember,
+    {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
+        }
+    }
+
+    impl<T> std::fmt::Debug for List<T>
+    where
+        T: ExternalListMember + std::fmt::Debug,
+    {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            std::fmt::Debug::fmt(&**self, f)
+        }
+    }
+
+    impl<T> PartialEq for List<T>
+    where
+        T: ExternalListMember + PartialEq,
+    {
+        fn eq(&self, other: &Self) -> bool {
+            self.as_ref() == other.as_ref()
+        }
+    }
+
+    impl<T> PartialEq<List<T>> for [T]
+    where
+        T: ExternalListMember + PartialEq,
+    {
+        fn eq(&self, other: &List<T>) -> bool {
+            self == other.as_ref()
+        }
+    }
+
+    impl<T> Eq for List<T> where T: ExternalListMember + Eq {}
+
+    impl<T> PartialEq<&[T]> for List<T>
+    where
+        T: ExternalListMember + PartialEq,
+    {
+        fn eq(&self, other: &&[T]) -> bool {
+            self.as_ref() == *other
+        }
+    }
+
+    impl<T> PartialEq<[T]> for List<T>
+    where
+        T: ExternalListMember + PartialEq,
+    {
+        fn eq(&self, other: &[T]) -> bool {
+            self.as_ref() == other
+        }
+    }
+
+    impl<T> PartialEq<Vec<T>> for List<T>
+    where
+        T: ExternalListMember + PartialEq,
+    {
+        fn eq(&self, other: &Vec<T>) -> bool {
+            self.as_ref() == other.as_slice()
+        }
+    }
+
+    impl<T> PartialEq<List<T>> for Vec<T>
+    where
+        T: ExternalListMember + PartialEq,
+    {
+        fn eq(&self, other: &List<T>) -> bool {
+            self.as_slice() == other.as_ref()
+        }
+    }
+
+    impl<T, I> std::ops::Index<I> for List<T>
+    where
+        T: ExternalListMember,
+        I: std::slice::SliceIndex<[T]>,
+    {
+        type Output = I::Output;
+
+        fn index(&self, index: I) -> &Self::Output {
+            std::ops::Index::index(&**self, index)
+        }
+    }
+
+    impl<T> ListAPI<T> for List<T>
+    where
+        T: ExternalListMember + Clone,
+    {
+        fn take_first(self) -> T {
+            if self.is_empty() {
+                panic!("can't get the first item from an empty list")
+            } else {
+                unsafe { self.as_ptr().as_ref() }.unwrap().clone()
+            }
+        }
+    }
+
     use super::ExternalSharedByteList;
     use super::ListAPI;
 
     macro_rules! gen_list_impl_for {
         (
             $t:ty,
-            $new:ident,
-            $with_capacity:ident,
-            $from_raw:ident,
-            $push:ident,
-            $remove:ident,
-            $shrink_to_fit:ident,
-            $as_ptr:ident,
-            $len:ident,
-            $capacity:ident
+            new = $new:ident,
+            drop = $drop:ident,
+            with_capacity = $with_capacity:ident,
+            from_raw = $from_raw:ident,
+            push = $push:ident,
+            remove = $remove:ident,
+            shrink_to_fit = $shrink_to_fit:ident,
+            as_ptr = $as_ptr:ident,
+            len = $len:ident,
+            capacity = $capacity:ident
         ) => {
-            use super::{List, ListAPI, ListBlob};
-            use crate::blobs::HasBlob;
+            use super::{ExternalListMember, ListBlob};
 
             extern "C" {
                 fn $new() -> ListBlob;
+                fn $drop(blob: *mut ListBlob);
                 fn $with_capacity(capacity: u64) -> ListBlob;
                 fn $from_raw(ptr: *mut $t, size: u64) -> ListBlob;
                 fn $push(blob: *mut ListBlob, item: $t);
-                fn $remove(blob: *mut ListBlob, index: u64) -> $t;
                 fn $shrink_to_fit(blob: *mut ListBlob);
+                fn $remove(blob: *mut ListBlob, index: u64) -> $t;
                 fn $as_ptr(blob: *mut ListBlob) -> *mut $t;
                 fn $len(blob: *const ListBlob) -> u64;
                 fn $capacity(blob: *const ListBlob) -> u64;
             }
 
-            impl List<$t> {
-                /// Equivalent of Vec::new
-                pub fn new() -> Self {
-                    let blob = unsafe { $new() };
-                    Self::from_blob(blob)
+            impl ExternalListMember for $t {
+                fn get_new_fn() -> unsafe extern "C" fn() -> ListBlob {
+                    $new
                 }
-
-                /// Equivalent of Vec::with_capacity
-                pub fn with_capacity(capacity: usize) -> Self {
-                    let blob = unsafe { $with_capacity(capacity as u64) };
-                    Self::from_blob(blob)
+                fn get_drop_fn() -> unsafe extern "C" fn(*mut ListBlob) {
+                    $drop
                 }
-
-                pub(crate) fn from_raw(ptr: *mut $t, size: usize) -> Self {
-                    let blob = unsafe { $from_raw(ptr, size as u64) };
-                    Self::from_blob(blob)
+                fn get_with_capacity_fn() -> unsafe extern "C" fn(capacity: u64) -> ListBlob {
+                    $with_capacity
                 }
-
-                pub(crate) fn shrink_to_fit(&mut self) {
-                    unsafe { $shrink_to_fit(&mut self.blob) };
+                fn get_from_raw_fn() -> unsafe extern "C" fn(ptr: *mut Self, size: u64) -> ListBlob
+                {
+                    $from_raw
                 }
-
-                /// Equivalent of Vec::push
-                pub fn push(&mut self, item: $t) {
-                    unsafe { $push(&mut self.blob, item) };
+                fn get_push_fn() -> unsafe extern "C" fn(blob: *mut ListBlob, item: Self) {
+                    $push
                 }
-
-                /// Equivalent of Vec::rmeove
-                pub fn remove(&mut self, index: usize) -> $t {
-                    unsafe { $remove(&mut self.blob, index as u64) }
+                fn get_remove_fn() -> unsafe extern "C" fn(blob: *mut ListBlob, index: u64) -> Self
+                {
+                    $remove
                 }
-
-                pub(crate) fn as_ptr(&self) -> *const $t {
-                    let blob_ptr: *const ListBlob = &self.blob;
-                    unsafe { $as_ptr(blob_ptr as *mut ListBlob) }
+                fn get_shrink_to_fit_fn() -> unsafe extern "C" fn(blob: *mut ListBlob) {
+                    $shrink_to_fit
                 }
-
-                pub(crate) fn as_mut_ptr(&mut self) -> *mut $t {
-                    unsafe { $as_ptr(&mut self.blob) }
+                fn get_as_ptr_fn() -> unsafe extern "C" fn(blob: *mut ListBlob) -> *mut Self {
+                    $as_ptr
                 }
-
-                pub(crate) fn into_ptr(mut self) -> *mut $t {
-                    let ptr = self.as_mut_ptr();
-                    std::mem::forget(self);
-                    ptr
+                fn get_len_fn() -> unsafe extern "C" fn(blob: *const ListBlob) -> u64 {
+                    $len
                 }
-
-                /// Equivalent of Vec::len
-                pub fn len(&self) -> usize {
-                    unsafe { $len(&self.blob) as usize }
-                }
-
-                /// Equivalent of Vec::capacity
-                pub fn capacity(&self) -> usize {
-                    unsafe { $capacity(&self.blob) as usize }
-                }
-            }
-
-            impl List<$t> {
-                /// Equivalent of Vec::iter
-                #[allow(dead_code)]
-                fn iter(&self) -> std::slice::Iter<'_, $t> {
-                    self.as_ref().iter()
-                }
-            }
-
-            impl Default for List<$t> {
-                fn default() -> Self {
-                    Self::new()
-                }
-            }
-
-            impl From<Vec<$t>> for List<$t> {
-                fn from(mut vec: Vec<$t>) -> Self {
-                    vec.shrink_to_fit();
-                    let ptr = vec.as_mut_ptr();
-                    let len = vec.len();
-                    std::mem::forget(vec);
-                    Self::from_raw(ptr, len)
-                }
-            }
-
-            impl<const N: usize> From<[$t; N]> for List<$t> {
-                fn from(array: [$t; N]) -> Self {
-                    Self::from(Vec::<$t>::from(array))
-                }
-            }
-
-            impl<const N: usize> From<&[$t; N]> for List<$t> {
-                fn from(array: &[$t; N]) -> Self {
-                    Self::from(Vec::<$t>::from(array.to_owned()))
-                }
-            }
-
-            impl Clone for List<$t> {
-                fn clone(&self) -> Self {
-                    let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<$t>>();
-                    let copy = Self::from(copied);
-                    drop(copy);
-
-                    let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<$t>>();
-                    let copy = Self::from(copied);
-                    copy
-                }
-            }
-
-            impl From<List<$t>> for Vec<$t> {
-                fn from(mut list: List<$t>) -> Self {
-                    list.shrink_to_fit();
-                    let len = list.len();
-                    let ptr = list.into_ptr();
-                    unsafe { Vec::from_raw_parts(ptr, len, len) }
-                }
-            }
-
-            impl std::ops::Deref for List<$t> {
-                type Target = [$t];
-
-                fn deref(&self) -> &[$t] {
-                    unsafe { std::slice::from_raw_parts(self.as_ptr(), self.len()) }
-                }
-            }
-
-            impl std::ops::DerefMut for List<$t> {
-                fn deref_mut(&mut self) -> &mut Self::Target {
-                    unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
-                }
-            }
-
-            impl std::fmt::Debug for List<$t> {
-                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                    std::fmt::Debug::fmt(&**self, f)
-                }
-            }
-
-            impl PartialEq for List<$t> {
-                fn eq(&self, other: &Self) -> bool {
-                    self.as_ref() == other.as_ref()
-                }
-            }
-
-            impl PartialEq<List<$t>> for [$t] {
-                fn eq(&self, other: &List<$t>) -> bool {
-                    self == other.as_ref()
-                }
-            }
-
-            impl Eq for List<$t> {}
-
-            impl PartialEq<&[$t]> for List<$t> {
-                fn eq(&self, other: &&[$t]) -> bool {
-                    self.as_ref() == *other
-                }
-            }
-
-            impl PartialEq<[$t]> for List<$t> {
-                fn eq(&self, other: &[$t]) -> bool {
-                    self.as_ref() == other
-                }
-            }
-
-            impl PartialEq<Vec<$t>> for List<$t> {
-                fn eq(&self, other: &Vec<$t>) -> bool {
-                    self.as_ref() == other.as_slice()
-                }
-            }
-
-            impl PartialEq<List<$t>> for Vec<$t> {
-                fn eq(&self, other: &List<$t>) -> bool {
-                    self.as_slice() == other.as_ref()
-                }
-            }
-
-            impl<I> std::ops::Index<I> for List<$t>
-            where
-                I: std::slice::SliceIndex<[$t]>,
-            {
-                type Output = I::Output;
-
-                fn index(&self, index: I) -> &Self::Output {
-                    std::ops::Index::index(&**self, index)
-                }
-            }
-
-            impl ListAPI<$t> for List<$t> {
-                fn take_first(self) -> $t {
-                    if self.is_empty() {
-                        panic!("can't get the first item from an empty list")
-                    } else {
-                        unsafe { self.as_ptr().as_ref() }.unwrap().clone()
-                    }
+                fn get_capacity_fn() -> unsafe extern "C" fn(blob: *const ListBlob) -> u64 {
+                    $capacity
                 }
             }
 
             #[cfg(test)]
             mod tests {
-                use super::{new_item, List as GenericList, ListAPI};
+                use super::new_item;
+                use crate::containers::{helpers::ListAPI, ExternalList as List};
                 use std::ops::{Deref, DerefMut};
-                type List = GenericList<$t>;
 
                 #[test]
                 fn test_new() {
-                    let list = List::new();
+                    let list = List::<$t>::new();
                     drop(list);
                 }
 
                 #[test]
                 fn test_with_capacity() {
-                    let list = List::with_capacity(10);
+                    let list = List::<$t>::with_capacity(10);
                     drop(list);
                 }
 
-                fn list_with_items(n: usize) -> List {
+                fn list_with_items(n: usize) -> List<$t> {
                     let mut list = List::new();
                     for _ in 0..n {
                         list.push(new_item());
@@ -382,7 +492,7 @@ pub(crate) mod external {
 
                 #[test]
                 fn test_capacity() {
-                    let list = List::with_capacity(10);
+                    let list = List::<$t>::with_capacity(10);
                     assert_eq!(list.capacity(), 10);
                 }
 
@@ -399,7 +509,7 @@ pub(crate) mod external {
 
                 #[test]
                 fn test_default() {
-                    let list = List::default();
+                    let list = List::<$t>::default();
                     assert_eq!(list.len(), 0);
                     assert_eq!(list.len(), 0);
                     assert_eq!(list.as_ptr(), std::ptr::null_mut());
@@ -514,15 +624,16 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::Node,
-            lib_ruby_parser__external__list__of_nodes__new,
-            lib_ruby_parser__external__list__of_nodes__with_capacity,
-            lib_ruby_parser__external__list__of_nodes__from_raw,
-            lib_ruby_parser__external__list__of_nodes__push,
-            lib_ruby_parser__external__list__of_nodes__remove,
-            lib_ruby_parser__external__list__of_nodes__shrink_to_fit,
-            lib_ruby_parser__external__list__of_nodes__as_ptr,
-            lib_ruby_parser__external__list__of_nodes__get_len,
-            lib_ruby_parser__external__list__of_nodes__get_capacity
+            new = lib_ruby_parser__external__list__of_nodes__new,
+            drop = lib_ruby_parser__external__list__of_nodes__drop,
+            with_capacity = lib_ruby_parser__external__list__of_nodes__with_capacity,
+            from_raw = lib_ruby_parser__external__list__of_nodes__from_raw,
+            push = lib_ruby_parser__external__list__of_nodes__push,
+            remove = lib_ruby_parser__external__list__of_nodes__remove,
+            shrink_to_fit = lib_ruby_parser__external__list__of_nodes__shrink_to_fit,
+            as_ptr = lib_ruby_parser__external__list__of_nodes__as_ptr,
+            len = lib_ruby_parser__external__list__of_nodes__get_len,
+            capacity = lib_ruby_parser__external__list__of_nodes__get_capacity
         );
     }
     mod of_diagnostics {
@@ -537,15 +648,16 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::Diagnostic,
-            lib_ruby_parser__external__list__of_diagnostics__new,
-            lib_ruby_parser__external__list__of_diagnostics__with_capacity,
-            lib_ruby_parser__external__list__of_diagnostics__from_raw,
-            lib_ruby_parser__external__list__of_diagnostics__push,
-            lib_ruby_parser__external__list__of_diagnostics__remove,
-            lib_ruby_parser__external__list__of_diagnostics__shrink_to_fit,
-            lib_ruby_parser__external__list__of_diagnostics__as_ptr,
-            lib_ruby_parser__external__list__of_diagnostics__get_len,
-            lib_ruby_parser__external__list__of_diagnostics__get_capacity
+            new = lib_ruby_parser__external__list__of_diagnostics__new,
+            drop = lib_ruby_parser__external__list__of_diagnostics__drop,
+            with_capacity = lib_ruby_parser__external__list__of_diagnostics__with_capacity,
+            from_raw = lib_ruby_parser__external__list__of_diagnostics__from_raw,
+            push = lib_ruby_parser__external__list__of_diagnostics__push,
+            remove = lib_ruby_parser__external__list__of_diagnostics__remove,
+            shrink_to_fit = lib_ruby_parser__external__list__of_diagnostics__shrink_to_fit,
+            as_ptr = lib_ruby_parser__external__list__of_diagnostics__as_ptr,
+            len = lib_ruby_parser__external__list__of_diagnostics__get_len,
+            capacity = lib_ruby_parser__external__list__of_diagnostics__get_capacity
         );
     }
     mod of_comments {
@@ -559,15 +671,16 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::source::Comment,
-            lib_ruby_parser__external__list__of_comments__new,
-            lib_ruby_parser__external__list__of_comments__with_capacity,
-            lib_ruby_parser__external__list__of_comments__from_raw,
-            lib_ruby_parser__external__list__of_comments__push,
-            lib_ruby_parser__external__list__of_comments__remove,
-            lib_ruby_parser__external__list__of_comments__shrink_to_fit,
-            lib_ruby_parser__external__list__of_comments__as_ptr,
-            lib_ruby_parser__external__list__of_comments__get_len,
-            lib_ruby_parser__external__list__of_comments__get_capacity
+            new = lib_ruby_parser__external__list__of_comments__new,
+            drop = lib_ruby_parser__external__list__of_comments__drop,
+            with_capacity = lib_ruby_parser__external__list__of_comments__with_capacity,
+            from_raw = lib_ruby_parser__external__list__of_comments__from_raw,
+            push = lib_ruby_parser__external__list__of_comments__push,
+            remove = lib_ruby_parser__external__list__of_comments__remove,
+            shrink_to_fit = lib_ruby_parser__external__list__of_comments__shrink_to_fit,
+            as_ptr = lib_ruby_parser__external__list__of_comments__as_ptr,
+            len = lib_ruby_parser__external__list__of_comments__get_len,
+            capacity = lib_ruby_parser__external__list__of_comments__get_capacity
         );
     }
     mod of_magic_comments {
@@ -582,15 +695,16 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::source::MagicComment,
-            lib_ruby_parser__external__list__of_magic_comments__new,
-            lib_ruby_parser__external__list__of_magic_comments__with_capacity,
-            lib_ruby_parser__external__list__of_magic_comments__from_raw,
-            lib_ruby_parser__external__list__of_magic_comments__push,
-            lib_ruby_parser__external__list__of_magic_comments__remove,
-            lib_ruby_parser__external__list__of_magic_comments__shrink_to_fit,
-            lib_ruby_parser__external__list__of_magic_comments__as_ptr,
-            lib_ruby_parser__external__list__of_magic_comments__get_len,
-            lib_ruby_parser__external__list__of_magic_comments__get_capacity
+            new = lib_ruby_parser__external__list__of_magic_comments__new,
+            drop = lib_ruby_parser__external__list__of_magic_comments__drop,
+            with_capacity = lib_ruby_parser__external__list__of_magic_comments__with_capacity,
+            from_raw = lib_ruby_parser__external__list__of_magic_comments__from_raw,
+            push = lib_ruby_parser__external__list__of_magic_comments__push,
+            remove = lib_ruby_parser__external__list__of_magic_comments__remove,
+            shrink_to_fit = lib_ruby_parser__external__list__of_magic_comments__shrink_to_fit,
+            as_ptr = lib_ruby_parser__external__list__of_magic_comments__as_ptr,
+            len = lib_ruby_parser__external__list__of_magic_comments__get_len,
+            capacity = lib_ruby_parser__external__list__of_magic_comments__get_capacity
         );
     }
     mod of_tokens {
@@ -607,15 +721,16 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::Token,
-            lib_ruby_parser__external__list__of_tokens__new,
-            lib_ruby_parser__external__list__of_tokens__with_capacity,
-            lib_ruby_parser__external__list__of_tokens__from_raw,
-            lib_ruby_parser__external__list__of_tokens__push,
-            lib_ruby_parser__external__list__of_tokens__remove,
-            lib_ruby_parser__external__list__of_tokens__shrink_to_fit,
-            lib_ruby_parser__external__list__of_tokens__as_ptr,
-            lib_ruby_parser__external__list__of_tokens__get_len,
-            lib_ruby_parser__external__list__of_tokens__get_capacity
+            new = lib_ruby_parser__external__list__of_tokens__new,
+            drop = lib_ruby_parser__external__list__of_tokens__drop,
+            with_capacity = lib_ruby_parser__external__list__of_tokens__with_capacity,
+            from_raw = lib_ruby_parser__external__list__of_tokens__from_raw,
+            push = lib_ruby_parser__external__list__of_tokens__push,
+            remove = lib_ruby_parser__external__list__of_tokens__remove,
+            shrink_to_fit = lib_ruby_parser__external__list__of_tokens__shrink_to_fit,
+            as_ptr = lib_ruby_parser__external__list__of_tokens__as_ptr,
+            len = lib_ruby_parser__external__list__of_tokens__get_len,
+            capacity = lib_ruby_parser__external__list__of_tokens__get_capacity
         );
     }
     mod of_source_lines {
@@ -626,15 +741,16 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             crate::source::SourceLine,
-            lib_ruby_parser__external__list__of_source_lines__new,
-            lib_ruby_parser__external__list__of_source_lines__with_capacity,
-            lib_ruby_parser__external__list__of_source_lines__from_raw,
-            lib_ruby_parser__external__list__of_source_lines__push,
-            lib_ruby_parser__external__list__of_source_lines__remove,
-            lib_ruby_parser__external__list__of_source_lines__shrink_to_fit,
-            lib_ruby_parser__external__list__of_source_lines__as_ptr,
-            lib_ruby_parser__external__list__of_source_lines__get_len,
-            lib_ruby_parser__external__list__of_source_lines__get_capacity
+            new = lib_ruby_parser__external__list__of_source_lines__new,
+            drop = lib_ruby_parser__external__list__of_source_lines__drop,
+            with_capacity = lib_ruby_parser__external__list__of_source_lines__with_capacity,
+            from_raw = lib_ruby_parser__external__list__of_source_lines__from_raw,
+            push = lib_ruby_parser__external__list__of_source_lines__push,
+            remove = lib_ruby_parser__external__list__of_source_lines__remove,
+            shrink_to_fit = lib_ruby_parser__external__list__of_source_lines__shrink_to_fit,
+            as_ptr = lib_ruby_parser__external__list__of_source_lines__as_ptr,
+            len = lib_ruby_parser__external__list__of_source_lines__get_len,
+            capacity = lib_ruby_parser__external__list__of_source_lines__get_capacity
         );
     }
     mod of_u8 {
@@ -645,20 +761,21 @@ pub(crate) mod external {
 
         gen_list_impl_for!(
             u8,
-            lib_ruby_parser__external__list__of_bytes__new,
-            lib_ruby_parser__external__list__of_bytes__with_capacity,
-            lib_ruby_parser__external__list__of_bytes__from_raw,
-            lib_ruby_parser__external__list__of_bytes__push,
-            lib_ruby_parser__external__list__of_bytes__remove,
-            lib_ruby_parser__external__list__of_bytes__shrink_to_fit,
-            lib_ruby_parser__external__list__of_bytes__as_ptr,
-            lib_ruby_parser__external__list__of_bytes__get_len,
-            lib_ruby_parser__external__list__of_bytes__get_capacity
+            new = lib_ruby_parser__external__list__of_bytes__new,
+            drop = lib_ruby_parser__external__list__of_bytes__drop,
+            with_capacity = lib_ruby_parser__external__list__of_bytes__with_capacity,
+            from_raw = lib_ruby_parser__external__list__of_bytes__from_raw,
+            push = lib_ruby_parser__external__list__of_bytes__push,
+            remove = lib_ruby_parser__external__list__of_bytes__remove,
+            shrink_to_fit = lib_ruby_parser__external__list__of_bytes__shrink_to_fit,
+            as_ptr = lib_ruby_parser__external__list__of_bytes__as_ptr,
+            len = lib_ruby_parser__external__list__of_bytes__get_len,
+            capacity = lib_ruby_parser__external__list__of_bytes__get_capacity
         );
 
         use super::ExternalSharedByteList;
 
-        impl List<u8> {
+        impl super::List<u8> {
             /// Equivalent of Vec::as_slice
             pub fn as_slice(&self) -> ExternalSharedByteList {
                 ExternalSharedByteList::from_raw(self.as_ptr(), self.len())

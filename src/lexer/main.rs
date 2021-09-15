@@ -49,8 +49,7 @@ pub struct Lexer {
 
     pub(crate) tokenbuf: TokenBuf,
 
-    pub(crate) max_numparam: usize,
-
+    // pub(crate) max_numparam: usize,
     pub(crate) context: Context,
     pub(crate) in_kwarg: bool,
 

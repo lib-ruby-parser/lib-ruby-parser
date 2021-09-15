@@ -14,7 +14,7 @@ fn ast() -> MaybePtr<Node> {
 }
 
 fn tokens() -> List<Token> {
-    List::<Token>::from(vec![Token::new(
+    List::from(vec![Token::new(
         280,
         Bytes::new(vec![97, 98, 99]),
         Loc::new(3, 4),
@@ -24,7 +24,7 @@ fn tokens() -> List<Token> {
 }
 
 fn diagnostics() -> List<Diagnostic> {
-    List::<Diagnostic>::from(vec![Diagnostic::new(
+    List::from(vec![Diagnostic::new(
         ErrorLevel::error(),
         DiagnosticMessage::new_alias_nth_ref(),
         Loc::new(5, 6),
@@ -32,10 +32,10 @@ fn diagnostics() -> List<Diagnostic> {
 }
 
 fn comments() -> List<Comment> {
-    List::<Comment>::from(vec![Comment::make(Loc::new(7, 8), CommentType::inline())])
+    List::from(vec![Comment::make(Loc::new(7, 8), CommentType::inline())])
 }
 fn magic_comments() -> List<MagicComment> {
-    List::<MagicComment>::from(vec![MagicComment::new(
+    List::from(vec![MagicComment::new(
         MagicCommentKind::warn_indent(),
         Loc::new(9, 10),
         Loc::new(11, 12),

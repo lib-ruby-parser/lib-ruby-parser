@@ -6,7 +6,7 @@ use crate::source::DecoderResult;
 use crate::source::InputError;
 
 fn decoded_output() -> List<u8> {
-    List::<u8>::from(vec![b'3', b'+', b'3'])
+    List::from(vec![b'3', b'+', b'3'])
 }
 
 fn decoding_error() -> InputError {
@@ -69,7 +69,7 @@ use dummy_decoder::{dummy_err_decoder, dummy_ok_decoder};
 fn call_dummy_decoder(mut decoder: Decoder) -> DecoderResult {
     // it's dummy, so encoding/input doesn't matter
     let encoding = StringPtr::from("UTF-8");
-    let input = List::<u8>::from(vec![b'2', b'+', b'2']);
+    let input = List::from(vec![b'2', b'+', b'2']);
 
     decoder.call(encoding, input)
 }

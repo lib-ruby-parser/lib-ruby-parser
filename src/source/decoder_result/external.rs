@@ -76,7 +76,7 @@ impl DecoderResult {
     pub(crate) fn unwrap_ok(self) -> List<u8> {
         let list_blob = unsafe { lib_ruby_parser__external__decoder_result_into_ok(self.blob) };
         std::mem::forget(self);
-        List::<u8>::from_blob(list_blob)
+        List::from_blob(list_blob)
     }
 
     pub(crate) fn unwrap_err(self) -> InputError {

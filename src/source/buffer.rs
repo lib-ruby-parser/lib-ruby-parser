@@ -30,15 +30,14 @@ pub(crate) struct Buffer {
     pub(crate) heredoc_line_indent: i32,
 
     pub(crate) tokidx: usize,
-    pub(crate) toksize: usize,
+    // pub(crate) toksize: usize,
     pub(crate) tokline: usize,
 
     pub(crate) has_shebang: bool,
 
-    pub(crate) ruby_sourceline: usize,     /* current line no. */
-    pub(crate) ruby_sourcefile: Vec<char>, /* current source file */
-    pub(crate) ruby_sourcefile_string: Vec<char>,
-
+    pub(crate) ruby_sourceline: usize, /* current line no. */
+    // pub(crate) ruby_sourcefile: Vec<char>, /* current source file */
+    // pub(crate) ruby_sourcefile_string: Vec<char>,
     pub(crate) debug: bool,
 }
 

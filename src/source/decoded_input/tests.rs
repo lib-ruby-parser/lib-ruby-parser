@@ -11,8 +11,8 @@ fn test_new() {
 
 fn decoded_input() -> DecodedInput {
     let mut decoded = DecodedInput::named("foo");
-    decoded.set_bytes(List::<u8>::from(vec![1, 2, 3]));
-    decoded.set_lines(List::<SourceLine>::from(vec![SourceLine::new(1, 2, true)]));
+    decoded.set_bytes(List::from(vec![1, 2, 3]));
+    decoded.set_lines(List::from(vec![SourceLine::new(1, 2, true)]));
     decoded
 }
 

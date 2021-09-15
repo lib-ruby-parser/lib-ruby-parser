@@ -18,7 +18,7 @@ fn test_as_raw() {
 fn test_into_raw() {
     let bytes = Bytes::new(vec![1, 2, 3]);
 
-    assert_eq!(bytes.into_raw(), List::<u8>::from(vec![1, 2, 3]))
+    assert_eq!(bytes.into_raw(), List::from(vec![1, 2, 3]))
 }
 
 #[test]

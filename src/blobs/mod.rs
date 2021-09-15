@@ -118,7 +118,7 @@ pub struct ListBlob {
 }
 impl<T> HasBlob for crate::containers::ExternalList<T>
 where
-    T: crate::containers::get_drop_fn::GetDropListFn,
+    T: crate::containers::list::external::ExternalListMember,
 {
     type Blob = ListBlob;
 

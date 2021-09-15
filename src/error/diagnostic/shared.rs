@@ -69,7 +69,7 @@ pub(crate) struct Diagnostics {
 impl Diagnostics {
     pub(crate) fn new() -> Self {
         Self {
-            list: Rc::new(RefCell::new(List::<Diagnostic>::new())),
+            list: Rc::new(RefCell::new(List::new())),
         }
     }
 
@@ -78,6 +78,6 @@ impl Diagnostics {
     }
 
     pub(crate) fn take_inner(self) -> List<Diagnostic> {
-        self.list.replace(List::<Diagnostic>::new())
+        self.list.replace(List::new())
     }
 }
