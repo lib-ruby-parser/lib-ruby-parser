@@ -2,7 +2,7 @@ extern crate rust_bison_skeleton;
 
 pub(crate) fn codegen() {
     use std::path::Path;
-    const PARSER_Y: &str = "src/parser.y";
+    const PARSER_Y: &str = "src/parser/parser.y";
 
     println!("cargo:rerun-if-changed={}", PARSER_Y);
     println!("Generating parser.rs");

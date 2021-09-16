@@ -2,7 +2,6 @@
 Cargo.lock
 Dockerfile
 flamegraph.svg
-out
 src/blobs/gen.rs
 src/containers/size.rs
 src/error/message/external/constructors.rs
@@ -22,11 +21,10 @@ src/error/message/tests.rs
 src/nodes/node_enum/external.rs
 src/nodes/node_enum/native.rs
 src/nodes/types
-src/parser.rs
+src/parser/parser.rs
 src/reserved_words/list.rs
 src/test_helpers/loc_matcher/loc_name_gen.rs
 src/traverse/visitor/visit_gen.rs
-test.rb
 
 # external/c
 external/c/*.a

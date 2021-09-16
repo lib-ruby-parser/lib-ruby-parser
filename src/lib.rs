@@ -97,6 +97,4 @@ pub(crate) use containers::use_native_or_external;
 pub mod blobs;
 
 #[cfg(test)]
-pub(crate) mod parser_test;
-#[cfg(test)]
 pub(crate) mod test_helpers;
