@@ -863,7 +863,7 @@ impl Builder {
                 Box::new(Node::new_send(
                     MaybePtr::none(),
                     name,
-                    List::new(),
+                    list![],
                     MaybeLoc::none(),
                     expression_l.clone().into(),
                     MaybeLoc::none(),
@@ -1113,9 +1113,7 @@ impl Builder {
             send.set_expression_l(expr_l);
             send.set_operator_l(op_l);
             if send.get_args().is_empty() {
-                let mut new_args = List::with_capacity(1);
-                new_args.push(new_rhs);
-                send.set_args(new_args);
+                send.set_args(list![new_rhs]);
             } else {
                 unreachable!("can't assign to method call with args")
             }
@@ -1123,9 +1121,7 @@ impl Builder {
             c_send.set_expression_l(expr_l);
             c_send.set_operator_l(op_l);
             if c_send.get_args().is_empty() {
-                let mut new_args = List::with_capacity(1);
-                new_args.push(new_rhs);
-                c_send.set_args(new_args);
+                c_send.set_args(list![new_rhs]);
             } else {
                 unreachable!("can't assign to method call with args")
             }
@@ -1668,11 +1664,7 @@ impl Builder {
         } else if arg.is_arg() {
             let expression_l = arg.expression().clone();
             Box::new(Node::new_procarg0(
-                {
-                    let mut args = List::with_capacity(1);
-                    args.push(*arg);
-                    args
-                },
+                list![*arg],
                 MaybeLoc::none(),
                 MaybeLoc::none(),
                 expression_l,
@@ -1825,10 +1817,8 @@ impl Builder {
             };
 
             let expr_l = keyword_expression_l.join(block.expression());
-            let mut args = List::with_capacity(1);
-            args.push(block);
 
-            (args, expr_l)
+            (list![block], expr_l)
         };
 
         if method_call.is_send()
@@ -1923,7 +1913,7 @@ impl Builder {
             MethodCallType::Send => Box::new(Node::new_send(
                 receiver.into(),
                 method_name.into(),
-                List::new(),
+                list![],
                 dot_l.into(),
                 selector_l.into(),
                 MaybeLoc::none(),
@@ -1935,7 +1925,7 @@ impl Builder {
             MethodCallType::CSend => Box::new(Node::new_c_send(
                 receiver,
                 method_name.into(),
-                List::new(),
+                list![],
                 dot_l,
                 selector_l.into(),
                 MaybeLoc::none(),
@@ -2005,11 +1995,7 @@ impl Builder {
         Ok(Box::new(Node::new_send(
             Some(receiver).into(),
             value(operator_t).into(),
-            {
-                let mut args = List::with_capacity(1);
-                args.push(*arg);
-                args
-            },
+            list![*arg],
             MaybeLoc::none(),
             selector_l,
             MaybeLoc::none(),
@@ -2042,11 +2028,7 @@ impl Builder {
             None => Node::new_send(
                 Some(receiver).into(),
                 StringPtr::from("=~"),
-                {
-                    let mut args = List::with_capacity(1);
-                    args.push(*arg);
-                    args
-                },
+                list![*arg],
                 MaybeLoc::none(),
                 selector_l.into(),
                 MaybeLoc::none(),
@@ -2070,7 +2052,7 @@ impl Builder {
         Ok(Box::new(Node::new_send(
             Some(receiver).into(),
             method_name.into(),
-            List::new(),
+            list![],
             MaybeLoc::none(),
             selector_l.into(),
             MaybeLoc::none(),
@@ -2104,7 +2086,7 @@ impl Builder {
             Ok(Box::new(Node::new_send(
                 self.check_condition(receiver.into()).into(),
                 StringPtr::from("!"),
-                List::new(),
+                list![],
                 MaybeLoc::none(),
                 selector_l.into(),
                 begin_l,
@@ -2119,14 +2101,14 @@ impl Builder {
                 expression_l,
             } = self.collection_map(&begin_t, &[], &end_t);
 
-            let nil_node = Node::new_begin(List::new(), begin_l, end_l, expression_l);
+            let nil_node = Node::new_begin(list![], begin_l, end_l, expression_l);
 
             let selector_l = self.loc(&not_t);
             let expression_l = nil_node.expression().join(&selector_l);
             Ok(Box::new(Node::new_send(
                 MaybePtr::some(nil_node),
                 StringPtr::from("!"),
-                List::new(),
+                list![],
                 MaybeLoc::none(),
                 selector_l.into(),
                 MaybeLoc::none(),
@@ -2596,7 +2578,7 @@ impl Builder {
                 )))
             }
         } else if let Some((else_t, else_)) = else_ {
-            let mut statements = List::new();
+            let mut statements = list![];
 
             let compound_stmt = compound_stmt.map(|boxed| *boxed);
             if let Some(compound_stmt) = compound_stmt {
@@ -2611,11 +2593,9 @@ impl Builder {
             }
 
             let parts = if let Some(else_) = else_ {
-                let mut parts = List::with_capacity(1);
-                parts.push(*else_);
-                parts
+                list![*else_]
             } else {
-                List::new()
+                list![]
             };
             let CollectionMap {
                 begin_l,
@@ -2722,7 +2702,7 @@ impl Builder {
                 begin.set_expression_l(new_expression_l);
                 body
             } else {
-                let mut statements = List::new();
+                let mut statements = list![];
                 statements.push(*body);
                 Box::new(Node::new_begin(
                     statements,
@@ -2734,7 +2714,7 @@ impl Builder {
         } else {
             // A nil expression: `()'.
             Box::new(Node::new_begin(
-                List::new(),
+                list![],
                 new_begin_l,
                 new_end_l,
                 new_expression_l,
@@ -2758,12 +2738,7 @@ impl Builder {
         match body.map(|boxed| *boxed) {
             None => {
                 // A nil expression: `begin end'.
-                Box::new(Node::new_kw_begin(
-                    List::new(),
-                    begin_l,
-                    end_l,
-                    expression_l,
-                ))
+                Box::new(Node::new_kw_begin(list![], begin_l, end_l, expression_l))
             }
             Some(body) => {
                 if body.is_begin() {
@@ -2771,7 +2746,7 @@ impl Builder {
                     let internal::Begin { statements, .. } = body.into_begin().into_internal();
                     Box::new(Node::new_kw_begin(statements, begin_l, end_l, expression_l))
                 } else {
-                    let mut statements = List::new();
+                    let mut statements = list![];
                     statements.push(body);
                     Box::new(Node::new_kw_begin(statements, begin_l, end_l, expression_l))
                 }
@@ -3042,7 +3017,7 @@ impl Builder {
 
         if elements.is_empty() {
             return Box::new(Node::new_array_pattern(
-                List::new(),
+                list![],
                 begin_l,
                 end_l,
                 expression_l,
@@ -3216,16 +3191,7 @@ impl Builder {
             if statements.len() == 1 {
                 let stmt = statements.take_first();
                 let stmt = self.check_condition(Ptr::new(stmt)).unptr();
-                Ptr::new(Node::new_begin(
-                    {
-                        let mut statements = List::with_capacity(1);
-                        statements.push(stmt);
-                        statements
-                    },
-                    begin_l,
-                    end_l,
-                    expression_l,
-                ))
+                Ptr::new(Node::new_begin(list![stmt], begin_l, end_l, expression_l))
             } else {
                 Ptr::new(Node::new_begin(statements, begin_l, end_l, expression_l))
             }

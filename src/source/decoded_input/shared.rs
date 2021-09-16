@@ -8,7 +8,7 @@ impl DecodedInput {
     /// Populates `Input` with a given byte array
     pub fn update_bytes(&mut self, bytes: List<u8>) {
         let mut line = SourceLine::new(0, 0, true);
-        let mut lines = List::new();
+        let mut lines = list![];
 
         for (idx, c) in bytes.iter().enumerate() {
             line.set_end(idx + 1);

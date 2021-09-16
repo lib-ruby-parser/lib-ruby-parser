@@ -51,7 +51,7 @@ fn new_maybe_string_ptr() -> MaybeStringPtr {{
 
 #[allow(dead_code)]
 fn new_node_list() -> List<Node> {{
-    List::from(vec![new_node()])
+    list![new_node()]
 }}
 
 #[allow(dead_code)]

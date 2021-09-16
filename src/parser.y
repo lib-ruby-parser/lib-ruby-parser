@@ -6696,7 +6696,7 @@ impl Parser {
             pattern_hash_keys,
             static_env,
             last_token_type,
-            tokens: List::new(),
+            tokens: list![],
             diagnostics,
             yylexer: lexer,
             token_rewriter,

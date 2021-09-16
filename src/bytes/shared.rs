@@ -45,6 +45,6 @@ impl Bytes {
 
     /// Clears inner data
     pub fn clear(&mut self) {
-        self.set_raw(List::new())
+        self.set_raw(list![])
     }
 }

@@ -6,7 +6,7 @@ use crate::source::InputError;
 
 #[test]
 fn test_ok() {
-    let output = List::from(vec![1, 2, 3]);
+    let output = list![1, 2, 3];
     let ok_result = DecoderResult::new_ok(output.clone());
 
     assert!(ok_result.is_ok());

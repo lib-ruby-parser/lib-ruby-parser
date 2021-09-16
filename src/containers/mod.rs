@@ -21,6 +21,8 @@ pub(crate) mod size;
 #[cfg(feature = "compile-with-external-structures")]
 pub use list::external::List as ExternalList;
 #[cfg(feature = "compile-with-external-structures")]
+pub(crate) use list::external::{list, list_count};
+#[cfg(feature = "compile-with-external-structures")]
 pub use maybe_loc::external::MaybeLoc as ExternalMaybeLoc;
 #[cfg(feature = "compile-with-external-structures")]
 pub use maybe_ptr::external::MaybePtr as ExternalMaybePtr;

@@ -112,6 +112,33 @@ pub(crate) mod external {
         }
     }
 
+    macro_rules! list_count {
+        () => {
+            0usize
+        };
+        ( $x:expr $( ,$xs:expr )* $(,)? ) => {
+            (1usize + list_count!( $($xs),* ))
+        };
+    }
+
+    macro_rules! list {
+        () => {
+            $crate::containers::ExternalList::new()
+        };
+        ($elem:expr; $n:expr) => {
+            compile_error!("list! macro doesn't support [item; N] format")
+        };
+        ( $x:expr $( ,$xs:expr )* $(,)? ) => {{
+            let capacity = list_count!($x, $($xs),*);
+            let mut list = $crate::containers::ExternalList::with_capacity(capacity);
+            list.push($x);
+            $( list.push($xs); )*
+            list
+        }};
+    }
+
+    pub(crate) use {list, list_count};
+
     impl<T> Drop for List<T>
     where
         T: ExternalListMember,

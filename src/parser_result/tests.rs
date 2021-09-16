@@ -14,37 +14,37 @@ fn ast() -> MaybePtr<Node> {
 }
 
 fn tokens() -> List<Token> {
-    List::from(vec![Token::new(
+    list![Token::new(
         280,
         Bytes::new(vec![97, 98, 99]),
         Loc::new(3, 4),
         LexState { value: 1 },
         LexState { value: 2 },
-    )])
+    )]
 }
 
 fn diagnostics() -> List<Diagnostic> {
-    List::from(vec![Diagnostic::new(
+    list![Diagnostic::new(
         ErrorLevel::error(),
         DiagnosticMessage::new_alias_nth_ref(),
         Loc::new(5, 6),
-    )])
+    )]
 }
 
 fn comments() -> List<Comment> {
-    List::from(vec![Comment::make(Loc::new(7, 8), CommentType::inline())])
+    list![Comment::make(Loc::new(7, 8), CommentType::inline())]
 }
 fn magic_comments() -> List<MagicComment> {
-    List::from(vec![MagicComment::new(
+    list![MagicComment::new(
         MagicCommentKind::warn_indent(),
         Loc::new(9, 10),
         Loc::new(11, 12),
-    )])
+    )]
 }
 fn input() -> DecodedInput {
     let mut input = DecodedInput::named("foo");
-    input.set_bytes(List::from(vec![1, 2, 3]));
-    input.set_lines(List::from(vec![SourceLine::new(1, 2, false)]));
+    input.set_bytes(list![1, 2, 3]);
+    input.set_lines(list![SourceLine::new(1, 2, false)]);
     input
 }
 

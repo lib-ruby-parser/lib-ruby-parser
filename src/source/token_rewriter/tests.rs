@@ -103,7 +103,7 @@ fn call_dummy_rewriter(mut rewriter: TokenRewriter) -> TokenRewriterResult {
         LexState { value: 1 },
         LexState { value: 2 },
     ));
-    let input = List::from(vec![b'2', b'+', b'2']);
+    let input = list![b'2', b'+', b'2'];
 
     rewriter.call(token, input.as_slice())
 }
