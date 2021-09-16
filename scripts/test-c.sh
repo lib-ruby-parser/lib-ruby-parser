@@ -16,5 +16,3 @@ run_c_tests() {
 # Linking fails on building doctests with ASAN enabled
 run_c_tests --lib -- containers
 run_c_tests --lib
-run_c_tests --test lexer_test
-run_c_tests --test parser_test

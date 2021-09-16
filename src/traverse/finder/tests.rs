@@ -1,5 +1,5 @@
-use lib_ruby_parser::traverse::finder::Finder;
-use lib_ruby_parser::{
+use crate::traverse::finder::Finder;
+use crate::{
     debug_level,
     source::maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI},
     source::{MaybeDecoder, MaybeDecoderAPI},

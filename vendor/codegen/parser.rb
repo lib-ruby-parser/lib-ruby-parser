@@ -1,5 +1,5 @@
 # This script imports test cases from whitequark/parser repo
-# and saves them into tests/fixtures/parser/gen/
+# and saves them into fixtures/parser/gen/
 #
 # Each assertion from whitequark/parser/test/test_parser.rb
 # produces files
@@ -18,7 +18,7 @@
 
 PARSER_DIR = File.expand_path('../parser', __dir__)
 TARGET_RUBY_VERSION = "3.0"
-TARGET_DIR = File.expand_path('../../tests/fixtures/parser/gen', __dir__)
+TARGET_DIR = File.expand_path('../../fixtures/parser/gen', __dir__)
 
 require 'fileutils'
 FileUtils.rm_rf(TARGET_DIR)

@@ -1,13 +1,12 @@
-use lib_ruby_parser::lex_states::*;
-use lib_ruby_parser::{
+use crate::lex_states::*;
+use crate::test_helpers::files_under_dir;
+use crate::{
+    debug_level,
     source::{MaybeDecoder, MaybeDecoderAPI},
     Lexer,
 };
 use std::fs;
 use std::panic;
-
-mod files_under_dir;
-use files_under_dir::files_under_dir;
 
 enum TestSection {
     None,
@@ -117,7 +116,7 @@ fn test(fixture_path: &str) -> TestResult {
         if test_case.cmdarg {
             lexer.cmdarg.push(true)
         }
-        lexer.set_debug(lib_ruby_parser::debug_level::NONE);
+        lexer.set_debug(debug_level::NONE);
         let tokens = lexer.tokenize_until_eof();
         let tokens = tokens
             .iter()
@@ -195,10 +194,10 @@ fn test_dir(dir: &str) {
 
 #[test]
 fn test_gen() {
-    test_dir("tests/fixtures/lexer/gen")
+    test_dir("fixtures/lexer/gen")
 }
 
 #[test]
 fn test_manual() {
-    test_dir("tests/fixtures/lexer/manual")
+    test_dir("fixtures/lexer/manual")
 }

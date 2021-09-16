@@ -1,6 +1,6 @@
 PARSER_DIR = File.expand_path('../parser', __dir__)
 TARGET_RUBY_VERSION = "3.0"
-TARGET_DIR = File.expand_path('../../tests/fixtures/lexer/gen', __dir__)
+TARGET_DIR = File.expand_path('../../fixtures/lexer/gen', __dir__)
 
 require 'fileutils'
 FileUtils.rm_rf(TARGET_DIR)

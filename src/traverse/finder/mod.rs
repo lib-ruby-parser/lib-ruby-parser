@@ -45,3 +45,6 @@ impl Observer for Finder {
         self.current_path.pop().unwrap();
     }
 }
+
+#[cfg(test)]
+mod tests;

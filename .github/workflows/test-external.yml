@@ -67,6 +67,3 @@ jobs:
           LIB_RUBY_PARSER_SIZES_FILEPATH: "${{ matrix.build.external-implementation-dir }}/sizes-out"
         run: |
           cargo test --features $CARGO_FEATURES --lib -- --nocapture
-
-          cargo test --features $CARGO_FEATURES --test lexer_test -- --nocapture
-          cargo test --features $CARGO_FEATURES --test parser_test -- --nocapture

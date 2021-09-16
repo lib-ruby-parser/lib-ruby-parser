@@ -1,4 +1,5 @@
-use lib_ruby_parser::{
+use crate::test_helpers::{files_under_dir, render_diagnostic_for_testing, LocMatcher};
+use crate::{
     debug_level,
     source::{
         maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI},
@@ -8,15 +9,6 @@ use lib_ruby_parser::{
 };
 use std::fs;
 use std::panic;
-
-mod files_under_dir;
-use files_under_dir::files_under_dir;
-
-mod loc_matcher;
-use loc_matcher::LocMatcher;
-
-mod diagnostic_matcher;
-use diagnostic_matcher::render_diagnostic_for_testing;
 
 enum TestSection {
     None,
@@ -277,12 +269,12 @@ fn test_dir(dir: &str) {
 
 #[test]
 fn test_gen() {
-    test_dir("tests/fixtures/parser/gen")
+    test_dir("fixtures/parser/gen")
 }
 
 #[test]
 fn test_manual() {
-    test_dir("tests/fixtures/parser/manual")
+    test_dir("fixtures/parser/manual")
 }
 
 fn read_fixture(path: &str) -> Vec<u8> {
@@ -303,7 +295,7 @@ fn parse(input: &[u8]) -> ParserResult {
 
 #[test]
 fn test_magic_comment() {
-    let result = parse(&read_fixture("tests/fixtures/magic_comments.rb"));
+    let result = parse(&read_fixture("fixtures/magic_comments.rb"));
     let magic_comments: Vec<MagicComment> = result.magic_comments().to_owned().into();
     assert_eq!(
         magic_comments,

@@ -24,9 +24,9 @@ src/nodes/node_enum/native.rs
 src/nodes/types
 src/parser.rs
 src/reserved_words/list.rs
+src/test_helpers/loc_matcher/loc_name_gen.rs
 src/traverse/visitor/visit_gen.rs
 test.rb
-tests/loc_matcher/loc_name_gen.rs
 
 # external/c
 external/c/*.a
