@@ -161,12 +161,6 @@ pub(crate) mod external {
         }
     }
 
-    impl From<Loc> for MaybeLoc {
-        fn from(loc: Loc) -> Self {
-            Self::some(loc)
-        }
-    }
-
     impl From<Option<Loc>> for MaybeLoc {
         fn from(maybe_loc: Option<Loc>) -> Self {
             if let Some(loc) = maybe_loc {

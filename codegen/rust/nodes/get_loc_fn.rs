@@ -120,7 +120,7 @@ fn loc_getter(loc_name: &LocName) -> String {
                 )
             } else {
                 format!(
-                    "return inner.get_{loc_name}().clone().into()",
+                    "return MaybeLoc::some(inner.get_{loc_name}().clone())",
                     loc_name = loc_name.to_str()
                 )
             };
