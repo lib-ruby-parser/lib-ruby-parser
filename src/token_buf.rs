@@ -1,3 +1,4 @@
+crate::use_native_or_external!(List);
 use crate::Bytes;
 
 #[derive(Debug, Clone, Default)]
@@ -8,7 +9,7 @@ pub(crate) struct TokenBuf {
 impl TokenBuf {
     pub(crate) fn new(bytes: &[u8]) -> Self {
         Self {
-            bytes: Bytes::new(bytes.to_vec()),
+            bytes: Bytes::new(List::from(bytes)),
         }
     }
 

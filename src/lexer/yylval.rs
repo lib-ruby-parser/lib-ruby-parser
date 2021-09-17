@@ -1,3 +1,4 @@
+crate::use_native_or_external!(List);
 use crate::lexer::*;
 use crate::Bytes;
 use crate::TokenBuf;
@@ -7,7 +8,7 @@ impl Lexer {
         if self.debug {
             println!("set_yylval_id({})", id);
         }
-        self.lval = Some(Bytes::new(id.as_bytes().to_vec()));
+        self.lval = Some(Bytes::new(List::from(id)));
     }
 
     pub(crate) fn set_yylval_literal(&mut self, value: &TokenBuf) {
@@ -24,7 +25,7 @@ impl Lexer {
         if self.debug {
             println!("set_yylval_num {:#?}", flags);
         }
-        self.lval = Some(Bytes::new(flags.into_bytes()));
+        self.lval = Some(Bytes::new(List::from(flags)));
     }
 
     pub(crate) fn set_yylval_str(&mut self, value: &TokenBuf) {

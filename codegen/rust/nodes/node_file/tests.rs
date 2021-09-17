@@ -61,7 +61,7 @@ fn new_u8() -> u8 {{
 
 #[allow(dead_code)]
 fn new_bytes() -> Bytes {{
-    Bytes::new(vec![1, 2, 3])
+    Bytes::new(list![1, 2, 3])
 }}
 
 {constructor}

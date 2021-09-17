@@ -1,13 +1,12 @@
 use crate::blobs::{Blob, HasBlob};
+crate::use_native_or_external!(List);
+type ByteList = List<u8>;
 
 /// Byte sequence based on external implementation
 #[repr(C)]
 pub struct Bytes {
     pub(crate) blob: Blob<Bytes>,
 }
-
-use crate::containers::ExternalList;
-type ByteList = ExternalList<u8>;
 
 extern "C" {
     fn lib_ruby_parser__external__bytes__new(list_blob: Blob<ByteList>) -> Blob<Bytes>;
@@ -27,7 +26,7 @@ impl Drop for Bytes {
 
 impl Default for Bytes {
     fn default() -> Self {
-        Self::new(vec![])
+        Self::new(list![])
     }
 }
 
@@ -49,20 +48,19 @@ impl std::fmt::Debug for Bytes {
 
 impl Clone for Bytes {
     fn clone(&self) -> Self {
-        Self::new(self.as_raw().to_vec())
+        Self::new(self.as_raw().clone())
     }
 }
 
 impl Bytes {
     /// Constructs Bytes based on a given vector
-    pub fn new(raw: Vec<u8>) -> Self {
-        let list: ByteList = raw.into();
-        let blob = unsafe { lib_ruby_parser__external__bytes__new(list.into_blob()) };
+    pub fn new(raw: List<u8>) -> Self {
+        let blob = unsafe { lib_ruby_parser__external__bytes__new(raw.into_blob()) };
         Self { blob }
     }
 
     /// Returns a reference to inner data
-    pub fn as_raw(&self) -> &[u8] {
+    pub fn as_raw(&self) -> &List<u8> {
         unsafe {
             (lib_ruby_parser__external__bytes__get_raw(&self.blob) as *const ByteList)
                 .as_ref()

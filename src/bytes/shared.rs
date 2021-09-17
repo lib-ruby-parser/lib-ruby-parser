@@ -5,7 +5,7 @@ use super::Bytes;
 impl Bytes {
     /// Constructs an empty instance of `Bytes`
     pub fn empty() -> Self {
-        Self::new(vec![])
+        Self::new(list![])
     }
 
     /// Converts byte sequence to a string slice, returns error if there are invalid UTF-8 chars

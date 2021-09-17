@@ -498,7 +498,7 @@ impl Builder {
             i += 1;
         }
 
-        Bytes::new(s.as_raw()[i..].to_vec())
+        Bytes::new(List::from(&s.as_raw()[i..]))
     }
 
     // Regular expressions

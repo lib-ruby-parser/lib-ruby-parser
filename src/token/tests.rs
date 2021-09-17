@@ -1,3 +1,4 @@
+crate::use_native_or_external!(List);
 use crate::{Bytes, LexState, Loc, Token};
 
 fn lex_state(value: i32) -> LexState {
@@ -9,7 +10,7 @@ fn lex_state(value: i32) -> LexState {
 fn new_token() -> Token {
     Token::new(
         1,
-        Bytes::new(vec![1, 2, 3]),
+        Bytes::new(list![1, 2, 3]),
         Loc::new(1, 2),
         lex_state(1),
         lex_state(2),
@@ -31,20 +32,20 @@ fn test_token_type() {
 #[test]
 fn test_token_value() {
     let token = new_token();
-    assert_eq!(token.token_value(), &Bytes::new(vec![1, 2, 3]));
+    assert_eq!(token.token_value(), &Bytes::new(list![1, 2, 3]));
 }
 
 #[test]
 fn test_set_token_value() {
     let mut token = new_token();
-    token.set_token_value(Bytes::new(vec![4, 5, 6]));
-    assert_eq!(token.token_value(), &Bytes::new(vec![4, 5, 6]));
+    token.set_token_value(Bytes::new(list![4, 5, 6]));
+    assert_eq!(token.token_value(), &Bytes::new(list![4, 5, 6]));
 }
 
 #[test]
 fn test_into_token_value() {
     let token = new_token();
-    assert_eq!(token.into_token_value(), Bytes::new(vec![1, 2, 3]))
+    assert_eq!(token.into_token_value(), Bytes::new(list![1, 2, 3]))
 }
 
 #[test]

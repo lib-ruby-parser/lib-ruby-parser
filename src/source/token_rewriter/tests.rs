@@ -15,7 +15,7 @@ const REWRITTEN_TOKEN_ID: i32 = 300;
 fn rewritten_token() -> Ptr<Token> {
     Ptr::new(Token::new(
         REWRITTEN_TOKEN_ID,
-        Bytes::new("rewritten".as_bytes().to_vec()),
+        Bytes::new(List::from("rewritten")),
         Loc::new(1, 2),
         LexState { value: 1 },
         LexState { value: 2 },
@@ -98,7 +98,7 @@ fn call_dummy_rewriter(mut rewriter: TokenRewriter) -> TokenRewriterResult {
     // it's dummy, so encoding/input doesn't matter
     let token = Ptr::new(Token::new(
         INITIAL_TOKEN_ID,
-        Bytes::new("initial".as_bytes().to_vec()),
+        Bytes::new(List::from("initial")),
         Loc::new(1, 2),
         LexState { value: 1 },
         LexState { value: 2 },
@@ -119,7 +119,7 @@ fn test_keep() {
     assert_eq!(rewritten_token.token_type(), INITIAL_TOKEN_ID);
     assert_eq!(
         rewritten_token.token_value(),
-        &Bytes::new("initial".as_bytes().to_vec())
+        &Bytes::new(List::from("initial"))
     );
     assert!(token_action.is_keep());
 }
@@ -143,7 +143,7 @@ fn test_rewrite() {
     assert_eq!(rewritten_token.token_type(), REWRITTEN_TOKEN_ID);
     assert_eq!(
         rewritten_token.token_value(),
-        &Bytes::new("rewritten".as_bytes().to_vec())
+        &Bytes::new(List::from("rewritten"))
     );
     assert!(token_action.is_keep());
 }

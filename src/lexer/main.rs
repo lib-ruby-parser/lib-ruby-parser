@@ -153,12 +153,12 @@ impl Lexer {
                 // take raw value if nothing was manually captured
                 self.buffer
                     .substr_at(begin, end)
-                    .map(|s| Bytes::new(s.to_vec()))
+                    .map(|s| Bytes::new(List::from(s)))
             })
-            .unwrap_or_else(|| Bytes::new(b"".to_vec()));
+            .unwrap_or_else(|| Bytes::new(list![]));
 
         if token_type == Self::tNL {
-            token_value = Bytes::new(b"\n".to_vec());
+            token_value = Bytes::new(list![b'\n']);
             end = begin + 1;
         }
 

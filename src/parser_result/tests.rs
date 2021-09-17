@@ -16,7 +16,7 @@ fn ast() -> MaybePtr<Node> {
 fn tokens() -> List<Token> {
     list![Token::new(
         280,
-        Bytes::new(vec![97, 98, 99]),
+        Bytes::new(list![97, 98, 99]),
         Loc::new(3, 4),
         LexState { value: 1 },
         LexState { value: 2 },
