@@ -138,7 +138,7 @@ impl Lexer {
     }
 
     pub(crate) fn yylex(&mut self) -> Ptr<Token> {
-        let lex_state_before = self.lex_state.clone();
+        let lex_state_before = self.lex_state;
         self.lval = None;
 
         let token_type = self.parser_yylex();
@@ -216,7 +216,7 @@ impl Lexer {
         self.token_seen = true;
 
         'retrying: loop {
-            last_state = self.lex_state.clone();
+            last_state = self.lex_state;
             self.token_flush();
 
             // handle EOF
@@ -226,7 +226,7 @@ impl Lexer {
                 return Self::END_OF_INPUT;
             }
 
-            match c.to_option() {
+            match c.as_option() {
                 None
                 | Some(Self::NULL_CHAR)
                 | Some(Self::CTRL_D_CHAR)
@@ -283,6 +283,7 @@ impl Lexer {
                         // while(1)
                         c = self.nextc();
 
+                        #[allow(clippy::never_loop)]
                         // emulate ugly C switch with fall-through logic
                         loop {
                             if c == b' '
@@ -799,7 +800,7 @@ impl Lexer {
                     return Self::tDOT;
                 }
 
-                Some(c) if c >= b'0' && c <= b'9' => {
+                Some(c) if (b'0'..=b'9').contains(&c) => {
                     return self.parse_numeric(c);
                 }
 
@@ -865,7 +866,7 @@ impl Lexer {
                         self.lex_state.set(EXPR_BEG);
                         return result;
                     }
-                    match c.to_option() {
+                    match c.as_option() {
                         Some(c) if c == b'\'' => {
                             self.strterm = self.new_strterm(str_ssym, c, None, None)
                         }
@@ -1048,7 +1049,7 @@ impl Lexer {
                         return Self::tSP;
                     }
                     if c.is_space() {
-                        match c.to_option() {
+                        match c.as_option() {
                             Some(b'\t') => return Self::tSLASH_T,
                             Some(Self::LF_CHAR) => return Self::tSLASH_F,
                             Some(b'\r') => return Self::tSLASH_R,
@@ -1104,7 +1105,7 @@ impl Lexer {
     fn normal_newline_leaf_label(&mut self) -> i32 {
         self.command_start = true;
         self.lex_state.set(EXPR_BEG);
-        return Self::tNL;
+        Self::tNL
     }
 
     pub(crate) fn warn(&mut self, message: DiagnosticMessage, loc: Loc) {
@@ -1244,7 +1245,7 @@ impl Lexer {
     }
 
     fn _multibyte_char_len(&self, ptr: usize) -> Option<usize> {
-        let c1 = self.buffer.byte_at(ptr).to_option()?;
+        let c1 = self.buffer.byte_at(ptr).as_option()?;
 
         let len = if c1 & 0x80 == 0 {
             1

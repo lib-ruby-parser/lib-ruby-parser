@@ -62,7 +62,7 @@ impl Buffer {
 
     fn prepare(&mut self) {
         let c = self.nextc();
-        match c.to_option() {
+        match c.as_option() {
             Some(b'#') => {
                 if self.peek(b'!') {
                     self.has_shebang = true;
@@ -353,21 +353,20 @@ impl Pushback<u8> for Buffer {
 
 impl Pushback<Option<u8>> for Buffer {
     fn pushback(&mut self, c: Option<u8>) {
-        match c {
-            Some(c) => self.pushback(c),
-            None => {}
+        if let Some(c) = c {
+            self.pushback(c)
         }
     }
 }
 
 impl Pushback<MaybeByte> for Buffer {
     fn pushback(&mut self, c: MaybeByte) {
-        self.pushback(c.to_option())
+        self.pushback(c.as_option())
     }
 }
 
 impl Pushback<&mut MaybeByte> for Buffer {
     fn pushback(&mut self, c: &mut MaybeByte) {
-        self.pushback(c.to_option())
+        self.pushback(c.as_option())
     }
 }

@@ -25,7 +25,7 @@ impl Finder {
                 result: None,
             },
         };
-        visitor.visit_root(&root);
+        visitor.visit_root(root);
         Ok(visitor.observer.result)
     }
 }

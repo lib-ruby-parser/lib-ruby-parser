@@ -13,7 +13,7 @@ impl Lexer {
         self.buffer.ptok = ptr - 1; // from '$'
         self.newtok();
         c = self.nextc();
-        match c.to_option() {
+        match c.as_option() {
             Some(b'_') => { /* $_: last read line string */
                 c = self.nextc();
                 if self.is_identchar() {
@@ -98,7 +98,7 @@ impl Lexer {
             }
             _ => {
                 if !self.is_identchar() {
-                    match c.to_option() {
+                    match c.as_option() {
                         None | Some(b' ') => self.compile_error(DiagnosticMessage::new_gvar_without_id(), self.current_loc()),
                         Some(name) => {
                             // The following line comes from MRI, but it seems to be a bug

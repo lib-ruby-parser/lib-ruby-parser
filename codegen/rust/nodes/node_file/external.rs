@@ -219,7 +219,7 @@ fn print_with_locs(field: &lib_ruby_parser_nodes::NodeField) -> Vec<String> {
             "}".to_string(),
         ],
         NodeFieldType::MaybeNode { .. } => vec![format!(
-            "self.get_{field_name}().as_ref().map(|node| node.inner_ref().print_with_locs());",
+            "if let Some(node) = self.get_{field_name}().as_ref() {{ node.inner_ref().print_with_locs() }}",
             field_name = field.field_name
         )],
         NodeFieldType::Loc => vec![format!(
@@ -231,7 +231,7 @@ fn print_with_locs(field: &lib_ruby_parser_nodes::NodeField) -> Vec<String> {
                 .expect("expected loc field to end with _l")
         )],
         NodeFieldType::MaybeLoc => vec![format!(
-            "self.get_{field_name}().as_ref().map(|loc| loc.print(\"{printable_field_name}\"));",
+            "if let Some(loc) = self.get_{field_name}().as_ref() {{ loc.print(\"{printable_field_name}\") }}",
             field_name = field.field_name,
             printable_field_name = field
                 .field_name

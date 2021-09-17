@@ -519,7 +519,7 @@ impl Builder {
             MaybeStringPtr::some(options.into_iter().collect::<String>())
         };
 
-        Some(Box::new(Node::new_reg_opt(options.into(), expression_l)))
+        Some(Box::new(Node::new_reg_opt(options, expression_l)))
     }
 
     pub(crate) fn regexp_compose(
@@ -587,14 +587,12 @@ impl Builder {
     }
 
     pub(crate) fn word(&self, parts: Vec<Node>) -> Box<Node> {
-        if parts.len() == 1 {
-            if parts[0].is_str() || parts[0].is_dstr() {
-                let part = parts
-                    .into_iter()
-                    .next()
-                    .expect("parts is supposed to have exactly 1 element");
-                return Box::new(part);
-            }
+        if parts.len() == 1 && (parts[0].is_str() || parts[0].is_dstr()) {
+            let part = parts
+                .into_iter()
+                .next()
+                .expect("parts is supposed to have exactly 1 element");
+            return Box::new(part);
         }
 
         let CollectionMap {
@@ -684,14 +682,14 @@ impl Builder {
         let key_loc = self.loc(&key_t);
         let key_l = key_loc.adjust_end(-1);
         let colon_l = key_loc.with_begin(key_loc.end() - 1);
-        let expression_l = key_loc.join(&value.expression());
+        let expression_l = key_loc.join(value.expression());
 
         let key = key_t.unptr().into_token_value();
         self.validate_sym_value(&key, &key_l);
 
         Box::new(Node::new_pair(
             Ptr::new(Node::new_sym(
-                key.into(),
+                key,
                 MaybeLoc::none(),
                 MaybeLoc::none(),
                 key_l,
@@ -723,7 +721,7 @@ impl Builder {
             LexState::default(),
             LexState::default(),
         ));
-        let expression_l = self.loc(&begin_t).join(&value.expression());
+        let expression_l = self.loc(&begin_t).join(value.expression());
 
         Box::new(Node::new_pair(
             self.symbol_compose(begin_t, parts, end_t).into(),
@@ -1777,7 +1775,7 @@ impl Builder {
 
         if let Some(yield_) = method_call.as_yield() {
             let keyword_l = yield_.get_keyword_l();
-            self.error(DiagnosticMessage::new_block_given_to_yield(), &keyword_l);
+            self.error(DiagnosticMessage::new_block_given_to_yield(), keyword_l);
             return Err(());
         } else if let Some(send) = method_call.as_send() {
             validate_block_and_block_arg(send.get_args())?;
@@ -2172,7 +2170,7 @@ impl Builder {
         let end_l = self.maybe_loc(&end_t);
 
         Box::new(Node::new_if(
-            self.check_condition(cond.into()).into(),
+            self.check_condition(cond.into()),
             if_true.into(),
             if_false.into(),
             keyword_l,
@@ -2197,11 +2195,11 @@ impl Builder {
             (Some(_), Some(_)) => unreachable!("only one of if_true/if_false is required"),
         };
 
-        let expression_l = pre.expression().join(&cond.expression());
+        let expression_l = pre.expression().join(cond.expression());
         let keyword_l = self.loc(&cond_t);
 
         Box::new(Node::new_if_mod(
-            self.check_condition(cond.into()).into(),
+            self.check_condition(cond.into()),
             if_true.into(),
             if_false.into(),
             keyword_l,
@@ -2302,7 +2300,7 @@ impl Builder {
 
         match loop_type {
             LoopType::While => Box::new(Node::new_while(
-                cond.into(),
+                cond,
                 body.into(),
                 keyword_l,
                 begin_l.into(),
@@ -2310,7 +2308,7 @@ impl Builder {
                 expression_l,
             )),
             LoopType::Until => Box::new(Node::new_until(
-                cond.into(),
+                cond,
                 body.into(),
                 keyword_l,
                 begin_l.into(),
@@ -2327,20 +2325,20 @@ impl Builder {
         keyword_t: Ptr<Token>,
         cond: Box<Node>,
     ) -> Box<Node> {
-        let expression_l = body.expression().join(&cond.expression());
+        let expression_l = body.expression().join(cond.expression());
         let keyword_l = self.loc(&keyword_t);
 
         let cond = self.check_condition(cond.into());
 
         match (loop_type, &*body) {
             (LoopType::While, node) if node.is_kw_begin() => Box::new(Node::new_while_post(
-                cond.into(),
+                cond,
                 body.into(),
                 keyword_l,
                 expression_l,
             )),
             (LoopType::While, _) => Box::new(Node::new_while(
-                cond.into(),
+                cond,
                 Some(body).into(),
                 keyword_l,
                 MaybeLoc::none(),
@@ -2348,13 +2346,13 @@ impl Builder {
                 expression_l,
             )),
             (LoopType::Until, node) if node.is_kw_begin() => Box::new(Node::new_until_post(
-                cond.into(),
+                cond,
                 body.into(),
                 keyword_l,
                 expression_l,
             )),
             (LoopType::Until, _) => Box::new(Node::new_until(
-                cond.into(),
+                cond,
                 Some(body).into(),
                 keyword_l,
                 MaybeLoc::none(),
@@ -3356,7 +3354,7 @@ impl Builder {
                 if self.arg_name_collides(this_name, that_name) {
                     self.error(
                         DiagnosticMessage::new_duplicated_argument_name(),
-                        &self.arg_name_loc(this_arg),
+                        self.arg_name_loc(this_arg),
                     )
                 }
             }
@@ -3403,11 +3401,9 @@ impl Builder {
         let first = all_chars
             .next()
             .expect("local variable name can't be empty");
-        let rest = all_chars.collect::<Vec<_>>();
+        let mut rest = all_chars;
 
-        if (first.is_lowercase() || first == '_')
-            && rest.into_iter().all(|c| c.is_alphanumeric() || c == '_')
-        {
+        if (first.is_lowercase() || first == '_') && rest.all(|c| c.is_alphanumeric() || c == '_') {
             Ok(())
         } else {
             self.error(
@@ -3455,7 +3451,7 @@ impl Builder {
                 result.push_str(&value)
             } else if let Some(begin) = node.as_begin() {
                 let statements = begin.get_statements();
-                if let Some(s) = self.static_string(&statements) {
+                if let Some(s) = self.static_string(statements) {
                     result.push_str(&s)
                 } else {
                     return None;
@@ -3572,7 +3568,7 @@ impl Builder {
         let begin_l = self.maybe_loc(begin_t);
         let end_l = self.maybe_loc(end_t);
 
-        let expression_l = collection_expr(&parts);
+        let expression_l = collection_expr(parts);
         let expression_l = join_maybe_locs(&expression_l, &begin_l);
         let expression_l = join_maybe_locs(&expression_l, &end_l);
         let expression_l = expression_l.unwrap_or_else(|| {
@@ -3588,7 +3584,7 @@ impl Builder {
 
     pub(crate) fn is_heredoc(&self, begin_t: &Option<Ptr<Token>>) -> bool {
         if let Some(begin_t) = begin_t {
-            if clone_value(&begin_t).starts_with("<<") {
+            if clone_value(begin_t).starts_with("<<") {
                 return true;
             }
         }
@@ -3604,7 +3600,7 @@ impl Builder {
         let begin_t = begin_t.as_deref().expect("bug: begin_t must be Some");
         let end_t = end_t.as_deref().expect("heredoc must have end_t");
 
-        let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(end_t));
+        let heredoc_body_l = collection_expr(parts).unwrap_or_else(|| self.loc(end_t));
         let expression_l = self.loc(begin_t);
         let heredoc_end_l = self.loc(end_t);
 
@@ -3767,7 +3763,7 @@ pub(crate) fn join_exprs(lhs: &Node, rhs: &Node) -> Loc {
 }
 
 pub(crate) fn join_maybe_exprs(lhs: &Option<&Node>, rhs: &Option<&Node>) -> MaybeLoc {
-    join_maybe_locs(&maybe_node_expr(&lhs), &maybe_node_expr(&rhs))
+    join_maybe_locs(&maybe_node_expr(lhs), &maybe_node_expr(rhs))
 }
 
 pub(crate) fn join_maybe_locs(lhs: &MaybeLoc, rhs: &MaybeLoc) -> MaybeLoc {
@@ -3775,7 +3771,7 @@ pub(crate) fn join_maybe_locs(lhs: &MaybeLoc, rhs: &MaybeLoc) -> MaybeLoc {
         (None, None) => MaybeLoc::none(),
         (None, Some(rhs)) => MaybeLoc::some(rhs.clone()),
         (Some(lhs), None) => MaybeLoc::some(lhs.clone()),
-        (Some(lhs), Some(rhs)) => lhs.join(&rhs).into(),
+        (Some(lhs), Some(rhs)) => lhs.join(rhs).into(),
     }
 }
 
@@ -3793,11 +3789,11 @@ pub(crate) struct HeredocMap {
 
 // Utility helper
 trait StringOrStrAsSlice {
-    fn as_str_slice(self: &Self) -> &str;
+    fn as_str_slice(&self) -> &str;
 }
 
 impl StringOrStrAsSlice for str {
-    fn as_str_slice(self: &Self) -> &str {
-        &self
+    fn as_str_slice(&self) -> &str {
+        self
     }
 }

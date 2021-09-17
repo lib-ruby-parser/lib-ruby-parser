@@ -25,7 +25,7 @@ impl Lexer {
         let mut paren: Option<u8>;
 
         if c.is_eof() || !c.is_alnum() {
-            term = c.clone();
+            term = *c;
             if !c.is_ascii() {
                 return self.percent_unknown(term);
             }
@@ -37,7 +37,7 @@ impl Lexer {
             }
         }
 
-        let mut term = match term.to_option() {
+        let mut term = match term.as_option() {
             None => {
                 self.compile_error(
                     DiagnosticMessage::new_unterminated_quoted_string(),
@@ -62,7 +62,7 @@ impl Lexer {
         }
 
         self.buffer.ptok = ptok - 1;
-        match c.to_option() {
+        match c.as_option() {
             Some(b'Q') => {
                 self.strterm = self.new_strterm(str_dquote, term, paren, None);
                 Self::tSTRING_BEG

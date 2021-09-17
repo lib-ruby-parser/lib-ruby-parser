@@ -60,10 +60,8 @@ impl PartialEq for ErrorLevel {
     fn eq(&self, other: &Self) -> bool {
         if self.is_warning() && other.is_warning() {
             true
-        } else if self.is_error() && other.is_error() {
-            true
         } else {
-            false
+            self.is_error() && other.is_error()
         }
     }
 }

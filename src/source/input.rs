@@ -32,11 +32,7 @@ impl Input {
     }
 
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
-        if let Some(c) = self.decoded.bytes().get(idx) {
-            Some(*c)
-        } else {
-            None
-        }
+        self.decoded.bytes().get(idx).copied()
     }
 
     pub(crate) fn unchecked_byte_at(&self, idx: usize) -> u8 {
@@ -63,7 +59,7 @@ impl Input {
     // }
 
     pub(crate) fn line_at(&self, idx: usize) -> &SourceLine {
-        &self.decoded.line_at(idx)
+        self.decoded.line_at(idx)
     }
 
     pub(crate) fn lines_count(&self) -> usize {

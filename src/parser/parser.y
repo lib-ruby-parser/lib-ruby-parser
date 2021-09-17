@@ -425,7 +425,7 @@ use crate::parser_options::InternalParserOptions;
                         let compound_stmt = $<MaybeBoxedNode>1;
                         let rescue_bodies = $<NodeList>2;
                         if rescue_bodies.is_empty() {
-                            return self.yyerror(&@3, DiagnosticMessage::new_else_without_rescue());
+                            return self.yyerror(@3, DiagnosticMessage::new_else_without_rescue());
                         }
 
                         let else_ = Some(( $<Token>3, $<MaybeBoxedNode>4 ));
@@ -494,7 +494,7 @@ use crate::parser_options::InternalParserOptions;
                     }
                 | klBEGIN
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::new_begin_not_at_top_level());
+                        return self.yyerror(@1, DiagnosticMessage::new_begin_not_at_top_level());
                     }
                   begin_block
                     {
@@ -535,7 +535,7 @@ use crate::parser_options::InternalParserOptions;
                     }
                 | kALIAS tGVAR tNTH_REF
                     {
-                        return self.yyerror(&@3, DiagnosticMessage::new_alias_nth_ref());
+                        return self.yyerror(@3, DiagnosticMessage::new_alias_nth_ref());
                     }
                 | kUNDEF undef_list
                     {
@@ -613,7 +613,7 @@ use crate::parser_options::InternalParserOptions;
                 | klEND tLCURLY compstmt tRCURLY
                     {
                         if self.context.is_in_def() {
-                            self.warn(&@1, DiagnosticMessage::new_end_in_method());
+                            self.warn(@1, DiagnosticMessage::new_end_in_method());
                         }
 
                         $$ = Value::Node(
@@ -1455,7 +1455,7 @@ use crate::parser_options::InternalParserOptions;
                     {
                         let op_t = $<Token>2;
                         if op_t.token_type() == Lexer::tANDDOT {
-                            return self.yyerror(&@2, DiagnosticMessage::new_csend_inside_masgn());
+                            return self.yyerror(@2, DiagnosticMessage::new_csend_inside_masgn());
                         }
 
                         $$ = Value::Node(
@@ -1480,7 +1480,7 @@ use crate::parser_options::InternalParserOptions;
                     {
                         let op_t = $<Token>2;
                         if op_t.token_type() == Lexer::tANDDOT {
-                            return self.yyerror(&@2, DiagnosticMessage::new_csend_inside_masgn());
+                            return self.yyerror(@2, DiagnosticMessage::new_csend_inside_masgn());
                         }
 
                         $$ = Value::Node(
@@ -1612,7 +1612,7 @@ use crate::parser_options::InternalParserOptions;
 
            cname: tIDENTIFIER
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::new_class_or_module_name_must_be_constant());
+                        return self.yyerror(@1, DiagnosticMessage::new_class_or_module_name_must_be_constant());
                     }
                 | tCONSTANT
                     {
@@ -2352,7 +2352,7 @@ use crate::parser_options::InternalParserOptions;
                     {
                         let op_t = $<Token>2;
                         self.warn(
-                            &@2,
+                            @2,
                             DiagnosticMessage::new_comparison_after_comparison(clone_value(&op_t).into())
                         );
                         $$ = Value::Node(
@@ -2443,7 +2443,7 @@ use crate::parser_options::InternalParserOptions;
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(&@4, DiagnosticMessage::new_unexpected_token("tBDOT3".into()));
+                            return self.yyerror(@4, DiagnosticMessage::new_unexpected_token("tBDOT3".into()));
                         }
 
                         let mut args = $<NodeList>2;
@@ -2460,7 +2460,7 @@ use crate::parser_options::InternalParserOptions;
                 | tLPAREN2 args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(&@2, DiagnosticMessage::new_unexpected_token("tBDOT3".into()));
+                            return self.yyerror(@2, DiagnosticMessage::new_unexpected_token("tBDOT3".into()));
                         }
 
                         $$ = Value::new_paren_args(
@@ -3099,7 +3099,7 @@ use crate::parser_options::InternalParserOptions;
                   k_end
                     {
                         if !self.context.is_class_definition_allowed() {
-                            return self.yyerror(&@1, DiagnosticMessage::new_class_definition_in_method_body());
+                            return self.yyerror(@1, DiagnosticMessage::new_class_definition_in_method_body());
                         }
 
                         let Superclass { lt_t, value } = $<Superclass>3;
@@ -3158,7 +3158,7 @@ use crate::parser_options::InternalParserOptions;
                   k_end
                     {
                         if !self.context.is_module_definition_allowed() {
-                            return self.yyerror(&@1, DiagnosticMessage::new_module_definition_in_method_body());
+                            return self.yyerror(@1, DiagnosticMessage::new_module_definition_in_method_body());
                         }
 
                         $$ = Value::Node(
@@ -3288,7 +3288,7 @@ use crate::parser_options::InternalParserOptions;
 
             k_if: kIF
                     {
-                        self.warn_eol(&@1, "if");
+                        self.warn_eol(@1, "if");
                         $$ = $1;
                     }
                 ;
@@ -3379,7 +3379,7 @@ use crate::parser_options::InternalParserOptions;
 
          k_elsif: kELSIF
                     {
-                        self.warn_eol(&@1, "elsif");
+                        self.warn_eol(@1, "elsif");
                         $$ = $1;
                     }
                 ;
@@ -3393,7 +3393,7 @@ use crate::parser_options::InternalParserOptions;
         k_return: kRETURN
                     {
                         if self.context.is_in_class() {
-                            return self.yyerror(&@1, DiagnosticMessage::new_invalid_return_in_class_or_module_body());
+                            return self.yyerror(@1, DiagnosticMessage::new_invalid_return_in_class_or_module_body());
                         }
                         $$ = $1;
                     }
@@ -5139,7 +5139,7 @@ opt_block_args_tail:
                         let name = clone_value(&ident_t);
 
                         if !self.static_env.is_declared(&name) {
-                            return self.yyerror(&@2, DiagnosticMessage::new_no_such_local_variable(name.into()));
+                            return self.yyerror(@2, DiagnosticMessage::new_no_such_local_variable(name.into()));
                         }
 
                         let lvar = self.builder.accessible(self.builder.lvar(ident_t));
@@ -5701,13 +5701,13 @@ keyword_variable: kNIL
                         if let Some(node) = node.as_lvar() {
                             let name = node.get_name().as_str();
                             match name.as_bytes()[..] {
-                                [b'_', n] if n >= b'1' && n <= b'9' => {
-                                    if !self.static_env.is_declared(&name) && self.context.is_in_dynamic_block() {
+                                [b'_', n] if (b'1'..=b'9').contains(&n) => {
+                                    if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
                                         /* definitely an implicit param */
 
                                         if self.max_numparam_stack.has_ordinary_params() {
                                             return self.yyerror(
-                                                &@1,
+                                                @1,
                                                 DiagnosticMessage::new_ordinary_param_defined(),
                                             );
                                         }
@@ -5727,7 +5727,7 @@ keyword_variable: kNIL
 
                                                 if outer_scope_has_numparams {
                                                     return self.yyerror(
-                                                        &@1,
+                                                        @1,
                                                         DiagnosticMessage::new_numparam_used(),
                                                     );
                                                 } else {
@@ -5741,7 +5741,7 @@ keyword_variable: kNIL
                                             }
                                         }
 
-                                        self.static_env.declare(&name);
+                                        self.static_env.declare(name);
                                         self.max_numparam_stack.register((n - b'0') as i32)
                                     }
                                 },
@@ -6092,19 +6092,19 @@ f_opt_paren_args: f_paren_args
 
        f_bad_arg: tCONSTANT
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::new_const_argument());
+                        return self.yyerror(@1, DiagnosticMessage::new_const_argument());
                     }
                 | tIVAR
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::new_ivar_argument());
+                        return self.yyerror(@1, DiagnosticMessage::new_ivar_argument());
                     }
                 | tGVAR
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::new_gvar_argument());
+                        return self.yyerror(@1, DiagnosticMessage::new_gvar_argument());
                     }
                 | tCVAR
                     {
-                        return self.yyerror(&@1, DiagnosticMessage::new_cvar_argument());
+                        return self.yyerror(@1, DiagnosticMessage::new_cvar_argument());
                     }
                 ;
 
@@ -6661,7 +6661,7 @@ impl Parser {
         let diagnostics = Diagnostics::new();
 
         let input: List<u8> = input.into();
-        let buffer_name: StringPtr = buffer_name.into();
+        let buffer_name: StringPtr = buffer_name;
 
         let mut lexer = Lexer::new(input, buffer_name, decoder);
         lexer.context = context.clone();
@@ -6787,7 +6787,7 @@ impl Parser {
     }
 
     fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), ()> {
-        let name = clone_value(&ident_t);
+        let name = clone_value(ident_t);
         let first_char = name.chars().next().expect("kwarg name can't be empty");
         if first_char.is_lowercase() || first_char == '_' {
             Ok(())
@@ -6805,9 +6805,9 @@ impl Parser {
     }
 
     fn validate_endless_method_name(&mut self, name_t: &Token) -> Result<(), ()> {
-        let name = clone_value(&name_t);
+        let name = clone_value(name_t);
         if name.ends_with('=') {
-            self.yyerror(&name_t.loc(), DiagnosticMessage::new_endless_setter_definition()).map(|_| ())
+            self.yyerror(name_t.loc(), DiagnosticMessage::new_endless_setter_definition()).map(|_| ())
         } else {
             Ok(())
         }

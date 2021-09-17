@@ -44,7 +44,7 @@ impl Lexer {
             if send - str_ <= 6 {
                 return;
             }
-            match self.char_at(str_ + 6).to_option() {
+            match self.char_at(str_ + 6).as_option() {
                 Some(b'C') | Some(b'c') => {
                     str_ += 6;
                     continue;
@@ -125,7 +125,7 @@ impl Lexer {
         let mut i = 2;
 
         while i < len {
-            match self.char_at(str_ + i).to_option() {
+            match self.char_at(str_ + i).as_option() {
                 Some(b'-') => {
                     if self.char_at(str_ + i - 1) == b'*' && self.char_at(str_ + i - 2) == b'-' {
                         return str_ + i + 1;
@@ -200,7 +200,7 @@ impl Lexer {
 
             beg = str_;
             loop {
-                if !(len > 0) {
+                if len <= 0 {
                     break;
                 }
 
@@ -334,7 +334,7 @@ impl Lexer {
                                     DiagnosticMessage::new_encoding_error(
                                         format!(
                                             "unknown encoding name: {}",
-                                            String::from_utf8_lossy(&err.as_bytes())
+                                            String::from_utf8_lossy(err.as_bytes())
                                         )
                                         .into(),
                                     ),

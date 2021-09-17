@@ -20,7 +20,7 @@ pub(crate) fn sizes() -> Vec<Size> {
         std::fs::read_to_string(sizes_filepath).expect("failed to read file with struct sizes");
 
     sizes.lines().map(|line| line.replace("LIB_RUBY_PARSER_", "")).map(|line| {
-        let parts = line.split("=").collect::<Vec<_>>();
+        let parts = line.split('=').collect::<Vec<_>>();
         if parts.len() != 2 {
             panic!("Wrong format of the sizes file. Must be LIB_RUBY_PARSER_<STRUCT_NAME>_SIZE=<SIZE>");
         }

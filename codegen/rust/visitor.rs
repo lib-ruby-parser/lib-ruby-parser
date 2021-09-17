@@ -63,7 +63,7 @@ impl<TObserver: Observer> Visit<&Node> for Visitor<TObserver> {{
 
         {visit_branches}
 
-        self.observer.on_node_moving_up(&node);
+        self.observer.on_node_moving_up(node);
         self.observer.on_subitem_moving_up(visit_as);
     }}
 }}

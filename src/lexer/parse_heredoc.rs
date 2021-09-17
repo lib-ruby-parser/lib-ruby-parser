@@ -150,8 +150,7 @@ impl Lexer {
              */
             self.buffer.heredoc_line_indent = 0;
         } else if self.buffer.is_whole_match(
-            &self
-                .buffer
+            self.buffer
                 .substr_at(eos, eos + len)
                 .expect("failed to get heredoc id for comparison"),
             indent,
@@ -189,7 +188,7 @@ impl Lexer {
                 }
 
                 match self.buffer.substr_at(ptr, ptr_end) {
-                    Some(s) => str_.append(&s),
+                    Some(s) => str_.append(s),
                     _ => panic!(
                         "no substr {}..{} (len = {})",
                         ptr,
@@ -210,8 +209,7 @@ impl Lexer {
                 }
 
                 if self.buffer.is_whole_match(
-                    &self
-                        .buffer
+                    self.buffer
                         .substr_at(eos, eos + len)
                         .expect("failed to get heredoc id for comparison"),
                     indent,
@@ -268,8 +266,7 @@ impl Lexer {
                 }
 
                 if self.buffer.is_whole_match(
-                    &self
-                        .buffer
+                    self.buffer
                         .substr_at(eos, eos + len)
                         .expect("failed to get heredoc id for comparison"),
                     indent,
@@ -316,7 +313,7 @@ impl Lexer {
     }
 
     fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32 {
-        self.heredoc_restore(&here);
+        self.heredoc_restore(here);
         self.compile_error(
             DiagnosticMessage::new_unterminated_heredoc(
                 String::from_utf8_lossy(
@@ -341,7 +338,7 @@ impl Lexer {
         self.lval_end = Some(heredoc_end.end);
         self.set_yylval_str(&TokenBuf::new(&heredoc_end.value));
 
-        self.heredoc_restore(&here);
+        self.heredoc_restore(here);
         self.token_flush();
         self.strterm = None;
         self.lex_state.set(EXPR_END);

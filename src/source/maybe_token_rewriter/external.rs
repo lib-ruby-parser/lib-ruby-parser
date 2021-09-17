@@ -67,7 +67,7 @@ impl MaybeTokenRewriterAPI for MaybeTokenRewriter {
 
     fn as_token_rewriter_mut(&mut self) -> Option<&mut TokenRewriter> {
         unsafe {
-            (lib_ruby_parser__external__maybe_token_rewriter__as_token_rewriter(&mut self.blob)
+            (lib_ruby_parser__external__maybe_token_rewriter__as_token_rewriter(&self.blob)
                 as *mut TokenRewriter)
                 .as_mut()
         }

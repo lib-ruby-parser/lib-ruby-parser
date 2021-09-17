@@ -24,28 +24,32 @@ pub(crate) fn codegen() {
 }
 
 fn branch(message: &lib_ruby_parser_nodes::Message) -> String {
-    let var_name = if message.fields.0.is_empty() {
-        "_"
+    let has_fields = !message.fields.0.is_empty();
+
+    let condition = if has_fields {
+        format!("let Some(variant) = self.as_{}()", message.lower_name())
     } else {
-        "variant"
+        format!("self.is_{}()", message.lower_name())
     };
 
     let arglist = message
         .fields
-        .map(|field| {
-            format!(
-                "variant.get_{field_name}().clone()",
-                field_name = field.name
-            )
+        .map(|field| match field.field_type {
+            lib_ruby_parser_nodes::MessageFieldType::Str => {
+                format!("variant.get_{}().clone()", field.name)
+            }
+            lib_ruby_parser_nodes::MessageFieldType::Byte => {
+                format!("*variant.get_{}()", field.name)
+            }
         })
         .join(", ");
 
     format!(
-        "if let Some({var_name}) = self.as_{message_type}() {{
+        "if {condition} {{
             Self::new_{message_type}({arglist})
         }}",
+        condition = condition,
         message_type = message.lower_name(),
         arglist = arglist,
-        var_name = var_name
     )
 }

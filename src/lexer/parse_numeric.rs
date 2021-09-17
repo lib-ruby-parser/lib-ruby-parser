@@ -38,7 +38,7 @@ impl Lexer {
                             if nondigit.is_some() {
                                 break;
                             }
-                            nondigit = Some(c.clone());
+                            nondigit = Some(c);
                             self.tokadd(c);
                             c = self.nextc();
                             if c.is_eof() {
@@ -80,7 +80,7 @@ impl Lexer {
                             if nondigit.is_some() {
                                 break;
                             }
-                            nondigit = Some(c.clone());
+                            nondigit = Some(c);
                             self.tokadd(c);
                             c = self.nextc();
                             if c.is_eof() {
@@ -122,7 +122,7 @@ impl Lexer {
                             if nondigit.is_some() {
                                 break;
                             }
-                            nondigit = Some(c.clone());
+                            nondigit = Some(c);
                             self.tokadd(c);
                             c = self.nextc();
                             if c.is_eof() {
@@ -168,6 +168,8 @@ impl Lexer {
                     return self.no_digits();
                 }
             }
+            // `c` here is a MaybeByte that implements PartialOrd<u8>
+            #[allow(clippy::manual_range_contains)]
             if c >= b'0' && c <= b'7' {
                 // octal
                 if let Some(result) = self.parse_octal(&mut c, &mut nondigit, start) {
@@ -189,7 +191,7 @@ impl Lexer {
         }
 
         loop {
-            match c.to_option() {
+            match c.as_option() {
                 Some(b'0') | Some(b'1') | Some(b'2') | Some(b'3') | Some(b'4') | Some(b'5')
                 | Some(b'6') | Some(b'7') | Some(b'8') | Some(b'9') => {
                     nondigit = None;
@@ -220,20 +222,20 @@ impl Lexer {
                 Some(b'e') | Some(b'E') => {
                     if let Some(nondigit_value) = &nondigit {
                         self.buffer.pushback(c);
-                        c = nondigit_value.clone();
+                        c = *nondigit_value;
                         return self.decode_num(c, nondigit, is_float, seen_e);
                     }
                     if seen_e {
                         return self.decode_num(c, nondigit, is_float, seen_e);
                     }
-                    nondigit = Some(c.clone());
+                    nondigit = Some(c);
                     c = self.nextc();
                     if c != b'-' && c != b'+' && !c.is_digit() {
                         self.buffer.pushback(c);
                         nondigit = None;
                         return self.decode_num(c, nondigit, is_float, seen_e);
                     }
-                    self.tokadd(nondigit.clone().expect("nondigit must be set"));
+                    self.tokadd(nondigit.expect("nondigit must be set"));
                     seen_e = true;
                     is_float = true;
                     self.tokadd(c);
@@ -270,7 +272,7 @@ impl Lexer {
                 if nondigit.is_some() {
                     break;
                 }
-                *nondigit = Some(c.clone());
+                *nondigit = Some(*c);
                 self.tokadd(*c);
                 *c = self.nextc();
                 if c.is_eof() {

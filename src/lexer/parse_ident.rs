@@ -1,9 +1,9 @@
+use crate::lex_states::*;
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::reserved_word;
 use crate::source::buffer::*;
 use crate::DiagnosticMessage;
-use crate::{lex_states::*, LexState};
 
 fn is_var_name(ident: &str) -> bool {
     if let Some(first_char) = ident.chars().next() {
@@ -27,7 +27,7 @@ impl Lexer {
 
     pub(crate) fn parse_ident(&mut self, mut c: MaybeByte, cmd_state: bool) -> i32 {
         let mut result: i32;
-        let last_state: LexState = self.lex_state.clone();
+        let last_state = self.lex_state;
         let ident: String;
 
         loop {
@@ -67,7 +67,7 @@ impl Lexer {
         }
         if !self.lex_state.is_some(EXPR_DOT) {
             if let Some(kw) = reserved_word(self.tokenbuf.bytes.as_raw()) {
-                let state: LexState = self.lex_state.clone();
+                let state = self.lex_state;
                 if state.is_some(EXPR_FNAME) {
                     self.lex_state.set(EXPR_ENDFN);
                     self.set_yylval_name();

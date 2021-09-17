@@ -19,6 +19,8 @@ pub use loc::Loc;
 /// like `Comment`, `Input`, `Decoder`
 pub mod source;
 
+#[allow(clippy::collapsible_if)]
+#[allow(clippy::collapsible_else_if)]
 mod lexer;
 
 pub use lexer::Lexer;
@@ -34,6 +36,7 @@ pub use parser_options::ParserOptions;
 mod parser_result;
 pub use parser_result::ParserResult;
 
+#[allow(clippy::module_inception)]
 mod parser;
 pub use parser::Parser;
 

@@ -344,7 +344,7 @@ impl std::fmt::Display for ItemFromStringError {
 
 impl Item {
     pub(crate) fn from_string(s: &str) -> Result<Self, ItemFromStringError> {
-        let result = match &s[..] {
+        let result = match s {
             "root" => Self::Root,
 
             "recv" => Self::Recv,

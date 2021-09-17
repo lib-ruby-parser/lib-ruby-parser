@@ -201,7 +201,7 @@ pub(crate) mod external {
         pub fn as_mut(&mut self) -> Option<&mut T> {
             let ptr = self.as_mut_ptr();
             if ptr.is_null() {
-                return None;
+                None
             } else {
                 Some(unsafe { &mut *ptr })
             }

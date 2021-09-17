@@ -61,7 +61,7 @@ pub mod messages {{
 
 fn camelcase(capitalized_name: &str) -> String {
     capitalized_name
-        .split("_")
+        .split('_')
         .map(|word| format!("{}{}", word[..1].to_uppercase(), word[1..].to_lowercase()))
         .collect::<Vec<_>>()
         .join("")

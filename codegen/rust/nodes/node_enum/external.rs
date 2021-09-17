@@ -133,7 +133,12 @@ fn clone_impl(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
         .map(|node| {
             let clone_fields = node
                 .fields
-                .map(|field| format!("inner.get_{}().clone()", field.field_name))
+                .map(|field| match field.field_type {
+                    lib_ruby_parser_nodes::NodeFieldType::U8 => {
+                        format!("*inner.get_{}()", field.field_name)
+                    }
+                    _ => format!("inner.get_{}().clone()", field.field_name),
+                })
                 .join(", ");
 
             format!(
@@ -241,7 +246,7 @@ fn as_variant_mut_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "/// Casts `&Node` to `Option<&mut nodes::{node_type}>`
     pub fn as_{lower}_mut(&mut self) -> Option<&mut {node_type}> {{
-        unsafe {{ ({extern_fn_name}(&mut self.blob) as *mut {node_type}).as_mut() }}
+        unsafe {{ ({extern_fn_name}(&self.blob) as *mut {node_type}).as_mut() }}
     }}",
         node_type = struct_name(node),
         lower = node.lower_name(),

@@ -63,6 +63,11 @@ pub(crate) mod external {
         pub fn len(&self) -> usize {
             unsafe { lib_ruby_parser__external__shared_byte_list__get_len(&self.blob) as usize }
         }
+
+        /// Equivalent std::slice::is_empty
+        pub fn is_empty(&self) -> bool {
+            self.len() == 0
+        }
     }
 
     #[cfg(test)]

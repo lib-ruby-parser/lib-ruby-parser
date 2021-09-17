@@ -106,6 +106,11 @@ pub(crate) mod external {
             unsafe { (T::get_len_fn())(&self.blob) as usize }
         }
 
+        /// Equivalent of Vec::is_empty
+        pub fn is_empty(&self) -> bool {
+            self.len() == 0
+        }
+
         /// Equivalent of Vec::capacity
         pub fn capacity(&self) -> usize {
             unsafe { (T::get_capacity_fn())(&self.blob) as usize }
@@ -241,13 +246,8 @@ pub(crate) mod external {
         T: ExternalListMember + Clone,
     {
         fn clone(&self) -> Self {
-            let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<T>>();
-            let copy = Self::from(copied);
-            drop(copy);
-
-            let copied = self.as_ref().iter().map(|e| e.clone()).collect::<Vec<T>>();
-            let copy = Self::from(copied);
-            copy
+            let copied = self.as_ref().to_vec();
+            Self::from(copied)
         }
     }
 

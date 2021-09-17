@@ -149,7 +149,7 @@ impl Lexer {
         loop {
             c = self.nextc();
 
-            let ch = match c.to_option() {
+            let ch = match c.as_option() {
                 Some(_) if !c.is_alpha() => break,
                 None => break,
                 Some(ch) => ch,
@@ -193,7 +193,7 @@ impl Lexer {
         c = self.char_at(ptr);
         ptr += 1;
 
-        match c.to_option() {
+        match c.as_option() {
             Some(b'$') => {
                 c = self.char_at(ptr);
                 if c == b'-' {
@@ -274,7 +274,7 @@ impl Lexer {
             } else if c == b'\\' {
                 self.literal_flush(self.buffer.pcur - 1);
                 c = self.nextc();
-                match c.to_option() {
+                match c.as_option() {
                     Some(b'\n') => {
                         if (func & STR_FUNC_QWORDS) != 0 {
                             // break;
@@ -373,7 +373,7 @@ impl Lexer {
         let mut result = 0;
 
         for _ in 0..len {
-            match self.buffer.byte_at(s).to_option() {
+            match self.buffer.byte_at(s).as_option() {
                 None => break,
                 Some(c) => match usize::from_str_radix(&(c as char).to_string(), 16) {
                     Ok(hex) => {
@@ -395,8 +395,8 @@ impl Lexer {
         let mut result: usize = 0;
 
         for _ in 0..len {
-            match self.buffer.byte_at(s).to_option() {
-                Some(c) if (c >= b'0' && c <= b'7') => {
+            match self.buffer.byte_at(s).as_option() {
+                Some(c) if (b'0'..=b'7').contains(&c) => {
                     result <<= 3;
                     result |= (c - b'0') as usize;
                 }
@@ -414,7 +414,7 @@ impl Lexer {
             .buffer
             .substr_at(self.buffer.pcur - n, self.buffer.pcur)
             .unwrap_or_else(|| panic!("no substr {}..{}", self.buffer.pcur - n, self.buffer.pcur));
-        self.tokenbuf.append(&substr);
+        self.tokenbuf.append(substr);
     }
 
     fn tokaddmbc(&mut self, codepoint: usize) {
@@ -587,7 +587,7 @@ impl Lexer {
 
         loop {
             c = self.nextc();
-            match c.to_option() {
+            match c.as_option() {
                 Some(b'\n') => return Ok(()),
 
                 Some(b'0') | Some(b'1') | Some(b'2') | Some(b'3') | Some(b'4') | Some(b'5')
@@ -710,7 +710,7 @@ impl Lexer {
         let mut numlen: usize = 0;
 
         c = self.nextc();
-        match c.to_option() {
+        match c.as_option() {
             Some(b'\\') => c,
             Some(b'n') => MaybeByte::new(b'\n'),
             Some(b't') => MaybeByte::new(b'\t'),

@@ -60,6 +60,11 @@ pub(crate) mod external {
             unsafe { lib_ruby_parser__external__string_ptr__get_len(&self.blob) as usize }
         }
 
+        /// Equivalent of String::is_empty
+        pub fn is_empty(&self) -> bool {
+            self.len() == 0
+        }
+
         pub(crate) fn as_ptr(&self) -> *const u8 {
             let blob_ptr: *const Blob<StringPtr> = &self.blob;
             unsafe {
