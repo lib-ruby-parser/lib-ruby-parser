@@ -120,7 +120,7 @@ impl Builder {
     pub(crate) fn integer(&self, integer_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&integer_t);
         Box::new(Node::new_int(
-            value(integer_t).into(),
+            value(integer_t),
             MaybeLoc::none(),
             expression_l,
         ))
@@ -129,7 +129,7 @@ impl Builder {
     pub(crate) fn float(&self, float_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&float_t);
         Box::new(Node::new_float(
-            value(float_t).into(),
+            value(float_t),
             MaybeLoc::none(),
             expression_l,
         ))
@@ -138,7 +138,7 @@ impl Builder {
     pub(crate) fn rational(&self, rational_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&rational_t);
         Box::new(Node::new_rational(
-            value(rational_t).into(),
+            value(rational_t),
             MaybeLoc::none(),
             expression_l,
         ))
@@ -147,7 +147,7 @@ impl Builder {
     pub(crate) fn complex(&self, complex_t: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&complex_t);
         Box::new(Node::new_complex(
-            value(complex_t).into(),
+            value(complex_t),
             MaybeLoc::none(),
             expression_l,
         ))
@@ -155,7 +155,7 @@ impl Builder {
 
     pub(crate) fn unary_num(&self, unary_t: Ptr<Token>, mut numeric: Box<Node>) -> Box<Node> {
         let new_operator_l = self.loc(&unary_t);
-        let sign = value(unary_t);
+        let sign = String::from(value(unary_t));
 
         if let Some(int) = numeric.as_int_mut() {
             let new_value: StringPtr = (sign + int.get_value().as_str()).into();
@@ -386,7 +386,7 @@ impl Builder {
         end_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
-        if lossy_value(begin_t).starts_with("<<") {
+        if lossy_value(begin_t).as_str().starts_with("<<") {
             let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(&end_t));
             let heredoc_end_l = self.loc(&end_t);
             let expression_l = begin_l;
@@ -510,7 +510,7 @@ impl Builder {
         }
         let expression_l = self.loc(&regexp_end_t).adjust_begin(1);
         let options = value(regexp_end_t);
-        let mut options = options.chars().skip(1).collect::<Vec<_>>();
+        let mut options = options.as_str().chars().skip(1).collect::<Vec<_>>();
         options.sort_unstable();
         options.dedup();
         let options = if options.is_empty() {
@@ -803,39 +803,40 @@ impl Builder {
 
     pub(crate) fn lvar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
-        Box::new(Node::new_lvar(value(token).into(), expression_l))
+        Box::new(Node::new_lvar(value(token), expression_l))
     }
 
     pub(crate) fn ivar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
-        Box::new(Node::new_ivar(value(token).into(), expression_l))
+        Box::new(Node::new_ivar(value(token), expression_l))
     }
 
     pub(crate) fn gvar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
-        Box::new(Node::new_gvar(value(token).into(), expression_l))
+        Box::new(Node::new_gvar(value(token), expression_l))
     }
 
     pub(crate) fn cvar(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
-        Box::new(Node::new_cvar(value(token).into(), expression_l))
+        Box::new(Node::new_cvar(value(token), expression_l))
     }
 
     pub(crate) fn back_ref(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
-        Box::new(Node::new_back_ref(value(token).into(), expression_l))
+        Box::new(Node::new_back_ref(value(token), expression_l))
     }
 
     const MAX_NTH_REF: usize = 0b111111111111111111111111111111;
 
     pub(crate) fn nth_ref(&self, token: Ptr<Token>) -> Box<Node> {
         let expression_l = self.loc(&token);
-        let name = value(token)[1..].to_string();
+        let name = value(token);
+        let name = &name.as_str()[1..];
         let parsed = name.parse::<usize>();
 
         if parsed.is_err() || parsed.map(|n| n > Self::MAX_NTH_REF) == Ok(true) {
             self.warn(
-                DiagnosticMessage::new_nth_ref_is_too_big(name.clone().into()),
+                DiagnosticMessage::new_nth_ref_is_too_big(name.into()),
                 &expression_l,
             )
         }
@@ -881,7 +882,7 @@ impl Builder {
 
         Box::new(Node::new_const(
             MaybePtr::none(),
-            value(name_t).into(),
+            value(name_t),
             MaybeLoc::none(),
             name_l,
             expression_l,
@@ -897,7 +898,7 @@ impl Builder {
 
         Box::new(Node::new_const(
             MaybePtr::some(scope),
-            value(name_t).into(),
+            value(name_t),
             double_colon_l.into(),
             name_l,
             expression_l,
@@ -917,7 +918,7 @@ impl Builder {
 
         Box::new(Node::new_const(
             scope.into(),
-            value(name_t).into(),
+            value(name_t),
             double_colon_l.into(),
             name_l,
             expression_l,
@@ -1137,7 +1138,7 @@ impl Builder {
         rhs: Box<Node>,
     ) -> Result<Box<Node>, ()> {
         let operator_l = self.loc(&op_t);
-        let mut operator = value(op_t);
+        let mut operator = String::from(value(op_t));
         operator.pop();
         let expression_l = join_exprs(&lhs, &rhs);
 
@@ -1321,10 +1322,10 @@ impl Builder {
         let expression_l = keyword_l.join(&end_l);
 
         let name = value(name_t);
-        self.check_reserved_for_numparam(&name, &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
         Ok(Box::new(Node::new_def(
-            name.into(),
+            name,
             args.into(),
             body.into(),
             keyword_l,
@@ -1352,10 +1353,10 @@ impl Builder {
         let assignment_l = self.loc(&assignment_t);
 
         let name = value(name_t);
-        self.check_reserved_for_numparam(&name, &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
         Ok(Box::new(Node::new_def(
-            name.into(),
+            name,
             args.into(),
             body.into(),
             keyword_l,
@@ -1383,11 +1384,11 @@ impl Builder {
         let expression_l = keyword_l.join(&end_l);
 
         let name = value(name_t);
-        self.check_reserved_for_numparam(&name, &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
         Ok(Box::new(Node::new_defs(
             definee.into(),
-            name.into(),
+            name,
             args.into(),
             body.into(),
             keyword_l,
@@ -1419,11 +1420,11 @@ impl Builder {
         let expression_l = keyword_l.join(&body_l);
 
         let name = value(name_t);
-        self.check_reserved_for_numparam(&name, &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
         Ok(Box::new(Node::new_defs(
             definee.into(),
-            name.into(),
+            name,
             args.into(),
             body.into(),
             keyword_l,
@@ -1508,9 +1509,9 @@ impl Builder {
         let name_l = self.loc(&name_t);
         let name = value(name_t);
 
-        self.check_reserved_for_numparam(&name, &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
-        Ok(Box::new(Node::new_arg(name.into(), name_l)))
+        Ok(Box::new(Node::new_arg(name, name_l)))
     }
 
     pub(crate) fn optarg(
@@ -1524,10 +1525,10 @@ impl Builder {
         let expression_l = self.loc(&name_t).join(default.expression());
 
         let name = value(name_t);
-        self.check_reserved_for_numparam(&name, &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
         Ok(Box::new(Node::new_optarg(
-            name.into(),
+            name,
             default.into(),
             name_l,
             operator_l,
@@ -1544,17 +1545,17 @@ impl Builder {
             Some(name_t) => {
                 let name_l = self.loc(&name_t);
                 let name = value(name_t);
-                self.check_reserved_for_numparam(&name, &name_l)?;
-                (Some(name), name_l.into())
+                self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+                (MaybeStringPtr::some(name), name_l.into())
             }
-            _ => (None, MaybeLoc::none()),
+            _ => (MaybeStringPtr::none(), MaybeLoc::none()),
         };
 
         let operator_l = self.loc(&star_t);
         let expression_l = operator_l.maybe_join(&name_l);
 
         Ok(Box::new(Node::new_restarg(
-            name.into(),
+            name,
             operator_l,
             name_l,
             expression_l,
@@ -1564,25 +1565,25 @@ impl Builder {
     pub(crate) fn kwarg(&self, name_t: Ptr<Token>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let name = value(name_t);
-        self.check_reserved_for_numparam(&name, &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
         let expression_l = name_l;
         let name_l = expression_l.adjust_end(-1);
 
-        Ok(Box::new(Node::new_kwarg(name.into(), name_l, expression_l)))
+        Ok(Box::new(Node::new_kwarg(name, name_l, expression_l)))
     }
 
     pub(crate) fn kwoptarg(&self, name_t: Ptr<Token>, default: Box<Node>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let name = value(name_t);
-        self.check_reserved_for_numparam(&name, &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
         let label_l = name_l;
         let name_l = label_l.adjust_end(-1);
         let expression_l = default.expression().join(&label_l);
 
         Ok(Box::new(Node::new_kwoptarg(
-            name.into(),
+            name,
             default.into(),
             name_l,
             expression_l,
@@ -1598,17 +1599,17 @@ impl Builder {
             Some(name_t) => {
                 let name_l = self.loc(&name_t);
                 let name = value(name_t);
-                self.check_reserved_for_numparam(&name, &name_l)?;
-                (Some(name), name_l.into())
+                self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+                (MaybeStringPtr::some(name), name_l.into())
             }
-            _ => (None, MaybeLoc::none()),
+            _ => (MaybeStringPtr::none(), MaybeLoc::none()),
         };
 
         let operator_l = self.loc(&dstar_t);
         let expression_l = operator_l.maybe_join(&name_l);
 
         Ok(Box::new(Node::new_kwrestarg(
-            name.into(),
+            name,
             operator_l,
             name_l,
             expression_l,
@@ -1625,9 +1626,9 @@ impl Builder {
     pub(crate) fn shadowarg(&self, name_t: Ptr<Token>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let name = value(name_t);
-        self.check_reserved_for_numparam(&name, &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
-        Ok(Box::new(Node::new_shadowarg(name.into(), name_l)))
+        Ok(Box::new(Node::new_shadowarg(name, name_l)))
     }
 
     pub(crate) fn blockarg(
@@ -1637,13 +1638,13 @@ impl Builder {
     ) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
         let name = value(name_t);
-        self.check_reserved_for_numparam(&name, &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
         let operator_l = self.loc(&amper_t);
         let expression_l = operator_l.join(&name_l);
 
         Ok(Box::new(Node::new_blockarg(
-            name.into(),
+            name,
             operator_l,
             name_l,
             expression_l,
@@ -1712,14 +1713,19 @@ impl Builder {
         let begin_l = self.maybe_loc(&lparen_t);
         let end_l = self.maybe_loc(&rparen_t);
 
-        let method_name = maybe_value(selector_t).unwrap_or_else(|| "call".to_string());
+        let method_name = maybe_value(selector_t);
+        let method_name = if method_name.is_some() {
+            method_name.unwrap()
+        } else {
+            StringPtr::from("call")
+        };
 
         self.rewrite_hash_args_to_kwargs(&mut args);
 
         match self.call_type_for_dot(&dot_t) {
             MethodCallType::Send => Box::new(Node::new_send(
                 receiver.into(),
-                method_name.into(),
+                method_name,
                 args.into(),
                 dot_l,
                 selector_l,
@@ -1731,7 +1737,7 @@ impl Builder {
 
             MethodCallType::CSend => Box::new(Node::new_c_send(
                 receiver.expect("csend node must have a receiver").into(),
-                method_name.into(),
+                method_name,
                 args.into(),
                 dot_l.expect("csend node must have &."),
                 selector_l,
@@ -1905,7 +1911,7 @@ impl Builder {
         let expression_l = receiver.expression().join(&selector_l);
         let receiver: Ptr<Node> = receiver.into();
 
-        let method_name = value(selector_t) + "=";
+        let method_name = String::from(value(selector_t)) + "=";
 
         match self.call_type_for_dot(&Some(dot_t)) {
             MethodCallType::Send => Box::new(Node::new_send(
@@ -1992,7 +1998,7 @@ impl Builder {
 
         Ok(Box::new(Node::new_send(
             Some(receiver).into(),
-            value(operator_t).into(),
+            value(operator_t),
             list![*arg],
             MaybeLoc::none(),
             selector_l,
@@ -2045,7 +2051,7 @@ impl Builder {
         let selector_l = self.loc(&op_t);
         let expression_l = receiver.expression().join(&selector_l);
 
-        let op = value(op_t);
+        let op = String::from(value(op_t));
         let method_name = if op == "+" || op == "-" { op + "@" } else { op };
         Ok(Box::new(Node::new_send(
             Some(receiver).into(),
@@ -2864,15 +2870,11 @@ impl Builder {
         let expression_l = name_l.clone();
         let name = value(name_t);
 
-        self.check_lvar_name(&name, &name_l)?;
-        self.check_duplicate_pattern_variable(&name, &name_l)?;
-        self.static_env.declare(&name);
+        self.check_lvar_name(name.as_str(), &name_l)?;
+        self.check_duplicate_pattern_variable(name.as_str(), &name_l)?;
+        self.static_env.declare(name.as_str());
 
-        Ok(Box::new(Node::new_match_var(
-            name.into(),
-            name_l,
-            expression_l,
-        )))
+        Ok(Box::new(Node::new_match_var(name, name_l, expression_l)))
     }
 
     pub(crate) fn match_hash_var(&self, name_t: Ptr<Token>) -> Result<Box<Node>, ()> {
@@ -2881,15 +2883,11 @@ impl Builder {
 
         let name = value(name_t);
 
-        self.check_lvar_name(&name, &name_l)?;
-        self.check_duplicate_pattern_variable(&name, &name_l)?;
-        self.static_env.declare(&name);
+        self.check_lvar_name(name.as_str(), &name_l)?;
+        self.check_duplicate_pattern_variable(name.as_str(), &name_l)?;
+        self.static_env.declare(name.as_str());
 
-        Ok(Box::new(Node::new_match_var(
-            name.into(),
-            name_l,
-            expression_l,
-        )))
+        Ok(Box::new(Node::new_match_var(name, name_l, expression_l)))
     }
     pub(crate) fn match_hash_var_from_str(
         &self,
@@ -2917,10 +2915,10 @@ impl Builder {
             let name = value.to_string_lossy();
             let mut name_l = expression_l.clone();
 
-            self.check_lvar_name(&name, &name_l)?;
-            self.check_duplicate_pattern_variable(&name, &name_l)?;
+            self.check_lvar_name(name.as_str(), &name_l)?;
+            self.check_duplicate_pattern_variable(name.as_str(), &name_l)?;
 
-            self.static_env.declare(&name);
+            self.static_env.declare(name.as_str());
 
             if let Some(begin_l) = begin_l.as_ref() {
                 let begin_d: i32 = begin_l
@@ -2942,7 +2940,7 @@ impl Builder {
                 .loc(&begin_t)
                 .join(&expression_l)
                 .join(&self.loc(&end_t));
-            Box::new(Node::new_match_var(name.into(), name_l, expression_l))
+            Box::new(Node::new_match_var(name, name_l, expression_l))
         } else if string.is_begin() {
             let internal::Begin { statements, .. } = string.into_begin().into_internal();
 
@@ -3139,7 +3137,10 @@ impl Builder {
     ) -> Result<Box<Node>, ()> {
         let result = match p_kw_label {
             PKwLabel::PlainLabel(label_t) => {
-                self.check_duplicate_pattern_key(&clone_value(&label_t), &self.loc(&label_t))?;
+                self.check_duplicate_pattern_key(
+                    clone_value(&label_t).as_str(),
+                    &self.loc(&label_t),
+                )?;
                 self.pair_keyword(label_t, value)
             }
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
@@ -3448,7 +3449,7 @@ impl Builder {
         for node in nodes {
             if let Some(str) = node.as_str() {
                 let value = str.get_value().to_string_lossy();
-                result.push_str(&value)
+                result.push_str(value.as_str())
             } else if let Some(begin) = node.as_begin() {
                 let statements = begin.get_statements();
                 if let Some(s) = self.static_string(statements) {
@@ -3584,7 +3585,7 @@ impl Builder {
 
     pub(crate) fn is_heredoc(&self, begin_t: &Option<Ptr<Token>>) -> bool {
         if let Some(begin_t) = begin_t {
-            if clone_value(begin_t).starts_with("<<") {
+            if clone_value(begin_t).as_str().starts_with("<<") {
                 return true;
             }
         }
@@ -3742,20 +3743,23 @@ pub(crate) fn collection_expr(nodes: &[Node]) -> MaybeLoc {
     join_maybe_exprs(&nodes.first(), &nodes.last())
 }
 
-pub(crate) fn value(token: Ptr<Token>) -> String {
+pub(crate) fn value(token: Ptr<Token>) -> StringPtr {
     token.unptr().into_string().unwrap()
 }
 
-pub(crate) fn lossy_value(token: Ptr<Token>) -> String {
+pub(crate) fn lossy_value(token: Ptr<Token>) -> StringPtr {
     token.to_string_lossy()
 }
 
-pub(crate) fn clone_value(token: &Token) -> String {
+pub(crate) fn clone_value(token: &Token) -> StringPtr {
     token.to_string_lossy()
 }
 
-pub(crate) fn maybe_value(token: Option<Ptr<Token>>) -> Option<String> {
-    token.map(value)
+pub(crate) fn maybe_value(token: Option<Ptr<Token>>) -> MaybeStringPtr {
+    match token.map(value) {
+        Some(s) => MaybeStringPtr::some(s),
+        None => MaybeStringPtr::none(),
+    }
 }
 
 pub(crate) fn join_exprs(lhs: &Node, rhs: &Node) -> Loc {

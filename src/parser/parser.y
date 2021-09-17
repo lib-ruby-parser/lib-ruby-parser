@@ -2353,7 +2353,7 @@ use crate::parser_options::InternalParserOptions;
                         let op_t = $<Token>2;
                         self.warn(
                             @2,
-                            DiagnosticMessage::new_comparison_after_comparison(clone_value(&op_t).into())
+                            DiagnosticMessage::new_comparison_after_comparison(clone_value(&op_t))
                         );
                         $$ = Value::Node(
                             self.builder.binary_op(
@@ -3861,7 +3861,7 @@ opt_block_args_tail:
             bvar: tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
-                        self.static_env.declare(&clone_value(&ident_t));
+                        self.static_env.declare(clone_value(&ident_t).as_str());
                         $$ = Value::Node(
                             self.builder.shadowarg(ident_t)?
                         );
@@ -5138,8 +5138,8 @@ opt_block_args_tail:
                         let ident_t = $<Token>2;
                         let name = clone_value(&ident_t);
 
-                        if !self.static_env.is_declared(&name) {
-                            return self.yyerror(@2, DiagnosticMessage::new_no_such_local_variable(name.into()));
+                        if !self.static_env.is_declared(name.as_str()) {
+                            return self.yyerror(@2, DiagnosticMessage::new_no_such_local_variable(name));
                         }
 
                         let lvar = self.builder.accessible(self.builder.lvar(ident_t));
@@ -6116,7 +6116,7 @@ f_opt_paren_args: f_paren_args
                     {
                         let ident_t = $<Token>1;
                         let name = clone_value(&ident_t);
-                        self.static_env.declare(&name);
+                        self.static_env.declare(name.as_str());
                         self.max_numparam_stack.set_has_ordinary_params();
                         $$ = Value::Token(ident_t);
                     }
@@ -6125,7 +6125,7 @@ f_opt_paren_args: f_paren_args
       f_arg_asgn: f_norm_arg
                     {
                         let arg_t = $<Token>1;
-                        let arg_name = clone_value(&arg_t);
+                        let arg_name = String::from(clone_value(&arg_t));
                         self.current_arg_stack.set(Some(arg_name));
                         $$ = Value::Token(arg_t);
                     }
@@ -6168,7 +6168,7 @@ f_opt_paren_args: f_paren_args
                         let ident_t = $<Token>1;
                         self.check_kwarg_name(&ident_t)?;
 
-                        let ident = clone_value(&ident_t);
+                        let ident = String::from(clone_value(&ident_t));
                         self.static_env.declare(&ident);
 
                         self.max_numparam_stack.set_has_ordinary_params();
@@ -6257,7 +6257,7 @@ f_opt_paren_args: f_paren_args
         f_kwrest: kwrest_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(&clone_value(&ident_t));
+                        self.static_env.declare(clone_value(&ident_t).as_str());
                         $$ = Value::NodeList(
                             vec![
                                 *self.builder.kwrestarg($<Token>1, Some(ident_t))?
@@ -6337,7 +6337,7 @@ f_opt_paren_args: f_paren_args
       f_rest_arg: restarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(&clone_value(&ident_t));
+                        self.static_env.declare(clone_value(&ident_t).as_str());
 
                         $$ = Value::NodeList(
                             vec![
@@ -6368,7 +6368,7 @@ f_opt_paren_args: f_paren_args
      f_block_arg: blkarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(&clone_value(&ident_t));
+                        self.static_env.declare(clone_value(&ident_t).as_str());
                         $$ = Value::Node(
                             self.builder.blockarg($<Token>1, ident_t)?
                         );
@@ -6788,7 +6788,7 @@ impl Parser {
 
     fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), ()> {
         let name = clone_value(ident_t);
-        let first_char = name.chars().next().expect("kwarg name can't be empty");
+        let first_char = name.as_str().chars().next().expect("kwarg name can't be empty");
         if first_char.is_lowercase() || first_char == '_' {
             Ok(())
         } else {
@@ -6806,7 +6806,7 @@ impl Parser {
 
     fn validate_endless_method_name(&mut self, name_t: &Token) -> Result<(), ()> {
         let name = clone_value(name_t);
-        if name.ends_with('=') {
+        if name.as_str().ends_with('=') {
             self.yyerror(name_t.loc(), DiagnosticMessage::new_endless_setter_definition()).map(|_| ())
         } else {
             Ok(())

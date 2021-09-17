@@ -19,7 +19,7 @@ impl Bytes {
     }
 
     /// Returns a reference to inner data
-    pub fn as_raw(&self) -> &[u8] {
+    pub fn as_raw(&self) -> &Vec<u8> {
         &self.raw
     }
 

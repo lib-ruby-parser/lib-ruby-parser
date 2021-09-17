@@ -2,6 +2,7 @@ use super::Token;
 use crate::parser::token_name;
 
 crate::use_native_or_external!(List);
+crate::use_native_or_external!(StringPtr);
 
 impl std::fmt::Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -17,7 +18,7 @@ impl std::fmt::Debug for Token {
 
 impl Token {
     /// Returns a byte array of the token value
-    pub fn as_bytes(&self) -> &[u8] {
+    pub fn as_bytes(&self) -> &List<u8> {
         self.token_value().as_raw()
     }
 
@@ -32,17 +33,17 @@ impl Token {
     }
 
     /// Converts token to a string, replaces unknown chars to `U+FFFD`
-    pub fn to_string_lossy(&self) -> String {
+    pub fn to_string_lossy(&self) -> StringPtr {
         self.token_value().to_string_lossy()
     }
 
     /// Converts token to a string
-    pub fn to_string(&self) -> Result<String, std::string::FromUtf8Error> {
+    pub fn to_string(&self) -> Result<StringPtr, std::string::FromUtf8Error> {
         self.token_value().to_string()
     }
 
     /// Consumes a token and converts it into a string
-    pub fn into_string(self) -> Result<String, std::string::FromUtf8Error> {
+    pub fn into_string(self) -> Result<StringPtr, std::string::FromUtf8Error> {
         self.into_token_value().into_string()
     }
 

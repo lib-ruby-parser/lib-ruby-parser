@@ -95,15 +95,12 @@ pub(crate) mod external {
         /// Equivalent of Option::unwrap()
         pub fn unwrap(self) -> ExternalStringPtr {
             if self.is_some() {
-                let len = unsafe {
-                    lib_ruby_parser__external__maybe_string_ptr__get_len(&self.blob) as usize
-                };
+                let len =
+                    unsafe { lib_ruby_parser__external__maybe_string_ptr__get_len(&self.blob) };
                 let ptr =
                     unsafe { lib_ruby_parser__external__maybe_string_ptr__into_raw(self.blob) };
-                std::mem::forget(self);
-                let bytes = unsafe { Vec::from_raw_parts(ptr, len, len) };
-                let s = String::from_utf8(bytes).unwrap();
-                ExternalStringPtr::from(s)
+                // ExternalStringPtr always COPIES given ptr
+                ExternalStringPtr::from_raw(ptr, len)
             } else {
                 panic!("failed to unwrap null MaybeStringPtr")
             }
@@ -183,6 +180,7 @@ pub(crate) mod external {
     #[cfg(test)]
     mod tests {
         use super::{MaybeStringPtr, MaybeStringPtrAPI};
+        use crate::containers::ExternalStringPtr as StringPtr;
 
         #[test]
         fn test_some() {
@@ -200,6 +198,12 @@ pub(crate) mod external {
         fn test_as_ref() {
             let s = MaybeStringPtr::some("foobar");
             assert_eq!(s.as_ref(), Some("foobar"))
+        }
+
+        #[test]
+        fn test_unwrap() {
+            let s = MaybeStringPtr::some("foobar");
+            assert_eq!(s.unwrap(), StringPtr::from("foobar"));
         }
     }
 }

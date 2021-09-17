@@ -44,6 +44,11 @@ pub(crate) mod external {
     }
 
     impl StringPtr {
+        pub(crate) fn from_raw(ptr: *const u8, len: u64) -> Self {
+            let blob = unsafe { lib_ruby_parser__external__string_ptr__new(ptr, len) };
+            Self { blob }
+        }
+
         /// Performs uppercase on self. Returns Err if stored byte array is invalid in UTF-8
         pub fn to_uppercase(&self) -> Self {
             Self::from(self.as_str().to_uppercase())
@@ -120,8 +125,7 @@ pub(crate) mod external {
                 bytes.as_ptr()
             };
 
-            let blob = unsafe { lib_ruby_parser__external__string_ptr__new(ptr, len) };
-            Self { blob }
+            Self::from_raw(ptr, len)
         }
     }
 

@@ -1,4 +1,5 @@
 crate::use_native_or_external!(List);
+crate::use_native_or_external!(StringPtr);
 
 use super::Bytes;
 
@@ -14,18 +15,18 @@ impl Bytes {
     }
 
     /// Converts byte sequnce to a string, all invalid UTF-8 chars are converted into "replacement char"
-    pub fn to_string_lossy(&self) -> String {
-        String::from_utf8_lossy(self.as_raw()).into_owned()
+    pub fn to_string_lossy(&self) -> StringPtr {
+        String::from_utf8_lossy(self.as_raw()).into_owned().into()
     }
 
     /// Converts byte sequence to a String, returns error if there are invalid UTF-8 chars
-    pub fn to_string(&self) -> Result<String, std::string::FromUtf8Error> {
-        String::from_utf8(self.as_raw().to_vec())
+    pub fn to_string(&self) -> Result<StringPtr, std::string::FromUtf8Error> {
+        String::from_utf8(self.as_raw().to_vec()).map(|s| s.into())
     }
 
     /// Consumes itself and convrters it into a string, returns error if there are invalid UTF-8 chars
-    pub fn into_string(self) -> Result<String, std::string::FromUtf8Error> {
-        String::from_utf8(self.into_raw().into())
+    pub fn into_string(self) -> Result<StringPtr, std::string::FromUtf8Error> {
+        String::from_utf8(self.into_raw().into()).map(|s| s.into())
     }
 
     /// Returns `true` if `self` represents a valid UTF-8 string
