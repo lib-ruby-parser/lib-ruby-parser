@@ -2,7 +2,7 @@ use super::Loc;
 use crate::source::DecodedInput;
 use std::convert::TryInto;
 
-crate::use_native_or_external!(MaybeLoc);
+crate::use_native_or_external!(Maybe);
 
 impl Loc {
     /// Converts location to a range
@@ -65,7 +65,7 @@ impl Loc {
         )
     }
 
-    pub(crate) fn maybe_join(&self, other: &MaybeLoc) -> Loc {
+    pub(crate) fn maybe_join(&self, other: &Maybe<Loc>) -> Loc {
         match other.as_ref() {
             Some(other) => self.join(other),
             None => self.clone(),

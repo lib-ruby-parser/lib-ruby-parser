@@ -52,11 +52,21 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
         regexp_options: true,
     }) || has_field(NodeFieldType::MaybeNode {
         regexp_options: false,
-    }) {
-        imports.push("crate::use_native_or_external!(MaybePtr);");
+    }) || has_field(NodeFieldType::MaybeLoc)
+        || has_field(NodeFieldType::MaybeStr { chars: true })
+        || has_field(NodeFieldType::MaybeStr { chars: false })
+    {
+        imports.push("crate::use_native_or_external!(Maybe);");
     }
 
-    if has_field(NodeFieldType::Node) {
+    if has_field(NodeFieldType::Node)
+        || has_field(NodeFieldType::MaybeNode {
+            regexp_options: true,
+        })
+        || has_field(NodeFieldType::MaybeNode {
+            regexp_options: false,
+        })
+    {
         imports.push("crate::use_native_or_external!(Ptr);");
     }
 
@@ -64,18 +74,12 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
         imports.push("crate::use_native_or_external!(List);");
     }
 
-    if has_field(NodeFieldType::MaybeLoc) {
-        imports.push("crate::use_native_or_external!(MaybeLoc);");
-    }
-
-    if has_field(NodeFieldType::Str { raw: true }) || has_field(NodeFieldType::Str { raw: false }) {
-        imports.push("crate::use_native_or_external!(StringPtr);");
-    }
-
-    if has_field(NodeFieldType::MaybeStr { chars: true })
+    if has_field(NodeFieldType::Str { raw: true })
+        || has_field(NodeFieldType::Str { raw: false })
+        || has_field(NodeFieldType::MaybeStr { chars: true })
         || has_field(NodeFieldType::MaybeStr { chars: false })
     {
-        imports.push("crate::use_native_or_external!(MaybeStringPtr);");
+        imports.push("crate::use_native_or_external!(StringPtr);");
     }
 
     imports
@@ -87,11 +91,11 @@ fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
     match field.field_type {
         NodeFieldType::Node => "Ptr<Node>",
         NodeFieldType::Nodes => "List<Node>",
-        NodeFieldType::MaybeNode { .. } => "MaybePtr<Node>",
+        NodeFieldType::MaybeNode { .. } => "Maybe<Ptr<Node>>",
         NodeFieldType::Loc => "Loc",
-        NodeFieldType::MaybeLoc => "MaybeLoc",
+        NodeFieldType::MaybeLoc => "Maybe<Loc>",
         NodeFieldType::Str { .. } => "StringPtr",
-        NodeFieldType::MaybeStr { .. } => "MaybeStringPtr",
+        NodeFieldType::MaybeStr { .. } => "Maybe<StringPtr>",
         NodeFieldType::StringValue => "Bytes",
         NodeFieldType::U8 => "u8",
     }

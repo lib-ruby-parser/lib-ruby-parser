@@ -1,10 +1,7 @@
+crate::use_native_or_external!(Maybe);
 use crate::lex_states::*;
 use crate::test_helpers::files_under_dir;
-use crate::{
-    debug_level,
-    source::{MaybeDecoder, MaybeDecoderAPI},
-    Lexer,
-};
+use crate::{debug_level, Lexer};
 use std::fs;
 use std::panic;
 
@@ -102,7 +99,7 @@ fn test(fixture_path: &str) -> TestResult {
         let mut lexer = Lexer::new(
             test_case.input.as_str(),
             format!("(test {})", fixture_path),
-            MaybeDecoder::new_none(),
+            Maybe::none(),
         );
         for var in test_case.vars {
             lexer.static_env.declare(&var);

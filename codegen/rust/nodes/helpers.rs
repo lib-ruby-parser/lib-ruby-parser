@@ -5,11 +5,11 @@ pub(crate) fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
     match field.field_type {
         NodeFieldType::Node => "Ptr<Node>",
         NodeFieldType::Nodes => "List<Node>",
-        NodeFieldType::MaybeNode { .. } => "MaybePtr<Node>",
+        NodeFieldType::MaybeNode { .. } => "Maybe<Ptr<Node>>",
         NodeFieldType::Loc => "Loc",
-        NodeFieldType::MaybeLoc => "MaybeLoc",
+        NodeFieldType::MaybeLoc => "Maybe<Loc>",
         NodeFieldType::Str { .. } => "StringPtr",
-        NodeFieldType::MaybeStr { .. } => "MaybeStringPtr",
+        NodeFieldType::MaybeStr { .. } => "Maybe<StringPtr>",
         NodeFieldType::StringValue => "Bytes",
         NodeFieldType::U8 => "u8",
     }

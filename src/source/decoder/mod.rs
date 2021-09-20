@@ -8,7 +8,7 @@ mod external;
 #[cfg(feature = "compile-with-external-structures")]
 pub use external::{decode_input, Decoder};
 
-mod shared;
+pub(crate) mod shared;
 
 #[cfg(test)]
 mod tests;

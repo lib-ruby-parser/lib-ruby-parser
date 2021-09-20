@@ -149,10 +149,7 @@ impl Drop for TokenRewriterResult {
 
 impl TokenRewriterResult {
     pub(crate) fn into_internal(self) -> InternalTokenRewriterResult {
-        let internal =
-            unsafe { lib_ruby_parser__external__token_rewriter_result__into_internal(self.blob) };
-        std::mem::forget(self);
-        internal
+        unsafe { lib_ruby_parser__external__token_rewriter_result__into_internal(self.into_blob()) }
     }
 }
 
@@ -171,7 +168,7 @@ pub struct TokenRewriter {
 extern "C" {
     fn lib_ruby_parser__external__token_rewriter__drop(blob: *mut Blob<TokenRewriter>);
     fn lib_ruby_parser__external__token_rewriter__call(
-        blob: *mut Blob<TokenRewriter>,
+        blob: *const Blob<TokenRewriter>,
         token: Blob<Ptr<Token>>,
         input: Blob<SharedByteList>,
     ) -> Blob<TokenRewriterResult>;
@@ -184,10 +181,10 @@ impl Drop for TokenRewriter {
 }
 
 impl TokenRewriter {
-    pub(crate) fn call(&mut self, token: Ptr<Token>, input: SharedByteList) -> TokenRewriterResult {
+    pub(crate) fn call(&self, token: Ptr<Token>, input: SharedByteList) -> TokenRewriterResult {
         TokenRewriterResult::from_blob(unsafe {
             lib_ruby_parser__external__token_rewriter__call(
-                &mut self.blob,
+                &self.blob,
                 token.into_blob(),
                 input.into_blob(),
             )

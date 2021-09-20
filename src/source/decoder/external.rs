@@ -1,10 +1,10 @@
+crate::use_native_or_external!(Maybe);
+
 use crate::blobs::{Blob, HasBlob};
 use crate::containers::ExternalList as List;
 use crate::containers::ExternalStringPtr as StringPtr;
 use crate::source::DecoderResult;
 use crate::source::InputError;
-use crate::source::MaybeDecoder;
-use crate::source::MaybeDecoderAPI;
 
 /// Custom decoder, a wrapper around a function
 #[repr(C)]
@@ -14,7 +14,7 @@ pub struct Decoder {
 
 extern "C" {
     fn lib_ruby_parser__external__decoder__call(
-        blob: *mut Blob<Decoder>,
+        blob: *const Blob<Decoder>,
         encoding: Blob<StringPtr>,
         input: Blob<List<u8>>,
     ) -> Blob<DecoderResult>;
@@ -28,10 +28,10 @@ impl Drop for Decoder {
 }
 
 impl Decoder {
-    pub(crate) fn call(&mut self, encoding: StringPtr, input: List<u8>) -> DecoderResult {
+    pub(crate) fn call(&self, encoding: StringPtr, input: List<u8>) -> DecoderResult {
         DecoderResult::from_blob(unsafe {
             lib_ruby_parser__external__decoder__call(
-                &mut self.blob,
+                &self.blob,
                 encoding.into_blob(),
                 input.into_blob(),
             )
@@ -45,11 +45,15 @@ impl std::fmt::Debug for Decoder {
     }
 }
 
-pub fn decode_input(input: List<u8>, enc: StringPtr, decoder: &mut MaybeDecoder) -> DecoderResult {
+pub fn decode_input(
+    input: List<u8>,
+    enc: StringPtr,
+    decoder: &mut Maybe<Decoder>,
+) -> DecoderResult {
     match enc.to_uppercase().as_str() {
         "UTF-8" | "ASCII-8BIT" | "BINARY" => DecoderResult::new_ok(input),
         _ => {
-            if let Some(decoder) = decoder.as_decoder_mut() {
+            if let Some(decoder) = decoder.as_ref() {
                 decoder.call(enc, input)
             } else {
                 DecoderResult::new_err(InputError::new_unsupported_encoding(enc))

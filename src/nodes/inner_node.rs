@@ -1,6 +1,6 @@
-crate::use_native_or_external!(MaybePtr);
+crate::use_native_or_external!(Maybe);
+crate::use_native_or_external!(Ptr);
 crate::use_native_or_external!(StringPtr);
-crate::use_native_or_external!(MaybeStringPtr);
 crate::use_native_or_external!(List);
 
 use crate::Bytes;
@@ -49,7 +49,7 @@ impl InspectVec {
         self.strings.push(format!(", {}", string.as_str()));
     }
 
-    pub(crate) fn push_maybe_str(&mut self, string: &MaybeStringPtr) {
+    pub(crate) fn push_maybe_str(&mut self, string: &Maybe<StringPtr>) {
         if let Some(string) = string.as_ref() {
             self.strings.push(format!(", {:?}", string));
         }
@@ -68,13 +68,13 @@ impl InspectVec {
             .push(format!(",\n{}", node.inspect(self.indent + 1)))
     }
 
-    pub(crate) fn push_maybe_node(&mut self, node: &MaybePtr<Node>) {
+    pub(crate) fn push_maybe_node(&mut self, node: &Maybe<Ptr<Node>>) {
         if let Some(node) = node.as_ref() {
             self.push_node(node)
         }
     }
 
-    pub(crate) fn push_regex_options(&mut self, node: &MaybePtr<Node>) {
+    pub(crate) fn push_regex_options(&mut self, node: &Maybe<Ptr<Node>>) {
         if let Some(node) = node.as_ref() {
             self.push_node(node)
         } else {
@@ -86,7 +86,7 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_maybe_node_or_nil(&mut self, node: &MaybePtr<Node>) {
+    pub(crate) fn push_maybe_node_or_nil(&mut self, node: &Maybe<Ptr<Node>>) {
         if let Some(node) = node.as_ref() {
             self.push_node(node)
         } else {
@@ -100,9 +100,9 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_chars(&mut self, chars: &MaybeStringPtr) {
+    pub(crate) fn push_chars(&mut self, chars: &Maybe<StringPtr>) {
         if let Some(chars) = chars.as_ref() {
-            for c in chars.chars() {
+            for c in chars.as_str().chars() {
                 self.push_str(&StringPtr::from(format!("{}", c)));
             }
         }

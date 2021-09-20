@@ -93,7 +93,7 @@ impl TokenRewriter {
         Self { f }
     }
 
-    pub(crate) fn call(&mut self, token: Box<Token>, input: &[u8]) -> TokenRewriterResult {
+    pub(crate) fn call(&self, token: Box<Token>, input: &[u8]) -> TokenRewriterResult {
         let f = &*self.f;
         f(token, input)
     }

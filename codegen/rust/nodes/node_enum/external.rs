@@ -17,12 +17,10 @@ use crate::nodes::*;
 
 use crate::Loc;
 use crate::Bytes;
-use crate::containers::ExternalMaybePtr as MaybePtr;
 use crate::containers::ExternalPtr as Ptr;
 use crate::containers::ExternalList as List;
-use crate::containers::ExternalMaybeLoc as MaybeLoc;
+use crate::containers::ExternalMaybe as Maybe;
 use crate::containers::ExternalStringPtr as StringPtr;
-use crate::containers::ExternalMaybeStringPtr as MaybeStringPtr;
 
 use crate::blobs::{{HasBlob, Blob}};
 

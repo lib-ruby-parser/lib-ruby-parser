@@ -74,15 +74,14 @@ impl DecoderResult {
     }
 
     pub(crate) fn unwrap_ok(self) -> List<u8> {
-        let list_blob = unsafe { lib_ruby_parser__external__decoder_result_into_ok(self.blob) };
-        std::mem::forget(self);
+        let list_blob =
+            unsafe { lib_ruby_parser__external__decoder_result_into_ok(self.into_blob()) };
         List::from_blob(list_blob)
     }
 
     pub(crate) fn unwrap_err(self) -> InputError {
         let input_error_blob =
-            unsafe { lib_ruby_parser__external__decoder_result_into_err(self.blob) };
-        std::mem::forget(self);
+            unsafe { lib_ruby_parser__external__decoder_result_into_err(self.into_blob()) };
         InputError::from_blob(input_error_blob)
     }
 

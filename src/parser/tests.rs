@@ -1,10 +1,9 @@
+crate::use_native_or_external!(Maybe);
+
 use crate::test_helpers::{files_under_dir, render_diagnostic_for_testing, LocMatcher};
 use crate::{
     debug_level,
-    source::{
-        maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI},
-        MagicComment, MagicCommentKind, {MaybeDecoder, MaybeDecoderAPI},
-    },
+    source::{MagicComment, MagicCommentKind},
     Loc, Parser, ParserOptions, ParserResult,
 };
 use std::fs;
@@ -198,8 +197,8 @@ fn test_file(fixture_path: &str) -> TestResult {
         let options = ParserOptions::new(
             format!("(test {})", fixture_path).into(),
             debug_level::NONE,
-            MaybeDecoder::new_none(),
-            MaybeTokenRewriter::new_none(),
+            Maybe::none(),
+            Maybe::none(),
             false,
         );
         let parser = Parser::new(test_case.input.as_bytes(), options);
@@ -285,8 +284,8 @@ fn parse(input: &[u8]) -> ParserResult {
     let options = ParserOptions::new(
         "(eval)".into(),
         debug_level::NONE,
-        MaybeDecoder::new_none(),
-        MaybeTokenRewriter::new_none(),
+        Maybe::none(),
+        Maybe::none(),
         false,
     );
     let parser = Parser::new(input, options);

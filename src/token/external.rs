@@ -107,8 +107,8 @@ impl Token {
 
     /// Consumes self, returns owned values of the token
     pub fn into_token_value(self) -> Bytes {
-        let bytes_blob = unsafe { lib_ruby_parser__external__token__into_token_value(self.blob) };
-        std::mem::forget(self);
+        let bytes_blob =
+            unsafe { lib_ruby_parser__external__token__into_token_value(self.into_blob()) };
         Bytes { blob: bytes_blob }
     }
 

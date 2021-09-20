@@ -7,7 +7,7 @@ pub use visit_gen::Observer;
 use crate::Node;
 
 crate::use_native_or_external!(Ptr);
-crate::use_native_or_external!(MaybePtr);
+crate::use_native_or_external!(Maybe);
 crate::use_native_or_external!(List);
 
 /// Generic visitor of `Node`.
@@ -78,8 +78,8 @@ impl<TObserver: Observer> Visit<&Ptr<Node>> for Visitor<TObserver> {
     }
 }
 
-impl<TObserver: Observer> Visit<&MaybePtr<Node>> for Visitor<TObserver> {
-    fn visit(&mut self, node: &MaybePtr<Node>, visit_as: Item) {
+impl<TObserver: Observer> Visit<&Maybe<Ptr<Node>>> for Visitor<TObserver> {
+    fn visit(&mut self, node: &Maybe<Ptr<Node>>, visit_as: Item) {
         if let Some(node) = node.as_ref() {
             self.visit(node, visit_as);
         }

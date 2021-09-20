@@ -32,9 +32,8 @@ pub(crate) mod external {
         where
             Self: Sized;
         fn get_shrink_to_fit_fn() -> unsafe extern "C" fn(blob: *mut ListBlob);
-        fn get_as_ptr_fn() -> unsafe extern "C" fn(blob: *mut ListBlob) -> *mut Self
-        where
-            Self: Sized;
+        fn get_as_ptr_fn() -> unsafe extern "C" fn(blob: *const ListBlob) -> *const Self;
+        fn get_into_ptr_fn() -> unsafe extern "C" fn(blob: ListBlob) -> *mut Self;
         fn get_len_fn() -> unsafe extern "C" fn(blob: *const ListBlob) -> u64;
         fn get_capacity_fn() -> unsafe extern "C" fn(blob: *const ListBlob) -> u64;
     }
@@ -87,18 +86,11 @@ pub(crate) mod external {
         }
 
         pub(crate) fn as_ptr(&self) -> *const T {
-            let blob_ptr: *const ListBlob = &self.blob;
-            unsafe { (T::get_as_ptr_fn())(blob_ptr as *mut ListBlob) }
+            unsafe { (T::get_as_ptr_fn())(&self.blob) }
         }
 
-        pub(crate) fn as_mut_ptr(&mut self) -> *mut T {
-            unsafe { (T::get_as_ptr_fn())(&mut self.blob) }
-        }
-
-        pub(crate) fn into_ptr(mut self) -> *mut T {
-            let ptr = self.as_mut_ptr();
-            std::mem::forget(self);
-            ptr
+        pub(crate) fn into_ptr(self) -> *mut T {
+            unsafe { (T::get_into_ptr_fn())(self.into_blob()) }
         }
 
         /// Equivalent of Vec::len
@@ -274,15 +266,6 @@ pub(crate) mod external {
         }
     }
 
-    impl<T> std::ops::DerefMut for List<T>
-    where
-        T: ExternalListMember,
-    {
-        fn deref_mut(&mut self) -> &mut Self::Target {
-            unsafe { std::slice::from_raw_parts_mut(self.as_mut_ptr(), self.len()) }
-        }
-    }
-
     impl<T> std::fmt::Debug for List<T>
     where
         T: ExternalListMember + std::fmt::Debug,
@@ -387,6 +370,7 @@ pub(crate) mod external {
             remove = $remove:ident,
             shrink_to_fit = $shrink_to_fit:ident,
             as_ptr = $as_ptr:ident,
+            into_ptr = $into_ptr:ident,
             len = $len:ident,
             capacity = $capacity:ident
         ) => {
@@ -400,7 +384,8 @@ pub(crate) mod external {
                 fn $push(blob: *mut ListBlob, item: $t);
                 fn $shrink_to_fit(blob: *mut ListBlob);
                 fn $remove(blob: *mut ListBlob, index: u64) -> $t;
-                fn $as_ptr(blob: *mut ListBlob) -> *mut $t;
+                fn $as_ptr(blob: *const ListBlob) -> *const $t;
+                fn $into_ptr(blob: ListBlob) -> *mut $t;
                 fn $len(blob: *const ListBlob) -> u64;
                 fn $capacity(blob: *const ListBlob) -> u64;
             }
@@ -429,8 +414,11 @@ pub(crate) mod external {
                 fn get_shrink_to_fit_fn() -> unsafe extern "C" fn(blob: *mut ListBlob) {
                     $shrink_to_fit
                 }
-                fn get_as_ptr_fn() -> unsafe extern "C" fn(blob: *mut ListBlob) -> *mut Self {
+                fn get_as_ptr_fn() -> unsafe extern "C" fn(blob: *const ListBlob) -> *const Self {
                     $as_ptr
+                }
+                fn get_into_ptr_fn() -> unsafe extern "C" fn(blob: ListBlob) -> *mut Self {
+                    $into_ptr
                 }
                 fn get_len_fn() -> unsafe extern "C" fn(blob: *const ListBlob) -> u64 {
                     $len
@@ -444,7 +432,7 @@ pub(crate) mod external {
             mod tests {
                 use super::new_item;
                 use crate::containers::{helpers::ListAPI, ExternalList as List};
-                use std::ops::{Deref, DerefMut};
+                use std::ops::Deref;
 
                 #[test]
                 fn test_new() {
@@ -551,7 +539,6 @@ pub(crate) mod external {
                 #[test]
                 fn test_clone() {
                     let mut list = List::new();
-                    // assert_eq!(list.clone().len(), 0);
 
                     list.push(new_item());
                     list.push(new_item());
@@ -577,17 +564,6 @@ pub(crate) mod external {
                     list.push(new_item());
                     vec.push(new_item());
                     assert_eq!(list.deref(), &vec);
-                }
-
-                #[test]
-                fn test_deref_mut() {
-                    let mut list = List::new();
-                    let mut vec = vec![];
-                    assert_eq!(list.deref_mut(), &vec);
-
-                    list.push(new_item());
-                    vec.push(new_item());
-                    assert_eq!(list.deref_mut(), &vec);
                 }
 
                 #[test]
@@ -659,6 +635,7 @@ pub(crate) mod external {
             remove = lib_ruby_parser__external__list__of_nodes__remove,
             shrink_to_fit = lib_ruby_parser__external__list__of_nodes__shrink_to_fit,
             as_ptr = lib_ruby_parser__external__list__of_nodes__as_ptr,
+            into_ptr = lib_ruby_parser__external__list__of_nodes__into_ptr,
             len = lib_ruby_parser__external__list__of_nodes__get_len,
             capacity = lib_ruby_parser__external__list__of_nodes__get_capacity
         );
@@ -683,6 +660,7 @@ pub(crate) mod external {
             remove = lib_ruby_parser__external__list__of_diagnostics__remove,
             shrink_to_fit = lib_ruby_parser__external__list__of_diagnostics__shrink_to_fit,
             as_ptr = lib_ruby_parser__external__list__of_diagnostics__as_ptr,
+            into_ptr = lib_ruby_parser__external__list__of_diagnostics__into_ptr,
             len = lib_ruby_parser__external__list__of_diagnostics__get_len,
             capacity = lib_ruby_parser__external__list__of_diagnostics__get_capacity
         );
@@ -706,6 +684,7 @@ pub(crate) mod external {
             remove = lib_ruby_parser__external__list__of_comments__remove,
             shrink_to_fit = lib_ruby_parser__external__list__of_comments__shrink_to_fit,
             as_ptr = lib_ruby_parser__external__list__of_comments__as_ptr,
+            into_ptr = lib_ruby_parser__external__list__of_comments__into_ptr,
             len = lib_ruby_parser__external__list__of_comments__get_len,
             capacity = lib_ruby_parser__external__list__of_comments__get_capacity
         );
@@ -730,6 +709,7 @@ pub(crate) mod external {
             remove = lib_ruby_parser__external__list__of_magic_comments__remove,
             shrink_to_fit = lib_ruby_parser__external__list__of_magic_comments__shrink_to_fit,
             as_ptr = lib_ruby_parser__external__list__of_magic_comments__as_ptr,
+            into_ptr = lib_ruby_parser__external__list__of_magic_comments__into_ptr,
             len = lib_ruby_parser__external__list__of_magic_comments__get_len,
             capacity = lib_ruby_parser__external__list__of_magic_comments__get_capacity
         );
@@ -756,6 +736,7 @@ pub(crate) mod external {
             remove = lib_ruby_parser__external__list__of_tokens__remove,
             shrink_to_fit = lib_ruby_parser__external__list__of_tokens__shrink_to_fit,
             as_ptr = lib_ruby_parser__external__list__of_tokens__as_ptr,
+            into_ptr = lib_ruby_parser__external__list__of_tokens__into_ptr,
             len = lib_ruby_parser__external__list__of_tokens__get_len,
             capacity = lib_ruby_parser__external__list__of_tokens__get_capacity
         );
@@ -776,6 +757,7 @@ pub(crate) mod external {
             remove = lib_ruby_parser__external__list__of_source_lines__remove,
             shrink_to_fit = lib_ruby_parser__external__list__of_source_lines__shrink_to_fit,
             as_ptr = lib_ruby_parser__external__list__of_source_lines__as_ptr,
+            into_ptr = lib_ruby_parser__external__list__of_source_lines__into_ptr,
             len = lib_ruby_parser__external__list__of_source_lines__get_len,
             capacity = lib_ruby_parser__external__list__of_source_lines__get_capacity
         );
@@ -796,6 +778,7 @@ pub(crate) mod external {
             remove = lib_ruby_parser__external__list__of_bytes__remove,
             shrink_to_fit = lib_ruby_parser__external__list__of_bytes__shrink_to_fit,
             as_ptr = lib_ruby_parser__external__list__of_bytes__as_ptr,
+            into_ptr = lib_ruby_parser__external__list__of_bytes__into_ptr,
             len = lib_ruby_parser__external__list__of_bytes__get_len,
             capacity = lib_ruby_parser__external__list__of_bytes__get_capacity
         );

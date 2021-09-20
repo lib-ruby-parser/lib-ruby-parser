@@ -1,17 +1,14 @@
+crate::use_native_or_external!(Maybe);
+
 use crate::traverse::finder::Finder;
-use crate::{
-    debug_level,
-    source::maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI},
-    source::{MaybeDecoder, MaybeDecoderAPI},
-    Parser, ParserOptions,
-};
+use crate::{debug_level, Parser, ParserOptions};
 
 fn find(src: &str, pattern: &str) -> Option<String> {
     let options = ParserOptions::new(
         "(find_test)".into(),
         debug_level::NONE,
-        MaybeDecoder::new_none(),
-        MaybeTokenRewriter::new_none(),
+        Maybe::none(),
+        Maybe::none(),
         false,
     );
     let parser = Parser::new(src, options);

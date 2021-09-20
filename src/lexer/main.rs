@@ -1,14 +1,15 @@
 crate::use_native_or_external!(Ptr);
 crate::use_native_or_external!(StringPtr);
 crate::use_native_or_external!(List);
+crate::use_native_or_external!(Maybe);
 
 use crate::debug_level;
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::source::Comment;
+use crate::source::Decoder;
 use crate::source::MagicComment;
-use crate::source::MaybeDecoder;
 use crate::str_term::{str_types::*, HeredocEnd, StrTerm, StringLiteral};
 use crate::Context;
 use crate::Loc;
@@ -96,7 +97,7 @@ impl Lexer {
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
     /// Constructs an instance of Lexer
-    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: MaybeDecoder) -> Self
+    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: Maybe<Decoder>) -> Self
     where
         Bytes: Into<List<u8>>,
         Name: Into<StringPtr>,

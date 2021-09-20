@@ -22,24 +22,70 @@ extern "C"
         Token *self = (Token *)(((Ptr *)self_blob)->release());
         delete self;
     }
-    void *lib_ruby_parser__external__ptr__get_raw(Ptr_BLOB *self_blob)
+    const void *lib_ruby_parser__external__ptr__get_raw(const Ptr_BLOB *self_blob)
     {
-        Ptr *self = (Ptr *)self_blob;
-        return (void *)(self->get());
+        const Ptr *self = (const Ptr *)self_blob;
+        return (const void *)(self->get());
+    }
+    void *lib_ruby_parser__external__ptr__into_raw(Ptr_BLOB self_blob)
+    {
+        Ptr self = std::move(UNPACK_Ptr(self_blob));
+        return (void *)(self.release());
+    }
+
+    /*
+        MaybeLoc
+    */
+    MaybeLoc_BLOB lib_ruby_parser__external__maybe__loc__new_some(Loc_BLOB loc_blob)
+    {
+        return PACK_MaybeLoc(MaybeLoc(UNPACK_Loc(loc_blob)));
+    }
+    MaybeLoc_BLOB lib_ruby_parser__external__maybe__loc__new_none()
+    {
+        return PACK_MaybeLoc(MaybeLoc());
+    }
+    void lib_ruby_parser__external__maybe__loc__drop(MaybeLoc_BLOB *self_blob)
+    {
+        MaybeLoc *self = (MaybeLoc *)self_blob;
+        self->~optional();
+    }
+    bool lib_ruby_parser__external__maybe__loc__is_some(const MaybeLoc_BLOB *self_blob)
+    {
+        const MaybeLoc *self = (const MaybeLoc *)self_blob;
+        return self->has_value();
+    }
+    bool lib_ruby_parser__external__maybe__loc__is_none(const MaybeLoc_BLOB *self_blob)
+    {
+        const MaybeLoc *self = (const MaybeLoc *)self_blob;
+        return !(self->has_value());
+    }
+    const Loc_BLOB *lib_ruby_parser__external__maybe__loc__as_value(const MaybeLoc_BLOB *self_blob)
+    {
+        MaybeLoc *self = (MaybeLoc *)self_blob;
+        if (!self->has_value())
+        {
+            return nullptr;
+        }
+        Loc *loc = &(*(*self));
+        return (Loc_BLOB *)loc;
+    }
+    Loc_BLOB lib_ruby_parser__external__maybe__loc__into_value(MaybeLoc_BLOB self_blob)
+    {
+        return PACK_Loc(std::move(UNPACK_MaybeLoc(self_blob).value()));
     }
 
     /*
         MaybePtr
     */
-    MaybePtr_BLOB lib_ruby_parser__external__maybe_ptr__new(void *raw)
+    MaybePtr_BLOB lib_ruby_parser__external__maybe__ptr__new_some(Ptr_BLOB value)
     {
-        return PACK_MaybePtr(std::unique_ptr<int>((int *)raw));
+        return PACK_MaybePtr(UNPACK_Ptr(value));
     }
-    MaybePtr_BLOB lib_ruby_parser__external__maybe_ptr__new_null()
+    MaybePtr_BLOB lib_ruby_parser__external__maybe__ptr__new_none()
     {
         return PACK_MaybePtr(nullptr);
     }
-    void lib_ruby_parser__external__maybe_ptr__of_node__drop(MaybePtr_BLOB *self_blob)
+    void lib_ruby_parser__external__maybe__ptr__of_node__drop(MaybePtr_BLOB *self_blob)
     {
         Node *self = (Node *)(((MaybePtr *)self_blob)->release());
         if (self != nullptr)
@@ -47,7 +93,7 @@ extern "C"
             delete self;
         }
     }
-    void lib_ruby_parser__external__maybe_ptr__of_token__drop(MaybePtr_BLOB *self_blob)
+    void lib_ruby_parser__external__maybe__ptr__of_token__drop(MaybePtr_BLOB *self_blob)
     {
         Token *self = (Token *)(((MaybePtr *)self_blob)->release());
         if (self != nullptr)
@@ -55,10 +101,146 @@ extern "C"
             delete self;
         }
     }
-    void *lib_ruby_parser__external__maybe_ptr__get_raw(MaybePtr_BLOB *self_blob)
+    bool lib_ruby_parser__external__maybe__ptr__is_some(const MaybePtr_BLOB *self_blob)
     {
-        MaybePtr *self = (MaybePtr *)self_blob;
-        return (void *)(self->get());
+        const MaybePtr *self = (const MaybePtr *)self_blob;
+        return self->get() != nullptr;
+    }
+    bool lib_ruby_parser__external__maybe__ptr__is_none(const MaybePtr_BLOB *self_blob)
+    {
+        const MaybePtr *self = (const MaybePtr *)self_blob;
+        return self->get() == nullptr;
+    }
+    const Ptr_BLOB *lib_ruby_parser__external__maybe__ptr__as_value(const MaybePtr_BLOB *self_blob)
+    {
+        const MaybePtr *self = (const MaybePtr *)self_blob;
+        return (const Ptr_BLOB *)self;
+    }
+    Ptr_BLOB lib_ruby_parser__external__maybe__ptr__into_value(MaybePtr_BLOB self_blob)
+    {
+        MaybePtr self = std::move(UNPACK_MaybePtr(self_blob));
+        return PACK_Ptr(std::move(self));
+    }
+
+    /*
+        MaybeStringPtr
+    */
+    MaybeStringPtr_BLOB lib_ruby_parser__external__maybe__string_ptr__new_some(StringPtr_BLOB value)
+    {
+        return PACK_MaybeStringPtr(UNPACK_StringPtr(value));
+    }
+    MaybeStringPtr_BLOB lib_ruby_parser__external__maybe__string_ptr__new_none()
+    {
+        return PACK_MaybeStringPtr(std::unique_ptr<std::string>(nullptr));
+    }
+    void lib_ruby_parser__external__maybe__string_ptr__drop(MaybeStringPtr_BLOB *self_blob)
+    {
+        MaybeStringPtr *self = (MaybeStringPtr *)self_blob;
+        self->~unique_ptr();
+    }
+    bool lib_ruby_parser__external__maybe__string_ptr__is_some(const MaybeStringPtr_BLOB *self_blob)
+    {
+        const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
+        return self->get() != nullptr;
+    }
+    bool lib_ruby_parser__external__maybe__string_ptr__is_none(const MaybeStringPtr_BLOB *self_blob)
+    {
+        const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
+        return self->get() == nullptr;
+    }
+    const StringPtr_BLOB *lib_ruby_parser__external__maybe__string_ptr__as_value(const MaybeStringPtr_BLOB *self_blob)
+    {
+        const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
+        // they have equal structure
+        return (const StringPtr_BLOB *)self;
+    }
+    StringPtr_BLOB lib_ruby_parser__external__maybe__string_ptr__into_value(MaybeStringPtr_BLOB self_blob)
+    {
+        return PACK_StringPtr(UNPACK_MaybeStringPtr(self_blob));
+    }
+
+    /*
+        MaybeDecoder
+    */
+    MaybeDecoder_BLOB lib_ruby_parser__external__maybe__decoder__new_some(Decoder_BLOB decoder_blob)
+    {
+        return PACK_MaybeDecoder(MaybeDecoder(UNPACK_Decoder(decoder_blob)));
+    }
+    MaybeDecoder_BLOB lib_ruby_parser__external__maybe__decoder__new_none()
+    {
+        return PACK_MaybeDecoder(MaybeDecoder());
+    }
+    void lib_ruby_parser__external__maybe__decoder__drop(MaybeDecoder_BLOB *self_blob)
+    {
+        (void)self_blob;
+    }
+    bool lib_ruby_parser__external__maybe__decoder__is_some(const MaybeDecoder_BLOB *self_blob)
+    {
+        const MaybeDecoder *self = (const MaybeDecoder *)self_blob;
+        return self->decoder.has_value();
+    }
+    bool lib_ruby_parser__external__maybe__decoder__is_none(const MaybeDecoder_BLOB *self_blob)
+    {
+        const MaybeDecoder *self = (const MaybeDecoder *)self_blob;
+        return !self->decoder.has_value();
+    }
+    const Decoder_BLOB *lib_ruby_parser__external__maybe__decoder__as_value(const MaybeDecoder_BLOB *self_blob)
+    {
+        MaybeDecoder *self = (MaybeDecoder *)self_blob;
+        if (self->decoder.has_value())
+        {
+            auto decoder = &(*(self->decoder));
+            return (const Decoder_BLOB *)decoder;
+        }
+        return nullptr;
+    }
+    Decoder_BLOB lib_ruby_parser__external__maybe__decoder__into_value(MaybeDecoder_BLOB self_blob)
+    {
+        MaybeDecoder self = UNPACK_MaybeDecoder(self_blob);
+        Decoder decoder = std::move(self.decoder.value());
+        return PACK_Decoder(std::move(decoder));
+    }
+
+    /*
+        MaybeTokenRewriter
+    */
+    MaybeTokenRewriter_BLOB lib_ruby_parser__external__maybe__token_rewriter__new_some(TokenRewriter_BLOB token_rewriter_blob)
+    {
+        return PACK_MaybeTokenRewriter(MaybeTokenRewriter(UNPACK_TokenRewriter(token_rewriter_blob)));
+    }
+    MaybeTokenRewriter_BLOB lib_ruby_parser__external__maybe__token_rewriter__new_none()
+    {
+        return PACK_MaybeTokenRewriter(MaybeTokenRewriter());
+    }
+    void lib_ruby_parser__external__maybe__token_rewriter__drop(MaybeTokenRewriter_BLOB *self_blob)
+    {
+        (void)self_blob;
+    }
+    bool lib_ruby_parser__external__maybe__token_rewriter__is_some(const MaybeTokenRewriter_BLOB *self_blob)
+    {
+        const MaybeTokenRewriter *self = (const MaybeTokenRewriter *)self_blob;
+        return self->token_rewriter.has_value();
+    }
+    bool lib_ruby_parser__external__maybe__token_rewriter__is_none(const MaybeTokenRewriter_BLOB *self_blob)
+    {
+        const MaybeTokenRewriter *self = (const MaybeTokenRewriter *)self_blob;
+        return !self->token_rewriter.has_value();
+    }
+    const TokenRewriter_BLOB *lib_ruby_parser__external__maybe__token_rewriter__as_value(const MaybeTokenRewriter_BLOB *self_blob)
+    {
+        MaybeTokenRewriter *self = (MaybeTokenRewriter *)self_blob;
+        if (self->token_rewriter.has_value())
+        {
+            auto token_rewriter = &(*(self->token_rewriter));
+            return (const TokenRewriter_BLOB *)token_rewriter;
+        }
+        return nullptr;
+    }
+    TokenRewriter_BLOB lib_ruby_parser__external__maybe__token_rewriter__into_value(MaybeTokenRewriter_BLOB self_blob)
+    {
+        MaybeTokenRewriter self = UNPACK_MaybeTokenRewriter(self_blob);
+        TokenRewriter token_rewriter = std::move(self.token_rewriter.value());
+        return PACK_TokenRewriter(std::move(token_rewriter));
     }
 
     /*
@@ -73,7 +255,7 @@ extern "C"
         StringPtr *self = (StringPtr *)self_blob;
         self->~unique_ptr();
     }
-    uint8_t *lib_ruby_parser__external__string_ptr__get_raw(StringPtr_BLOB *self_blob)
+    const uint8_t *lib_ruby_parser__external__string_ptr__as_raw(const StringPtr_BLOB *self_blob)
     {
         StringPtr *self = (StringPtr *)self_blob;
         if (self->get()->length() == 0)
@@ -88,61 +270,6 @@ extern "C"
     uint64_t lib_ruby_parser__external__string_ptr__get_len(const StringPtr_BLOB *self_blob)
     {
         StringPtr *self = (StringPtr *)self_blob;
-        return self->get()->length();
-    }
-
-    /*
-        MaybeStringPtr
-    */
-    MaybeStringPtr_BLOB lib_ruby_parser__external__maybe_string_ptr__new_some(const uint8_t *ptr, uint64_t len)
-    {
-        return PACK_MaybeStringPtr(std::make_unique<std::string>((const char *)ptr, len));
-    }
-    MaybeStringPtr_BLOB lib_ruby_parser__external__maybe_string_ptr__new_none()
-    {
-        return PACK_MaybeStringPtr(std::unique_ptr<std::string>(nullptr));
-    }
-    void lib_ruby_parser__external__maybe_string_ptr__drop(MaybeStringPtr_BLOB *self_blob)
-    {
-        MaybeStringPtr *self = (MaybeStringPtr *)self_blob;
-        self->~unique_ptr();
-    }
-    bool lib_ruby_parser__external__maybe_string_ptr__is_some(const MaybeStringPtr_BLOB *self_blob)
-    {
-        const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
-        return self->get() != nullptr;
-    }
-    bool lib_ruby_parser__external__maybe_string_ptr__is_none(const MaybeStringPtr_BLOB *self_blob)
-    {
-        const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
-        return self->get() == nullptr;
-    }
-    uint8_t *lib_ruby_parser__external__maybe_string_ptr__get_raw(MaybeStringPtr_BLOB *self_blob)
-    {
-        MaybeStringPtr *self = (MaybeStringPtr *)self_blob;
-        if (self->get() == nullptr)
-        {
-            return nullptr;
-        }
-        if (self->get()->length() == 0)
-        {
-            return nullptr;
-        }
-        return (uint8_t *)(self->get()->c_str());
-    }
-    uint8_t *lib_ruby_parser__external__maybe_string_ptr__into_raw(MaybeStringPtr_BLOB self_blob)
-    {
-        MaybeStringPtr self = UNPACK_MaybeStringPtr(self_blob);
-        std::string *s = self.release();
-        if (s == nullptr)
-        {
-            return nullptr;
-        }
-        return (uint8_t *)(s->c_str());
-    }
-    uint64_t lib_ruby_parser__external__maybe_string_ptr__get_len(const MaybeStringPtr_BLOB *self_blob)
-    {
-        const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
         return self->get()->length();
     }
 
@@ -241,10 +368,24 @@ extern "C"
         LIST *self = (LIST *)self_blob;                                                              \
         self->shrink_to_fit();                                                                       \
     }                                                                                                \
-    ITEM_BLOB *lib_ruby_parser__external__list__##NS##__as_ptr(LIST_BLOB *self_blob)                 \
+    const ITEM_BLOB *lib_ruby_parser__external__list__##NS##__as_ptr(const LIST_BLOB *self_blob)     \
     {                                                                                                \
         LIST *self = (LIST *)self_blob;                                                              \
         return (ITEM_BLOB *)(self->data());                                                          \
+    }                                                                                                \
+    ITEM_BLOB *lib_ruby_parser__external__list__##NS##__into_ptr(LIST_BLOB self_blob)                \
+    {                                                                                                \
+        LIST self = UNPACK_##LIST(self_blob);                                                        \
+        ITEM *ptr = self.data();                                                                     \
+        union VALUE##_FORGET_LIST                                                                    \
+        {                                                                                            \
+            LIST list;                                                                               \
+            uint8_t data[sizeof(LIST)];                                                              \
+                                                                                                     \
+            ~VALUE##_FORGET_LIST() {}                                                                \
+        };                                                                                           \
+        VALUE##_FORGET_LIST forget{std::move(self)};                                                 \
+        return (ITEM_BLOB *)ptr;                                                                     \
     }                                                                                                \
     uint64_t lib_ruby_parser__external__list__##NS##__get_len(const LIST_BLOB *self_blob)            \
     {                                                                                                \
@@ -487,47 +628,6 @@ extern "C"
     {
         const Loc *self = (const Loc *)self_blob;
         return self->end;
-    }
-
-    /*
-        MaybeLoc
-    */
-    MaybeLoc_BLOB lib_ruby_parser__external__maybe_loc__new_some(Loc_BLOB loc_blob)
-    {
-        return PACK_MaybeLoc(MaybeLoc(UNPACK_Loc(loc_blob)));
-    }
-    MaybeLoc_BLOB lib_ruby_parser__external__maybe_loc__new_none()
-    {
-        return PACK_MaybeLoc(MaybeLoc());
-    }
-    void lib_ruby_parser__external__maybe_loc__drop(MaybeLoc_BLOB *self_blob)
-    {
-        MaybeLoc *self = (MaybeLoc *)self_blob;
-        self->~optional();
-    }
-    bool lib_ruby_parser__external__maybe_loc__is_some(const MaybeLoc_BLOB *self_blob)
-    {
-        const MaybeLoc *self = (const MaybeLoc *)self_blob;
-        return self->has_value();
-    }
-    bool lib_ruby_parser__external__maybe_loc__is_none(const MaybeLoc_BLOB *self_blob)
-    {
-        const MaybeLoc *self = (const MaybeLoc *)self_blob;
-        return !(self->has_value());
-    }
-    const Loc_BLOB *lib_ruby_parser__external__maybe_loc__as_loc(const MaybeLoc_BLOB *self_blob)
-    {
-        MaybeLoc *self = (MaybeLoc *)self_blob;
-        if (!self->has_value())
-        {
-            return nullptr;
-        }
-        Loc *loc = &(*(*self));
-        return (Loc_BLOB *)loc;
-    }
-    Loc_BLOB lib_ruby_parser__external__maybe_loc__into_loc(MaybeLoc_BLOB self_blob)
-    {
-        return PACK_Loc(UNPACK_MaybeLoc(self_blob).value());
     }
 
     /*
@@ -882,90 +982,6 @@ extern "C"
         build_new_token_t build_new_token_f)
     {
         return PACK_TokenRewriter(TokenRewriter::NewRewriteRewriter(build_new_token_f));
-    }
-
-    /*
-        MaybeDecoder
-    */
-    MaybeDecoder_BLOB lib_ruby_parser__external__maybe_decoder__new_some(Decoder_BLOB decoder_blob)
-    {
-        return PACK_MaybeDecoder(MaybeDecoder(UNPACK_Decoder(decoder_blob)));
-    }
-    MaybeDecoder_BLOB lib_ruby_parser__external__maybe_decoder__new_none()
-    {
-        return PACK_MaybeDecoder(MaybeDecoder());
-    }
-    void lib_ruby_parser__external__maybe_decoder__drop(MaybeDecoder_BLOB *self_blob)
-    {
-        (void)self_blob;
-    }
-    bool lib_ruby_parser__external__maybe_decoder__is_some(const MaybeDecoder_BLOB *self_blob)
-    {
-        const MaybeDecoder *self = (const MaybeDecoder *)self_blob;
-        return self->decoder.has_value();
-    }
-    bool lib_ruby_parser__external__maybe_decoder__is_none(const MaybeDecoder_BLOB *self_blob)
-    {
-        const MaybeDecoder *self = (const MaybeDecoder *)self_blob;
-        return !self->decoder.has_value();
-    }
-    const Decoder_BLOB *lib_ruby_parser__external__maybe_decoder__as_decoder(const MaybeDecoder_BLOB *self_blob)
-    {
-        MaybeDecoder *self = (MaybeDecoder *)self_blob;
-        if (self->decoder.has_value())
-        {
-            auto decoder = &(*(self->decoder));
-            return (const Decoder_BLOB *)decoder;
-        }
-        return nullptr;
-    }
-    Decoder_BLOB lib_ruby_parser__external__maybe_decoder__into_decoder(MaybeDecoder_BLOB self_blob)
-    {
-        MaybeDecoder self = UNPACK_MaybeDecoder(self_blob);
-        Decoder decoder = std::move(self.decoder.value());
-        return PACK_Decoder(std::move(decoder));
-    }
-
-    /*
-        MaybeTokenRewriter
-    */
-    MaybeTokenRewriter_BLOB lib_ruby_parser__external__maybe_token_rewriter__new_some(TokenRewriter_BLOB token_rewriter_blob)
-    {
-        return PACK_MaybeTokenRewriter(MaybeTokenRewriter(UNPACK_TokenRewriter(token_rewriter_blob)));
-    }
-    MaybeTokenRewriter_BLOB lib_ruby_parser__external__maybe_token_rewriter__new_none()
-    {
-        return PACK_MaybeTokenRewriter(MaybeTokenRewriter());
-    }
-    void lib_ruby_parser__external__maybe_token_rewriter__drop(MaybeTokenRewriter_BLOB *self_blob)
-    {
-        (void)self_blob;
-    }
-    bool lib_ruby_parser__external__maybe_token_rewriter__is_some(const MaybeTokenRewriter_BLOB *self_blob)
-    {
-        const MaybeTokenRewriter *self = (const MaybeTokenRewriter *)self_blob;
-        return self->token_rewriter.has_value();
-    }
-    bool lib_ruby_parser__external__maybe_token_rewriter__is_none(const MaybeTokenRewriter_BLOB *self_blob)
-    {
-        const MaybeTokenRewriter *self = (const MaybeTokenRewriter *)self_blob;
-        return !self->token_rewriter.has_value();
-    }
-    const TokenRewriter_BLOB *lib_ruby_parser__external__maybe_token_rewriter__as_token_rewriter(const MaybeTokenRewriter_BLOB *self_blob)
-    {
-        MaybeTokenRewriter *self = (MaybeTokenRewriter *)self_blob;
-        if (self->token_rewriter.has_value())
-        {
-            auto token_rewriter = &(*(self->token_rewriter));
-            return (const TokenRewriter_BLOB *)token_rewriter;
-        }
-        return nullptr;
-    }
-    TokenRewriter_BLOB lib_ruby_parser__external__maybe_token_rewriter__into_token_rewriter(MaybeTokenRewriter_BLOB self_blob)
-    {
-        MaybeTokenRewriter self = UNPACK_MaybeTokenRewriter(self_blob);
-        TokenRewriter token_rewriter = std::move(self.token_rewriter.value());
-        return PACK_TokenRewriter(std::move(token_rewriter));
     }
 
     /*

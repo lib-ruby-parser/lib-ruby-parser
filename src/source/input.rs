@@ -1,8 +1,9 @@
+crate::use_native_or_external!(Maybe);
 crate::use_native_or_external!(StringPtr);
 crate::use_native_or_external!(List);
 crate::use_native_or_external!(SharedByteList);
 
-use crate::source::MaybeDecoder;
+use crate::source::Decoder;
 use crate::source::SourceLine;
 use crate::source::{decode_input, DecodedInput, InputError};
 
@@ -11,12 +12,12 @@ use crate::source::{decode_input, DecodedInput, InputError};
 #[repr(C)]
 pub struct Input {
     pub(crate) decoded: DecodedInput,
-    decoder: MaybeDecoder,
+    decoder: Maybe<Decoder>,
 }
 
 impl Input {
     /// Constructs a new input
-    pub fn new<Name>(name: Name, decoder: MaybeDecoder) -> Self
+    pub fn new<Name>(name: Name, decoder: Maybe<Decoder>) -> Self
     where
         Name: Into<StringPtr>,
     {

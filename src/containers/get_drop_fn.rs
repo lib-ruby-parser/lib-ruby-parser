@@ -4,42 +4,35 @@ use crate::{Node, Token};
 
 pub trait GetDropPtrFn {
     fn get_drop_ptr_fn() -> unsafe extern "C" fn(*mut PtrBlob);
+    fn get_drop_maybe_ptr_fn() -> unsafe extern "C" fn(*mut MaybePtrBlob);
 }
 
 macro_rules! ptr_impl {
-    ($t:ty, $fn_name:ident) => {
+    ($t:ty, $drop_ptr_fn:ident, $drop_maybe_ptr_fn:ident) => {
         extern "C" {
-            fn $fn_name(ptr: *mut PtrBlob);
+            fn $drop_ptr_fn(ptr: *mut PtrBlob);
+            fn $drop_maybe_ptr_fn(ptr: *mut MaybePtrBlob);
         }
 
         impl GetDropPtrFn for $t {
             fn get_drop_ptr_fn() -> unsafe extern "C" fn(*mut PtrBlob) {
-                $fn_name
+                $drop_ptr_fn
             }
-        }
-    };
-}
 
-ptr_impl!(Node, lib_ruby_parser__external__ptr__of_node__drop);
-ptr_impl!(Token, lib_ruby_parser__external__ptr__of_token__drop);
-
-pub trait GetDropMaybePtrFn {
-    fn get_drop_maybe_ptr_fn() -> unsafe extern "C" fn(*mut MaybePtrBlob);
-}
-
-macro_rules! maybe_ptr_impl {
-    ($t:ty, $fn_name:ident) => {
-        extern "C" {
-            fn $fn_name(ptr: *mut MaybePtrBlob);
-        }
-
-        impl GetDropMaybePtrFn for $t {
             fn get_drop_maybe_ptr_fn() -> unsafe extern "C" fn(*mut MaybePtrBlob) {
-                $fn_name
+                $drop_maybe_ptr_fn
             }
         }
     };
 }
 
-maybe_ptr_impl!(Node, lib_ruby_parser__external__maybe_ptr__of_node__drop);
-maybe_ptr_impl!(Token, lib_ruby_parser__external__maybe_ptr__of_token__drop);
+ptr_impl!(
+    Node,
+    lib_ruby_parser__external__ptr__of_node__drop,
+    lib_ruby_parser__external__maybe_ptr__of_node__drop
+);
+ptr_impl!(
+    Token,
+    lib_ruby_parser__external__ptr__of_token__drop,
+    lib_ruby_parser__external__maybe_ptr__of_token__drop
+);

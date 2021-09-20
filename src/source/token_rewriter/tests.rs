@@ -94,7 +94,7 @@ mod dummy_rewriter {
     }
 }
 
-fn call_dummy_rewriter(mut rewriter: TokenRewriter) -> TokenRewriterResult {
+fn call_dummy_rewriter(rewriter: TokenRewriter) -> TokenRewriterResult {
     // it's dummy, so encoding/input doesn't matter
     let token = Ptr::new(Token::new(
         INITIAL_TOKEN_ID,

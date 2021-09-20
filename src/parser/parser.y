@@ -7,7 +7,7 @@
 %define parse.trace
 
 %code parser_fields {
-    result: MaybePtr<Node>,
+    result: Maybe<Ptr<Node>>,
     builder: Builder,
     current_arg_stack: CurrentArgStack,
     /// Stack of sets of variables in current scopes.
@@ -43,14 +43,14 @@
     pattern_hash_keys: VariablesStack,
     tokens: List<Token>,
     diagnostics: Diagnostics,
-    token_rewriter: MaybeTokenRewriter,
+    token_rewriter: Maybe<TokenRewriter>,
     record_tokens: bool,
 }
 
 %code use {
 
 crate::use_native_or_external!(Ptr);
-crate::use_native_or_external!(MaybePtr);
+crate::use_native_or_external!(Maybe);
 crate::use_native_or_external!(StringPtr);
 crate::use_native_or_external!(List);
 
@@ -66,7 +66,7 @@ use crate::parse_value::*;
 use crate::Node;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
-use crate::source::maybe_token_rewriter::{MaybeTokenRewriter, MaybeTokenRewriterAPI};
+use crate::source::token_rewriter::TokenRewriter;
 use crate::source::token_rewriter::InternalTokenRewriterResult;
 use crate::debug_level;
 use crate::Loc;
@@ -6686,7 +6686,7 @@ impl Parser {
             yynerrs: 0,
             yydebug: debug_level::is_debug_parser(debug),
             yyerrstatus_: 0,
-            result: MaybePtr::none(),
+            result: Maybe::none(),
 
             builder,
             context,
@@ -6756,7 +6756,7 @@ impl Parser {
     fn next_token(&mut self) -> Ptr<Token> {
         let mut token = self.yylex();
 
-        if let Some(token_rewriter) = self.token_rewriter.as_token_rewriter_mut() {
+        if let Some(token_rewriter) = self.token_rewriter.as_ref() {
             let InternalTokenRewriterResult { rewritten_token, token_action, lex_state_action } =
                 token_rewriter.call(token, self.yylexer.buffer.input.as_shared_bytes()).into_internal();
 

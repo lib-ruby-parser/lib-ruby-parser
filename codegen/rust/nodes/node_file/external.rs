@@ -40,9 +40,7 @@ impl {struct_name} {{
 
     #[allow(dead_code)]
     pub(crate) fn into_internal(self) -> Internal{struct_name} {{
-        let internal = unsafe {{ {external_into_internal_name}(self.blob) }};
-        std::mem::forget(self);
-        internal
+        unsafe {{ {external_into_internal_name}(self.into_blob()) }}
     }}
 }}
 
@@ -134,11 +132,21 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
         regexp_options: true,
     }) || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode {
         regexp_options: false,
-    }) {
-        imports.push("use crate::containers::ExternalMaybePtr as MaybePtr;");
+    }) || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeLoc)
+        || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: false })
+        || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: true })
+    {
+        imports.push("use crate::containers::ExternalMaybe as Maybe;");
     }
 
-    if has_field(lib_ruby_parser_nodes::NodeFieldType::Node) {
+    if has_field(lib_ruby_parser_nodes::NodeFieldType::Node)
+        || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode {
+            regexp_options: true,
+        })
+        || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeNode {
+            regexp_options: false,
+        })
+    {
         imports.push("use crate::containers::ExternalPtr as Ptr;");
     }
 
@@ -146,20 +154,12 @@ fn imports(node: &lib_ruby_parser_nodes::Node) -> Vec<&str> {
         imports.push("use crate::containers::ExternalList as List;");
     }
 
-    if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeLoc) {
-        imports.push("use crate::containers::ExternalMaybeLoc as MaybeLoc;");
-    }
-
     if has_field(lib_ruby_parser_nodes::NodeFieldType::Str { raw: true })
         || has_field(lib_ruby_parser_nodes::NodeFieldType::Str { raw: false })
-    {
-        imports.push("use crate::containers::ExternalStringPtr as StringPtr;");
-    }
-
-    if has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: false })
+        || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: false })
         || has_field(lib_ruby_parser_nodes::NodeFieldType::MaybeStr { chars: true })
     {
-        imports.push("use crate::containers::ExternalMaybeStringPtr as MaybeStringPtr;");
+        imports.push("use crate::containers::ExternalStringPtr as StringPtr;");
     }
 
     imports

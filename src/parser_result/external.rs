@@ -1,5 +1,5 @@
 use crate::blobs::{Blob, HasBlob};
-use crate::containers::{ExternalList as List, ExternalMaybePtr as MaybePtr};
+use crate::containers::{ExternalList as List, ExternalMaybe as Maybe, ExternalPtr as Ptr};
 
 use crate::source::Comment;
 use crate::source::DecodedInput;
@@ -16,7 +16,7 @@ pub struct ParserResult {
 
 extern "C" {
     fn lib_ruby_parser__external__parser_result__new(
-        ast: Blob<MaybePtr<Node>>,
+        ast: Blob<Maybe<Ptr<Node>>>,
         tokens: Blob<List<Token>>,
         diagnostics: Blob<List<Diagnostic>>,
         comments: Blob<List<Comment>>,
@@ -26,7 +26,7 @@ extern "C" {
     fn lib_ruby_parser__external__parser_result__drop(blob: *mut Blob<ParserResult>);
     fn lib_ruby_parser__external__parser_result__get_ast(
         blob: *const Blob<ParserResult>,
-    ) -> *const Blob<MaybePtr<Node>>;
+    ) -> *const Blob<Maybe<Ptr<Node>>>;
     fn lib_ruby_parser__external__parser_result__get_tokens(
         blob: *const Blob<ParserResult>,
     ) -> *const Blob<List<Token>>;
@@ -52,7 +52,7 @@ impl Drop for ParserResult {
 
 impl ParserResult {
     pub(crate) fn new(
-        ast: MaybePtr<Node>,
+        ast: Maybe<Ptr<Node>>,
         tokens: List<Token>,
         diagnostics: List<Diagnostic>,
         comments: List<Comment>,
@@ -73,9 +73,10 @@ impl ParserResult {
     }
 
     /// Returns `ast` attribute
-    pub fn ast(&self) -> &MaybePtr<Node> {
+    pub fn ast(&self) -> &Maybe<Ptr<Node>> {
         unsafe {
-            (lib_ruby_parser__external__parser_result__get_ast(&self.blob) as *const MaybePtr<Node>)
+            (lib_ruby_parser__external__parser_result__get_ast(&self.blob)
+                as *const Maybe<Ptr<Node>>)
                 .as_ref()
                 .unwrap()
         }

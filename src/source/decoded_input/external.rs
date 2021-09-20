@@ -135,12 +135,10 @@ impl DecodedInput {
 
     /// Converts itself into owned vector of bytes
     pub fn into_bytes(self) -> List<u8> {
-        let bytes = unsafe {
+        unsafe {
             List::from_blob(lib_ruby_parser__external__decoded_input__into_bytes(
-                self.blob,
+                self.into_blob(),
             ))
-        };
-        std::mem::forget(self);
-        bytes
+        }
     }
 }

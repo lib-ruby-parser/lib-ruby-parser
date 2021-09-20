@@ -6,11 +6,12 @@ use crate::{
 };
 use crate::{ErrorLevel, LexState};
 
-crate::use_native_or_external!(MaybePtr);
+crate::use_native_or_external!(Maybe);
 crate::use_native_or_external!(List);
+crate::use_native_or_external!(Ptr);
 
-fn ast() -> MaybePtr<Node> {
-    MaybePtr::some(Node::new_retry(Loc::new(1, 2)))
+fn ast() -> Maybe<Ptr<Node>> {
+    Maybe::some(Ptr::new(Node::new_retry(Loc::new(1, 2))))
 }
 
 fn tokens() -> List<Token> {

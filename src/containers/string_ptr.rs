@@ -1,6 +1,6 @@
 #[cfg(feature = "compile-with-external-structures")]
 pub(crate) mod external {
-    use crate::blobs::Blob;
+    use crate::blobs::{Blob, HasBlob};
     use std::ops::Deref;
 
     /// C-compatible list
@@ -12,9 +12,10 @@ pub(crate) mod external {
     extern "C" {
         fn lib_ruby_parser__external__string_ptr__new(ptr: *const u8, len: u64) -> Blob<StringPtr>;
         fn lib_ruby_parser__external__string_ptr__drop(blob: *mut Blob<StringPtr>);
-        fn lib_ruby_parser__external__string_ptr__get_raw(
-            blob_ptr: *mut Blob<StringPtr>,
-        ) -> *mut u8;
+        fn lib_ruby_parser__external__string_ptr__as_raw(
+            blob_ptr: *const Blob<StringPtr>,
+        ) -> *const u8;
+        fn lib_ruby_parser__external__string_ptr__into_raw(blob_ptr: Blob<StringPtr>) -> *mut u8;
         fn lib_ruby_parser__external__string_ptr__get_len(blob: *const Blob<StringPtr>) -> u64;
     }
 
@@ -71,20 +72,11 @@ pub(crate) mod external {
         }
 
         pub(crate) fn as_ptr(&self) -> *const u8 {
-            let blob_ptr: *const Blob<StringPtr> = &self.blob;
-            unsafe {
-                lib_ruby_parser__external__string_ptr__get_raw(blob_ptr as *mut Blob<StringPtr>)
-            }
+            unsafe { lib_ruby_parser__external__string_ptr__as_raw(&self.blob) }
         }
 
-        pub(crate) fn as_mut_ptr(&mut self) -> *mut u8 {
-            unsafe { lib_ruby_parser__external__string_ptr__get_raw(&mut self.blob) }
-        }
-
-        pub(crate) fn into_ptr(mut self) -> *mut u8 {
-            let ptr = self.as_mut_ptr();
-            std::mem::forget(self);
-            ptr
+        pub(crate) fn into_ptr(self) -> *mut u8 {
+            unsafe { lib_ruby_parser__external__string_ptr__into_raw(self.into_blob()) }
         }
     }
 
@@ -154,14 +146,6 @@ pub(crate) mod external {
             let ptr = value.as_ptr();
             let len = value.len();
             unsafe { std::slice::from_raw_parts(ptr, len) }
-        }
-    }
-
-    impl From<&mut StringPtr> for &mut [u8] {
-        fn from(value: &mut StringPtr) -> Self {
-            let ptr = value.as_mut_ptr();
-            let len = value.len();
-            unsafe { std::slice::from_raw_parts_mut(ptr, len) }
         }
     }
 

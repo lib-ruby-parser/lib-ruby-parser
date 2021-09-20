@@ -36,7 +36,7 @@ impl Decoder {
         Self { f }
     }
 
-    pub(crate) fn call(&mut self, encoding: String, input: Vec<u8>) -> DecoderResult {
+    pub(crate) fn call(&self, encoding: String, input: Vec<u8>) -> DecoderResult {
         let f = &*self.f;
         f(encoding, input)
     }

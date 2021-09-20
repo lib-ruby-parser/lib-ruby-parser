@@ -70,8 +70,7 @@ impl Bytes {
 
     /// "Unwraps" self and returns inner data
     pub fn into_raw(self) -> ByteList {
-        let list_blob = unsafe { lib_ruby_parser__external__bytes__into_raw(self.blob) };
-        std::mem::forget(self);
+        let list_blob = unsafe { lib_ruby_parser__external__bytes__into_raw(self.into_blob()) };
         ByteList::from_blob(list_blob)
     }
 

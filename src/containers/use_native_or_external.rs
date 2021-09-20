@@ -12,17 +12,17 @@ macro_rules! use_native_or_external {
         use crate::containers::helpers::PtrAPI;
     };
 
-    // MaybePtr<T>
-    (MaybePtr) => {
+    // Maybe<T>
+    (Maybe) => {
         #[cfg(feature = "compile-with-external-structures")]
-        use $crate::containers::ExternalMaybePtr;
+        use $crate::containers::ExternalMaybe;
         #[cfg(feature = "compile-with-external-structures")]
-        type MaybePtr<T> = ExternalMaybePtr<T>;
+        type Maybe<T> = ExternalMaybe<T>;
         #[cfg(not(feature = "compile-with-external-structures"))]
-        type MaybePtr<T> = Option<Box<T>>;
+        type Maybe<T> = Option<T>;
 
         #[allow(unused_imports)]
-        use crate::containers::helpers::MaybePtrAPI;
+        use crate::containers::helpers::MaybeAPI;
     };
 
     // StringPtr
@@ -33,19 +33,6 @@ macro_rules! use_native_or_external {
         type StringPtr = ExternalStringPtr;
         #[cfg(not(feature = "compile-with-external-structures"))]
         type StringPtr = String;
-    };
-
-    // MaybeStringPtr
-    (MaybeStringPtr) => {
-        #[cfg(feature = "compile-with-external-structures")]
-        use $crate::containers::ExternalMaybeStringPtr;
-        #[cfg(feature = "compile-with-external-structures")]
-        type MaybeStringPtr = ExternalMaybeStringPtr;
-        #[cfg(not(feature = "compile-with-external-structures"))]
-        type MaybeStringPtr = Option<String>;
-
-        #[allow(unused_imports)]
-        use crate::containers::helpers::MaybeStringPtrAPI;
     };
 
     // List<T>
@@ -81,20 +68,6 @@ macro_rules! use_native_or_external {
         type SharedByteList = ExternalSharedByteList;
         #[cfg(not(feature = "compile-with-external-structures"))]
         type SharedByteList<'a> = &'a [u8];
-    };
-
-    // MaybeLoc
-    (MaybeLoc) => {
-        #[cfg(feature = "compile-with-external-structures")]
-        use $crate::containers::ExternalMaybeLoc;
-        #[cfg(feature = "compile-with-external-structures")]
-        type MaybeLoc = ExternalMaybeLoc;
-        #[cfg(not(feature = "compile-with-external-structures"))]
-        #[allow(unused_qualifications)]
-        type MaybeLoc = Option<crate::Loc>;
-
-        #[allow(unused_imports)]
-        use crate::containers::helpers::MaybeLocAPI;
     };
 }
 

@@ -2,17 +2,14 @@ pub(crate) mod buffer;
 mod comment;
 mod comment_type;
 mod decoded_input;
-mod decoder;
+pub(crate) mod decoder;
 mod decoder_result;
 mod input;
 mod input_error;
 mod magic_comment;
 pub(crate) mod magic_comment_kind;
-mod maybe_decoder;
 mod source_line;
 
-/// Module with external implementation of Option<TokenRewriter>
-pub mod maybe_token_rewriter;
 /// Module to perform token rewriting
 pub mod token_rewriter;
 
@@ -26,5 +23,4 @@ pub use input::Input;
 pub use input_error::InputError;
 pub use magic_comment::MagicComment;
 pub use magic_comment_kind::MagicCommentKind;
-pub use maybe_decoder::{MaybeDecoder, MaybeDecoderAPI};
 pub use source_line::SourceLine;

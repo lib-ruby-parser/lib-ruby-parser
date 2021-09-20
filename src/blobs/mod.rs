@@ -66,7 +66,7 @@ pub struct PtrBlob {
 }
 impl<T> HasBlob for crate::containers::ExternalPtr<T>
 where
-    T: crate::containers::get_drop_fn::GetDropPtrFn,
+    T: crate::containers::ptr::external::PtrValue,
 {
     type Blob = PtrBlob;
 
@@ -90,17 +90,24 @@ where
 pub struct MaybePtrBlob {
     pub(crate) bytes: [u8; size::MAYBE_PTR_SIZE],
 }
-impl<T> HasBlob for crate::containers::ExternalMaybePtr<T>
-where
-    T: crate::containers::get_drop_fn::GetDropMaybePtrFn,
-{
+impl HasBlob for crate::containers::ExternalMaybe<crate::containers::ExternalPtr<crate::Node>> {
     type Blob = MaybePtrBlob;
 
     fn from_blob(blob: Self::Blob) -> Self {
-        Self {
-            blob,
-            _t: std::marker::PhantomData,
-        }
+        Self { blob }
+    }
+
+    fn into_blob(self) -> Self::Blob {
+        let blob = self.blob;
+        std::mem::forget(self);
+        blob
+    }
+}
+impl HasBlob for crate::containers::ExternalMaybe<crate::containers::ExternalPtr<crate::Token>> {
+    type Blob = MaybePtrBlob;
+
+    fn from_blob(blob: Self::Blob) -> Self {
+        Self { blob }
     }
 
     fn into_blob(self) -> Self::Blob {
@@ -144,7 +151,7 @@ declare_blob!(
 );
 declare_blob!(
     size = size::MAYBE_STRING_PTR_SIZE,
-    value = crate::containers::ExternalMaybeStringPtr,
+    value = crate::containers::ExternalMaybe<crate::containers::ExternalStringPtr>,
     blob = MaybeStringPtrBlob,
     doc = "Blob of the `MaybeStringPtr`"
 );
@@ -180,7 +187,7 @@ declare_blob!(
 );
 declare_blob!(
     size = size::MAYBE_LOC_SIZE,
-    value = crate::containers::ExternalMaybeLoc,
+    value = crate::containers::ExternalMaybe<crate::Loc>,
     blob = MaybeLocBlob,
     doc = "Blob of the `MaybeLoc`"
 );
@@ -276,13 +283,13 @@ declare_blob!(
 );
 declare_blob!(
     size = size::MAYBE_DECODER_SIZE,
-    value = crate::source::MaybeDecoder,
+    value = crate::containers::ExternalMaybe<crate::source::Decoder>,
     blob = MaybeDecoderBlob,
     doc = "Blob of the `MaybeDecoder`"
 );
 declare_blob!(
     size = size::MAYBE_TOKEN_REWRITER_SIZE,
-    value = crate::source::maybe_token_rewriter::MaybeTokenRewriter,
+    value = crate::containers::ExternalMaybe<crate::source::token_rewriter::TokenRewriter>,
     blob = MaybeTokenRewriterBlob,
     doc = "Blob of the `MaybeTokenRewriter`"
 );
