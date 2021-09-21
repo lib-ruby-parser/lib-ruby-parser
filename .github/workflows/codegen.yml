@@ -34,8 +34,9 @@ jobs:
           cd vendor/parser
           bundle install
           bundle exec rake generate
-          ruby ../codegen/lexer.rb
-          ruby ../codegen/parser.rb
+          cd ../..
+          ruby vendor/codegen/lexer.rb
+          ruby vendor/codegen/parser.rb
 
       - name: assert no diff
         run: |
