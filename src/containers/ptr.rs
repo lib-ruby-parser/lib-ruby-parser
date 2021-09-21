@@ -187,7 +187,10 @@ pub(crate) mod external {
     }
 }
 
-pub(crate) trait PtrAPI<T: Sized> {
+/// Shared Ptr API, implemented for both ExternalPtr<T> and Box<T>
+pub trait PtrAPI<T> {
+    /// Consumes `self` and returns value located on the stack
+    /// `Deref` on `Box` is very special, we can't emulate if for our own `Ptr<T>`
     fn unptr(self) -> T
     where
         Self: Sized;

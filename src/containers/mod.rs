@@ -4,8 +4,9 @@ pub(crate) mod ptr;
 pub(crate) mod shared_byte_list;
 pub(crate) mod string_ptr;
 
-pub(crate) mod helpers {
-    pub(crate) use super::{list::ListAPI, maybe::MaybeAPI, ptr::PtrAPI};
+/// Module with compatibility APIs that are implemented for both native AND external containers
+pub mod helpers {
+    pub use super::{list::ListAPI, maybe::MaybeAPI, ptr::PtrAPI};
 }
 
 #[cfg(feature = "compile-with-external-structures")]

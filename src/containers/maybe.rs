@@ -528,6 +528,7 @@ pub(crate) mod external {
     }
 }
 
+/// Shared Maybe API, implemented for both ExternalMaybe<T> and std::option::Option<T>
 pub trait MaybeAPI<T> {
     /// Some(T) constructor
     fn some(value: T) -> Self

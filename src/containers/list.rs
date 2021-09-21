@@ -876,6 +876,9 @@ pub(crate) mod external {
     }
 }
 
-pub(crate) trait ListAPI<T: Clone> {
+/// Shared List API, implemented for both ExternalList<T> and std::vec::Vec<T>
+pub trait ListAPI<T: Clone> {
+    /// Consumes `self` and returns the first element.
+    /// Panics if list is empty
     fn take_first(self) -> T;
 }
