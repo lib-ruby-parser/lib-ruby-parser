@@ -14,12 +14,11 @@
 Basic usage:
 
 ```rust
-use lib_ruby_parser::{Parser, ParserOptions, debug_level};
+use lib_ruby_parser::{Parser, ParserOptions};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let options = ParserOptions {
         buffer_name: "(eval)".to_string(),
-        debug: debug_level::PARSER,
         ..Default::default()
     };
     let mut parser = Parser::new(b"2 + 2".to_vec(), options);
@@ -67,7 +66,7 @@ It's possible to pass a `decoder` function in `ParserOptions` that takes a recog
 
 ```rust
 use lib_ruby_parser::source::{InputError, Decoder, DecoderResult};
-use lib_ruby_parser::{Parser, ParserOptions, ParserResult, debug_level};
+use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
 
 fn decode(encoding: String, input: Vec<u8>) -> DecoderResult {
     if "US-ASCII" == encoding.to_uppercase() {
@@ -81,7 +80,6 @@ fn decode(encoding: String, input: Vec<u8>) -> DecoderResult {
 
 let options = ParserOptions {
     decoder: Some(Decoder::new(Box::new(decode))),
-    debug: debug_level::PARSER,
     ..Default::default()
 };
 let mut parser = Parser::new(b"# encoding: us-ascii\n3 + 3".to_vec(), options);

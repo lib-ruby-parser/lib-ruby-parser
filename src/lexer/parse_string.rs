@@ -31,7 +31,7 @@ impl Lexer {
         let mut space = false;
         self.lval_start = Some(self.buffer.pcur);
 
-        if self.debug {
+        if cfg!(feature = "debug-lexer") {
             println!(
                 "func = {}, pcur = {}, ptok = {}, term = {}",
                 func, self.buffer.pcur, self.buffer.ptok, quote.term

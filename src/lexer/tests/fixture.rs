@@ -1,6 +1,6 @@
 crate::use_native_or_external!(Maybe);
 use crate::lex_states::*;
-use crate::{debug_level, Lexer};
+use crate::Lexer;
 use std::fs;
 use std::panic;
 
@@ -103,7 +103,6 @@ pub(crate) fn test_file(fixture_path: &str) {
     if fixture.cmdarg {
         lexer.cmdarg.push(true)
     }
-    lexer.set_debug(debug_level::NONE);
     let tokens = lexer.tokenize_until_eof();
     let tokens = tokens
         .iter()

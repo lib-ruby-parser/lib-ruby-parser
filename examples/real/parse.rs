@@ -18,9 +18,6 @@ struct Args {
     #[clap(long = "print", about = Printer::ABOUT)]
     printer: Option<Printer>,
 
-    #[clap(long, about = DebugLevel::ABOUT)]
-    debug_level: Option<DebugLevel>,
-
     #[clap(long = "run-profiler", about = "Run profiling")]
     profiler: Option<Profiler>,
 
@@ -59,8 +56,6 @@ pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let printer = args.printer.unwrap_or_default();
 
-    let debug_level = args.debug_level.unwrap_or_default();
-
     let files = InputFiles::new(&args.code_to_eval, &args.pattern, &args.repeat);
     let files_count = files.len();
 
@@ -71,7 +66,7 @@ pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
     timer.start();
 
     for file in files.into_iter() {
-        let result = parse(file, debug_level, args.drop_tokens);
+        let result = parse(file, args.drop_tokens);
         printer.print(&result);
     }
 

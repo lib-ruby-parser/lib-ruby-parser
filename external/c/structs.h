@@ -291,7 +291,6 @@ typedef struct LIB_RUBY_PARSER_MaybeTokenRewriter
 typedef struct LIB_RUBY_PARSER_ParserOptions
 {
     LIB_RUBY_PARSER_StringPtr buffer_name;
-    uint8_t debug;
     LIB_RUBY_PARSER_MaybeDecoder decoder;
     LIB_RUBY_PARSER_MaybeTokenRewriter token_rewriter;
     bool record_tokens;

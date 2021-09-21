@@ -1002,7 +1002,6 @@ extern "C"
     */
     ParserOptions_BLOB lib_ruby_parser__external__parser_options__new(
         StringPtr_BLOB buffer_name_blob,
-        uint8_t debug,
         MaybeDecoder_BLOB decoder_blob,
         MaybeTokenRewriter_BLOB token_rewriter_blob,
         bool record_tokens)
@@ -1010,7 +1009,6 @@ extern "C"
         return PACK_ParserOptions(
             ParserOptions(
                 UNPACK_StringPtr(buffer_name_blob),
-                debug,
                 UNPACK_MaybeDecoder(decoder_blob),
                 UNPACK_MaybeTokenRewriter(token_rewriter_blob),
                 record_tokens));
@@ -1025,7 +1023,6 @@ extern "C"
         ParserOptions self = UNPACK_ParserOptions(self_blob);
         InternalParserOptions internal = {
             .buffer_name = PACK_StringPtr(std::move(self.buffer_name)),
-            .debug = self.debug,
             .decoder = PACK_MaybeDecoder(std::move(self.decoder)),
             .token_rewriter = PACK_MaybeTokenRewriter(std::move(self.token_rewriter)),
             .record_tokens = self.record_tokens};
@@ -1035,11 +1032,6 @@ extern "C"
     {
         const ParserOptions *self = (const ParserOptions *)self_blob;
         return (const StringPtr_BLOB *)(&(self->buffer_name));
-    }
-    uint8_t lib_ruby_parser__external__parser_options__get_debug(const ParserOptions_BLOB *self_blob)
-    {
-        const ParserOptions *self = (const ParserOptions *)self_blob;
-        return self->debug;
     }
     const MaybeDecoder_BLOB *lib_ruby_parser__external__parser_options__get_decoder(const ParserOptions_BLOB *self_blob)
     {

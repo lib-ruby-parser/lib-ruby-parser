@@ -14,12 +14,6 @@ struct Args {
 
     #[clap(short, long, about = "don't print anything except OK/Error per file")]
     quiet: bool,
-
-    #[clap(
-        long,
-        about = "comma-separated list of debug levels (parser, lexer, buffer)"
-    )]
-    debug_level: Option<DebugLevel>,
 }
 
 #[allow(dead_code)]
@@ -32,12 +26,11 @@ pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("{:?}", tokens)
     }
     let callback = if args.quiet { print_nothing } else { print_all };
-    let debug_level = args.debug_level.unwrap_or_default();
 
     let files = InputFiles::new(&args.code_to_eval, &args.pattern, &None);
 
     for file in files.into_iter() {
-        let tokens = tokenize(file, debug_level)?;
+        let tokens = tokenize(file)?;
         println!("OK");
         callback(TokenList { tokens });
     }

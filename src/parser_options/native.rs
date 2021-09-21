@@ -1,4 +1,3 @@
-use crate::debug_level;
 use crate::source::token_rewriter::TokenRewriter;
 use crate::source::Decoder;
 
@@ -8,17 +7,6 @@ pub struct ParserOptions {
     /// Name of the buffer. Used in all diagnostic messages
     pub buffer_name: String,
 
-    /// Controls which debug information is printed during parsing
-    ///
-    /// Can be:
-    ///
-    /// + lib_ruby_parser::debug_level::None
-    /// + lib_ruby_parser::debug_level::Parser
-    /// + lib_ruby_parser::debug_level::Lexer
-    /// + lib_ruby_parser::debug_level::Buffer
-    /// + or a combination of them (like `Lexer | Buffer`, this value is just a bitmask)
-    pub debug: debug_level::Type,
-
     /// Custom decoder that can be used if the source is encoded
     /// in unknown encoding. Only UTF-8 and ASCII-8BIT/BINARY are
     /// supported out of the box.
@@ -26,7 +14,7 @@ pub struct ParserOptions {
     /// # Example
     /// ```rust
     /// use lib_ruby_parser::source::{Decoder, DecoderResult, InputError};
-    /// use lib_ruby_parser::{debug_level, Parser, ParserOptions, ParserResult};
+    /// use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
     ///
     /// fn decode(encoding: String, input: Vec<u8>) -> DecoderResult {
     ///     if "US-ASCII" == encoding.to_uppercase() {
@@ -41,7 +29,6 @@ pub struct ParserOptions {
     /// let decoder = Decoder::new(Box::new(decode));
     /// let options = ParserOptions {
     ///     decoder: Some(decoder),
-    ///     debug: debug_level::PARSER,
     ///     ..Default::default()
     /// };
     /// let parser = Parser::new(b"# encoding: us-ascii\n3 + 3".to_vec(), options);
@@ -103,14 +90,12 @@ impl ParserOptions {
     /// Constructs new ParserOptions
     pub fn new(
         buffer_name: String,
-        debug: debug_level::Type,
         decoder: Option<Decoder>,
         token_rewriter: Option<TokenRewriter>,
         record_tokens: bool,
     ) -> Self {
         Self {
             buffer_name,
-            debug,
             decoder,
             token_rewriter,
             record_tokens,
@@ -123,7 +108,6 @@ impl From<ParserOptions> for InternalParserOptions {
     fn from(options: ParserOptions) -> Self {
         let ParserOptions {
             buffer_name,
-            debug,
             decoder,
             token_rewriter,
             record_tokens,
@@ -131,7 +115,6 @@ impl From<ParserOptions> for InternalParserOptions {
 
         Self {
             buffer_name,
-            debug,
             decoder,
             token_rewriter,
             record_tokens,

@@ -139,11 +139,9 @@ namespace lib_ruby_parser
     MaybeTokenRewriter::MaybeTokenRewriter(TokenRewriter token_rewriter) : token_rewriter(std::move(token_rewriter)) {}
 
     ParserOptions::ParserOptions(StringPtr buffer_name,
-                                 uint8_t debug,
                                  MaybeDecoder decoder,
                                  MaybeTokenRewriter token_rewriter,
                                  bool record_tokens) : buffer_name(std::move(buffer_name)),
-                                                       debug(debug),
                                                        decoder(std::move(decoder)),
                                                        token_rewriter(std::move(token_rewriter)),
                                                        record_tokens(record_tokens) {}

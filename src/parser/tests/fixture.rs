@@ -1,7 +1,7 @@
 crate::use_native_or_external!(Maybe);
 
 use crate::test_helpers::{render_diagnostic_for_testing, LocMatcher};
-use crate::{debug_level, Parser, ParserOptions, ParserResult};
+use crate::{Parser, ParserOptions, ParserResult};
 
 enum TestSection {
     None,
@@ -171,7 +171,6 @@ pub(crate) fn test_file(fixture_path: &str) {
 
     let options = ParserOptions::new(
         format!("(test {})", fixture_path).into(),
-        debug_level::NONE,
         Maybe::none(),
         Maybe::none(),
         false,

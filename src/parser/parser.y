@@ -2,6 +2,7 @@
 
 %define api.parser.struct { Parser }
 %define api.value.type { Value }
+%define api.parser.check_debug { cfg!(feature = "debug-parser") }
 
 %define parse.error custom
 %define parse.trace
@@ -68,7 +69,6 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
 use crate::source::token_rewriter::TokenRewriter;
 use crate::source::token_rewriter::InternalTokenRewriterResult;
-use crate::debug_level;
 use crate::Loc;
 use crate::parser_options::InternalParserOptions;
 
@@ -6649,7 +6649,6 @@ impl Parser {
     {
         let InternalParserOptions {
             buffer_name,
-            debug,
             decoder,
             token_rewriter,
             record_tokens,
@@ -6670,7 +6669,6 @@ impl Parser {
         lexer.context = context.clone();
         lexer.static_env = static_env.clone();
         lexer.diagnostics = diagnostics.clone();
-        lexer.set_debug(debug);
 
         let builder = Builder::new(
             static_env.clone(),
@@ -6687,7 +6685,6 @@ impl Parser {
         Self {
             yy_error_verbose: true,
             yynerrs: 0,
-            yydebug: debug_level::is_debug_parser(debug),
             yyerrstatus_: 0,
             result: Maybe::none(),
 

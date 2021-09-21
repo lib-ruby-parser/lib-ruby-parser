@@ -1,9 +1,6 @@
 mod timer;
 pub(crate) use timer::Timer;
 
-mod debug_level;
-pub(crate) use debug_level::DebugLevel;
-
 mod parse;
 pub(crate) use parse::parse;
 

@@ -2,7 +2,6 @@ crate::use_native_or_external!(Maybe);
 use super::InternalParserOptions;
 use crate::blobs::{Blob, HasBlob};
 use crate::containers::ExternalStringPtr as StringPtr;
-use crate::debug_level;
 use crate::source::token_rewriter::TokenRewriter;
 use crate::source::Decoder;
 
@@ -15,7 +14,6 @@ pub struct ParserOptions {
 extern "C" {
     fn lib_ruby_parser__external__parser_options__new(
         buffer_name: Blob<StringPtr>,
-        debug: u8,
         decoder: Blob<Maybe<Decoder>>,
         token_rewriter: Blob<Maybe<TokenRewriter>>,
         record_tokens: bool,
@@ -27,8 +25,6 @@ extern "C" {
     fn lib_ruby_parser__external__parser_options__get_buffer_name(
         blob: *const Blob<ParserOptions>,
     ) -> *const Blob<StringPtr>;
-    fn lib_ruby_parser__external__parser_options__get_debug(blob: *const Blob<ParserOptions>)
-        -> u8;
     fn lib_ruby_parser__external__parser_options__get_decoder(
         blob: *const Blob<ParserOptions>,
     ) -> *const Blob<Maybe<Decoder>>;
@@ -50,7 +46,6 @@ impl ParserOptions {
     /// Constructs new ParserOptions
     pub fn new(
         buffer_name: StringPtr,
-        debug: debug_level::Type,
         decoder: Maybe<Decoder>,
         token_rewriter: Maybe<TokenRewriter>,
         record_tokens: bool,
@@ -58,7 +53,6 @@ impl ParserOptions {
         let blob = unsafe {
             lib_ruby_parser__external__parser_options__new(
                 buffer_name.into_blob(),
-                debug,
                 decoder.into_blob(),
                 token_rewriter.into_blob(),
                 record_tokens,
@@ -74,9 +68,6 @@ impl ParserOptions {
                 .as_ref()
                 .unwrap()
         }
-    }
-    pub(crate) fn debug(&self) -> debug_level::Type {
-        unsafe { lib_ruby_parser__external__parser_options__get_debug(&self.blob) }
     }
     pub(crate) fn decoder(&self) -> &Maybe<Decoder> {
         unsafe {
@@ -103,7 +94,6 @@ impl std::fmt::Debug for ParserOptions {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ParserOptions")
             .field("buffer_name", self.buffer_name())
-            .field("debug", &self.debug())
             .field("decoder", self.decoder())
             .field("token_rewriter", self.token_rewriter())
             .field("record_tokens", &self.record_tokens())

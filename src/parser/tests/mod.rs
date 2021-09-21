@@ -9,7 +9,6 @@ mod gen;
 mod manual;
 
 use crate::{
-    debug_level,
     source::{MagicComment, MagicCommentKind},
     Loc, Parser, ParserOptions, ParserResult,
 };
@@ -26,13 +25,7 @@ macro_rules! fixture_file {
 pub(crate) use fixture_file;
 
 fn parse(input: &[u8]) -> ParserResult {
-    let options = ParserOptions::new(
-        "(eval)".into(),
-        debug_level::NONE,
-        Maybe::none(),
-        Maybe::none(),
-        false,
-    );
+    let options = ParserOptions::new("(eval)".into(), Maybe::none(), Maybe::none(), false);
     let parser = Parser::new(input, options);
     parser.do_parse()
 }

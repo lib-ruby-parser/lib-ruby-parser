@@ -1,4 +1,4 @@
-use super::{DebugLevel, InputFile};
+use super::InputFile;
 use lib_ruby_parser::{Lexer, Token};
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -12,10 +12,9 @@ type Maybe<T> = Option<T>;
 use lib_ruby_parser::containers::helpers::MaybeAPI;
 
 #[allow(dead_code)]
-pub(crate) fn tokenize(input: InputFile, debug_level: DebugLevel) -> Result<Vec<Token>, String> {
+pub(crate) fn tokenize(input: InputFile) -> Result<Vec<Token>, String> {
     print!("tokenizing {} ... ", input.filepath);
     let mut lexer = Lexer::new(input.code, input.filepath, Maybe::none());
-    lexer.set_debug(debug_level.level);
     let tokens = lexer.tokenize_until_eof();
     Ok(tokens)
 }

@@ -3,7 +3,6 @@ crate::use_native_or_external!(StringPtr);
 crate::use_native_or_external!(List);
 crate::use_native_or_external!(Maybe);
 
-use crate::debug_level;
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
@@ -26,9 +25,6 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 #[derive(Debug, Default)]
 pub struct Lexer {
     pub(crate) buffer: Buffer,
-    /// Boolean field that controls printing
-    /// additional debug information to stdout
-    pub(crate) debug: bool,
 
     pub(crate) lval: Option<Bytes>,
     pub(crate) lval_start: Option<usize>,
@@ -111,12 +107,6 @@ impl Lexer {
         }
     }
 
-    /// Enables printing additional debugging during lexing
-    pub fn set_debug(&mut self, debug: debug_level::Type) {
-        self.debug = debug_level::is_debug_lexer(debug);
-        self.buffer.set_debug(debug);
-    }
-
     /// Tokenizes given input until EOF
     ///
     /// Keep in mind that Lexer in Ruby is driven by Parser,
@@ -170,7 +160,7 @@ impl Lexer {
             lex_state_before,
             self.lex_state,
         ));
-        if self.debug {
+        if cfg!(feature = "debug-lexer") {
             println!(
                 "yylex ({:?}, {:?}, {:?})",
                 token.token_name(),
@@ -1110,7 +1100,7 @@ impl Lexer {
     }
 
     pub(crate) fn warn(&mut self, message: DiagnosticMessage, loc: Loc) {
-        if self.debug {
+        if cfg!(feature = "debug-lexer") {
             println!("WARNING: {}", message.render())
         }
         let diagnostic = Diagnostic::new(ErrorLevel::warning(), message, loc);
@@ -1138,7 +1128,7 @@ impl Lexer {
     }
 
     pub(crate) fn compile_error(&mut self, message: DiagnosticMessage, loc: Loc) {
-        if self.debug {
+        if cfg!(feature = "debug-lexer") {
             println!("Compile error: {}", message.render())
         }
         let diagnostic = Diagnostic::new(ErrorLevel::error(), message, loc);
@@ -1191,7 +1181,7 @@ impl Lexer {
     }
 
     pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) {
-        if self.debug {
+        if cfg!(feature = "debug-lexer") {
             println!("yyerror0: {}", message.render())
         }
         let diagnostic = Diagnostic::new(ErrorLevel::error(), message, loc);

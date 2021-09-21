@@ -1033,14 +1033,12 @@ LIB_RUBY_PARSER_TokenRewriter_BLOB lib_ruby_parser__external__token_rewriter__ne
 */
 LIB_RUBY_PARSER_ParserOptions_BLOB lib_ruby_parser__external__parser_options__new(
     LIB_RUBY_PARSER_StringPtr_BLOB buffer_name_blob,
-    uint8_t debug,
     LIB_RUBY_PARSER_MaybeDecoder_BLOB decoder_blob,
     LIB_RUBY_PARSER_MaybeTokenRewriter_BLOB token_rewriter_blob,
     bool record_tokens)
 {
     return PACK_ParserOptions(((LIB_RUBY_PARSER_ParserOptions){
         .buffer_name = UNPACK_StringPtr(buffer_name_blob),
-        .debug = debug,
         .decoder = UNPACK_MaybeDecoder(decoder_blob),
         .token_rewriter = UNPACK_MaybeTokenRewriter(token_rewriter_blob),
         .record_tokens = record_tokens}));
@@ -1055,7 +1053,6 @@ InternalParserOptions lib_ruby_parser__external__parser_options__into_internal(L
     LIB_RUBY_PARSER_ParserOptions self = UNPACK_ParserOptions(self_blob);
     return ((InternalParserOptions){
         .buffer_name = PACK_StringPtr(self.buffer_name),
-        .debug = self.debug,
         .decoder = PACK_MaybeDecoder(self.decoder),
         .token_rewriter = PACK_MaybeTokenRewriter(self.token_rewriter),
         .record_tokens = self.record_tokens});
@@ -1064,11 +1061,6 @@ const LIB_RUBY_PARSER_StringPtr_BLOB *lib_ruby_parser__external__parser_options_
 {
     const LIB_RUBY_PARSER_ParserOptions *self = (const LIB_RUBY_PARSER_ParserOptions *)self_blob;
     return (const LIB_RUBY_PARSER_StringPtr_BLOB *)(&(self->buffer_name));
-}
-uint8_t lib_ruby_parser__external__parser_options__get_debug(const LIB_RUBY_PARSER_ParserOptions_BLOB *self_blob)
-{
-    const LIB_RUBY_PARSER_ParserOptions *self = (const LIB_RUBY_PARSER_ParserOptions *)self_blob;
-    return self->debug;
 }
 const LIB_RUBY_PARSER_MaybeDecoder_BLOB *lib_ruby_parser__external__parser_options__get_decoder(const LIB_RUBY_PARSER_ParserOptions_BLOB *self_blob)
 {

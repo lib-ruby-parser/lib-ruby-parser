@@ -389,14 +389,12 @@ namespace lib_ruby_parser
     {
     public:
         StringPtr buffer_name;
-        uint8_t debug;
         MaybeDecoder decoder;
         MaybeTokenRewriter token_rewriter;
         bool record_tokens;
 
         ParserOptions(
             StringPtr buffer_name,
-            uint8_t debug,
             MaybeDecoder decoder,
             MaybeTokenRewriter token_rewriter,
             bool record_tokens);

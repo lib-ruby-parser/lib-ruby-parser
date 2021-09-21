@@ -4,7 +4,6 @@ crate::use_native_or_external!(StringPtr);
 crate::use_native_or_external!(List);
 crate::use_native_or_external!(Maybe);
 
-use crate::debug_level;
 use crate::maybe_byte::*;
 use crate::source::input::Input;
 use crate::source::Decoder;
@@ -36,10 +35,10 @@ pub(crate) struct Buffer {
 
     pub(crate) has_shebang: bool,
 
-    pub(crate) ruby_sourceline: usize, /* current line no. */
+    /* current line no. */
+    pub(crate) ruby_sourceline: usize,
     // pub(crate) ruby_sourcefile: Vec<char>, /* current source file */
     // pub(crate) ruby_sourcefile_string: Vec<char>,
-    pub(crate) debug: bool,
 }
 
 impl Buffer {
@@ -90,7 +89,7 @@ impl Buffer {
     pub(crate) fn nextc(&mut self) -> MaybeByte {
         if self.pcur == self.pend || self.eofp || self.nextline != 0 {
             let n = self.nextline();
-            if self.debug {
+            if cfg!(feature = "debug-buffer") {
                 println!("nextline = {:?}", n);
             }
             if n.is_err() {
@@ -105,7 +104,7 @@ impl Buffer {
         if c == b'\r' {
             c = self.parser_cr(c);
         }
-        if self.debug {
+        if cfg!(feature = "debug-buffer") {
             println!("nextc = {:?}", c);
         }
         MaybeByte::new(c)
@@ -185,7 +184,7 @@ impl Buffer {
     pub(crate) fn getline(&mut self) -> Result<usize, ()> {
         if self.line_count < self.input.lines_count() {
             self.line_count += 1;
-            if self.debug {
+            if cfg!(feature = "debug-buffer") {
                 println!("line_count = {}", self.line_count)
             }
             Ok(self.line_count - 1)
@@ -199,7 +198,7 @@ impl Buffer {
     }
 
     pub(crate) fn set_ptok(&mut self, ptok: usize) {
-        if self.debug {
+        if cfg!(feature = "debug-buffer") {
             println!("set_ptok({})", ptok);
         }
         self.ptok = ptok;
@@ -327,10 +326,6 @@ impl Buffer {
     pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
         self.input.set_encoding(encoding)
     }
-
-    pub(crate) fn set_debug(&mut self, debug: debug_level::Type) {
-        self.debug = debug_level::is_debug_buffer(debug)
-    }
 }
 
 pub(crate) trait Pushback<T> {
@@ -346,7 +341,7 @@ impl Pushback<u8> for Buffer {
         {
             self.pcur -= 1;
         }
-        if self.debug {
+        if cfg!(feature = "debug-buffer") {
             println!("pushback({:?}) pcur = {}", c, self.pcur);
         }
     }
