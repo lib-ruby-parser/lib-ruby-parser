@@ -5485,7 +5485,7 @@ xstring_contents: /* none */
                     }
                 | tSTRING_DVAR
                     {
-                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(Box::new(std::mem::take(&mut self.yylexer.strterm)));
+                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(std::mem::take(&mut self.yylexer.strterm));
                         self.yylexer.lex_state.set(EXPR_BEG);
                     }
                   string_dvar
@@ -5500,7 +5500,7 @@ xstring_contents: /* none */
                         $<None>$ = Value::None;
                     }
                     {
-                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(Box::new(std::mem::take(&mut self.yylexer.strterm)));
+                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(std::mem::take(&mut self.yylexer.strterm));
                     }
                     {
                         $<Num>$ = Value::Num( self.yylexer.lex_state.get() );

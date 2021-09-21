@@ -12,13 +12,13 @@ const ESCAPE_META: usize = 2;
 
 impl Lexer {
     fn take_strterm(&mut self) -> StringLiteral {
-        match self.strterm.take() {
+        match self.strterm.take().map(|v| *v) {
             Some(StrTerm::StringLiteral(s)) => s,
             _ => unreachable!("strterm must be string"),
         }
     }
     fn restore_strterm(&mut self, literal: StringLiteral) {
-        self.strterm = Some(StrTerm::StringLiteral(literal));
+        self.strterm = Some(Box::new(StrTerm::StringLiteral(literal)));
     }
 
     pub(crate) fn parse_string(&mut self) -> i32 {
