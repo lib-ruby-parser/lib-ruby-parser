@@ -314,7 +314,10 @@ uint64_t lib_ruby_parser__external__shared_byte_list__get_len(const LIB_RUBY_PAR
         {                                                                                                                                       \
             drop(&self->ptr[i]);                                                                                                                \
         }                                                                                                                                       \
-        free(self->ptr);                                                                                                                        \
+        if (self->ptr != NULL)                                                                                                                  \
+        {                                                                                                                                       \
+            free(self->ptr);                                                                                                                    \
+        }                                                                                                                                       \
     }                                                                                                                                           \
     LIB_RUBY_PARSER_##ITEM##List_BLOB lib_ruby_parser__external__list__##NS##__with_capacity(uint64_t capacity)                                 \
     {                                                                                                                                           \
@@ -356,6 +359,13 @@ uint64_t lib_ruby_parser__external__shared_byte_list__get_len(const LIB_RUBY_PAR
         self->ptr[self->len] = item;                                                                                                            \
         self->len++;                                                                                                                            \
     }                                                                                                                                           \
+    LIB_RUBY_PARSER_##ITEM##_BLOB lib_ruby_parser__external__list__##NS##__pop(LIB_RUBY_PARSER_##ITEM##List_BLOB *self_blob)                    \
+    {                                                                                                                                           \
+        LIB_RUBY_PARSER_##ITEM##List *self = (LIB_RUBY_PARSER_##ITEM##List *)self_blob;                                                         \
+        LIB_RUBY_PARSER_##ITEM item = self->ptr[self->len - 1];                                                                                 \
+        self->len -= 1;                                                                                                                         \
+        return PACK_##ITEM(item);                                                                                                               \
+    }                                                                                                                                           \
     LIB_RUBY_PARSER_##ITEM##_BLOB lib_ruby_parser__external__list__##NS##__remove(LIB_RUBY_PARSER_##ITEM##List_BLOB *self_blob, uint64_t index) \
     {                                                                                                                                           \
         LIB_RUBY_PARSER_##ITEM##List *self = (LIB_RUBY_PARSER_##ITEM##List *)self_blob;                                                         \
@@ -370,25 +380,39 @@ uint64_t lib_ruby_parser__external__shared_byte_list__get_len(const LIB_RUBY_PAR
                                                                                                                                                 \
         uint64_t new_len = self->len;                                                                                                           \
         uint64_t new_capacity = self->len;                                                                                                      \
-                                                                                                                                                \
-        LIB_RUBY_PARSER_##ITEM *new_ptr = malloc(sizeof(LIB_RUBY_PARSER_##ITEM) * new_capacity);                                                \
-        memcpy(new_ptr, self->ptr, sizeof(LIB_RUBY_PARSER_##ITEM) * new_len);                                                                   \
-                                                                                                                                                \
         LIB_RUBY_PARSER_##ITEM *old_ptr = self->ptr;                                                                                            \
-        self->ptr = new_ptr;                                                                                                                    \
+                                                                                                                                                \
+        if (new_capacity == 0)                                                                                                                  \
+        {                                                                                                                                       \
+            self->ptr = NULL;                                                                                                                   \
+        }                                                                                                                                       \
+        else                                                                                                                                    \
+        {                                                                                                                                       \
+            LIB_RUBY_PARSER_##ITEM *new_ptr = malloc(sizeof(LIB_RUBY_PARSER_##ITEM) * new_capacity);                                            \
+            memcpy(new_ptr, self->ptr, sizeof(LIB_RUBY_PARSER_##ITEM) * new_len);                                                               \
+                                                                                                                                                \
+            self->ptr = new_ptr;                                                                                                                \
+        }                                                                                                                                       \
         self->len = new_len;                                                                                                                    \
         self->capacity = new_capacity;                                                                                                          \
-        free(old_ptr);                                                                                                                          \
+        if (old_ptr != NULL)                                                                                                                    \
+        {                                                                                                                                       \
+            free(old_ptr);                                                                                                                      \
+        }                                                                                                                                       \
     }                                                                                                                                           \
     const LIB_RUBY_PARSER_##ITEM##_BLOB *lib_ruby_parser__external__list__##NS##__as_ptr(const LIB_RUBY_PARSER_##ITEM##List_BLOB *self_blob)    \
     {                                                                                                                                           \
         const LIB_RUBY_PARSER_##ITEM##List *self = (const LIB_RUBY_PARSER_##ITEM##List *)self_blob;                                             \
         return (const LIB_RUBY_PARSER_##ITEM##_BLOB *)(self->ptr);                                                                              \
     }                                                                                                                                           \
-    LIB_RUBY_PARSER_##ITEM##_BLOB *lib_ruby_parser__external__list__##NS##__into_ptr(LIB_RUBY_PARSER_##ITEM##List_BLOB self_blob)               \
+    LIB_RUBY_PARSER_##ITEM##_BLOB *lib_ruby_parser__external__list__##NS##__take_ptr(LIB_RUBY_PARSER_##ITEM##List_BLOB *self_blob)              \
     {                                                                                                                                           \
-        LIB_RUBY_PARSER_##ITEM##List self = UNPACK_##ITEM##List(self_blob);                                                                     \
-        return (LIB_RUBY_PARSER_##ITEM##_BLOB *)(self.ptr);                                                                                     \
+        LIB_RUBY_PARSER_##ITEM##List *self = (LIB_RUBY_PARSER_##ITEM##List *)self_blob;                                                         \
+        LIB_RUBY_PARSER_##ITEM *ptr = self->ptr;                                                                                                \
+        self->ptr = NULL;                                                                                                                       \
+        self->len = 0;                                                                                                                          \
+        self->capacity = 0;                                                                                                                     \
+        return (LIB_RUBY_PARSER_##ITEM##_BLOB *)ptr;                                                                                            \
     }                                                                                                                                           \
     uint64_t lib_ruby_parser__external__list__##NS##__get_len(const LIB_RUBY_PARSER_##ITEM##List_BLOB *self_blob)                               \
     {                                                                                                                                           \
@@ -399,6 +423,29 @@ uint64_t lib_ruby_parser__external__shared_byte_list__get_len(const LIB_RUBY_PAR
     {                                                                                                                                           \
         const LIB_RUBY_PARSER_##ITEM##List *self = (const LIB_RUBY_PARSER_##ITEM##List *)self_blob;                                             \
         return self->capacity;                                                                                                                  \
+    }                                                                                                                                           \
+    void lib_ruby_parser__external__list__##NS##__reserve(LIB_RUBY_PARSER_##ITEM##List_BLOB *self_blob, uint64_t additional)                    \
+    {                                                                                                                                           \
+        LIB_RUBY_PARSER_##ITEM##List *self = (LIB_RUBY_PARSER_##ITEM##List *)self_blob;                                                         \
+        if (self->len + additional > self->capacity)                                                                                            \
+        {                                                                                                                                       \
+            self->capacity = self->len + additional;                                                                                            \
+            LIB_RUBY_PARSER_##ITEM *old_ptr = self->ptr;                                                                                        \
+            if (self->capacity == 0)                                                                                                            \
+            {                                                                                                                                   \
+                self->ptr = NULL;                                                                                                               \
+            }                                                                                                                                   \
+            else                                                                                                                                \
+            {                                                                                                                                   \
+                LIB_RUBY_PARSER_##ITEM *new_ptr = malloc(sizeof(LIB_RUBY_PARSER_##ITEM) * self->capacity);                                      \
+                memcpy(new_ptr, old_ptr, sizeof(LIB_RUBY_PARSER_##ITEM) * self->len);                                                           \
+                self->ptr = new_ptr;                                                                                                            \
+            }                                                                                                                                   \
+            if (old_ptr != NULL)                                                                                                                \
+            {                                                                                                                                   \
+                free(old_ptr);                                                                                                                  \
+            }                                                                                                                                   \
+        }                                                                                                                                       \
     }
 
 void drop_nothing(void *byte)

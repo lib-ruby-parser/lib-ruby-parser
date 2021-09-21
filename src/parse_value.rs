@@ -1,4 +1,5 @@
 crate::use_native_or_external!(Ptr);
+crate::use_native_or_external!(List);
 
 use crate::builder::{ArgsType, PKwLabel};
 use crate::str_term::StrTerm;
@@ -37,9 +38,9 @@ impl Token {
 
 #[allow(non_snake_case)]
 pub(crate) mod NodeList {
-    use super::{Node, ParseValue};
+    use super::{List, Node, ParseValue};
 
-    pub(crate) fn from(value: ParseValue) -> Vec<Node> {
+    pub(crate) fn from(value: ParseValue) -> List<Node> {
         match value {
             ParseValue::NodeList(value) => value,
             other => unreachable!("expected NodeList, got {:?}", other),
@@ -215,7 +216,7 @@ impl CmdBraceBlock {
 #[derive(Debug, Clone)]
 pub(crate) struct ParenArgs {
     pub(crate) begin_t: Ptr<Token>,
-    pub(crate) args: Vec<Node>,
+    pub(crate) args: List<Node>,
     pub(crate) end_t: Ptr<Token>,
 }
 impl ParenArgs {
@@ -230,7 +231,7 @@ impl ParenArgs {
 #[derive(Debug, Clone)]
 pub(crate) struct OptParenArgs {
     pub(crate) begin_t: Option<Ptr<Token>>,
-    pub(crate) args: Vec<Node>,
+    pub(crate) args: List<Node>,
     pub(crate) end_t: Option<Ptr<Token>>,
 }
 impl OptParenArgs {
@@ -336,7 +337,7 @@ impl DefnHead {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Cases {
-    pub(crate) when_bodies: Vec<Node>,
+    pub(crate) when_bodies: List<Node>,
     pub(crate) opt_else: Option<Else>,
 }
 impl Cases {
@@ -350,7 +351,7 @@ impl Cases {
 
 #[derive(Debug, Clone)]
 pub(crate) struct CaseBody {
-    pub(crate) when_bodies: Vec<Node>,
+    pub(crate) when_bodies: List<Node>,
     pub(crate) opt_else: Option<Else>,
 }
 impl CaseBody {
@@ -364,7 +365,7 @@ impl CaseBody {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PCases {
-    pub(crate) in_bodies: Vec<Node>,
+    pub(crate) in_bodies: List<Node>,
     pub(crate) opt_else: Option<Else>,
 }
 impl PCases {
@@ -378,7 +379,7 @@ impl PCases {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PCaseBody {
-    pub(crate) in_bodies: Vec<Node>,
+    pub(crate) in_bodies: List<Node>,
     pub(crate) opt_else: Option<Else>,
 }
 impl PCaseBody {
@@ -444,7 +445,7 @@ impl PTopExpr {
 
 #[derive(Debug, Clone)]
 pub(crate) struct MatchPatternWithTrailingComma {
-    pub(crate) elements: Vec<Node>,
+    pub(crate) elements: List<Node>,
     pub(crate) trailing_comma: Option<Ptr<Token>>,
 }
 impl MatchPatternWithTrailingComma {
@@ -462,9 +463,9 @@ pub(crate) enum ParseValue {
     Uninitialized,
     None,
     Token(Ptr<Token>),
-    TokenList(Vec<Token>),
+    TokenList(List<Token>),
     Node(Box<Node>),
-    NodeList(Vec<Node>),
+    NodeList(List<Node>),
     Bool(bool),
     MaybeStrTerm(Box<Option<StrTerm>>),
     Num(i32),

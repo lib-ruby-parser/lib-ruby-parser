@@ -54,7 +54,7 @@ pub(crate) enum LogicalOp {
 #[derive(Debug, Clone)]
 pub(crate) enum PKwLabel {
     PlainLabel(Ptr<Token>),
-    QuotedLabel((Ptr<Token>, Vec<Node>, Ptr<Token>)),
+    QuotedLabel((Ptr<Token>, List<Node>, Ptr<Token>)),
 }
 
 #[derive(Debug, Clone)]
@@ -196,7 +196,7 @@ impl Builder {
         &self,
         begin_t: Option<Ptr<Token>>,
         value: Bytes,
-        parts: Vec<Node>,
+        parts: List<Node>,
         end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         if self.is_heredoc(&begin_t) {
@@ -237,7 +237,7 @@ impl Builder {
     pub(crate) fn string_compose(
         &self,
         begin_t: Option<Ptr<Token>>,
-        parts: Vec<Node>,
+        parts: List<Node>,
         end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         if parts.is_empty() {
@@ -337,7 +337,7 @@ impl Builder {
     pub(crate) fn symbol_compose(
         &self,
         begin_t: Ptr<Token>,
-        parts: Vec<Node>,
+        parts: List<Node>,
         end_t: Ptr<Token>,
     ) -> Box<Node> {
         if parts.len() == 1 && parts.first().unwrap().is_str() {
@@ -367,7 +367,7 @@ impl Builder {
     pub(crate) fn xstring_compose(
         &self,
         begin_t: Ptr<Token>,
-        parts: Vec<Node>,
+        parts: List<Node>,
         end_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
@@ -510,7 +510,7 @@ impl Builder {
     pub(crate) fn regexp_compose(
         &self,
         begin_t: Ptr<Token>,
-        parts: Vec<Node>,
+        parts: List<Node>,
         end_t: Ptr<Token>,
         options: Option<Box<Node>>,
     ) -> Box<Node> {
@@ -547,7 +547,7 @@ impl Builder {
     pub(crate) fn array(
         &self,
         begin_t: Option<Ptr<Token>>,
-        elements: Vec<Node>,
+        elements: List<Node>,
         end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
@@ -571,7 +571,7 @@ impl Builder {
         Box::new(Node::new_splat(value.into(), operator_l, expression_l))
     }
 
-    pub(crate) fn word(&self, parts: Vec<Node>) -> Box<Node> {
+    pub(crate) fn word(&self, parts: List<Node>) -> Box<Node> {
         if parts.len() == 1 && (parts[0].is_str() || parts[0].is_dstr()) {
             let part = parts
                 .into_iter()
@@ -592,7 +592,7 @@ impl Builder {
     pub(crate) fn words_compose(
         &self,
         begin_t: Ptr<Token>,
-        elements: Vec<Node>,
+        elements: List<Node>,
         end_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
@@ -609,7 +609,7 @@ impl Builder {
     pub(crate) fn symbols_compose(
         &self,
         begin_t: Ptr<Token>,
-        parts: Vec<Node>,
+        parts: List<Node>,
         end_t: Ptr<Token>,
     ) -> Box<Node> {
         let parts = parts
@@ -683,7 +683,7 @@ impl Builder {
     pub(crate) fn pair_quoted(
         &self,
         begin_t: Ptr<Token>,
-        parts: Vec<Node>,
+        parts: List<Node>,
         end_t: Ptr<Token>,
         value: Box<Node>,
     ) -> Box<Node> {
@@ -721,7 +721,7 @@ impl Builder {
     pub(crate) fn associate(
         &self,
         begin_t: Option<Ptr<Token>>,
-        pairs: Vec<Node>,
+        pairs: List<Node>,
         end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
@@ -1183,7 +1183,7 @@ impl Builder {
     pub(crate) fn multi_lhs(
         &self,
         begin_t: Option<Ptr<Token>>,
-        items: Vec<Node>,
+        items: List<Node>,
         end_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
@@ -1416,7 +1416,7 @@ impl Builder {
         )))
     }
 
-    pub(crate) fn undef_method(&self, undef_t: Ptr<Token>, names: Vec<Node>) -> Box<Node> {
+    pub(crate) fn undef_method(&self, undef_t: Ptr<Token>, names: List<Node>) -> Box<Node> {
         let keyword_l = self.loc(&undef_t);
         let expression_l = keyword_l.maybe_join(&collection_expr(&names));
         Box::new(Node::new_undef(names.into(), keyword_l, expression_l))
@@ -1440,7 +1440,7 @@ impl Builder {
     pub(crate) fn args(
         &self,
         begin_t: Option<Ptr<Token>>,
-        args: Vec<Node>,
+        args: List<Node>,
         end_t: Option<Ptr<Token>>,
     ) -> Option<Box<Node>> {
         self.check_duplicate_args(&args, &mut HashMap::new());
@@ -1469,12 +1469,12 @@ impl Builder {
         dots_t: Ptr<Token>,
         end_t: Ptr<Token>,
     ) -> Box<Node> {
-        let args = vec![*self.forward_arg(dots_t)];
+        let args = list![*self.forward_arg(dots_t)];
         let begin_l = self.loc(&begin_t);
         let end_l = self.loc(&end_t);
         let expression_l = begin_l.join(&end_l);
         Box::new(Node::new_args(
-            args.into(),
+            args,
             expression_l,
             Maybe::some(begin_l),
             Maybe::some(end_l),
@@ -1674,7 +1674,7 @@ impl Builder {
         dot_t: Option<Ptr<Token>>,
         selector_t: Option<Ptr<Token>>,
         lparen_t: Option<Ptr<Token>>,
-        mut args: Vec<Node>,
+        mut args: List<Node>,
         rparen_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let begin_l = maybe_boxed_node_expr(&receiver)
@@ -1925,7 +1925,7 @@ impl Builder {
         &self,
         recv: Box<Node>,
         lbrack_t: Ptr<Token>,
-        mut indexes: Vec<Node>,
+        mut indexes: List<Node>,
         rbrack_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&lbrack_t);
@@ -1947,7 +1947,7 @@ impl Builder {
         &self,
         recv: Box<Node>,
         lbrack_t: Ptr<Token>,
-        indexes: Vec<Node>,
+        indexes: List<Node>,
         rbrack_t: Ptr<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&lbrack_t);
@@ -2221,7 +2221,7 @@ impl Builder {
     pub(crate) fn when(
         &self,
         when_t: Ptr<Token>,
-        patterns: Vec<Node>,
+        patterns: List<Node>,
         then_t: Ptr<Token>,
         body: Option<Box<Node>>,
     ) -> Box<Node> {
@@ -2246,7 +2246,7 @@ impl Builder {
         &self,
         case_t: Ptr<Token>,
         expr: Option<Box<Node>>,
-        when_bodies: Vec<Node>,
+        when_bodies: List<Node>,
         else_t: Option<Ptr<Token>>,
         else_body: Option<Box<Node>>,
         end_t: Ptr<Token>,
@@ -2384,7 +2384,7 @@ impl Builder {
         type_: KeywordCmd,
         keyword_t: Ptr<Token>,
         lparen_t: Option<Ptr<Token>>,
-        mut args: Vec<Node>,
+        mut args: List<Node>,
         rparen_t: Option<Ptr<Token>>,
     ) -> Result<Box<Node>, ()> {
         let keyword_l = self.loc(&keyword_t);
@@ -2418,7 +2418,7 @@ impl Builder {
         let result = match type_ {
             KeywordCmd::Break => Node::new_break(args.into(), keyword_l, expression_l),
             KeywordCmd::Defined => Node::new_defined(
-                Ptr::new(args.pop().expect("defined? always has an argument")),
+                Ptr::new(args.take_first()),
                 keyword_l,
                 begin_l,
                 end_l,
@@ -2519,7 +2519,7 @@ impl Builder {
     pub(crate) fn begin_body(
         &self,
         compound_stmt: Option<Box<Node>>,
-        rescue_bodies: Vec<Node>,
+        rescue_bodies: List<Node>,
         else_: Option<(Ptr<Token>, Option<Box<Node>>)>,
         ensure: Option<(Ptr<Token>, Option<Box<Node>>)>,
     ) -> Option<Box<Node>> {
@@ -2635,10 +2635,10 @@ impl Builder {
     // Expression grouping
     //
 
-    pub(crate) fn compstmt(&self, mut statements: Vec<Node>) -> Option<Box<Node>> {
+    pub(crate) fn compstmt(&self, statements: List<Node>) -> Option<Box<Node>> {
         match &statements[..] {
             [] => None,
-            [_] => statements.pop().map(Box::new),
+            [_] => Some(Box::new(statements.take_first())),
             _ => {
                 let CollectionMap {
                     begin_l,
@@ -2747,7 +2747,7 @@ impl Builder {
         &self,
         case_t: Ptr<Token>,
         expr: Box<Node>,
-        in_bodies: Vec<Node>,
+        in_bodies: List<Node>,
         else_t: Option<Ptr<Token>>,
         else_body: Option<Box<Node>>,
         end_t: Ptr<Token>,
@@ -2960,7 +2960,7 @@ impl Builder {
     pub(crate) fn hash_pattern(
         &self,
         lbrace_t: Option<Ptr<Token>>,
-        kwargs: Vec<Node>,
+        kwargs: List<Node>,
         rbrace_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
@@ -2980,7 +2980,7 @@ impl Builder {
     pub(crate) fn array_pattern(
         &self,
         lbrack_t: Option<Ptr<Token>>,
-        elements: Vec<Node>,
+        elements: List<Node>,
         trailing_comma: Option<Ptr<Token>>,
         rbrack_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
@@ -3021,7 +3021,7 @@ impl Builder {
     pub(crate) fn find_pattern(
         &self,
         lbrack_t: Option<Ptr<Token>>,
-        elements: Vec<Node>,
+        elements: List<Node>,
         rbrack_t: Option<Ptr<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
@@ -3669,29 +3669,28 @@ impl Builder {
         }
     }
 
-    fn rewrite_hash_args_to_kwargs(&self, args: &mut Vec<Node>) {
+    fn rewrite_hash_args_to_kwargs(&self, args: &mut List<Node>) {
         let len = args.len();
 
         if !args.is_empty() && self.is_kwargs(&args[len - 1]) {
-            let mut arg = Node::new_nil(Loc::default());
-            std::mem::swap(&mut args[len - 1], &mut arg);
             let internal::Hash {
                 pairs,
                 expression_l,
                 ..
-            } = arg.into_hash().into_internal();
-            let arg = Node::new_kwargs(pairs, expression_l);
-            args[len - 1] = arg;
+            } = args.pop().unwrap().into_hash().into_internal();
+
+            let kwargs = Node::new_kwargs(pairs, expression_l);
+            args.push(kwargs);
         } else if len > 1 && args[len - 1].is_block_pass() && self.is_kwargs(&args[len - 2]) {
-            let mut arg = Node::new_nil(Loc::default());
-            std::mem::swap(&mut args[len - 2], &mut arg);
+            let block_pass = args.pop().unwrap();
             let internal::Hash {
                 pairs,
                 expression_l,
                 ..
-            } = arg.into_hash().into_internal();
-            let arg = Node::new_kwargs(pairs, expression_l);
-            args[len - 2] = arg;
+            } = args.pop().unwrap().into_hash().into_internal();
+            let kwargs = Node::new_kwargs(pairs, expression_l);
+            args.push(kwargs);
+            args.push(block_pass);
         }
     }
 

@@ -356,6 +356,13 @@ extern "C"
         LIST *self = (LIST *)self_blob;                                                              \
         self->push_back(UNPACK_##ITEM(item_blob));                                                   \
     }                                                                                                \
+    ITEM_BLOB lib_ruby_parser__external__list__##NS##__pop(LIST_BLOB *self_blob)                     \
+    {                                                                                                \
+        LIST *self = (LIST *)self_blob;                                                              \
+        ITEM_BLOB item = PACK_##ITEM(std::move(self->back()));                                       \
+        self->pop_back();                                                                            \
+        return item;                                                                                 \
+    }                                                                                                \
     ITEM_BLOB lib_ruby_parser__external__list__##NS##__remove(LIST_BLOB *self_blob, uint64_t index)  \
     {                                                                                                \
         LIST *self = (LIST *)self_blob;                                                              \
@@ -373,10 +380,10 @@ extern "C"
         LIST *self = (LIST *)self_blob;                                                              \
         return (ITEM_BLOB *)(self->data());                                                          \
     }                                                                                                \
-    ITEM_BLOB *lib_ruby_parser__external__list__##NS##__into_ptr(LIST_BLOB self_blob)                \
+    ITEM_BLOB *lib_ruby_parser__external__list__##NS##__take_ptr(LIST_BLOB *self_blob)               \
     {                                                                                                \
-        LIST self = UNPACK_##LIST(self_blob);                                                        \
-        ITEM *ptr = self.data();                                                                     \
+        LIST *self = (LIST *)self_blob;                                                              \
+        ITEM *ptr = self->data();                                                                    \
         union VALUE##_FORGET_LIST                                                                    \
         {                                                                                            \
             LIST list;                                                                               \
@@ -384,7 +391,8 @@ extern "C"
                                                                                                      \
             ~VALUE##_FORGET_LIST() {}                                                                \
         };                                                                                           \
-        VALUE##_FORGET_LIST forget{std::move(self)};                                                 \
+        VALUE##_FORGET_LIST forget{std::move(*self)};                                                \
+        *self = LIST{};                                                                              \
         return (ITEM_BLOB *)ptr;                                                                     \
     }                                                                                                \
     uint64_t lib_ruby_parser__external__list__##NS##__get_len(const LIST_BLOB *self_blob)            \
@@ -396,6 +404,11 @@ extern "C"
     {                                                                                                \
         const LIST *self = (const LIST *)self_blob;                                                  \
         return self->capacity();                                                                     \
+    }                                                                                                \
+    void lib_ruby_parser__external__list__##NS##__reserve(LIST_BLOB *self_blob, uint64_t additional) \
+    {                                                                                                \
+        LIST *self = (LIST *)self_blob;                                                              \
+        self->reserve(self->capacity() + additional);                                                \
     }
 
     DECLARE_REPACK_LIST_OF(Byte);
