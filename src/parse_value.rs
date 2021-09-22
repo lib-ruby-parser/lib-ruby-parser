@@ -110,7 +110,7 @@ pub(crate) mod OptEnsure {
 
     pub(crate) fn from(value: ParseValue) -> Option<Ensure> {
         match value {
-            ParseValue::OptEnsure(value) => *value,
+            ParseValue::OptEnsure(value) => value.map(|v| *v),
             other => unreachable!("expected OptEnsure, got {:?}", other),
         }
     }
@@ -127,7 +127,7 @@ pub(crate) mod OptElse {
 
     pub(crate) fn from(value: ParseValue) -> Option<Else> {
         match value {
-            ParseValue::OptElse(value) => *value,
+            ParseValue::OptElse(value) => value.map(|v| *v),
             other => unreachable!("expected OptElse, got {:?}", other),
         }
     }
@@ -481,10 +481,10 @@ pub(crate) enum ParseValue {
     Superclass(Box<Superclass>),
 
     /* For custom opt_ensure rule */
-    OptEnsure(Box<Option<Ensure>>),
+    OptEnsure(Option<Box<Ensure>>),
 
     /* For custom opt_else rule */
-    OptElse(Box<Option<Else>>),
+    OptElse(Option<Box<Else>>),
 
     /* For custom exc_var rule */
     ExcVar(Box<ExcVar>),
@@ -562,10 +562,10 @@ impl ParseValue {
         Self::Superclass(Box::new(value))
     }
     pub(crate) fn new_opt_ensure(value: Option<Ensure>) -> Self {
-        Self::OptEnsure(Box::new(value))
+        Self::OptEnsure(value.map(Box::new))
     }
     pub(crate) fn new_opt_else(value: Option<Else>) -> Self {
-        Self::OptElse(Box::new(value))
+        Self::OptElse(value.map(Box::new))
     }
     pub(crate) fn new_exc_var(value: ExcVar) -> Self {
         Self::ExcVar(Box::new(value))
