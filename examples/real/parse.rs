@@ -49,7 +49,6 @@ impl From<&Args> for Option<InputFiles> {
 #[allow(dead_code)]
 pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    println!("args = {:?}", args);
 
     if args.print_build_info {
         BuildInfo::print()
