@@ -136,7 +136,7 @@ If you use it from GitHub directly you also need Bison (because `parser.rs` is u
 You can use `parse` example:
 
 ```sh
-$ cargo run --features run-examples --example parse -- --print=N --run-profiler "<pattern>"
+$ cargo run --features run-examples --example parse -- --print=N --run-profiler=1 "<pattern>"
 ```
 
 ## Benchmarking

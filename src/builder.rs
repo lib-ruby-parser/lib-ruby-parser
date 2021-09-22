@@ -54,7 +54,7 @@ pub(crate) enum LogicalOp {
 #[derive(Debug, Clone)]
 pub(crate) enum PKwLabel {
     PlainLabel(Ptr<Token>),
-    QuotedLabel((Ptr<Token>, List<Node>, Ptr<Token>)),
+    QuotedLabel((Ptr<Token>, Box<List<Node>>, Ptr<Token>)),
 }
 
 #[derive(Debug, Clone)]
@@ -197,7 +197,7 @@ impl Builder {
         &self,
         begin_t: Maybe<Ptr<Token>>,
         value: Bytes,
-        parts: List<Node>,
+        parts: Box<List<Node>>,
         end_t: Maybe<Ptr<Token>>,
     ) -> Ptr<Node> {
         if self.is_heredoc(&begin_t) {
@@ -208,7 +208,7 @@ impl Builder {
             } = self.heredoc_map(&begin_t, &parts, &end_t);
 
             Ptr::new(Node::new_heredoc(
-                parts,
+                *parts,
                 heredoc_body_l,
                 heredoc_end_l,
                 expression_l,
@@ -238,7 +238,7 @@ impl Builder {
     pub(crate) fn string_compose(
         &self,
         begin_t: Maybe<Ptr<Token>>,
-        parts: List<Node>,
+        parts: Box<List<Node>>,
         end_t: Maybe<Ptr<Token>>,
     ) -> Ptr<Node> {
         if parts.is_empty() {
@@ -276,7 +276,7 @@ impl Builder {
             } = self.heredoc_map(&begin_t, &parts, &end_t);
 
             Ptr::new(Node::new_heredoc(
-                parts,
+                *parts,
                 heredoc_body_l,
                 heredoc_end_l,
                 expression_l,
@@ -288,7 +288,7 @@ impl Builder {
                 expression_l,
             } = self.collection_map(&begin_t, &parts, &end_t);
 
-            Ptr::new(Node::new_dstr(parts, begin_l, end_l, expression_l))
+            Ptr::new(Node::new_dstr(*parts, begin_l, end_l, expression_l))
         }
     }
 
@@ -341,7 +341,7 @@ impl Builder {
     pub(crate) fn symbol_compose(
         &self,
         begin_t: Ptr<Token>,
-        parts: List<Node>,
+        parts: Box<List<Node>>,
         end_t: Ptr<Token>,
     ) -> Ptr<Node> {
         if parts.len() == 1 && parts.first().unwrap().is_str() {
@@ -363,7 +363,7 @@ impl Builder {
             end_l,
             expression_l,
         } = self.collection_map(&Maybe::some(begin_t), &parts, &Maybe::some(end_t));
-        Ptr::new(Node::new_dsym(parts, begin_l, end_l, expression_l))
+        Ptr::new(Node::new_dsym(*parts, begin_l, end_l, expression_l))
     }
 
     // Executable strings
@@ -371,7 +371,7 @@ impl Builder {
     pub(crate) fn xstring_compose(
         &self,
         begin_t: Ptr<Token>,
-        parts: List<Node>,
+        parts: Box<List<Node>>,
         end_t: Ptr<Token>,
     ) -> Ptr<Node> {
         let begin_l = self.loc(&begin_t);
@@ -381,7 +381,7 @@ impl Builder {
             let expression_l = begin_l;
 
             Ptr::new(Node::new_x_heredoc(
-                parts,
+                *parts,
                 heredoc_body_l,
                 heredoc_end_l,
                 expression_l,
@@ -390,7 +390,7 @@ impl Builder {
             let end_l = self.loc(&end_t);
             let expression_l = begin_l.join(&end_l);
 
-            Ptr::new(Node::new_xstr(parts, begin_l, end_l, expression_l))
+            Ptr::new(Node::new_xstr(*parts, begin_l, end_l, expression_l))
         }
     }
 
@@ -514,7 +514,7 @@ impl Builder {
     pub(crate) fn regexp_compose(
         &self,
         begin_t: Ptr<Token>,
-        parts: List<Node>,
+        parts: Box<List<Node>>,
         end_t: Ptr<Token>,
         options: Maybe<Ptr<Node>>,
     ) -> Ptr<Node> {
@@ -538,7 +538,7 @@ impl Builder {
         }
 
         Ptr::new(Node::new_regexp(
-            parts,
+            *parts,
             options,
             begin_l,
             end_l,
@@ -551,7 +551,7 @@ impl Builder {
     pub(crate) fn array(
         &self,
         begin_t: Maybe<Ptr<Token>>,
-        elements: List<Node>,
+        elements: Box<List<Node>>,
         end_t: Maybe<Ptr<Token>>,
     ) -> Ptr<Node> {
         let CollectionMap {
@@ -560,7 +560,7 @@ impl Builder {
             expression_l,
         } = self.collection_map(&begin_t, &elements, &end_t);
 
-        Ptr::new(Node::new_array(elements, begin_l, end_l, expression_l))
+        Ptr::new(Node::new_array(*elements, begin_l, end_l, expression_l))
     }
 
     pub(crate) fn splat(&self, star_t: Ptr<Token>, value: Maybe<Ptr<Node>>) -> Ptr<Node> {
@@ -570,7 +570,7 @@ impl Builder {
         Ptr::new(Node::new_splat(value, operator_l, expression_l))
     }
 
-    pub(crate) fn word(&self, parts: List<Node>) -> Ptr<Node> {
+    pub(crate) fn word(&self, parts: Box<List<Node>>) -> Ptr<Node> {
         if parts.len() == 1 && (parts[0].is_str() || parts[0].is_dstr()) {
             let part = parts
                 .into_iter()
@@ -585,20 +585,20 @@ impl Builder {
             expression_l,
         } = self.collection_map(&Maybe::none(), &parts, &Maybe::none());
 
-        Ptr::new(Node::new_dstr(parts, begin_l, end_l, expression_l))
+        Ptr::new(Node::new_dstr(*parts, begin_l, end_l, expression_l))
     }
 
     pub(crate) fn words_compose(
         &self,
         begin_t: Ptr<Token>,
-        elements: List<Node>,
+        elements: Box<List<Node>>,
         end_t: Ptr<Token>,
     ) -> Ptr<Node> {
         let begin_l = self.loc(&begin_t);
         let end_l = self.loc(&end_t);
         let expression_l = begin_l.join(&end_l);
         Ptr::new(Node::new_array(
-            elements,
+            *elements,
             Maybe::some(begin_l),
             Maybe::some(end_l),
             expression_l,
@@ -608,7 +608,7 @@ impl Builder {
     pub(crate) fn symbols_compose(
         &self,
         begin_t: Ptr<Token>,
-        parts: List<Node>,
+        parts: Box<List<Node>>,
         end_t: Ptr<Token>,
     ) -> Ptr<Node> {
         let parts = parts
@@ -677,7 +677,7 @@ impl Builder {
     pub(crate) fn pair_quoted(
         &self,
         begin_t: Ptr<Token>,
-        parts: List<Node>,
+        parts: Box<List<Node>>,
         end_t: Ptr<Token>,
         value: Ptr<Node>,
     ) -> Ptr<Node> {
@@ -715,7 +715,7 @@ impl Builder {
     pub(crate) fn associate(
         &self,
         begin_t: Maybe<Ptr<Token>>,
-        pairs: List<Node>,
+        pairs: Box<List<Node>>,
         end_t: Maybe<Ptr<Token>>,
     ) -> Ptr<Node> {
         let CollectionMap {
@@ -724,7 +724,7 @@ impl Builder {
             expression_l,
         } = self.collection_map(&begin_t, &pairs, &end_t);
 
-        Ptr::new(Node::new_hash(pairs, begin_l, end_l, expression_l))
+        Ptr::new(Node::new_hash(*pairs, begin_l, end_l, expression_l))
     }
 
     // Ranges
@@ -1175,7 +1175,7 @@ impl Builder {
     pub(crate) fn multi_lhs(
         &self,
         begin_t: Maybe<Ptr<Token>>,
-        items: List<Node>,
+        items: Box<List<Node>>,
         end_t: Maybe<Ptr<Token>>,
     ) -> Ptr<Node> {
         let CollectionMap {
@@ -1184,7 +1184,7 @@ impl Builder {
             expression_l,
         } = self.collection_map(&begin_t, &items, &end_t);
 
-        Ptr::new(Node::new_mlhs(items, begin_l, end_l, expression_l))
+        Ptr::new(Node::new_mlhs(*items, begin_l, end_l, expression_l))
     }
 
     pub(crate) fn multi_assign(
@@ -1397,10 +1397,10 @@ impl Builder {
         )))
     }
 
-    pub(crate) fn undef_method(&self, undef_t: Ptr<Token>, names: List<Node>) -> Ptr<Node> {
+    pub(crate) fn undef_method(&self, undef_t: Ptr<Token>, names: Box<List<Node>>) -> Ptr<Node> {
         let keyword_l = self.loc(&undef_t);
         let expression_l = keyword_l.maybe_join(&collection_expr(&names));
-        Ptr::new(Node::new_undef(names, keyword_l, expression_l))
+        Ptr::new(Node::new_undef(*names, keyword_l, expression_l))
     }
 
     pub(crate) fn alias(&self, alias_t: Ptr<Token>, to: Ptr<Node>, from: Ptr<Node>) -> Ptr<Node> {
@@ -1416,7 +1416,7 @@ impl Builder {
     pub(crate) fn args(
         &self,
         begin_t: Maybe<Ptr<Token>>,
-        args: List<Node>,
+        args: Box<List<Node>>,
         end_t: Maybe<Ptr<Token>>,
     ) -> Maybe<Ptr<Node>> {
         self.check_duplicate_args(&args, &mut HashMap::new());
@@ -1431,7 +1431,12 @@ impl Builder {
             expression_l,
         } = self.collection_map(&begin_t, &args, &end_t);
 
-        Maybe::some(Ptr::new(Node::new_args(args, expression_l, begin_l, end_l)))
+        Maybe::some(Ptr::new(Node::new_args(
+            *args,
+            expression_l,
+            begin_l,
+            end_l,
+        )))
     }
 
     pub(crate) fn forward_only_args(
@@ -1645,7 +1650,7 @@ impl Builder {
         dot_t: Maybe<Ptr<Token>>,
         selector_t: Maybe<Ptr<Token>>,
         lparen_t: Maybe<Ptr<Token>>,
-        mut args: List<Node>,
+        mut args: Box<List<Node>>,
         rparen_t: Maybe<Ptr<Token>>,
     ) -> Ptr<Node> {
         let begin_l = maybe_boxed_node_expr(&receiver)
@@ -1677,7 +1682,7 @@ impl Builder {
             MethodCallType::Send => Ptr::new(Node::new_send(
                 receiver,
                 method_name,
-                args,
+                *args,
                 dot_l,
                 selector_l,
                 begin_l,
@@ -1689,7 +1694,7 @@ impl Builder {
             MethodCallType::CSend => Ptr::new(Node::new_c_send(
                 receiver.expect("csend node must have a receiver"),
                 method_name,
-                args,
+                *args,
                 dot_l.expect("csend node must have &."),
                 selector_l,
                 begin_l,
@@ -1892,7 +1897,7 @@ impl Builder {
         &self,
         recv: Ptr<Node>,
         lbrack_t: Ptr<Token>,
-        mut indexes: List<Node>,
+        mut indexes: Box<List<Node>>,
         rbrack_t: Ptr<Token>,
     ) -> Ptr<Node> {
         let begin_l = self.loc(&lbrack_t);
@@ -1901,14 +1906,20 @@ impl Builder {
 
         self.rewrite_hash_args_to_kwargs(&mut indexes);
 
-        Ptr::new(Node::new_index(recv, indexes, begin_l, end_l, expression_l))
+        Ptr::new(Node::new_index(
+            recv,
+            *indexes,
+            begin_l,
+            end_l,
+            expression_l,
+        ))
     }
 
     pub(crate) fn index_asgn(
         &self,
         recv: Ptr<Node>,
         lbrack_t: Ptr<Token>,
-        indexes: List<Node>,
+        indexes: Box<List<Node>>,
         rbrack_t: Ptr<Token>,
     ) -> Ptr<Node> {
         let begin_l = self.loc(&lbrack_t);
@@ -1917,7 +1928,7 @@ impl Builder {
 
         Ptr::new(Node::new_index_asgn(
             recv,
-            indexes,
+            *indexes,
             Maybe::none(),
             begin_l,
             end_l,
@@ -2183,7 +2194,7 @@ impl Builder {
     pub(crate) fn when(
         &self,
         when_t: Ptr<Token>,
-        patterns: List<Node>,
+        patterns: Box<List<Node>>,
         then_t: Ptr<Token>,
         body: Maybe<Ptr<Node>>,
     ) -> Ptr<Node> {
@@ -2196,7 +2207,7 @@ impl Builder {
         let expression_l = when_l.join(&expr_end_l);
 
         Ptr::new(Node::new_when(
-            patterns,
+            *patterns,
             body,
             when_l,
             begin_l,
@@ -2208,7 +2219,7 @@ impl Builder {
         &self,
         case_t: Ptr<Token>,
         expr: Maybe<Ptr<Node>>,
-        when_bodies: List<Node>,
+        when_bodies: Box<List<Node>>,
         else_t: Maybe<Ptr<Token>>,
         else_body: Maybe<Ptr<Node>>,
         end_t: Ptr<Token>,
@@ -2220,7 +2231,7 @@ impl Builder {
 
         Ptr::new(Node::new_case(
             expr,
-            when_bodies,
+            *when_bodies,
             else_body,
             keyword_l,
             else_l,
@@ -2340,7 +2351,7 @@ impl Builder {
         type_: KeywordCmd,
         keyword_t: Ptr<Token>,
         lparen_t: Maybe<Ptr<Token>>,
-        mut args: List<Node>,
+        mut args: Box<List<Node>>,
         rparen_t: Maybe<Ptr<Token>>,
     ) -> Result<Ptr<Node>, ()> {
         let keyword_l = self.loc(&keyword_t);
@@ -2372,7 +2383,7 @@ impl Builder {
         let expression_l = keyword_l.join(&expr_end_l);
 
         let result = match type_ {
-            KeywordCmd::Break => Node::new_break(args, keyword_l, expression_l),
+            KeywordCmd::Break => Node::new_break(*args, keyword_l, expression_l),
             KeywordCmd::Defined => Node::new_defined(
                 Ptr::new(args.take_first()),
                 keyword_l,
@@ -2380,12 +2391,12 @@ impl Builder {
                 end_l,
                 expression_l,
             ),
-            KeywordCmd::Next => Node::new_next(args, keyword_l, expression_l),
+            KeywordCmd::Next => Node::new_next(*args, keyword_l, expression_l),
             KeywordCmd::Redo => Node::new_redo(expression_l),
             KeywordCmd::Retry => Node::new_retry(expression_l),
-            KeywordCmd::Return => Node::new_return(args, keyword_l, expression_l),
-            KeywordCmd::Super => Node::new_super(args, keyword_l, begin_l, end_l, expression_l),
-            KeywordCmd::Yield => Node::new_yield(args, keyword_l, begin_l, end_l, expression_l),
+            KeywordCmd::Return => Node::new_return(*args, keyword_l, expression_l),
+            KeywordCmd::Super => Node::new_super(*args, keyword_l, begin_l, end_l, expression_l),
+            KeywordCmd::Yield => Node::new_yield(*args, keyword_l, begin_l, end_l, expression_l),
             KeywordCmd::Zsuper => Node::new_z_super(expression_l),
         };
 
@@ -2471,7 +2482,7 @@ impl Builder {
     pub(crate) fn begin_body(
         &self,
         compound_stmt: Maybe<Ptr<Node>>,
-        rescue_bodies: List<Node>,
+        rescue_bodies: Box<List<Node>>,
         else_: Option<(Ptr<Token>, Maybe<Ptr<Node>>)>,
         ensure: Option<(Ptr<Token>, Maybe<Ptr<Node>>)>,
     ) -> Maybe<Ptr<Node>> {
@@ -2490,7 +2501,7 @@ impl Builder {
 
                 result = Maybe::some(Ptr::new(Node::new_rescue(
                     compound_stmt,
-                    rescue_bodies,
+                    *rescue_bodies,
                     else_,
                     Maybe::some(else_l),
                     expression_l,
@@ -2508,7 +2519,7 @@ impl Builder {
 
                 result = Maybe::some(Ptr::new(Node::new_rescue(
                     compound_stmt,
-                    rescue_bodies,
+                    *rescue_bodies,
                     Maybe::none(),
                     else_l,
                     expression_l,
@@ -2585,7 +2596,7 @@ impl Builder {
     // Expression grouping
     //
 
-    pub(crate) fn compstmt(&self, statements: List<Node>) -> Maybe<Ptr<Node>> {
+    pub(crate) fn compstmt(&self, statements: Box<List<Node>>) -> Maybe<Ptr<Node>> {
         match &statements[..] {
             [] => Maybe::none(),
             [_] => Maybe::some(Ptr::new(statements.take_first())),
@@ -2597,7 +2608,7 @@ impl Builder {
                 } = self.collection_map(&Maybe::none(), &statements, &Maybe::none());
 
                 Maybe::some(Ptr::new(Node::new_begin(
-                    statements,
+                    *statements,
                     begin_l,
                     end_l,
                     expression_l,
@@ -2696,7 +2707,7 @@ impl Builder {
         &self,
         case_t: Ptr<Token>,
         expr: Ptr<Node>,
-        in_bodies: List<Node>,
+        in_bodies: Box<List<Node>>,
         else_t: Maybe<Ptr<Token>>,
         else_body: Maybe<Ptr<Node>>,
         end_t: Ptr<Token>,
@@ -2713,7 +2724,7 @@ impl Builder {
 
         Ptr::new(Node::new_case_match(
             expr,
-            in_bodies,
+            *in_bodies,
             else_body,
             keyword_l,
             else_l,
@@ -2822,7 +2833,7 @@ impl Builder {
     pub(crate) fn match_hash_var_from_str(
         &self,
         begin_t: Ptr<Token>,
-        mut strings: List<Node>,
+        mut strings: Box<List<Node>>,
         end_t: Ptr<Token>,
     ) -> Result<Ptr<Node>, ()> {
         if strings.len() != 1 {
@@ -2874,7 +2885,7 @@ impl Builder {
         } else if string.is_begin() {
             let internal::Begin { statements, .. } = string.into_begin().into_internal();
 
-            self.match_hash_var_from_str(begin_t, statements, end_t)?
+            self.match_hash_var_from_str(begin_t, Box::new(statements), end_t)?
         } else {
             self.error(
                 DiagnosticMessage::new_symbol_literal_with_interpolation(),
@@ -2911,7 +2922,7 @@ impl Builder {
     pub(crate) fn hash_pattern(
         &self,
         lbrace_t: Maybe<Ptr<Token>>,
-        kwargs: List<Node>,
+        kwargs: Box<List<Node>>,
         rbrace_t: Maybe<Ptr<Token>>,
     ) -> Ptr<Node> {
         let CollectionMap {
@@ -2920,13 +2931,18 @@ impl Builder {
             expression_l,
         } = self.collection_map(&lbrace_t, &kwargs, &rbrace_t);
 
-        Ptr::new(Node::new_hash_pattern(kwargs, begin_l, end_l, expression_l))
+        Ptr::new(Node::new_hash_pattern(
+            *kwargs,
+            begin_l,
+            end_l,
+            expression_l,
+        ))
     }
 
     pub(crate) fn array_pattern(
         &self,
         lbrack_t: Maybe<Ptr<Token>>,
-        elements: List<Node>,
+        elements: Box<List<Node>>,
         trailing_comma: Maybe<Ptr<Token>>,
         rbrack_t: Maybe<Ptr<Token>>,
     ) -> Ptr<Node> {
@@ -2949,14 +2965,14 @@ impl Builder {
 
         if trailing_comma.is_some() {
             Ptr::new(Node::new_array_pattern_with_tail(
-                elements,
+                *elements,
                 begin_l,
                 end_l,
                 expression_l,
             ))
         } else {
             Ptr::new(Node::new_array_pattern(
-                elements,
+                *elements,
                 begin_l,
                 end_l,
                 expression_l,
@@ -2967,7 +2983,7 @@ impl Builder {
     pub(crate) fn find_pattern(
         &self,
         lbrack_t: Maybe<Ptr<Token>>,
-        elements: List<Node>,
+        elements: Box<List<Node>>,
         rbrack_t: Maybe<Ptr<Token>>,
     ) -> Ptr<Node> {
         let CollectionMap {
@@ -2977,7 +2993,7 @@ impl Builder {
         } = self.collection_map(&lbrack_t, &elements, &rbrack_t);
 
         Ptr::new(Node::new_find_pattern(
-            elements,
+            *elements,
             begin_l,
             end_l,
             expression_l,

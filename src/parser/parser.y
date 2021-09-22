@@ -377,21 +377,21 @@ use crate::parser_options::InternalParserOptions;
 
        top_stmts: none
                     {
-                      $$ = Value::NodeList( list![] );
+                      $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | top_stmt
                     {
-                      $$ = Value::NodeList( list![ $<Node>1 ] );
+                      $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | top_stmts terms top_stmt
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
-                        $$ = Value::NodeList(nodes);
+                        $$ = Value::NodeList( nodes );
                     }
                 | error top_stmt
                     {
-                      $$ = Value::NodeList( list![ $<Node>2 ] );
+                      $$ = Value::NodeList( Box::new(list![ $<Node>2 ]) );
                     }
                 ;
 
@@ -473,11 +473,11 @@ use crate::parser_options::InternalParserOptions;
 
            stmts: none
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | stmt_or_begin
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | stmts terms stmt_or_begin
                     {
@@ -487,7 +487,7 @@ use crate::parser_options::InternalParserOptions;
                     }
                 | error
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 ;
 
@@ -607,7 +607,7 @@ use crate::parser_options::InternalParserOptions;
                         $$ = Value::Node(
                             self.builder.begin_body(
                                 Maybe::some($<BoxedNode>1),
-                                list![rescue_body.unptr()],
+                                Box::new( list![rescue_body.unptr()] ),
                                 None,
                                 None,
                             ).expect("expected begin_body to return Maybe::some (compound_stmt was given)")
@@ -678,7 +678,7 @@ use crate::parser_options::InternalParserOptions;
 
                         let begin_body = self.builder.begin_body(
                             Maybe::some(mrhs_arg),
-                            list![ rescue_body.unptr() ],
+                            Box::new( list![ rescue_body.unptr() ] ),
                             None,
                             None,
                         ).expect("expected begin_body to return Maybe::some (compound_stmt was given)");
@@ -751,7 +751,7 @@ use crate::parser_options::InternalParserOptions;
                                     Maybe::some($<Token>2),
                                     Maybe::some($<Token>3),
                                     Maybe::none(),
-                                    list![],
+                                    Box::new( list![] ),
                                     Maybe::none()
                                 ),
                                 $<Token>4,
@@ -768,7 +768,7 @@ use crate::parser_options::InternalParserOptions;
                                     Maybe::some($<Token>2),
                                     Maybe::some($<Token>3),
                                     Maybe::none(),
-                                    list![],
+                                    Box::new( list![] ),
                                     Maybe::none()
                                 ),
                                 $<Token>4,
@@ -802,7 +802,7 @@ use crate::parser_options::InternalParserOptions;
                                     Maybe::some($<Token>2),
                                     Maybe::some($<Token>3),
                                     Maybe::none(),
-                                    list![],
+                                    Box::new( list![] ),
                                     Maybe::none()
                                 ),
                                 $<Token>4,
@@ -845,7 +845,7 @@ use crate::parser_options::InternalParserOptions;
                         $$ = Value::Node(
                             self.builder.begin_body(
                                 Maybe::some(command_call),
-                                list![ rescue_body.unptr() ],
+                                Box::new( list![ rescue_body.unptr() ] ),
                                 None,
                                 None,
                             ).expect("expected begin_body to return Maybe::some (compound_stmt was given)")
@@ -1295,8 +1295,8 @@ use crate::parser_options::InternalParserOptions;
                 | tLPAREN mlhs_inner rparen
                     {
                         let mlhs_inner = $<Node>2;
-                        let mlhs_items: List<Node> = if mlhs_inner.is_mlhs() {
-                            mlhs_inner.into_mlhs().into_internal().items
+                        let mlhs_items = if mlhs_inner.is_mlhs() {
+                            Box::new(mlhs_inner.into_mlhs().into_internal().items)
                         } else {
                             unreachable!("unsupported mlhs item {:?}", mlhs_inner)
                         };
@@ -1359,7 +1359,16 @@ use crate::parser_options::InternalParserOptions;
                     }
                 | tSTAR mlhs_node
                     {
-                        $$ = Value::NodeList(list![ self.builder.splat($<Token>1, Maybe::some($<BoxedNode>2)).unptr() ]);
+                        $$ = Value::NodeList(
+                            Box::new(
+                                list![
+                                    self.builder.splat(
+                                        $<Token>1,
+                                        Maybe::some($<BoxedNode>2)
+                                    ).unptr()
+                                ]
+                            )
+                        );
                     }
                 | tSTAR mlhs_node tCOMMA mlhs_post
                     {
@@ -1367,7 +1376,7 @@ use crate::parser_options::InternalParserOptions;
                         let splat = self.builder.splat($<Token>1, Maybe::some($<BoxedNode>2));
                         let mut mlhs_post = $<NodeList>4;
 
-                        nodes = List::with_capacity(1 + mlhs_post.len());
+                        nodes = Box::new(List::with_capacity(1 + mlhs_post.len()));
                         nodes.push(splat.unptr());
                         nodes.append(&mut mlhs_post);
 
@@ -1375,7 +1384,16 @@ use crate::parser_options::InternalParserOptions;
                     }
                 | tSTAR
                     {
-                        $$ = Value::NodeList(list![ self.builder.splat($<Token>1, Maybe::none()).unptr() ]);
+                        $$ = Value::NodeList(
+                            Box::new(
+                                list![
+                                    self.builder.splat(
+                                        $<Token>1,
+                                        Maybe::none()
+                                    ).unptr()
+                                ]
+                            )
+                        );
                     }
                 | tSTAR tCOMMA mlhs_post
                     {
@@ -1383,7 +1401,7 @@ use crate::parser_options::InternalParserOptions;
                         let splat = self.builder.splat($<Token>1, Maybe::none());
                         let mut mlhs_post = $<NodeList>3;
 
-                        nodes = List::with_capacity(1 + mlhs_post.len());
+                        nodes = Box::new(List::with_capacity(1 + mlhs_post.len()));
                         nodes.push(splat.unptr());
                         nodes.append(&mut mlhs_post);
 
@@ -1409,7 +1427,7 @@ use crate::parser_options::InternalParserOptions;
 
        mlhs_head: mlhs_item tCOMMA
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ]);
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | mlhs_head mlhs_item tCOMMA
                     {
@@ -1421,7 +1439,7 @@ use crate::parser_options::InternalParserOptions;
 
        mlhs_post: mlhs_item
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | mlhs_post tCOMMA mlhs_item
                     {
@@ -1684,7 +1702,7 @@ use crate::parser_options::InternalParserOptions;
 
       undef_list: fitem
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | undef_list tCOMMA
                     {
@@ -1818,7 +1836,7 @@ use crate::parser_options::InternalParserOptions;
                                     Maybe::some($<Token>2),
                                     Maybe::some($<Token>3),
                                     Maybe::none(),
-                                    list![],
+                                    Box::new( list![] ),
                                     Maybe::none()
                                 ),
                                 $<Token>4,
@@ -1835,7 +1853,7 @@ use crate::parser_options::InternalParserOptions;
                                     Maybe::some($<Token>2),
                                     Maybe::some($<Token>3),
                                     Maybe::none(),
-                                    list![],
+                                    Box::new( list![] ),
                                     Maybe::none()
                                 ),
                                 $<Token>4,
@@ -1852,7 +1870,7 @@ use crate::parser_options::InternalParserOptions;
                                     Maybe::some($<Token>2),
                                     Maybe::some($<Token>3),
                                     Maybe::none(),
-                                    list![],
+                                    Box::new( list![] ),
                                     Maybe::none()
                                 ),
                                 $<Token>4,
@@ -2177,7 +2195,7 @@ use crate::parser_options::InternalParserOptions;
                                 KeywordCmd::Defined,
                                 $<Token>1,
                                 Maybe::none(),
-                                list![ $<Node>3 ],
+                                Box::new( list![ $<Node>3 ] ),
                                 Maybe::none()
                             )?
                         );
@@ -2234,7 +2252,7 @@ use crate::parser_options::InternalParserOptions;
 
                         let method_body = self.builder.begin_body(
                             Maybe::some($<BoxedNode>4),
-                            list![ rescue_body.unptr() ],
+                            Box::new( list![ rescue_body.unptr() ] ),
                             None,
                             None,
                         );
@@ -2294,7 +2312,7 @@ use crate::parser_options::InternalParserOptions;
 
                         let method_body = self.builder.begin_body(
                             Maybe::some($<BoxedNode>4),
-                            list![ rescue_body.unptr() ],
+                            Box::new( list![ rescue_body.unptr() ] ),
                             None,
                             None,
                         );
@@ -2378,7 +2396,7 @@ use crate::parser_options::InternalParserOptions;
 
        aref_args: none
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new( list![] ) );
                     }
                 | args trailer
                     {
@@ -2388,16 +2406,26 @@ use crate::parser_options::InternalParserOptions;
                     {
                         let mut nodes = $<NodeList>1;
                         nodes.push(
-                            self.builder.associate(Maybe::none(), $<NodeList>3, Maybe::none()).unptr()
+                            self.builder.associate(
+                                Maybe::none(),
+                                $<NodeList>3,
+                                Maybe::none()
+                            ).unptr()
                         );
                         $$ = Value::NodeList(nodes);
                     }
                 | assocs trailer
                     {
                         $$ = Value::NodeList(
-                            list![
-                                self.builder.associate(Maybe::none(), $<NodeList>1, Maybe::none()).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    self.builder.associate(
+                                        Maybe::none(),
+                                        $<NodeList>1,
+                                        Maybe::none()
+                                    ).unptr()
+                                ]
+                            )
                         );
                     }
                 ;
@@ -2425,7 +2453,7 @@ use crate::parser_options::InternalParserOptions;
                         $$ = Value::Node(
                             self.builder.begin_body(
                                 Maybe::some(arg),
-                                list![ rescue_body.unptr() ],
+                                Box::new( list![ rescue_body.unptr() ] ),
                                 None,
                                 None,
                             ).expect("expected begin_body to return Maybe::some (compound_stmt was given)")
@@ -2469,7 +2497,7 @@ use crate::parser_options::InternalParserOptions;
                         $$ = Value::new_paren_args(
                             ParenArgs {
                                 begin_t: $<Token>1,
-                                args: list![ self.builder.forwarded_args($<Token>2).unptr() ],
+                                args: Box::new( list![ self.builder.forwarded_args($<Token>2).unptr() ] ),
                                 end_t: $<Token>3
                             }
                         );
@@ -2481,7 +2509,7 @@ use crate::parser_options::InternalParserOptions;
                         $$ = Value::new_opt_paren_args(
                             OptParenArgs {
                                 begin_t: Maybe::none(),
-                                args: list![],
+                                args: Box::new( list![] ),
                                 end_t: Maybe::none()
                             }
                         );
@@ -2501,7 +2529,7 @@ use crate::parser_options::InternalParserOptions;
 
    opt_call_args: none
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | call_args
                     {
@@ -2520,9 +2548,15 @@ use crate::parser_options::InternalParserOptions;
                 | assocs tCOMMA
                     {
                         $$ = Value::NodeList(
-                            list![
-                                self.builder.associate(Maybe::none(), $<NodeList>1, Maybe::none()).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    self.builder.associate(
+                                        Maybe::none(),
+                                        $<NodeList>1,
+                                        Maybe::none()
+                                    ).unptr()
+                                ]
+                            )
                         );
                     }
                 ;
@@ -2531,7 +2565,7 @@ use crate::parser_options::InternalParserOptions;
                     {
                         let command = $<Node>1;
                         self.value_expr(&command)?;
-                        $$ = Value::NodeList( list![ command ] );
+                        $$ = Value::NodeList( Box::new(list![ command ]) );
                     }
                 | args opt_block_arg
                     {
@@ -2546,7 +2580,7 @@ use crate::parser_options::InternalParserOptions;
                         let hash = self.builder.associate(Maybe::none(), $<NodeList>1, Maybe::none());
                         let mut opt_block_arg = $<NodeList>2;
 
-                        nodes = List::with_capacity(1 + opt_block_arg.len());
+                        nodes = Box::new(List::with_capacity(1 + opt_block_arg.len()));
                         nodes.push(hash.unptr());
                         nodes.append(&mut opt_block_arg);
 
@@ -2566,7 +2600,7 @@ use crate::parser_options::InternalParserOptions;
                     }
                 | block_arg
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 ;
 
@@ -2611,24 +2645,29 @@ use crate::parser_options::InternalParserOptions;
 
    opt_block_arg: tCOMMA block_arg
                     {
-                        $$ = Value::NodeList( list![ $<Node>2 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>2 ]) );
                     }
                 | none
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 ;
 
             args: arg_value
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | tSTAR arg_value
                     {
                         $$ = Value::NodeList(
-                            list![
-                                self.builder.splat($<Token>1, Maybe::some($<BoxedNode>2)).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    self.builder.splat(
+                                        $<Token>1,
+                                        Maybe::some($<BoxedNode>2)
+                                    ).unptr()
+                                ]
+                            )
                         );
                     }
                 | args tCOMMA arg_value
@@ -2674,9 +2713,14 @@ use crate::parser_options::InternalParserOptions;
                 | tSTAR arg_value
                     {
                         $$ = Value::NodeList(
-                            list![
-                                self.builder.splat($<Token>1, Maybe::some($<BoxedNode>2)).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    self.builder.splat(
+                                        $<Token>1,
+                                        Maybe::some($<BoxedNode>2)
+                                    ).unptr()
+                                ]
+                            )
                         );
                     }
                 ;
@@ -2729,7 +2773,7 @@ use crate::parser_options::InternalParserOptions;
                                 Maybe::none(),
                                 Maybe::some($<Token>1),
                                 Maybe::none(),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::none()
                             )
                         );
@@ -2821,7 +2865,7 @@ use crate::parser_options::InternalParserOptions;
                                 KeywordCmd::Return,
                                 $<Token>1,
                                 Maybe::none(),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::none()
                             )?
                         );
@@ -2845,7 +2889,7 @@ use crate::parser_options::InternalParserOptions;
                                 KeywordCmd::Yield,
                                 $<Token>1,
                                 Maybe::some($<Token>2),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::some($<Token>3)
                             )?
                         );
@@ -2857,7 +2901,7 @@ use crate::parser_options::InternalParserOptions;
                                 KeywordCmd::Yield,
                                 $<Token>1,
                                 Maybe::none(),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::none()
                             )?
                         );
@@ -2869,7 +2913,7 @@ use crate::parser_options::InternalParserOptions;
                                 KeywordCmd::Defined,
                                 $<Token>1,
                                 Maybe::some($<Token>3),
-                                list![ $<Node>4 ],
+                                Box::new( list![ $<Node>4 ] ),
                                 Maybe::some($<Token>5)
                             )?
                         );
@@ -2903,7 +2947,7 @@ use crate::parser_options::InternalParserOptions;
                             Maybe::none(),
                             Maybe::some($<Token>1),
                             Maybe::none(),
-                            list![],
+                            Box::new( list![] ),
                             Maybe::none()
                         );
                         let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>2;
@@ -3232,7 +3276,7 @@ use crate::parser_options::InternalParserOptions;
                                 KeywordCmd::Break,
                                 $<Token>1,
                                 Maybe::none(),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::none()
                             )?
                         );
@@ -3244,7 +3288,7 @@ use crate::parser_options::InternalParserOptions;
                                 KeywordCmd::Next,
                                 $<Token>1,
                                 Maybe::none(),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::none()
                             )?
                         );
@@ -3256,7 +3300,7 @@ use crate::parser_options::InternalParserOptions;
                                 KeywordCmd::Redo,
                                 $<Token>1,
                                 Maybe::none(),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::none()
                             )?
                         );
@@ -3268,7 +3312,7 @@ use crate::parser_options::InternalParserOptions;
                                 KeywordCmd::Retry,
                                 $<Token>1,
                                 Maybe::none(),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::none()
                             )?
                         );
@@ -3500,7 +3544,7 @@ use crate::parser_options::InternalParserOptions;
 
      f_marg_list: f_marg
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | f_marg_list tCOMMA f_marg
                     {
@@ -3534,7 +3578,7 @@ use crate::parser_options::InternalParserOptions;
                     }
                 | f_rest_marg
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | f_rest_marg tCOMMA f_marg_list
                     {
@@ -3542,7 +3586,7 @@ use crate::parser_options::InternalParserOptions;
                         let f_rest_marg = $<Node>1;
                         let mut f_marg_list = $<NodeList>3;
 
-                        nodes = List::with_capacity(1 + f_marg_list.len());
+                        nodes = Box::new( List::with_capacity(1 + f_marg_list.len()) );
                         nodes.push(f_rest_marg);
                         nodes.append(&mut f_marg_list);
 
@@ -3602,7 +3646,7 @@ use crate::parser_options::InternalParserOptions;
                     }
                 | f_block_arg
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 ;
 
@@ -3613,7 +3657,7 @@ opt_block_args_tail:
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 ;
 
@@ -3716,7 +3760,10 @@ opt_block_args_tail:
                         let mut nodes;
 
                         if opt_block_args_tail.is_empty() && f_arg.len() == 1 {
-                            nodes = list![ self.builder.procarg0(Ptr::new(f_arg.take_first())).unptr() ];
+                            let procarg0 = self.builder.procarg0(
+                                Ptr::new(f_arg.take_first())
+                            ).unptr();
+                            nodes = Box::new( list![ procarg0 ] );
                         } else {
                             nodes = f_arg;
                             nodes.append(&mut opt_block_args_tail);
@@ -3797,7 +3844,7 @@ opt_block_args_tail:
  opt_block_param: none
                     {
                         $$ = Value::MaybeNode(
-                            self.builder.args(Maybe::none(), list![], Maybe::none())
+                            self.builder.args(Maybe::none(), Box::new( list![] ), Maybe::none())
                         );
                     }
                 | block_param_def
@@ -3841,7 +3888,7 @@ opt_block_args_tail:
 
      opt_bv_decl: opt_nl
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | opt_nl tSEMI bv_decls opt_nl
                     {
@@ -3851,7 +3898,7 @@ opt_block_args_tail:
 
         bv_decls: bvar
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | bv_decls tCOMMA bvar
                     {
@@ -4125,7 +4172,7 @@ opt_block_args_tail:
                                 Maybe::some($<Token>2),
                                 Maybe::some($<Token>3),
                                 Maybe::none(),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::none()
                             )
                         );
@@ -4181,7 +4228,7 @@ opt_block_args_tail:
                                 KeywordCmd::Zsuper,
                                 $<Token>1,
                                 Maybe::none(),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::none()
                             )?
                         );
@@ -4290,14 +4337,19 @@ opt_block_args_tail:
 
        case_args: arg_value
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | tSTAR arg_value
                     {
                         $$ = Value::NodeList(
-                            list![
-                                self.builder.splat($<Token>1, Maybe::some($<BoxedNode>2)).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    self.builder.splat(
+                                        $<Token>1,
+                                        Maybe::some($<BoxedNode>2)
+                                    ).unptr()
+                                ]
+                            )
                         );
                     }
                 | case_args tCOMMA arg_value
@@ -4321,7 +4373,7 @@ opt_block_args_tail:
                         let when = self.builder.when($<Token>1, $<NodeList>2, $<Token>3, $<MaybeBoxedNode>4).unptr();
                         let Cases { mut when_bodies, opt_else } = $<Cases>5;
 
-                        let mut nodes = List::with_capacity(1 + when_bodies.len());
+                        let mut nodes = Box::new(List::with_capacity(1 + when_bodies.len()));
                         nodes.push(when);
                         nodes.append(&mut when_bodies);
 
@@ -4331,7 +4383,7 @@ opt_block_args_tail:
 
            cases: opt_else
                     {
-                        $$ = Value::new_cases(Cases { when_bodies: list![], opt_else: $<OptElse>1 });
+                        $$ = Value::new_cases(Cases { when_bodies: Box::new(list![]), opt_else: $<OptElse>1 });
                     }
                 | case_body
                     {
@@ -4363,7 +4415,7 @@ opt_block_args_tail:
                         let PCases { mut in_bodies, opt_else } = $<PCases>7;
                         let PTopExpr { pattern, guard } = $<PTopExpr>3;
 
-                        let mut nodes = List::with_capacity(1 + in_bodies.len());
+                        let mut nodes = Box::new(List::with_capacity(1 + in_bodies.len()));
                         nodes.push(
                             self.builder.in_pattern(
                                 $<Token>1,
@@ -4381,7 +4433,7 @@ opt_block_args_tail:
 
          p_cases: opt_else
                     {
-                        $$ = Value::new_p_cases(PCases { in_bodies: list![], opt_else: $<OptElse>1 });
+                        $$ = Value::new_p_cases(PCases { in_bodies: Box::new(list![]), opt_else: $<OptElse>1 });
                     }
                 | p_case_body
                     {
@@ -4415,7 +4467,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.array_pattern(
                                 Maybe::none(),
-                                list![ $<Node>1 ],
+                                Box::new(list![ $<Node>1 ]),
                                 Maybe::some($<Token>2),
                                 Maybe::none()
                             )
@@ -4425,7 +4477,7 @@ opt_block_args_tail:
                     {
                         let MatchPatternWithTrailingComma { mut elements, trailing_comma } = $<MatchPatternWithTrailingComma>3;
 
-                        let mut nodes = List::with_capacity(1 + elements.len());
+                        let mut nodes = Box::new(List::with_capacity(1 + elements.len()));
                         nodes.push($<Node>1);
                         nodes.append(&mut elements);
 
@@ -4553,7 +4605,12 @@ opt_block_args_tail:
                     {
                         let lparen = $<Token>2;
                         let rparen = $<Token>3;
-                        let pattern = self.builder.array_pattern(Maybe::some(lparen.clone()), list![], Maybe::none(), Maybe::some(rparen.clone()));
+                        let pattern = self.builder.array_pattern(
+                            Maybe::some(lparen.clone()),
+                            Box::new( list![] ),
+                            Maybe::none(),
+                            Maybe::some(rparen.clone())
+                        );
                         $$ = Value::Node(
                             self.builder.const_pattern(
                                 $<BoxedNode>1,
@@ -4607,7 +4664,12 @@ opt_block_args_tail:
                     {
                         let lparen = $<Token>2;
                         let rparen = $<Token>3;
-                        let pattern = self.builder.array_pattern(Maybe::some(lparen.clone()), list![], Maybe::none(), Maybe::some(rparen.clone()));
+                        let pattern = self.builder.array_pattern(
+                            Maybe::some(lparen.clone()),
+                            Box::new( list![] ),
+                            Maybe::none(),
+                            Maybe::some(rparen.clone())
+                        );
                         $$ = Value::Node(
                             self.builder.const_pattern(
                                 $<BoxedNode>1,
@@ -4644,7 +4706,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.array_pattern(
                                 Maybe::some($<Token>1),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::none(),
                                 Maybe::some($<Token>2)
                             )
@@ -4673,7 +4735,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.hash_pattern(
                                 Maybe::some($<Token>1),
-                                list![],
+                                Box::new( list![] ),
                                 Maybe::some($<Token>2),
                             )
                         );
@@ -4700,7 +4762,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
-                                elements: list![ $<Node>1 ],
+                                elements: Box::new(list![ $<Node>1 ]),
                                 trailing_comma: Maybe::none()
                             }
                         );
@@ -4797,7 +4859,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
-                                elements: list![$<Node>1],
+                                elements: Box::new(list![$<Node>1]),
                                 trailing_comma: Maybe::some($<Token>2),
                             }
                         );
@@ -4818,13 +4880,13 @@ opt_block_args_tail:
 
      p_args_tail: p_rest
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | p_rest tCOMMA p_args_post
                     {
                         let mut nodes;
                         let mut p_args_post = $<NodeList>3;
-                        nodes = List::with_capacity(1 + p_args_post.len());
+                        nodes = Box::new(List::with_capacity(1 + p_args_post.len()));
                         nodes.push($<Node>1);
                         nodes.append(&mut p_args_post);
 
@@ -4836,7 +4898,7 @@ opt_block_args_tail:
                     {
                         let mut nodes;
                         let mut p_args_post = $<NodeList>3;
-                        nodes = List::with_capacity(1 + p_args_post.len() + 1);
+                        nodes = Box::new(List::with_capacity(1 + p_args_post.len() + 1));
                         nodes.push($<Node>1);
                         nodes.append(&mut p_args_post);
                         nodes.push($<Node>5);
@@ -4862,7 +4924,7 @@ opt_block_args_tail:
 
      p_args_post: p_arg
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | p_args_post tCOMMA p_arg
                     {
@@ -4901,7 +4963,7 @@ opt_block_args_tail:
 
          p_kwarg: p_kw
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | p_kwarg tCOMMA p_kw
                     {
@@ -4947,17 +5009,31 @@ opt_block_args_tail:
         p_kwrest: kwrest_mark tIDENTIFIER
                     {
                         $$ = Value::NodeList(
-                            list![
-                                (self.builder.match_rest($<Token>1, Maybe::some($<Token>2))?).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    (
+                                        self.builder.match_rest(
+                                            $<Token>1,
+                                            Maybe::some($<Token>2)
+                                        )?
+                                    ).unptr()
+                                ]
+                            )
                         );
                     }
                 | kwrest_mark
                     {
                         $$ = Value::NodeList(
-                            list![
-                                (self.builder.match_rest($<Token>1, Maybe::none())?).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    (
+                                        self.builder.match_rest(
+                                            $<Token>1,
+                                            Maybe::none()
+                                        )?
+                                    ).unptr()
+                                ]
+                            )
                         );
                     }
                 ;
@@ -4965,9 +5041,14 @@ opt_block_args_tail:
       p_kwnorest: kwrest_mark kNIL
                     {
                         $$ = Value::NodeList(
-                            list![
-                                self.builder.match_nil_pattern($<Token>1, $<Token>2).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    self.builder.match_nil_pattern(
+                                        $<Token>1,
+                                        $<Token>2
+                                    ).unptr()
+                                ]
+                            )
                         );
                     }
                 ;
@@ -5197,7 +5278,7 @@ opt_block_args_tail:
                         );
                         let mut nodes;
                         let mut opt_rescue = $<NodeList>6;
-                        nodes = List::with_capacity(1 + opt_rescue.len());
+                        nodes = Box::new(List::with_capacity(1 + opt_rescue.len()));
                         nodes.push(rescue_body.unptr());
                         nodes.append(&mut opt_rescue);
 
@@ -5205,13 +5286,13 @@ opt_block_args_tail:
                     }
                 | none
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 ;
 
         exc_list: arg_value
                     {
-                        $$ = Value::NodeList(list![ $<Node>1 ]);
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | mrhs
                     {
@@ -5219,7 +5300,7 @@ opt_block_args_tail:
                     }
                 | none
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 ;
 
@@ -5272,14 +5353,16 @@ opt_block_args_tail:
           string: tCHAR
                     {
                         $$ = Value::NodeList(
-                            list![
-                                self.builder.character($<Token>1).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    self.builder.character($<Token>1).unptr()
+                                ]
+                            )
                         );
                     }
                 | string1
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | string string1
                     {
@@ -5338,7 +5421,7 @@ opt_block_args_tail:
 
        word_list: /* none */
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
 
                     }
                 | word_list word tSPACE
@@ -5353,7 +5436,7 @@ opt_block_args_tail:
 
             word: string_content
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | word string_content
                     {
@@ -5377,7 +5460,7 @@ opt_block_args_tail:
 
      symbol_list: /* none */
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | symbol_list word tSPACE
                     {
@@ -5415,7 +5498,7 @@ opt_block_args_tail:
 
       qword_list: /* none */
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | qword_list tSTRING_CONTENT tSPACE
                     {
@@ -5429,7 +5512,7 @@ opt_block_args_tail:
 
        qsym_list: /* none */
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | qsym_list tSTRING_CONTENT tSPACE
                     {
@@ -5443,7 +5526,7 @@ opt_block_args_tail:
 
  string_contents: /* none */
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | string_contents string_content
                     {
@@ -5455,7 +5538,7 @@ opt_block_args_tail:
 
 xstring_contents: /* none */
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | xstring_contents string_content
                     {
@@ -5467,7 +5550,7 @@ xstring_contents: /* none */
 
  regexp_contents: /* none */
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | regexp_contents string_content
                     {
@@ -5910,7 +5993,11 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_block_arg
                     {
-                        $$ = Value::NodeList(list![ $<Node>1 ]);
+                        $$ = Value::NodeList(
+                            Box::new(
+                                list![ $<Node>1 ]
+                            )
+                        );
                     }
                 ;
 
@@ -5920,7 +6007,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 ;
 
@@ -6083,7 +6170,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 ;
 
@@ -6155,7 +6242,7 @@ f_opt_paren_args: f_paren_args
 
            f_arg: f_arg_item
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | f_arg tCOMMA f_arg_item
                     {
@@ -6214,7 +6301,7 @@ f_opt_paren_args: f_paren_args
 
    f_block_kwarg: f_block_kw
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | f_block_kwarg tCOMMA f_block_kw
                     {
@@ -6227,7 +6314,7 @@ f_opt_paren_args: f_paren_args
 
          f_kwarg: f_kw
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | f_kwarg tCOMMA f_kw
                     {
@@ -6250,9 +6337,14 @@ f_opt_paren_args: f_paren_args
       f_no_kwarg: kwrest_mark kNIL
                     {
                         $$ = Value::NodeList(
-                            list![
-                                self.builder.kwnilarg($<Token>1, $<Token>2).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    self.builder.kwnilarg(
+                                        $<Token>1,
+                                        $<Token>2
+                                    ).unptr()
+                                ]
+                            )
                         );
                     }
                 ;
@@ -6262,17 +6354,21 @@ f_opt_paren_args: f_paren_args
                         let ident_t = $<Token>2;
                         self.static_env.declare(clone_value(&ident_t).as_str());
                         $$ = Value::NodeList(
-                            list![
-                                (self.builder.kwrestarg($<Token>1, Maybe::some(ident_t))?).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    (self.builder.kwrestarg($<Token>1, Maybe::some(ident_t))?).unptr()
+                                ]
+                            )
                         );
                     }
                 | kwrest_mark
                     {
                         $$ = Value::NodeList(
-                            list![
-                                (self.builder.kwrestarg($<Token>1, Maybe::none())?).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    (self.builder.kwrestarg($<Token>1, Maybe::none())?).unptr()
+                                ]
+                            )
                         );
                     }
                 ;
@@ -6305,7 +6401,7 @@ f_opt_paren_args: f_paren_args
 
   f_block_optarg: f_block_opt
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | f_block_optarg tCOMMA f_block_opt
                     {
@@ -6317,7 +6413,7 @@ f_opt_paren_args: f_paren_args
 
         f_optarg: f_opt
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | f_optarg tCOMMA f_opt
                     {
@@ -6343,17 +6439,21 @@ f_opt_paren_args: f_paren_args
                         self.static_env.declare(clone_value(&ident_t).as_str());
 
                         $$ = Value::NodeList(
-                            list![
-                                (self.builder.restarg($<Token>1, Maybe::some(ident_t))?).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    (self.builder.restarg($<Token>1, Maybe::some(ident_t))?).unptr()
+                                ]
+                            )
                         );
                     }
                 | restarg_mark
                     {
                         $$ = Value::NodeList(
-                            list![
-                                (self.builder.restarg($<Token>1, Maybe::none())?).unptr()
-                            ]
+                            Box::new(
+                                list![
+                                    (self.builder.restarg($<Token>1, Maybe::none())?).unptr()
+                                ]
+                            )
                         );
                     }
                 ;
@@ -6380,11 +6480,11 @@ f_opt_paren_args: f_paren_args
 
  opt_f_block_arg: tCOMMA f_block_arg
                     {
-                        $$ = Value::NodeList( list![ $<Node>2 ] )
+                        $$ = Value::NodeList( Box::new(list![ $<Node>2 ]) );
                     }
                 | none
                     {
-                        $$ = Value::NodeList( list![] );
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 ;
 
@@ -6425,7 +6525,7 @@ f_opt_paren_args: f_paren_args
 
       assoc_list: none
                     {
-                        $$ = Value::NodeList(list![]);
+                        $$ = Value::NodeList( Box::new(list![]) );
                     }
                 | assocs trailer
                     {
@@ -6435,7 +6535,7 @@ f_opt_paren_args: f_paren_args
 
           assocs: assoc
                     {
-                        $$ = Value::NodeList( list![ $<Node>1 ] );
+                        $$ = Value::NodeList( Box::new(list![ $<Node>1 ]) );
                     }
                 | assocs tCOMMA assoc
                     {
@@ -6623,11 +6723,11 @@ f_opt_paren_args: f_paren_args
 
            terms: term
                     {
-                        $$ = Value::TokenList(list![]);
+                        $$ = Value::TokenList( Box::new(list![]) );
                     }
                 | terms tSEMI
                     {
-                        $$ = Value::TokenList(list![]);
+                        $$ = Value::TokenList( Box::new(list![]) );
                     }
                 ;
 

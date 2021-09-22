@@ -41,7 +41,7 @@ impl Token {
 pub(crate) mod NodeList {
     use super::{List, Node, ParseValue};
 
-    pub(crate) fn from(value: ParseValue) -> List<Node> {
+    pub(crate) fn from(value: ParseValue) -> Box<List<Node>> {
         match value {
             ParseValue::NodeList(value) => value,
             other => unreachable!("expected NodeList, got {:?}", other),
@@ -217,7 +217,7 @@ impl CmdBraceBlock {
 #[derive(Debug, Clone)]
 pub(crate) struct ParenArgs {
     pub(crate) begin_t: Ptr<Token>,
-    pub(crate) args: List<Node>,
+    pub(crate) args: Box<List<Node>>,
     pub(crate) end_t: Ptr<Token>,
 }
 impl ParenArgs {
@@ -232,7 +232,7 @@ impl ParenArgs {
 #[derive(Debug, Clone)]
 pub(crate) struct OptParenArgs {
     pub(crate) begin_t: Maybe<Ptr<Token>>,
-    pub(crate) args: List<Node>,
+    pub(crate) args: Box<List<Node>>,
     pub(crate) end_t: Maybe<Ptr<Token>>,
 }
 impl OptParenArgs {
@@ -338,7 +338,7 @@ impl DefnHead {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Cases {
-    pub(crate) when_bodies: List<Node>,
+    pub(crate) when_bodies: Box<List<Node>>,
     pub(crate) opt_else: Option<Else>,
 }
 impl Cases {
@@ -352,7 +352,7 @@ impl Cases {
 
 #[derive(Debug, Clone)]
 pub(crate) struct CaseBody {
-    pub(crate) when_bodies: List<Node>,
+    pub(crate) when_bodies: Box<List<Node>>,
     pub(crate) opt_else: Option<Else>,
 }
 impl CaseBody {
@@ -366,7 +366,7 @@ impl CaseBody {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PCases {
-    pub(crate) in_bodies: List<Node>,
+    pub(crate) in_bodies: Box<List<Node>>,
     pub(crate) opt_else: Option<Else>,
 }
 impl PCases {
@@ -380,7 +380,7 @@ impl PCases {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PCaseBody {
-    pub(crate) in_bodies: List<Node>,
+    pub(crate) in_bodies: Box<List<Node>>,
     pub(crate) opt_else: Option<Else>,
 }
 impl PCaseBody {
@@ -452,7 +452,7 @@ impl PTopExpr {
 
 #[derive(Debug, Clone)]
 pub(crate) struct MatchPatternWithTrailingComma {
-    pub(crate) elements: List<Node>,
+    pub(crate) elements: Box<List<Node>>,
     pub(crate) trailing_comma: Maybe<Ptr<Token>>,
 }
 impl MatchPatternWithTrailingComma {
@@ -470,9 +470,9 @@ pub(crate) enum ParseValue {
     Uninitialized,
     None,
     Token(Ptr<Token>),
-    TokenList(List<Token>),
+    TokenList(Box<List<Token>>),
     Node(Ptr<Node>),
-    NodeList(List<Node>),
+    NodeList(Box<List<Node>>),
     Bool(bool),
     MaybeStrTerm(Option<Box<StrTerm>>),
     Num(i32),
