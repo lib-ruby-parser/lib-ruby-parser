@@ -1,4 +1,6 @@
 #include "bindings.hpp"
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 using namespace lib_ruby_parser;
@@ -266,6 +268,13 @@ extern "C"
         {
             return (uint8_t *)(self->get()->c_str());
         }
+    }
+    uint8_t *lib_ruby_parser__external__string_ptr__into_raw(StringPtr_BLOB self_blob)
+    {
+        StringPtr self = UNPACK_StringPtr(self_blob);
+        char *ptr = (char *)malloc(self->length());
+        memcpy(ptr, self->data(), self->length());
+        return (uint8_t *)ptr;
     }
     uint64_t lib_ruby_parser__external__string_ptr__get_len(const StringPtr_BLOB *self_blob)
     {
@@ -839,25 +848,25 @@ extern "C"
         DecoderResult *self = (DecoderResult *)self_blob;
         self->~DecoderResult();
     }
-    bool lib_ruby_parser__external__decoder_result_is_ok(const DecoderResult_BLOB *self_blob)
+    bool lib_ruby_parser__external__decoder_result__is_ok(const DecoderResult_BLOB *self_blob)
     {
         const DecoderResult *self = (const DecoderResult *)self_blob;
         return std::holds_alternative<DecoderResult::Ok>(self->variant);
     }
-    bool lib_ruby_parser__external__decoder_result_is_err(const DecoderResult_BLOB *self_blob)
+    bool lib_ruby_parser__external__decoder_result__is_err(const DecoderResult_BLOB *self_blob)
     {
         const DecoderResult *self = (const DecoderResult *)self_blob;
         return std::holds_alternative<DecoderResult::Err>(self->variant);
     }
-    ByteList_BLOB lib_ruby_parser__external__decoder_result_into_ok(DecoderResult_BLOB self_blob)
+    ByteList_BLOB lib_ruby_parser__external__decoder_result__into_ok(DecoderResult_BLOB self_blob)
     {
         return PACK_ByteList(std::get<DecoderResult::Ok>(UNPACK_DecoderResult(self_blob).variant).output);
     }
-    InputError_BLOB lib_ruby_parser__external__decoder_result_into_err(DecoderResult_BLOB self_blob)
+    InputError_BLOB lib_ruby_parser__external__decoder_result__into_err(DecoderResult_BLOB self_blob)
     {
         return PACK_InputError(std::get<DecoderResult::Err>(UNPACK_DecoderResult(self_blob).variant).error);
     }
-    const ByteList_BLOB *lib_ruby_parser__external__decoder_result_as_ok(const DecoderResult_BLOB *self_blob)
+    const ByteList_BLOB *lib_ruby_parser__external__decoder_result__as_ok(const DecoderResult_BLOB *self_blob)
     {
         const DecoderResult *self = (const DecoderResult *)self_blob;
         const DecoderResult::Ok *ok = std::get_if<DecoderResult::Ok>(&(self->variant));
@@ -865,7 +874,7 @@ extern "C"
             return nullptr;
         return (const ByteList_BLOB *)(&(ok->output));
     }
-    const InputError_BLOB *lib_ruby_parser__external__decoder_result_as_err(const DecoderResult_BLOB *self_blob)
+    const InputError_BLOB *lib_ruby_parser__external__decoder_result__as_err(const DecoderResult_BLOB *self_blob)
     {
         const DecoderResult *self = (const DecoderResult *)self_blob;
         const DecoderResult::Err *err = std::get_if<DecoderResult::Err>(&(self->variant));
@@ -892,11 +901,11 @@ extern "C"
         Decoder *self = (Decoder *)self_blob;
         return PACK_DecoderResult(self->f());
     }
-    void lib_ruby_parser__external__decoder_drop(Decoder_BLOB *self_blob)
+    void lib_ruby_parser__external__decoder__drop(Decoder_BLOB *self_blob)
     {
         (void)self_blob;
     }
-    Decoder_BLOB lib_ruby_parser__external__decoder__new(dummy_decoder_t f)
+    Decoder_BLOB lib_ruby_parser__testing__decoder__new(dummy_decoder_t f)
     {
         Decoder decoder;
         decoder.f = f;
@@ -983,15 +992,15 @@ extern "C"
         return PACK_TokenRewriterResult(std::move(result));
     }
     // Test APIs
-    TokenRewriter_BLOB lib_ruby_parser__external__token_rewriter__new_keep(build_new_token_t build_new_token_f)
+    TokenRewriter_BLOB lib_ruby_parser__testing__token_rewriter__new_keep(build_new_token_t build_new_token_f)
     {
         return PACK_TokenRewriter(TokenRewriter::NewKeepRewriter(build_new_token_f));
     }
-    TokenRewriter_BLOB lib_ruby_parser__external__token_rewriter__new_drop(build_new_token_t build_new_token_f)
+    TokenRewriter_BLOB lib_ruby_parser__testing__token_rewriter__new_drop(build_new_token_t build_new_token_f)
     {
         return PACK_TokenRewriter(TokenRewriter::NewDropRewriter(build_new_token_f));
     }
-    TokenRewriter_BLOB lib_ruby_parser__external__token_rewriter__new_rewrite(
+    TokenRewriter_BLOB lib_ruby_parser__testing__token_rewriter__new_rewrite(
         build_new_token_t build_new_token_f)
     {
         return PACK_TokenRewriter(TokenRewriter::NewRewriteRewriter(build_new_token_f));

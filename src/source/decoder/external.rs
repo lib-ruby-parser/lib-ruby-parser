@@ -18,12 +18,12 @@ extern "C" {
         encoding: Blob<StringPtr>,
         input: Blob<List<u8>>,
     ) -> Blob<DecoderResult>;
-    fn lib_ruby_parser__external__decoder_drop(blob: *mut Blob<Decoder>);
+    fn lib_ruby_parser__external__decoder__drop(blob: *mut Blob<Decoder>);
 }
 
 impl Drop for Decoder {
     fn drop(&mut self) {
-        unsafe { lib_ruby_parser__external__decoder_drop(&mut self.blob) }
+        unsafe { lib_ruby_parser__external__decoder__drop(&mut self.blob) }
     }
 }
 

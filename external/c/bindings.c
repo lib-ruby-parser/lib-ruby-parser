@@ -269,6 +269,11 @@ const uint8_t *lib_ruby_parser__external__string_ptr__as_raw(const LIB_RUBY_PARS
         return NULL;
     return self->ptr;
 }
+uint8_t *lib_ruby_parser__external__string_ptr__into_raw(LIB_RUBY_PARSER_StringPtr_BLOB self_blob)
+{
+    LIB_RUBY_PARSER_StringPtr self = UNPACK_StringPtr(self_blob);
+    return self.ptr;
+}
 uint64_t lib_ruby_parser__external__string_ptr__get_len(const LIB_RUBY_PARSER_StringPtr_BLOB *self_blob)
 {
     LIB_RUBY_PARSER_StringPtr *self = (LIB_RUBY_PARSER_StringPtr *)self_blob;
@@ -877,30 +882,30 @@ void lib_ruby_parser__external__decoder_result__drop(LIB_RUBY_PARSER_DecoderResu
     LIB_RUBY_PARSER_DecoderResult *self = (LIB_RUBY_PARSER_DecoderResult *)self_blob;
     LIB_RUBY_PARSER_drop_decoder_result(self);
 }
-bool lib_ruby_parser__external__decoder_result_is_ok(const LIB_RUBY_PARSER_DecoderResult_BLOB *self_blob)
+bool lib_ruby_parser__external__decoder_result__is_ok(const LIB_RUBY_PARSER_DecoderResult_BLOB *self_blob)
 {
     const LIB_RUBY_PARSER_DecoderResult *self = (const LIB_RUBY_PARSER_DecoderResult *)self_blob;
     return self->tag == LIB_RUBY_PARSER_DECODER_RESULT_OK;
 }
-bool lib_ruby_parser__external__decoder_result_is_err(const LIB_RUBY_PARSER_DecoderResult_BLOB *self_blob)
+bool lib_ruby_parser__external__decoder_result__is_err(const LIB_RUBY_PARSER_DecoderResult_BLOB *self_blob)
 {
     const LIB_RUBY_PARSER_DecoderResult *self = (const LIB_RUBY_PARSER_DecoderResult *)self_blob;
     return self->tag == LIB_RUBY_PARSER_DECODER_RESULT_ERR;
 }
-LIB_RUBY_PARSER_ByteList_BLOB lib_ruby_parser__external__decoder_result_into_ok(LIB_RUBY_PARSER_DecoderResult_BLOB self_blob)
+LIB_RUBY_PARSER_ByteList_BLOB lib_ruby_parser__external__decoder_result__into_ok(LIB_RUBY_PARSER_DecoderResult_BLOB self_blob)
 {
     return PACK_ByteList(UNPACK_DecoderResult(self_blob).as.ok);
 }
-LIB_RUBY_PARSER_InputError_BLOB lib_ruby_parser__external__decoder_result_into_err(LIB_RUBY_PARSER_DecoderResult_BLOB self_blob)
+LIB_RUBY_PARSER_InputError_BLOB lib_ruby_parser__external__decoder_result__into_err(LIB_RUBY_PARSER_DecoderResult_BLOB self_blob)
 {
     return PACK_InputError(UNPACK_DecoderResult(self_blob).as.err);
 }
-const LIB_RUBY_PARSER_ByteList_BLOB *lib_ruby_parser__external__decoder_result_as_ok(const LIB_RUBY_PARSER_DecoderResult_BLOB *self_blob)
+const LIB_RUBY_PARSER_ByteList_BLOB *lib_ruby_parser__external__decoder_result__as_ok(const LIB_RUBY_PARSER_DecoderResult_BLOB *self_blob)
 {
     const LIB_RUBY_PARSER_DecoderResult *self = (const LIB_RUBY_PARSER_DecoderResult *)self_blob;
     return (const LIB_RUBY_PARSER_ByteList_BLOB *)(&(self->as.ok));
 }
-const LIB_RUBY_PARSER_InputError_BLOB *lib_ruby_parser__external__decoder_result_as_err(const LIB_RUBY_PARSER_DecoderResult_BLOB *self_blob)
+const LIB_RUBY_PARSER_InputError_BLOB *lib_ruby_parser__external__decoder_result__as_err(const LIB_RUBY_PARSER_DecoderResult_BLOB *self_blob)
 {
     const LIB_RUBY_PARSER_DecoderResult *self = (const LIB_RUBY_PARSER_DecoderResult *)self_blob;
     return (const LIB_RUBY_PARSER_InputError_BLOB *)(&(self->as.err));
@@ -924,11 +929,11 @@ LIB_RUBY_PARSER_DecoderResult_BLOB lib_ruby_parser__external__decoder__call(
     LIB_RUBY_PARSER_Decoder *self = (LIB_RUBY_PARSER_Decoder *)self_blob;
     return PACK_DecoderResult(self->f());
 }
-void lib_ruby_parser__external__decoder_drop(LIB_RUBY_PARSER_Decoder_BLOB *self_blob)
+void lib_ruby_parser__external__decoder__drop(LIB_RUBY_PARSER_Decoder_BLOB *self_blob)
 {
     (void)self_blob;
 }
-LIB_RUBY_PARSER_Decoder_BLOB lib_ruby_parser__external__decoder__new(LIB_RUBY_PARSER_dummy_decoder_t f)
+LIB_RUBY_PARSER_Decoder_BLOB lib_ruby_parser__testing__decoder__new(LIB_RUBY_PARSER_dummy_decoder_t f)
 {
     return PACK_Decoder(((LIB_RUBY_PARSER_Decoder){.f = f}));
 }
@@ -1012,17 +1017,17 @@ LIB_RUBY_PARSER_TokenRewriterResult_BLOB lib_ruby_parser__external__token_rewrit
     return PACK_TokenRewriterResult(result);
 }
 // Test APIs
-LIB_RUBY_PARSER_TokenRewriter_BLOB lib_ruby_parser__external__token_rewriter__new_keep(
+LIB_RUBY_PARSER_TokenRewriter_BLOB lib_ruby_parser__testing__token_rewriter__new_keep(
     LIB_RUBY_PARSER_build_new_token_t build_new_token_f)
 {
     return PACK_TokenRewriter(__keep_token_rewriter(build_new_token_f));
 }
-LIB_RUBY_PARSER_TokenRewriter_BLOB lib_ruby_parser__external__token_rewriter__new_drop(
+LIB_RUBY_PARSER_TokenRewriter_BLOB lib_ruby_parser__testing__token_rewriter__new_drop(
     LIB_RUBY_PARSER_build_new_token_t build_new_token_f)
 {
     return PACK_TokenRewriter(__drop_token_rewriter(build_new_token_f));
 }
-LIB_RUBY_PARSER_TokenRewriter_BLOB lib_ruby_parser__external__token_rewriter__new_rewrite(
+LIB_RUBY_PARSER_TokenRewriter_BLOB lib_ruby_parser__testing__token_rewriter__new_rewrite(
     LIB_RUBY_PARSER_build_new_token_t build_new_token_f)
 {
     return PACK_TokenRewriter(__rewriter_token_rewriter(build_new_token_f));

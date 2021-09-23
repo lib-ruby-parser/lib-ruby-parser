@@ -23,7 +23,7 @@ pub(crate) mod dummy_decoder {
         type ExternDecodeFn = extern "C" fn() -> Blob<DecoderResult>;
 
         extern "C" {
-            fn lib_ruby_parser__external__decoder__new(f: ExternDecodeFn) -> Blob<Decoder>;
+            fn lib_ruby_parser__testing__decoder__new(f: ExternDecodeFn) -> Blob<Decoder>;
         }
 
         extern "C" fn decode_ok() -> Blob<DecoderResult> {
@@ -35,11 +35,11 @@ pub(crate) mod dummy_decoder {
         }
 
         pub(crate) fn ok_decoder() -> Decoder {
-            Decoder::from_blob(unsafe { lib_ruby_parser__external__decoder__new(decode_ok) })
+            Decoder::from_blob(unsafe { lib_ruby_parser__testing__decoder__new(decode_ok) })
         }
 
         pub(crate) fn err_decoder() -> Decoder {
-            Decoder::from_blob(unsafe { lib_ruby_parser__external__decoder__new(decode_err) })
+            Decoder::from_blob(unsafe { lib_ruby_parser__testing__decoder__new(decode_err) })
         }
     }
 

@@ -25,3 +25,6 @@ clean:
 
 sizes: sizes.cpp
 	$(CXX) sizes.cpp $(CXXFLAGS) -o sizes
+
+check:
+	CXX=$(CXX) ruby ../assert_defs.rb bindings.hpp bindings.cpp bindings_messages.cpp bindings_nodes.cpp

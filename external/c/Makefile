@@ -25,3 +25,6 @@ clean:
 
 sizes: sizes.c $(OBJECTS)
 	$(CC) sizes.c $(CFLAGS) -o sizes
+
+check:
+	CC=$(CC) ruby ../assert_defs.rb bindings.h bindings.c bindings_messages.c bindings_nodes.c

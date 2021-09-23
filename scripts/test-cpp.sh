@@ -14,5 +14,5 @@ run_c_tests() {
 }
 
 # Linking fails on building doctests with ASAN enabled
-run_c_tests --lib -- containers
-run_c_tests --lib
+run_c_tests --lib -- containers::string_ptr::external::tests::test_from
+# run_c_tests --lib

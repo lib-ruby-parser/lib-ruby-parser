@@ -271,6 +271,9 @@ pub(crate) mod external {
 
             let string_ptr = StringPtr::from(vec![1, 2, 3]);
             drop(string_ptr);
+
+            let vec = Vec::from(StringPtr::from("foo"));
+            assert_eq!(vec, vec![b'f', b'o', b'o']);
         }
     }
 }

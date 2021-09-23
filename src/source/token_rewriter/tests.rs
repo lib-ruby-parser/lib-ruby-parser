@@ -30,13 +30,13 @@ mod dummy_rewriter {
     use crate::source::token_rewriter::TokenRewriter;
 
     extern "C" {
-        fn lib_ruby_parser__external__token_rewriter__new_keep(
+        fn lib_ruby_parser__testing__token_rewriter__new_keep(
             token_f: extern "C" fn() -> Ptr<Token>,
         ) -> Blob<TokenRewriter>;
-        fn lib_ruby_parser__external__token_rewriter__new_drop(
+        fn lib_ruby_parser__testing__token_rewriter__new_drop(
             token_f: extern "C" fn() -> Ptr<Token>,
         ) -> Blob<TokenRewriter>;
-        fn lib_ruby_parser__external__token_rewriter__new_rewrite(
+        fn lib_ruby_parser__testing__token_rewriter__new_rewrite(
             token_f: extern "C" fn() -> Ptr<Token>,
         ) -> Blob<TokenRewriter>;
     }
@@ -47,19 +47,19 @@ mod dummy_rewriter {
 
     pub(crate) fn dummy_decoder_keep() -> TokenRewriter {
         TokenRewriter::from_blob(unsafe {
-            lib_ruby_parser__external__token_rewriter__new_keep(token_f)
+            lib_ruby_parser__testing__token_rewriter__new_keep(token_f)
         })
     }
 
     pub(crate) fn dummy_decoder_drop() -> TokenRewriter {
         TokenRewriter::from_blob(unsafe {
-            lib_ruby_parser__external__token_rewriter__new_drop(token_f)
+            lib_ruby_parser__testing__token_rewriter__new_drop(token_f)
         })
     }
 
     pub(crate) fn dummy_decoder_rewrite() -> TokenRewriter {
         TokenRewriter::from_blob(unsafe {
-            lib_ruby_parser__external__token_rewriter__new_rewrite(token_f)
+            lib_ruby_parser__testing__token_rewriter__new_rewrite(token_f)
         })
     }
 }

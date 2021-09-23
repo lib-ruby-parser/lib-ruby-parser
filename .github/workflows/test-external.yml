@@ -56,7 +56,9 @@ jobs:
           CXX: clang++
           AR: ar
         run: |
-          cd ${{ matrix.build.external-implementation-dir }} && make all
+          cd ${{ matrix.build.external-implementation-dir }}
+          make check
+          make all
           cat sizes-out
 
       - name: run tests
