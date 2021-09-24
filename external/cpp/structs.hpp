@@ -7,12 +7,13 @@
 #include <string_view>
 #include <optional>
 #include <vector>
+#include "list.hpp"
 
 namespace lib_ruby_parser
 {
     // Byte
     using Byte = uint8_t;
-    using ByteList = std::vector<uint8_t>;
+    using ByteList = List<Byte>;
 
     // Ptr<T>
     using Ptr = std::unique_ptr<int>;
@@ -55,7 +56,7 @@ namespace lib_ruby_parser
         SourceLine(SourceLine &&) = default;
         SourceLine &operator=(SourceLine &&other) = default;
     };
-    using SourceLineList = std::vector<SourceLine>;
+    using SourceLineList = List<SourceLine>;
 
     // Loc
     class Loc
@@ -114,7 +115,7 @@ namespace lib_ruby_parser
         Token(Token &&) = default;
         Token &operator=(Token &&other) = default;
     };
-    using TokenList = std::vector<Token>;
+    using TokenList = List<Token>;
 
     // CommentType
     enum class CommentType
@@ -139,7 +140,7 @@ namespace lib_ruby_parser
         Comment(Comment &&) = default;
         Comment &operator=(Comment &&other) = default;
     };
-    using CommentList = std::vector<Comment>;
+    using CommentList = List<Comment>;
 
     // MagicCommentKind
     enum class MagicCommentKind
@@ -166,7 +167,7 @@ namespace lib_ruby_parser
         MagicComment(MagicComment &&) = default;
         MagicComment &operator=(MagicComment &&other) = default;
     };
-    using MagicCommentList = std::vector<MagicComment>;
+    using MagicCommentList = List<MagicComment>;
 
     // ErrorLevel
     enum class ErrorLevel

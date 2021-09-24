@@ -47,7 +47,7 @@ namespace lib_ruby_parser
 
         explicit Diagnostic(ErrorLevel level, DiagnosticMessage message, Loc loc);
     }};
-    using DiagnosticList = std::vector<Diagnostic>;
+    using DiagnosticList = List<Diagnostic>;
     void drop_diagnostic(Diagnostic *);
 }}
 

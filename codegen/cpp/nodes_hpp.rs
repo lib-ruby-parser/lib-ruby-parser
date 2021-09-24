@@ -16,7 +16,7 @@ namespace lib_ruby_parser
     class Node;
     typedef std::unique_ptr<Node> NodePtr;
     typedef std::unique_ptr<Node> MaybeNodePtr;
-    using NodeList = std::vector<Node>;
+    using NodeList = List<Node>;
 
     {structs}
 

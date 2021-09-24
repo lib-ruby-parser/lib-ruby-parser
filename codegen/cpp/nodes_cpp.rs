@@ -30,7 +30,7 @@ namespace lib_ruby_parser
 
     void drop_node_list(NodeList *node_list)
     {{
-        node_list->~vector();
+        node_list->~List();
     }}
 }}
 ",

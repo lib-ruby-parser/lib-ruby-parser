@@ -6,7 +6,8 @@ OBJECTS = \
 	messages.o \
 	bindings.o \
 	bindings_nodes.o \
-	bindings_messages.o
+	bindings_messages.o \
+	list.o
 
 all: libstructures.a sizes
 	./sizes > sizes-out

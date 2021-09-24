@@ -578,8 +578,6 @@ pub(crate) mod external {
                     list.push(new_item());
                     let copy = list.clone();
                     assert_eq!(copy.len(), 2);
-                    drop(copy);
-                    drop(list);
                 }
 
                 #[test]
