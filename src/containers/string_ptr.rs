@@ -45,7 +45,7 @@ pub(crate) mod external {
     }
 
     impl StringPtr {
-        pub(crate) fn from_raw(ptr: *const u8, len: u64) -> Self {
+        pub(crate) fn from_raw(ptr: *mut u8, len: u64) -> Self {
             let blob = unsafe { lib_ruby_parser__external__string_ptr__new(ptr, len) };
             Self { blob }
         }
@@ -114,8 +114,9 @@ pub(crate) mod external {
             let ptr = if len == 0 {
                 std::ptr::null_mut()
             } else {
-                bytes.as_ptr()
+                bytes.as_mut_ptr()
             };
+            std::mem::forget(bytes);
 
             Self::from_raw(ptr, len)
         }

@@ -128,26 +128,30 @@ extern "C"
     */
     MaybeStringPtr_BLOB lib_ruby_parser__external__maybe__string_ptr__new_some(StringPtr_BLOB value)
     {
-        return PACK_MaybeStringPtr(UNPACK_StringPtr(value));
+        StringPtr string_ptr = UNPACK_StringPtr(value);
+        MaybeStringPtr maybe_string_ptr(string_ptr.ptr, string_ptr.size);
+        string_ptr.ptr = nullptr;
+        string_ptr.size = 0;
+        return PACK_MaybeStringPtr(std::move(maybe_string_ptr));
     }
     MaybeStringPtr_BLOB lib_ruby_parser__external__maybe__string_ptr__new_none()
     {
-        return PACK_MaybeStringPtr(std::unique_ptr<std::string>(nullptr));
+        return PACK_MaybeStringPtr(MaybeStringPtr());
     }
     void lib_ruby_parser__external__maybe__string_ptr__drop(MaybeStringPtr_BLOB *self_blob)
     {
         MaybeStringPtr *self = (MaybeStringPtr *)self_blob;
-        self->~unique_ptr();
+        self->~MaybeStringPtr();
     }
     bool lib_ruby_parser__external__maybe__string_ptr__is_some(const MaybeStringPtr_BLOB *self_blob)
     {
         const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
-        return self->get() != nullptr;
+        return self->ptr != nullptr;
     }
     bool lib_ruby_parser__external__maybe__string_ptr__is_none(const MaybeStringPtr_BLOB *self_blob)
     {
         const MaybeStringPtr *self = (const MaybeStringPtr *)self_blob;
-        return self->get() == nullptr;
+        return self->ptr == nullptr;
     }
     const StringPtr_BLOB *lib_ruby_parser__external__maybe__string_ptr__as_value(const MaybeStringPtr_BLOB *self_blob)
     {
@@ -247,38 +251,31 @@ extern "C"
     /*
         StringPtr
     */
-    StringPtr_BLOB lib_ruby_parser__external__string_ptr__new(const uint8_t *ptr, uint64_t len)
+    StringPtr_BLOB lib_ruby_parser__external__string_ptr__new(uint8_t *ptr, uint64_t len)
     {
-        return PACK_StringPtr(std::make_unique<std::string>((const char *)ptr, len));
+        return PACK_StringPtr(StringPtr(ptr, (size_t)len));
     }
     void lib_ruby_parser__external__string_ptr__drop(StringPtr_BLOB *self_blob)
     {
         StringPtr *self = (StringPtr *)self_blob;
-        self->~unique_ptr();
+        self->~StringPtr();
     }
     const uint8_t *lib_ruby_parser__external__string_ptr__as_raw(const StringPtr_BLOB *self_blob)
     {
         StringPtr *self = (StringPtr *)self_blob;
-        if (self->get()->length() == 0)
-        {
-            return nullptr;
-        }
-        else
-        {
-            return (uint8_t *)(self->get()->c_str());
-        }
+        return self->ptr;
     }
     uint8_t *lib_ruby_parser__external__string_ptr__into_raw(StringPtr_BLOB self_blob)
     {
         StringPtr self = UNPACK_StringPtr(self_blob);
-        char *ptr = (char *)malloc(self->length());
-        memcpy(ptr, self->data(), self->length());
-        return (uint8_t *)ptr;
+        uint8_t *ptr = self.ptr;
+        self.ptr = nullptr;
+        return ptr;
     }
     uint64_t lib_ruby_parser__external__string_ptr__get_len(const StringPtr_BLOB *self_blob)
     {
         StringPtr *self = (StringPtr *)self_blob;
-        return self->get()->length();
+        return self->size;
     }
 
     /*

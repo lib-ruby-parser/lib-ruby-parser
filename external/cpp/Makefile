@@ -2,12 +2,13 @@ CXXFLAGS += -g -Wall -Wextra -std=c++17 -fPIC
 
 OBJECTS = \
 	structs.o \
+	list.o \
+	string_ptr.o \
+	bindings.o \
 	nodes.o \
 	messages.o \
-	bindings.o \
 	bindings_nodes.o \
 	bindings_messages.o \
-	list.o
 
 all: libstructures.a sizes
 	./sizes > sizes-out

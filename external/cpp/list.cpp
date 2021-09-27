@@ -1,9 +1,7 @@
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include "list.hpp"
 #include "structs.hpp"
-#include <execinfo.h>
 
 namespace lib_ruby_parser
 {

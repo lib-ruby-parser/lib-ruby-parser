@@ -8,6 +8,7 @@
 #include <optional>
 #include <vector>
 #include "list.hpp"
+#include "string_ptr.hpp"
 
 namespace lib_ruby_parser
 {
@@ -21,19 +22,9 @@ namespace lib_ruby_parser
     // MaybePtr<T>
     using MaybePtr = std::unique_ptr<int>;
 
-    // StringPtr
-    // Small strings have optimization that forces string content
-    // to be stored INSIDE the string container.
-    // Because of that moved small string has a different c_str()
-    // which prevents us from sharing it with Rust
-    using StringPtr = std::unique_ptr<std::string>;
+    // StringPtr is implemented in "string_ptr.hpp"
 
-    // MaybeStringPtr
-    // Small strings have optimization that forces string content
-    // to be stored INSIDE the string container.
-    // Because of that moved small string has a different c_str()
-    // which prevents us from sharing it with Rust
-    using MaybeStringPtr = std::unique_ptr<std::string>;
+    // MaybeStringPtr is implemented in "string_ptr.hpp"
 
     // SharedByteList
     using SharedByteList = std::string_view;

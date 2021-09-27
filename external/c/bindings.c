@@ -251,11 +251,9 @@ LIB_RUBY_PARSER_TokenRewriter_BLOB lib_ruby_parser__external__maybe__token_rewri
 /*
     LIB_RUBY_PARSER_StringPtr
 */
-LIB_RUBY_PARSER_StringPtr_BLOB lib_ruby_parser__external__string_ptr__new(const uint8_t *ptr, uint64_t len)
+LIB_RUBY_PARSER_StringPtr_BLOB lib_ruby_parser__external__string_ptr__new(uint8_t *ptr, uint64_t len)
 {
-    uint8_t *new_ptr = malloc(len);
-    memcpy(new_ptr, ptr, len);
-    return PACK_StringPtr(((LIB_RUBY_PARSER_StringPtr){.ptr = new_ptr, .len = len}));
+    return PACK_StringPtr(((LIB_RUBY_PARSER_StringPtr){.ptr = ptr, .len = len}));
 }
 void lib_ruby_parser__external__string_ptr__drop(LIB_RUBY_PARSER_StringPtr_BLOB *self_blob)
 {
