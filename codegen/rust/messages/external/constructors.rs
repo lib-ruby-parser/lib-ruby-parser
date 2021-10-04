@@ -40,7 +40,7 @@ fn extern_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
 
             format!(
                 "{field_name}: {field_type}",
-                field_name = field.name,
+                field_name = field.snakecase_name,
                 field_type = field_type
             )
         })
@@ -64,7 +64,7 @@ fn foreign_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
 
             format!(
                 "{field_name}: {field_type}",
-                field_name = field.name,
+                field_name = field.snakecase_name,
                 field_type = field_type
             )
         })
@@ -74,9 +74,9 @@ fn foreign_constructor(message: &lib_ruby_parser_nodes::Message) -> String {
         .fields
         .map(|field| match field.field_type {
             lib_ruby_parser_nodes::MessageFieldType::Str => {
-                format!("{name}.into_blob()", name = field.name)
+                format!("{name}.into_blob()", name = field.snakecase_name)
             }
-            lib_ruby_parser_nodes::MessageFieldType::Byte => field.name.to_string(),
+            lib_ruby_parser_nodes::MessageFieldType::Byte => field.snakecase_name.to_string(),
         })
         .join(", ");
 

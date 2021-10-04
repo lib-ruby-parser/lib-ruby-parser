@@ -35,7 +35,7 @@ pub(crate) fn struct_name(node: &lib_ruby_parser_nodes::Node) -> String {
 }
 
 pub(crate) fn node_field_name(field: &lib_ruby_parser_nodes::NodeField) -> String {
-    let name = field.field_name.to_owned();
+    let name = field.snakecase_name.to_owned();
 
     match &name[..] {
         "const" | "as" | "else" => format!("{}_", name),

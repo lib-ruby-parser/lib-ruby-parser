@@ -1,14 +1,11 @@
 use crate::codegen::cpp::helpers as cpp_helpers;
-use lib_ruby_parser_bindings::{
-    helpers::messages::{
-        constructor::sig as constructor_sig, field_getter::sig as field_getter_sig,
-        fields::field_name, variant_getter::sig as variant_getter_sig,
-        variant_predicate::sig as variant_predicate_sig,
-    },
-    Options,
+use lib_ruby_parser_bindings::helpers::messages::{
+    constructor::sig as constructor_sig, field_getter::sig as field_getter_sig, fields::field_name,
+    variant_getter::sig as variant_getter_sig, variant_predicate::sig as variant_predicate_sig,
 };
+use lib_ruby_parser_nodes::MessageWithField;
 
-fn contents(options: &Options) -> String {
+fn contents() -> String {
     let messages = lib_ruby_parser_nodes::messages();
 
     format!(
@@ -35,25 +32,25 @@ extern \"C\"
 ",
         generator = file!(),
         constructors = messages
-            .map(|message| constructor(message, options))
+            .map(|message| constructor(message,))
             .join("\n\n    "),
         variant_getters = messages
-            .map(|message| variant_getter(message, options))
+            .map(|message| variant_getter(message,))
             .join("\n\n    "),
         field_getters = messages
-            .flat_map(|message| field_getters(message, options))
+            .flat_map(|message| field_getters(message,))
             .join("\n\n    "),
         variant_predicates = messages
-            .map(|message| variant_predicate(message, options))
+            .map(|message| variant_predicate(message,))
             .join("\n\n    ")
     )
 }
 
-pub(crate) fn codegen(options: &Options) {
-    std::fs::write("external/cpp/bindings_messages.cpp", contents(options)).unwrap();
+pub(crate) fn codegen() {
+    std::fs::write("external/cpp/bindings_messages.cpp", contents()).unwrap();
 }
 
-fn constructor(message: &lib_ruby_parser_nodes::Message, options: &Options) -> String {
+fn constructor(message: &lib_ruby_parser_nodes::Message) -> String {
     let arglist = message
         .fields
         .map(|field| {
@@ -70,12 +67,12 @@ fn constructor(message: &lib_ruby_parser_nodes::Message, options: &Options) -> S
     {{
         return PACK_DiagnosticMessage(DiagnosticMessage({inner_t}({arglist})));
     }}",
-        sig = constructor_sig(message, options),
+        sig = constructor_sig(message),
         inner_t = message.camelcase_name,
         arglist = arglist
     )
 }
-fn variant_getter(message: &lib_ruby_parser_nodes::Message, options: &Options) -> String {
+fn variant_getter(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "{sig}
     {{
@@ -83,11 +80,11 @@ fn variant_getter(message: &lib_ruby_parser_nodes::Message, options: &Options) -
         const {variant_name} *variant = std::get_if<{variant_name}>(&(self->variant));
         return (const {variant_name}_BLOB*)variant;
     }}",
-        sig = variant_getter_sig(message, options),
+        sig = variant_getter_sig(message),
         variant_name = message.camelcase_name,
     )
 }
-fn field_getters(message: &lib_ruby_parser_nodes::Message, options: &Options) -> Vec<String> {
+fn field_getters(message: &lib_ruby_parser_nodes::Message) -> Vec<String> {
     message.fields.map(|field| {
         format!(
             "{signature}
@@ -95,21 +92,24 @@ fn field_getters(message: &lib_ruby_parser_nodes::Message, options: &Options) ->
         const {variant_name} *self = (const {variant_name} *)self_blob;
         return (const {blob_type} *)(&(self->{field_name}));
     }}",
-            signature = field_getter_sig(message, field, options),
+            signature = field_getter_sig(&MessageWithField {
+                message: message.clone(),
+                field: field.clone()
+            }),
             variant_name = message.camelcase_name,
             field_name = field_name(field),
             blob_type = cpp_helpers::messages::blob_type(field),
         )
     })
 }
-fn variant_predicate(message: &lib_ruby_parser_nodes::Message, options: &Options) -> String {
+fn variant_predicate(message: &lib_ruby_parser_nodes::Message) -> String {
     format!(
         "{signature}
     {{
         const DiagnosticMessage *self = (const DiagnosticMessage *)self_blob;
         return std::holds_alternative<{variant_name}>(self->variant);
     }}",
-        signature = variant_predicate_sig(message, options),
+        signature = variant_predicate_sig(message),
         variant_name = message.camelcase_name
     )
 }

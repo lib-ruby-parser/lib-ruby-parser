@@ -7,6 +7,7 @@ use lib_ruby_parser_bindings::helpers::nodes::{
     field_setter::name as external_field_setter_name,
     into_internal::name as external_into_internal_name,
 };
+use lib_ruby_parser_nodes::NodeWithField;
 
 fn contents(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
@@ -200,7 +201,10 @@ fn inspect_field(field: &lib_ruby_parser_nodes::NodeField) -> String {
         NodeFieldType::U8 => "push_u8",
     };
 
-    format!("result.{}(self.get_{}());", method_name, field.field_name)
+    format!(
+        "result.{}(self.get_{}());",
+        method_name, field.snakecase_name
+    )
 }
 fn print_with_locs(field: &lib_ruby_parser_nodes::NodeField) -> Vec<String> {
     use lib_ruby_parser_nodes::NodeFieldType;
@@ -208,33 +212,33 @@ fn print_with_locs(field: &lib_ruby_parser_nodes::NodeField) -> Vec<String> {
     match field.field_type {
         NodeFieldType::Node => vec![format!(
             "self.get_{field_name}().inner_ref().print_with_locs();",
-            field_name = field.field_name
+            field_name = field.snakecase_name
         )],
         NodeFieldType::Nodes => vec![
             format!(
                 "for node in self.get_{field_name}().iter() {{",
-                field_name = field.field_name
+                field_name = field.snakecase_name
             ),
             "  node.inner_ref().print_with_locs();".to_string(),
             "}".to_string(),
         ],
         NodeFieldType::MaybeNode { .. } => vec![format!(
             "if let Some(node) = self.get_{field_name}().as_ref() {{ node.inner_ref().print_with_locs() }}",
-            field_name = field.field_name
+            field_name = field.snakecase_name
         )],
         NodeFieldType::Loc => vec![format!(
             "self.get_{field_name}().print(\"{printable_field_name}\");",
-            field_name = field.field_name,
+            field_name = field.snakecase_name,
             printable_field_name = field
-                .field_name
+                .snakecase_name
                 .strip_suffix("_l")
                 .expect("expected loc field to end with _l")
         )],
         NodeFieldType::MaybeLoc => vec![format!(
             "if let Some(loc) = self.get_{field_name}().as_ref() {{ loc.print(\"{printable_field_name}\") }}",
-            field_name = field.field_name,
+            field_name = field.snakecase_name,
             printable_field_name = field
-                .field_name
+                .snakecase_name
                 .strip_suffix("_l")
                 .expect("expected loc field to end with _l"),
         )],
@@ -261,11 +265,17 @@ fn getter(node: &lib_ruby_parser_nodes::Node, field: &lib_ruby_parser_nodes::Nod
     pub fn set_{method_name}(&mut self, {field_name}: {field_type}) {{
         unsafe {{ {extern_setter}(&mut self.blob, {field_name}.into_blob()) }}
     }}",
-        method_name = field.field_name,
+        method_name = field.snakecase_name,
         field_name = node_field_name(field),
         field_type = helpers::field_type(field),
-        extern_getter = external_field_getter_name(node, field),
-        extern_setter = external_field_setter_name(node, field),
+        extern_getter = external_field_getter_name(&NodeWithField {
+            node: node.clone(),
+            field: field.clone()
+        }),
+        extern_setter = external_field_setter_name(&NodeWithField {
+            node: node.clone(),
+            field: field.clone()
+        }),
     )
 }
 
@@ -278,14 +288,20 @@ fn extern_fns(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
             .flat_map(|field| {
                 let getter = format!(
                     "fn {getter_name}(blob: *const Blob<{node_type}>) -> *mut Blob<{field_type}>;",
-                    getter_name = external_field_getter_name(node, field),
+                    getter_name = external_field_getter_name(&NodeWithField {
+                        node: node.clone(),
+                        field: field.clone()
+                    }),
                     node_type = struct_name(node),
                     field_type = helpers::field_type(field)
                 );
 
                 let setter = format!(
                     "fn {setter_name}(blob: *mut Blob<{node_type}>, blob: Blob<{field_type}>);",
-                    setter_name = external_field_setter_name(node, field),
+                    setter_name = external_field_setter_name(&NodeWithField {
+                        node: node.clone(),
+                        field: field.clone()
+                    }),
                     node_type = struct_name(node),
                     field_type = helpers::field_type(field)
                 );
@@ -329,7 +345,7 @@ fn debug_impl(node: &lib_ruby_parser_nodes::Node) -> String {
         stmts.push(format!(
             "            .field(\"{field_name}\", &self.get_{method_name}())\n",
             field_name = node_field_name(field),
-            method_name = field.field_name
+            method_name = field.snakecase_name
         ));
     }
     stmts.push(format!("            .finish()"));
@@ -340,7 +356,7 @@ fn partial_eq_impl(node: &lib_ruby_parser_nodes::Node) -> String {
         .map(|field| {
             format!(
                 "self.get_{field_name}() == other.get_{field_name}()",
-                field_name = field.field_name
+                field_name = field.snakecase_name
             )
         })
         .join("\n            && ")

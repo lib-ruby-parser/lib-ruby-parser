@@ -31,7 +31,7 @@ fn constructor(message: &lib_ruby_parser_nodes::Message) -> String {
 
             format!(
                 "{field_name}: {field_type}",
-                field_name = field.name,
+                field_name = field.snakecase_name,
                 field_type = field_type
             )
         })
@@ -39,7 +39,7 @@ fn constructor(message: &lib_ruby_parser_nodes::Message) -> String {
 
     let fields = message
         .fields
-        .map(|field| format!("{}", field.name))
+        .map(|field| format!("{}", field.snakecase_name))
         .join(", ");
 
     format!(

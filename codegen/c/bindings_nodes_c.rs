@@ -1,19 +1,15 @@
 use crate::codegen::c::helpers;
-use lib_ruby_parser_bindings::{
-    helpers::nodes::{
-        constructor::sig as external_constructor_sig,
-        drop_variant::sig as external_drop_variant_sig,
-        field_getter::sig as external_field_getter_sig,
-        field_setter::sig as external_field_setter_sig,
-        into_internal::sig as external_into_internal_sig,
-        into_variant::sig as external_into_variant_sig,
-        variant_getter::sig as external_variant_getter_sig,
-        variant_predicate::sig as external_variant_predicate_sig,
-    },
-    Options,
+use lib_ruby_parser_bindings::helpers::nodes::{
+    constructor::sig as external_constructor_sig, drop_variant::sig as external_drop_variant_sig,
+    field_getter::sig as external_field_getter_sig, field_setter::sig as external_field_setter_sig,
+    into_internal::sig as external_into_internal_sig,
+    into_variant::sig as external_into_variant_sig,
+    variant_getter::sig as external_variant_getter_sig,
+    variant_predicate::sig as external_variant_predicate_sig,
 };
+use lib_ruby_parser_nodes::NodeWithField;
 
-fn contents(options: &Options) -> String {
+fn contents() -> String {
     let nodes = lib_ruby_parser_nodes::nodes();
 
     format!(
@@ -53,28 +49,22 @@ void lib_ruby_parser__external__node__drop(LIB_RUBY_PARSER_Node_BLOB* self_blob)
 }}
 ",
         generator = file!(),
-        constructors = nodes.map(|node| constructor(node, options)).join("\n"),
-        variant_predicates = nodes
-            .map(|node| variant_predicate(node, options))
-            .join("\n"),
-        variant_getters = nodes.map(|node| variant_getter(node, options)).join("\n"),
-        field_getters = nodes
-            .flat_map(|node| field_getters(node, options))
-            .join("\n"),
-        field_setters = nodes
-            .flat_map(|node| field_setters(node, options))
-            .join("\n"),
-        into_internal_fns = nodes.map(|node| into_internal_fn(node, options)).join("\n"),
-        into_variant_fns = nodes.map(|node| into_variant_fn(node, options)).join("\n"),
-        variant_drop_fns = nodes.map(|node| variant_drop_fn(node, options)).join("\n"),
+        constructors = nodes.map(|node| constructor(node)).join("\n"),
+        variant_predicates = nodes.map(|node| variant_predicate(node)).join("\n"),
+        variant_getters = nodes.map(|node| variant_getter(node)).join("\n"),
+        field_getters = nodes.flat_map(|node| field_getters(node)).join("\n"),
+        field_setters = nodes.flat_map(|node| field_setters(node)).join("\n"),
+        into_internal_fns = nodes.map(|node| into_internal_fn(node)).join("\n"),
+        into_variant_fns = nodes.map(|node| into_variant_fn(node)).join("\n"),
+        variant_drop_fns = nodes.map(|node| variant_drop_fn(node)).join("\n"),
     )
 }
 
-pub(crate) fn codegen(options: &Options) {
-    std::fs::write("external/c/bindings_nodes.c", contents(options)).unwrap();
+pub(crate) fn codegen() {
+    std::fs::write("external/c/bindings_nodes.c", contents()).unwrap();
 }
 
-fn constructor(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn constructor(node: &lib_ruby_parser_nodes::Node) -> String {
     let fields = node
         .fields
         .map(|field| {
@@ -92,24 +82,24 @@ fn constructor(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String 
     LIB_RUBY_PARSER_Node node = {{ .tag = {tag_name}, .as = {{ .{union_member} = {{ {fields} }} }} }};
     return PACK_Node(node);
 }}",
-        sig = external_constructor_sig(node, options),
+        sig = external_constructor_sig(node),
         tag_name = helpers::nodes::enum_variant_name(node),
         union_member = helpers::nodes::union_member_name(node),
         fields = fields
     )
 }
-fn variant_predicate(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn variant_predicate(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "{sig}
 {{
     LIB_RUBY_PARSER_Node *self = (LIB_RUBY_PARSER_Node *)self_blob;
     return self->tag == {tag_name};
 }}",
-        sig = external_variant_predicate_sig(node, options),
+        sig = external_variant_predicate_sig(node),
         tag_name = helpers::nodes::enum_variant_name(node),
     )
 }
-fn variant_getter(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn variant_getter(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "{sig}
 {{
@@ -119,13 +109,13 @@ fn variant_getter(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Stri
     }}
     return (LIB_RUBY_PARSER_{struct_name}_BLOB *)(&(self->as.{union_member}));
 }}",
-        sig = external_variant_getter_sig(node, options),
+        sig = external_variant_getter_sig(node),
         tag_name = helpers::nodes::enum_variant_name(node),
         struct_name = node.camelcase_name,
         union_member = helpers::nodes::union_member_name(node)
     )
 }
-fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<String> {
+fn field_getters(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     node.fields.map(|field| {
         let field_type = helpers::nodes::fields::field_type(field);
 
@@ -136,7 +126,10 @@ fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
     {field_type}* field = &(self->{field_name});
     return ({blob_type} *)field;
 }}",
-            sig = external_field_getter_sig(node, field, options),
+            sig = external_field_getter_sig(&NodeWithField {
+                node: node.clone(),
+                field: field.clone()
+            }),
             variant = node.camelcase_name,
             field_type = field_type,
             field_name = helpers::nodes::fields::field_name(field),
@@ -144,7 +137,7 @@ fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
         )
     })
 }
-fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<String> {
+fn field_setters(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     node.fields.map(|field| {
         let drop_old_value_fn = match field.field_type {
             lib_ruby_parser_nodes::NodeFieldType::Node => "LIB_RUBY_PARSER_drop_node_ptr",
@@ -171,7 +164,10 @@ fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
     {drop_old_value_fn}(&(self->{field_name}));
     self->{field_name} = {unpack_fn}({field_name}_blob);
 }}",
-            sig = external_field_setter_sig(node, field, options),
+            sig = external_field_setter_sig(&NodeWithField {
+                node: node.clone(),
+                field: field.clone()
+            }),
             struct_name = node.camelcase_name,
             field_name = helpers::nodes::fields::field_name(field),
             unpack_fn = helpers::nodes::fields::unpack_field_fn(field),
@@ -179,7 +175,7 @@ fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
         )
     })
 }
-fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn into_internal_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     let fields = node
         .fields
         .map(|field| {
@@ -199,32 +195,32 @@ fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> St
     Internal{struct_name} internal = {{ {fields} }};
     return internal;
 }}",
-        sig = external_into_internal_sig(node, options),
+        sig = external_into_internal_sig(node),
         struct_name = node.camelcase_name,
         fields = fields
     )
 }
 
-fn into_variant_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn into_variant_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "{sig} {{
     LIB_RUBY_PARSER_Node self = UNPACK_Node(self_blob);
     LIB_RUBY_PARSER_{struct_name} variant = self.as.{union_member_name};
     return PACK_{struct_name}(variant);
 }}",
-        sig = external_into_variant_sig(node, options),
+        sig = external_into_variant_sig(node),
         struct_name = node.camelcase_name,
         union_member_name = helpers::nodes::union_member_name(node)
     )
 }
 
-fn variant_drop_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn variant_drop_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "{sig} {{
     LIB_RUBY_PARSER_{struct_name} *self = (LIB_RUBY_PARSER_{struct_name} *)self_blob;
     LIB_RUBY_PARSER_drop_node_{lower}(self);
 }}",
-        sig = external_drop_variant_sig(node, options),
+        sig = external_drop_variant_sig(node),
         struct_name = node.camelcase_name,
         lower = node.lower_name()
     )

@@ -133,9 +133,9 @@ fn clone_impl(nodes: &lib_ruby_parser_nodes::NodeList) -> String {
                 .fields
                 .map(|field| match field.field_type {
                     lib_ruby_parser_nodes::NodeFieldType::U8 => {
-                        format!("*inner.get_{}()", field.field_name)
+                        format!("*inner.get_{}()", field.snakecase_name)
                     }
-                    _ => format!("inner.get_{}().clone()", field.field_name),
+                    _ => format!("inner.get_{}().clone()", field.snakecase_name),
                 })
                 .join(", ");
 

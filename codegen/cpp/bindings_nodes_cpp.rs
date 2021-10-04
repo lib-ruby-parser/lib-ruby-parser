@@ -1,19 +1,15 @@
 use crate::codegen::cpp::helpers as cpp_helpers;
-use lib_ruby_parser_bindings::{
-    helpers::nodes::{
-        constructor::sig as external_constructor_sig,
-        drop_variant::sig as external_drop_variant_sig,
-        field_getter::sig as external_field_getter_sig,
-        field_setter::sig as external_field_setter_sig,
-        into_internal::sig as external_into_internal_sig,
-        into_variant::sig as external_into_variant_sig,
-        variant_getter::sig as external_variant_getter_sig,
-        variant_predicate::sig as external_variant_predicate_sig,
-    },
-    Options,
+use lib_ruby_parser_bindings::helpers::nodes::{
+    constructor::sig as external_constructor_sig, drop_variant::sig as external_drop_variant_sig,
+    field_getter::sig as external_field_getter_sig, field_setter::sig as external_field_setter_sig,
+    into_internal::sig as external_into_internal_sig,
+    into_variant::sig as external_into_variant_sig,
+    variant_getter::sig as external_variant_getter_sig,
+    variant_predicate::sig as external_variant_predicate_sig,
 };
+use lib_ruby_parser_nodes::NodeWithField;
 
-fn contents(options: &Options) -> String {
+fn contents() -> String {
     let nodes = lib_ruby_parser_nodes::nodes();
 
     format!(
@@ -56,36 +52,22 @@ extern \"C\"
 ",
         generator = file!(),
         // impl
-        constructors = nodes.map(|node| constructor(node, options)).join("\n    "),
-        variant_predicates = nodes
-            .map(|node| variant_predicate(node, options))
-            .join("\n    "),
-        variant_getters = nodes
-            .map(|node| variant_getter(node, options))
-            .join("\n    "),
-        field_getters = nodes
-            .flat_map(|node| field_getters(node, options))
-            .join("\n    "),
-        field_setters = nodes
-            .flat_map(|node| field_setters(node, options))
-            .join("\n    "),
-        into_internal_fns = nodes
-            .map(|node| into_internal_fn(node, options))
-            .join("\n    "),
-        into_variant_fns = nodes
-            .map(|node| into_variant_fn(node, options))
-            .join("\n    "),
-        variant_drop_fns = nodes
-            .map(|node| variant_drop_fn(node, options))
-            .join("\n    "),
+        constructors = nodes.map(|node| constructor(node,)).join("\n    "),
+        variant_predicates = nodes.map(|node| variant_predicate(node,)).join("\n    "),
+        variant_getters = nodes.map(|node| variant_getter(node,)).join("\n    "),
+        field_getters = nodes.flat_map(|node| field_getters(node,)).join("\n    "),
+        field_setters = nodes.flat_map(|node| field_setters(node,)).join("\n    "),
+        into_internal_fns = nodes.map(|node| into_internal_fn(node,)).join("\n    "),
+        into_variant_fns = nodes.map(|node| into_variant_fn(node,)).join("\n    "),
+        variant_drop_fns = nodes.map(|node| variant_drop_fn(node,)).join("\n    "),
     )
 }
 
-pub(crate) fn codegen(options: &Options) {
-    std::fs::write("external/cpp/bindings_nodes.cpp", contents(options)).unwrap();
+pub(crate) fn codegen() {
+    std::fs::write("external/cpp/bindings_nodes.cpp", contents()).unwrap();
 }
 
-fn constructor(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn constructor(node: &lib_ruby_parser_nodes::Node) -> String {
     let arglist = node
         .fields
         .map(|field| {
@@ -107,24 +89,24 @@ fn constructor(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String 
         {unpack_fields}
         return PACK_Node(Node({variant_name}({arglist})));
     }}",
-        sig = external_constructor_sig(node, options),
+        sig = external_constructor_sig(node),
         unpack_fields = unpack_fields,
         variant_name = node.camelcase_name,
         arglist = arglist
     )
 }
-fn variant_predicate(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn variant_predicate(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "{sig}
     {{
         const Node *self = (const Node *)self_blob;
         return std::holds_alternative<{variant_name}>(self->variant);
     }}",
-        sig = external_variant_predicate_sig(node, options),
+        sig = external_variant_predicate_sig(node),
         variant_name = node.camelcase_name,
     )
 }
-fn variant_getter(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn variant_getter(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "{sig}
     {{
@@ -132,11 +114,11 @@ fn variant_getter(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Stri
         {variant_name} *variant = std::get_if<{variant_name}>(&(self->variant));
         return ({variant_name}_BLOB*)variant;
     }}",
-        sig = external_variant_getter_sig(node, options),
+        sig = external_variant_getter_sig(node),
         variant_name = node.camelcase_name
     )
 }
-fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<String> {
+fn field_getters(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     node.fields.map(|field| {
         let field_type = cpp_helpers::nodes::field_type(field);
 
@@ -147,7 +129,10 @@ fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
         {field_type}* field = &(self->{field_name});
         return ({blob_type} *)field;
     }}",
-            sig = external_field_getter_sig(node, field, options),
+            sig = external_field_getter_sig(&NodeWithField {
+                node: node.clone(),
+                field: field.clone()
+            }),
             variant = node.camelcase_name,
             field_type = field_type,
             field_name = cpp_helpers::nodes::field_name(field),
@@ -155,7 +140,7 @@ fn field_getters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
         )
     })
 }
-fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<String> {
+fn field_setters(node: &lib_ruby_parser_nodes::Node) -> Vec<String> {
     node.fields.map(|field| {
         format!(
             "{sig}
@@ -164,14 +149,17 @@ fn field_setters(node: &lib_ruby_parser_nodes::Node, options: &Options) -> Vec<S
         {unpack_arg}
         self->{field_name} = std::move({field_name});
     }}",
-            sig = external_field_setter_sig(node, field, options),
+            sig = external_field_setter_sig(&NodeWithField {
+                node: node.clone(),
+                field: field.clone()
+            }),
             struct_name = node.camelcase_name,
             field_name = cpp_helpers::nodes::field_name(field),
             unpack_arg = unpack_field(field),
         )
     })
 }
-fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn into_internal_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     let fields = node
         .fields
         .map(|field| {
@@ -193,32 +181,32 @@ fn into_internal_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> St
         Internal{variant_name} internal = {{ {fields} }};
         return internal;
     }}",
-        sig = external_into_internal_sig(node, options),
+        sig = external_into_internal_sig(node),
         variant_name = node.camelcase_name,
         pack_fields = pack_fields,
         fields = fields
     )
 }
 
-fn into_variant_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn into_variant_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "{sig} {{
         Node self = UNPACK_Node(self_blob);
         {variant_name} variant = std::get<{variant_name}>(std::move(self.variant));
         return PACK_{variant_name}(std::move(variant));
     }}",
-        sig = external_into_variant_sig(node, options),
+        sig = external_into_variant_sig(node),
         variant_name = node.camelcase_name,
     )
 }
 
-fn variant_drop_fn(node: &lib_ruby_parser_nodes::Node, options: &Options) -> String {
+fn variant_drop_fn(node: &lib_ruby_parser_nodes::Node) -> String {
     format!(
         "{sig} {{
         {struct_name} *self = ({struct_name} *)self_blob;
         self->~{struct_name}();
     }}",
-        sig = external_drop_variant_sig(node, options),
+        sig = external_drop_variant_sig(node),
         struct_name = node.camelcase_name,
     )
 }

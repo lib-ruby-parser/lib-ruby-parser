@@ -1,6 +1,6 @@
 pub(crate) mod messages {
     pub(crate) fn field_name(field: &lib_ruby_parser_nodes::MessageField) -> &str {
-        match &field.name[..] {
+        match &field.snakecase_name[..] {
             "operator" => "operator_",
             other => other,
         }

@@ -222,7 +222,7 @@ fn test_getters(node: &lib_ruby_parser_nodes::Node) -> String {
     let assertions = node
         .fields
         .map(|field| {
-            let lhs = format!("variant.get_{}()", field.field_name);
+            let lhs = format!("variant.get_{}()", field.snakecase_name);
             let rhs = format!("&{}()", new_field_fn(field));
 
             format!("assert_eq!({}, {});", lhs, rhs)
@@ -248,11 +248,11 @@ fn test_setters(node: &lib_ruby_parser_nodes::Node) -> String {
         .map(|field| {
             let set_field = format!(
                 "variant.set_{}({}())",
-                field.field_name,
+                field.snakecase_name,
                 new_field_fn(field)
             );
 
-            let lhs = format!("variant.get_{}()", field.field_name);
+            let lhs = format!("variant.get_{}()", field.snakecase_name);
             let rhs = format!("&{}()", new_field_fn(field));
 
             format!(

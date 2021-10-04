@@ -81,7 +81,10 @@ fn extern_getters(message: &lib_ruby_parser_nodes::Message) -> String {
         .map(|field| {
             format!(
                 "fn {name}(blob: *const Blob<{struct_name}>) -> *const Blob<{return_type}>;",
-                name = bindings_field_getter::name(message, field),
+                name = bindings_field_getter::name(&lib_ruby_parser_nodes::MessageWithField {
+                    message: message.clone(),
+                    field: field.clone()
+                }),
                 struct_name = message.camelcase_name,
                 return_type = field_type(field)
             )
@@ -101,9 +104,13 @@ fn getters(message: &lib_ruby_parser_nodes::Message) -> String {
             ({extern_getter}(&self.blob) as *const {return_type}).as_ref().unwrap()
         }}
     }}",
-                field_name = field.name,
+                field_name = field.snakecase_name,
                 return_type = field_type(field),
-                extern_getter = bindings_field_getter::name(message, field),
+                extern_getter =
+                    bindings_field_getter::name(&lib_ruby_parser_nodes::MessageWithField {
+                        message: message.clone(),
+                        field: field.clone()
+                    }),
             )
         })
         .join("\n    ")
@@ -114,7 +121,7 @@ fn debug_fields(message: &lib_ruby_parser_nodes::Message) -> String {
         .map(|field| {
             format!(
                 ".field(\"{field_name}\", self.get_{field_name}())",
-                field_name = field.name
+                field_name = field.snakecase_name
             )
         })
         .join("\n            ")
@@ -123,7 +130,7 @@ fn compare_fields(message: &lib_ruby_parser_nodes::Message) -> String {
     let checks = message.fields.map(|field| {
         format!(
             "self.get_{field_name}() == other.get_{field_name}()",
-            field_name = field.name
+            field_name = field.snakecase_name
         )
     });
 

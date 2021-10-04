@@ -36,10 +36,10 @@ fn branch(message: &lib_ruby_parser_nodes::Message) -> String {
         .fields
         .map(|field| match field.field_type {
             lib_ruby_parser_nodes::MessageFieldType::Str => {
-                format!("variant.get_{}().clone()", field.name)
+                format!("variant.get_{}().clone()", field.snakecase_name)
             }
             lib_ruby_parser_nodes::MessageFieldType::Byte => {
-                format!("*variant.get_{}()", field.name)
+                format!("*variant.get_{}()", field.snakecase_name)
             }
         })
         .join(", ");

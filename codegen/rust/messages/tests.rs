@@ -29,7 +29,10 @@ fn message_test(message: &lib_ruby_parser_nodes::Message) -> String {
     let assert_getters = message
         .fields
         .map(|field| {
-            let lhs = format!("variant.get_{field_name}()", field_name = field.name);
+            let lhs = format!(
+                "variant.get_{field_name}()",
+                field_name = field.snakecase_name
+            );
 
             let rhs = format!("&{}()", new_field_code(field));
 

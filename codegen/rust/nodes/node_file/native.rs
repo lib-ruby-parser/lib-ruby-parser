@@ -209,7 +209,7 @@ fn getter(field: &lib_ruby_parser_nodes::NodeField) -> String {
     pub fn get_{method_name}_mut(&mut self) -> &mut {return_type} {{
         &mut self.{field_name}
     }}",
-        method_name = field.field_name,
+        method_name = field.snakecase_name,
         field_name = node_field_name(field),
         return_type = field_type(field),
     )
@@ -223,6 +223,6 @@ fn setter(field: &lib_ruby_parser_nodes::NodeField) -> String {
     }}",
         field_name = node_field_name(field),
         field_type = field_type(field),
-        method_name = field.field_name,
+        method_name = field.snakecase_name,
     )
 }

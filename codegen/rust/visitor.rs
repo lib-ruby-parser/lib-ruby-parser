@@ -161,7 +161,7 @@ impl<'a> NodeWrapper<'a> {
 
                 Some(format!(
                     "self.visit(node.get_{field_name}(), Item::{variant});",
-                    field_name = field.field_name,
+                    field_name = field.snakecase_name,
                     variant = variant
                 ))
             })

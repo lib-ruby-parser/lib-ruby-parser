@@ -28,7 +28,7 @@ fn variant(message: &lib_ruby_parser_nodes::Message) -> String {
                 "{comment}
     pub {field_name}: {field_type},",
                 comment = field.render_comment("///", 4),
-                field_name = field.name,
+                field_name = field.snakecase_name,
                 field_type = field_type(field)
             )
         })
@@ -42,7 +42,7 @@ fn variant(message: &lib_ruby_parser_nodes::Message) -> String {
     pub fn get_{field_name}(&self) -> &{field_type} {{
         &self.{field_name}
     }}",
-                field_name = field.name,
+                field_name = field.snakecase_name,
                 field_type = field_type(field)
             )
         })
