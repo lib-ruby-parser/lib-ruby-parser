@@ -13,6 +13,9 @@ mod y;
 #[cfg(feature = "compile-with-external-structures")]
 mod sizes;
 
+#[cfg(feature = "lib-ruby-parser-nodes")]
+mod fns;
+
 macro_rules! codegen_if_feature {
     ($feature:literal, $codegen:block, otherwise print: $msg:literal) => {
         #[cfg(feature = $feature)]

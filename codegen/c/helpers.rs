@@ -8,10 +8,6 @@ pub(crate) mod messages {
                 lib_ruby_parser_nodes::MessageFieldType::Byte => "LIB_RUBY_PARSER_Byte",
             }
         }
-
-        pub(crate) fn blob_type(field: &lib_ruby_parser_nodes::MessageField) -> String {
-            format!("{}_BLOB", field_type(field))
-        }
     }
 }
 
