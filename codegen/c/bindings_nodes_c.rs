@@ -129,10 +129,6 @@ pub(crate) fn codegen() {
         lib_ruby_parser_bindings::helpers::nodes::field_getter::sig,
     );
     fns.register_helper(
-        "node-camelcase-name",
-        local_helpers::field_node_camelcase_name,
-    );
-    fns.register_helper(
         "field-setter-sig",
         lib_ruby_parser_bindings::helpers::nodes::field_setter::sig,
     );
@@ -156,10 +152,6 @@ pub(crate) fn codegen() {
 
 mod local_helpers {
     use super::*;
-
-    pub(crate) fn field_node_camelcase_name(node_with_field: &NodeWithField) -> String {
-        node_with_field.node.camelcase_name.to_string()
-    }
 
     pub(crate) fn drop_field_fn(node_with_field: &NodeWithField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
