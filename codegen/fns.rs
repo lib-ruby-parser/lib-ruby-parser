@@ -110,6 +110,25 @@ mod node_fields {
         }
         .to_string()
     }
+
+    pub(crate) fn drop_fn_name(node_with_field: &NodeWithField) -> String {
+        use lib_ruby_parser_nodes::NodeFieldType::*;
+
+        match node_with_field.field.field_type {
+            Node => "LIB_RUBY_PARSER_drop_node_ptr",
+            Nodes => "LIB_RUBY_PARSER_drop_node_list",
+            MaybeNode { .. } => "LIB_RUBY_PARSER_drop_maybe_node_ptr",
+            Loc => "LIB_RUBY_PARSER_drop_loc",
+            MaybeLoc => "LIB_RUBY_PARSER_drop_maybe_loc",
+
+            Str { .. } => "LIB_RUBY_PARSER_drop_string_ptr",
+
+            MaybeStr { .. } => "LIB_RUBY_PARSER_drop_maybe_string_ptr",
+            StringValue => "LIB_RUBY_PARSER_drop_bytes",
+            U8 => "LIB_RUBY_PARSER_drop_byte",
+        }
+        .to_string()
+    }
 }
 
 mod messages {
@@ -153,6 +172,23 @@ mod message_fields {
     pub(crate) fn c_blob_type(message_with_field: &MessageWithField) -> String {
         format!("{}_BLOB", c_field_type(message_with_field))
     }
+
+    pub(crate) fn c_pack_fn_name(message_with_field: &MessageWithField) -> String {
+        use lib_ruby_parser_nodes::MessageFieldType::*;
+        match message_with_field.field.field_type {
+            Str => "PACK_StringPtr",
+            Byte => "PACK_Byte",
+        }
+        .to_string()
+    }
+    pub(crate) fn c_unpack_fn_name(message_with_field: &MessageWithField) -> String {
+        use lib_ruby_parser_nodes::MessageFieldType::*;
+        match message_with_field.field.field_type {
+            Str => "UNPACK_StringPtr",
+            Byte => "UNPACK_Byte",
+        }
+        .to_string()
+    }
 }
 
 pub(crate) fn build() -> TemplateFns {
@@ -171,6 +207,7 @@ pub(crate) fn build() -> TemplateFns {
     fns.register_helper("node-field-c-blob-type", node_fields::c_blob_type);
     fns.register_helper("node-field-c-pack-fn-name", node_fields::c_pack_fn_name);
     fns.register_helper("node-field-c-unpack-fn-name", node_fields::c_unpack_fn_name);
+    fns.register_helper("node-field-drop-fn-name", node_fields::drop_fn_name);
 
     fns.register_helper("message-camelcase-name", messages::camelcase_name);
     fns.register_helper("message-upper-name", messages::upper_name);
@@ -181,6 +218,14 @@ pub(crate) fn build() -> TemplateFns {
     fns.register_helper("message-field-c-name", message_fields::c_name);
     fns.register_helper("message-field-c-field-type", message_fields::c_field_type);
     fns.register_helper("message-field-c-blob-type", message_fields::c_blob_type);
+    fns.register_helper(
+        "message-field-c-pack-fn-name",
+        message_fields::c_pack_fn_name,
+    );
+    fns.register_helper(
+        "message-field-c-unpack-fn-name",
+        message_fields::c_unpack_fn_name,
+    );
 
     fns
 }
