@@ -22,7 +22,8 @@ DECLARE_BLOB_FOR(LIB_RUBY_PARSER_<helper message-camelcase-name>);
 #define PACK_<helper message-camelcase-name>(value) ((LIB_RUBY_PARSER_<helper message-camelcase-name>_BLOB_UNION){.as_value = value}).as_blob
 </each-message>
 
-#endif // LIB_RUBY_PARSER_EXTERNAL_C_BLOBS_H";
+#endif // LIB_RUBY_PARSER_EXTERNAL_C_BLOBS_H
+";
 
 pub(crate) fn codegen() {
     let template = TemplateRoot::new(TEMPLATE).unwrap();

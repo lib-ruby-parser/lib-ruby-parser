@@ -51,7 +51,8 @@ void LIB_RUBY_PARSER_drop_maybe_node_ptr(LIB_RUBY_PARSER_Node **node);
 void LIB_RUBY_PARSER_drop_node_ptr(LIB_RUBY_PARSER_Node **node);
 void LIB_RUBY_PARSER_drop_node_list(LIB_RUBY_PARSER_NodeList *node_list);
 
-#endif // LIB_RUBY_PARSER_EXTERNAL_C_NODES_H";
+#endif // LIB_RUBY_PARSER_EXTERNAL_C_NODES_H
+";
 
 pub(crate) fn codegen() {
     let template = TemplateRoot::new(TEMPLATE).unwrap();
