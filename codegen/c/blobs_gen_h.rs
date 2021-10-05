@@ -9,19 +9,19 @@ const TEMPLATE: &str = "#ifndef LIB_RUBY_PARSER_EXTERNAL_C_BLOBS_H
 #include \"declare_blob.h\"
 
 // Nodes
-<each-node>
+<each-node><dnl>
 DECLARE_BLOB_FOR(LIB_RUBY_PARSER_<helper node-camelcase-name>);
 #define UNPACK_<helper node-camelcase-name>(blob) ((LIB_RUBY_PARSER_<helper node-camelcase-name>_BLOB_UNION){.as_blob = blob}).as_value
 #define PACK_<helper node-camelcase-name>(value) ((LIB_RUBY_PARSER_<helper node-camelcase-name>_BLOB_UNION){.as_value = value}).as_blob
-</each-node>
 
+</each-node><dnl>
 // Messages
-<each-message>
+<each-message><dnl>
 DECLARE_BLOB_FOR(LIB_RUBY_PARSER_<helper message-camelcase-name>);
 #define UNPACK_<helper message-camelcase-name>(blob) ((LIB_RUBY_PARSER_<helper message-camelcase-name>_BLOB_UNION){.as_blob = blob}).as_value
 #define PACK_<helper message-camelcase-name>(value) ((LIB_RUBY_PARSER_<helper message-camelcase-name>_BLOB_UNION){.as_value = value}).as_blob
-</each-message>
 
+</each-message><dnl>
 #endif // LIB_RUBY_PARSER_EXTERNAL_C_BLOBS_H
 ";
 

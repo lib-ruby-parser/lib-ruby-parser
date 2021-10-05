@@ -19,32 +19,32 @@ typedef struct LIB_RUBY_PARSER_NodeList
 typedef LIB_RUBY_PARSER_Node* LIB_RUBY_PARSER_NodePtr;
 typedef LIB_RUBY_PARSER_Node* LIB_RUBY_PARSER_MaybeNodePtr;
 
-<each-node>
+<each-node><dnl>
 typedef struct LIB_RUBY_PARSER_<helper node-camelcase-name>
 {
 <each-node-field><dnl>
     <helper node-field-c-field-type> <helper node-field-c-name>;
 </each-node-field>
 } LIB_RUBY_PARSER_<helper node-camelcase-name>;
-</each-node>
+</each-node><dnl>
 
 struct LIB_RUBY_PARSER_Node {
     enum {
 <each-node><dnl>
         <helper node-c-enum-variant-name>,
-</each-node>
+</each-node><dnl>
     } tag;
 
     union {
 <each-node><dnl>
         LIB_RUBY_PARSER_<helper node-camelcase-name> <helper node-c-union-member-name>;
-</each-node>
+</each-node><dnl>
     } as;
 };
 
 <each-node><dnl>
 void LIB_RUBY_PARSER_drop_node_<helper node-lower-name>(LIB_RUBY_PARSER_<helper node-camelcase-name> *variant);
-</each-node>
+</each-node><dnl>
 
 void LIB_RUBY_PARSER_drop_node(LIB_RUBY_PARSER_Node *node);
 void LIB_RUBY_PARSER_drop_maybe_node_ptr(LIB_RUBY_PARSER_Node **node);

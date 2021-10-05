@@ -12,7 +12,7 @@ typedef struct LIB_RUBY_PARSER_<helper message-camelcase-name>
     <helper message-field-c-field-type> <helper message-field-c-name>;
 </each-message-field><dnl>
 } LIB_RUBY_PARSER_<helper message-camelcase-name>;
-</each-message>
+</each-message><dnl>
 
 typedef struct LIB_RUBY_PARSER_DiagnosticMessage {
     enum {
@@ -30,7 +30,7 @@ typedef struct LIB_RUBY_PARSER_DiagnosticMessage {
 
 <each-message><dnl>
 void LIB_RUBY_PARSER_drop_message_<helper message-lower-name>(LIB_RUBY_PARSER_<helper message-camelcase-name>* variant);
-</each-message>
+</each-message><dnl>
 
 void LIB_RUBY_PARSER_drop_diagnostic_message(LIB_RUBY_PARSER_DiagnosticMessage *message);
 
