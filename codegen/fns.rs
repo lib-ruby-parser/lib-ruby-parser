@@ -189,6 +189,15 @@ mod message_fields {
         }
         .to_string()
     }
+
+    pub(crate) fn drop_fn_name(message_with_field: &MessageWithField) -> String {
+        use lib_ruby_parser_nodes::MessageFieldType::*;
+        match message_with_field.field.field_type {
+            Str => "LIB_RUBY_PARSER_drop_string_ptr",
+            Byte => "LIB_RUBY_PARSER_drop_byte",
+        }
+        .to_string()
+    }
 }
 
 pub(crate) fn build() -> TemplateFns {
@@ -226,6 +235,7 @@ pub(crate) fn build() -> TemplateFns {
         "message-field-c-unpack-fn-name",
         message_fields::c_unpack_fn_name,
     );
+    fns.register_helper("message-field-drop-fn-name", message_fields::drop_fn_name);
 
     fns
 }
