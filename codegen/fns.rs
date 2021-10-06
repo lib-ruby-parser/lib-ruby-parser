@@ -30,6 +30,15 @@ pub(crate) mod nodes {
         }
     }
 
+    pub(crate) fn rust_camelcase_name(node: &Node) -> String {
+        let camelcase_name = node.camelcase_name.to_owned();
+
+        match &camelcase_name[..] {
+            "Self" => format!("{}_", camelcase_name),
+            _ => camelcase_name,
+        }
+    }
+
     pub(crate) fn is_last(node: &Node) -> bool {
         lib_ruby_parser_nodes::template::ALL_DATA
             .nodes
@@ -200,6 +209,32 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
+    pub(crate) fn rust_field_name(node_with_field: &NodeWithField) -> String {
+        let name = node_with_field.field.snakecase_name.to_owned();
+
+        match &name[..] {
+            "const" | "as" | "else" => format!("{}_", name),
+            _ => name,
+        }
+    }
+
+    pub(crate) fn rust_field_type(node_with_field: &NodeWithField) -> String {
+        use lib_ruby_parser_nodes::NodeFieldType::*;
+
+        match node_with_field.field.field_type {
+            Node => "Ptr<Node>",
+            Nodes => "List<Node>",
+            MaybeNode { .. } => "Maybe<Ptr<Node>>",
+            Loc => "Loc",
+            MaybeLoc => "Maybe<Loc>",
+            Str { .. } => "StringPtr",
+            MaybeStr { .. } => "Maybe<StringPtr>",
+            StringValue => "Bytes",
+            U8 => "u8",
+        }
+        .to_string()
+    }
+
     pub(crate) fn is_last(node_with_field: &NodeWithField) -> bool {
         node_with_field.node.fields.0.last().unwrap() == &node_with_field.field
     }
@@ -341,6 +376,7 @@ pub(crate) fn build() -> TemplateFns {
     fns.register_helper("node-lower-name", nodes::lower_name);
     fns.register_helper("node-c-enum-variant-name", nodes::c_enum_variant_name);
     fns.register_helper("node-c-union-member-name", nodes::c_union_member_name);
+    fns.register_helper("node-rust-camelcase-name", nodes::rust_camelcase_name);
     fns.register_predicate("node-is-last", nodes::is_last);
 
     fns.register_helper("node-field-name", node_fields::name);
@@ -358,6 +394,8 @@ pub(crate) fn build() -> TemplateFns {
         "node-field-cpp-unpack-fn-name",
         node_fields::cpp_unpack_fn_name,
     );
+    fns.register_helper("node-field-rust-field-type", node_fields::rust_field_type);
+    fns.register_helper("node-field-rust-field-name", node_fields::rust_field_name);
     fns.register_predicate("node-field-is-last", node_fields::is_last);
 
     fns.register_helper("message-camelcase-name", messages::camelcase_name);
