@@ -169,8 +169,21 @@ mod message_fields {
         .to_string()
     }
 
+    pub(crate) fn cpp_field_type(message_with_field: &MessageWithField) -> String {
+        use lib_ruby_parser_nodes::MessageFieldType::*;
+        match message_with_field.field.field_type {
+            Str => "StringPtr",
+            Byte => "Byte",
+        }
+        .to_string()
+    }
+
     pub(crate) fn c_blob_type(message_with_field: &MessageWithField) -> String {
         format!("{}_BLOB", c_field_type(message_with_field))
+    }
+
+    pub(crate) fn cpp_blob_type(message_with_field: &MessageWithField) -> String {
+        format!("{}_BLOB", cpp_field_type(message_with_field))
     }
 
     pub(crate) fn c_pack_fn_name(message_with_field: &MessageWithField) -> String {
@@ -235,6 +248,11 @@ pub(crate) fn build() -> TemplateFns {
         "message-field-c-unpack-fn-name",
         message_fields::c_unpack_fn_name,
     );
+    fns.register_helper(
+        "message-field-cpp-field-type",
+        message_fields::cpp_field_type,
+    );
+    fns.register_helper("message-field-cpp-blob-type", message_fields::cpp_blob_type);
     fns.register_helper("message-field-drop-fn-name", message_fields::drop_fn_name);
 
     fns

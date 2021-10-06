@@ -25,10 +25,6 @@ pub(crate) mod messages {
             })
             .join(", ")
     }
-
-    pub(crate) fn blob_type(field: &lib_ruby_parser_nodes::MessageField) -> String {
-        format!("{}_BLOB", field_type(field))
-    }
 }
 
 pub(crate) mod nodes {
