@@ -199,6 +199,10 @@ pub(crate) mod node_fields {
         }
         .to_string()
     }
+
+    pub(crate) fn is_last(node_with_field: &NodeWithField) -> bool {
+        node_with_field.node.fields.0.last().unwrap() == &node_with_field.field
+    }
 }
 
 pub(crate) mod messages {
@@ -216,7 +220,7 @@ pub(crate) mod messages {
         message.lower_name()
     }
 
-    pub(crate) fn message_has_no_fields(message: &Message) -> bool {
+    pub(crate) fn has_no_fields(message: &Message) -> bool {
         message.fields.0.is_empty()
     }
 
@@ -294,7 +298,7 @@ pub(crate) mod message_fields {
         .to_string()
     }
 
-    pub(crate) fn message_field_is_last(message_with_field: &MessageWithField) -> bool {
+    pub(crate) fn is_last(message_with_field: &MessageWithField) -> bool {
         message_with_field.message.fields.0.last().unwrap() == &message_with_field.field
     }
 }
@@ -324,12 +328,13 @@ pub(crate) fn build() -> TemplateFns {
         "node-field-cpp-unpack-fn-name",
         node_fields::cpp_unpack_fn_name,
     );
+    fns.register_predicate("node-field-is-last", node_fields::is_last);
 
     fns.register_helper("message-camelcase-name", messages::camelcase_name);
     fns.register_helper("message-upper-name", messages::upper_name);
     fns.register_helper("message-lower-name", messages::lower_name);
     fns.register_predicate("message-is-last", messages::is_last);
-    fns.register_predicate("message-has-no-fields", messages::message_has_no_fields);
+    fns.register_predicate("message-has-no-fields", messages::has_no_fields);
 
     fns.register_helper("message-field-name", message_fields::name);
     #[cfg(feature = "lib-ruby-parser-bindings")]
@@ -350,10 +355,7 @@ pub(crate) fn build() -> TemplateFns {
     );
     fns.register_helper("message-field-cpp-blob-type", message_fields::cpp_blob_type);
     fns.register_helper("message-field-drop-fn-name", message_fields::drop_fn_name);
-    fns.register_predicate(
-        "message-field-is-last",
-        message_fields::message_field_is_last,
-    );
+    fns.register_predicate("message-field-is-last", message_fields::is_last);
 
     fns
 }
