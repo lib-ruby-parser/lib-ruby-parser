@@ -29,6 +29,14 @@ pub(crate) mod nodes {
             other => other.to_owned(),
         }
     }
+
+    pub(crate) fn is_last(node: &Node) -> bool {
+        lib_ruby_parser_nodes::template::ALL_DATA
+            .nodes
+            .last()
+            .unwrap()
+            == node
+    }
 }
 
 pub(crate) mod node_fields {
@@ -207,6 +215,18 @@ pub(crate) mod messages {
     pub(crate) fn lower_name(message: &Message) -> String {
         message.lower_name()
     }
+
+    pub(crate) fn message_has_no_fields(message: &Message) -> bool {
+        message.fields.0.is_empty()
+    }
+
+    pub(crate) fn is_last(message: &Message) -> bool {
+        lib_ruby_parser_nodes::template::ALL_DATA
+            .messages
+            .last()
+            .unwrap()
+            == message
+    }
 }
 
 pub(crate) mod message_fields {
@@ -273,6 +293,10 @@ pub(crate) mod message_fields {
         }
         .to_string()
     }
+
+    pub(crate) fn message_field_is_last(message_with_field: &MessageWithField) -> bool {
+        message_with_field.message.fields.0.last().unwrap() == &message_with_field.field
+    }
 }
 
 pub(crate) fn build() -> TemplateFns {
@@ -283,6 +307,7 @@ pub(crate) fn build() -> TemplateFns {
     fns.register_helper("node-lower-name", nodes::lower_name);
     fns.register_helper("node-c-enum-variant-name", nodes::c_enum_variant_name);
     fns.register_helper("node-c-union-member-name", nodes::c_union_member_name);
+    fns.register_predicate("node-is-last", nodes::is_last);
 
     fns.register_helper("node-field-name", node_fields::name);
     #[cfg(feature = "lib-ruby-parser-bindings")]
@@ -303,6 +328,8 @@ pub(crate) fn build() -> TemplateFns {
     fns.register_helper("message-camelcase-name", messages::camelcase_name);
     fns.register_helper("message-upper-name", messages::upper_name);
     fns.register_helper("message-lower-name", messages::lower_name);
+    fns.register_predicate("message-is-last", messages::is_last);
+    fns.register_predicate("message-has-no-fields", messages::message_has_no_fields);
 
     fns.register_helper("message-field-name", message_fields::name);
     #[cfg(feature = "lib-ruby-parser-bindings")]
@@ -323,6 +350,10 @@ pub(crate) fn build() -> TemplateFns {
     );
     fns.register_helper("message-field-cpp-blob-type", message_fields::cpp_blob_type);
     fns.register_helper("message-field-drop-fn-name", message_fields::drop_fn_name);
+    fns.register_predicate(
+        "message-field-is-last",
+        message_fields::message_field_is_last,
+    );
 
     fns
 }

@@ -1,32 +1,3 @@
-pub(crate) mod messages {
-    pub(crate) fn field_name(field: &lib_ruby_parser_nodes::MessageField) -> &str {
-        match &field.snakecase_name[..] {
-            "operator" => "operator_",
-            other => other,
-        }
-    }
-
-    pub(crate) fn field_type(field: &lib_ruby_parser_nodes::MessageField) -> &str {
-        match field.field_type {
-            lib_ruby_parser_nodes::MessageFieldType::Str => "StringPtr",
-            lib_ruby_parser_nodes::MessageFieldType::Byte => "Byte",
-        }
-    }
-
-    pub(crate) fn constructor_arglist(message: &lib_ruby_parser_nodes::Message) -> String {
-        message
-            .fields
-            .map(|field| {
-                format!(
-                    "{t} {name}",
-                    t = field_type(field),
-                    name = field_name(field)
-                )
-            })
-            .join(", ")
-    }
-}
-
 pub(crate) mod nodes {
     pub(crate) fn field_name(field: &lib_ruby_parser_nodes::NodeField) -> String {
         lib_ruby_parser_bindings::helpers::nodes::fields::field_name(field)

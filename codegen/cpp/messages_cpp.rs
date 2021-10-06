@@ -9,12 +9,12 @@ namespace lib_ruby_parser
 <each-message><dnl>
     <helper message-camelcase-name>::<helper message-camelcase-name>(<dnl>
 <each-message-field><dnl>
-<helper message-field-cpp-field-type> <helper message-field-c-name><if message-has-more-fields>, <else></if><dnl>
+<helper message-field-cpp-field-type> <helper message-field-c-name><if message-field-is-last><else>, </if><dnl>
 </each-message-field><dnl>
 )<dnl>
 <if message-has-no-fields><else> : </if><dnl>
 <each-message-field><dnl>
-<helper message-field-c-name>(std::move(<helper message-field-c-name>))<if message-has-more-fields>, <else></if><dnl>
+<helper message-field-c-name>(std::move(<helper message-field-c-name>))<if message-field-is-last><else>, </if><dnl>
 </each-message-field>{}
 </each-message><dnl>
 
@@ -43,36 +43,8 @@ namespace lib_ruby_parser
 
 pub(crate) fn codegen() {
     let template = TemplateRoot::new(TEMPLATE).unwrap();
-    let mut fns = crate::codegen::fns::default_fns!();
-
-    fns.register_predicate(
-        "message-has-no-fields",
-        local_helpers::message_has_no_fields,
-    );
-    fns.register_predicate(
-        "message-has-more-fields",
-        local_helpers::message_has_more_fields,
-    );
+    let fns = crate::codegen::fns::default_fns!();
 
     let contents = template.render(ALL_DATA, &fns);
     std::fs::write("external/cpp/messages.cpp", contents).unwrap();
-}
-
-mod local_helpers {
-    use lib_ruby_parser_nodes::{Message, MessageWithField};
-
-    pub(crate) fn message_has_no_fields(message: &Message) -> bool {
-        message.fields.0.is_empty()
-    }
-
-    pub(crate) fn message_has_more_fields(message_with_field: &MessageWithField) -> bool {
-        let len = message_with_field.message.fields.0.len();
-
-        for (idx, field) in message_with_field.message.fields.0.iter().enumerate() {
-            if field == &message_with_field.field {
-                return idx < len - 1;
-            }
-        }
-        unreachable!("we must've caught it above")
-    }
 }

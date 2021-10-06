@@ -10,7 +10,7 @@ void LIB_RUBY_PARSER_drop_message_<helper message-lower-name>(LIB_RUBY_PARSER_<h
 <each-message-field><dnl>
     <helper message-field-drop-fn-name>(&(variant-><helper message-field-c-name>));
 </each-message-field><dnl>
-<if message-has-no-field><dnl>
+<if message-has-no-fields><dnl>
     (void)variant;
 <else><dnl>
 </if><dnl>
@@ -32,18 +32,8 @@ void LIB_RUBY_PARSER_drop_diagnostic_message(LIB_RUBY_PARSER_DiagnosticMessage *
 
 pub(crate) fn codegen() {
     let template = TemplateRoot::new(TEMPLATE).unwrap();
-    let mut fns = crate::codegen::fns::default_fns!();
-
-    fns.register_predicate("message-has-no-field", local_helpers::message_has_no_fields);
+    let fns = crate::codegen::fns::default_fns!();
 
     let contents = template.render(ALL_DATA, &fns);
     std::fs::write("external/c/messages.c", contents).unwrap();
-}
-
-mod local_helpers {
-    use lib_ruby_parser_nodes::Message;
-
-    pub(crate) fn message_has_no_fields(message: &Message) -> bool {
-        message.fields.0.is_empty()
-    }
 }
