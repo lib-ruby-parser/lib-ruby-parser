@@ -319,6 +319,10 @@ pub(crate) mod message_fields {
     pub(crate) fn is_last(message_with_field: &MessageWithField) -> bool {
         message_with_field.message.fields.0.last().unwrap() == &message_with_field.field
     }
+
+    pub(crate) fn is_byte(message_with_field: &MessageWithField) -> bool {
+        message_with_field.field.field_type == lib_ruby_parser_nodes::MessageFieldType::Byte
+    }
 }
 
 pub(crate) fn build() -> TemplateFns {
@@ -382,6 +386,7 @@ pub(crate) fn build() -> TemplateFns {
         message_fields::rust_blob_type,
     );
     fns.register_predicate("message-field-is-last", message_fields::is_last);
+    fns.register_predicate("message-field-is-byte", message_fields::is_byte);
 
     fns
 }
