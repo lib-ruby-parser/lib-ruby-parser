@@ -224,6 +224,10 @@ pub(crate) mod messages {
         message.fields.0.is_empty()
     }
 
+    pub(crate) fn comment(message: &Message) -> String {
+        message.render_comment("///", 0)
+    }
+
     pub(crate) fn is_last(message: &Message) -> bool {
         lib_ruby_parser_nodes::template::ALL_DATA
             .messages
@@ -316,6 +320,10 @@ pub(crate) mod message_fields {
         .to_string()
     }
 
+    pub(crate) fn comment(message_with_field: &MessageWithField) -> String {
+        message_with_field.field.render_comment("///", 4)
+    }
+
     pub(crate) fn is_last(message_with_field: &MessageWithField) -> bool {
         message_with_field.message.fields.0.last().unwrap() == &message_with_field.field
     }
@@ -355,10 +363,12 @@ pub(crate) fn build() -> TemplateFns {
     fns.register_helper("message-camelcase-name", messages::camelcase_name);
     fns.register_helper("message-upper-name", messages::upper_name);
     fns.register_helper("message-lower-name", messages::lower_name);
+    fns.register_helper("message-comment", messages::comment);
     fns.register_predicate("message-is-last", messages::is_last);
     fns.register_predicate("message-has-no-fields", messages::has_no_fields);
 
     fns.register_helper("message-field-name", message_fields::name);
+    fns.register_helper("mesage-field-comment", message_fields::comment);
     #[cfg(feature = "lib-ruby-parser-bindings")]
     fns.register_helper("message-field-c-name", message_fields::c_name);
     fns.register_helper("message-field-c-field-type", message_fields::c_field_type);
