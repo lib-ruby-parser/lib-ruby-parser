@@ -47,32 +47,4 @@ pub(crate) mod nodes {
             NodeFieldType::U8 => "Byte",
         }
     }
-
-    pub(crate) fn internal_field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
-        use lib_ruby_parser_nodes::NodeFieldType;
-
-        match field.field_type {
-            NodeFieldType::Node => "Ptr",
-            NodeFieldType::Nodes => "NodeList",
-            NodeFieldType::MaybeNode { .. } => "MaybePtr",
-            NodeFieldType::Loc => "Loc",
-            NodeFieldType::MaybeLoc => "MaybeLoc",
-            NodeFieldType::Str { .. } => "StringPtr",
-            NodeFieldType::MaybeStr { .. } => "MaybeStringPtr",
-            NodeFieldType::StringValue => "Bytes",
-            NodeFieldType::U8 => "Byte",
-        }
-    }
-
-    pub(crate) fn pack_field_fn(field: &lib_ruby_parser_nodes::NodeField) -> String {
-        format!("PACK_{}", internal_field_type(field))
-    }
-
-    pub(crate) fn unpack_field_fn(field: &lib_ruby_parser_nodes::NodeField) -> String {
-        format!("UNPACK_{}", internal_field_type(field))
-    }
-
-    pub(crate) fn blob_type(field: &lib_ruby_parser_nodes::NodeField) -> String {
-        format!("{}_BLOB", internal_field_type(field))
-    }
 }

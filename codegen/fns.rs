@@ -2,7 +2,7 @@ use lib_ruby_parser_nodes::{
     template::TemplateFns, Message, MessageWithField, Node, NodeWithField,
 };
 
-mod nodes {
+pub(crate) mod nodes {
     use super::*;
 
     pub(crate) fn camelcase_name(node: &Node) -> String {
@@ -31,7 +31,7 @@ mod nodes {
     }
 }
 
-mod node_fields {
+pub(crate) mod node_fields {
     use super::*;
 
     pub(crate) fn name(node_with_field: &NodeWithField) -> String {
@@ -77,9 +77,39 @@ mod node_fields {
         .to_string()
     }
 
+    pub(crate) fn cpp_pack_fn_name(node_with_field: &NodeWithField) -> String {
+        use lib_ruby_parser_nodes::NodeFieldType::*;
+        match node_with_field.field.field_type {
+            Node => "PACK_Ptr",
+            Nodes => "PACK_NodeList",
+            MaybeNode { .. } => "PACK_MaybePtr",
+            Loc => "PACK_Loc",
+            MaybeLoc => "PACK_MaybeLoc",
+            Str { .. } => "PACK_StringPtr",
+            MaybeStr { .. } => "PACK_MaybeStringPtr",
+            StringValue => "PACK_Bytes",
+            U8 => "PACK_Byte",
+        }
+        .to_string()
+    }
+    pub(crate) fn cpp_unpack_fn_name(node_with_field: &NodeWithField) -> String {
+        use lib_ruby_parser_nodes::NodeFieldType::*;
+        match node_with_field.field.field_type {
+            Node => "UNPACK_Ptr",
+            Nodes => "UNPACK_NodeList",
+            MaybeNode { .. } => "UNPACK_MaybePtr",
+            Loc => "UNPACK_Loc",
+            MaybeLoc => "UNPACK_MaybeLoc",
+            Str { .. } => "UNPACK_StringPtr",
+            MaybeStr { .. } => "UNPACK_MaybeStringPtr",
+            StringValue => "UNPACK_Bytes",
+            U8 => "UNPACK_Byte",
+        }
+        .to_string()
+    }
+
     pub(crate) fn c_field_type(node_with_field: &NodeWithField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
-
         match node_with_field.field.field_type {
             Node => "LIB_RUBY_PARSER_NodePtr",
             Nodes => "LIB_RUBY_PARSER_NodeList",
@@ -90,6 +120,22 @@ mod node_fields {
             MaybeStr { .. } => "LIB_RUBY_PARSER_MaybeStringPtr",
             StringValue => "LIB_RUBY_PARSER_Bytes",
             U8 => "LIB_RUBY_PARSER_Byte",
+        }
+        .to_string()
+    }
+
+    pub(crate) fn cpp_field_type(node_with_field: &NodeWithField) -> String {
+        use lib_ruby_parser_nodes::NodeFieldType::*;
+        match node_with_field.field.field_type {
+            Node => "NodePtr",
+            Nodes => "NodeList",
+            MaybeNode { .. } => "MaybeNodePtr",
+            Loc => "Loc",
+            MaybeLoc => "MaybeLoc",
+            Str { .. } => "StringPtr",
+            MaybeStr { .. } => "MaybeStringPtr",
+            StringValue => "Bytes",
+            U8 => "Byte",
         }
         .to_string()
     }
@@ -107,6 +153,22 @@ mod node_fields {
             MaybeStr { .. } => "LIB_RUBY_PARSER_MaybeStringPtr_BLOB",
             StringValue => "LIB_RUBY_PARSER_Bytes_BLOB",
             U8 => "LIB_RUBY_PARSER_Byte_BLOB",
+        }
+        .to_string()
+    }
+
+    pub(crate) fn cpp_blob_type(node_with_field: &NodeWithField) -> String {
+        use lib_ruby_parser_nodes::NodeFieldType::*;
+        match node_with_field.field.field_type {
+            Node => "Ptr_BLOB",
+            Nodes => "NodeList_BLOB",
+            MaybeNode { .. } => "MaybePtr_BLOB",
+            Loc => "Loc_BLOB",
+            MaybeLoc => "MaybeLoc_BLOB",
+            Str { .. } => "StringPtr_BLOB",
+            MaybeStr { .. } => "MaybeStringPtr_BLOB",
+            StringValue => "Bytes_BLOB",
+            U8 => "Byte_BLOB",
         }
         .to_string()
     }
@@ -131,7 +193,7 @@ mod node_fields {
     }
 }
 
-mod messages {
+pub(crate) mod messages {
     use super::*;
 
     pub(crate) fn camelcase_name(message: &Message) -> String {
@@ -147,7 +209,7 @@ mod messages {
     }
 }
 
-mod message_fields {
+pub(crate) mod message_fields {
     use super::*;
 
     pub(crate) fn name(message_with_field: &MessageWithField) -> String {
@@ -230,6 +292,13 @@ pub(crate) fn build() -> TemplateFns {
     fns.register_helper("node-field-c-pack-fn-name", node_fields::c_pack_fn_name);
     fns.register_helper("node-field-c-unpack-fn-name", node_fields::c_unpack_fn_name);
     fns.register_helper("node-field-drop-fn-name", node_fields::drop_fn_name);
+    fns.register_helper("node-field-cpp-field-type", node_fields::cpp_field_type);
+    fns.register_helper("node-field-cpp-blob-type", node_fields::cpp_blob_type);
+    fns.register_helper("node-field-cpp-pack-fn-name", node_fields::cpp_pack_fn_name);
+    fns.register_helper(
+        "node-field-cpp-unpack-fn-name",
+        node_fields::cpp_unpack_fn_name,
+    );
 
     fns.register_helper("message-camelcase-name", messages::camelcase_name);
     fns.register_helper("message-upper-name", messages::upper_name);
