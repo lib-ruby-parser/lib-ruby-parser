@@ -298,6 +298,24 @@ pub(crate) mod message_fields {
         .to_string()
     }
 
+    pub(crate) fn rust_field_type(message_with_field: &MessageWithField) -> String {
+        use lib_ruby_parser_nodes::MessageFieldType::*;
+        match message_with_field.field.field_type {
+            Str => "StringPtr",
+            Byte => "u8",
+        }
+        .to_string()
+    }
+
+    pub(crate) fn rust_blob_type(message_with_field: &MessageWithField) -> String {
+        use lib_ruby_parser_nodes::MessageFieldType::*;
+        match message_with_field.field.field_type {
+            Str => "Blob<StringPtr>",
+            Byte => "u8",
+        }
+        .to_string()
+    }
+
     pub(crate) fn is_last(message_with_field: &MessageWithField) -> bool {
         message_with_field.message.fields.0.last().unwrap() == &message_with_field.field
     }
@@ -355,6 +373,14 @@ pub(crate) fn build() -> TemplateFns {
     );
     fns.register_helper("message-field-cpp-blob-type", message_fields::cpp_blob_type);
     fns.register_helper("message-field-drop-fn-name", message_fields::drop_fn_name);
+    fns.register_helper(
+        "message-field-rust-field-type",
+        message_fields::rust_field_type,
+    );
+    fns.register_helper(
+        "message-field-rust-blob-type",
+        message_fields::rust_blob_type,
+    );
     fns.register_predicate("message-field-is-last", message_fields::is_last);
 
     fns
