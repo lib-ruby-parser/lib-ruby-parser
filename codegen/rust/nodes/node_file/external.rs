@@ -32,7 +32,7 @@ impl PartialEq for {{ helper node-rust-camelcase-name }} {
             return false
         }
 {{ end }}<dnl>
-        false
+        true
     }
 }
 
