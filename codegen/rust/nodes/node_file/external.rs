@@ -127,7 +127,6 @@ pub(crate) fn codegen(node: &lib_ruby_parser_nodes::Node) {
     fns.register_helper("imports", local_helpers::imports);
     fns.register_helper("inspect-field", local_helpers::inspect_field);
     fns.register_helper("print-field-with-loc", local_helpers::print_field_with_loc);
-    fns.register_helper("node-str-type", local_helpers::node_str_type);
 
     let contents = template.render(node, &fns);
 
@@ -283,9 +282,5 @@ mod local_helpers {
             StringValue => format!(""),
             U8 => format!(""),
         }
-    }
-
-    pub(crate) fn node_str_type(node: &Node) -> String {
-        node.wqp_name.to_string()
     }
 }

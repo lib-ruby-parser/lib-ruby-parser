@@ -13,6 +13,10 @@ pub(crate) mod nodes {
         node.render_comment("///", 0)
     }
 
+    pub(crate) fn str_type(node: &Node) -> String {
+        node.wqp_name.to_string()
+    }
+
     pub(crate) fn upper_name(node: &Node) -> String {
         node.upper_name()
     }
@@ -239,6 +243,10 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
+    pub(crate) fn comment(node_with_field: &NodeWithField) -> String {
+        node_with_field.field.render_comment("///", 4)
+    }
+
     pub(crate) fn is_last(node_with_field: &NodeWithField) -> bool {
         node_with_field.node.fields.0.last().unwrap() == &node_with_field.field
     }
@@ -377,6 +385,7 @@ pub(crate) fn build() -> TemplateFns {
 
     fns.register_helper("node-camelcase-name", nodes::camelcase_name);
     fns.register_helper("node-comment", nodes::comment);
+    fns.register_helper("node-str-type", nodes::str_type);
     fns.register_helper("node-upper-name", nodes::upper_name);
     fns.register_helper("node-lower-name", nodes::lower_name);
     fns.register_helper("node-c-enum-variant-name", nodes::c_enum_variant_name);
@@ -385,6 +394,7 @@ pub(crate) fn build() -> TemplateFns {
     fns.register_predicate("node-is-last", nodes::is_last);
 
     fns.register_helper("node-field-name", node_fields::name);
+    fns.register_helper("node-field-comment", node_fields::comment);
     #[cfg(feature = "lib-ruby-parser-bindings")]
     fns.register_helper("node-field-c-name", node_fields::c_name);
     fns.register_helper("node-field-c-field-type", node_fields::c_field_type);
