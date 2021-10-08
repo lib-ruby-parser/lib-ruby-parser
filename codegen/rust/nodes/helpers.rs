@@ -1,20 +1,3 @@
-#[allow(dead_code)]
-pub(crate) fn field_type(field: &lib_ruby_parser_nodes::NodeField) -> &str {
-    use lib_ruby_parser_nodes::NodeFieldType;
-
-    match field.field_type {
-        NodeFieldType::Node => "Ptr<Node>",
-        NodeFieldType::Nodes => "List<Node>",
-        NodeFieldType::MaybeNode { .. } => "Maybe<Ptr<Node>>",
-        NodeFieldType::Loc => "Loc",
-        NodeFieldType::MaybeLoc => "Maybe<Loc>",
-        NodeFieldType::Str { .. } => "StringPtr",
-        NodeFieldType::MaybeStr { .. } => "Maybe<StringPtr>",
-        NodeFieldType::StringValue => "Bytes",
-        NodeFieldType::U8 => "u8",
-    }
-}
-
 pub(crate) fn filename(node: &lib_ruby_parser_nodes::Node) -> String {
     let lower = node.lower_name();
 
