@@ -87,7 +87,7 @@ impl InnerNode for {{ helper node-rust-camelcase-name }} {
     }
 
     fn str_type(&self) -> &'static str {
-        \"{str_type}\"
+        \"{{ helper node-str-type }}\"
     }
 
     fn print_with_locs(&self) {
@@ -127,6 +127,7 @@ pub(crate) fn codegen(node: &lib_ruby_parser_nodes::Node) {
     fns.register_helper("imports", local_helpers::imports);
     fns.register_helper("inspect-field", local_helpers::inspect_field);
     fns.register_helper("print-field-with-loc", local_helpers::print_field_with_loc);
+    fns.register_helper("node-str-type", local_helpers::node_str_type);
 
     let contents = template.render(node, &fns);
 
@@ -248,39 +249,43 @@ mod local_helpers {
         use lib_ruby_parser_nodes::NodeFieldType::*;
 
         match node_with_field.field.field_type {
-        Node => format!(
-            "self.get_{field_name}().inner_ref().print_with_locs();",
-            field_name = node_with_field.field.snakecase_name
-        ),
-        Nodes =>
-            format!(
-                "for node in self.get_{field_name}().iter() {{ node.inner_ref().print_with_locs(); }}",
+            Node => format!(
+                "self.get_{field_name}().inner_ref().print_with_locs();",
                 field_name = node_with_field.field.snakecase_name
             ),
-        MaybeNode { .. } => format!(
-            "if let Some(node) = self.get_{field_name}().as_ref() {{ node.inner_ref().print_with_locs() }}",
-            field_name = node_with_field.field.snakecase_name
-        ),
-        Loc => format!(
-            "self.get_{field_name}().print(\"{printable_field_name}\");",
-            field_name = node_with_field.field.snakecase_name,
-            printable_field_name = node_with_field.field
-                .snakecase_name
-                .strip_suffix("_l")
-                .expect("expected loc field to end with _l")
-        ),
-        MaybeLoc => format!(
-            "if let Some(loc) = self.get_{field_name}().as_ref() {{ loc.print(\"{printable_field_name}\") }}",
-            field_name = node_with_field.field.snakecase_name,
-            printable_field_name = node_with_field.field
-                .snakecase_name
-                .strip_suffix("_l")
-                .expect("expected loc field to end with _l"),
-        ),
-        Str { .. } => format!(""),
-        MaybeStr { .. } => format!(""),
-        StringValue => format!(""),
-        U8 => format!(""),
+            Nodes =>
+                format!(
+                    "for node in self.get_{field_name}().iter() {{ node.inner_ref().print_with_locs(); }}",
+                    field_name = node_with_field.field.snakecase_name
+                ),
+            MaybeNode { .. } => format!(
+                "if let Some(node) = self.get_{field_name}().as_ref() {{ node.inner_ref().print_with_locs() }}",
+                field_name = node_with_field.field.snakecase_name
+            ),
+            Loc => format!(
+                "self.get_{field_name}().print(\"{printable_field_name}\");",
+                field_name = node_with_field.field.snakecase_name,
+                printable_field_name = node_with_field.field
+                    .snakecase_name
+                    .strip_suffix("_l")
+                    .expect("expected loc field to end with _l")
+            ),
+            MaybeLoc => format!(
+                "if let Some(loc) = self.get_{field_name}().as_ref() {{ loc.print(\"{printable_field_name}\") }}",
+                field_name = node_with_field.field.snakecase_name,
+                printable_field_name = node_with_field.field
+                    .snakecase_name
+                    .strip_suffix("_l")
+                    .expect("expected loc field to end with _l"),
+            ),
+            Str { .. } => format!(""),
+            MaybeStr { .. } => format!(""),
+            StringValue => format!(""),
+            U8 => format!(""),
+        }
     }
+
+    pub(crate) fn node_str_type(node: &Node) -> String {
+        node.wqp_name.to_string()
     }
 }
