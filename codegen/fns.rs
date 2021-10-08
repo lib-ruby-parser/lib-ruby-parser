@@ -9,6 +9,10 @@ pub(crate) mod nodes {
         node.camelcase_name.to_owned()
     }
 
+    pub(crate) fn comment(node: &Node) -> String {
+        node.render_comment("///", 0)
+    }
+
     pub(crate) fn upper_name(node: &Node) -> String {
         node.upper_name()
     }
@@ -372,6 +376,7 @@ pub(crate) fn build() -> TemplateFns {
     let mut fns = TemplateFns::new();
 
     fns.register_helper("node-camelcase-name", nodes::camelcase_name);
+    fns.register_helper("node-comment", nodes::comment);
     fns.register_helper("node-upper-name", nodes::upper_name);
     fns.register_helper("node-lower-name", nodes::lower_name);
     fns.register_helper("node-c-enum-variant-name", nodes::c_enum_variant_name);
@@ -444,8 +449,12 @@ macro_rules! default_fns {
         fn generated_by(_: &lib_ruby_parser_nodes::template::GlobalContext) -> String {
             file!().to_string()
         }
+        fn generated_by_for_node(_: &lib_ruby_parser_nodes::Node) -> String {
+            file!().to_string()
+        }
         let mut fns = $crate::codegen::fns::build();
         fns.register_helper("generated-by", generated_by);
+        fns.register_helper("generated-by", generated_by_for_node);
         fns
     }};
 }
