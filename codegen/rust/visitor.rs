@@ -91,7 +91,7 @@ mod local_helpers {
 
     pub(crate) fn visit_children(node_field: &NodeField) -> String {
         let node = &node_field.node;
-        let field_name = crate::codegen::fns::node_fields::rust_field_name(node_field);
+        let field_name = crate::codegen::fns::rust::node_fields::rust_field_name(node_field);
 
         use lib_ruby_parser_nodes::NodeFieldType::*;
         match node_field.field_type {

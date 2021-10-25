@@ -155,7 +155,7 @@ mod local_helpers {
     use crate::codegen::fns;
 
     pub(crate) fn unpack_field(node_field: &NodeField) -> String {
-        let field_name = fns::node_fields::c_name(node_field);
+        let field_name = fns::c::node_fields::c_name(node_field);
 
         match node_field.field_type {
             lib_ruby_parser_nodes::NodeFieldType::Node => {
@@ -173,16 +173,16 @@ mod local_helpers {
             _ => {
                 format!(
                     "{field_type} {field_name} = {unpack}({field_name}_blob);",
-                    field_type = fns::node_fields::cpp_field_type(node_field),
+                    field_type = fns::cpp::node_fields::cpp_field_type(node_field),
                     field_name = field_name,
-                    unpack = fns::node_fields::cpp_unpack_fn_name(node_field)
+                    unpack = fns::cpp::node_fields::cpp_unpack_fn_name(node_field)
                 )
             }
         }
     }
 
     pub(crate) fn pack_field(node_field: &NodeField) -> String {
-        let field_name = fns::node_fields::c_name(node_field);
+        let field_name = fns::c::node_fields::c_name(node_field);
 
         match node_field.field_type {
             lib_ruby_parser_nodes::NodeFieldType::Node => {
@@ -200,9 +200,9 @@ mod local_helpers {
             _ => {
                 format!(
                     "{field_type}_BLOB {field_name} = {pack}(std::move(self.{field_name}));",
-                    field_type = fns::node_fields::cpp_field_type(node_field),
+                    field_type = fns::cpp::node_fields::cpp_field_type(node_field),
                     field_name = field_name,
-                    pack = fns::node_fields::cpp_pack_fn_name(node_field)
+                    pack = fns::cpp::node_fields::cpp_pack_fn_name(node_field)
                 )
             }
         }

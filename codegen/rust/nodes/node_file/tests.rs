@@ -212,7 +212,7 @@ mod local_helpers {
             .fields
             .iter()
             .map(|field| {
-                let key = crate::codegen::fns::node_fields::rust_field_name(field);
+                let key = crate::codegen::fns::rust::node_fields::rust_field_name(field);
                 use lib_ruby_parser_nodes::NodeFieldType;
                 let value = match field.field_type {
                     NodeFieldType::Node => &d_node,
@@ -230,11 +230,9 @@ mod local_helpers {
             .collect::<Vec<_>>()
             .join(", ");
 
-        let node_type = crate::codegen::fns::nodes::rust_camelcase_name(node);
-
         format!(
             "{node_type}({node_type} {{ {fields} }})",
-            node_type = node_type,
+            node_type = node.camelcase_name,
             fields = fields
         )
     }
