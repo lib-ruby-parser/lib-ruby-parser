@@ -11,7 +11,7 @@ pub(crate) fn codegen() {
 
     std::fs::create_dir_all("src/nodes/types").unwrap();
 
-    for node in nodes.0.iter() {
+    for node in nodes.iter() {
         node_file::codegen(node);
     }
 

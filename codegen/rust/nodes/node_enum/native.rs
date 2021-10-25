@@ -17,7 +17,7 @@ crate::use_native_or_external!(StringPtr);
 #[repr(C)]
 pub enum Node {
 {{ each node }}<dnl>
-    {{ helper node-rust-camelcase-name }}({{ helper node-rust-camelcase-name }}),
+    {{ helper node-camelcase-name }}({{ helper node-camelcase-name }}),
 {{ end }}<dnl>
 }
 
@@ -25,32 +25,32 @@ impl Node {
     pub(crate) fn inner_ref(&self) -> &dyn InnerNode {
         match &self {
 {{ each node }}<dnl>
-            Node::{{ helper node-rust-camelcase-name }}(inner) => inner,
+            Node::{{ helper node-camelcase-name }}(inner) => inner,
 {{ end }}<dnl>
         }
     }
 
     // new_<node> FNs
 {{ each node }}<dnl>
-    /// Constructs `Node::{{ helper node-rust-camelcase-name }}` variant
+    /// Constructs `Node::{{ helper node-camelcase-name }}` variant
     pub(crate) fn new_{{ helper node-lower-name }}({{ each node-field }}{{ helper node-field-rust-field-name }}: {{ helper node-field-rust-field-type }}, {{ end }}) -> Self {
-        Self::{{ helper node-rust-camelcase-name }}({{ helper node-rust-camelcase-name }} { {{ each node-field }}{{ helper node-field-rust-field-name }}, {{ end }} })
+        Self::{{ helper node-camelcase-name }}({{ helper node-camelcase-name }} { {{ each node-field }}{{ helper node-field-rust-field-name }}, {{ end }} })
     }
 {{ end }}<dnl>
 
     // is_<node> FNs
 {{ each node }}<dnl>
-    /// Returns true if `self` is `Node::{{ helper node-rust-camelcase-name }}`
+    /// Returns true if `self` is `Node::{{ helper node-camelcase-name }}`
     pub fn is_{{ helper node-lower-name }}(&self) -> bool {
-        matches!(self, Self::{{ helper node-rust-camelcase-name }}(_))
+        matches!(self, Self::{{ helper node-camelcase-name }}(_))
     }
 {{ end }}<dnl>
 
     // as_<node> FNs
 {{ each node }}<dnl>
-    /// Casts `&Node` to `Option<&nodes::{{ helper node-rust-camelcase-name }}>`
-    pub fn as_{{ helper node-lower-name }}(&self) -> Option<&{{ helper node-rust-camelcase-name }}> {
-        if let Self::{{ helper node-rust-camelcase-name }}(inner) = self {
+    /// Casts `&Node` to `Option<&nodes::{{ helper node-camelcase-name }}>`
+    pub fn as_{{ helper node-lower-name }}(&self) -> Option<&{{ helper node-camelcase-name }}> {
+        if let Self::{{ helper node-camelcase-name }}(inner) = self {
             Some(inner)
         } else {
             None
@@ -60,9 +60,10 @@ impl Node {
 
     // as_<node>_mut FNs
 {{ each node }}<dnl>
-    /// Casts `&Node` to `Option<&mut nodes::{{ helper node-rust-camelcase-name }}>`
-    pub fn as_{{ helper node-lower-name }}_mut(&mut self) -> Option<&mut {{ helper node-rust-camelcase-name }}> {
-        if let Self::{{ helper node-rust-camelcase-name }}(inner) = self {
+    /// Casts `&Node` to `Option<&mut nodes::{{ helper node-camelcase-name }}>`
+    #[allow(non_snake_case)]
+    pub fn as_{{ helper node-lower-name }}_mut(&mut self) -> Option<&mut {{ helper node-camelcase-name }}> {
+        if let Self::{{ helper node-camelcase-name }}(inner) = self {
             Some(inner)
         } else {
             None
@@ -72,12 +73,12 @@ impl Node {
 
     // into_<node> FNs
 {{ each node }}<dnl>
-    /// Casts `self` to `nodes::{{ helper node-rust-camelcase-name }}`, panics if variant doesn't match
-    pub fn into_{{ helper node-lower-name }}(self) -> {{ helper node-rust-camelcase-name }} {
-        if let Self::{{ helper node-rust-camelcase-name }}(inner) = self {
+    /// Casts `self` to `nodes::{{ helper node-camelcase-name }}`, panics if variant doesn't match
+    pub fn into_{{ helper node-lower-name }}(self) -> {{ helper node-camelcase-name }} {
+        if let Self::{{ helper node-camelcase-name }}(inner) = self {
             inner
         } else {
-            panic!(\"bug: expected type {{ helper node-rust-camelcase-name }}, got {:?}\", self)
+            panic!(\"bug: expected type {{ helper node-camelcase-name }}, got {:?}\", self)
         }
     }
 {{ end }}<dnl>

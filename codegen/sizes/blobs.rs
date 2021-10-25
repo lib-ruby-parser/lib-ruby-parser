@@ -62,7 +62,13 @@ pub mod messages {{
 fn camelcase(capitalized_name: &str) -> String {
     capitalized_name
         .split('_')
-        .map(|word| format!("{}{}", word[..1].to_uppercase(), word[1..].to_lowercase()))
+        .map(|word| {
+            if word.is_empty() {
+                format!("_")
+            } else {
+                format!("{}{}", word[..1].to_uppercase(), word[1..].to_lowercase())
+            }
+        })
         .collect::<Vec<_>>()
         .join("")
 }
@@ -76,10 +82,6 @@ fn map_blobs(blobs: Vec<(String, String)>, f: &dyn Fn(&str, &str) -> String) -> 
 
 fn blob_code(struct_name: &str, size_name: &str) -> String {
     let blob_name = format!("{}Blob", struct_name);
-    let struct_name = match struct_name {
-        "Self" => "Self_",
-        other => other,
-    };
 
     format!(
         "declare_blob!(

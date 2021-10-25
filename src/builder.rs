@@ -762,7 +762,7 @@ impl Builder {
     //
 
     pub(crate) fn self_(&self, token: Ptr<Token>) -> Ptr<Node> {
-        Ptr::new(Node::new_self(self.loc(&token)))
+        Ptr::new(Node::new_self_(self.loc(&token)))
     }
 
     pub(crate) fn lvar(&self, token: Ptr<Token>) -> Ptr<Node> {
@@ -965,7 +965,7 @@ impl Builder {
                 Maybe::none(),
                 expression_l,
             )
-        } else if let Some(self_) = node.as_self() {
+        } else if let Some(self_) = node.as_self_() {
             let expression_l = self_.get_expression_l();
             self.error(DiagnosticMessage::new_cant_assign_to_self(), expression_l);
             return Err(());

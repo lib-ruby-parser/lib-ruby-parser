@@ -1,5 +1,5 @@
 use lib_ruby_parser_nodes::{
-    template::TemplateFns, Message, MessageWithField, Node, NodeWithField,
+    template::TemplateFns, template::F, Message, MessageField, Node, NodeField,
 };
 
 pub(crate) mod nodes {
@@ -41,10 +41,11 @@ pub(crate) mod nodes {
     pub(crate) fn rust_camelcase_name(node: &Node) -> String {
         let camelcase_name = node.camelcase_name.to_owned();
 
-        match &camelcase_name[..] {
-            "Self" => format!("{}_", camelcase_name),
-            _ => camelcase_name,
-        }
+        // match &camelcase_name[..] {
+        //     "Self" => format!("{}_", camelcase_name),
+        //     _ => camelcase_name,
+        // }
+        camelcase_name
     }
 
     pub(crate) fn is_last(node: &Node) -> bool {
@@ -52,26 +53,26 @@ pub(crate) mod nodes {
             .nodes
             .last()
             .unwrap()
-            == node
+            == &node
     }
 }
 
 pub(crate) mod node_fields {
     use super::*;
 
-    pub(crate) fn name(node_with_field: &NodeWithField) -> String {
-        node_with_field.field.snakecase_name.to_string()
+    pub(crate) fn name(node_field: &NodeField) -> String {
+        node_field.snakecase_name.to_string()
     }
 
     #[cfg(feature = "lib-ruby-parser-bindings")]
-    pub(crate) fn c_name(node_with_field: &NodeWithField) -> String {
-        lib_ruby_parser_bindings::helpers::nodes::fields::field_name(&node_with_field.field)
+    pub(crate) fn c_name(node_field: &NodeField) -> String {
+        lib_ruby_parser_bindings::helpers::nodes::fields::field_name(&node_field)
     }
 
-    pub(crate) fn c_pack_fn_name(node_with_field: &NodeWithField) -> String {
+    pub(crate) fn c_pack_fn_name(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
 
-        match node_with_field.field.field_type {
+        match node_field.field_type {
             Node => "PACK_Ptr",
             Nodes => "PACK_NodeList",
             MaybeNode { .. } => "PACK_MaybePtr",
@@ -85,10 +86,10 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
-    pub(crate) fn c_unpack_fn_name(node_with_field: &NodeWithField) -> String {
+    pub(crate) fn c_unpack_fn_name(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
 
-        match node_with_field.field.field_type {
+        match node_field.field_type {
             Node => "UNPACK_Ptr",
             Nodes => "UNPACK_NodeList",
             MaybeNode { .. } => "UNPACK_MaybePtr",
@@ -102,9 +103,9 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
-    pub(crate) fn cpp_pack_fn_name(node_with_field: &NodeWithField) -> String {
+    pub(crate) fn cpp_pack_fn_name(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
-        match node_with_field.field.field_type {
+        match node_field.field_type {
             Node => "PACK_Ptr",
             Nodes => "PACK_NodeList",
             MaybeNode { .. } => "PACK_MaybePtr",
@@ -117,9 +118,9 @@ pub(crate) mod node_fields {
         }
         .to_string()
     }
-    pub(crate) fn cpp_unpack_fn_name(node_with_field: &NodeWithField) -> String {
+    pub(crate) fn cpp_unpack_fn_name(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
-        match node_with_field.field.field_type {
+        match node_field.field_type {
             Node => "UNPACK_Ptr",
             Nodes => "UNPACK_NodeList",
             MaybeNode { .. } => "UNPACK_MaybePtr",
@@ -133,9 +134,9 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
-    pub(crate) fn c_field_type(node_with_field: &NodeWithField) -> String {
+    pub(crate) fn c_field_type(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
-        match node_with_field.field.field_type {
+        match node_field.field_type {
             Node => "LIB_RUBY_PARSER_NodePtr",
             Nodes => "LIB_RUBY_PARSER_NodeList",
             MaybeNode { .. } => "LIB_RUBY_PARSER_MaybeNodePtr",
@@ -149,9 +150,9 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
-    pub(crate) fn cpp_field_type(node_with_field: &NodeWithField) -> String {
+    pub(crate) fn cpp_field_type(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
-        match node_with_field.field.field_type {
+        match node_field.field_type {
             Node => "NodePtr",
             Nodes => "NodeList",
             MaybeNode { .. } => "MaybeNodePtr",
@@ -165,10 +166,10 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
-    pub(crate) fn c_blob_type(node_with_field: &NodeWithField) -> String {
+    pub(crate) fn c_blob_type(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
 
-        match node_with_field.field.field_type {
+        match node_field.field_type {
             Node => "LIB_RUBY_PARSER_Ptr_BLOB",
             Nodes => "LIB_RUBY_PARSER_NodeList_BLOB",
             MaybeNode { .. } => "LIB_RUBY_PARSER_MaybePtr_BLOB",
@@ -182,9 +183,9 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
-    pub(crate) fn cpp_blob_type(node_with_field: &NodeWithField) -> String {
+    pub(crate) fn cpp_blob_type(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
-        match node_with_field.field.field_type {
+        match node_field.field_type {
             Node => "Ptr_BLOB",
             Nodes => "NodeList_BLOB",
             MaybeNode { .. } => "MaybePtr_BLOB",
@@ -198,10 +199,10 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
-    pub(crate) fn drop_fn_name(node_with_field: &NodeWithField) -> String {
+    pub(crate) fn drop_fn_name(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
 
-        match node_with_field.field.field_type {
+        match node_field.field_type {
             Node => "LIB_RUBY_PARSER_drop_node_ptr",
             Nodes => "LIB_RUBY_PARSER_drop_node_list",
             MaybeNode { .. } => "LIB_RUBY_PARSER_drop_maybe_node_ptr",
@@ -217,8 +218,8 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
-    pub(crate) fn rust_field_name(node_with_field: &NodeWithField) -> String {
-        let name = node_with_field.field.snakecase_name.to_owned();
+    pub(crate) fn rust_field_name(node_field: &NodeField) -> String {
+        let name = node_field.snakecase_name.to_owned();
 
         match &name[..] {
             "const" | "as" | "else" => format!("{}_", name),
@@ -226,10 +227,10 @@ pub(crate) mod node_fields {
         }
     }
 
-    pub(crate) fn rust_field_type(node_with_field: &NodeWithField) -> String {
+    pub(crate) fn rust_field_type(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
 
-        match node_with_field.field.field_type {
+        match node_field.field_type {
             Node => "Ptr<Node>",
             Nodes => "List<Node>",
             MaybeNode { .. } => "Maybe<Ptr<Node>>",
@@ -243,12 +244,12 @@ pub(crate) mod node_fields {
         .to_string()
     }
 
-    pub(crate) fn comment(node_with_field: &NodeWithField) -> String {
-        node_with_field.field.render_comment("///", 4)
+    pub(crate) fn comment(node_field: &NodeField) -> String {
+        node_field.render_comment("///", 4)
     }
 
-    pub(crate) fn is_last(node_with_field: &NodeWithField) -> bool {
-        node_with_field.node.fields.0.last().unwrap() == &node_with_field.field
+    pub(crate) fn is_last(node_field: &NodeField) -> bool {
+        node_field.node.fields.last().unwrap() == &node_field
     }
 }
 
@@ -268,7 +269,7 @@ pub(crate) mod messages {
     }
 
     pub(crate) fn has_no_fields(message: &Message) -> bool {
-        message.fields.0.is_empty()
+        message.fields.is_empty()
     }
 
     pub(crate) fn comment(message: &Message) -> String {
@@ -280,176 +281,198 @@ pub(crate) mod messages {
             .messages
             .last()
             .unwrap()
-            == message
+            == &message
     }
 }
 
 pub(crate) mod message_fields {
     use super::*;
 
-    pub(crate) fn name(message_with_field: &MessageWithField) -> String {
-        message_with_field.field.snakecase_name.to_owned()
+    pub(crate) fn name(message_field: &MessageField) -> String {
+        message_field.snakecase_name.to_owned()
     }
 
     #[cfg(feature = "lib-ruby-parser-bindings")]
-    pub(crate) fn c_name(message_with_field: &MessageWithField) -> String {
-        lib_ruby_parser_bindings::helpers::messages::fields::field_name(&message_with_field.field)
-            .to_string()
+    pub(crate) fn c_name(message_field: &MessageField) -> String {
+        lib_ruby_parser_bindings::helpers::messages::fields::field_name(&message_field).to_string()
     }
 
-    pub(crate) fn c_field_type(message_with_field: &MessageWithField) -> String {
+    pub(crate) fn c_field_type(message_field: &MessageField) -> String {
         use lib_ruby_parser_nodes::MessageFieldType::*;
-        match message_with_field.field.field_type {
+        match message_field.field_type {
             Str => "LIB_RUBY_PARSER_StringPtr",
             Byte => "LIB_RUBY_PARSER_Byte",
         }
         .to_string()
     }
 
-    pub(crate) fn cpp_field_type(message_with_field: &MessageWithField) -> String {
+    pub(crate) fn cpp_field_type(message_field: &MessageField) -> String {
         use lib_ruby_parser_nodes::MessageFieldType::*;
-        match message_with_field.field.field_type {
+        match message_field.field_type {
             Str => "StringPtr",
             Byte => "Byte",
         }
         .to_string()
     }
 
-    pub(crate) fn c_blob_type(message_with_field: &MessageWithField) -> String {
-        format!("{}_BLOB", c_field_type(message_with_field))
+    pub(crate) fn c_blob_type(message_field: &MessageField) -> String {
+        format!("{}_BLOB", c_field_type(message_field))
     }
 
-    pub(crate) fn cpp_blob_type(message_with_field: &MessageWithField) -> String {
-        format!("{}_BLOB", cpp_field_type(message_with_field))
+    pub(crate) fn cpp_blob_type(message_field: &MessageField) -> String {
+        format!("{}_BLOB", cpp_field_type(message_field))
     }
 
-    pub(crate) fn c_pack_fn_name(message_with_field: &MessageWithField) -> String {
+    pub(crate) fn c_pack_fn_name(message_field: &MessageField) -> String {
         use lib_ruby_parser_nodes::MessageFieldType::*;
-        match message_with_field.field.field_type {
+        match message_field.field_type {
             Str => "PACK_StringPtr",
             Byte => "PACK_Byte",
         }
         .to_string()
     }
-    pub(crate) fn c_unpack_fn_name(message_with_field: &MessageWithField) -> String {
+    pub(crate) fn c_unpack_fn_name(message_field: &MessageField) -> String {
         use lib_ruby_parser_nodes::MessageFieldType::*;
-        match message_with_field.field.field_type {
+        match message_field.field_type {
             Str => "UNPACK_StringPtr",
             Byte => "UNPACK_Byte",
         }
         .to_string()
     }
 
-    pub(crate) fn drop_fn_name(message_with_field: &MessageWithField) -> String {
+    pub(crate) fn drop_fn_name(message_field: &MessageField) -> String {
         use lib_ruby_parser_nodes::MessageFieldType::*;
-        match message_with_field.field.field_type {
+        match message_field.field_type {
             Str => "LIB_RUBY_PARSER_drop_string_ptr",
             Byte => "LIB_RUBY_PARSER_drop_byte",
         }
         .to_string()
     }
 
-    pub(crate) fn rust_field_type(message_with_field: &MessageWithField) -> String {
+    pub(crate) fn rust_field_type(message_field: &MessageField) -> String {
         use lib_ruby_parser_nodes::MessageFieldType::*;
-        match message_with_field.field.field_type {
+        match message_field.field_type {
             Str => "StringPtr",
             Byte => "u8",
         }
         .to_string()
     }
 
-    pub(crate) fn rust_blob_type(message_with_field: &MessageWithField) -> String {
+    pub(crate) fn rust_blob_type(message_field: &MessageField) -> String {
         use lib_ruby_parser_nodes::MessageFieldType::*;
-        match message_with_field.field.field_type {
+        match message_field.field_type {
             Str => "Blob<StringPtr>",
             Byte => "u8",
         }
         .to_string()
     }
 
-    pub(crate) fn comment(message_with_field: &MessageWithField) -> String {
-        message_with_field.field.render_comment("///", 4)
+    pub(crate) fn comment(message_field: &MessageField) -> String {
+        message_field.render_comment("///", 4)
     }
 
-    pub(crate) fn is_last(message_with_field: &MessageWithField) -> bool {
-        message_with_field.message.fields.0.last().unwrap() == &message_with_field.field
+    pub(crate) fn is_last(message_field: &MessageField) -> bool {
+        message_field.message.fields.last().unwrap() == &message_field
     }
 
-    pub(crate) fn is_byte(message_with_field: &MessageWithField) -> bool {
-        message_with_field.field.field_type == lib_ruby_parser_nodes::MessageFieldType::Byte
+    pub(crate) fn is_byte(message_field: &MessageField) -> bool {
+        message_field.field_type == lib_ruby_parser_nodes::MessageFieldType::Byte
     }
 }
 
 pub(crate) fn build() -> TemplateFns {
     let mut fns = TemplateFns::new();
 
-    fns.register_helper("node-camelcase-name", nodes::camelcase_name);
-    fns.register_helper("node-comment", nodes::comment);
-    fns.register_helper("node-str-type", nodes::str_type);
-    fns.register_helper("node-upper-name", nodes::upper_name);
-    fns.register_helper("node-lower-name", nodes::lower_name);
-    fns.register_helper("node-c-enum-variant-name", nodes::c_enum_variant_name);
-    fns.register_helper("node-c-union-member-name", nodes::c_union_member_name);
-    fns.register_helper("node-rust-camelcase-name", nodes::rust_camelcase_name);
-    fns.register_predicate("node-is-last", nodes::is_last);
+    fns.register::<Node, F::Helper>("node-camelcase-name", nodes::camelcase_name);
+    fns.register::<Node, F::Helper>("node-comment", nodes::comment);
+    fns.register::<Node, F::Helper>("node-str-type", nodes::str_type);
+    fns.register::<Node, F::Helper>("node-upper-name", nodes::upper_name);
+    fns.register::<Node, F::Helper>("node-lower-name", nodes::lower_name);
+    fns.register::<Node, F::Helper>("node-c-enum-variant-name", nodes::c_enum_variant_name);
+    fns.register::<Node, F::Helper>("node-c-union-member-name", nodes::c_union_member_name);
+    fns.register::<Node, F::Predicate>("node-is-last", nodes::is_last);
 
-    fns.register_helper("node-field-name", node_fields::name);
-    fns.register_helper("node-field-comment", node_fields::comment);
+    fns.register::<NodeField, F::Helper>("node-field-name", node_fields::name);
+    fns.register::<NodeField, F::Helper>("node-field-comment", node_fields::comment);
     #[cfg(feature = "lib-ruby-parser-bindings")]
-    fns.register_helper("node-field-c-name", node_fields::c_name);
-    fns.register_helper("node-field-c-field-type", node_fields::c_field_type);
-    fns.register_helper("node-field-c-blob-type", node_fields::c_blob_type);
-    fns.register_helper("node-field-c-pack-fn-name", node_fields::c_pack_fn_name);
-    fns.register_helper("node-field-c-unpack-fn-name", node_fields::c_unpack_fn_name);
-    fns.register_helper("node-field-drop-fn-name", node_fields::drop_fn_name);
-    fns.register_helper("node-field-cpp-field-type", node_fields::cpp_field_type);
-    fns.register_helper("node-field-cpp-blob-type", node_fields::cpp_blob_type);
-    fns.register_helper("node-field-cpp-pack-fn-name", node_fields::cpp_pack_fn_name);
-    fns.register_helper(
+    fns.register::<NodeField, F::Helper>("node-field-c-name", node_fields::c_name);
+    fns.register::<NodeField, F::Helper>("node-field-c-field-type", node_fields::c_field_type);
+    fns.register::<NodeField, F::Helper>("node-field-c-blob-type", node_fields::c_blob_type);
+    fns.register::<NodeField, F::Helper>("node-field-c-pack-fn-name", node_fields::c_pack_fn_name);
+    fns.register::<NodeField, F::Helper>(
+        "node-field-c-unpack-fn-name",
+        node_fields::c_unpack_fn_name,
+    );
+    fns.register::<NodeField, F::Helper>("node-field-drop-fn-name", node_fields::drop_fn_name);
+    fns.register::<NodeField, F::Helper>("node-field-cpp-field-type", node_fields::cpp_field_type);
+    fns.register::<NodeField, F::Helper>("node-field-cpp-blob-type", node_fields::cpp_blob_type);
+    fns.register::<NodeField, F::Helper>(
+        "node-field-cpp-pack-fn-name",
+        node_fields::cpp_pack_fn_name,
+    );
+    fns.register::<NodeField, F::Helper>(
         "node-field-cpp-unpack-fn-name",
         node_fields::cpp_unpack_fn_name,
     );
-    fns.register_helper("node-field-rust-field-type", node_fields::rust_field_type);
-    fns.register_helper("node-field-rust-field-name", node_fields::rust_field_name);
-    fns.register_predicate("node-field-is-last", node_fields::is_last);
+    fns.register::<NodeField, F::Helper>(
+        "node-field-rust-field-type",
+        node_fields::rust_field_type,
+    );
+    fns.register::<NodeField, F::Helper>(
+        "node-field-rust-field-name",
+        node_fields::rust_field_name,
+    );
+    fns.register::<NodeField, F::Predicate>("node-field-is-last", node_fields::is_last);
 
-    fns.register_helper("message-camelcase-name", messages::camelcase_name);
-    fns.register_helper("message-upper-name", messages::upper_name);
-    fns.register_helper("message-lower-name", messages::lower_name);
-    fns.register_helper("message-comment", messages::comment);
-    fns.register_predicate("message-is-last", messages::is_last);
-    fns.register_predicate("message-has-no-fields", messages::has_no_fields);
+    fns.register::<Message, F::Helper>("message-camelcase-name", messages::camelcase_name);
+    fns.register::<Message, F::Helper>("message-upper-name", messages::upper_name);
+    fns.register::<Message, F::Helper>("message-lower-name", messages::lower_name);
+    fns.register::<Message, F::Helper>("message-comment", messages::comment);
+    fns.register::<Message, F::Predicate>("message-is-last", messages::is_last);
+    fns.register::<Message, F::Predicate>("message-has-no-fields", messages::has_no_fields);
 
-    fns.register_helper("message-field-name", message_fields::name);
-    fns.register_helper("mesage-field-comment", message_fields::comment);
+    fns.register::<MessageField, F::Helper>("message-field-name", message_fields::name);
+    fns.register::<MessageField, F::Helper>("mesage-field-comment", message_fields::comment);
     #[cfg(feature = "lib-ruby-parser-bindings")]
-    fns.register_helper("message-field-c-name", message_fields::c_name);
-    fns.register_helper("message-field-c-field-type", message_fields::c_field_type);
-    fns.register_helper("message-field-c-blob-type", message_fields::c_blob_type);
-    fns.register_helper(
+    fns.register::<MessageField, F::Helper>("message-field-c-name", message_fields::c_name);
+    fns.register::<MessageField, F::Helper>(
+        "message-field-c-field-type",
+        message_fields::c_field_type,
+    );
+    fns.register::<MessageField, F::Helper>(
+        "message-field-c-blob-type",
+        message_fields::c_blob_type,
+    );
+    fns.register::<MessageField, F::Helper>(
         "message-field-c-pack-fn-name",
         message_fields::c_pack_fn_name,
     );
-    fns.register_helper(
+    fns.register::<MessageField, F::Helper>(
         "message-field-c-unpack-fn-name",
         message_fields::c_unpack_fn_name,
     );
-    fns.register_helper(
+    fns.register::<MessageField, F::Helper>(
         "message-field-cpp-field-type",
         message_fields::cpp_field_type,
     );
-    fns.register_helper("message-field-cpp-blob-type", message_fields::cpp_blob_type);
-    fns.register_helper("message-field-drop-fn-name", message_fields::drop_fn_name);
-    fns.register_helper(
+    fns.register::<MessageField, F::Helper>(
+        "message-field-cpp-blob-type",
+        message_fields::cpp_blob_type,
+    );
+    fns.register::<MessageField, F::Helper>(
+        "message-field-drop-fn-name",
+        message_fields::drop_fn_name,
+    );
+    fns.register::<MessageField, F::Helper>(
         "message-field-rust-field-type",
         message_fields::rust_field_type,
     );
-    fns.register_helper(
+    fns.register::<MessageField, F::Helper>(
         "message-field-rust-blob-type",
         message_fields::rust_blob_type,
     );
-    fns.register_predicate("message-field-is-last", message_fields::is_last);
-    fns.register_predicate("message-field-is-byte", message_fields::is_byte);
+    fns.register::<MessageField, F::Predicate>("message-field-is-last", message_fields::is_last);
+    fns.register::<MessageField, F::Predicate>("message-field-is-byte", message_fields::is_byte);
 
     fns
 }
@@ -463,8 +486,11 @@ macro_rules! default_fns {
             file!().to_string()
         }
         let mut fns = $crate::codegen::fns::build();
-        fns.register_helper("generated-by", generated_by);
-        fns.register_helper("generated-by", generated_by_for_node);
+        fns.register::<GlobalContext, F::Helper>("generated-by", generated_by);
+        fns.register::<lib_ruby_parser_nodes::Node, F::Helper>(
+            "generated-by",
+            generated_by_for_node,
+        );
         fns
     }};
 }

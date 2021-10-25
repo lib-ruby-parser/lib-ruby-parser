@@ -92,8 +92,8 @@ fn map_loc(f: &dyn Fn(&LocName) -> String) -> Vec<String> {
 fn loc_getter(loc_name: &LocName) -> String {
     let mut variants = vec![];
 
-    for node in lib_ruby_parser_nodes::nodes().0.iter() {
-        for field in node.fields.0.iter() {
+    for node in lib_ruby_parser_nodes::nodes().iter() {
+        for field in node.fields.iter() {
             if field.snakecase_name == loc_name.to_str() {
                 match field.field_type {
                     lib_ruby_parser_nodes::NodeFieldType::Loc => {
