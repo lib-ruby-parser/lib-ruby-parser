@@ -1,7 +1,7 @@
 use super::ParserResult;
 use crate::source::{CommentType, MagicCommentKind, SourceLine};
 use crate::{
-    source::Comment, source::DecodedInput, source::MagicComment, Bytes, Diagnostic,
+    nodes::Retry, source::Comment, source::DecodedInput, source::MagicComment, Bytes, Diagnostic,
     DiagnosticMessage, Loc, Node, Token,
 };
 use crate::{ErrorLevel, LexState};
@@ -11,7 +11,9 @@ crate::use_native_or_external!(List);
 crate::use_native_or_external!(Ptr);
 
 fn ast() -> Maybe<Ptr<Node>> {
-    Maybe::some(Ptr::new(Node::new_retry(Loc::new(1, 2))))
+    Maybe::some(Ptr::new(Node::Retry(Retry {
+        expression_l: Loc::new(1, 2),
+    })))
 }
 
 fn tokens() -> List<Token> {

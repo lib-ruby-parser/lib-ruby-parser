@@ -3,6 +3,7 @@ use crate::source::Decoder;
 
 /// Configuration of the parser
 #[derive(Debug)]
+#[repr(C)]
 pub struct ParserOptions {
     /// Name of the buffer. Used in all diagnostic messages
     pub buffer_name: String,

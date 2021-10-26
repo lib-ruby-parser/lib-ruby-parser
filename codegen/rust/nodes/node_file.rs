@@ -16,30 +16,6 @@ pub struct {{ helper node-camelcase-name }} {
 {{ end }}<dnl>
 }
 
-impl {{ helper node-camelcase-name }} {
-    // getters
-{{ each node-field }}
-    /// Returns `{{ helper node-field-rust-field-name }}` field
-    pub fn get_{{ helper node-field-name }}(&self) -> &{{ helper node-field-native-type }} {
-        &self.{{ helper node-field-rust-field-name }}
-    }
-{{ end }}
-
-    // setters
-{{ each node-field }}
-    /// Sets `{{ helper node-field-rust-field-name }}` field
-    pub fn set_{{ helper node-field-name }}(&mut self, {{ helper node-field-rust-field-name }}: {{ helper node-field-native-type }}) {
-        self.{{ helper node-field-rust-field-name }} = {{ helper node-field-rust-field-name }};
-    }
-{{ end }}
-
-    #[allow(dead_code)]
-    pub(crate) fn into_internal(self) -> super::Internal{{ helper node-camelcase-name }} {
-        let Self { {{ each node-field }}{{ helper node-field-rust-field-name }}, {{ end }} } = self;
-        super::Internal{{ helper node-camelcase-name }} { {{ each node-field }}{{ helper node-field-rust-field-name }}, {{ end }} }
-    }
-}
-
 impl InnerNode for {{ helper node-camelcase-name }} {
     fn expression(&self) -> &Loc {
         &self.expression_l
@@ -84,7 +60,7 @@ pub(crate) fn codegen(node: &lib_ruby_parser_nodes::Node) {
     let contents = template.render(node, &fns);
 
     let dir = filename(node);
-    let path = format!("src/nodes/types/{}/native.rs", dir);
+    let path = format!("src/nodes/types/{}.rs", dir);
     std::fs::write(&path, contents).unwrap();
 }
 
@@ -161,40 +137,40 @@ mod local_helpers {
             U8 => "push_u8",
         };
 
-        format!(
-            "result.{}(self.get_{}());",
-            method_name, node_field.snakecase_name
-        )
+        let field_name = crate::codegen::fns::rust::node_fields::rust_field_name(node_field);
+
+        format!("result.{}(&self.{});", method_name, field_name)
     }
 
     pub(crate) fn print_field_with_loc(node_field: &NodeField) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
+        let field_name = crate::codegen::fns::rust::node_fields::rust_field_name(node_field);
 
         match node_field.field_type {
             Node => format!(
-                "self.get_{field_name}().inner_ref().print_with_locs();",
-                field_name = node_field.snakecase_name
+                "self.{field_name}.inner_ref().print_with_locs();",
+                field_name = field_name
             ),
             Nodes =>
                 format!(
-                    "for node in self.get_{field_name}().iter() {{ node.inner_ref().print_with_locs(); }}",
-                    field_name = node_field.snakecase_name
+                    "for node in self.{field_name}.iter() {{ node.inner_ref().print_with_locs(); }}",
+                    field_name = field_name
                 ),
             MaybeNode { .. } => format!(
-                "if let Some(node) = self.get_{field_name}().as_ref() {{ node.inner_ref().print_with_locs() }}",
-                field_name = node_field.snakecase_name
+                "if let Some(node) = self.{field_name}.as_ref() {{ node.inner_ref().print_with_locs() }}",
+                field_name = field_name
             ),
             Loc => format!(
-                "self.get_{field_name}().print(\"{printable_field_name}\");",
-                field_name = node_field.snakecase_name,
+                "self.{field_name}.print(\"{printable_field_name}\");",
+                field_name = field_name,
                 printable_field_name = node_field
                     .snakecase_name
                     .strip_suffix("_l")
                     .expect("expected loc field to end with _l")
             ),
             MaybeLoc => format!(
-                "if let Some(loc) = self.get_{field_name}().as_ref() {{ loc.print(\"{printable_field_name}\") }}",
-                field_name = node_field.snakecase_name,
+                "if let Some(loc) = self.{field_name}.as_ref() {{ loc.print(\"{printable_field_name}\") }}",
+                field_name = field_name,
                 printable_field_name = node_field
                     .snakecase_name
                     .strip_suffix("_l")

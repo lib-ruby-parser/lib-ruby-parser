@@ -1,7 +1,7 @@
 pub(crate) mod c;
 pub(crate) mod cpp;
 pub(crate) mod rust;
-mod shared;
+pub(crate) mod shared;
 
 use lib_ruby_parser_nodes::template::TemplateFns;
 

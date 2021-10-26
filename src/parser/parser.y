@@ -65,6 +65,7 @@ use crate::builder::clone_value;
 use crate::parse_value::ParseValue as Value;
 use crate::parse_value::*;
 use crate::Node;
+use crate::nodes;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
 use crate::source::token_rewriter::TokenRewriter;
@@ -1295,10 +1296,13 @@ use crate::parser_options::InternalParserOptions;
                 | tLPAREN mlhs_inner rparen
                     {
                         let mlhs_inner = $<Node>2;
-                        let mlhs_items = if mlhs_inner.is_mlhs() {
-                            Box::new(mlhs_inner.into_mlhs().into_internal().items)
-                        } else {
-                            unreachable!("unsupported mlhs item {:?}", mlhs_inner)
+                        let mlhs_items = match mlhs_inner {
+                            Node::Mlhs(nodes::Mlhs { items, .. }) => {
+                                Box::new(items)
+                            }
+                            other => {
+                                unreachable!("unsupported mlhs item {:?}", other)
+                            }
                         };
 
                         $$ = Value::Node(
@@ -5784,55 +5788,57 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         let node = $<BoxedNode>1;
-                        if let Some(node) = node.as_lvar() {
-                            let name = node.get_name().as_str();
-                            match name.as_bytes()[..] {
-                                [b'_', n] if (b'1'..=b'9').contains(&n) => {
-                                    if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
-                                        /* definitely an implicit param */
+                        match &*node {
+                            Node::Lvar(nodes::Lvar { name, .. }) => {
+                                match name.as_bytes()[..] {
+                                    [b'_', n] if (b'1'..=b'9').contains(&n) => {
+                                        if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
+                                            /* definitely an implicit param */
 
-                                        if self.max_numparam_stack.has_ordinary_params() {
-                                            return self.yyerror(
-                                                @1,
-                                                DiagnosticMessage::new_ordinary_param_defined(),
-                                            );
-                                        }
-
-                                        let mut raw_context = self.context.inner_clone();
-                                        let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
-
-                                        /* ignore current block scope */
-                                        raw_context.pop();
-                                        raw_max_numparam_stack.pop();
-
-                                        for outer_scope in raw_context.iter().rev() {
-                                            if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda {
-                                                let outer_scope_has_numparams = raw_max_numparam_stack
-                                                    .pop()
-                                                    .unwrap_or(0) > 0;
-
-                                                if outer_scope_has_numparams {
-                                                    return self.yyerror(
-                                                        @1,
-                                                        DiagnosticMessage::new_numparam_used(),
-                                                    );
-                                                } else {
-                                                    /* for now it's ok, but an outer scope can also be a block
-                                                        with numparams, so we need to continue */
-                                                }
-                                            } else {
-                                                /* found an outer scope that can't have numparams
-                                                    like def/class/etc */
-                                                break;
+                                            if self.max_numparam_stack.has_ordinary_params() {
+                                                return self.yyerror(
+                                                    @1,
+                                                    DiagnosticMessage::new_ordinary_param_defined(),
+                                                );
                                             }
-                                        }
 
-                                        self.static_env.declare(name);
-                                        self.max_numparam_stack.register((n - b'0') as i32)
-                                    }
-                                },
-                                _ => {}
+                                            let mut raw_context = self.context.inner_clone();
+                                            let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
+
+                                            /* ignore current block scope */
+                                            raw_context.pop();
+                                            raw_max_numparam_stack.pop();
+
+                                            for outer_scope in raw_context.iter().rev() {
+                                                if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda {
+                                                    let outer_scope_has_numparams = raw_max_numparam_stack
+                                                        .pop()
+                                                        .unwrap_or(0) > 0;
+
+                                                    if outer_scope_has_numparams {
+                                                        return self.yyerror(
+                                                            @1,
+                                                            DiagnosticMessage::new_numparam_used(),
+                                                        );
+                                                    } else {
+                                                        /* for now it's ok, but an outer scope can also be a block
+                                                            with numparams, so we need to continue */
+                                                    }
+                                                } else {
+                                                    /* found an outer scope that can't have numparams
+                                                        like def/class/etc */
+                                                    break;
+                                                }
+                                            }
+
+                                            self.static_env.declare(name);
+                                            self.max_numparam_stack.register((n - b'0') as i32)
+                                        }
+                                    },
+                                    _ => {}
+                                }
                             }
+                            _ => {}
                         }
 
                         $$ = Value::Node(
@@ -6498,25 +6504,28 @@ f_opt_paren_args: f_paren_args
                     {
                         let expr = $<BoxedNode>3;
 
-                        if expr.is_int() ||
-                            expr.is_float() ||
-                            expr.is_rational() ||
-                            expr.is_complex() ||
-                            expr.is_str() ||
-                            expr.is_dstr() ||
-                            expr.is_sym() ||
-                            expr.is_dsym() ||
-                            expr.is_heredoc() ||
-                            expr.is_x_heredoc() ||
-                            expr.is_regexp() ||
-                            expr.is_array() ||
-                            expr.is_hash() {
-                            self.yyerror1(
-                                DiagnosticMessage::new_singleton_literal(),
-                                expr.expression().clone(),
-                            )?;
-                        } else {
-                            self.value_expr(&expr)?
+                        match &*expr {
+                            Node::Int(nodes::Int { expression_l, .. })
+                            | Node::Float(nodes::Float { expression_l, .. })
+                            | Node::Rational(nodes::Rational { expression_l, .. })
+                            | Node::Complex(nodes::Complex { expression_l, .. })
+                            | Node::Str(nodes::Str { expression_l, .. })
+                            | Node::Dstr(nodes::Dstr { expression_l, .. })
+                            | Node::Sym(nodes::Sym { expression_l, .. })
+                            | Node::Dsym(nodes::Dsym { expression_l, .. })
+                            | Node::Heredoc(nodes::Heredoc { expression_l, .. })
+                            | Node::XHeredoc(nodes::XHeredoc { expression_l, .. })
+                            | Node::Regexp(nodes::Regexp { expression_l, .. })
+                            | Node::Array(nodes::Array { expression_l, .. })
+                            | Node::Hash(nodes::Hash { expression_l, .. }) => {
+                                self.yyerror1(
+                                    DiagnosticMessage::new_singleton_literal(),
+                                    expression_l.clone(),
+                                )?;
+                            }
+                            other => {
+                                self.value_expr(other)?
+                            }
                         }
 
                         $$ = Value::Node(expr);

@@ -14,7 +14,7 @@ version = "3.0.11"
 default = []
 
 # Uses external structures
-compile-with-external-structures = []
+# compile-with-external-structures = []
 
 # Link with C library that provides external structures (used only for internal testing)
 link-with-external-c-structures = []
