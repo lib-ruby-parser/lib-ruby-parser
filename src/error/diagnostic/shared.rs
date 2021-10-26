@@ -1,4 +1,3 @@
-crate::use_native_or_external!(List);
 use super::Diagnostic;
 use crate::source::DecodedInput;
 use std::cell::RefCell;
@@ -63,13 +62,13 @@ impl Diagnostic {
 
 #[derive(Debug, Default, Clone)]
 pub(crate) struct Diagnostics {
-    list: Rc<RefCell<List<Diagnostic>>>,
+    list: Rc<RefCell<Vec<Diagnostic>>>,
 }
 
 impl Diagnostics {
     pub(crate) fn new() -> Self {
         Self {
-            list: Rc::new(RefCell::new(list![])),
+            list: Rc::new(RefCell::new(vec![])),
         }
     }
 
@@ -77,7 +76,7 @@ impl Diagnostics {
         self.list.borrow_mut().push(diagnostic)
     }
 
-    pub(crate) fn take_inner(self) -> List<Diagnostic> {
-        self.list.replace(list![])
+    pub(crate) fn take_inner(self) -> Vec<Diagnostic> {
+        self.list.replace(vec![])
     }
 }

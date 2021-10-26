@@ -1,6 +1,5 @@
 use super::Diagnostic;
 use crate::{DiagnosticMessage, ErrorLevel, Loc};
-crate::use_native_or_external!(List);
 
 fn new_diagnostic() -> Diagnostic {
     Diagnostic::new(
@@ -36,7 +35,7 @@ fn test_get_loc() {
 fn test_renders() {
     let source = "line 1\nvery long line 2\n";
     let mut input = crate::source::DecodedInput::named("(test_render)");
-    input.update_bytes(List::from(source));
+    input.update_bytes(Vec::from(source));
 
     let error = Diagnostic::new(
         ErrorLevel::warning(),

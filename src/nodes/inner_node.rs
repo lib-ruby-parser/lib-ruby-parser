@@ -1,8 +1,3 @@
-crate::use_native_or_external!(Maybe);
-crate::use_native_or_external!(Ptr);
-crate::use_native_or_external!(StringPtr);
-crate::use_native_or_external!(List);
-
 use crate::Bytes;
 use crate::Loc;
 use crate::Node;
@@ -41,15 +36,15 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_str(&mut self, string: &StringPtr) {
+    pub(crate) fn push_str(&mut self, string: &String) {
         self.strings.push(format!(", {:?}", string));
     }
 
-    pub(crate) fn push_raw_str(&mut self, string: &StringPtr) {
+    pub(crate) fn push_raw_str(&mut self, string: &String) {
         self.strings.push(format!(", {}", string.as_str()));
     }
 
-    pub(crate) fn push_maybe_str(&mut self, string: &Maybe<StringPtr>) {
+    pub(crate) fn push_maybe_str(&mut self, string: &Option<String>) {
         if let Some(string) = string.as_ref() {
             self.strings.push(format!(", {:?}", string));
         }
@@ -68,13 +63,13 @@ impl InspectVec {
             .push(format!(",\n{}", node.inspect(self.indent + 1)))
     }
 
-    pub(crate) fn push_maybe_node(&mut self, node: &Maybe<Ptr<Node>>) {
+    pub(crate) fn push_maybe_node(&mut self, node: &Option<Box<Node>>) {
         if let Some(node) = node.as_ref() {
             self.push_node(node)
         }
     }
 
-    pub(crate) fn push_regex_options(&mut self, node: &Maybe<Ptr<Node>>) {
+    pub(crate) fn push_regex_options(&mut self, node: &Option<Box<Node>>) {
         if let Some(node) = node.as_ref() {
             self.push_node(node)
         } else {
@@ -86,7 +81,7 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_maybe_node_or_nil(&mut self, node: &Maybe<Ptr<Node>>) {
+    pub(crate) fn push_maybe_node_or_nil(&mut self, node: &Option<Box<Node>>) {
         if let Some(node) = node.as_ref() {
             self.push_node(node)
         } else {
@@ -94,16 +89,16 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_nodes(&mut self, nodes: &List<Node>) {
+    pub(crate) fn push_nodes(&mut self, nodes: &Vec<Node>) {
         for node in nodes.iter() {
             self.push_node(node)
         }
     }
 
-    pub(crate) fn push_chars(&mut self, chars: &Maybe<StringPtr>) {
+    pub(crate) fn push_chars(&mut self, chars: &Option<String>) {
         if let Some(chars) = chars.as_ref() {
             for c in chars.as_str().chars() {
-                self.push_str(&StringPtr::from(format!("{}", c)));
+                self.push_str(&String::from(format!("{}", c)));
             }
         }
     }

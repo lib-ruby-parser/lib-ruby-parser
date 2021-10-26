@@ -1,5 +1,3 @@
-crate::use_native_or_external!(List);
-
 use super::DecodedInput;
 use crate::source::SourceLine;
 
@@ -11,8 +9,8 @@ fn test_new() {
 
 fn decoded_input() -> DecodedInput {
     let mut decoded = DecodedInput::named("foo");
-    decoded.set_bytes(list![1, 2, 3]);
-    decoded.set_lines(list![SourceLine::new(1, 2, true)]);
+    decoded.set_bytes(vec![1, 2, 3]);
+    decoded.set_lines(vec![SourceLine::new(1, 2, true)]);
     decoded
 }
 

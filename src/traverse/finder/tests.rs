@@ -1,10 +1,8 @@
-crate::use_native_or_external!(Maybe);
-
 use crate::traverse::finder::Finder;
 use crate::{Parser, ParserOptions};
 
 fn find(src: &str, pattern: &str) -> Option<String> {
-    let options = ParserOptions::new("(find_test)".into(), Maybe::none(), Maybe::none(), false);
+    let options = ParserOptions::new("(find_test)".into(), None, None, false);
     let parser = Parser::new(src, options);
 
     let result = parser.do_parse();

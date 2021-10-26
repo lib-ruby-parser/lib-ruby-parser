@@ -1,8 +1,3 @@
-crate::use_native_or_external!(Maybe);
-crate::use_native_or_external!(StringPtr);
-crate::use_native_or_external!(List);
-crate::use_native_or_external!(SharedByteList);
-
 use crate::source::Decoder;
 use crate::source::SourceLine;
 use crate::source::{decode_input, DecodedInput, InputError};
@@ -12,14 +7,14 @@ use crate::source::{decode_input, DecodedInput, InputError};
 #[repr(C)]
 pub struct Input {
     pub(crate) decoded: DecodedInput,
-    decoder: Maybe<Decoder>,
+    decoder: Option<Decoder>,
 }
 
 impl Input {
     /// Constructs a new input
-    pub fn new<Name>(name: Name, decoder: Maybe<Decoder>) -> Self
+    pub fn new<Name>(name: Name, decoder: Option<Decoder>) -> Self
     where
-        Name: Into<StringPtr>,
+        Name: Into<String>,
     {
         Self {
             decoded: DecodedInput::named(name),
@@ -28,7 +23,7 @@ impl Input {
     }
 
     /// Populates `Input` with a given byte array
-    pub fn update_bytes(&mut self, bytes: List<u8>) {
+    pub fn update_bytes(&mut self, bytes: Vec<u8>) {
         self.decoded.update_bytes(bytes)
     }
 
@@ -70,7 +65,7 @@ impl Input {
     pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
         let new_input = decode_input(
             self.decoded.take_bytes(),
-            StringPtr::from(encoding),
+            String::from(encoding),
             &mut self.decoder,
         )
         .into_result()?;
@@ -79,12 +74,12 @@ impl Input {
     }
 
     /// Returns raw bytes after decoding
-    pub fn as_shared_bytes(&self) -> SharedByteList {
+    pub fn as_shared_bytes(&self) -> &[u8] {
         self.decoded.as_shared_bytes()
     }
 
     /// Converts itself into owned vector of bytes
-    pub fn into_bytes(self) -> List<u8> {
+    pub fn into_bytes(self) -> Vec<u8> {
         self.decoded.into_bytes()
     }
 }

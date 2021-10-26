@@ -1,12 +1,10 @@
-pub(crate) mod c;
-pub(crate) mod cpp;
 pub(crate) mod rust;
 pub(crate) mod shared;
 
 use lib_ruby_parser_nodes::template::TemplateFns;
 
 pub(crate) fn build() -> TemplateFns {
-    shared::build() + c::build() + cpp::build() + rust::build()
+    shared::build() + rust::build()
 }
 
 macro_rules! default_fns {

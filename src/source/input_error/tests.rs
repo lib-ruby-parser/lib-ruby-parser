@@ -1,10 +1,8 @@
 use super::InputError;
 
-crate::use_native_or_external!(StringPtr);
-
 #[test]
 fn test_unsupported_encoding() {
-    let err = InputError::new_unsupported_encoding(StringPtr::from("foo"));
+    let err = InputError::new_unsupported_encoding(String::from("foo"));
 
     assert!(err.is_unsupported_encoding());
     assert!(!err.is_decoding_error());
@@ -15,7 +13,7 @@ fn test_unsupported_encoding() {
 
 #[test]
 fn test_decoding_error() {
-    let err = InputError::new_decoding_error(StringPtr::from("bar"));
+    let err = InputError::new_decoding_error(String::from("bar"));
 
     assert!(err.is_decoding_error());
     assert!(!err.is_unsupported_encoding());

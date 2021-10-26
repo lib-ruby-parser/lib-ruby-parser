@@ -6,39 +6,35 @@ use crate::{
 };
 use crate::{ErrorLevel, LexState};
 
-crate::use_native_or_external!(Maybe);
-crate::use_native_or_external!(List);
-crate::use_native_or_external!(Ptr);
-
-fn ast() -> Maybe<Ptr<Node>> {
-    Maybe::some(Ptr::new(Node::Retry(Retry {
+fn ast() -> Option<Box<Node>> {
+    Some(Box::new(Node::Retry(Retry {
         expression_l: Loc::new(1, 2),
     })))
 }
 
-fn tokens() -> List<Token> {
-    list![Token::new(
+fn tokens() -> Vec<Token> {
+    vec![Token::new(
         280,
-        Bytes::new(list![97, 98, 99]),
+        Bytes::new(vec![97, 98, 99]),
         Loc::new(3, 4),
         LexState { value: 1 },
         LexState { value: 2 },
     )]
 }
 
-fn diagnostics() -> List<Diagnostic> {
-    list![Diagnostic::new(
+fn diagnostics() -> Vec<Diagnostic> {
+    vec![Diagnostic::new(
         ErrorLevel::error(),
         DiagnosticMessage::new_alias_nth_ref(),
         Loc::new(5, 6),
     )]
 }
 
-fn comments() -> List<Comment> {
-    list![Comment::make(Loc::new(7, 8), CommentType::inline())]
+fn comments() -> Vec<Comment> {
+    vec![Comment::make(Loc::new(7, 8), CommentType::inline())]
 }
-fn magic_comments() -> List<MagicComment> {
-    list![MagicComment::new(
+fn magic_comments() -> Vec<MagicComment> {
+    vec![MagicComment::new(
         MagicCommentKind::warn_indent(),
         Loc::new(9, 10),
         Loc::new(11, 12),
@@ -46,8 +42,8 @@ fn magic_comments() -> List<MagicComment> {
 }
 fn input() -> DecodedInput {
     let mut input = DecodedInput::named("foo");
-    input.set_bytes(list![1, 2, 3]);
-    input.set_lines(list![SourceLine::new(1, 2, false)]);
+    input.set_bytes(vec![1, 2, 3]);
+    input.set_lines(vec![SourceLine::new(1, 2, false)]);
     input
 }
 

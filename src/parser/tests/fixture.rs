@@ -1,5 +1,3 @@
-crate::use_native_or_external!(Maybe);
-
 use crate::test_helpers::{render_diagnostic_for_testing, LocMatcher};
 use crate::{Parser, ParserOptions, ParserResult};
 
@@ -169,12 +167,7 @@ pub(crate) fn test_file(fixture_path: &str) {
         }
     }
 
-    let options = ParserOptions::new(
-        format!("(test {})", fixture_path).into(),
-        Maybe::none(),
-        Maybe::none(),
-        false,
-    );
+    let options = ParserOptions::new(format!("(test {})", fixture_path).into(), None, None, false);
     let parser = Parser::new(fixture.input.as_bytes(), options);
 
     parser.static_env.declare("foo");

@@ -247,14 +247,12 @@ impl Builder {
         parts: Box<Vec<Node>>,
         end_t: Option<Box<Token>>,
     ) -> Box<Node> {
-        if parts.is_empty() {
-            return self.str_node(begin_t, Bytes::empty(), parts, end_t);
-        } else if parts.len() == 1 {
-            let part = parts.first().unwrap();
-
-            if matches!(part, Node::Str(_) | Node::Dstr(_) | Node::Heredoc(_))
-                && begin_t.is_none()
-                && end_t.is_none()
+        match &**parts {
+            [] => {
+                return self.str_node(begin_t, Bytes::empty(), parts, end_t);
+            }
+            [Node::Str(_) | Node::Dstr(_) | Node::Heredoc(_)]
+                if begin_t.is_none() && end_t.is_none() =>
             {
                 return Box::new(
                     parts
@@ -264,16 +262,14 @@ impl Builder {
                 );
             }
 
-            match part {
-                Node::Str(Str { value, .. }) => {
-                    return self.str_node(begin_t, value.clone(), parts, end_t);
-                }
-                _ => {}
+            [Node::Str(Str { value, .. })] => {
+                return self.str_node(begin_t, value.clone(), parts, end_t);
             }
 
-            if matches!(part, Node::Dstr(_) | Node::Heredoc(_)) {
+            [Node::Dstr(_) | Node::Heredoc(_)] => {
                 unreachable!()
             }
+            _ => {}
         }
 
         if self.is_heredoc(&begin_t) {
@@ -369,7 +365,7 @@ impl Builder {
         parts: Box<Vec<Node>>,
         end_t: Box<Token>,
     ) -> Box<Node> {
-        if parts.len() == 1 && matches!(parts.first().unwrap(), Node::Str(_)) {
+        if parts.len() == 1 && matches!(&parts[0], Node::Str(_)) {
             match parts.into_iter().next().unwrap() {
                 Node::Str(Str { value, .. }) => {
                     let CollectionMap {
@@ -636,7 +632,7 @@ impl Builder {
     }
 
     pub(crate) fn word(&self, parts: Box<Vec<Node>>) -> Box<Node> {
-        if parts.len() == 1 && matches!(parts.first().unwrap(), Node::Str(_) | Node::Dstr(_)) {
+        if parts.len() == 1 && matches!(&parts[0], Node::Str(_) | Node::Dstr(_)) {
             let part = parts
                 .into_iter()
                 .next()
@@ -2547,14 +2543,12 @@ impl Builder {
         let cond = self.check_condition(cond);
 
         match (loop_type, &*body) {
-            (LoopType::While, node) if matches!(node, Node::KwBegin(_)) => {
-                Box::new(Node::WhilePost(WhilePost {
-                    cond,
-                    body,
-                    keyword_l,
-                    expression_l,
-                }))
-            }
+            (LoopType::While, Node::KwBegin(_)) => Box::new(Node::WhilePost(WhilePost {
+                cond,
+                body,
+                keyword_l,
+                expression_l,
+            })),
             (LoopType::While, _) => Box::new(Node::While(While {
                 cond,
                 body: Some(body),
@@ -2563,14 +2557,12 @@ impl Builder {
                 end_l: None,
                 expression_l,
             })),
-            (LoopType::Until, node) if matches!(node, Node::KwBegin(_)) => {
-                Box::new(Node::UntilPost(UntilPost {
-                    cond,
-                    body,
-                    keyword_l,
-                    expression_l,
-                }))
-            }
+            (LoopType::Until, Node::KwBegin(_)) => Box::new(Node::UntilPost(UntilPost {
+                cond,
+                body,
+                keyword_l,
+                expression_l,
+            })),
             (LoopType::Until, _) => Box::new(Node::Until(Until {
                 cond,
                 body: Some(body),
@@ -2623,11 +2615,9 @@ impl Builder {
         let keyword_l = self.loc(&keyword_t);
 
         if type_ == KeywordCmd::Yield && !args.is_empty() {
-            if let Some(last_arg) = args.last() {
-                if matches!(last_arg, Node::BlockPass(_)) {
-                    self.error(DiagnosticMessage::new_block_given_to_yield(), &keyword_l);
-                    return Err(());
-                }
+            if let Some(Node::BlockPass(_)) = args.last() {
+                self.error(DiagnosticMessage::new_block_given_to_yield(), &keyword_l);
+                return Err(());
             }
         }
 
@@ -4030,14 +4020,14 @@ impl Builder {
     }
 
     fn is_kwargs(&self, node: &Node) -> bool {
-        match node {
+        matches!(
+            node,
             Node::Hash(Hash {
                 begin_l: None,
                 end_l: None,
                 ..
-            }) => true,
-            _ => false,
-        }
+            })
+        )
     }
 }
 

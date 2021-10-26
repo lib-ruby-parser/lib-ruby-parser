@@ -7,12 +7,11 @@ fn contents() -> String {
 use super::LocName;
 use crate::{{Node, Loc}};
 use crate::nodes::*;
-crate::use_native_or_external!(Maybe);
 
 impl LocName {{
     {loc_getters}
 
-    pub(crate) fn get(&self, node: &Node) -> Maybe<Loc> {{
+    pub(crate) fn get(&self, node: &Node) -> Option<Loc> {{
         match self {{
             {loc_branches}
         }}
@@ -154,7 +153,7 @@ fn loc_getter(loc_name: &LocName) -> String {
     };
 
     format!(
-        "fn get_{loc_name}(node: &Node) -> Maybe<Loc> {{
+        "fn get_{loc_name}(node: &Node) -> Option<Loc> {{
         match node {{
             {branches}
 

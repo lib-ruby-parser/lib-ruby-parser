@@ -88,13 +88,5 @@ pub use token::Token;
 mod bytes;
 pub use bytes::Bytes;
 
-/// Module with generic containers
-pub mod containers;
-pub(crate) use containers::use_native_or_external;
-
-/// Module with blobs, based on provided sizes
-#[cfg(feature = "compile-with-external-structures")]
-pub mod blobs;
-
 #[cfg(test)]
 pub(crate) mod test_helpers;

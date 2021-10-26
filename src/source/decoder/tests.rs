@@ -1,5 +1,3 @@
-crate::use_native_or_external!(List);
-
 use super::shared::dummy_decoder::*;
 use crate::source::DecoderResult;
 

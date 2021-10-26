@@ -1,8 +1,3 @@
-crate::use_native_or_external!(Ptr);
-crate::use_native_or_external!(StringPtr);
-crate::use_native_or_external!(List);
-crate::use_native_or_external!(Maybe);
-
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
@@ -81,8 +76,8 @@ pub struct Lexer {
     pub static_env: StaticEnvironment,
 
     pub(crate) diagnostics: Diagnostics,
-    pub(crate) comments: List<Comment>,
-    pub(crate) magic_comments: List<MagicComment>,
+    pub(crate) comments: Vec<Comment>,
+    pub(crate) magic_comments: Vec<MagicComment>,
 }
 
 impl Lexer {
@@ -93,10 +88,10 @@ impl Lexer {
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
     /// Constructs an instance of Lexer
-    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: Maybe<Decoder>) -> Self
+    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: Option<Decoder>) -> Self
     where
-        Bytes: Into<List<u8>>,
-        Name: Into<StringPtr>,
+        Bytes: Into<Vec<u8>>,
+        Name: Into<String>,
     {
         Self {
             cond: StackState::new("cond"),
@@ -118,7 +113,7 @@ impl Lexer {
         let mut tokens = vec![];
 
         loop {
-            let token = self.yylex().unptr();
+            let token = *self.yylex();
             match token.token_type() {
                 Self::END_OF_INPUT => break,
                 _ => tokens.push(token),
@@ -128,7 +123,7 @@ impl Lexer {
         tokens
     }
 
-    pub(crate) fn yylex(&mut self) -> Ptr<Token> {
+    pub(crate) fn yylex(&mut self) -> Box<Token> {
         let lex_state_before = self.lex_state;
         self.lval = None;
 
@@ -144,16 +139,16 @@ impl Lexer {
                 // take raw value if nothing was manually captured
                 self.buffer
                     .substr_at(begin, end)
-                    .map(|s| Bytes::new(List::from(s)))
+                    .map(|s| Bytes::new(Vec::from(s)))
             })
-            .unwrap_or_else(|| Bytes::new(list![]));
+            .unwrap_or_else(|| Bytes::new(vec![]));
 
         if token_type == Self::tNL {
-            token_value = Bytes::new(list![b'\n']);
+            token_value = Bytes::new(vec![b'\n']);
             end = begin + 1;
         }
 
-        let token = Ptr::new(Token::new(
+        let token = Box::new(Token::new(
             token_type,
             token_value,
             Loc::new(begin, end),

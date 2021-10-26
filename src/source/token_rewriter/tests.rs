@@ -1,6 +1,3 @@
-crate::use_native_or_external!(Ptr);
-crate::use_native_or_external!(List);
-
 use crate::source::token_rewriter::InternalTokenRewriterResult;
 
 use super::{TokenRewriter, TokenRewriterResult};
@@ -12,10 +9,10 @@ use crate::Token;
 const INITIAL_TOKEN_ID: i32 = 310;
 const REWRITTEN_TOKEN_ID: i32 = 300;
 
-fn rewritten_token() -> Ptr<Token> {
-    Ptr::new(Token::new(
+fn rewritten_token() -> Box<Token> {
+    Box::new(Token::new(
         REWRITTEN_TOKEN_ID,
-        Bytes::new(List::from("rewritten")),
+        Bytes::new(Vec::from("rewritten")),
         Loc::new(1, 2),
         LexState { value: 1 },
         LexState { value: 2 },
@@ -25,23 +22,23 @@ fn rewritten_token() -> Ptr<Token> {
 #[cfg(feature = "compile-with-external-structures")]
 mod dummy_rewriter {
     use super::rewritten_token;
-    use super::{Ptr, Token};
+    use super::{Box, Token};
     use crate::blobs::{Blob, HasBlob};
     use crate::source::token_rewriter::TokenRewriter;
 
     extern "C" {
         fn lib_ruby_parser__testing__token_rewriter__new_keep(
-            token_f: extern "C" fn() -> Ptr<Token>,
+            token_f: extern "C" fn() -> Box<Token>,
         ) -> Blob<TokenRewriter>;
         fn lib_ruby_parser__testing__token_rewriter__new_drop(
-            token_f: extern "C" fn() -> Ptr<Token>,
+            token_f: extern "C" fn() -> Box<Token>,
         ) -> Blob<TokenRewriter>;
         fn lib_ruby_parser__testing__token_rewriter__new_rewrite(
-            token_f: extern "C" fn() -> Ptr<Token>,
+            token_f: extern "C" fn() -> Box<Token>,
         ) -> Blob<TokenRewriter>;
     }
 
-    extern "C" fn token_f() -> Ptr<Token> {
+    extern "C" fn token_f() -> Box<Token> {
         rewritten_token()
     }
 
@@ -96,14 +93,14 @@ mod dummy_rewriter {
 
 fn call_dummy_rewriter(rewriter: TokenRewriter) -> TokenRewriterResult {
     // it's dummy, so encoding/input doesn't matter
-    let token = Ptr::new(Token::new(
+    let token = Box::new(Token::new(
         INITIAL_TOKEN_ID,
-        Bytes::new(List::from("initial")),
+        Bytes::new(Vec::from("initial")),
         Loc::new(1, 2),
         LexState { value: 1 },
         LexState { value: 2 },
     ));
-    let input = list![b'2', b'+', b'2'];
+    let input = vec![b'2', b'+', b'2'];
 
     rewriter.call(token, input.as_slice())
 }
@@ -119,7 +116,7 @@ fn test_keep() {
     assert_eq!(rewritten_token.token_type(), INITIAL_TOKEN_ID);
     assert_eq!(
         rewritten_token.token_value(),
-        &Bytes::new(List::from("initial"))
+        &Bytes::new(Vec::from("initial"))
     );
     assert!(token_action.is_keep());
 }
@@ -143,7 +140,7 @@ fn test_rewrite() {
     assert_eq!(rewritten_token.token_type(), REWRITTEN_TOKEN_ID);
     assert_eq!(
         rewritten_token.token_value(),
-        &Bytes::new(List::from("rewritten"))
+        &Bytes::new(Vec::from("rewritten"))
     );
     assert!(token_action.is_keep());
 }

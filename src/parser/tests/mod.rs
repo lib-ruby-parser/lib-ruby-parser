@@ -1,5 +1,3 @@
-crate::use_native_or_external!(Maybe);
-
 mod fixture;
 pub(crate) use fixture::test_file;
 
@@ -25,7 +23,7 @@ macro_rules! fixture_file {
 pub(crate) use fixture_file;
 
 fn parse(input: &[u8]) -> ParserResult {
-    let options = ParserOptions::new("(eval)".into(), Maybe::none(), Maybe::none(), false);
+    let options = ParserOptions::new("(eval)".into(), None, None, false);
     let parser = Parser::new(input, options);
     parser.do_parse()
 }

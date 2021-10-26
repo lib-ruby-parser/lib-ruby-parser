@@ -1,12 +1,9 @@
-crate::use_native_or_external!(StringPtr);
-crate::use_native_or_external!(List);
-
 use super::DecoderResult;
 use crate::source::InputError;
 
 #[test]
 fn test_ok() {
-    let output = list![1, 2, 3];
+    let output = vec![1, 2, 3];
     let ok_result = DecoderResult::new_ok(output.clone());
 
     assert!(ok_result.is_ok());
@@ -19,7 +16,7 @@ fn test_ok() {
 
 #[test]
 fn test_err() {
-    let err = InputError::new_unsupported_encoding(StringPtr::from("foo"));
+    let err = InputError::new_unsupported_encoding(String::from("foo"));
     let err_result = DecoderResult::new_err(err.clone());
 
     assert!(!err_result.is_ok());

@@ -1,14 +1,11 @@
-crate::use_native_or_external!(List);
-crate::use_native_or_external!(SharedByteList);
-
 use super::DecodedInput;
 use crate::source::SourceLine;
 
 impl DecodedInput {
     /// Populates `Input` with a given byte array
-    pub fn update_bytes(&mut self, bytes: List<u8>) {
+    pub fn update_bytes(&mut self, bytes: Vec<u8>) {
         let mut line = SourceLine::new(0, 0, true);
-        let mut lines = list![];
+        let mut lines = vec![];
 
         for (idx, c) in bytes.iter().enumerate() {
             line.set_end(idx + 1);
@@ -64,7 +61,7 @@ impl DecodedInput {
     }
 
     /// Returns raw bytes after decoding
-    pub fn as_shared_bytes(&self) -> SharedByteList {
+    pub fn as_shared_bytes(&self) -> &[u8] {
         self.bytes().as_slice()
     }
 }

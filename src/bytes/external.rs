@@ -26,7 +26,7 @@ impl Drop for Bytes {
 
 impl Default for Bytes {
     fn default() -> Self {
-        Self::new(list![])
+        Self::new(vec![])
     }
 }
 

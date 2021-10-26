@@ -16,13 +16,13 @@ pub(crate) mod node_fields {
         use lib_ruby_parser_nodes::NodeFieldType::*;
 
         match node_field.field_type {
-            Node => "Ptr<Node>",
-            Nodes => "List<Node>",
-            MaybeNode { .. } => "Maybe<Ptr<Node>>",
+            Node => "Box<Node>",
+            Nodes => "Vec<Node>",
+            MaybeNode { .. } => "Option<Box<Node>>",
             Loc => "Loc",
-            MaybeLoc => "Maybe<Loc>",
-            Str { .. } => "StringPtr",
-            MaybeStr { .. } => "Maybe<StringPtr>",
+            MaybeLoc => "Option<Loc>",
+            Str { .. } => "String",
+            MaybeStr { .. } => "Option<String>",
             StringValue => "Bytes",
             U8 => "u8",
         }
@@ -36,7 +36,7 @@ pub(crate) mod message_fields {
     pub(crate) fn rust_field_type(message_field: &MessageField) -> String {
         use lib_ruby_parser_nodes::MessageFieldType::*;
         match message_field.field_type {
-            Str => "StringPtr",
+            Str => "String",
             Byte => "u8",
         }
         .to_string()
@@ -45,7 +45,7 @@ pub(crate) mod message_fields {
     pub(crate) fn rust_blob_type(message_field: &MessageField) -> String {
         use lib_ruby_parser_nodes::MessageFieldType::*;
         match message_field.field_type {
-            Str => "Blob<StringPtr>",
+            Str => "Blob<String>",
             Byte => "u8",
         }
         .to_string()
