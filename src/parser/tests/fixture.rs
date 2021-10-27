@@ -85,7 +85,7 @@ impl Fixture {
         match &self.ast {
             Some(expected_ast) => {
                 let actual_ast = actual
-                    .ast()
+                    .ast
                     .as_ref()
                     .map(|node| node.inspect(0))
                     .unwrap_or_else(|| "nil".to_string());
@@ -101,7 +101,7 @@ impl Fixture {
 
         match &self.locs {
             Some(locs) => {
-                let ast = if let Some(ast) = actual.ast().as_ref() {
+                let ast = if let Some(ast) = actual.ast.as_ref() {
                     ast
                 } else {
                     panic!("can't compare locs, ast is empty");
@@ -118,7 +118,7 @@ impl Fixture {
         }
 
         let actual_diagnostics = actual
-            .diagnostics()
+            .diagnostics
             .iter()
             .map(|d| render_diagnostic_for_testing(d))
             .collect::<Vec<_>>();
@@ -126,7 +126,7 @@ impl Fixture {
         match &self.diagnostics {
             None => {
                 assert_eq!(
-                    actual.diagnostics().len(),
+                    actual.diagnostics.len(),
                     0,
                     "expected no diagnostics to be emitted, got:\n{}",
                     actual_diagnostics.join("\n")

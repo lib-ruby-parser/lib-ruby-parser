@@ -36,7 +36,7 @@ fn parse(input: &[u8]) -> ParserResult {
 fn test_magic_comment() {
     let fixture = std::fs::read("fixtures/magic_comments.rb").unwrap();
     let result = parse(&fixture);
-    let magic_comments: Vec<MagicComment> = result.magic_comments().to_owned().into();
+    let magic_comments: Vec<MagicComment> = result.magic_comments.to_owned().into();
     assert_eq!(
         magic_comments,
         vec![

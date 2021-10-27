@@ -6819,14 +6819,14 @@ impl Parser {
     pub fn do_parse(mut self) -> ParserResult  {
         self.parse();
 
-        ParserResult::new(
-            self.result,
-            self.tokens,
-            self.diagnostics.take_inner(),
-            self.yylexer.comments,
-            self.yylexer.magic_comments,
-            self.yylexer.buffer.input.decoded,
-        )
+        ParserResult {
+            ast: self.result,
+            tokens: self.tokens,
+            diagnostics: self.diagnostics.take_inner(),
+            comments: self.yylexer.comments,
+            magic_comments: self.yylexer.magic_comments,
+            input: self.yylexer.buffer.input.decoded,
+        }
     }
 
     #[doc(hidden)]
@@ -6835,14 +6835,14 @@ impl Parser {
 
         self.assert_state_is_final();
 
-        ParserResult::new(
-            self.result,
-            self.tokens,
-            self.diagnostics.take_inner(),
-            self.yylexer.comments,
-            self.yylexer.magic_comments,
-            self.yylexer.buffer.input.decoded,
-        )
+        ParserResult {
+            ast: self.result,
+            tokens: self.tokens,
+            diagnostics: self.diagnostics.take_inner(),
+            comments: self.yylexer.comments,
+            magic_comments: self.yylexer.magic_comments,
+            input: self.yylexer.buffer.input.decoded,
+        }
     }
 
     fn warn(&mut self, loc: &Loc, message: DiagnosticMessage) {

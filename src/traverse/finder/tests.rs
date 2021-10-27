@@ -10,9 +10,9 @@ fn find(src: &str, pattern: &str) -> Option<String> {
     let parser = Parser::new(src, options);
 
     let result = parser.do_parse();
-    let ast = result.ast().as_ref().expect("expected AST to be Some");
+    let ast = result.ast.as_ref().expect("expected AST to be Some");
     let node = Finder::run(&pattern, ast).unwrap()?;
-    node.expression().source(result.input())
+    node.expression().source(&result.input)
 }
 
 #[test]
