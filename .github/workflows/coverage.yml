@@ -24,6 +24,10 @@ jobs:
           toolchain: stable
           override: true
 
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.0.0"
+
       - name: install bison
         run: |
           brew install bison
@@ -31,7 +35,10 @@ jobs:
           bison --version
 
       - name: codegen
-        run: cargo build --features "codegen-y,codegen-rust" && cargo clean
+        run: |
+          ruby vendor/codegen/parser.rb
+          ruby vendor/codegen/lexer.rb
+          cargo build --features "codegen-y,codegen-rust" && cargo clean
 
       - name: cargo-tarpaulin
         run: |

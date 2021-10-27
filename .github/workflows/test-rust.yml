@@ -33,6 +33,10 @@ jobs:
           toolchain: ${{ matrix.build.rust }}
           override: true
 
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.0.0"
+
       - name: install bison
         run: |
           brew update
@@ -43,7 +47,10 @@ jobs:
         run: bison --version
 
       - name: codegen
-        run: cargo build --features "codegen-y,codegen-rust"
+        run: |
+          ruby vendor/codegen/parser.rb
+          ruby vendor/codegen/lexer.rb
+          cargo build --features "codegen-y,codegen-rust"
 
       - name: run tests
         run: cargo test ${{ matrix.build.cargoargs }} -- --nocapture
