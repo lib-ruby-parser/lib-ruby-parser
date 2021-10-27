@@ -6848,7 +6848,7 @@ impl Parser {
 
     fn warn(&mut self, loc: &Loc, message: DiagnosticMessage) {
         let diagnostic = Diagnostic::new(
-            ErrorLevel::warning(),
+            ErrorLevel::Warning,
             message,
             loc.clone(),
         );
@@ -6901,7 +6901,7 @@ impl Parser {
             let loc = ident_t.loc().clone();
             self.diagnostics.emit(
                 Diagnostic::new(
-                    ErrorLevel::error(),
+                    ErrorLevel::Error,
                     DiagnosticMessage::ConstArgument {},
                     loc
                 )
@@ -6927,7 +6927,7 @@ impl Parser {
     }
 
     fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) -> Result<i32, ()> {
-        let diagnostic = Diagnostic::new(ErrorLevel::error(), message, loc);
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc);
         self.diagnostics.emit(diagnostic);
         Err(())
     }
@@ -6935,7 +6935,7 @@ impl Parser {
     fn report_syntax_error(&mut self, ctx: &Context) {
         let id: usize = ctx.token().code().try_into().expect("failed to convert token code into i32, is it too big?");
         let diagnostic = Diagnostic::new(
-            ErrorLevel::error(),
+            ErrorLevel::Error,
             DiagnosticMessage::UnexpectedToken { token_name: Lexer::TOKEN_NAMES[id].to_string() },
             ctx.location().clone(),
         );

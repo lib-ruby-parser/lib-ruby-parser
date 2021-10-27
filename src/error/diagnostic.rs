@@ -73,10 +73,10 @@ impl Diagnostic {
 
         Some(
             format!(
-                "{prefix}:{start_col}: {level:?}: {message}\n{prefix}: {line}\n{prefix}: {highlight}",
+                "{prefix}:{start_col}: {level}: {message}\n{prefix}: {line}\n{prefix}: {highlight}",
                 prefix = prefix,
                 start_col = start_col,
-                level = self.level(),
+                level = self.level().to_string(),
                 message = self.message().render(),
                 line = line,
                 highlight = highlight
@@ -88,12 +88,12 @@ impl Diagnostic {
 
     /// Returns `true` if level of the diagnostic is `Warning`
     pub fn is_warning(&self) -> bool {
-        self.level().is_warning()
+        matches!(self.level(), ErrorLevel::Warning)
     }
 
     /// Returns `true` if level of the diagnostic is `Error`
     pub fn is_error(&self) -> bool {
-        self.level().is_error()
+        matches!(self.level(), ErrorLevel::Error)
     }
 }
 
@@ -124,7 +124,7 @@ mod tests {
 
     fn new_diagnostic() -> Diagnostic {
         Diagnostic::new(
-            ErrorLevel::error(),
+            ErrorLevel::Error,
             DiagnosticMessage::AliasNthRef {},
             Loc::new(1, 2),
         )
@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn test_get_level() {
-        assert!(new_diagnostic().level().is_error())
+        assert_eq!(new_diagnostic().level(), &ErrorLevel::Error)
     }
 
     #[test]
@@ -162,7 +162,7 @@ mod tests {
         input.update_bytes(Vec::from(source));
 
         let error = Diagnostic::new(
-            ErrorLevel::warning(),
+            ErrorLevel::Warning,
             DiagnosticMessage::FractionAfterNumeric {},
             Loc::new(8, 12),
         );
