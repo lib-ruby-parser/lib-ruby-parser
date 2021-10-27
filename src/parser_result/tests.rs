@@ -33,7 +33,7 @@ fn diagnostics() -> Vec<Diagnostic> {
 fn comments() -> Vec<Comment> {
     vec![Comment {
         location: Loc { begin: 7, end: 8 },
-        kind: CommentType::inline(),
+        kind: CommentType::Inline,
     }]
 }
 fn magic_comments() -> Vec<MagicComment> {

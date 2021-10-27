@@ -18,14 +18,14 @@ impl Comment {
         let kind = match location.source(input) {
             Some(source) => {
                 if source.starts_with('#') {
-                    CommentType::inline()
+                    CommentType::Inline
                 } else if source.starts_with("=begin") {
-                    CommentType::document()
+                    CommentType::Document
                 } else {
-                    CommentType::unknown()
+                    CommentType::Unknown
                 }
             }
-            None => CommentType::unknown(),
+            None => CommentType::Unknown,
         };
         Self { location, kind }
     }
