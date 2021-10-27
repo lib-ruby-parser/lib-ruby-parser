@@ -13,26 +13,11 @@ version = "3.0.11"
 [features]
 default = []
 
-# Uses external structures
-# compile-with-external-structures = []
-
-# Link with C library that provides external structures (used only for internal testing)
-link-with-external-c-structures = []
-
-# Link with CXX library that provides external structures (used only for internal testing)
-link-with-external-cpp-structures = []
-
 # Codegen parser.y
 codegen-y = ["rust-bison-skeleton"]
 
 # Codegen Rust files
 codegen-rust = ["lib-ruby-parser-nodes"]
-
-# Codegen C files (used for internal testing)
-codegen-c = ["lib-ruby-parser-nodes", "lib-ruby-parser-bindings"]
-
-# Codegen CXX files (used for internal testing)
-codegen-cpp = ["lib-ruby-parser-nodes", "lib-ruby-parser-bindings"]
 
 # Enables optional dependencies to run examples
 run-examples = ["clap", "glob", "jemallocator", "pprof"]

@@ -1,17 +1,8 @@
-#[cfg(feature = "codegen-c")]
-mod c;
-
-#[cfg(feature = "codegen-cpp")]
-mod cpp;
-
 #[cfg(feature = "codegen-rust")]
 mod rust;
 
 #[cfg(feature = "codegen-y")]
 mod y;
-
-#[cfg(feature = "compile-with-external-structures")]
-mod sizes;
 
 #[cfg(feature = "lib-ruby-parser-nodes")]
 mod fns;
@@ -36,23 +27,5 @@ pub(crate) fn codegen() {
         "codegen-rust",
         { rust::codegen() },
         otherwise print: "Skipping generating .rs files"
-    );
-
-    codegen_if_feature!(
-        "codegen-c",
-        { c::codegen() },
-        otherwise print: "Skipping generating .c files"
-    );
-
-    codegen_if_feature!(
-        "codegen-cpp",
-        { cpp::codegen() },
-        otherwise print: "Skipping generating .cpp files"
-    );
-
-    codegen_if_feature!(
-        "compile-with-external-structures",
-        { sizes::codegen() },
-        otherwise print: "Skipping generating size.rs"
     );
 }
