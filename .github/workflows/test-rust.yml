@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: install rust
         uses: actions-rs/toolchain@v1
