@@ -36,6 +36,10 @@ jobs:
 
       - name: codegen
         run: |
+          cd vendor/parser
+          bundle install
+          bundle exec rake generate
+          cd ../..
           ruby vendor/codegen/parser.rb
           ruby vendor/codegen/lexer.rb
           cargo build --features "codegen-y,codegen-rust" && cargo clean
