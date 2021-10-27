@@ -131,7 +131,7 @@ impl Lexer {
 
         let heredoc_end: HeredocEnd;
 
-        eos = self.buffer.input.line_at(here.lastline).start() + here.offset;
+        eos = self.buffer.input.line_at(here.lastline).start + here.offset;
         len = here.length;
         func = here.func;
         indent = here.func & STR_FUNC_INDENT;
@@ -160,7 +160,7 @@ impl Lexer {
 
         if (func & STR_FUNC_EXPAND) == 0 {
             loop {
-                ptr = self.buffer.input.line_at(self.buffer.lastline).start();
+                ptr = self.buffer.input.line_at(self.buffer.lastline).start;
                 ptr_end = self.buffer.pend;
                 if ptr_end > ptr {
                     match self.buffer.input.unchecked_byte_at(ptr_end - 1) {
@@ -361,7 +361,7 @@ impl Lexer {
         self.strterm = None;
         let line = here.lastline;
         self.buffer.lastline = line;
-        self.buffer.pbeg = self.buffer.input.line_at(line).start();
+        self.buffer.pbeg = self.buffer.input.line_at(line).start;
         self.buffer.pend = self.buffer.pbeg + self.buffer.input.line_at(line).len();
         self.buffer.pcur = self.buffer.pbeg + here.offset + here.length + here.quote;
         self.buffer.ptok = self.buffer.pbeg + here.offset - here.quote;

@@ -37,19 +37,27 @@ impl DecodedInput {
 
     /// Populates `Input` with a given byte array
     pub fn update_bytes(&mut self, bytes: Vec<u8>) {
-        let mut line = SourceLine::new(0, 0, true);
+        let mut line = SourceLine {
+            start: 0,
+            end: 0,
+            ends_with_eof: true,
+        };
         let mut lines = vec![];
 
         for (idx, c) in bytes.iter().enumerate() {
-            line.set_end(idx + 1);
+            line.end = idx + 1;
             if *c == b'\n' {
-                line.set_ends_with_eof(false);
+                line.ends_with_eof = false;
                 lines.push(line);
-                line = SourceLine::new(idx + 1, 0, true)
+                line = SourceLine {
+                    start: idx + 1,
+                    end: 0,
+                    ends_with_eof: true,
+                }
             }
         }
-        line.set_end(bytes.len());
-        line.set_ends_with_eof(true);
+        line.end = bytes.len();
+        line.ends_with_eof = true;
         lines.push(line);
 
         self.bytes = bytes;

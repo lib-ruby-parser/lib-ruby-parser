@@ -167,9 +167,9 @@ impl Buffer {
             self.heredoc_end = 0;
         }
         self.ruby_sourceline += 1;
-        self.pbeg = line.start();
-        self.pcur = line.start();
-        self.pend = line.end();
+        self.pbeg = line.start;
+        self.pcur = line.start;
+        self.pend = line.end;
         self.token_flush();
         self.prevline = Some(self.lastline);
         self.lastline = v;
@@ -303,7 +303,7 @@ impl Buffer {
                 self.lastline = prevline;
             }
         }
-        self.pbeg = self.input.line_at(self.lastline).start();
+        self.pbeg = self.input.line_at(self.lastline).start;
         self.pend = self.pbeg + self.input.line_at(self.lastline).len();
         self.pcur = self.pend;
         self.pushback(1);

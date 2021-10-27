@@ -111,7 +111,7 @@ impl Loc {
         Some((
             line_no,
             Self {
-                begin: line.start(),
+                begin: line.start,
                 end: line.line_end(),
             },
         ))
