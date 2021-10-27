@@ -86,7 +86,7 @@ impl Loc {
     pub(crate) fn maybe_join(&self, other: &Option<Loc>) -> Loc {
         match other.as_ref() {
             Some(other) => self.join(other),
-            None => self.clone(),
+            None => *self,
         }
     }
 

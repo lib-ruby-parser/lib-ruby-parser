@@ -174,8 +174,7 @@ impl Lexer {
                         .tokenbuf
                         .borrow_string()
                         .expect("expected buffer to have only utf-8 chars")
-                        .to_string()
-                        .into(),
+                        .to_string(),
                 },
                 self.current_loc(),
             );
@@ -820,7 +819,7 @@ impl Lexer {
     pub(crate) fn warn_space_char(&mut self, c: u8, prefix: &'static str) {
         self.warn(
             DiagnosticMessage::InvalidCharacterSyntax {
-                suggestion: format!("{}\\{}", prefix, c).into(),
+                suggestion: format!("{}\\{}", prefix, c),
             },
             self.current_loc(),
         )

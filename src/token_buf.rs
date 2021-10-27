@@ -29,7 +29,7 @@ impl TokenBuf {
     pub(crate) fn prepend(&mut self, part: &[u8]) {
         let mut tmp = part.to_vec();
         tmp.extend(self.bytes.as_raw().iter());
-        self.bytes.set_raw(tmp.into());
+        self.bytes.set_raw(tmp);
     }
 
     pub(crate) fn borrow_string(&self) -> Result<&str, &[u8]> {

@@ -4,6 +4,8 @@
 #![warn(unused_qualifications)]
 #![warn(deprecated_in_future)]
 #![warn(unused_lifetimes)]
+#![allow(clippy::box_vec)]
+#![allow(clippy::boxed_local)]
 #![doc = include_str!("../README.md")]
 
 /*!

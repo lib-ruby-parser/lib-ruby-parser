@@ -89,9 +89,7 @@ impl std::fmt::Debug for Decoder {
 
 pub fn decode_input(input: Vec<u8>, enc: String, decoder: &mut Option<Decoder>) -> DecoderResult {
     match enc.to_uppercase().as_str() {
-        "UTF-8" | "ASCII-8BIT" | "BINARY" => {
-            return DecoderResult::Ok(input.into());
-        }
+        "UTF-8" | "ASCII-8BIT" | "BINARY" => DecoderResult::Ok(input),
         _ => {
             if let Some(f) = decoder.as_mut() {
                 f.call(enc, input)

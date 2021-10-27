@@ -38,7 +38,7 @@ debug-parser = []
 onig = {version = "6", optional = true}
 
 # Dependencies of examples
-clap = {version = "3.0.0-beta.2", optional = true}
+clap = {version = "3.0.0-beta.5", optional = true}
 glob = {version = "0.3.0", optional = true}
 jemallocator = {version = "0.3.2", optional = true}
 pprof = {version = "0.6.0", features = ["flamegraph"], optional = true}
@@ -46,7 +46,7 @@ pprof = {version = "0.6.0", features = ["flamegraph"], optional = true}
 [build-dependencies]
 lib-ruby-parser-bindings = {version = "0.13.0", optional = true}
 lib-ruby-parser-nodes = {version = "0.38.0", optional = true}
-rust-bison-skeleton = {version = "0.35.0", optional = true}
+rust-bison-skeleton = {version = "0.36.0", optional = true}
 
 [profile.dev]
 debug-assertions = false

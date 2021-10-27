@@ -153,7 +153,7 @@ impl Builder {
 
     pub(crate) fn unary_num(&self, unary_t: Box<Token>, mut numeric: Box<Node>) -> Box<Node> {
         let new_operator_l = self.loc(&unary_t);
-        let sign = String::from(value(unary_t));
+        let sign = value(unary_t);
 
         match &mut *numeric {
             Node::Int(Int {
@@ -447,7 +447,7 @@ impl Builder {
             .expect("dedent_level must be positive");
 
         let dedent_heredoc_parts = |parts: Vec<Node>| -> Vec<Node> {
-            let parts = parts
+            parts
                 .into_iter()
                 .filter_map(|part| match part {
                     Node::Str(Str {
@@ -478,8 +478,7 @@ impl Builder {
                         unreachable!("unsupported heredoc child {}", other.str_type())
                     }
                 })
-                .collect::<Vec<_>>();
-            Vec::from(parts)
+                .collect::<Vec<_>>()
         };
 
         match node {
@@ -561,7 +560,7 @@ impl Builder {
         let options = if options.is_empty() {
             None
         } else {
-            Some(String::from(options.into_iter().collect::<String>()))
+            Some(options.into_iter().collect::<String>())
         };
 
         Some(Box::new(Node::RegOpt(RegOpt {
@@ -582,11 +581,11 @@ impl Builder {
         let expression_l =
             begin_l.join(&maybe_boxed_node_expr(&options).unwrap_or_else(|| self.loc(&end_t)));
 
-        match options.as_ref().map(|boxed| &**boxed) {
+        match options.as_deref() {
             Some(Node::RegOpt(RegOpt {
-                ref options,
-                ref expression_l,
-            })) => self.validate_static_regexp(&parts, options, &expression_l),
+                options,
+                expression_l,
+            })) => self.validate_static_regexp(&parts, options, expression_l),
             None => self.validate_static_regexp(&parts, &None, &expression_l),
             _ => unreachable!("must be Option<RegOpt>"),
         }
@@ -715,7 +714,7 @@ impl Builder {
         let end_l = self.loc(&end_t);
         let expression_l = begin_l.join(&end_l);
         Box::new(Node::Array(Array {
-            elements: Vec::from(parts),
+            elements: parts,
             begin_l: Some(begin_l),
             end_l: Some(end_l),
             expression_l,
@@ -957,7 +956,7 @@ impl Builder {
                             method_name: name,
                             args: vec![],
                             dot_l: None,
-                            selector_l: Some(expression_l.clone()),
+                            selector_l: Some(expression_l),
                             begin_l: None,
                             end_l: None,
                             operator_l: None,
@@ -974,7 +973,7 @@ impl Builder {
 
     pub(crate) fn const_(&self, name_t: Box<Token>) -> Box<Node> {
         let name_l = self.loc(&name_t);
-        let expression_l = name_l.clone();
+        let expression_l = name_l;
 
         Box::new(Node::Const(Const {
             scope: None,
@@ -1133,7 +1132,7 @@ impl Builder {
             Node::NthRef(NthRef { name, expression_l }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: String::from(format!("${}", name)),
+                        var_name: format!("${}", name),
                     },
                     &expression_l,
                 );
@@ -1251,7 +1250,7 @@ impl Builder {
         rhs: Box<Node>,
     ) -> Result<Box<Node>, ()> {
         let operator_l = self.loc(&op_t);
-        let mut operator = String::from(value(op_t));
+        let mut operator = value(op_t);
         operator.pop();
         let expression_l = join_exprs(&lhs, &rhs);
 
@@ -1297,7 +1296,7 @@ impl Builder {
             Node::NthRef(NthRef { name, expression_l }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: String::from(format!("${}", name)),
+                        var_name: format!("${}", name),
                     },
                     expression_l,
                 );
@@ -1324,7 +1323,7 @@ impl Builder {
             }),
             _ => Node::OpAsgn(OpAsgn {
                 recv,
-                operator: String::from(operator),
+                operator,
                 value,
                 operator_l,
                 expression_l,
@@ -1689,8 +1688,7 @@ impl Builder {
         star_t: Box<Token>,
         name_t: Option<Box<Token>>,
     ) -> Result<Box<Node>, ()> {
-        let (name, name_l) = if name_t.is_some() {
-            let name_t = name_t.unwrap();
+        let (name, name_l) = if let Some(name_t) = name_t {
             let name_l = self.loc(&name_t);
             let name = value(name_t);
             self.check_reserved_for_numparam(name.as_str(), &name_l)?;
@@ -1747,8 +1745,7 @@ impl Builder {
         dstar_t: Box<Token>,
         name_t: Option<Box<Token>>,
     ) -> Result<Box<Node>, ()> {
-        let (name, name_l) = if name_t.is_some() {
-            let name_t = name_t.unwrap();
+        let (name, name_l) = if let Some(name_t) = name_t {
             let name_l = self.loc(&name_t);
             let name = value(name_t);
             self.check_reserved_for_numparam(name.as_str(), &name_l)?;
@@ -1823,10 +1820,7 @@ impl Builder {
                 expression_l,
             })),
             Node::Arg(Arg { name, expression_l }) => Box::new(Node::Procarg0(Procarg0 {
-                args: vec![Node::Arg(Arg {
-                    name,
-                    expression_l: expression_l.clone(),
-                })],
+                args: vec![Node::Arg(Arg { name, expression_l })],
                 begin_l: None,
                 end_l: None,
                 expression_l,
@@ -1880,11 +1874,7 @@ impl Builder {
         let end_l = self.maybe_loc(&rparen_t);
 
         let method_name = maybe_value(selector_t);
-        let method_name = if method_name.is_some() {
-            method_name.unwrap()
-        } else {
-            String::from("call")
-        };
+        let method_name = method_name.unwrap_or_else(|| String::from("call"));
 
         self.rewrite_hash_args_to_kwargs(&mut args);
 
@@ -2106,7 +2096,7 @@ impl Builder {
         let expression_l = receiver.expression().join(&selector_l);
         let receiver: Box<Node> = receiver;
 
-        let method_name = String::from(String::from(value(selector_t)) + "=");
+        let method_name = value(selector_t) + "=";
 
         match self.call_type_for_dot(&Some(dot_t)) {
             MethodCallType::Send => Box::new(Node::Send(Send {
@@ -2251,11 +2241,11 @@ impl Builder {
         let selector_l = self.loc(&op_t);
         let expression_l = receiver.expression().join(&selector_l);
 
-        let op = String::from(value(op_t));
+        let op = value(op_t);
         let method_name = if op == "+" || op == "-" { op + "@" } else { op };
         Ok(Box::new(Node::Send(Send {
             recv: Some(receiver),
-            method_name: String::from(method_name),
+            method_name,
             args: vec![],
             dot_l: None,
             selector_l: Some(selector_l),
@@ -2273,14 +2263,14 @@ impl Builder {
         receiver: Option<Box<Node>>,
         end_t: Option<Box<Token>>,
     ) -> Result<Box<Node>, ()> {
-        if receiver.is_some() {
-            let receiver = receiver.unwrap();
+        if let Some(receiver) = receiver {
+            let receiver = receiver;
             self.value_expr(&receiver)?;
 
             let begin_l = self.loc(&not_t);
             let end_l = self
                 .maybe_loc(&end_t)
-                .unwrap_or_else(|| receiver.expression().clone());
+                .unwrap_or_else(|| *receiver.expression());
 
             let expression_l = begin_l.join(&end_l);
 
@@ -2642,9 +2632,8 @@ impl Builder {
         let end_l = self.maybe_loc(&rparen_t);
 
         let expr_end_l = end_l
-            .clone()
             .or_else(|| maybe_node_expr(&args.last()))
-            .unwrap_or_else(|| keyword_l.clone());
+            .unwrap_or(keyword_l);
 
         let expression_l = keyword_l.join(&expr_end_l);
 
@@ -2818,9 +2807,8 @@ impl Builder {
         } else if let Some((else_t, else_)) = else_ {
             let mut statements = vec![];
 
-            if compound_stmt.is_some() {
-                let compound_stmt = *compound_stmt.unwrap();
-                match compound_stmt {
+            if let Some(compound_stmt) = compound_stmt {
+                match *compound_stmt {
                     Node::Begin(Begin {
                         statements: stmts, ..
                     }) => statements = stmts,
@@ -2922,8 +2910,8 @@ impl Builder {
         let new_begin_l = Some(new_begin_l);
         let new_end_l = Some(new_end_l);
 
-        if body.is_some() {
-            let mut body = *body.unwrap();
+        if let Some(body) = body {
+            let mut body = *body;
             match &mut body {
                 Node::Mlhs(Mlhs {
                     begin_l,
@@ -2949,16 +2937,12 @@ impl Builder {
                     *expression_l = new_expression_l;
                     Box::new(body)
                 }
-                _ => {
-                    let mut statements = vec![];
-                    statements.push(body);
-                    Box::new(Node::Begin(Begin {
-                        statements,
-                        begin_l: new_begin_l,
-                        end_l: new_end_l,
-                        expression_l: new_expression_l,
-                    }))
-                }
+                _ => Box::new(Node::Begin(Begin {
+                    statements: vec![body],
+                    begin_l: new_begin_l,
+                    end_l: new_end_l,
+                    expression_l: new_expression_l,
+                })),
             }
         } else {
             // A nil expression: `()'.
@@ -2984,16 +2968,8 @@ impl Builder {
         let begin_l = Some(begin_l);
         let end_l = Some(end_l);
 
-        if body.is_none() {
-            // A nil expression: `begin end'.
-            Box::new(Node::KwBegin(KwBegin {
-                statements: vec![],
-                begin_l,
-                end_l,
-                expression_l,
-            }))
-        } else {
-            let body = *body.unwrap();
+        if let Some(body) = body {
+            let body = *body;
             match body {
                 Node::Begin(Begin { statements, .. }) => {
                     // Synthesized (begin) from compstmt "a; b".
@@ -3004,17 +2980,21 @@ impl Builder {
                         expression_l,
                     }))
                 }
-                other => {
-                    let mut statements = vec![];
-                    statements.push(other);
-                    Box::new(Node::KwBegin(KwBegin {
-                        statements,
-                        begin_l,
-                        end_l,
-                        expression_l,
-                    }))
-                }
+                other => Box::new(Node::KwBegin(KwBegin {
+                    statements: vec![other],
+                    begin_l,
+                    end_l,
+                    expression_l,
+                })),
             }
+        } else {
+            // A nil expression: `begin end'.
+            Box::new(Node::KwBegin(KwBegin {
+                statements: vec![],
+                begin_l,
+                end_l,
+                expression_l,
+            }))
         }
     }
 
@@ -3101,7 +3081,7 @@ impl Builder {
 
         let expression_l = maybe_boxed_node_expr(&body)
             .or_else(|| maybe_boxed_node_expr(&guard))
-            .unwrap_or_else(|| pattern.expression().clone())
+            .unwrap_or_else(|| *pattern.expression())
             .join(&keyword_l);
 
         Box::new(Node::InPattern(InPattern {
@@ -3137,7 +3117,7 @@ impl Builder {
 
     pub(crate) fn match_var(&self, name_t: Box<Token>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(&name_t);
-        let expression_l = name_l.clone();
+        let expression_l = name_l;
         let name = value(name_t);
 
         self.check_lvar_name(name.as_str(), &name_l)?;
@@ -3190,7 +3170,7 @@ impl Builder {
                 expression_l,
             }) => {
                 let name = value.to_string_lossy();
-                let mut name_l = expression_l.clone();
+                let mut name_l = expression_l;
 
                 self.check_lvar_name(name.as_str(), &name_l)?;
                 self.check_duplicate_pattern_variable(name.as_str(), &name_l)?;
@@ -3243,11 +3223,10 @@ impl Builder {
         star_t: Box<Token>,
         name_t: Option<Box<Token>>,
     ) -> Result<Box<Node>, ()> {
-        let name = if name_t.is_none() {
-            None
+        let name = if let Some(name_t) = name_t {
+            Some(self.match_var(name_t)?)
         } else {
-            let t = name_t.unwrap();
-            Some(self.match_var(t)?)
+            None
         };
 
         let operator_l = self.loc(&star_t);
@@ -3545,7 +3524,7 @@ impl Builder {
                 expression_l,
             })),
             regexp if matches!(regexp, Node::Regexp(_)) => {
-                let expression_l = regexp.expression().clone();
+                let expression_l = *regexp.expression();
 
                 Box::new(Node::MatchCurrentLine(MatchCurrentLine {
                     re: Box::new(regexp),
@@ -3853,14 +3832,11 @@ impl Builder {
     }
 
     pub(crate) fn loc(&self, token: &Token) -> Loc {
-        token.loc.clone()
+        token.loc
     }
 
     pub(crate) fn maybe_loc(&self, token: &Option<Box<Token>>) -> Option<Loc> {
-        match token.as_ref() {
-            Some(token) => Some(self.loc(token.as_ref())),
-            None => None,
-        }
+        token.as_deref().map(|token| self.loc(token))
     }
 
     pub(crate) fn collection_map(
@@ -3919,7 +3895,7 @@ impl Builder {
         self.diagnostics.emit(Diagnostic {
             level: ErrorLevel::Error,
             message,
-            loc: loc.clone(),
+            loc: *loc,
         })
     }
 
@@ -3927,7 +3903,7 @@ impl Builder {
         self.diagnostics.emit(Diagnostic {
             level: ErrorLevel::Warning,
             message,
-            loc: loc.clone(),
+            loc: *loc,
         })
     }
 
@@ -4052,17 +4028,11 @@ impl Builder {
 }
 
 pub(crate) fn maybe_node_expr(node: &Option<&Node>) -> Option<Loc> {
-    match node {
-        Some(node) => Some(node.expression().clone()),
-        None => None,
-    }
+    node.map(|node| *node.expression())
 }
 
 pub(crate) fn maybe_boxed_node_expr(node: &Option<Box<Node>>) -> Option<Loc> {
-    match node.as_ref() {
-        Some(node) => Some(node.expression().clone()),
-        None => None,
-    }
+    node.as_deref().map(|node| *node.expression())
 }
 
 pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Loc> {
@@ -4096,8 +4066,8 @@ pub(crate) fn join_maybe_exprs(lhs: &Option<&Node>, rhs: &Option<&Node>) -> Opti
 pub(crate) fn join_maybe_locs(lhs: &Option<Loc>, rhs: &Option<Loc>) -> Option<Loc> {
     match (lhs.as_ref(), rhs.as_ref()) {
         (None, None) => None,
-        (None, Some(rhs)) => Some(rhs.clone()),
-        (Some(lhs), None) => Some(lhs.clone()),
+        (None, Some(rhs)) => Some(*rhs),
+        (Some(lhs), None) => Some(*lhs),
         (Some(lhs), Some(rhs)) => Some(lhs.join(rhs)),
     }
 }

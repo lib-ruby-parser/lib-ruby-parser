@@ -1,13 +1,13 @@
 use super::helpers::*;
 
 extern crate clap;
-use clap::Clap;
+use clap::Parser;
 
 extern crate jemallocator;
 #[global_allocator]
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 struct Args {
     #[clap(about = "file/dir to parse")]
     pattern: Option<String>,

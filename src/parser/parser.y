@@ -2,7 +2,7 @@
 
 %define api.parser.struct { Parser }
 %define api.value.type { Value }
-%define api.parser.check_debug { cfg!(feature = "debug-parser") }
+%define api.parser.check_debug { self.is_debug() }
 
 %define parse.error custom
 %define parse.trace
@@ -349,10 +349,7 @@ use crate::Loc;
                   top_compstmt
                     {
                         let top_compstmt = $<MaybeNode>2;
-                        self.result = match top_compstmt {
-                            Some(node) => Some(Box::new(node)),
-                            None => None,
-                        };
+                        self.result = top_compstmt.map(Box::new);
                         $$ = Value::None;
 
                         self.current_arg_stack.pop();
@@ -5783,57 +5780,54 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         let node = $<BoxedNode>1;
-                        match &*node {
-                            Node::Lvar(nodes::Lvar { name, .. }) => {
-                                match name.as_bytes()[..] {
-                                    [b'_', n] if (b'1'..=b'9').contains(&n) => {
-                                        if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
-                                            /* definitely an implicit param */
+                        if let Node::Lvar(nodes::Lvar { name, .. }) = &*node {
+                            match name.as_bytes()[..] {
+                                [b'_', n] if (b'1'..=b'9').contains(&n) => {
+                                    if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
+                                        /* definitely an implicit param */
 
-                                            if self.max_numparam_stack.has_ordinary_params() {
-                                                return self.yyerror(
-                                                    @1,
-                                                    DiagnosticMessage::OrdinaryParamDefined {},
-                                                );
-                                            }
-
-                                            let mut raw_context = self.context.inner_clone();
-                                            let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
-
-                                            /* ignore current block scope */
-                                            raw_context.pop();
-                                            raw_max_numparam_stack.pop();
-
-                                            for outer_scope in raw_context.iter().rev() {
-                                                if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda {
-                                                    let outer_scope_has_numparams = raw_max_numparam_stack
-                                                        .pop()
-                                                        .unwrap_or(0) > 0;
-
-                                                    if outer_scope_has_numparams {
-                                                        return self.yyerror(
-                                                            @1,
-                                                            DiagnosticMessage::NumparamUsed {},
-                                                        );
-                                                    } else {
-                                                        /* for now it's ok, but an outer scope can also be a block
-                                                            with numparams, so we need to continue */
-                                                    }
-                                                } else {
-                                                    /* found an outer scope that can't have numparams
-                                                        like def/class/etc */
-                                                    break;
-                                                }
-                                            }
-
-                                            self.static_env.declare(name);
-                                            self.max_numparam_stack.register((n - b'0') as i32)
+                                        if self.max_numparam_stack.has_ordinary_params() {
+                                            return self.yyerror(
+                                                @1,
+                                                DiagnosticMessage::OrdinaryParamDefined {},
+                                            );
                                         }
-                                    },
-                                    _ => {}
-                                }
+
+                                        let mut raw_context = self.context.inner_clone();
+                                        let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
+
+                                        /* ignore current block scope */
+                                        raw_context.pop();
+                                        raw_max_numparam_stack.pop();
+
+                                        for outer_scope in raw_context.iter().rev() {
+                                            if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda {
+                                                let outer_scope_has_numparams = raw_max_numparam_stack
+                                                    .pop()
+                                                    .unwrap_or(0) > 0;
+
+                                                if outer_scope_has_numparams {
+                                                    return self.yyerror(
+                                                        @1,
+                                                        DiagnosticMessage::NumparamUsed {},
+                                                    );
+                                                } else {
+                                                    /* for now it's ok, but an outer scope can also be a block
+                                                        with numparams, so we need to continue */
+                                                }
+                                            } else {
+                                                /* found an outer scope that can't have numparams
+                                                    like def/class/etc */
+                                                break;
+                                            }
+                                        }
+
+                                        self.static_env.declare(name);
+                                        self.max_numparam_stack.register((n - b'0') as i32)
+                                    }
+                                },
+                                _ => {}
                             }
-                            _ => {}
                         }
 
                         $$ = Value::Node(
@@ -6216,7 +6210,7 @@ f_opt_paren_args: f_paren_args
       f_arg_asgn: f_norm_arg
                     {
                         let arg_t = $<Token>1;
-                        let arg_name = String::from(clone_value(&arg_t));
+                        let arg_name = clone_value(&arg_t);
                         self.current_arg_stack.set(Some(arg_name));
                         $$ = Value::Token(arg_t);
                     }
@@ -6259,7 +6253,7 @@ f_opt_paren_args: f_paren_args
                         let ident_t = $<Token>1;
                         self.check_kwarg_name(&ident_t)?;
 
-                        let ident = String::from(clone_value(&ident_t));
+                        let ident = clone_value(&ident_t);
                         self.static_env.declare(&ident);
 
                         self.max_numparam_stack.set_has_ordinary_params();
@@ -6515,7 +6509,7 @@ f_opt_paren_args: f_paren_args
                             | Node::Hash(nodes::Hash { expression_l, .. }) => {
                                 self.yyerror1(
                                     DiagnosticMessage::SingletonLiteral {},
-                                    expression_l.clone(),
+                                    *expression_l,
                                 )?;
                             }
                             other => {
@@ -6848,7 +6842,7 @@ impl Parser {
         let diagnostic = Diagnostic {
             level: ErrorLevel::Warning,
             message,
-            loc: loc.clone(),
+            loc: *loc,
         };
         self.diagnostics.emit(diagnostic);
     }
@@ -6898,7 +6892,7 @@ impl Parser {
         if first_char.is_lowercase() || first_char == '_' {
             Ok(())
         } else {
-            let loc = ident_t.loc.clone();
+            let loc = ident_t.loc;
             self.diagnostics.emit(
                 Diagnostic {
                     level: ErrorLevel::Error,
@@ -6922,7 +6916,7 @@ impl Parser {
     fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage) -> Result<i32, ()> {
         self.yyerror1(
             message,
-            loc.clone()
+            *loc
         )
     }
 
@@ -6939,7 +6933,7 @@ impl Parser {
             message: DiagnosticMessage::UnexpectedToken {
                 token_name: Lexer::TOKEN_NAMES[id].to_string()
             },
-            loc: ctx.location().clone(),
+            loc: *ctx.location(),
         };
         self.diagnostics.emit(diagnostic);
     }
@@ -6966,5 +6960,10 @@ impl Parser {
         assert!(self.current_arg_stack.is_empty());
         assert!(self.pattern_variables.is_empty());
         assert!(self.pattern_hash_keys.is_empty());
+    }
+
+    #[inline]
+    fn is_debug(&self) -> bool {
+        cfg!(feature = "debug-parser")
     }
 }

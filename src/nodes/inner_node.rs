@@ -36,12 +36,12 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_str(&mut self, string: &String) {
+    pub(crate) fn push_str(&mut self, string: &str) {
         self.strings.push(format!(", {:?}", string));
     }
 
-    pub(crate) fn push_raw_str(&mut self, string: &String) {
-        self.strings.push(format!(", {}", string.as_str()));
+    pub(crate) fn push_raw_str(&mut self, string: &str) {
+        self.strings.push(format!(", {}", string));
     }
 
     pub(crate) fn push_maybe_str(&mut self, string: &Option<String>) {
@@ -89,7 +89,7 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_nodes(&mut self, nodes: &Vec<Node>) {
+    pub(crate) fn push_nodes(&mut self, nodes: &[Node]) {
         for node in nodes.iter() {
             self.push_node(node)
         }
@@ -98,7 +98,7 @@ impl InspectVec {
     pub(crate) fn push_chars(&mut self, chars: &Option<String>) {
         if let Some(chars) = chars.as_ref() {
             for c in chars.as_str().chars() {
-                self.push_str(&String::from(format!("{}", c)));
+                self.push_str(&format!("{}", c));
             }
         }
     }
