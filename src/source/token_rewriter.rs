@@ -1,4 +1,3 @@
-use super::InternalTokenRewriterResult;
 use crate::Token;
 
 /// Enum of what token rewriter should do with a token.
@@ -12,16 +11,6 @@ pub enum RewriteAction {
     Keep,
 }
 
-impl RewriteAction {
-    pub(crate) fn is_drop(&self) -> bool {
-        matches!(self, Self::Drop)
-    }
-
-    pub(crate) fn is_keep(&self) -> bool {
-        matches!(self, Self::Keep)
-    }
-}
-
 /// Enum of what token rewriter should do with the state of the lexer
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[repr(C)]
@@ -31,23 +20,6 @@ pub enum LexStateAction {
 
     /// Means "keep the state unchanged"
     Keep,
-}
-
-impl LexStateAction {
-    pub(crate) fn is_set(&self) -> bool {
-        matches!(self, Self::Set(_))
-    }
-
-    pub(crate) fn is_keep(&self) -> bool {
-        matches!(self, Self::Keep)
-    }
-
-    pub(crate) fn next_state(&self) -> i32 {
-        match self {
-            Self::Set(state) => *state,
-            Self::Keep => panic!("Wrong variant of LexStateAction"),
-        }
-    }
 }
 
 /// Output of the token rewriter
@@ -62,21 +34,6 @@ pub struct TokenRewriterResult {
 
     /// Action to be applied on lexer's state (keep as is or change)
     pub lex_state_action: LexStateAction,
-}
-
-impl TokenRewriterResult {
-    pub(crate) fn into_internal(self) -> InternalTokenRewriterResult {
-        let Self {
-            rewritten_token,
-            token_action,
-            lex_state_action,
-        } = self;
-        InternalTokenRewriterResult {
-            rewritten_token,
-            token_action,
-            lex_state_action,
-        }
-    }
 }
 
 /// Token rewriter function
@@ -96,5 +53,11 @@ impl TokenRewriter {
     pub(crate) fn call(&self, token: Box<Token>, input: &[u8]) -> TokenRewriterResult {
         let f = &*self.f;
         f(token, input)
+    }
+}
+
+impl std::fmt::Debug for TokenRewriter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TokenRewriter").finish()
     }
 }
