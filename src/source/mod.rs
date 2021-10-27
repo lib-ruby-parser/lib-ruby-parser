@@ -1,6 +1,5 @@
 pub(crate) mod buffer;
 mod comment;
-mod comment_type;
 mod decoded_input;
 pub(crate) mod decoder;
 mod input;
@@ -11,8 +10,7 @@ mod source_line;
 /// Module to perform token rewriting
 pub mod token_rewriter;
 
-pub use comment::Comment;
-pub use comment_type::CommentType;
+pub use comment::{Comment, CommentType};
 pub use decoded_input::DecodedInput;
 pub(crate) use decoder::decode_input;
 pub use decoder::{Decoder, DecoderResult, InputError};
