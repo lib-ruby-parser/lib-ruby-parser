@@ -3789,7 +3789,9 @@ impl Builder {
             Ok(regex) => Some(regex),
             Err(err) => {
                 self.error(
-                    DiagnosticMessage::regex_error(String::from(err.description())),
+                    DiagnosticMessage::RegexError {
+                        error: String::from(err.description()),
+                    },
                     loc,
                 );
                 None
@@ -3818,28 +3820,29 @@ impl Builder {
 
     #[cfg(feature = "onig")]
     pub(crate) fn static_regexp_captures(&self, node: &Node) -> Option<Vec<String>> {
-        if node.is_regexp() {
-            let node = node.as_regexp().unwrap();
-            let parts = node.get_parts();
-            let options = node.get_options();
-            let expression_l = node.get_expression_l();
+        match node {
+            Node::Regexp(Regexp {
+                parts,
+                options,
+                expression_l,
+                ..
+            }) => {
+                let mut re_options = &None;
+                if let Some(Node::RegOpt(RegOpt { options, .. })) = options.as_ref().map(|b| &**b) {
+                    re_options = options;
+                };
+                let regex = self.build_static_regexp(parts, re_options, expression_l)?;
 
-            let mut re_options = &None;
-            if let Some(options) = options.as_ref() {
-                if let Some(regopt) = options.as_reg_opt() {
-                    re_options = regopt.get_options();
-                }
-            };
-            let regex = self.build_static_regexp(parts, re_options, expression_l)?;
+                let mut result: Vec<String> = vec![];
 
-            let mut result: Vec<String> = vec![];
+                regex.foreach_name(|name, _| {
+                    result.push(name.to_string());
+                    true
+                });
 
-            regex.foreach_name(|name, _| {
-                result.push(name.to_string());
-                true
-            });
-
-            return Some(result);
+                return Some(result);
+            }
+            _ => {}
         }
         None
     }
