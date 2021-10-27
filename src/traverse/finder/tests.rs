@@ -2,7 +2,11 @@ use crate::traverse::finder::Finder;
 use crate::{Parser, ParserOptions};
 
 fn find(src: &str, pattern: &str) -> Option<String> {
-    let options = ParserOptions::new("(find_test)".into(), None, None, false);
+    let options = ParserOptions {
+        buffer_name: "(find_test)".into(),
+        record_tokens: false,
+        ..Default::default()
+    };
     let parser = Parser::new(src, options);
 
     let result = parser.do_parse();

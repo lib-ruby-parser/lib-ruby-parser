@@ -23,7 +23,11 @@ macro_rules! fixture_file {
 pub(crate) use fixture_file;
 
 fn parse(input: &[u8]) -> ParserResult {
-    let options = ParserOptions::new("(eval)".into(), None, None, false);
+    let options = ParserOptions {
+        buffer_name: "(eval)".into(),
+        record_tokens: false,
+        ..Default::default()
+    };
     let parser = Parser::new(input, options);
     parser.do_parse()
 }

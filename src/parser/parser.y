@@ -66,7 +66,6 @@ use crate::error::Diagnostics;
 use crate::source::token_rewriter::TokenRewriter;
 use crate::source::token_rewriter::InternalTokenRewriterResult;
 use crate::Loc;
-use crate::parser_options::InternalParserOptions;
 
 }
 
@@ -6753,12 +6752,12 @@ impl Parser {
     where
         TInput: Into<Vec<u8>>
     {
-        let InternalParserOptions {
+        let ParserOptions {
             buffer_name,
             decoder,
             token_rewriter,
             record_tokens,
-        } = options.into();
+        } = options;
 
         let context = ParserContext::new();
         let current_arg_stack = CurrentArgStack::new();

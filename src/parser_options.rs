@@ -87,38 +87,15 @@ pub struct ParserOptions {
     pub record_tokens: bool,
 }
 
-impl ParserOptions {
-    /// Constructs new ParserOptions
-    pub fn new(
-        buffer_name: String,
-        decoder: Option<Decoder>,
-        token_rewriter: Option<TokenRewriter>,
-        record_tokens: bool,
-    ) -> Self {
-        Self {
-            buffer_name,
-            decoder,
-            token_rewriter,
-            record_tokens,
-        }
-    }
-}
+const DEFAULT_BUFFER_NAME: &str = "(eval)";
 
-use super::InternalParserOptions;
-impl From<ParserOptions> for InternalParserOptions {
-    fn from(options: ParserOptions) -> Self {
-        let ParserOptions {
-            buffer_name,
-            decoder,
-            token_rewriter,
-            record_tokens,
-        } = options;
-
+impl Default for ParserOptions {
+    fn default() -> Self {
         Self {
-            buffer_name,
-            decoder,
-            token_rewriter,
-            record_tokens,
+            buffer_name: DEFAULT_BUFFER_NAME.to_string(),
+            decoder: None,
+            token_rewriter: None,
+            record_tokens: true,
         }
     }
 }

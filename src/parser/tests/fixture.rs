@@ -167,7 +167,11 @@ pub(crate) fn test_file(fixture_path: &str) {
         }
     }
 
-    let options = ParserOptions::new(format!("(test {})", fixture_path).into(), None, None, false);
+    let options = ParserOptions {
+        buffer_name: format!("(test {})", fixture_path),
+        record_tokens: false,
+        ..Default::default()
+    };
     let parser = Parser::new(fixture.input.as_bytes(), options);
 
     parser.static_env.declare("foo");
