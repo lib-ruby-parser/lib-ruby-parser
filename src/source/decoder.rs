@@ -1,5 +1,24 @@
-use crate::source::DecoderResult;
 use crate::source::InputError;
+
+/// Result that is returned from decoding function
+#[repr(C)]
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum DecoderResult {
+    /// Ok + decoded bytes
+    Ok(Vec<u8>),
+
+    /// Err + reason
+    Err(InputError),
+}
+
+impl DecoderResult {
+    pub(crate) fn into_result(self) -> Result<Vec<u8>, InputError> {
+        match self {
+            Self::Ok(value) => Ok(value),
+            Self::Err(err) => Err(err),
+        }
+    }
+}
 
 /// Decoder is what is used if input source has encoding
 /// that is not supported out of the box.
