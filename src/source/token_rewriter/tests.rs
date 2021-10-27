@@ -10,13 +10,13 @@ const INITIAL_TOKEN_ID: i32 = 310;
 const REWRITTEN_TOKEN_ID: i32 = 300;
 
 fn rewritten_token() -> Box<Token> {
-    Box::new(Token::new(
-        REWRITTEN_TOKEN_ID,
-        Bytes::new(Vec::from("rewritten")),
-        Loc { begin: 1, end: 2 },
-        LexState { value: 1 },
-        LexState { value: 2 },
-    ))
+    Box::new(Token {
+        token_type: REWRITTEN_TOKEN_ID,
+        token_value: Bytes::new(Vec::from("rewritten")),
+        loc: Loc { begin: 1, end: 2 },
+        lex_state_before: LexState { value: 1 },
+        lex_state_after: LexState { value: 2 },
+    })
 }
 
 #[cfg(feature = "compile-with-external-structures")]
@@ -93,13 +93,13 @@ mod dummy_rewriter {
 
 fn call_dummy_rewriter(rewriter: TokenRewriter) -> TokenRewriterResult {
     // it's dummy, so encoding/input doesn't matter
-    let token = Box::new(Token::new(
-        INITIAL_TOKEN_ID,
-        Bytes::new(Vec::from("initial")),
-        Loc { begin: 1, end: 2 },
-        LexState { value: 1 },
-        LexState { value: 2 },
-    ));
+    let token = Box::new(Token {
+        token_type: INITIAL_TOKEN_ID,
+        token_value: Bytes::new(Vec::from("initial")),
+        loc: Loc { begin: 1, end: 2 },
+        lex_state_before: LexState { value: 1 },
+        lex_state_after: LexState { value: 2 },
+    });
     let input = vec![b'2', b'+', b'2'];
 
     rewriter.call(token, input.as_slice())
@@ -113,10 +113,10 @@ fn test_keep() {
         ..
     } = call_dummy_rewriter(dummy_rewriter::dummy_decoder_keep()).into_internal();
 
-    assert_eq!(rewritten_token.token_type(), INITIAL_TOKEN_ID);
+    assert_eq!(rewritten_token.token_type, INITIAL_TOKEN_ID);
     assert_eq!(
-        rewritten_token.token_value(),
-        &Bytes::new(Vec::from("initial"))
+        rewritten_token.token_value,
+        Bytes::new(Vec::from("initial"))
     );
     assert!(token_action.is_keep());
 }
@@ -137,10 +137,10 @@ fn test_rewrite() {
         ..
     } = call_dummy_rewriter(dummy_rewriter::dummy_decoder_rewrite()).into_internal();
 
-    assert_eq!(rewritten_token.token_type(), REWRITTEN_TOKEN_ID);
+    assert_eq!(rewritten_token.token_type, REWRITTEN_TOKEN_ID);
     assert_eq!(
-        rewritten_token.token_value(),
-        &Bytes::new(Vec::from("rewritten"))
+        rewritten_token.token_value,
+        Bytes::new(Vec::from("rewritten"))
     );
     assert!(token_action.is_keep());
 }

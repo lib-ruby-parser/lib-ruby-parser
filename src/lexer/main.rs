@@ -114,7 +114,7 @@ impl Lexer {
 
         loop {
             let token = *self.yylex();
-            match token.token_type() {
+            match token.token_type {
                 Self::END_OF_INPUT => break,
                 _ => tokens.push(token),
             }
@@ -148,19 +148,19 @@ impl Lexer {
             end = begin + 1;
         }
 
-        let token = Box::new(Token::new(
+        let token = Box::new(Token {
             token_type,
             token_value,
-            Loc { begin, end },
+            loc: Loc { begin, end },
             lex_state_before,
-            self.lex_state,
-        ));
+            lex_state_after: self.lex_state,
+        });
         if cfg!(feature = "debug-lexer") {
             println!(
                 "yylex ({:?}, {:?}, {:?})",
                 token.token_name(),
-                token.token_value(),
-                token.loc()
+                token.token_value,
+                token.loc
             );
         }
         token

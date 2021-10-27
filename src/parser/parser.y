@@ -1474,7 +1474,7 @@ use crate::parser_options::InternalParserOptions;
                 | primary_value call_op tIDENTIFIER
                     {
                         let op_t = $<Token>2;
-                        if op_t.token_type() == Lexer::tANDDOT {
+                        if op_t.token_type == Lexer::tANDDOT {
                             return self.yyerror(@2, DiagnosticMessage::CsendInsideMasgn {});
                         }
 
@@ -1499,7 +1499,7 @@ use crate::parser_options::InternalParserOptions;
                 | primary_value call_op tCONSTANT
                     {
                         let op_t = $<Token>2;
-                        if op_t.token_type() == Lexer::tANDDOT {
+                        if op_t.token_type == Lexer::tANDDOT {
                             return self.yyerror(@2, DiagnosticMessage::CsendInsideMasgn {});
                         }
 
@@ -6883,7 +6883,7 @@ impl Parser {
             }
         }
 
-        self.last_token_type = token.token_type();
+        self.last_token_type = token.token_type;
 
         if self.record_tokens {
             self.tokens.push(*token.clone());
@@ -6898,7 +6898,7 @@ impl Parser {
         if first_char.is_lowercase() || first_char == '_' {
             Ok(())
         } else {
-            let loc = ident_t.loc().clone();
+            let loc = ident_t.loc.clone();
             self.diagnostics.emit(
                 Diagnostic {
                     level: ErrorLevel::Error,
@@ -6913,7 +6913,7 @@ impl Parser {
     fn validate_endless_method_name(&mut self, name_t: &Token) -> Result<(), ()> {
         let name = clone_value(name_t);
         if name.as_str().ends_with('=') {
-            self.yyerror(name_t.loc(), DiagnosticMessage::EndlessSetterDefinition {}).map(|_| ())
+            self.yyerror(&name_t.loc, DiagnosticMessage::EndlessSetterDefinition {}).map(|_| ())
         } else {
             Ok(())
         }

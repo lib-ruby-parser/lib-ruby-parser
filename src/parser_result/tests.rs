@@ -13,13 +13,13 @@ fn ast() -> Option<Box<Node>> {
 }
 
 fn tokens() -> Vec<Token> {
-    vec![Token::new(
-        280,
-        Bytes::new(vec![97, 98, 99]),
-        Loc { begin: 3, end: 4 },
-        LexState { value: 1 },
-        LexState { value: 2 },
-    )]
+    vec![Token {
+        token_type: 280,
+        token_value: Bytes::new(vec![97, 98, 99]),
+        loc: Loc { begin: 3, end: 4 },
+        lex_state_before: LexState { value: 1 },
+        lex_state_after: LexState { value: 2 },
+    }]
 }
 
 fn diagnostics() -> Vec<Diagnostic> {

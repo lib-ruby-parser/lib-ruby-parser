@@ -110,8 +110,8 @@ pub(crate) fn test_file(fixture_path: &str) {
                 "{} {:?} [{}, {}]",
                 token.token_name(),
                 token.to_string_lossy(),
-                token.loc().begin,
-                token.loc().end
+                token.loc.begin,
+                token.loc.end
             )
         })
         .collect::<Vec<_>>()

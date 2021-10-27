@@ -54,7 +54,7 @@ pub struct ParserOptions {
     /// fn rewrite_foo_to_bar(mut token: Box<Token>, input: &[u8]) -> TokenRewriterResult {
     ///     // simply rewrite all tokens "foo" to "bar"
     ///     if token.to_string_lossy() == "foo" {
-    ///         token.set_token_value(Bytes::new(b"bar".to_vec()));
+    ///         token.token_value = Bytes::new(b"bar".to_vec());
     ///     }
     ///
     ///     // return token + keep it + keep lexer's state

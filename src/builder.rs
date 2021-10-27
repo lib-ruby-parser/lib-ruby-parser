@@ -232,7 +232,7 @@ impl Builder {
 
     pub(crate) fn string_internal(&self, string_t: Box<Token>) -> Box<Node> {
         let expression_l = self.loc(&string_t);
-        let value = string_t.into_token_value();
+        let value = string_t.token_value;
         Box::new(Node::Str(Str {
             value,
             begin_l: None,
@@ -308,7 +308,7 @@ impl Builder {
         let end_l = None;
         let expression_l = str_loc;
 
-        let value = char_t.into_token_value();
+        let value = char_t.token_value;
         Box::new(Node::Str(Str {
             value,
             begin_l,
@@ -339,7 +339,7 @@ impl Builder {
     pub(crate) fn symbol(&self, start_t: Box<Token>, value_t: Box<Token>) -> Box<Node> {
         let expression_l = self.loc(&start_t).join(&self.loc(&value_t));
         let begin_l = Some(self.loc(&start_t));
-        let value = value_t.into_token_value();
+        let value = value_t.token_value;
         self.validate_sym_value(&value, &expression_l);
         Box::new(Node::Sym(Sym {
             name: value,
@@ -351,7 +351,7 @@ impl Builder {
 
     pub(crate) fn symbol_internal(&self, symbol_t: Box<Token>) -> Box<Node> {
         let expression_l = self.loc(&symbol_t);
-        let value = symbol_t.into_token_value();
+        let value = symbol_t.token_value;
         self.validate_sym_value(&value, &expression_l);
         Box::new(Node::Sym(Sym {
             name: value,
@@ -549,7 +549,7 @@ impl Builder {
     // Regular expressions
 
     pub(crate) fn regexp_options(&self, regexp_end_t: Box<Token>) -> Option<Box<Node>> {
-        if regexp_end_t.loc().end - regexp_end_t.loc().begin == 1 {
+        if regexp_end_t.loc.end - regexp_end_t.loc.begin == 1 {
             // no regexp options, only trailing "/"
             return None;
         }
@@ -742,7 +742,7 @@ impl Builder {
         let colon_l = key_loc.with_begin(key_loc.end - 1);
         let expression_l = key_loc.join(value.expression());
 
-        let key = key_t.into_token_value();
+        let key = key_t.token_value;
         self.validate_sym_value(&key, &key_l);
 
         Box::new(Node::Pair(Pair {
@@ -775,13 +775,13 @@ impl Builder {
         let colon_l = end_l.with_begin(end_l.end - 1);
 
         let end_t = end_t;
-        let end_t: Box<Token> = Box::new(Token::new(
-            end_t.token_type(),
-            end_t.into_token_value(),
-            quote_loc,
-            LexState::default(),
-            LexState::default(),
-        ));
+        let end_t: Box<Token> = Box::new(Token {
+            token_type: end_t.token_type,
+            token_value: end_t.token_value,
+            loc: quote_loc,
+            lex_state_before: LexState::default(),
+            lex_state_after: LexState::default(),
+        });
         let expression_l = self.loc(&begin_t).join(value.expression());
 
         Box::new(Node::Pair(Pair {
@@ -1843,7 +1843,7 @@ impl Builder {
 
     fn call_type_for_dot(&self, dot_t: &Option<Box<Token>>) -> MethodCallType {
         match dot_t.as_ref() {
-            Some(token) if token.token_type() == Lexer::tANDDOT => MethodCallType::CSend,
+            Some(token) if token.token_type == Lexer::tANDDOT => MethodCallType::CSend,
             _ => MethodCallType::Send,
         }
     }
@@ -3850,7 +3850,7 @@ impl Builder {
     }
 
     pub(crate) fn loc(&self, token: &Token) -> Loc {
-        token.loc().clone()
+        token.loc.clone()
     }
 
     pub(crate) fn maybe_loc(&self, token: &Option<Box<Token>>) -> Option<Loc> {
