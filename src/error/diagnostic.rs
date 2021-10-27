@@ -105,7 +105,7 @@ fn test_renders() {
     let error = Diagnostic {
         level: ErrorLevel::Warning,
         message: DiagnosticMessage::FractionAfterNumeric {},
-        loc: Loc::new(8, 12),
+        loc: Loc { begin: 8, end: 12 },
     };
 
     assert_eq!(

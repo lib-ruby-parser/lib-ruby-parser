@@ -79,23 +79,17 @@ impl LocMatcher {
         match Finder::run(&self.pattern, root).unwrap() {
             Some(node) => match self.loc_name.get(&node).as_ref() {
                 Some(loc) => {
-                    if loc.begin() != self.begin {
+                    if loc.begin != self.begin {
                         return Err(format!(
                             "begin of {:?} - {:?} doesn't match, expected {}, got {}",
-                            self.pattern,
-                            self.loc_name,
-                            self.begin,
-                            loc.begin()
+                            self.pattern, self.loc_name, self.begin, loc.begin
                         ));
                     }
 
-                    if loc.end() != self.end {
+                    if loc.end != self.end {
                         return Err(format!(
                             "end of {:?} - {:?} doesn't match, expected {}, got {}",
-                            self.pattern,
-                            self.loc_name,
-                            self.end,
-                            loc.end()
+                            self.pattern, self.loc_name, self.end, loc.end
                         ));
                     }
 

@@ -7,8 +7,8 @@ impl std::fmt::Debug for Token {
             "[{}, {:?}, {}...{}]",
             self.token_name(),
             self.token_value().to_string_lossy(),
-            self.loc().begin(),
-            self.loc().end(),
+            self.loc().begin,
+            self.loc().end,
         ))
     }
 }

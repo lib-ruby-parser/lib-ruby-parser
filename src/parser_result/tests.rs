@@ -8,7 +8,7 @@ use crate::{ErrorLevel, LexState};
 
 fn ast() -> Option<Box<Node>> {
     Some(Box::new(Node::Retry(Retry {
-        expression_l: Loc::new(1, 2),
+        expression_l: Loc { begin: 1, end: 2 },
     })))
 }
 
@@ -16,7 +16,7 @@ fn tokens() -> Vec<Token> {
     vec![Token::new(
         280,
         Bytes::new(vec![97, 98, 99]),
-        Loc::new(3, 4),
+        Loc { begin: 3, end: 4 },
         LexState { value: 1 },
         LexState { value: 2 },
     )]
@@ -26,18 +26,21 @@ fn diagnostics() -> Vec<Diagnostic> {
     vec![Diagnostic {
         level: ErrorLevel::Error,
         message: DiagnosticMessage::AliasNthRef {},
-        loc: Loc::new(5, 6),
+        loc: Loc { begin: 5, end: 6 },
     }]
 }
 
 fn comments() -> Vec<Comment> {
-    vec![Comment::make(Loc::new(7, 8), CommentType::inline())]
+    vec![Comment::make(
+        Loc { begin: 7, end: 8 },
+        CommentType::inline(),
+    )]
 }
 fn magic_comments() -> Vec<MagicComment> {
     vec![MagicComment::new(
         MagicCommentKind::warn_indent(),
-        Loc::new(9, 10),
-        Loc::new(11, 12),
+        Loc { begin: 9, end: 10 },
+        Loc { begin: 11, end: 12 },
     )]
 }
 fn input() -> DecodedInput {

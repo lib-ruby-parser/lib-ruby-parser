@@ -38,28 +38,34 @@ fn test_magic_comment() {
         vec![
             MagicComment::new(
                 MagicCommentKind::encoding(),
-                Loc::new(2, 10),
-                Loc::new(12, 17),
+                Loc { begin: 2, end: 10 },
+                Loc { begin: 12, end: 17 },
             ),
             MagicComment::new(
                 MagicCommentKind::frozen_string_literal(),
-                Loc::new(20, 41),
-                Loc::new(43, 47),
+                Loc { begin: 20, end: 41 },
+                Loc { begin: 43, end: 47 },
             ),
             MagicComment::new(
                 MagicCommentKind::encoding(),
-                Loc::new(50, 56),
-                Loc::new(58, 63),
+                Loc { begin: 50, end: 56 },
+                Loc { begin: 58, end: 63 },
             ),
             MagicComment::new(
                 MagicCommentKind::shareable_constant_value(),
-                Loc::new(66, 90),
-                Loc::new(92, 99),
+                Loc { begin: 66, end: 90 },
+                Loc { begin: 92, end: 99 },
             ),
             MagicComment::new(
                 MagicCommentKind::warn_indent(),
-                Loc::new(102, 113),
-                Loc::new(115, 119),
+                Loc {
+                    begin: 102,
+                    end: 113
+                },
+                Loc {
+                    begin: 115,
+                    end: 119
+                },
             ),
         ]
     );

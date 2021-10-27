@@ -10,7 +10,7 @@ fn new_token() -> Token {
     Token::new(
         1,
         Bytes::new(vec![1, 2, 3]),
-        Loc::new(1, 2),
+        Loc { begin: 1, end: 2 },
         lex_state(1),
         lex_state(2),
     )
@@ -50,7 +50,7 @@ fn test_into_token_value() {
 #[test]
 fn test_loc() {
     let token = new_token();
-    assert_eq!(token.loc(), &Loc::new(1, 2));
+    assert_eq!(token.loc(), &Loc { begin: 1, end: 2 });
 }
 
 #[test]

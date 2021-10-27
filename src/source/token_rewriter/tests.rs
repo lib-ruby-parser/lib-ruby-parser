@@ -13,7 +13,7 @@ fn rewritten_token() -> Box<Token> {
     Box::new(Token::new(
         REWRITTEN_TOKEN_ID,
         Bytes::new(Vec::from("rewritten")),
-        Loc::new(1, 2),
+        Loc { begin: 1, end: 2 },
         LexState { value: 1 },
         LexState { value: 2 },
     ))
@@ -96,7 +96,7 @@ fn call_dummy_rewriter(rewriter: TokenRewriter) -> TokenRewriterResult {
     let token = Box::new(Token::new(
         INITIAL_TOKEN_ID,
         Bytes::new(Vec::from("initial")),
-        Loc::new(1, 2),
+        Loc { begin: 1, end: 2 },
         LexState { value: 1 },
         LexState { value: 2 },
     ));

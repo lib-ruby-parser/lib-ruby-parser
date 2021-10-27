@@ -6,20 +6,20 @@ use crate::{Bytes, LexState, Loc};
 pub struct Token {
     /// Numeric representation of the token type,
     /// e.g. 42 (for example) for tINTEGER
-    token_type: i32,
+    pub token_type: i32,
 
     /// Value of the token,
     /// e.g "42" for 42
-    token_value: Bytes,
+    pub token_value: Bytes,
 
     /// Location of the token
-    loc: Loc,
+    pub loc: Loc,
 
     /// Lex state **before** reading the token
-    lex_state_before: LexState,
+    pub lex_state_before: LexState,
 
     /// Lex state **after** reading the token
-    lex_state_after: LexState,
+    pub lex_state_after: LexState,
 }
 
 impl Token {

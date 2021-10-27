@@ -151,7 +151,7 @@ impl Lexer {
         let token = Box::new(Token::new(
             token_type,
             token_value,
-            Loc::new(begin, end),
+            Loc { begin, end },
             lex_state_before,
             self.lex_state,
         ));
@@ -1155,7 +1155,10 @@ impl Lexer {
     }
 
     pub(crate) fn loc(&self, begin_pos: usize, end_pos: usize) -> Loc {
-        Loc::new(begin_pos, end_pos)
+        Loc {
+            begin: begin_pos,
+            end: end_pos,
+        }
     }
 
     pub(crate) fn current_loc(&self) -> Loc {
