@@ -1,4 +1,24 @@
-use crate::source::InputError;
+/// An enum with all possible kinds of errors that can be returned
+/// from a decoder
+#[derive(Debug, PartialEq, Eq, Clone)]
+#[repr(C)]
+pub enum InputError {
+    /// Emitted when no custom decoder provided but input has custom encoding.
+    ///
+    /// You can return this error from your custom decoder if you don't support given encoding.
+    UnsupportedEncoding(String),
+
+    /// Generic error that can be emitted from a custom decoder
+    DecodingError(String),
+}
+
+impl std::fmt::Display for InputError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl std::error::Error for InputError {}
 
 /// Result that is returned from decoding function
 #[repr(C)]
