@@ -1,6 +1,16 @@
-use super::Comment;
 use crate::source::{CommentType, DecodedInput};
 use crate::Loc;
+
+/// A struct that represents a comment in Ruby
+#[repr(C)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Comment {
+    /// Location of the comment (starts with `#` and ends with the last char)
+    pub location: Loc,
+
+    /// Kind of the comment
+    pub kind: CommentType,
+}
 
 impl Comment {
     /// Constructs a new comment by `Loc` and `Input`
@@ -17,6 +27,6 @@ impl Comment {
             }
             None => CommentType::unknown(),
         };
-        Self::make(location, kind)
+        Self { location, kind }
     }
 }

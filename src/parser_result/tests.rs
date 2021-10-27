@@ -31,10 +31,10 @@ fn diagnostics() -> Vec<Diagnostic> {
 }
 
 fn comments() -> Vec<Comment> {
-    vec![Comment::make(
-        Loc { begin: 7, end: 8 },
-        CommentType::inline(),
-    )]
+    vec![Comment {
+        location: Loc { begin: 7, end: 8 },
+        kind: CommentType::inline(),
+    }]
 }
 fn magic_comments() -> Vec<MagicComment> {
     vec![MagicComment::new(
