@@ -23,11 +23,11 @@ fn tokens() -> Vec<Token> {
 }
 
 fn diagnostics() -> Vec<Diagnostic> {
-    vec![Diagnostic::new(
-        ErrorLevel::Error,
-        DiagnosticMessage::AliasNthRef {},
-        Loc::new(5, 6),
-    )]
+    vec![Diagnostic {
+        level: ErrorLevel::Error,
+        message: DiagnosticMessage::AliasNthRef {},
+        loc: Loc::new(5, 6),
+    }]
 }
 
 fn comments() -> Vec<Comment> {

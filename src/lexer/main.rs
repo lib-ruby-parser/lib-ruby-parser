@@ -1095,7 +1095,11 @@ impl Lexer {
         if cfg!(feature = "debug-lexer") {
             println!("WARNING: {}", message.render())
         }
-        let diagnostic = Diagnostic::new(ErrorLevel::Warning, message, loc);
+        let diagnostic = Diagnostic {
+            level: ErrorLevel::Warning,
+            message,
+            loc,
+        };
         self.diagnostics.emit(diagnostic);
     }
 
@@ -1126,7 +1130,11 @@ impl Lexer {
         if cfg!(feature = "debug-lexer") {
             println!("Compile error: {}", message.render())
         }
-        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc);
+        let diagnostic = Diagnostic {
+            level: ErrorLevel::Error,
+            message,
+            loc,
+        };
         self.diagnostics.emit(diagnostic);
     }
 
@@ -1182,7 +1190,11 @@ impl Lexer {
         if cfg!(feature = "debug-lexer") {
             println!("yyerror0: {}", message.render())
         }
-        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc);
+        let diagnostic = Diagnostic {
+            level: ErrorLevel::Error,
+            message,
+            loc,
+        };
         self.diagnostics.emit(diagnostic);
     }
 

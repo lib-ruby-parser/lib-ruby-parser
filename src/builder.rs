@@ -3910,13 +3910,19 @@ impl Builder {
     }
 
     pub(crate) fn error(&self, message: DiagnosticMessage, loc: &Loc) {
-        self.diagnostics
-            .emit(Diagnostic::new(ErrorLevel::Error, message, loc.clone()))
+        self.diagnostics.emit(Diagnostic {
+            level: ErrorLevel::Error,
+            message,
+            loc: loc.clone(),
+        })
     }
 
     pub(crate) fn warn(&self, message: DiagnosticMessage, loc: &Loc) {
-        self.diagnostics
-            .emit(Diagnostic::new(ErrorLevel::Warning, message, loc.clone()))
+        self.diagnostics.emit(Diagnostic {
+            level: ErrorLevel::Warning,
+            message,
+            loc: loc.clone(),
+        })
     }
 
     pub(crate) fn value_expr(&self, node: &Node) -> Result<(), ()> {
