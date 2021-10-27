@@ -2,12 +2,15 @@
 Cargo.lock
 Dockerfile
 flamegraph.svg
-src/blobs/gen.rs
-src/containers/size.rs
+
+# codegen
+# must be in sync with .rustfmt.toml
 src/error/messages/message_enum.rs
+src/lexer/tests/gen.rs
 src/nodes/node_enum.rs
-src/nodes/types
+src/nodes/types/*.rs
 src/parser/parser.rs
+src/parser/tests/gen.rs
 src/reserved_words/list.rs
 src/test_helpers/loc_matcher/loc_name_gen.rs
 src/traverse/visitor/visit_gen.rs
