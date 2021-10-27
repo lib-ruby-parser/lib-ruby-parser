@@ -28,11 +28,11 @@ impl Input {
     }
 
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
-        self.decoded.bytes().get(idx).copied()
+        self.decoded.bytes.get(idx).copied()
     }
 
     pub(crate) fn unchecked_byte_at(&self, idx: usize) -> u8 {
-        self.decoded.bytes()[idx]
+        self.decoded.bytes[idx]
     }
 
     pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&[u8]> {
@@ -59,7 +59,7 @@ impl Input {
     }
 
     pub(crate) fn lines_count(&self) -> usize {
-        self.decoded.lines().len()
+        self.decoded.lines.len()
     }
 
     pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {

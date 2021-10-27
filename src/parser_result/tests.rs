@@ -45,8 +45,8 @@ fn magic_comments() -> Vec<MagicComment> {
 }
 fn input() -> DecodedInput {
     let mut input = DecodedInput::named("foo");
-    input.set_bytes(vec![1, 2, 3]);
-    input.set_lines(vec![SourceLine::new(1, 2, false)]);
+    input.bytes = vec![1, 2, 3];
+    input.lines = vec![SourceLine::new(1, 2, false)];
     input
 }
 
