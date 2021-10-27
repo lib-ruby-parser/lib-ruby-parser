@@ -70,7 +70,7 @@ pub(crate) mod messages {
     }
 
     pub(crate) fn comment(message: &Message) -> String {
-        message.render_comment("///", 0)
+        message.render_comment("///", 4)
     }
 
     pub(crate) fn is_last(message: &Message) -> bool {
@@ -90,7 +90,7 @@ pub(crate) mod message_fields {
     }
 
     pub(crate) fn comment(message_field: &MessageField) -> String {
-        message_field.render_comment("///", 4)
+        message_field.render_comment("///", 8)
     }
 
     pub(crate) fn is_last(message_field: &MessageField) -> bool {
@@ -120,7 +120,7 @@ pub(crate) fn build() -> TemplateFns {
     fns.register::<Message, F::Predicate>("message-has-no-fields", messages::has_no_fields);
 
     fns.register::<MessageField, F::Helper>("message-field-name", message_fields::name);
-    fns.register::<MessageField, F::Helper>("mesage-field-comment", message_fields::comment);
+    fns.register::<MessageField, F::Helper>("message-field-comment", message_fields::comment);
     fns.register::<MessageField, F::Predicate>("message-field-is-last", message_fields::is_last);
 
     fns

@@ -14,7 +14,7 @@ impl Lexer {
             None => return Self::END_OF_INPUT,
         }
         self.yyerror1(
-            DiagnosticMessage::new_unknown_type_of_percent_string(),
+            DiagnosticMessage::UnknownTypeOfPercentString {},
             self.current_loc().adjust_end(-1),
         );
         Self::END_OF_INPUT
@@ -40,7 +40,7 @@ impl Lexer {
         let mut term = match term.as_option() {
             None => {
                 self.compile_error(
-                    DiagnosticMessage::new_unterminated_quoted_string(),
+                    DiagnosticMessage::UnterminatedQuotedString {},
                     self.current_loc(),
                 );
                 return Self::END_OF_INPUT;
@@ -102,7 +102,7 @@ impl Lexer {
             }
             _ => {
                 self.yyerror1(
-                    DiagnosticMessage::new_unknown_type_of_percent_string(),
+                    DiagnosticMessage::UnknownTypeOfPercentString {},
                     self.current_loc().adjust_end(-1),
                 );
                 Self::END_OF_INPUT

@@ -424,7 +424,7 @@ use crate::parser_options::InternalParserOptions;
                         let compound_stmt = $<MaybeBoxedNode>1;
                         let rescue_bodies = $<NodeList>2;
                         if rescue_bodies.is_empty() {
-                            return self.yyerror(@3, DiagnosticMessage::new_else_without_rescue());
+                            return self.yyerror(@3, DiagnosticMessage::ElseWithoutRescue {});
                         }
 
                         let else_ = Some(( $<Token>3, $<MaybeBoxedNode>4 ));
@@ -493,7 +493,7 @@ use crate::parser_options::InternalParserOptions;
                     }
                 | klBEGIN
                     {
-                        return self.yyerror(@1, DiagnosticMessage::new_begin_not_at_top_level());
+                        return self.yyerror(@1, DiagnosticMessage::BeginNotAtTopLevel {});
                     }
                   begin_block
                     {
@@ -534,7 +534,7 @@ use crate::parser_options::InternalParserOptions;
                     }
                 | kALIAS tGVAR tNTH_REF
                     {
-                        return self.yyerror(@3, DiagnosticMessage::new_alias_nth_ref());
+                        return self.yyerror(@3, DiagnosticMessage::AliasNthRef {});
                     }
                 | kUNDEF undef_list
                     {
@@ -612,7 +612,7 @@ use crate::parser_options::InternalParserOptions;
                 | klEND tLCURLY compstmt tRCURLY
                     {
                         if self.context.is_in_def() {
-                            self.warn(@1, DiagnosticMessage::new_end_in_method());
+                            self.warn(@1, DiagnosticMessage::EndInMethod {});
                         }
 
                         $$ = Value::Node(
@@ -1475,7 +1475,7 @@ use crate::parser_options::InternalParserOptions;
                     {
                         let op_t = $<Token>2;
                         if op_t.token_type() == Lexer::tANDDOT {
-                            return self.yyerror(@2, DiagnosticMessage::new_csend_inside_masgn());
+                            return self.yyerror(@2, DiagnosticMessage::CsendInsideMasgn {});
                         }
 
                         $$ = Value::Node(
@@ -1500,7 +1500,7 @@ use crate::parser_options::InternalParserOptions;
                     {
                         let op_t = $<Token>2;
                         if op_t.token_type() == Lexer::tANDDOT {
-                            return self.yyerror(@2, DiagnosticMessage::new_csend_inside_masgn());
+                            return self.yyerror(@2, DiagnosticMessage::CsendInsideMasgn {});
                         }
 
                         $$ = Value::Node(
@@ -1632,7 +1632,7 @@ use crate::parser_options::InternalParserOptions;
 
            cname: tIDENTIFIER
                     {
-                        return self.yyerror(@1, DiagnosticMessage::new_class_or_module_name_must_be_constant());
+                        return self.yyerror(@1, DiagnosticMessage::ClassOrModuleNameMustBeConstant {});
                     }
                 | tCONSTANT
                     {
@@ -2373,7 +2373,7 @@ use crate::parser_options::InternalParserOptions;
                         let op_t = $<Token>2;
                         self.warn(
                             @2,
-                            DiagnosticMessage::new_comparison_after_comparison(clone_value(&op_t))
+                            DiagnosticMessage::ComparisonAfterComparison { comparison: clone_value(&op_t) }
                         );
                         $$ = Value::Node(
                             self.builder.binary_op(
@@ -2473,7 +2473,10 @@ use crate::parser_options::InternalParserOptions;
                 | tLPAREN2 args tCOMMA args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(@4, DiagnosticMessage::new_unexpected_token("tBDOT3".into()));
+                            return self.yyerror(
+                                @4,
+                                DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3".to_string() }
+                            );
                         }
 
                         let mut args = $<NodeList>2;
@@ -2490,7 +2493,7 @@ use crate::parser_options::InternalParserOptions;
                 | tLPAREN2 args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(@2, DiagnosticMessage::new_unexpected_token("tBDOT3".into()));
+                            return self.yyerror(@2, DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3".to_string() });
                         }
 
                         $$ = Value::new_paren_args(
@@ -3145,7 +3148,7 @@ use crate::parser_options::InternalParserOptions;
                   k_end
                     {
                         if !self.context.is_class_definition_allowed() {
-                            return self.yyerror(@1, DiagnosticMessage::new_class_definition_in_method_body());
+                            return self.yyerror(@1, DiagnosticMessage::ClassDefinitionInMethodBody {});
                         }
 
                         let Superclass { lt_t, value } = $<Superclass>3;
@@ -3204,7 +3207,7 @@ use crate::parser_options::InternalParserOptions;
                   k_end
                     {
                         if !self.context.is_module_definition_allowed() {
-                            return self.yyerror(@1, DiagnosticMessage::new_module_definition_in_method_body());
+                            return self.yyerror(@1, DiagnosticMessage::ModuleDefinitionInMethodBody {});
                         }
 
                         $$ = Value::Node(
@@ -3439,7 +3442,7 @@ use crate::parser_options::InternalParserOptions;
         k_return: kRETURN
                     {
                         if self.context.is_in_class() {
-                            return self.yyerror(@1, DiagnosticMessage::new_invalid_return_in_class_or_module_body());
+                            return self.yyerror(@1, DiagnosticMessage::InvalidReturnInClassOrModuleBody {});
                         }
                         $$ = $1;
                     }
@@ -5218,7 +5221,10 @@ opt_block_args_tail:
                         let name = clone_value(&ident_t);
 
                         if !self.static_env.is_declared(name.as_str()) {
-                            return self.yyerror(@2, DiagnosticMessage::new_no_such_local_variable(name));
+                            return self.yyerror(
+                                @2,
+                                DiagnosticMessage::NoSuchLocalVariable { var_name: name }
+                            );
                         }
 
                         let lvar = self.builder.accessible(self.builder.lvar(ident_t));
@@ -5789,7 +5795,7 @@ keyword_variable: kNIL
                                             if self.max_numparam_stack.has_ordinary_params() {
                                                 return self.yyerror(
                                                     @1,
-                                                    DiagnosticMessage::new_ordinary_param_defined(),
+                                                    DiagnosticMessage::OrdinaryParamDefined {},
                                                 );
                                             }
 
@@ -5809,7 +5815,7 @@ keyword_variable: kNIL
                                                     if outer_scope_has_numparams {
                                                         return self.yyerror(
                                                             @1,
-                                                            DiagnosticMessage::new_numparam_used(),
+                                                            DiagnosticMessage::NumparamUsed {},
                                                         );
                                                     } else {
                                                         /* for now it's ok, but an outer scope can also be a block
@@ -6179,19 +6185,19 @@ f_opt_paren_args: f_paren_args
 
        f_bad_arg: tCONSTANT
                     {
-                        return self.yyerror(@1, DiagnosticMessage::new_const_argument());
+                        return self.yyerror(@1, DiagnosticMessage::ConstArgument {});
                     }
                 | tIVAR
                     {
-                        return self.yyerror(@1, DiagnosticMessage::new_ivar_argument());
+                        return self.yyerror(@1, DiagnosticMessage::IvarArgument {});
                     }
                 | tGVAR
                     {
-                        return self.yyerror(@1, DiagnosticMessage::new_gvar_argument());
+                        return self.yyerror(@1, DiagnosticMessage::GvarArgument {});
                     }
                 | tCVAR
                     {
-                        return self.yyerror(@1, DiagnosticMessage::new_cvar_argument());
+                        return self.yyerror(@1, DiagnosticMessage::CvarArgument {});
                     }
                 ;
 
@@ -6510,7 +6516,7 @@ f_opt_paren_args: f_paren_args
                             | Node::Array(nodes::Array { expression_l, .. })
                             | Node::Hash(nodes::Hash { expression_l, .. }) => {
                                 self.yyerror1(
-                                    DiagnosticMessage::new_singleton_literal(),
+                                    DiagnosticMessage::SingletonLiteral {},
                                     expression_l.clone(),
                                 )?;
                             }
@@ -6896,7 +6902,7 @@ impl Parser {
             self.diagnostics.emit(
                 Diagnostic::new(
                     ErrorLevel::error(),
-                    DiagnosticMessage::new_const_argument(),
+                    DiagnosticMessage::ConstArgument {},
                     loc
                 )
             );
@@ -6907,7 +6913,7 @@ impl Parser {
     fn validate_endless_method_name(&mut self, name_t: &Token) -> Result<(), ()> {
         let name = clone_value(name_t);
         if name.as_str().ends_with('=') {
-            self.yyerror(name_t.loc(), DiagnosticMessage::new_endless_setter_definition()).map(|_| ())
+            self.yyerror(name_t.loc(), DiagnosticMessage::EndlessSetterDefinition {}).map(|_| ())
         } else {
             Ok(())
         }
@@ -6930,7 +6936,7 @@ impl Parser {
         let id: usize = ctx.token().code().try_into().expect("failed to convert token code into i32, is it too big?");
         let diagnostic = Diagnostic::new(
             ErrorLevel::error(),
-            DiagnosticMessage::new_unexpected_token(Lexer::TOKEN_NAMES[id].to_string()),
+            DiagnosticMessage::UnexpectedToken { token_name: Lexer::TOKEN_NAMES[id].to_string() },
             ctx.location().clone(),
         );
         self.diagnostics.emit(diagnostic);
@@ -6938,7 +6944,7 @@ impl Parser {
 
     fn warn_eol(&mut self, loc: &Loc, tok: &str) {
         if self.yylexer.buffer.is_looking_at_eol() {
-            self.warn(loc, DiagnosticMessage::new_tok_at_eol_without_expression(tok.to_string()));
+            self.warn(loc, DiagnosticMessage::TokAtEolWithoutExpression { token_name: tok.to_string() });
         }
     }
 

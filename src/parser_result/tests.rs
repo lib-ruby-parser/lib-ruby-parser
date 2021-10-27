@@ -25,7 +25,7 @@ fn tokens() -> Vec<Token> {
 fn diagnostics() -> Vec<Diagnostic> {
     vec![Diagnostic::new(
         ErrorLevel::error(),
-        DiagnosticMessage::new_alias_nth_ref(),
+        DiagnosticMessage::AliasNthRef {},
         Loc::new(5, 6),
     )]
 }
@@ -71,7 +71,7 @@ fn test_debug() {
         "ParserResult { \
 ast: Some(Retry(Retry { expression_l: 1...2 })), \
 tokens: [[kIN, \"abc\", 3...4]], \
-diagnostics: [Diagnostic { level: error, message: AliasNthRef(AliasNthRef), loc: 5...6 }], \
+diagnostics: [Diagnostic { level: error, message: AliasNthRef, loc: 5...6 }], \
 comments: [Comment { location: 7...8, kind: Inline }], \
 magic_comments: [MagicComment { kind: WarnIndent, key_l: 9...10, value_l: 11...12 }], \
 input: DecodedInput { name: \"foo\", lines: [SourceLine { start: 1, end: 2, ends_with_eof: false }], bytes: [1, 2, 3] } \

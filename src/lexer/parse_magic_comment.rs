@@ -331,13 +331,13 @@ impl Lexer {
                             Ok(encoding) => encoding,
                             Err(err) => {
                                 self.yyerror1(
-                                    DiagnosticMessage::new_encoding_error(
-                                        format!(
+                                    DiagnosticMessage::EncodingError {
+                                        error: format!(
                                             "unknown encoding name: {}",
                                             String::from_utf8_lossy(err.as_bytes())
                                         )
                                         .into(),
-                                    ),
+                                    },
                                     self.loc(vbeg, vend),
                                 );
 
@@ -348,7 +348,9 @@ impl Lexer {
                             Ok(_) => {}
                             Err(err) => {
                                 self.yyerror1(
-                                    DiagnosticMessage::new_encoding_error(err.to_string().into()),
+                                    DiagnosticMessage::EncodingError {
+                                        error: err.to_string().into(),
+                                    },
                                     self.loc(vbeg, vend),
                                 );
                                 return Err(());

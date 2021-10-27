@@ -104,14 +104,14 @@ impl Lexer {
             self.literal_flush(self.buffer.pcur);
             if (func & STR_FUNC_QWORDS) != 0 {
                 /* no content to add, bailing out here */
-                self.yyerror0(DiagnosticMessage::new_unterminated_list());
+                self.yyerror0(DiagnosticMessage::UnterminatedList {});
                 self.strterm = None;
                 return Self::tSTRING_END;
             }
             if (func & STR_FUNC_REGEXP) != 0 {
-                self.yyerror0(DiagnosticMessage::new_unterminated_regexp());
+                self.yyerror0(DiagnosticMessage::UnterminatedRegexp {});
             } else {
-                self.yyerror0(DiagnosticMessage::new_unterminated_string());
+                self.yyerror0(DiagnosticMessage::UnterminatedString {});
             }
             quote.func |= STR_FUNC_TERM;
         }
@@ -169,13 +169,14 @@ impl Lexer {
         if self.toklen() > 0 {
             self.tokfix();
             self.compile_error(
-                DiagnosticMessage::new_unknown_regex_options(
-                    self.tokenbuf
+                DiagnosticMessage::UnknownRegexOptions {
+                    options: self
+                        .tokenbuf
                         .borrow_string()
                         .expect("expected buffer to have only utf-8 chars")
                         .to_string()
                         .into(),
-                ),
+                },
                 self.current_loc(),
             );
         }
@@ -363,7 +364,7 @@ impl Lexer {
     fn tokadd_utf8_unterminated(&mut self) {
         self.token_flush();
         self.yyerror1(
-            DiagnosticMessage::new_unterminated_unicode_escape(),
+            DiagnosticMessage::UnterminatedUnicodeEscape {},
             self.loc(self.buffer.ptok, self.buffer.pcur + 1),
         );
     }
@@ -446,17 +447,17 @@ impl Lexer {
             numlen < 4
         } {
             self.yyerror1(
-                DiagnosticMessage::new_invalid_unicode_escape(),
+                DiagnosticMessage::InvalidUnicodeEscape {},
                 self.loc(self.buffer.pcur, self.buffer.pcur + 1),
             );
             return wide && numlen > 0;
         }
         if codepoint > 0x10ffff {
-            self.yyerror0(DiagnosticMessage::new_too_large_unicode_codepoint());
+            self.yyerror0(DiagnosticMessage::TooLargeUnicodeCodepoint {});
             return wide;
         }
         if (codepoint & 0xfffff800) == 0xd800 {
-            self.yyerror0(DiagnosticMessage::new_invalid_unicode_codepoint());
+            self.yyerror0(DiagnosticMessage::InvalidUnicodeCodepoint {});
             return wide;
         }
         if regexp_literal != 0 {
@@ -543,7 +544,7 @@ impl Lexer {
                     self.buffer.pcur = second;
                     self.token_flush();
                     self.buffer.pcur = pcur;
-                    self.yyerror0(DiagnosticMessage::new_multiple_codepoint_at_single_char());
+                    self.yyerror0(DiagnosticMessage::MultipleCodepointAtSingleChar {});
                     self.token_flush();
                 }
             }
@@ -575,7 +576,7 @@ impl Lexer {
     }
 
     fn tokadd_escape_eof(&mut self) -> Result<(), ()> {
-        self.yyerror0(DiagnosticMessage::new_invalid_escape_character());
+        self.yyerror0(DiagnosticMessage::InvalidEscapeCharacter {});
         self.token_flush();
         Err(())
     }
@@ -684,7 +685,7 @@ impl Lexer {
     }
 
     fn read_escape_eof(&mut self) -> MaybeByte {
-        self.yyerror0(DiagnosticMessage::new_invalid_escape_character());
+        self.yyerror0(DiagnosticMessage::InvalidEscapeCharacter {});
         self.token_flush();
         MaybeByte::new(0)
     }
@@ -694,10 +695,7 @@ impl Lexer {
 
         c = self.scan_hex(self.buffer.pcur, 2, numlen);
         if *numlen == 0 {
-            self.yyerror1(
-                DiagnosticMessage::new_invalid_hex_escape(),
-                self.current_loc(),
-            );
+            self.yyerror1(DiagnosticMessage::InvalidHexEscape {}, self.current_loc());
             self.token_flush();
             return MaybeByte::new(0);
         }
@@ -821,7 +819,9 @@ impl Lexer {
 
     pub(crate) fn warn_space_char(&mut self, c: u8, prefix: &'static str) {
         self.warn(
-            DiagnosticMessage::new_invalid_character_syntax(format!("{}\\{}", prefix, c).into()),
+            DiagnosticMessage::InvalidCharacterSyntax {
+                suggestion: format!("{}\\{}", prefix, c).into(),
+            },
             self.current_loc(),
         )
     }

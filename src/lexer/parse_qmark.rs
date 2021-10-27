@@ -22,7 +22,7 @@ impl Lexer {
         c = self.nextc();
         if c.is_eof() {
             self.compile_error(
-                DiagnosticMessage::new_incomplete_character_syntax(),
+                DiagnosticMessage::IncompleteCharacterSyntax {},
                 self.current_loc(),
             );
             return Ok(Self::END_OF_INPUT);
@@ -61,11 +61,13 @@ impl Lexer {
                     }
                 }
                 self.warn(
-                    DiagnosticMessage::new_ambiguous_ternary_operator(
-                        String::from_utf8_lossy(self.buffer.substr_at(start, ptr).unwrap())
-                            .into_owned()
-                            .into(),
-                    ),
+                    DiagnosticMessage::AmbiguousTernaryOperator {
+                        condition: String::from_utf8_lossy(
+                            self.buffer.substr_at(start, ptr).unwrap(),
+                        )
+                        .into_owned()
+                        .into(),
+                    },
                     self.loc(start - 1, start),
                 )
             }

@@ -4,7 +4,7 @@ use crate::{DiagnosticMessage, ErrorLevel, Loc};
 fn new_diagnostic() -> Diagnostic {
     Diagnostic::new(
         ErrorLevel::error(),
-        DiagnosticMessage::new_alias_nth_ref(),
+        DiagnosticMessage::AliasNthRef {},
         Loc::new(1, 2),
     )
 }
@@ -22,7 +22,10 @@ fn test_get_level() {
 
 #[test]
 fn test_get_message() {
-    assert!(new_diagnostic().message().is_alias_nth_ref())
+    assert_eq!(
+        new_diagnostic().message(),
+        &DiagnosticMessage::AliasNthRef {}
+    )
 }
 
 #[test]
@@ -39,7 +42,7 @@ fn test_renders() {
 
     let error = Diagnostic::new(
         ErrorLevel::warning(),
-        DiagnosticMessage::new_fraction_after_numeric(),
+        DiagnosticMessage::FractionAfterNumeric {},
         Loc::new(8, 12),
     );
 
