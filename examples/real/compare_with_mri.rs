@@ -2,6 +2,7 @@ use super::helpers::*;
 
 extern crate clap;
 use clap::Parser;
+use lib_ruby_parser::{DiagnosticMessage, ParserResult};
 
 use std::process::Command;
 
@@ -11,32 +12,96 @@ struct Args {
     pattern: Option<String>,
 }
 
-fn compare(file: InputFile) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Checking {}", file.filepath);
+const RED: &str = "\x1b[0;31m";
+const GREY: &str = "\x1b[0;37m";
+const RESET: &str = "\x1b[0m";
 
-    let expected = Command::new("./mri-tokenizer")
-        .arg(&file.filepath)
-        .output()?;
-    let expected = String::from_utf8(expected.stdout)?;
-    let expected = expected.lines().collect::<Vec<_>>();
+enum Output {
+    Ok,
+    Skip { reason: String },
+    Err(String),
+}
 
-    let tokens = parse(file, false).tokens;
+fn compare(file: InputFile) -> Output {
+    let filepath = file.filepath.clone();
 
-    for (expected_name, tok) in expected.iter().zip(tokens.iter()) {
-        assert_eq!(
-            expected_name,
-            &tok.token_name(),
-            "token mismatch expected = {}, actual = {}, token = {:?}",
-            expected_name,
-            tok.token_name(),
-            tok
-        );
-        // println!("{} == {:?}", expected_name, tok);
+    match std::fs::read_to_string(&filepath) {
+        Ok(contents) => {
+            if contents.chars().all(|c| c.is_ascii()) {
+                // ok, otherwise there's a risk that MRI > 3.0.0.alpha
+                // emits multibyte UTF chars as separate tSTRING_CONTENT chunks
+            } else {
+                return Output::Skip {
+                    reason: format!("has multibyte UTF-8 chars"),
+                };
+            }
+        }
+        Err(_) => {
+            return Output::Skip {
+                reason: format!("has invalid utf-8 source"),
+            };
+        }
     }
 
-    assert_eq!(expected.len(), tokens.len());
+    let expected = match Command::new("./mri-tokenizer").arg(&filepath).output() {
+        Ok(output) => output,
+        Err(err) => return Output::Err(format!("Failed to run ./mri-tokenizer: {}", err)),
+    };
+    if expected.status.code() != Some(0) {
+        // invalid file, even popular gems have them
+        return Output::Skip {
+            reason: format!("contains invalid Ruby code"),
+        };
+    }
 
-    Ok(())
+    let expected = match String::from_utf8(expected.stdout) {
+        Ok(s) => s,
+        Err(err) => {
+            return Output::Err(format!(
+                "failed to convert mri-tokenizer output to UTF-8: {}",
+                err
+            ));
+        }
+    };
+    let expected = expected.lines().collect::<Vec<_>>();
+
+    let ParserResult {
+        tokens,
+        diagnostics,
+        ..
+    } = parse(file, false);
+
+    for diagnostic in diagnostics {
+        if let DiagnosticMessage::EncodingError { error } = diagnostic.message {
+            // non-utf-8 encoding comment
+            return Output::Skip {
+                reason: format!("has non-utf-8 magic comment ({})", error),
+            };
+        }
+    }
+
+    println!("Checking {}", filepath);
+
+    for (expected_name, tok) in expected.iter().zip(tokens.iter()) {
+        if *expected_name != tok.token_name() {
+            return Output::Err(format!(
+                "token mismatch expected = {}, actual = {}, token = {:?}",
+                expected_name,
+                tok.token_name(),
+                tok,
+            ));
+        }
+    }
+
+    if expected.len() != tokens.len() {
+        return Output::Err(format!(
+            "tokens length mispatch: expected = {}, actual = {}",
+            expected.len(),
+            tokens.len(),
+        ));
+    }
+
+    Output::Ok
 }
 
 #[allow(dead_code)]
@@ -48,8 +113,40 @@ pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|pattern| InputFiles::new_pattern(&pattern))
         .unwrap_or_else(|| InputFiles::empty());
 
+    let mut warnings = vec![];
+    let mut errors = vec![];
+
     for file in files.into_iter() {
-        compare(file)?;
+        let filepath = file.filepath.clone();
+
+        match compare(file) {
+            Output::Ok => {}
+            Output::Skip { reason } => {
+                let warning = format!("{}File {}: {}, skipping.{}", GREY, filepath, reason, RESET);
+                println!("{}", warning);
+                warnings.push(warning);
+            }
+            Output::Err(error) => {
+                let error = format!("{}File {}: {}{}", RED, filepath, error, RESET);
+                println!("{}", error);
+                errors.push(error);
+            }
+        }
     }
-    Ok(())
+
+    if !warnings.is_empty() {
+        println!(
+            "\n\n{}WARNINGS:\n\n{}\n\n{}",
+            GREY,
+            warnings.join("\n"),
+            RESET
+        );
+    }
+
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        println!("\n\n{}ERRORS:\n\n{}\n\n{}", RED, errors.join("\n"), RESET);
+        std::process::exit(1);
+    }
 }
