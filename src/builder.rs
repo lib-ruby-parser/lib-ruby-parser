@@ -437,7 +437,7 @@ impl Builder {
 
     // Indented (interpolated, noninterpolated, executable) strings
 
-    pub(crate) fn heredoc_dedent(&self, node: Node, dedent_level: i32) -> Node {
+    pub(crate) fn heredoc_dedent(&self, node: Box<Node>, dedent_level: i32) -> Box<Node> {
         if dedent_level == 0 {
             return node;
         }
@@ -481,7 +481,7 @@ impl Builder {
                 .collect::<Vec<_>>()
         };
 
-        match node {
+        match *node {
             Node::Heredoc(Heredoc {
                 parts,
                 heredoc_body_l,
@@ -489,12 +489,12 @@ impl Builder {
                 expression_l,
             }) => {
                 let parts = dedent_heredoc_parts(parts);
-                Node::Heredoc(Heredoc {
+                Box::new(Node::Heredoc(Heredoc {
                     parts,
                     heredoc_body_l,
                     heredoc_end_l,
                     expression_l,
-                })
+                }))
             }
             Node::XHeredoc(XHeredoc {
                 parts,
@@ -503,12 +503,12 @@ impl Builder {
                 expression_l,
             }) => {
                 let parts = dedent_heredoc_parts(parts);
-                Node::XHeredoc(XHeredoc {
+                Box::new(Node::XHeredoc(XHeredoc {
                     parts,
                     heredoc_body_l,
                     heredoc_end_l,
                     expression_l,
-                })
+                }))
             }
             _ => {
                 unreachable!("unsupported heredoc_dedent argument {}", node.str_type())

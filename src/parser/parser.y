@@ -5383,7 +5383,7 @@ opt_block_args_tail:
                         );
                         let indent = self.yylexer.buffer.heredoc_indent;
                         self.yylexer.buffer.heredoc_indent = 0;
-                        string = Box::new(self.builder.heredoc_dedent(*string, indent));
+                        string = self.builder.heredoc_dedent(string, indent);
                         $$ = Value::Node(string);
                     }
                 ;
@@ -5397,7 +5397,7 @@ opt_block_args_tail:
                         );
                         let indent = self.yylexer.buffer.heredoc_indent;
                         self.yylexer.buffer.heredoc_indent = 0;
-                        string = Box::new(self.builder.heredoc_dedent(*string, indent));
+                        string = self.builder.heredoc_dedent(string, indent);
                         $$ = Value::Node(string);
                     }
                 ;
