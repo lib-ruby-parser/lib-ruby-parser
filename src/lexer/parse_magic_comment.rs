@@ -4,20 +4,20 @@ use crate::source::{MagicComment, MagicCommentKind};
 use crate::DiagnosticMessage;
 use crate::Lexer;
 
-type MagicCommentData = (&'static str, fn() -> MagicCommentKind);
+type MagicCommentData = (&'static str, MagicCommentKind);
 
 const MAGIC_COMMENTS: &[MagicCommentData] = &[
-    ("coding", MagicCommentKind::encoding),
-    ("encoding", MagicCommentKind::encoding),
+    ("coding", MagicCommentKind::Encoding),
+    ("encoding", MagicCommentKind::Encoding),
     (
         "frozen_string_literal",
-        MagicCommentKind::frozen_string_literal,
+        MagicCommentKind::FrozenStringLiteral,
     ),
     (
         "shareable_constant_value",
-        MagicCommentKind::shareable_constant_value,
+        MagicCommentKind::ShareableConstantValue,
     ),
-    ("warn_indent", MagicCommentKind::warn_indent),
+    ("warn_indent", MagicCommentKind::WarnIndent),
 ];
 
 impl Lexer {
@@ -319,9 +319,8 @@ impl Lexer {
 
             let name_to_compare = name.replace("-", "_");
             for (name, kind) in MAGIC_COMMENTS.iter() {
-                let kind = kind();
                 if &name_to_compare == name {
-                    if kind.is_encoding() {
+                    if kind == &MagicCommentKind::Encoding {
                         let encoding = match String::from_utf8(
                             self.buffer
                                 .substr_at(vbeg, vend)
@@ -331,13 +330,12 @@ impl Lexer {
                             Ok(encoding) => encoding,
                             Err(err) => {
                                 self.yyerror1(
-                                    DiagnosticMessage::new_encoding_error(
-                                        format!(
+                                    DiagnosticMessage::EncodingError {
+                                        error: format!(
                                             "unknown encoding name: {}",
                                             String::from_utf8_lossy(err.as_bytes())
-                                        )
-                                        .into(),
-                                    ),
+                                        ),
+                                    },
                                     self.loc(vbeg, vend),
                                 );
 
@@ -348,7 +346,9 @@ impl Lexer {
                             Ok(_) => {}
                             Err(err) => {
                                 self.yyerror1(
-                                    DiagnosticMessage::new_encoding_error(err.to_string().into()),
+                                    DiagnosticMessage::EncodingError {
+                                        error: err.to_string(),
+                                    },
                                     self.loc(vbeg, vend),
                                 );
                                 return Err(());
@@ -359,7 +359,11 @@ impl Lexer {
                     let key_l = self.loc(beg, beg + n);
                     let value_l = self.loc(vbeg, vend);
 
-                    let magic_comment = MagicComment::new(kind.clone(), key_l, value_l);
+                    let magic_comment = MagicComment {
+                        kind: kind.clone(),
+                        key_l,
+                        value_l,
+                    };
                     self.magic_comments.push(magic_comment);
                 }
             }

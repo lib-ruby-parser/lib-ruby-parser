@@ -10,13 +10,6 @@ mod {{ helper mod-name }};
 {{ each node }}<dnl>
 pub use {{ helper mod-name }}::{{ helper node-camelcase-name }};
 {{ end }}
-
-pub(crate) mod internal {
-{{ each node }}<dnl>
-    #[allow(unused_imports)]
-    pub(crate) use super::{{ helper mod-name }}::Internal{{ helper node-camelcase-name }} as {{ helper node-camelcase-name }};
-{{ end }}
-}
 ";
 
 pub(crate) fn codegen() {

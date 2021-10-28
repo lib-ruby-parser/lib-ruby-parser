@@ -1,16 +1,18 @@
-crate::use_native_or_external!(Maybe);
-
 use crate::traverse::finder::Finder;
 use crate::{Parser, ParserOptions};
 
 fn find(src: &str, pattern: &str) -> Option<String> {
-    let options = ParserOptions::new("(find_test)".into(), Maybe::none(), Maybe::none(), false);
+    let options = ParserOptions {
+        buffer_name: "(find_test)".into(),
+        record_tokens: false,
+        ..Default::default()
+    };
     let parser = Parser::new(src, options);
 
     let result = parser.do_parse();
-    let ast = result.ast().as_ref().expect("expected AST to be Some");
+    let ast = result.ast.as_ref().expect("expected AST to be Some");
     let node = Finder::run(&pattern, ast).unwrap()?;
-    node.expression().source(result.input())
+    node.expression().source(&result.input)
 }
 
 #[test]

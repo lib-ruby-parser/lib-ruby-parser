@@ -1,17 +1,10 @@
 use lib_ruby_parser::Token;
 
-#[cfg(feature = "compile-with-external-structures")]
-use lib_ruby_parser::containers::ExternalStringPtr;
-#[cfg(feature = "compile-with-external-structures")]
-type StringPtr = ExternalStringPtr;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type StringPtr = String;
-
 pub(crate) struct TokenList {
     pub(crate) tokens: Vec<Token>,
 }
 
-fn token_value(token: &Token) -> StringPtr {
+fn token_value(token: &Token) -> String {
     token.to_string_lossy()
 }
 
@@ -53,10 +46,7 @@ impl std::fmt::Debug for TokenList {
 
                 format!(
                     "    :{}{}[{}, {}]",
-                    name,
-                    value,
-                    token.loc().begin(),
-                    token.loc().end(),
+                    name, value, token.loc.begin, token.loc.end,
                 )
             })
             .collect::<Vec<_>>()

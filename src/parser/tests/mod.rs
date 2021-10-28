@@ -1,5 +1,3 @@
-crate::use_native_or_external!(Maybe);
-
 mod fixture;
 pub(crate) use fixture::test_file;
 
@@ -25,7 +23,11 @@ macro_rules! fixture_file {
 pub(crate) use fixture_file;
 
 fn parse(input: &[u8]) -> ParserResult {
-    let options = ParserOptions::new("(eval)".into(), Maybe::none(), Maybe::none(), false);
+    let options = ParserOptions {
+        buffer_name: "(eval)".into(),
+        record_tokens: false,
+        ..Default::default()
+    };
     let parser = Parser::new(input, options);
     parser.do_parse()
 }
@@ -34,35 +36,41 @@ fn parse(input: &[u8]) -> ParserResult {
 fn test_magic_comment() {
     let fixture = std::fs::read("fixtures/magic_comments.rb").unwrap();
     let result = parse(&fixture);
-    let magic_comments: Vec<MagicComment> = result.magic_comments().to_owned().into();
+    let magic_comments: Vec<MagicComment> = result.magic_comments.to_owned().into();
     assert_eq!(
         magic_comments,
         vec![
-            MagicComment::new(
-                MagicCommentKind::encoding(),
-                Loc::new(2, 10),
-                Loc::new(12, 17),
-            ),
-            MagicComment::new(
-                MagicCommentKind::frozen_string_literal(),
-                Loc::new(20, 41),
-                Loc::new(43, 47),
-            ),
-            MagicComment::new(
-                MagicCommentKind::encoding(),
-                Loc::new(50, 56),
-                Loc::new(58, 63),
-            ),
-            MagicComment::new(
-                MagicCommentKind::shareable_constant_value(),
-                Loc::new(66, 90),
-                Loc::new(92, 99),
-            ),
-            MagicComment::new(
-                MagicCommentKind::warn_indent(),
-                Loc::new(102, 113),
-                Loc::new(115, 119),
-            ),
+            MagicComment {
+                kind: MagicCommentKind::Encoding,
+                key_l: Loc { begin: 2, end: 10 },
+                value_l: Loc { begin: 12, end: 17 },
+            },
+            MagicComment {
+                kind: MagicCommentKind::FrozenStringLiteral,
+                key_l: Loc { begin: 20, end: 41 },
+                value_l: Loc { begin: 43, end: 47 },
+            },
+            MagicComment {
+                kind: MagicCommentKind::Encoding,
+                key_l: Loc { begin: 50, end: 56 },
+                value_l: Loc { begin: 58, end: 63 },
+            },
+            MagicComment {
+                kind: MagicCommentKind::ShareableConstantValue,
+                key_l: Loc { begin: 66, end: 90 },
+                value_l: Loc { begin: 92, end: 99 },
+            },
+            MagicComment {
+                kind: MagicCommentKind::WarnIndent,
+                key_l: Loc {
+                    begin: 102,
+                    end: 113
+                },
+                value_l: Loc {
+                    begin: 115,
+                    end: 119
+                },
+            },
         ]
     );
 }

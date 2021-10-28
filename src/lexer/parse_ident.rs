@@ -119,7 +119,7 @@ impl Lexer {
         ident = match self.tokenize_ident() {
             Some(ident) => ident,
             None => {
-                self.yyerror0(DiagnosticMessage::new_invalid_multibyte_char());
+                self.yyerror0(DiagnosticMessage::InvalidMultibyteChar {});
                 return Self::END_OF_INPUT;
             }
         };

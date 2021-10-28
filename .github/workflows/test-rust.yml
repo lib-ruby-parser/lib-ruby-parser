@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: install rust
         uses: actions-rs/toolchain@v1
@@ -33,17 +35,33 @@ jobs:
           toolchain: ${{ matrix.build.rust }}
           override: true
 
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.0.0"
+
       - name: install bison
         run: |
           brew update
           brew install bison
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
 
+      - name: install ragel
+        run: |
+          sudo apt-get update
+          sudo apt-get install ragel
+
       - name: show bison version
         run: bison --version
 
       - name: codegen
-        run: cargo build --features "codegen-y,codegen-rust"
+        run: |
+          cd vendor/parser
+          bundle install
+          bundle exec rake generate
+          cd ../..
+          ruby vendor/codegen/parser.rb
+          ruby vendor/codegen/lexer.rb
+          cargo build --features "codegen-y,codegen-rust"
 
       - name: run tests
         run: cargo test ${{ matrix.build.cargoargs }} -- --nocapture

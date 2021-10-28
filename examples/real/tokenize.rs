@@ -1,10 +1,10 @@
 extern crate clap;
-use clap::Clap;
+use clap::Parser;
 
 #[allow(dead_code)]
 use super::helpers::*;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 struct Args {
     #[clap(about = "file/dir to parse")]
     pattern: Option<String>,

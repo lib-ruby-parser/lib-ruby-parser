@@ -1,23 +1,12 @@
 use super::InputFile;
 use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
 
-#[cfg(feature = "compile-with-external-structures")]
-use lib_ruby_parser::containers::ExternalMaybe;
-#[cfg(feature = "compile-with-external-structures")]
-type Maybe<T> = ExternalMaybe<T>;
-#[cfg(not(feature = "compile-with-external-structures"))]
-type Maybe<T> = Option<T>;
-
-#[allow(unused_imports)]
-use lib_ruby_parser::containers::helpers::MaybeAPI;
-
 #[allow(dead_code)]
 pub(crate) fn parse(input: InputFile, drop_tokens: bool) -> ParserResult {
-    let options = ParserOptions::new(
-        input.filepath.into(),
-        Maybe::none(),
-        Maybe::none(),
-        !drop_tokens,
-    );
+    let options = ParserOptions {
+        buffer_name: input.filepath.into(),
+        record_tokens: !drop_tokens,
+        ..Default::default()
+    };
     Parser::new(input.code, options).do_parse()
 }

@@ -1,8 +1,3 @@
-crate::use_native_or_external!(Ptr);
-crate::use_native_or_external!(StringPtr);
-crate::use_native_or_external!(List);
-crate::use_native_or_external!(Maybe);
-
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
@@ -81,8 +76,8 @@ pub struct Lexer {
     pub static_env: StaticEnvironment,
 
     pub(crate) diagnostics: Diagnostics,
-    pub(crate) comments: List<Comment>,
-    pub(crate) magic_comments: List<MagicComment>,
+    pub(crate) comments: Vec<Comment>,
+    pub(crate) magic_comments: Vec<MagicComment>,
 }
 
 impl Lexer {
@@ -93,10 +88,10 @@ impl Lexer {
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
     /// Constructs an instance of Lexer
-    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: Maybe<Decoder>) -> Self
+    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: Option<Decoder>) -> Self
     where
-        Bytes: Into<List<u8>>,
-        Name: Into<StringPtr>,
+        Bytes: Into<Vec<u8>>,
+        Name: Into<String>,
     {
         Self {
             cond: StackState::new("cond"),
@@ -118,8 +113,8 @@ impl Lexer {
         let mut tokens = vec![];
 
         loop {
-            let token = self.yylex().unptr();
-            match token.token_type() {
+            let token = *self.yylex();
+            match token.token_type {
                 Self::END_OF_INPUT => break,
                 _ => tokens.push(token),
             }
@@ -128,7 +123,7 @@ impl Lexer {
         tokens
     }
 
-    pub(crate) fn yylex(&mut self) -> Ptr<Token> {
+    pub(crate) fn yylex(&mut self) -> Box<Token> {
         let lex_state_before = self.lex_state;
         self.lval = None;
 
@@ -144,28 +139,28 @@ impl Lexer {
                 // take raw value if nothing was manually captured
                 self.buffer
                     .substr_at(begin, end)
-                    .map(|s| Bytes::new(List::from(s)))
+                    .map(|s| Bytes::new(Vec::from(s)))
             })
-            .unwrap_or_else(|| Bytes::new(list![]));
+            .unwrap_or_else(|| Bytes::new(vec![]));
 
         if token_type == Self::tNL {
-            token_value = Bytes::new(list![b'\n']);
+            token_value = Bytes::new(vec![b'\n']);
             end = begin + 1;
         }
 
-        let token = Ptr::new(Token::new(
+        let token = Box::new(Token {
             token_type,
             token_value,
-            Loc::new(begin, end),
+            loc: Loc { begin, end },
             lex_state_before,
-            self.lex_state,
-        ));
+            lex_state_after: self.lex_state,
+        });
         if cfg!(feature = "debug-lexer") {
             println!(
                 "yylex ({:?}, {:?}, {:?})",
                 token.token_name(),
-                token.token_value(),
-                token.loc()
+                token.token_value,
+                token.loc
             );
         }
         token
@@ -228,7 +223,7 @@ impl Lexer {
                     if !self.buffer.cr_seen {
                         self.buffer.cr_seen = true;
                         self.warn(
-                            DiagnosticMessage::new_slash_r_at_middle_of_line(),
+                            DiagnosticMessage::SlashRAtMiddleOfLine {},
                             self.current_loc(),
                         );
                     }
@@ -330,7 +325,7 @@ impl Lexer {
                         self.buffer.pushback(c);
                         if self.lex_state.is_spacearg(c, space_seen) {
                             self.warn(
-                                DiagnosticMessage::new_d_star_interpreted_as_arg_prefix(),
+                                DiagnosticMessage::DStarInterpretedAsArgPrefix {},
                                 self.current_loc(),
                             );
                             result = Self::tDSTAR;
@@ -355,7 +350,7 @@ impl Lexer {
                         self.buffer.pushback(c);
                         if self.lex_state.is_spacearg(c, space_seen) {
                             self.warn(
-                                DiagnosticMessage::new_star_interpreted_as_arg_prefix(),
+                                DiagnosticMessage::StarInterpretedAsArgPrefix {},
                                 self.current_loc(),
                             );
                             result = Self::tSTAR;
@@ -412,7 +407,7 @@ impl Lexer {
                                 c = self.nextc();
                                 if c.is_eof() {
                                     self.compile_error(
-                                        DiagnosticMessage::new_embedded_document_meets_eof(),
+                                        DiagnosticMessage::EmbeddedDocumentMeetsEof {},
                                         begin_loc,
                                     );
                                     return Self::END_OF_INPUT;
@@ -610,7 +605,7 @@ impl Lexer {
                                     .is_identchar(self.buffer.pcur + 1, self.buffer.pend))
                         {
                             self.warn(
-                                DiagnosticMessage::new_ampersand_interpreted_as_arg_prefix(),
+                                DiagnosticMessage::AmpersandInterpretedAsArgPrefix {},
                                 self.current_loc(),
                             );
                         }
@@ -754,10 +749,7 @@ impl Lexer {
                         c = self.nextc();
                         if c == b'.' {
                             if self.paren_nest == 0 && self.buffer.is_looking_at_eol() {
-                                self.warn(
-                                    DiagnosticMessage::new_triple_dot_at_eol(),
-                                    self.current_loc(),
-                                );
+                                self.warn(DiagnosticMessage::TripleDotAtEol {}, self.current_loc());
                             } else if self.lpar_beg >= 0
                                 && self.lpar_beg + 1 == self.paren_nest
                                 && last_state.is_some(EXPR_LABEL)
@@ -778,9 +770,9 @@ impl Lexer {
                         };
                         self.parse_numeric(b'.');
                         if prev.is_digit() {
-                            self.yyerror0(DiagnosticMessage::new_fraction_after_numeric());
+                            self.yyerror0(DiagnosticMessage::FractionAfterNumeric {});
                         } else {
-                            self.yyerror0(DiagnosticMessage::new_no_digits_after_dot());
+                            self.yyerror0(DiagnosticMessage::NoDigitsAfterDot {});
                         }
                         self.lex_state.set(EXPR_END);
                         self.buffer.set_ptok(self.buffer.pcur);
@@ -956,7 +948,7 @@ impl Lexer {
                         result = Self::tLPAREN_ARG;
                     } else if self.lex_state.is_some(EXPR_ENDFN) && !self.is_lambda_beginning() {
                         self.warn(
-                            DiagnosticMessage::new_parentheses_iterpreted_as_arglist(),
+                            DiagnosticMessage::ParenthesesIterpretedAsArglist {},
                             self.current_loc(),
                         );
                     }
@@ -1076,7 +1068,7 @@ impl Lexer {
                 Some(c) => {
                     if !self.is_identchar() {
                         self.compile_error(
-                            DiagnosticMessage::new_invalid_char(c),
+                            DiagnosticMessage::InvalidChar { c },
                             self.current_loc(),
                         );
                         self.token_flush();
@@ -1103,7 +1095,11 @@ impl Lexer {
         if cfg!(feature = "debug-lexer") {
             println!("WARNING: {}", message.render())
         }
-        let diagnostic = Diagnostic::new(ErrorLevel::warning(), message, loc);
+        let diagnostic = Diagnostic {
+            level: ErrorLevel::Warning,
+            message,
+            loc,
+        };
         self.diagnostics.emit(diagnostic);
     }
 
@@ -1120,7 +1116,10 @@ impl Lexer {
             && space_seen & !c.is_space()
         {
             self.warn(
-                DiagnosticMessage::new_ambiguous_operator(op.into(), syn.into()),
+                DiagnosticMessage::AmbiguousOperator {
+                    operator: op.to_string(),
+                    interpreted_as: syn.to_string(),
+                },
                 self.current_loc(),
             );
         }
@@ -1131,7 +1130,11 @@ impl Lexer {
         if cfg!(feature = "debug-lexer") {
             println!("Compile error: {}", message.render())
         }
-        let diagnostic = Diagnostic::new(ErrorLevel::error(), message, loc);
+        let diagnostic = Diagnostic {
+            level: ErrorLevel::Error,
+            message,
+            loc,
+        };
         self.diagnostics.emit(diagnostic);
     }
 
@@ -1152,7 +1155,10 @@ impl Lexer {
     }
 
     pub(crate) fn loc(&self, begin_pos: usize, end_pos: usize) -> Loc {
-        Loc::new(begin_pos, end_pos)
+        Loc {
+            begin: begin_pos,
+            end: end_pos,
+        }
     }
 
     pub(crate) fn current_loc(&self) -> Loc {
@@ -1161,9 +1167,12 @@ impl Lexer {
 
     pub(crate) fn arg_ambiguous(&mut self, c: u8, loc: Loc) -> bool {
         if c == b'/' {
-            self.warn(DiagnosticMessage::new_ambiguous_regexp(), loc);
+            self.warn(DiagnosticMessage::AmbiguousRegexp {}, loc);
         } else {
-            self.warn(DiagnosticMessage::new_ambiguous_first_argument(c), loc);
+            self.warn(
+                DiagnosticMessage::AmbiguousFirstArgument { operator: c },
+                loc,
+            );
         }
         true
     }
@@ -1184,7 +1193,11 @@ impl Lexer {
         if cfg!(feature = "debug-lexer") {
             println!("yyerror0: {}", message.render())
         }
-        let diagnostic = Diagnostic::new(ErrorLevel::error(), message, loc);
+        let diagnostic = Diagnostic {
+            level: ErrorLevel::Error,
+            message,
+            loc,
+        };
         self.diagnostics.emit(diagnostic);
     }
 
@@ -1259,7 +1272,7 @@ impl Lexer {
     pub(crate) fn multibyte_char_len(&mut self, ptr: usize) -> Option<usize> {
         let result = self._multibyte_char_len(ptr);
         if result.is_none() {
-            self.yyerror0(DiagnosticMessage::new_invalid_multibyte_char());
+            self.yyerror0(DiagnosticMessage::InvalidMultibyteChar {});
         }
         result
     }

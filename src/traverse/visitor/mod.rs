@@ -6,10 +6,6 @@ pub use visit_gen::Observer;
 
 use crate::Node;
 
-crate::use_native_or_external!(Ptr);
-crate::use_native_or_external!(Maybe);
-crate::use_native_or_external!(List);
-
 /// Generic visitor of `Node`.
 ///
 /// It doesn't do anything on its own,
@@ -64,22 +60,22 @@ impl<TObserver: Observer> Visit<&[Node]> for Visitor<TObserver> {
     }
 }
 
-impl<TObserver: Observer> Visit<&List<Node>> for Visitor<TObserver> {
-    fn visit(&mut self, nodes: &List<Node>, visit_as: Item) {
+impl<TObserver: Observer> Visit<&Vec<Node>> for Visitor<TObserver> {
+    fn visit(&mut self, nodes: &Vec<Node>, visit_as: Item) {
         let nodes: &[Node] = nodes;
         self.visit(nodes, visit_as);
     }
 }
 
-impl<TObserver: Observer> Visit<&Ptr<Node>> for Visitor<TObserver> {
-    fn visit(&mut self, node: &Ptr<Node>, visit_as: Item) {
+impl<TObserver: Observer> Visit<&Box<Node>> for Visitor<TObserver> {
+    fn visit(&mut self, node: &Box<Node>, visit_as: Item) {
         let node: &Node = &*node;
         self.visit(node, visit_as);
     }
 }
 
-impl<TObserver: Observer> Visit<&Maybe<Ptr<Node>>> for Visitor<TObserver> {
-    fn visit(&mut self, node: &Maybe<Ptr<Node>>, visit_as: Item) {
+impl<TObserver: Observer> Visit<&Option<Box<Node>>> for Visitor<TObserver> {
+    fn visit(&mut self, node: &Option<Box<Node>>, visit_as: Item) {
         if let Some(node) = node.as_ref() {
             self.visit(node, visit_as);
         }

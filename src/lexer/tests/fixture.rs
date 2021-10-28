@@ -1,4 +1,3 @@
-crate::use_native_or_external!(Maybe);
 use crate::lex_states::*;
 use crate::Lexer;
 use std::fs;
@@ -89,7 +88,7 @@ pub(crate) fn test_file(fixture_path: &str) {
     let mut lexer = Lexer::new(
         fixture.input.as_str(),
         format!("(test {})", fixture_path),
-        Maybe::none(),
+        None,
     );
     for var in fixture.vars {
         lexer.static_env.declare(&var);
@@ -111,8 +110,8 @@ pub(crate) fn test_file(fixture_path: &str) {
                 "{} {:?} [{}, {}]",
                 token.token_name(),
                 token.to_string_lossy(),
-                token.loc().begin(),
-                token.loc().end()
+                token.loc.begin,
+                token.loc.end
             )
         })
         .collect::<Vec<_>>()

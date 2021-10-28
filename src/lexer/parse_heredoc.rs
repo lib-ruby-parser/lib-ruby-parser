@@ -57,7 +57,7 @@ impl Lexer {
                 }
 
                 if c.is_eof() || c == b'\r' || c == b'\n' {
-                    self.yyerror0(DiagnosticMessage::new_unterminated_heredoc_id());
+                    self.yyerror0(DiagnosticMessage::UnterminatedHeredocId {});
                     return Some(Self::END_OF_INPUT);
                 }
             }
@@ -131,7 +131,7 @@ impl Lexer {
 
         let heredoc_end: HeredocEnd;
 
-        eos = self.buffer.input.line_at(here.lastline).start() + here.offset;
+        eos = self.buffer.input.line_at(here.lastline).start + here.offset;
         len = here.length;
         func = here.func;
         indent = here.func & STR_FUNC_INDENT;
@@ -160,7 +160,7 @@ impl Lexer {
 
         if (func & STR_FUNC_EXPAND) == 0 {
             loop {
-                ptr = self.buffer.input.line_at(self.buffer.lastline).start();
+                ptr = self.buffer.input.line_at(self.buffer.lastline).start;
                 ptr_end = self.buffer.pend;
                 if ptr_end > ptr {
                     match self.buffer.input.unchecked_byte_at(ptr_end - 1) {
@@ -315,15 +315,14 @@ impl Lexer {
     fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32 {
         self.heredoc_restore(here);
         self.compile_error(
-            DiagnosticMessage::new_unterminated_heredoc(
-                String::from_utf8_lossy(
+            DiagnosticMessage::UnterminatedHeredoc {
+                heredoc_id: String::from_utf8_lossy(
                     self.buffer
                         .substr_at(eos, eos + len)
                         .expect("failed to get heredoc id for comparison"),
                 )
-                .into_owned()
-                .into(),
-            ),
+                .into_owned(),
+            },
             self.current_loc(),
         );
         self.token_flush();
@@ -361,7 +360,7 @@ impl Lexer {
         self.strterm = None;
         let line = here.lastline;
         self.buffer.lastline = line;
-        self.buffer.pbeg = self.buffer.input.line_at(line).start();
+        self.buffer.pbeg = self.buffer.input.line_at(line).start;
         self.buffer.pend = self.buffer.pbeg + self.buffer.input.line_at(line).len();
         self.buffer.pcur = self.buffer.pbeg + here.offset + here.length + here.quote;
         self.buffer.ptok = self.buffer.pbeg + here.offset - here.quote;

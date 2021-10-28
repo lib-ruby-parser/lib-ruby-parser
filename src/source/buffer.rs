@@ -1,9 +1,5 @@
 use std::convert::TryFrom;
 
-crate::use_native_or_external!(StringPtr);
-crate::use_native_or_external!(List);
-crate::use_native_or_external!(Maybe);
-
 use crate::maybe_byte::*;
 use crate::source::input::Input;
 use crate::source::Decoder;
@@ -45,7 +41,7 @@ impl Buffer {
     const CTRL_Z_CHAR: u8 = 0x1a;
     const CTRL_D_CHAR: u8 = 0x04;
 
-    pub(crate) fn new(name: StringPtr, bytes: List<u8>, decoder: Maybe<Decoder>) -> Self {
+    pub(crate) fn new(name: String, bytes: Vec<u8>, decoder: Option<Decoder>) -> Self {
         let mut input = Input::new(name, decoder);
 
         input.update_bytes(bytes);
@@ -171,9 +167,9 @@ impl Buffer {
             self.heredoc_end = 0;
         }
         self.ruby_sourceline += 1;
-        self.pbeg = line.start();
-        self.pcur = line.start();
-        self.pend = line.end();
+        self.pbeg = line.start;
+        self.pcur = line.start;
+        self.pend = line.end;
         self.token_flush();
         self.prevline = Some(self.lastline);
         self.lastline = v;
@@ -307,7 +303,7 @@ impl Buffer {
                 self.lastline = prevline;
             }
         }
-        self.pbeg = self.input.line_at(self.lastline).start();
+        self.pbeg = self.input.line_at(self.lastline).start;
         self.pend = self.pbeg + self.input.line_at(self.lastline).len();
         self.pcur = self.pend;
         self.pushback(1);
