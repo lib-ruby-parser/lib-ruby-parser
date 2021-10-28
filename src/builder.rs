@@ -411,7 +411,9 @@ impl Builder {
         end_t: Box<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
-        if lossy_value(begin_t).as_str().starts_with("<<") {
+
+        let begin = &begin_t.token_value;
+        if begin.len() >= 2 && begin[0] == b'<' && begin[1] == b'<' {
             let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(&end_t));
             let heredoc_end_l = self.loc(&end_t);
             let expression_l = begin_l;
@@ -3864,7 +3866,8 @@ impl Builder {
 
     pub(crate) fn is_heredoc(&self, begin_t: &Option<Box<Token>>) -> bool {
         if let Some(begin_t) = begin_t.as_ref() {
-            if clone_value(begin_t.as_ref()).as_str().starts_with("<<") {
+            let begin = &begin_t.token_value;
+            if begin.len() >= 2 && begin[0] == b'<' && begin[1] == b'<' {
                 return true;
             }
         }
@@ -4041,10 +4044,6 @@ pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Loc> {
 
 pub(crate) fn value(token: Box<Token>) -> String {
     token.into_string().unwrap()
-}
-
-pub(crate) fn lossy_value(token: Box<Token>) -> String {
-    token.to_string_lossy()
 }
 
 pub(crate) fn clone_value(token: &Token) -> String {
