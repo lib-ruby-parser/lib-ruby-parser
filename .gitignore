@@ -2,6 +2,7 @@
 Cargo.lock
 Dockerfile
 flamegraph.svg
+mri-tokenizer
 
 # codegen
 # must be in sync with .rustfmt.toml

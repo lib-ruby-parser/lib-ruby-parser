@@ -74,4 +74,8 @@ impl InputFiles {
         }
         .repeat(repeat)
     }
+
+    pub(crate) fn empty() -> Self {
+        Self { files: vec![] }
+    }
 }
