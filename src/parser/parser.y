@@ -1318,17 +1318,18 @@ use crate::Loc;
                 | mlhs_head tSTAR mlhs_node
                     {
                         let mut nodes = $<BoxedNodeList>1;
-                        nodes.push( *self.builder.splat($<Token>2, Some($<BoxedNode>3)) );
+                        let mlhs_node = *self.builder.splat($<Token>2, Some($<BoxedNode>3));
+                        nodes.push(mlhs_node);
                         $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR mlhs_node tCOMMA mlhs_post
                     {
                         let mut nodes = $<BoxedNodeList>1;
-                        let mlhs_node = self.builder.splat($<Token>2, Some($<BoxedNode>3));
+                        let mlhs_node = *self.builder.splat($<Token>2, Some($<BoxedNode>3));
                         let mut mlhs_post = $<NodeList>5;
 
                         nodes.reserve(1 + mlhs_post.len());
-                        nodes.push(*mlhs_node);
+                        nodes.push(mlhs_node);
                         nodes.append(&mut mlhs_post);
 
                         $$ = Value::NodeList(nodes);
@@ -1336,17 +1337,18 @@ use crate::Loc;
                 | mlhs_head tSTAR
                     {
                         let mut nodes = $<BoxedNodeList>1;
-                        nodes.push( *self.builder.splat($<Token>2, None) );
+                        let splat = *self.builder.splat($<Token>2, None);
+                        nodes.push(splat);
                         $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR tCOMMA mlhs_post
                     {
                         let mut nodes = $<BoxedNodeList>1;
-                        let splat = self.builder.splat($<Token>2, None);
+                        let splat = *self.builder.splat($<Token>2, None);
                         let mut mlhs_post = $<NodeList>4;
 
                         nodes.reserve(1 + mlhs_post.len());
-                        nodes.push(*splat);
+                        nodes.push(splat);
                         nodes.append(&mut mlhs_post);
 
                         $$ = Value::NodeList(nodes);
@@ -2475,7 +2477,8 @@ use crate::Loc;
                         }
 
                         let mut args = $<NodeList>2;
-                        args.push(*self.builder.forwarded_args($<Token>4));
+                        let forwarded_args = *self.builder.forwarded_args($<Token>4);
+                        args.push(forwarded_args);
 
                         $$ = Value::new_paren_args(
                             ParenArgs {
@@ -2539,7 +2542,8 @@ use crate::Loc;
                 | args tCOMMA assocs tCOMMA
                     {
                         let mut nodes = $<BoxedNodeList>1;
-                        nodes.push( *self.builder.associate(None, $<NodeList>3, None) );
+                        let pair = *self.builder.associate(None, $<NodeList>3, None);
+                        nodes.push(pair);
                         $$ = Value::NodeList(nodes);
                     }
                 | assocs tCOMMA
@@ -2574,11 +2578,11 @@ use crate::Loc;
                 | assocs opt_block_arg
                     {
                         let mut nodes;
-                        let hash = self.builder.associate(None, $<NodeList>1, None);
+                        let hash = *self.builder.associate(None, $<NodeList>1, None);
                         let mut opt_block_arg = $<NodeList>2;
 
                         nodes = Box::new(Vec::with_capacity(1 + opt_block_arg.len()));
-                        nodes.push(*hash);
+                        nodes.push(hash);
                         nodes.append(&mut opt_block_arg);
 
                         $$ = Value::NodeList(nodes);
@@ -2586,11 +2590,11 @@ use crate::Loc;
                 | args tCOMMA assocs opt_block_arg
                     {
                         let mut nodes = $<BoxedNodeList>1;
-                        let hash = self.builder.associate(None, $<NodeList>3, None);
+                        let hash = *self.builder.associate(None, $<NodeList>3, None);
                         let mut opt_block_arg = $<NodeList>4;
 
                         nodes.reserve(1 + opt_block_arg.len());
-                        nodes.push(*hash);
+                        nodes.push(hash);
                         nodes.append(&mut opt_block_arg);
 
                         $$ = Value::NodeList(nodes);
@@ -2676,7 +2680,8 @@ use crate::Loc;
                 | args tCOMMA tSTAR arg_value
                     {
                         let mut nodes = $<BoxedNodeList>1;
-                        nodes.push( *self.builder.splat($<Token>3, Some($<BoxedNode>4)) );
+                        let splat = *self.builder.splat($<Token>3, Some($<BoxedNode>4));
+                        nodes.push(splat);
                         $$ = Value::NodeList(nodes);
                     }
                 ;
@@ -4358,7 +4363,8 @@ opt_block_args_tail:
                 | case_args tCOMMA tSTAR arg_value
                     {
                         let mut nodes = $<BoxedNodeList>1;
-                        nodes.push( *self.builder.splat($<Token>3, Some($<BoxedNode>4)) );
+                        let splat = *self.builder.splat($<Token>3, Some($<BoxedNode>4));
+                        nodes.push(splat);
                         $$ = Value::NodeList(nodes);
                     }
                 ;
@@ -4782,10 +4788,10 @@ opt_block_args_tail:
                     }
                 | p_args_head tSTAR tIDENTIFIER
                     {
-                        let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3))?;
+                        let match_rest = *self.builder.match_rest($<Token>2, Some($<Token>3))?;
 
                         let mut elements = $<MatchPatternWithTrailingComma>1.elements;
-                        elements.push(*match_rest);
+                        elements.push(match_rest);
 
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
@@ -4796,12 +4802,12 @@ opt_block_args_tail:
                     }
                 | p_args_head tSTAR tIDENTIFIER tCOMMA p_args_post
                     {
-                        let match_rest = self.builder.match_rest($<Token>2, Some($<Token>3))?;
+                        let match_rest = *self.builder.match_rest($<Token>2, Some($<Token>3))?;
 
                         let mut elements = $<MatchPatternWithTrailingComma>1.elements;
                         let mut p_args_post = $<NodeList>5;
                         elements.reserve(1 + p_args_post.len());
-                        elements.push(*match_rest);
+                        elements.push(match_rest);
                         elements.append(&mut p_args_post);
 
                         $$ = Value::new_match_pattern_with_trailing_comma(
@@ -4813,10 +4819,10 @@ opt_block_args_tail:
                     }
                 | p_args_head tSTAR
                     {
-                        let match_rest = self.builder.match_rest($<Token>2, None)?;
+                        let match_rest = *self.builder.match_rest($<Token>2, None)?;
 
                         let mut elements = $<MatchPatternWithTrailingComma>1.elements;
-                        elements.push(*match_rest);
+                        elements.push(match_rest);
 
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
@@ -4827,11 +4833,11 @@ opt_block_args_tail:
                     }
                 | p_args_head tSTAR tCOMMA p_args_post
                     {
-                        let match_rest = self.builder.match_rest($<Token>2, None)?;
+                        let match_rest = *self.builder.match_rest($<Token>2, None)?;
 
                         let mut elements = $<MatchPatternWithTrailingComma>1.elements;
                         let mut p_args_post = $<NodeList>4;
-                        elements.push(*match_rest);
+                        elements.push(match_rest);
                         elements.append(&mut p_args_post);
 
                         $$ = Value::new_match_pattern_with_trailing_comma(
@@ -5264,7 +5270,7 @@ opt_block_args_tail:
                             Some(self.builder.array(None, exc_list, None))
                         };
 
-                        let rescue_body = self.builder.rescue_body(
+                        let rescue_body = *self.builder.rescue_body(
                             $<Token>1,
                             exc_list,
                             assoc_t,
@@ -5275,7 +5281,7 @@ opt_block_args_tail:
                         let mut nodes;
                         let mut opt_rescue = $<NodeList>6;
                         nodes = Box::new(Vec::with_capacity(1 + opt_rescue.len()));
-                        nodes.push(*rescue_body);
+                        nodes.push(rescue_body);
                         nodes.append(&mut opt_rescue);
 
                         $$ = Value::NodeList(nodes);
@@ -5920,7 +5926,8 @@ f_opt_paren_args: f_paren_args
                 | tLPAREN2 f_arg tCOMMA args_forward rparen
                     {
                         let mut args = $<NodeList>2;
-                        args.push(*self.builder.forward_arg($<Token>4));
+                        let forward_arg = *self.builder.forward_arg($<Token>4);
+                        args.push(forward_arg);
 
                         $$ = Value::MaybeNode(
                             self.builder.args(
