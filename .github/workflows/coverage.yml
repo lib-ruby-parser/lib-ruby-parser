@@ -34,6 +34,11 @@ jobs:
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
           bison --version
 
+      - name: install ragel
+        run: |
+          sudo apt-get update
+          sudo apt-get install ragel
+
       - name: codegen
         run: |
           cd vendor/parser

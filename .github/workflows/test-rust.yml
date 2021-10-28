@@ -45,6 +45,11 @@ jobs:
           brew install bison
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
 
+      - name: install ragel
+        run: |
+          sudo apt-get update
+          sudo apt-get install ragel
+
       - name: show bison version
         run: bison --version
 
