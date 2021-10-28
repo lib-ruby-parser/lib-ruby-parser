@@ -52,7 +52,7 @@ jobs:
       - name: cargo-tarpaulin
         run: |
           cargo install cargo-tarpaulin
-          cargo tarpaulin --features onig -v --out Xml --exclude-files codegen
+          cargo tarpaulin -v --out Xml --exclude-files codegen
 
       - name: upload to codecov.io
         uses: codecov/codecov-action@v1.0.2
