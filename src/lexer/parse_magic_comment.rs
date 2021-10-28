@@ -320,7 +320,7 @@ impl Lexer {
             let name_to_compare = name.replace("-", "_");
             for (name, kind) in MAGIC_COMMENTS.iter() {
                 if &name_to_compare == name {
-                    if kind == &MagicCommentKind::Encoding {
+                    if kind == &MagicCommentKind::Encoding && self.comment_at_top() {
                         let encoding = match String::from_utf8(
                             self.buffer
                                 .substr_at(vbeg, vend)
