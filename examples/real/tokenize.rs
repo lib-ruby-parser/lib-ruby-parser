@@ -1,7 +1,6 @@
 extern crate clap;
 use clap::Parser;
 
-#[allow(dead_code)]
 use super::helpers::*;
 
 #[derive(Debug, Parser)]
@@ -35,5 +34,5 @@ pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
         callback(TokenList { tokens });
     }
 
-    return Ok(());
+    Ok(())
 }

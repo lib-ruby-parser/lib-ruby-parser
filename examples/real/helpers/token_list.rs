@@ -42,7 +42,7 @@ impl std::fmt::Debug for TokenList {
             .iter()
             .map(|token| {
                 let name = rpad(&token.token_name(), tok_name_length);
-                let value = rpad(&token_value(&token), tok_value_length);
+                let value = rpad(&token_value(token), tok_value_length);
 
                 format!(
                     "    :{}{}[{}, {}]",

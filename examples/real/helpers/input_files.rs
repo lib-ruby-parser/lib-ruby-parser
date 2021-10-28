@@ -25,7 +25,7 @@ impl InputFiles {
     }
 
     pub(crate) fn new_pattern(pattern: &str) -> Self {
-        let files: Vec<InputFile> = glob::glob(&pattern)
+        let files: Vec<InputFile> = glob::glob(pattern)
             .expect("invalid glob pattern")
             .map(|f| f.unwrap().to_str().unwrap().to_string())
             .map(|filepath| InputFile {

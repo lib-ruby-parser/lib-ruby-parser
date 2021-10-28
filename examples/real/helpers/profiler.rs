@@ -1,5 +1,5 @@
 #[cfg(feature = "pprof")]
-mod profiler {
+mod implementation {
     extern crate pprof;
 
     pub(crate) struct Profiler {
@@ -58,7 +58,7 @@ mod profiler {
 }
 
 #[cfg(not(feature = "pprof"))]
-mod profiler {
+mod implementation {
     pub(crate) struct Profiler {}
 
     impl Profiler {
@@ -74,4 +74,4 @@ mod profiler {
     }
 }
 
-pub(crate) use profiler::Profiler;
+pub(crate) use implementation::Profiler;

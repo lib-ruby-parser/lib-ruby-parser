@@ -38,10 +38,10 @@ impl From<&Args> for Option<InputFiles> {
     fn from(args: &Args) -> Self {
         if let Some(code_to_eval) = &args.code_to_eval {
             Some(InputFiles::new_eval(code_to_eval.clone().into_bytes()))
-        } else if let Some(pattern) = &args.pattern {
-            Some(InputFiles::new_pattern(&pattern))
         } else {
-            None
+            args.pattern
+                .as_ref()
+                .map(|pattern| InputFiles::new_pattern(pattern))
         }
     }
 }

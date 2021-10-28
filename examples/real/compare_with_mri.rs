@@ -32,13 +32,13 @@ fn compare(file: InputFile) -> Output {
                 // emits multibyte UTF chars as separate tSTRING_CONTENT chunks
             } else {
                 return Output::Skip {
-                    reason: format!("has multibyte UTF-8 chars"),
+                    reason: "has multibyte UTF-8 chars".to_string(),
                 };
             }
         }
         Err(_) => {
             return Output::Skip {
-                reason: format!("has invalid utf-8 source"),
+                reason: "has invalid utf-8 source".to_string(),
             };
         }
     }
@@ -50,7 +50,7 @@ fn compare(file: InputFile) -> Output {
     if expected.status.code() != Some(0) {
         // invalid file, even popular gems have them
         return Output::Skip {
-            reason: format!("contains invalid Ruby code"),
+            reason: "contains invalid Ruby code".to_string(),
         };
     }
 
@@ -111,7 +111,7 @@ pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
     let files = args
         .pattern
         .map(|pattern| InputFiles::new_pattern(&pattern))
-        .unwrap_or_else(|| InputFiles::empty());
+        .unwrap_or_else(InputFiles::empty);
 
     let mut warnings = vec![];
     let mut errors = vec![];

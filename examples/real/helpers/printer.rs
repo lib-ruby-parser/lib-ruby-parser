@@ -28,15 +28,15 @@ mod formatters {
 
     pub(crate) fn print_compact_ast_with_locations(result: &ParserResult) {
         let src = result.input.as_shared_bytes();
-        let src = std::str::from_utf8(src.as_ref()).unwrap_or_else(|_| "invalid-source");
+        let src = std::str::from_utf8(src).unwrap_or("invalid-source");
         println!("{}", src);
-        print_only_diagnostics(&result);
+        print_only_diagnostics(result);
         if let Some(ast) = result.ast.as_ref() {
             ast.print_with_locs()
         }
     }
     pub(crate) fn print_compact_ast(result: &ParserResult) {
-        print_only_diagnostics(&result);
+        print_only_diagnostics(result);
         if let Some(ast) = result.ast.as_ref() {
             println!("{}", ast.inspect(0));
         }
