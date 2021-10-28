@@ -48,7 +48,7 @@ pub(crate) enum LogicalOp {
 #[derive(Debug, Clone)]
 pub(crate) enum PKwLabel {
     PlainLabel(Box<Token>),
-    QuotedLabel((Box<Token>, Box<Vec<Node>>, Box<Token>)),
+    QuotedLabel((Box<Token>, Vec<Node>, Box<Token>)),
 }
 
 #[derive(Debug, Clone)]
@@ -198,7 +198,7 @@ impl Builder {
         &self,
         begin_t: Option<Box<Token>>,
         value: Bytes,
-        parts: Box<Vec<Node>>,
+        parts: Vec<Node>,
         end_t: Option<Box<Token>>,
     ) -> Box<Node> {
         if self.is_heredoc(&begin_t) {
@@ -209,7 +209,7 @@ impl Builder {
             } = self.heredoc_map(&begin_t, &parts, &end_t);
 
             Box::new(Node::Heredoc(Heredoc {
-                parts: *parts,
+                parts,
                 heredoc_body_l,
                 heredoc_end_l,
                 expression_l,
@@ -244,10 +244,10 @@ impl Builder {
     pub(crate) fn string_compose(
         &self,
         begin_t: Option<Box<Token>>,
-        parts: Box<Vec<Node>>,
+        parts: Vec<Node>,
         end_t: Option<Box<Token>>,
     ) -> Box<Node> {
-        match &**parts {
+        match &parts[..] {
             [] => {
                 return self.str_node(begin_t, Bytes::empty(), parts, end_t);
             }
@@ -280,7 +280,7 @@ impl Builder {
             } = self.heredoc_map(&begin_t, &parts, &end_t);
 
             Box::new(Node::Heredoc(Heredoc {
-                parts: *parts,
+                parts,
                 heredoc_body_l,
                 heredoc_end_l,
                 expression_l,
@@ -293,7 +293,7 @@ impl Builder {
             } = self.collection_map(&begin_t, &parts, &end_t);
 
             Box::new(Node::Dstr(Dstr {
-                parts: *parts,
+                parts,
                 begin_l,
                 end_l,
                 expression_l,
@@ -364,7 +364,7 @@ impl Builder {
     pub(crate) fn symbol_compose(
         &self,
         begin_t: Box<Token>,
-        parts: Box<Vec<Node>>,
+        parts: Vec<Node>,
         end_t: Box<Token>,
     ) -> Box<Node> {
         if parts.len() == 1 && matches!(&parts[0], Node::Str(_)) {
@@ -395,7 +395,7 @@ impl Builder {
             expression_l,
         } = self.collection_map(&Some(begin_t), &parts, &Some(end_t));
         Box::new(Node::Dsym(Dsym {
-            parts: *parts,
+            parts,
             begin_l,
             end_l,
             expression_l,
@@ -407,7 +407,7 @@ impl Builder {
     pub(crate) fn xstring_compose(
         &self,
         begin_t: Box<Token>,
-        parts: Box<Vec<Node>>,
+        parts: Vec<Node>,
         end_t: Box<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
@@ -417,7 +417,7 @@ impl Builder {
             let expression_l = begin_l;
 
             Box::new(Node::XHeredoc(XHeredoc {
-                parts: *parts,
+                parts,
                 heredoc_body_l,
                 heredoc_end_l,
                 expression_l,
@@ -427,7 +427,7 @@ impl Builder {
             let expression_l = begin_l.join(&end_l);
 
             Box::new(Node::Xstr(Xstr {
-                parts: *parts,
+                parts,
                 begin_l,
                 end_l,
                 expression_l,
@@ -572,7 +572,7 @@ impl Builder {
     pub(crate) fn regexp_compose(
         &self,
         begin_t: Box<Token>,
-        parts: Box<Vec<Node>>,
+        parts: Vec<Node>,
         end_t: Box<Token>,
         options: Option<Box<Node>>,
     ) -> Box<Node> {
@@ -591,7 +591,7 @@ impl Builder {
         }
 
         Box::new(Node::Regexp(Regexp {
-            parts: *parts,
+            parts,
             options,
             begin_l,
             end_l,
@@ -604,7 +604,7 @@ impl Builder {
     pub(crate) fn array(
         &self,
         begin_t: Option<Box<Token>>,
-        elements: Box<Vec<Node>>,
+        elements: Vec<Node>,
         end_t: Option<Box<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
@@ -614,7 +614,7 @@ impl Builder {
         } = self.collection_map(&begin_t, &elements, &end_t);
 
         Box::new(Node::Array(Array {
-            elements: *elements,
+            elements,
             begin_l,
             end_l,
             expression_l,
@@ -632,7 +632,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn word(&self, parts: Box<Vec<Node>>) -> Box<Node> {
+    pub(crate) fn word(&self, parts: Vec<Node>) -> Box<Node> {
         if parts.len() == 1 && matches!(&parts[0], Node::Str(_) | Node::Dstr(_)) {
             let part = parts
                 .into_iter()
@@ -648,7 +648,7 @@ impl Builder {
         } = self.collection_map(&None, &parts, &None);
 
         Box::new(Node::Dstr(Dstr {
-            parts: *parts,
+            parts,
             begin_l,
             end_l,
             expression_l,
@@ -658,14 +658,14 @@ impl Builder {
     pub(crate) fn words_compose(
         &self,
         begin_t: Box<Token>,
-        elements: Box<Vec<Node>>,
+        elements: Vec<Node>,
         end_t: Box<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
         let end_l = self.loc(&end_t);
         let expression_l = begin_l.join(&end_l);
         Box::new(Node::Array(Array {
-            elements: *elements,
+            elements,
             begin_l: Some(begin_l),
             end_l: Some(end_l),
             expression_l,
@@ -675,7 +675,7 @@ impl Builder {
     pub(crate) fn symbols_compose(
         &self,
         begin_t: Box<Token>,
-        parts: Box<Vec<Node>>,
+        parts: Vec<Node>,
         end_t: Box<Token>,
     ) -> Box<Node> {
         let parts = parts
@@ -760,7 +760,7 @@ impl Builder {
     pub(crate) fn pair_quoted(
         &self,
         begin_t: Box<Token>,
-        parts: Box<Vec<Node>>,
+        parts: Vec<Node>,
         end_t: Box<Token>,
         value: Box<Node>,
     ) -> Box<Node> {
@@ -805,7 +805,7 @@ impl Builder {
     pub(crate) fn associate(
         &self,
         begin_t: Option<Box<Token>>,
-        pairs: Box<Vec<Node>>,
+        pairs: Vec<Node>,
         end_t: Option<Box<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
@@ -815,7 +815,7 @@ impl Builder {
         } = self.collection_map(&begin_t, &pairs, &end_t);
 
         Box::new(Node::Hash(Hash {
-            pairs: *pairs,
+            pairs,
             begin_l,
             end_l,
             expression_l,
@@ -1336,7 +1336,7 @@ impl Builder {
     pub(crate) fn multi_lhs(
         &self,
         begin_t: Option<Box<Token>>,
-        items: Box<Vec<Node>>,
+        items: Vec<Node>,
         end_t: Option<Box<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
@@ -1346,7 +1346,7 @@ impl Builder {
         } = self.collection_map(&begin_t, &items, &end_t);
 
         Box::new(Node::Mlhs(Mlhs {
-            items: *items,
+            items,
             begin_l,
             end_l,
             expression_l,
@@ -1574,11 +1574,11 @@ impl Builder {
         })))
     }
 
-    pub(crate) fn undef_method(&self, undef_t: Box<Token>, names: Box<Vec<Node>>) -> Box<Node> {
+    pub(crate) fn undef_method(&self, undef_t: Box<Token>, names: Vec<Node>) -> Box<Node> {
         let keyword_l = self.loc(&undef_t);
         let expression_l = keyword_l.maybe_join(&collection_expr(&names));
         Box::new(Node::Undef(Undef {
-            names: *names,
+            names,
             keyword_l,
             expression_l,
         }))
@@ -1602,7 +1602,7 @@ impl Builder {
     pub(crate) fn args(
         &self,
         begin_t: Option<Box<Token>>,
-        args: Box<Vec<Node>>,
+        args: Vec<Node>,
         end_t: Option<Box<Token>>,
     ) -> Option<Box<Node>> {
         self.check_duplicate_args(&args, &mut HashMap::new());
@@ -1618,7 +1618,7 @@ impl Builder {
         } = self.collection_map(&begin_t, &args, &end_t);
 
         Some(Box::new(Node::Args(Args {
-            args: *args,
+            args,
             expression_l,
             begin_l,
             end_l,
@@ -1854,7 +1854,7 @@ impl Builder {
         dot_t: Option<Box<Token>>,
         selector_t: Option<Box<Token>>,
         lparen_t: Option<Box<Token>>,
-        mut args: Box<Vec<Node>>,
+        mut args: Vec<Node>,
         rparen_t: Option<Box<Token>>,
     ) -> Box<Node> {
         let begin_l = maybe_boxed_node_expr(&receiver)
@@ -1882,7 +1882,7 @@ impl Builder {
             MethodCallType::Send => Box::new(Node::Send(Send {
                 recv: receiver,
                 method_name,
-                args: *args,
+                args,
                 dot_l,
                 selector_l,
                 begin_l,
@@ -1894,7 +1894,7 @@ impl Builder {
             MethodCallType::CSend => Box::new(Node::CSend(CSend {
                 recv: receiver.expect("csend node must have a receiver"),
                 method_name,
-                args: *args,
+                args,
                 dot_l: dot_l.expect("csend node must have &."),
                 selector_l,
                 begin_l,
@@ -2129,7 +2129,7 @@ impl Builder {
         &self,
         recv: Box<Node>,
         lbrack_t: Box<Token>,
-        mut indexes: Box<Vec<Node>>,
+        mut indexes: Vec<Node>,
         rbrack_t: Box<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&lbrack_t);
@@ -2140,7 +2140,7 @@ impl Builder {
 
         Box::new(Node::Index(Index {
             recv,
-            indexes: *indexes,
+            indexes,
             begin_l,
             end_l,
             expression_l,
@@ -2151,7 +2151,7 @@ impl Builder {
         &self,
         recv: Box<Node>,
         lbrack_t: Box<Token>,
-        indexes: Box<Vec<Node>>,
+        indexes: Vec<Node>,
         rbrack_t: Box<Token>,
     ) -> Box<Node> {
         let begin_l = self.loc(&lbrack_t);
@@ -2160,7 +2160,7 @@ impl Builder {
 
         Box::new(Node::IndexAsgn(IndexAsgn {
             recv,
-            indexes: *indexes,
+            indexes,
             value: None,
             begin_l,
             end_l,
@@ -2446,7 +2446,7 @@ impl Builder {
     pub(crate) fn when(
         &self,
         when_t: Box<Token>,
-        patterns: Box<Vec<Node>>,
+        patterns: Vec<Node>,
         then_t: Box<Token>,
         body: Option<Box<Node>>,
     ) -> Box<Node> {
@@ -2459,7 +2459,7 @@ impl Builder {
         let expression_l = when_l.join(&expr_end_l);
 
         Box::new(Node::When(When {
-            patterns: *patterns,
+            patterns,
             body,
             keyword_l: when_l,
             begin_l,
@@ -2471,7 +2471,7 @@ impl Builder {
         &self,
         case_t: Box<Token>,
         expr: Option<Box<Node>>,
-        when_bodies: Box<Vec<Node>>,
+        when_bodies: Vec<Node>,
         else_t: Option<Box<Token>>,
         else_body: Option<Box<Node>>,
         end_t: Box<Token>,
@@ -2483,7 +2483,7 @@ impl Builder {
 
         Box::new(Node::Case(Case {
             expr,
-            when_bodies: *when_bodies,
+            when_bodies,
             else_body,
             keyword_l,
             else_l,
@@ -2609,7 +2609,7 @@ impl Builder {
         type_: KeywordCmd,
         keyword_t: Box<Token>,
         lparen_t: Option<Box<Token>>,
-        mut args: Box<Vec<Node>>,
+        mut args: Vec<Node>,
         rparen_t: Option<Box<Token>>,
     ) -> Result<Box<Node>, ()> {
         let keyword_l = self.loc(&keyword_t);
@@ -2639,7 +2639,7 @@ impl Builder {
 
         let result = match type_ {
             KeywordCmd::Break => Node::Break(Break {
-                args: *args,
+                args,
                 keyword_l,
                 expression_l,
             }),
@@ -2651,26 +2651,26 @@ impl Builder {
                 expression_l,
             }),
             KeywordCmd::Next => Node::Next(Next {
-                args: *args,
+                args,
                 keyword_l,
                 expression_l,
             }),
             KeywordCmd::Redo => Node::Redo(Redo { expression_l }),
             KeywordCmd::Retry => Node::Retry(Retry { expression_l }),
             KeywordCmd::Return => Node::Return(Return {
-                args: *args,
+                args,
                 keyword_l,
                 expression_l,
             }),
             KeywordCmd::Super => Node::Super(Super {
-                args: *args,
+                args,
                 keyword_l,
                 begin_l,
                 end_l,
                 expression_l,
             }),
             KeywordCmd::Yield => Node::Yield(Yield {
-                args: *args,
+                args,
                 keyword_l,
                 begin_l,
                 end_l,
@@ -2761,7 +2761,7 @@ impl Builder {
     pub(crate) fn begin_body(
         &self,
         compound_stmt: Option<Box<Node>>,
-        rescue_bodies: Box<Vec<Node>>,
+        rescue_bodies: Vec<Node>,
         else_: Option<(Box<Token>, Option<Box<Node>>)>,
         ensure: Option<(Box<Token>, Option<Box<Node>>)>,
     ) -> Option<Box<Node>> {
@@ -2780,7 +2780,7 @@ impl Builder {
 
                 result = Some(Box::new(Node::Rescue(Rescue {
                     body: compound_stmt,
-                    rescue_bodies: *rescue_bodies,
+                    rescue_bodies,
                     else_,
                     else_l: Some(else_l),
                     expression_l,
@@ -2798,7 +2798,7 @@ impl Builder {
 
                 result = Some(Box::new(Node::Rescue(Rescue {
                     body: compound_stmt,
-                    rescue_bodies: *rescue_bodies,
+                    rescue_bodies,
                     else_: None,
                     else_l,
                     expression_l,
@@ -2876,7 +2876,7 @@ impl Builder {
     // Expression grouping
     //
 
-    pub(crate) fn compstmt(&self, statements: Box<Vec<Node>>) -> Option<Box<Node>> {
+    pub(crate) fn compstmt(&self, statements: Vec<Node>) -> Option<Box<Node>> {
         match &statements[..] {
             [] => None,
             [_] => Some(Box::new(statements.into_iter().next().unwrap())),
@@ -2888,7 +2888,7 @@ impl Builder {
                 } = self.collection_map(&None, &statements, &None);
 
                 Some(Box::new(Node::Begin(Begin {
-                    statements: *statements,
+                    statements,
                     begin_l,
                     end_l,
                     expression_l,
@@ -3006,7 +3006,7 @@ impl Builder {
         &self,
         case_t: Box<Token>,
         expr: Box<Node>,
-        in_bodies: Box<Vec<Node>>,
+        in_bodies: Vec<Node>,
         else_t: Option<Box<Token>>,
         else_body: Option<Box<Node>>,
         end_t: Box<Token>,
@@ -3025,7 +3025,7 @@ impl Builder {
 
         Box::new(Node::CaseMatch(CaseMatch {
             expr,
-            in_bodies: *in_bodies,
+            in_bodies,
             else_body,
             keyword_l,
             else_l,
@@ -3150,7 +3150,7 @@ impl Builder {
     pub(crate) fn match_hash_var_from_str(
         &self,
         begin_t: Box<Token>,
-        mut strings: Box<Vec<Node>>,
+        mut strings: Vec<Node>,
         end_t: Box<Token>,
     ) -> Result<Box<Node>, ()> {
         if strings.len() != 1 {
@@ -3204,7 +3204,7 @@ impl Builder {
                 }))
             }
             Node::Begin(Begin { statements, .. }) => {
-                self.match_hash_var_from_str(begin_t, Box::new(statements), end_t)?
+                self.match_hash_var_from_str(begin_t, statements, end_t)?
             }
             _ => {
                 self.error(
@@ -3242,7 +3242,7 @@ impl Builder {
     pub(crate) fn hash_pattern(
         &self,
         lbrace_t: Option<Box<Token>>,
-        kwargs: Box<Vec<Node>>,
+        kwargs: Vec<Node>,
         rbrace_t: Option<Box<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
@@ -3252,7 +3252,7 @@ impl Builder {
         } = self.collection_map(&lbrace_t, &kwargs, &rbrace_t);
 
         Box::new(Node::HashPattern(HashPattern {
-            elements: *kwargs,
+            elements: kwargs,
             begin_l,
             end_l,
             expression_l,
@@ -3262,7 +3262,7 @@ impl Builder {
     pub(crate) fn array_pattern(
         &self,
         lbrack_t: Option<Box<Token>>,
-        elements: Box<Vec<Node>>,
+        elements: Vec<Node>,
         trailing_comma: Option<Box<Token>>,
         rbrack_t: Option<Box<Token>>,
     ) -> Box<Node> {
@@ -3285,14 +3285,14 @@ impl Builder {
 
         if trailing_comma.is_some() {
             Box::new(Node::ArrayPatternWithTail(ArrayPatternWithTail {
-                elements: *elements,
+                elements,
                 begin_l,
                 end_l,
                 expression_l,
             }))
         } else {
             Box::new(Node::ArrayPattern(ArrayPattern {
-                elements: *elements,
+                elements,
                 begin_l,
                 end_l,
                 expression_l,
@@ -3303,7 +3303,7 @@ impl Builder {
     pub(crate) fn find_pattern(
         &self,
         lbrack_t: Option<Box<Token>>,
-        elements: Box<Vec<Node>>,
+        elements: Vec<Node>,
         rbrack_t: Option<Box<Token>>,
     ) -> Box<Node> {
         let CollectionMap {
@@ -3313,7 +3313,7 @@ impl Builder {
         } = self.collection_map(&lbrack_t, &elements, &rbrack_t);
 
         Box::new(Node::FindPattern(FindPattern {
-            elements: *elements,
+            elements,
             begin_l,
             end_l,
             expression_l,

@@ -37,6 +37,19 @@ impl Token {
 pub(crate) mod NodeList {
     use super::{Node, ParseValue};
 
+    pub(crate) fn from(value: ParseValue) -> Vec<Node> {
+        match value {
+            ParseValue::NodeList(value) => *value,
+            other => unreachable!("expected NodeList, got {:?}", other),
+        }
+    }
+}
+
+#[allow(non_snake_case)]
+#[allow(clippy::box_vec)]
+pub(crate) mod BoxedNodeList {
+    use super::{Node, ParseValue};
+
     pub(crate) fn from(value: ParseValue) -> Box<Vec<Node>> {
         match value {
             ParseValue::NodeList(value) => value,
@@ -213,7 +226,7 @@ impl CmdBraceBlock {
 #[derive(Debug, Clone)]
 pub(crate) struct ParenArgs {
     pub(crate) begin_t: Box<Token>,
-    pub(crate) args: Box<Vec<Node>>,
+    pub(crate) args: Vec<Node>,
     pub(crate) end_t: Box<Token>,
 }
 impl ParenArgs {
@@ -228,7 +241,7 @@ impl ParenArgs {
 #[derive(Debug, Clone)]
 pub(crate) struct OptParenArgs {
     pub(crate) begin_t: Option<Box<Token>>,
-    pub(crate) args: Box<Vec<Node>>,
+    pub(crate) args: Vec<Node>,
     pub(crate) end_t: Option<Box<Token>>,
 }
 impl OptParenArgs {
@@ -334,7 +347,7 @@ impl DefnHead {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Cases {
-    pub(crate) when_bodies: Box<Vec<Node>>,
+    pub(crate) when_bodies: Vec<Node>,
     pub(crate) opt_else: Option<Else>,
 }
 impl Cases {
@@ -348,7 +361,7 @@ impl Cases {
 
 #[derive(Debug, Clone)]
 pub(crate) struct CaseBody {
-    pub(crate) when_bodies: Box<Vec<Node>>,
+    pub(crate) when_bodies: Vec<Node>,
     pub(crate) opt_else: Option<Else>,
 }
 impl CaseBody {
@@ -362,7 +375,7 @@ impl CaseBody {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PCases {
-    pub(crate) in_bodies: Box<Vec<Node>>,
+    pub(crate) in_bodies: Vec<Node>,
     pub(crate) opt_else: Option<Else>,
 }
 impl PCases {
@@ -376,7 +389,7 @@ impl PCases {
 
 #[derive(Debug, Clone)]
 pub(crate) struct PCaseBody {
-    pub(crate) in_bodies: Box<Vec<Node>>,
+    pub(crate) in_bodies: Vec<Node>,
     pub(crate) opt_else: Option<Else>,
 }
 impl PCaseBody {
@@ -442,7 +455,7 @@ impl PTopExpr {
 
 #[derive(Debug, Clone)]
 pub(crate) struct MatchPatternWithTrailingComma {
-    pub(crate) elements: Box<Vec<Node>>,
+    pub(crate) elements: Vec<Node>,
     pub(crate) trailing_comma: Option<Box<Token>>,
 }
 impl MatchPatternWithTrailingComma {
@@ -454,6 +467,7 @@ impl MatchPatternWithTrailingComma {
     }
 }
 
+#[allow(clippy::box_vec)]
 #[derive(Clone, Debug)]
 pub(crate) enum ParseValue {
     Stolen,

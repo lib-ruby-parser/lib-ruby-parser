@@ -376,7 +376,7 @@ use crate::Loc;
                     }
                 | top_stmts terms top_stmt
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList( nodes );
                     }
@@ -472,7 +472,7 @@ use crate::Loc;
                     }
                 | stmts terms stmt_or_begin
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -598,7 +598,7 @@ use crate::Loc;
                         $$ = Value::Node(
                             self.builder.begin_body(
                                 Some($<BoxedNode>1),
-                                Box::new( vec![*rescue_body] ),
+                                vec![*rescue_body],
                                 None,
                                 None,
                             ).expect("expected begin_body to return Some (compound_stmt was given)")
@@ -669,7 +669,7 @@ use crate::Loc;
 
                         let begin_body = self.builder.begin_body(
                             Some(mrhs_arg),
-                            Box::new( vec![ *rescue_body ] ),
+                            vec![ *rescue_body ],
                             None,
                             None,
                         ).expect("expected begin_body to return Some (compound_stmt was given)");
@@ -742,7 +742,7 @@ use crate::Loc;
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    Box::new( vec![] ),
+                                    vec![],
                                     None
                                 ),
                                 $<Token>4,
@@ -759,7 +759,7 @@ use crate::Loc;
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    Box::new( vec![] ),
+                                    vec![],
                                     None
                                 ),
                                 $<Token>4,
@@ -793,7 +793,7 @@ use crate::Loc;
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    Box::new( vec![] ),
+                                    vec![],
                                     None
                                 ),
                                 $<Token>4,
@@ -836,7 +836,7 @@ use crate::Loc;
                         $$ = Value::Node(
                             self.builder.begin_body(
                                 Some(command_call),
-                                Box::new( vec![ *rescue_body ] ),
+                                vec![ *rescue_body ],
                                 None,
                                 None,
                             ).expect("expected begin_body to return Some (compound_stmt was given)")
@@ -1288,7 +1288,7 @@ use crate::Loc;
                         let mlhs_inner = $<Node>2;
                         let mlhs_items = match mlhs_inner {
                             Node::Mlhs(nodes::Mlhs { items, .. }) => {
-                                Box::new(items)
+                                items
                             }
                             other => {
                                 unreachable!("unsupported mlhs item {:?}", other)
@@ -1311,19 +1311,19 @@ use crate::Loc;
                     }
                 | mlhs_head mlhs_item
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>2 );
                         $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR mlhs_node
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( *self.builder.splat($<Token>2, Some($<BoxedNode>3)) );
                         $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR mlhs_node tCOMMA mlhs_post
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mlhs_node = self.builder.splat($<Token>2, Some($<BoxedNode>3));
                         let mut mlhs_post = $<NodeList>5;
 
@@ -1335,13 +1335,13 @@ use crate::Loc;
                     }
                 | mlhs_head tSTAR
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( *self.builder.splat($<Token>2, None) );
                         $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR tCOMMA mlhs_post
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let splat = self.builder.splat($<Token>2, None);
                         let mut mlhs_post = $<NodeList>4;
 
@@ -1425,7 +1425,7 @@ use crate::Loc;
                     }
                 | mlhs_head mlhs_item tCOMMA
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>2 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -1437,7 +1437,7 @@ use crate::Loc;
                     }
                 | mlhs_post tCOMMA mlhs_item
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -1705,7 +1705,7 @@ use crate::Loc;
                     }
                   fitem
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>4 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -1830,7 +1830,7 @@ use crate::Loc;
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    Box::new( vec![] ),
+                                    vec![],
                                     None
                                 ),
                                 $<Token>4,
@@ -1847,7 +1847,7 @@ use crate::Loc;
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    Box::new( vec![] ),
+                                    vec![],
                                     None
                                 ),
                                 $<Token>4,
@@ -1864,7 +1864,7 @@ use crate::Loc;
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    Box::new( vec![] ),
+                                    vec![],
                                     None
                                 ),
                                 $<Token>4,
@@ -2189,7 +2189,7 @@ use crate::Loc;
                                 KeywordCmd::Defined,
                                 $<Token>1,
                                 None,
-                                Box::new( vec![ $<Node>3 ] ),
+                                vec![ $<Node>3 ],
                                 None
                             )?
                         );
@@ -2246,7 +2246,7 @@ use crate::Loc;
 
                         let method_body = self.builder.begin_body(
                             Some($<BoxedNode>4),
-                            Box::new( vec![ *rescue_body ] ),
+                            vec![ *rescue_body ],
                             None,
                             None,
                         );
@@ -2306,7 +2306,7 @@ use crate::Loc;
 
                         let method_body = self.builder.begin_body(
                             Some($<BoxedNode>4),
-                            Box::new( vec![ *rescue_body ] ),
+                            vec![ *rescue_body ],
                             None,
                             None,
                         );
@@ -2398,7 +2398,7 @@ use crate::Loc;
                     }
                 | args tCOMMA assocs trailer
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push(
                             *self.builder.associate(
                                 None,
@@ -2447,7 +2447,7 @@ use crate::Loc;
                         $$ = Value::Node(
                             self.builder.begin_body(
                                 Some(arg),
-                                Box::new( vec![ *rescue_body ] ),
+                                vec![ *rescue_body ],
                                 None,
                                 None,
                             ).expect("expected begin_body to return Some (compound_stmt was given)")
@@ -2494,7 +2494,7 @@ use crate::Loc;
                         $$ = Value::new_paren_args(
                             ParenArgs {
                                 begin_t: $<Token>1,
-                                args: Box::new( vec![ *self.builder.forwarded_args($<Token>2) ] ),
+                                args: vec![ *self.builder.forwarded_args($<Token>2) ],
                                 end_t: $<Token>3
                             }
                         );
@@ -2506,7 +2506,7 @@ use crate::Loc;
                         $$ = Value::new_opt_paren_args(
                             OptParenArgs {
                                 begin_t: None,
-                                args: Box::new( vec![] ),
+                                args: vec![],
                                 end_t: None
                             }
                         );
@@ -2538,7 +2538,7 @@ use crate::Loc;
                     }
                 | args tCOMMA assocs tCOMMA
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( *self.builder.associate(None, $<NodeList>3, None) );
                         $$ = Value::NodeList(nodes);
                     }
@@ -2566,7 +2566,7 @@ use crate::Loc;
                     }
                 | args opt_block_arg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
@@ -2585,7 +2585,7 @@ use crate::Loc;
                     }
                 | args tCOMMA assocs opt_block_arg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let hash = self.builder.associate(None, $<NodeList>3, None);
                         let mut opt_block_arg = $<NodeList>4;
 
@@ -2669,13 +2669,13 @@ use crate::Loc;
                     }
                 | args tCOMMA arg_value
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
                 | args tCOMMA tSTAR arg_value
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( *self.builder.splat($<Token>3, Some($<BoxedNode>4)) );
                         $$ = Value::NodeList(nodes);
                     }
@@ -2695,13 +2695,13 @@ use crate::Loc;
 
             mrhs: args tCOMMA arg_value
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
                 | args tCOMMA tSTAR arg_value
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push(
                             *self.builder.splat($<Token>3, Some($<BoxedNode>4))
                         );
@@ -2770,7 +2770,7 @@ use crate::Loc;
                                 None,
                                 Some($<Token>1),
                                 None,
-                                Box::new( vec![] ),
+                                vec![],
                                 None
                             )
                         );
@@ -2862,7 +2862,7 @@ use crate::Loc;
                                 KeywordCmd::Return,
                                 $<Token>1,
                                 None,
-                                Box::new( vec![] ),
+                                vec![],
                                 None
                             )?
                         );
@@ -2886,7 +2886,7 @@ use crate::Loc;
                                 KeywordCmd::Yield,
                                 $<Token>1,
                                 Some($<Token>2),
-                                Box::new( vec![] ),
+                                vec![],
                                 Some($<Token>3)
                             )?
                         );
@@ -2898,7 +2898,7 @@ use crate::Loc;
                                 KeywordCmd::Yield,
                                 $<Token>1,
                                 None,
-                                Box::new( vec![] ),
+                                vec![],
                                 None
                             )?
                         );
@@ -2910,7 +2910,7 @@ use crate::Loc;
                                 KeywordCmd::Defined,
                                 $<Token>1,
                                 Some($<Token>3),
-                                Box::new( vec![ $<Node>4 ] ),
+                                vec![ $<Node>4 ],
                                 Some($<Token>5)
                             )?
                         );
@@ -2944,7 +2944,7 @@ use crate::Loc;
                             None,
                             Some($<Token>1),
                             None,
-                            Box::new( vec![] ),
+                            vec![],
                             None
                         );
                         let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>2;
@@ -3273,7 +3273,7 @@ use crate::Loc;
                                 KeywordCmd::Break,
                                 $<Token>1,
                                 None,
-                                Box::new( vec![] ),
+                                vec![],
                                 None
                             )?
                         );
@@ -3285,7 +3285,7 @@ use crate::Loc;
                                 KeywordCmd::Next,
                                 $<Token>1,
                                 None,
-                                Box::new( vec![] ),
+                                vec![],
                                 None
                             )?
                         );
@@ -3297,7 +3297,7 @@ use crate::Loc;
                                 KeywordCmd::Redo,
                                 $<Token>1,
                                 None,
-                                Box::new( vec![] ),
+                                vec![],
                                 None
                             )?
                         );
@@ -3309,7 +3309,7 @@ use crate::Loc;
                                 KeywordCmd::Retry,
                                 $<Token>1,
                                 None,
-                                Box::new( vec![] ),
+                                vec![],
                                 None
                             )?
                         );
@@ -3545,7 +3545,7 @@ use crate::Loc;
                     }
                 | f_marg_list tCOMMA f_marg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -3557,13 +3557,13 @@ use crate::Loc;
                     }
                 | f_marg_list tCOMMA f_rest_marg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
                 | f_marg_list tCOMMA f_rest_marg tCOMMA f_marg_list
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let f_rest_marg = $<Node>3;
                         let mut f_marg_list = $<NodeList>5;
 
@@ -3617,7 +3617,7 @@ use crate::Loc;
 
  block_args_tail: f_block_kwarg tCOMMA f_kwrest opt_f_block_arg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_kwrest = $<NodeList>3;
                         let mut opt_f_block_arg = $<NodeList>4;
 
@@ -3629,14 +3629,14 @@ use crate::Loc;
                     }
                 | f_block_kwarg opt_f_block_arg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_any_kwrest opt_f_block_arg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
@@ -3666,7 +3666,7 @@ opt_block_args_tail:
 
      block_param: f_arg tCOMMA f_block_optarg tCOMMA f_rest_arg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_block_optarg = $<NodeList>3;
                         let mut f_rest_arg = $<NodeList>5;
                         let mut opt_block_args_tail = $<NodeList>6;
@@ -3680,7 +3680,7 @@ opt_block_args_tail:
                     }
                 | f_arg tCOMMA f_block_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_block_optarg = $<NodeList>3;
                         let mut f_rest_arg = $<NodeList>5;
                         let mut f_arg = $<NodeList>7;
@@ -3696,7 +3696,7 @@ opt_block_args_tail:
                     }
                 | f_arg tCOMMA f_block_optarg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_block_optarg = $<NodeList>3;
                         let mut opt_block_args_tail = $<NodeList>4;
 
@@ -3708,7 +3708,7 @@ opt_block_args_tail:
                     }
                 | f_arg tCOMMA f_block_optarg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_block_optarg = $<NodeList>3;
                         let mut f_arg = $<NodeList>5;
                         let mut opt_block_args_tail = $<NodeList>6;
@@ -3722,7 +3722,7 @@ opt_block_args_tail:
                     }
                 | f_arg tCOMMA f_rest_arg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_rest_arg = $<NodeList>3;
                         let mut opt_block_args_tail = $<NodeList>4;
 
@@ -3738,7 +3738,7 @@ opt_block_args_tail:
                     }
                 | f_arg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_rest_arg = $<NodeList>3;
                         let mut f_arg = $<NodeList>5;
                         let mut opt_block_args_tail = $<NodeList>6;
@@ -3752,7 +3752,7 @@ opt_block_args_tail:
                     }
                 | f_arg opt_block_args_tail
                     {
-                        let f_arg = $<NodeList>1;
+                        let f_arg = $<BoxedNodeList>1;
                         let mut opt_block_args_tail = $<NodeList>2;
                         let mut nodes;
 
@@ -3770,7 +3770,7 @@ opt_block_args_tail:
                     }
                 | f_block_optarg tCOMMA f_rest_arg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_rest_arg = $<NodeList>3;
                         let mut opt_block_args_tail = $<NodeList>4;
 
@@ -3782,7 +3782,7 @@ opt_block_args_tail:
                     }
                 | f_block_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_rest_arg = $<NodeList>3;
                         let mut f_arg = $<NodeList>5;
                         let mut opt_block_args_tail = $<NodeList>6;
@@ -3796,14 +3796,14 @@ opt_block_args_tail:
                     }
                 | f_block_optarg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_block_optarg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_arg = $<NodeList>3;
                         let mut opt_block_args_tail = $<NodeList>4;
 
@@ -3815,14 +3815,14 @@ opt_block_args_tail:
                     }
                 | f_rest_arg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_arg = $<NodeList>3;
                         let mut opt_block_args_tail = $<NodeList>4;
 
@@ -3841,7 +3841,7 @@ opt_block_args_tail:
  opt_block_param: none
                     {
                         $$ = Value::MaybeNode(
-                            self.builder.args(None, Box::new( vec![] ), None)
+                            self.builder.args(None, vec![], None)
                         );
                     }
                 | block_param_def
@@ -3899,7 +3899,7 @@ opt_block_args_tail:
                     }
                 | bv_decls tCOMMA bvar
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -4169,7 +4169,7 @@ opt_block_args_tail:
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 None,
-                                Box::new( vec![] ),
+                                vec![],
                                 None
                             )
                         );
@@ -4225,7 +4225,7 @@ opt_block_args_tail:
                                 KeywordCmd::Zsuper,
                                 $<Token>1,
                                 None,
-                                Box::new( vec![] ),
+                                vec![],
                                 None
                             )?
                         );
@@ -4351,13 +4351,13 @@ opt_block_args_tail:
                     }
                 | case_args tCOMMA arg_value
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
                 | case_args tCOMMA tSTAR arg_value
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( *self.builder.splat($<Token>3, Some($<BoxedNode>4)) );
                         $$ = Value::NodeList(nodes);
                     }
@@ -4370,7 +4370,7 @@ opt_block_args_tail:
                         let when = *self.builder.when($<Token>1, $<NodeList>2, $<Token>3, $<MaybeBoxedNode>4);
                         let Cases { mut when_bodies, opt_else } = $<Cases>5;
 
-                        let mut nodes = Box::new(Vec::with_capacity(1 + when_bodies.len()));
+                        let mut nodes = Vec::with_capacity(1 + when_bodies.len());
                         nodes.push(when);
                         nodes.append(&mut when_bodies);
 
@@ -4380,7 +4380,7 @@ opt_block_args_tail:
 
            cases: opt_else
                     {
-                        $$ = Value::new_cases(Cases { when_bodies: Box::new(vec![]), opt_else: $<OptElse>1 });
+                        $$ = Value::new_cases(Cases { when_bodies: vec![], opt_else: $<OptElse>1 });
                     }
                 | case_body
                     {
@@ -4412,7 +4412,7 @@ opt_block_args_tail:
                         let PCases { mut in_bodies, opt_else } = $<PCases>7;
                         let PTopExpr { pattern, guard } = $<PTopExpr>3;
 
-                        let mut nodes = Box::new(Vec::with_capacity(1 + in_bodies.len()));
+                        let mut nodes = Vec::with_capacity(1 + in_bodies.len());
                         nodes.push(
                             *self.builder.in_pattern(
                                 $<Token>1,
@@ -4430,7 +4430,7 @@ opt_block_args_tail:
 
          p_cases: opt_else
                     {
-                        $$ = Value::new_p_cases(PCases { in_bodies: Box::new(vec![]), opt_else: $<OptElse>1 });
+                        $$ = Value::new_p_cases(PCases { in_bodies: vec![], opt_else: $<OptElse>1 });
                     }
                 | p_case_body
                     {
@@ -4464,7 +4464,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.array_pattern(
                                 None,
-                                Box::new(vec![ $<Node>1 ]),
+                                vec![ $<Node>1 ],
                                 Some($<Token>2),
                                 None
                             )
@@ -4474,7 +4474,7 @@ opt_block_args_tail:
                     {
                         let MatchPatternWithTrailingComma { mut elements, trailing_comma } = $<MatchPatternWithTrailingComma>3;
 
-                        let mut nodes = Box::new(Vec::with_capacity(1 + elements.len()));
+                        let mut nodes = Vec::with_capacity(1 + elements.len());
                         nodes.push($<Node>1);
                         nodes.append(&mut elements);
 
@@ -4604,7 +4604,7 @@ opt_block_args_tail:
                         let rparen = $<Token>3;
                         let pattern = self.builder.array_pattern(
                             Some(lparen.clone()),
-                            Box::new( vec![] ),
+                            vec![],
                             None,
                             Some(rparen.clone())
                         );
@@ -4663,7 +4663,7 @@ opt_block_args_tail:
                         let rparen = $<Token>3;
                         let pattern = self.builder.array_pattern(
                             Some(lparen.clone()),
-                            Box::new( vec![] ),
+                            vec![],
                             None,
                             Some(rparen.clone())
                         );
@@ -4703,7 +4703,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.array_pattern(
                                 Some($<Token>1),
-                                Box::new( vec![] ),
+                                vec![],
                                 None,
                                 Some($<Token>2)
                             )
@@ -4732,7 +4732,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.hash_pattern(
                                 Some($<Token>1),
-                                Box::new( vec![] ),
+                                vec![],
                                 Some($<Token>2),
                             )
                         );
@@ -4759,7 +4759,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
-                                elements: Box::new(vec![ $<Node>1 ]),
+                                elements: vec![ $<Node>1 ],
                                 trailing_comma: None
                             }
                         );
@@ -4856,7 +4856,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
-                                elements: Box::new(vec![$<Node>1]),
+                                elements: vec![$<Node>1],
                                 trailing_comma: Some($<Token>2),
                             }
                         );
@@ -4925,7 +4925,7 @@ opt_block_args_tail:
                     }
                 | p_args_post tCOMMA p_arg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -4939,7 +4939,7 @@ opt_block_args_tail:
 
         p_kwargs: p_kwarg tCOMMA p_any_kwrest
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>3);
 
                         $$ = Value::NodeList(nodes);
@@ -4964,7 +4964,7 @@ opt_block_args_tail:
                     }
                 | p_kwarg tCOMMA p_kw
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5362,7 +5362,7 @@ opt_block_args_tail:
                     }
                 | string string1
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>2 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5370,7 +5370,11 @@ opt_block_args_tail:
 
          string1: tSTRING_BEG string_contents tSTRING_END
                     {
-                        let mut string = self.builder.string_compose(Some($<Token>1), $<NodeList>2, Some($<Token>3));
+                        let mut string = self.builder.string_compose(
+                            Some($<Token>1),
+                            $<NodeList>2,
+                            Some($<Token>3)
+                        );
                         let indent = self.yylexer.buffer.heredoc_indent;
                         self.yylexer.buffer.heredoc_indent = 0;
                         string = Box::new(self.builder.heredoc_dedent(*string, indent));
@@ -5380,7 +5384,11 @@ opt_block_args_tail:
 
          xstring: tXSTRING_BEG xstring_contents tSTRING_END
                     {
-                        let mut string = self.builder.xstring_compose($<Token>1, $<NodeList>2, $<Token>3);
+                        let mut string = self.builder.xstring_compose(
+                            $<Token>1,
+                            $<NodeList>2,
+                            $<Token>3
+                        );
                         let indent = self.yylexer.buffer.heredoc_indent;
                         self.yylexer.buffer.heredoc_indent = 0;
                         string = Box::new(self.builder.heredoc_dedent(*string, indent));
@@ -5422,7 +5430,7 @@ opt_block_args_tail:
                     }
                 | word_list word tSPACE
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push(
                             *self.builder.word( $<NodeList>2 )
                         );
@@ -5436,7 +5444,7 @@ opt_block_args_tail:
                     }
                 | word string_content
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>2 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5460,7 +5468,7 @@ opt_block_args_tail:
                     }
                 | symbol_list word tSPACE
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push(
                             *self.builder.word( $<NodeList>2 )
                         );
@@ -5498,7 +5506,7 @@ opt_block_args_tail:
                     }
                 | qword_list tSTRING_CONTENT tSPACE
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push(
                             *self.builder.string_internal( $<Token>2 )
                         );
@@ -5512,7 +5520,7 @@ opt_block_args_tail:
                     }
                 | qsym_list tSTRING_CONTENT tSPACE
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push(
                             *self.builder.symbol_internal( $<Token>2 )
                         );
@@ -5526,7 +5534,7 @@ opt_block_args_tail:
                     }
                 | string_contents string_content
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push($<Node>2);
                         $$ = Value::NodeList(nodes);
                     }
@@ -5538,7 +5546,7 @@ xstring_contents: /* none */
                     }
                 | xstring_contents string_content
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push($<Node>2);
                         $$ = Value::NodeList(nodes);
                     }
@@ -5550,7 +5558,7 @@ xstring_contents: /* none */
                     }
                 | regexp_contents string_content
                     {
-                        let mut  nodes = $<NodeList>1;
+                        let mut  nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>2 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5962,7 +5970,7 @@ f_opt_paren_args: f_paren_args
 
        args_tail: f_kwarg tCOMMA f_kwrest opt_f_block_arg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_kwrest = $<NodeList>3;
                         let mut opt_f_block_arg = $<NodeList>4;
 
@@ -5974,14 +5982,14 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_kwarg opt_f_block_arg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_any_kwrest opt_f_block_arg
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
@@ -6008,7 +6016,7 @@ f_opt_paren_args: f_paren_args
 
           f_args: f_arg tCOMMA f_optarg tCOMMA f_rest_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_optarg = $<NodeList>3;
                         let mut f_rest_arg = $<NodeList>5;
                         let mut opt_args_tail = $<NodeList>6;
@@ -6022,7 +6030,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_arg tCOMMA f_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_optarg = $<NodeList>3;
                         let mut f_rest_arg = $<NodeList>5;
                         let mut f_arg = $<NodeList>7;
@@ -6038,7 +6046,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_arg tCOMMA f_optarg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_optarg = $<NodeList>3;
                         let mut opt_args_tail = $<NodeList>4;
 
@@ -6050,7 +6058,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_arg tCOMMA f_optarg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_optarg = $<NodeList>3;
                         let mut f_arg = $<NodeList>5;
                         let mut opt_args_tail = $<NodeList>6;
@@ -6064,7 +6072,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_arg tCOMMA f_rest_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_rest_arg = $<NodeList>3;
                         let mut opt_args_tail = $<NodeList>4;
 
@@ -6076,7 +6084,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_arg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_rest_arg = $<NodeList>3;
                         let mut f_arg = $<NodeList>5;
                         let mut opt_args_tail = $<NodeList>6;
@@ -6090,14 +6098,14 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_optarg tCOMMA f_rest_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_rest_arg = $<NodeList>3;
                         let mut opt_args_tail = $<NodeList>4;
 
@@ -6109,7 +6117,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_rest_arg = $<NodeList>3;
                         let mut f_arg = $<NodeList>5;
                         let mut opt_args_tail = $<NodeList>6;
@@ -6123,14 +6131,14 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_optarg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_optarg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_arg = $<NodeList>3;
                         let mut opt_args_tail = $<NodeList>4;
 
@@ -6142,14 +6150,14 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_rest_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.append(&mut $<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         let mut f_arg = $<NodeList>3;
                         let mut opt_args_tail = $<NodeList>4;
 
@@ -6161,7 +6169,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | args_tail
                     {
-                        $$ = Value::NodeList($<NodeList>1);
+                        $$ = Value::NodeList($<BoxedNodeList>1);
                     }
                 | /* none */
                     {
@@ -6241,7 +6249,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_arg tCOMMA f_arg_item
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -6300,7 +6308,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_block_kwarg tCOMMA f_block_kw
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -6313,7 +6321,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_kwarg tCOMMA f_kw
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -6400,7 +6408,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_block_optarg tCOMMA f_block_opt
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -6412,7 +6420,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_optarg tCOMMA f_opt
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -6537,7 +6545,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | assocs tCOMMA assoc
                     {
-                        let mut nodes = $<NodeList>1;
+                        let mut nodes = $<BoxedNodeList>1;
                         nodes.push($<Node>3);
                         $$ = Value::NodeList(nodes);
                     }
