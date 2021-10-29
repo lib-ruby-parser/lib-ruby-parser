@@ -18,7 +18,6 @@ pub enum LocName {
 }
 
 impl LocName {
-    #[allow(dead_code)]
     pub fn new(name: &str) -> Self {
         match &name[..] {
             "begin" => LocName::Begin,

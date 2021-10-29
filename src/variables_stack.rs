@@ -26,11 +26,6 @@ impl VariablesStack {
         self.stack.borrow_mut().pop();
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn reset(&self) {
-        self.stack.borrow_mut().clear()
-    }
-
     pub(crate) fn declare(&self, name: &str) {
         self.stack
             .borrow_mut()

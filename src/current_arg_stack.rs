@@ -38,11 +38,6 @@ impl CurrentArgStack {
         self.stack.borrow_mut().pop();
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn reset(&self) {
-        self.stack.borrow_mut().clear()
-    }
-
     pub(crate) fn top(&self) -> Option<String> {
         match self.stack.borrow().last() {
             Some(Some(value)) => Some(value.clone()),

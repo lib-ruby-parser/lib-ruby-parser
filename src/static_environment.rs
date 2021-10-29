@@ -42,12 +42,6 @@ impl StaticEnvironment {
         self.stack.borrow().is_empty()
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn reset(&self) {
-        self.variables.borrow_mut().clear();
-        self.stack.borrow_mut().clear();
-    }
-
     /// Performs a push, doesn't inherit previously declared variables in the new scope
     ///
     /// Handles class/module scopes

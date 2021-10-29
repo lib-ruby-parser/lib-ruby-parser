@@ -102,11 +102,6 @@ impl Context {
     }
 
     #[allow(dead_code)]
-    pub(crate) fn reset(&self) {
-        self.stack.borrow_mut().clear()
-    }
-
-    #[allow(dead_code)]
     pub(crate) fn is_indirectly_in_def(&self) -> bool {
         let stack = self.stack.borrow();
         stack.contains(&ContextItem::Def) || stack.contains(&ContextItem::Defs)
