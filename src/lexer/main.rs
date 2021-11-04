@@ -1,3 +1,5 @@
+use alloc_from_pool::{Factory as PoolFactory, PoolValue};
+
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
@@ -78,6 +80,8 @@ pub struct Lexer {
     pub(crate) diagnostics: Diagnostics,
     pub(crate) comments: Vec<Comment>,
     pub(crate) magic_comments: Vec<MagicComment>,
+
+    pub(crate) tokens_factory: PoolFactory<Token>,
 }
 
 impl Lexer {
@@ -113,7 +117,7 @@ impl Lexer {
         let mut tokens = vec![];
 
         loop {
-            let token = *self.yylex();
+            let token = self.yylex().take_value();
             match token.token_type {
                 Self::END_OF_INPUT => break,
                 _ => tokens.push(token),
@@ -123,7 +127,7 @@ impl Lexer {
         tokens
     }
 
-    pub(crate) fn yylex(&mut self) -> Box<Token> {
+    pub(crate) fn yylex(&mut self) -> PoolValue<Token> {
         let lex_state_before = self.lex_state;
         self.lval = None;
 
@@ -148,7 +152,7 @@ impl Lexer {
             end = begin + 1;
         }
 
-        let token = Box::new(Token {
+        let token = self.tokens_factory.alloc(Token {
             token_type,
             token_value,
             loc: Loc { begin, end },

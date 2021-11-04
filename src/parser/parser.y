@@ -46,10 +46,12 @@
     diagnostics: Diagnostics,
     token_rewriter: Option<TokenRewriter>,
     record_tokens: bool,
+    tokens_pool: Pool<Token>,
 }
 
 %code use {
 
+use alloc_from_pool::{Pool, PoolValue};
 use crate::{ParserOptions, ParserResult};
 use crate::{Token};
 use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
@@ -6774,6 +6776,7 @@ impl Parser {
         let pattern_hash_keys = VariablesStack::new();
         let static_env = StaticEnvironment::new();
         let diagnostics = Diagnostics::new();
+        let tokens_pool = Pool::new();
 
         let input: Vec<u8> = input.into();
         let buffer_name: String = buffer_name;
@@ -6782,6 +6785,7 @@ impl Parser {
         lexer.context = context.clone();
         lexer.static_env = static_env.clone();
         lexer.diagnostics = diagnostics.clone();
+        lexer.tokens_factory = tokens_pool.factory();
 
         let builder = Builder::new(
             static_env.clone(),
@@ -6791,6 +6795,7 @@ impl Parser {
             pattern_variables.clone(),
             pattern_hash_keys.clone(),
             diagnostics.clone(),
+            tokens_pool.factory(),
         );
 
         let last_token_type = 0;
@@ -6814,6 +6819,7 @@ impl Parser {
             yylexer: lexer,
             token_rewriter,
             record_tokens,
+            tokens_pool,
         }
     }
 
@@ -6862,16 +6868,17 @@ impl Parser {
         self.diagnostics.emit(diagnostic);
     }
 
-    fn yylex(&mut self) -> Box<Token> {
+    fn yylex(&mut self) -> PoolValue<Token> {
         self.yylexer.yylex()
     }
 
-    fn next_token(&mut self) -> Box<Token> {
+    fn next_token(&mut self) -> PoolValue<Token> {
         let mut token = self.yylex();
 
         if let Some(token_rewriter) = self.token_rewriter.as_ref() {
+            let boxed_token = token.take_boxed_value();
             let TokenRewriterResult { rewritten_token, token_action, lex_state_action } =
-                token_rewriter.call(token, self.yylexer.buffer.input.as_shared_bytes());
+                token_rewriter.call(boxed_token, self.yylexer.buffer.input.as_shared_bytes());
 
             match lex_state_action {
                 LexStateAction::Keep => {
@@ -6887,7 +6894,7 @@ impl Parser {
                     return self.next_token();
                 }
                 RewriteAction::Keep => {
-                    token = rewritten_token;
+                    token = self.tokens_pool.alloc(*rewritten_token);
                 }
             }
         }
@@ -6895,7 +6902,8 @@ impl Parser {
         self.last_token_type = token.token_type;
 
         if self.record_tokens {
-            self.tokens.push(*token.clone());
+            let token = token.clone();
+            self.tokens.push(token.take_value());
         }
 
         token
@@ -6941,14 +6949,14 @@ impl Parser {
         Err(())
     }
 
-    fn report_syntax_error(&mut self, ctx: &Context) {
-        let id: usize = ctx.token().code().try_into().expect("failed to convert token code into i32, is it too big?");
+    fn report_syntax_error(&mut self, _stack: &YYStack, yytoken: &SymbolKind, loc: YYLoc) {
+        let id: usize = yytoken.code().try_into().expect("failed to convert token code into i32, is it too big?");
         let diagnostic = Diagnostic {
             level: ErrorLevel::Error,
             message: DiagnosticMessage::UnexpectedToken {
                 token_name: Lexer::TOKEN_NAMES[id].to_string()
             },
-            loc: *ctx.location(),
+            loc,
         };
         self.diagnostics.emit(diagnostic);
     }

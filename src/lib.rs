@@ -14,6 +14,8 @@ A Ruby parser written in Rust.
 Uses bison under the hood.
 */
 
+extern crate alloc_from_pool;
+
 mod loc;
 pub use loc::Loc;
 

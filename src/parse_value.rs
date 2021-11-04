@@ -1,3 +1,5 @@
+use alloc_from_pool::PoolValue;
+
 use crate::builder::{ArgsType, PKwLabel};
 use crate::str_term::StrTerm;
 use crate::Node;
@@ -25,7 +27,7 @@ pub(crate) mod BoxedNode {
 }
 
 impl Token {
-    pub(crate) fn from(value: ParseValue) -> Box<Token> {
+    pub(crate) fn from(value: ParseValue) -> PoolValue<Token> {
         match value {
             ParseValue::Token(value) => value,
             other => unreachable!("expected Token, got {:?}", other),
@@ -96,7 +98,7 @@ pub(crate) mod Num {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Superclass {
-    pub(crate) lt_t: Option<Box<Token>>,
+    pub(crate) lt_t: Option<PoolValue<Token>>,
     pub(crate) value: Option<Box<Node>>,
 }
 impl Superclass {
@@ -110,7 +112,7 @@ impl Superclass {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Ensure {
-    pub(crate) ensure_t: Box<Token>,
+    pub(crate) ensure_t: PoolValue<Token>,
     pub(crate) body: Option<Box<Node>>,
 }
 #[allow(non_snake_case)]
@@ -127,7 +129,7 @@ pub(crate) mod OptEnsure {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Else {
-    pub(crate) else_t: Box<Token>,
+    pub(crate) else_t: PoolValue<Token>,
     pub(crate) body: Option<Box<Node>>,
 }
 #[allow(non_snake_case)]
@@ -144,7 +146,7 @@ pub(crate) mod OptElse {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ExcVar {
-    pub(crate) assoc_t: Option<Box<Token>>,
+    pub(crate) assoc_t: Option<PoolValue<Token>>,
     pub(crate) exc_var: Option<Box<Node>>,
 }
 impl ExcVar {
@@ -158,7 +160,7 @@ impl ExcVar {
 
 #[derive(Debug, Clone)]
 pub(crate) struct IfTail {
-    pub(crate) keyword_t: Option<Box<Token>>,
+    pub(crate) keyword_t: Option<PoolValue<Token>>,
     pub(crate) body: Option<Box<Node>>,
 }
 impl IfTail {
@@ -173,7 +175,7 @@ impl IfTail {
 #[derive(Debug, Clone)]
 pub(crate) struct ExprValueDo {
     pub(crate) value: Box<Node>,
-    pub(crate) do_t: Box<Token>,
+    pub(crate) do_t: PoolValue<Token>,
 }
 impl ExprValueDo {
     pub(crate) fn from(value: ParseValue) -> ExprValueDo {
@@ -209,10 +211,10 @@ impl BraceBody {
 
 #[derive(Debug, Clone)]
 pub(crate) struct CmdBraceBlock {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: PoolValue<Token>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: PoolValue<Token>,
 }
 impl CmdBraceBlock {
     pub(crate) fn from(value: ParseValue) -> CmdBraceBlock {
@@ -225,9 +227,9 @@ impl CmdBraceBlock {
 
 #[derive(Debug, Clone)]
 pub(crate) struct ParenArgs {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: PoolValue<Token>,
     pub(crate) args: Vec<Node>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: PoolValue<Token>,
 }
 impl ParenArgs {
     pub(crate) fn from(value: ParseValue) -> ParenArgs {
@@ -240,9 +242,9 @@ impl ParenArgs {
 
 #[derive(Debug, Clone)]
 pub(crate) struct OptParenArgs {
-    pub(crate) begin_t: Option<Box<Token>>,
+    pub(crate) begin_t: Option<PoolValue<Token>>,
     pub(crate) args: Vec<Node>,
-    pub(crate) end_t: Option<Box<Token>>,
+    pub(crate) end_t: Option<PoolValue<Token>>,
 }
 impl OptParenArgs {
     pub(crate) fn from(value: ParseValue) -> OptParenArgs {
@@ -255,9 +257,9 @@ impl OptParenArgs {
 
 #[derive(Debug, Clone)]
 pub(crate) struct BeginBlock {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: PoolValue<Token>,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: PoolValue<Token>,
 }
 impl BeginBlock {
     pub(crate) fn from(value: ParseValue) -> BeginBlock {
@@ -270,9 +272,9 @@ impl BeginBlock {
 
 #[derive(Debug, Clone)]
 pub(crate) struct LambdaBody {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: PoolValue<Token>,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: PoolValue<Token>,
 }
 impl LambdaBody {
     pub(crate) fn from(value: ParseValue) -> LambdaBody {
@@ -285,10 +287,10 @@ impl LambdaBody {
 
 #[derive(Debug, Clone)]
 pub(crate) struct DoBlock {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: PoolValue<Token>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: PoolValue<Token>,
 }
 impl DoBlock {
     pub(crate) fn from(value: ParseValue) -> DoBlock {
@@ -301,10 +303,10 @@ impl DoBlock {
 
 #[derive(Debug, Clone)]
 pub(crate) struct BraceBlock {
-    pub(crate) begin_t: Box<Token>,
+    pub(crate) begin_t: PoolValue<Token>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: Box<Token>,
+    pub(crate) end_t: PoolValue<Token>,
 }
 impl BraceBlock {
     pub(crate) fn from(value: ParseValue) -> BraceBlock {
@@ -317,10 +319,10 @@ impl BraceBlock {
 
 #[derive(Debug, Clone)]
 pub(crate) struct DefsHead {
-    pub(crate) def_t: Box<Token>,
+    pub(crate) def_t: PoolValue<Token>,
     pub(crate) definee: Box<Node>,
-    pub(crate) dot_t: Box<Token>,
-    pub(crate) name_t: Box<Token>,
+    pub(crate) dot_t: PoolValue<Token>,
+    pub(crate) name_t: PoolValue<Token>,
 }
 impl DefsHead {
     pub(crate) fn from(value: ParseValue) -> DefsHead {
@@ -333,8 +335,8 @@ impl DefsHead {
 
 #[derive(Debug, Clone)]
 pub(crate) struct DefnHead {
-    pub(crate) def_t: Box<Token>,
-    pub(crate) name_t: Box<Token>,
+    pub(crate) def_t: PoolValue<Token>,
+    pub(crate) name_t: PoolValue<Token>,
 }
 impl DefnHead {
     pub(crate) fn from(value: ParseValue) -> DefnHead {
@@ -456,7 +458,7 @@ impl PTopExpr {
 #[derive(Debug, Clone)]
 pub(crate) struct MatchPatternWithTrailingComma {
     pub(crate) elements: Vec<Node>,
-    pub(crate) trailing_comma: Option<Box<Token>>,
+    pub(crate) trailing_comma: Option<PoolValue<Token>>,
 }
 impl MatchPatternWithTrailingComma {
     pub(crate) fn from(value: ParseValue) -> MatchPatternWithTrailingComma {
@@ -473,7 +475,7 @@ pub(crate) enum ParseValue {
     Stolen,
     Uninitialized,
     None,
-    Token(Box<Token>),
+    Token(PoolValue<Token>),
     TokenList(Box<Vec<Token>>),
     Node(Box<Node>),
     NodeList(Box<Vec<Node>>),
@@ -558,7 +560,7 @@ pub(crate) enum ParseValue {
 }
 
 impl ParseValue {
-    pub(crate) fn from_token(token: Box<Token>) -> Self {
+    pub(crate) fn from_token(token: PoolValue<Token>) -> Self {
         Self::Token(token)
     }
 
