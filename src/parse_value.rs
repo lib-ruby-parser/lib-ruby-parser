@@ -560,8 +560,15 @@ pub(crate) enum ParseValue {
 }
 
 impl ParseValue {
+    // rust-bison-skeleton contract
     pub(crate) fn from_token(token: PoolValue<Token>) -> Self {
         Self::Token(token)
+    }
+    pub(crate) fn new_uninitialized() -> Self {
+        Self::Uninitialized
+    }
+    pub(crate) fn is_uninitialized(&self) -> bool {
+        matches!(self, Self::Uninitialized)
     }
 
     pub(crate) fn new_superclass(value: Superclass) -> Self {
