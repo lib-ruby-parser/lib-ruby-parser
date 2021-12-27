@@ -46,3 +46,7 @@ fixture_file!("fixtures/parser/manual", test_regex_error_1);
 fixture_file!("fixtures/parser/manual", test_regexp_encoding_0);
 fixture_file!("fixtures/parser/manual", unterminated_heredoc_id);
 fixture_file!("fixtures/parser/manual", unterminated_unicode_escape);
+fixture_file!(
+    "fixtures/parser/manual",
+    unterminated_string_after_percent_at_eof
+);

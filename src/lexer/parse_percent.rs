@@ -24,7 +24,11 @@ impl Lexer {
         let term: MaybeByte;
         let mut paren: Option<u8>;
 
-        if c.is_eof() || !c.is_alnum() {
+        if c.is_eof() {
+            return self.percent_unterminated();
+        }
+
+        if !c.is_alnum() {
             term = *c;
             if !c.is_ascii() {
                 return self.percent_unknown(term);
@@ -37,15 +41,11 @@ impl Lexer {
             }
         }
 
-        let mut term = match term.as_option() {
-            None => {
-                self.compile_error(
-                    DiagnosticMessage::UnterminatedQuotedString {},
-                    self.current_loc(),
-                );
-                return Self::END_OF_INPUT;
+        let mut term = match term {
+            MaybeByte::EndOfInput => {
+                return self.percent_unterminated();
             }
-            Some(term) => term,
+            MaybeByte::Some(term) => term,
         };
 
         paren = Some(term);
@@ -108,6 +108,14 @@ impl Lexer {
                 Self::END_OF_INPUT
             }
         }
+    }
+
+    fn percent_unterminated(&mut self) -> i32 {
+        self.compile_error(
+            DiagnosticMessage::UnterminatedQuotedString {},
+            self.current_loc(),
+        );
+        Self::END_OF_INPUT
     }
 
     pub(crate) fn parse_percent(&mut self, space_seen: bool, last_state: LexState) -> i32 {

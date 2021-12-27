@@ -1,0 +1,4 @@
+--INPUT
+%
+--DIAGNOSTIC
+~ (error) unterminated quoted string meets end of file
