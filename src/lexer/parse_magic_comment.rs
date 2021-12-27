@@ -85,6 +85,7 @@ impl Lexer {
             if self.buffer.substr_at(str_ - 6, str_) == Some(b"coding") {
                 break;
             }
+            sep = false;
         }
         loop {
             loop {

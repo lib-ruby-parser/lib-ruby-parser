@@ -1,0 +1,6 @@
+--INPUT
+# xxxx : coding sjis
+x = __ENCODING__
+--AST
+s(:lvasgn, "x",
+  s(:__ENCODING__))

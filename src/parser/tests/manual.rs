@@ -50,3 +50,7 @@ fixture_file!(
     "fixtures/parser/manual",
     unterminated_string_after_percent_at_eof
 );
+fixture_file!(
+    "fixtures/parser/manual",
+    random_characters_before_encoding_comment
+);
