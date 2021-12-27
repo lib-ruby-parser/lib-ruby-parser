@@ -164,7 +164,7 @@ use crate::Loc;
 %type <node> p_top_expr_body
 %type <node> p_expr p_as p_alt p_expr_basic
 %type <node> p_arg
-%type <node> p_value p_primitive p_variable p_var_ref p_const
+%type <node> p_value p_primitive p_variable p_var_ref p_const p_expr_ref
 %type <node> p_kw
 %type <node> f_block_arg keyword_variable program
 %type <node> var_lhs lhs mlhs_node mlhs mlhs_item mlhs_inner for_var
@@ -4566,6 +4566,10 @@ opt_block_args_tail:
                     {
                         $$ = $1;
                     }
+                | p_variable
+                    {
+                        $$ = $1;
+                    }
                 | p_const p_lparen p_args rparen
                     {
                         self.pattern_hash_keys.pop();
@@ -5126,11 +5130,11 @@ opt_block_args_tail:
                             )
                         );
                     }
-                | p_variable
+                | p_var_ref
                     {
                         $$ = $1;
                     }
-                | p_var_ref
+                | p_expr_ref
                     {
                         $$ = $1;
                     }
@@ -5233,6 +5237,22 @@ opt_block_args_tail:
                         let lvar = self.builder.accessible(self.builder.lvar(ident_t));
                         $$ = Value::Node(
                             self.builder.pin($<Token>1, lvar)
+                        );
+                    }
+                ;
+
+      p_expr_ref: tCARET tLPAREN expr_value tRPAREN
+                    {
+                        let expr = self.builder.begin(
+                            $<Token>2,
+                            Some($<BoxedNode>3),
+                            $<Token>4
+                        );
+                        $$ = Value::Node(
+                            self.builder.pin(
+                                $<Token>1,
+                                expr
+                            )
                         );
                     }
                 ;
