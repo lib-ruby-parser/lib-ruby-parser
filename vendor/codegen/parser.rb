@@ -150,6 +150,7 @@ module ParseHelperPatch
     :dynamic_const => ->(*) { 'dynamic constant assignment' },
     :empty_symbol => ->(args, range) { 'empty_symbol' },
     :endless_setter => ->(args, range) { 'setter method cannot be defined in an endless method definition' },
+    :invalid_id_to_get => ->(args, range) { "identifier #{args[:identifier]} is not valid to get" },
     :invalid_assignment => ->(args, range) {
       case range.source
       when 'self' then "Can't change the value of self"
@@ -726,6 +727,9 @@ IGNORE = [
   'test_private_endless_method_command_syntax_1',
   'test_private_endless_method_command_syntax_3',
   'test_private_endless_method_command_syntax_4',
+
+  # bug in wq/parser
+  'test_dedenting_interpolating_heredoc_fake_line_continuation',
 ]
 
 Minitest.after_run do

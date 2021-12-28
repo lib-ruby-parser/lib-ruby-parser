@@ -803,6 +803,34 @@ impl Builder {
         }))
     }
 
+    pub(crate) fn pair_label(&self, key_t: PoolValue<Token>) -> Box<Node> {
+        let key_l = self.loc(&key_t);
+        let value_l = key_l.adjust_end(-1);
+
+        let label = value(key_t.clone());
+        let value = if label
+            .chars()
+            .next()
+            .expect("bug: label can't be empty")
+            .is_lowercase()
+        {
+            Box::new(Node::Lvar(Lvar {
+                name: label,
+                expression_l: value_l,
+            }))
+        } else {
+            Box::new(Node::Const(Const {
+                scope: None,
+                name: label,
+                double_colon_l: None,
+                name_l: value_l,
+                expression_l: value_l,
+            }))
+        };
+
+        self.pair_keyword(key_t, self.accessible(value))
+    }
+
     pub(crate) fn kwsplat(&self, dstar_t: PoolValue<Token>, value: Box<Node>) -> Box<Node> {
         let operator_l = self.loc(&dstar_t);
         let expression_l = value.expression().join(&operator_l);
@@ -949,21 +977,24 @@ impl Builder {
             match *node {
                 Node::Lvar(Lvar { name, expression_l }) => {
                     let name_s = name.as_str();
-                    if self.static_env.is_declared(name_s) {
-                        if let Some(current_arg) = self.current_arg_stack.top() {
-                            if current_arg == name_s {
-                                self.error(
-                                    DiagnosticMessage::CircularArgumentReference {
-                                        arg_name: name.clone(),
-                                    },
-                                    &expression_l,
-                                );
-                            }
-                        }
 
-                        Box::new(Node::Lvar(Lvar { name, expression_l }))
-                    } else {
-                        Box::new(Node::Send(Send {
+                    if name_s.ends_with('?') || name_s.ends_with('!') {
+                        self.error(
+                            DiagnosticMessage::InvalidIdToGet {
+                                identifier: name_s.to_string(),
+                            },
+                            &expression_l,
+                        );
+                    }
+
+                    // Numbered parameters are not declared anywhere,
+                    // so they take precedence over method calls in numblock contexts
+                    if self.try_declare_numparam(name_s, &expression_l) {
+                        return Box::new(Node::Lvar(Lvar { name, expression_l }));
+                    }
+
+                    if !self.static_env.is_declared(name_s) {
+                        return Box::new(Node::Send(Send {
                             recv: None,
                             method_name: name,
                             args: vec![],
@@ -973,8 +1004,21 @@ impl Builder {
                             end_l: None,
                             operator_l: None,
                             expression_l,
-                        }))
+                        }));
                     }
+
+                    if let Some(current_arg) = self.current_arg_stack.top() {
+                        if current_arg == name_s {
+                            self.error(
+                                DiagnosticMessage::CircularArgumentReference {
+                                    arg_name: name.clone(),
+                                },
+                                &expression_l,
+                            );
+                        }
+                    }
+
+                    Box::new(Node::Lvar(Lvar { name, expression_l }))
                 }
                 _ => unreachable!(),
             }
@@ -1107,6 +1151,21 @@ impl Builder {
                     value: None,
                     name_l: expression_l,
                     operator_l: None,
+                    expression_l,
+                })
+            }
+            Node::MatchVar(MatchVar {
+                name,
+                name_l,
+                expression_l,
+            }) => {
+                let name_s = name.as_str();
+                self.check_assignment_to_numparam(name_s, &name_l)?;
+                self.check_reserved_for_numparam(name_s, &name_l)?;
+
+                Node::MatchVar(MatchVar {
+                    name,
+                    name_l,
                     expression_l,
                 })
             }
@@ -2002,7 +2061,11 @@ impl Builder {
                     ArgsType::Numargs(numargs) => Node::Numblock(Numblock {
                         call: Box::new(actual_send),
                         numargs,
-                        body: block_body.expect("numblock always has body"),
+                        body: block_body.unwrap_or_else(|| {
+                            Box::new(Node::Nil(Nil {
+                                expression_l: Loc { begin: 0, end: 0 },
+                            }))
+                        }),
                         begin_l,
                         end_l,
                         expression_l,
@@ -2037,10 +2100,11 @@ impl Builder {
                     ArgsType::Numargs(numargs) => Node::Numblock(Numblock {
                         call: method_call,
                         numargs,
-                        body: {
-                            let block_body: Option<Box<Node>> = block_body;
-                            block_body.expect("numblock always has body")
-                        },
+                        body: block_body.unwrap_or_else(|| {
+                            Box::new(Node::Nil(Nil {
+                                expression_l: Loc { begin: 0, end: 0 },
+                            }))
+                        }),
                         begin_l,
                         end_l,
                         expression_l,
@@ -4058,6 +4122,60 @@ impl Builder {
                 ..
             })
         )
+    }
+
+    fn try_declare_numparam(&self, name: &str, loc: &Loc) -> bool {
+        use crate::context::ContextItem;
+
+        match name.as_bytes()[..] {
+            [b'_', n]
+                if (b'1'..=b'9').contains(&n)
+                    && !self.static_env.is_declared(name)
+                    && self.context.is_in_dynamic_block() =>
+            {
+                if true {
+                    /* definitely an implicit param */
+
+                    if self.max_numparam_stack.has_ordinary_params() {
+                        self.error(DiagnosticMessage::OrdinaryParamDefined {}, loc);
+                    }
+
+                    let mut raw_context = self.context.inner_clone();
+                    let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
+
+                    /* ignore current block scope */
+                    raw_context.pop();
+                    raw_max_numparam_stack.pop();
+
+                    for outer_scope in raw_context.iter().rev() {
+                        if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda
+                        {
+                            let outer_scope_has_numparams =
+                                raw_max_numparam_stack.pop().unwrap_or(0) > 0;
+
+                            if outer_scope_has_numparams {
+                                self.error(DiagnosticMessage::NumparamUsed {}, loc);
+                            } else {
+                                /* for now it's ok, but an outer scope can also be a block
+                                with numparams, so we need to continue */
+                            }
+                        } else {
+                            /* found an outer scope that can't have numparams
+                            like def/class/etc */
+                            break;
+                        }
+                    }
+
+                    self.static_env.declare(name);
+                    self.max_numparam_stack.register((n - b'0') as i32);
+
+                    true
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
     }
 }
 

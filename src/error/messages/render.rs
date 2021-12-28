@@ -217,6 +217,10 @@ impl DiagnosticMessage {
                 "setter method cannot be defined in an endless method definition".to_string()
             }
 
+            Self::InvalidIdToGet { identifier } => {
+                format!("identifier {} is not valid to get", identifier)
+            }
+
             Self::UnexpectedToken { token_name } => {
                 format!("unexpected {}", token_name)
             }

@@ -56,7 +56,7 @@ use crate::{ParserOptions, ParserResult};
 use crate::{Token};
 use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
 use crate::lex_states::*;
-use crate::{Context as ParserContext, ContextItem};
+use crate::Context as ParserContext;
 use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel, ArgsType};
 use crate::builder::clone_value;
 use crate::parse_value::ParseValue as Value;
@@ -5337,7 +5337,9 @@ opt_block_args_tail:
       p_variable: tIDENTIFIER
                     {
                         $$ = Value::Node(
-                            self.builder.match_var($<Token>1)?
+                            self.builder.assignable(
+                                self.builder.match_var($<Token>1)?
+                            )?
                         );
                     }
                 ;
@@ -5965,59 +5967,8 @@ keyword_variable: kNIL
 
          var_ref: user_variable
                     {
-                        let node = $<BoxedNode>1;
-                        if let Node::Lvar(nodes::Lvar { name, .. }) = &*node {
-                            match name.as_bytes()[..] {
-                                [b'_', n] if (b'1'..=b'9').contains(&n) => {
-                                    if !self.static_env.is_declared(name) && self.context.is_in_dynamic_block() {
-                                        /* definitely an implicit param */
-
-                                        if self.max_numparam_stack.has_ordinary_params() {
-                                            return self.yyerror(
-                                                @1,
-                                                DiagnosticMessage::OrdinaryParamDefined {},
-                                            );
-                                        }
-
-                                        let mut raw_context = self.context.inner_clone();
-                                        let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
-
-                                        /* ignore current block scope */
-                                        raw_context.pop();
-                                        raw_max_numparam_stack.pop();
-
-                                        for outer_scope in raw_context.iter().rev() {
-                                            if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda {
-                                                let outer_scope_has_numparams = raw_max_numparam_stack
-                                                    .pop()
-                                                    .unwrap_or(0) > 0;
-
-                                                if outer_scope_has_numparams {
-                                                    return self.yyerror(
-                                                        @1,
-                                                        DiagnosticMessage::NumparamUsed {},
-                                                    );
-                                                } else {
-                                                    /* for now it's ok, but an outer scope can also be a block
-                                                        with numparams, so we need to continue */
-                                                }
-                                            } else {
-                                                /* found an outer scope that can't have numparams
-                                                    like def/class/etc */
-                                                break;
-                                            }
-                                        }
-
-                                        self.static_env.declare(name);
-                                        self.max_numparam_stack.register((n - b'0') as i32)
-                                    }
-                                },
-                                _ => {}
-                            }
-                        }
-
                         $$ = Value::Node(
-                            self.builder.accessible(node)
+                            self.builder.accessible($<BoxedNode>1)
                         );
                     }
                 | keyword_variable
@@ -6747,6 +6698,12 @@ f_opt_paren_args: f_paren_args
                                 $<Token>1,
                                 $<BoxedNode>2
                             )
+                        );
+                    }
+                | tLABEL
+                    {
+                        $$ = Value::Node(
+                            self.builder.pair_label($<Token>1)
                         );
                     }
                 | tSTRING_BEG string_contents tLABEL_END arg_value

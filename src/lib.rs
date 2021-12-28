@@ -77,7 +77,7 @@ pub(crate) use stack_state::StackState;
 pub(crate) mod str_term;
 
 mod context;
-pub(crate) use context::{Context, ContextItem};
+pub(crate) use context::Context;
 
 /// Module with all known node types
 pub mod nodes;

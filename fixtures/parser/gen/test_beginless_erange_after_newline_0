@@ -1,0 +1,14 @@
+--INPUT
+foo
+...100
+--LOCATIONS
+~~~~~~~~~~ expression (root)
+~~~ expression (root -> stmts -> 0)
+    ~~~ operator (root -> stmts -> 1)
+    ~~~~~~ expression (root -> stmts -> 1)
+       ~~~ expression (root -> stmts -> 1 -> right)
+--AST
+s(:begin,
+  s(:lvar, "foo"),
+  s(:erange, nil,
+    s(:int, "100")))

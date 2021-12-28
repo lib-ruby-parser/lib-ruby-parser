@@ -1,0 +1,8 @@
+--INPUT
+foo
+..42
+--TOKENS
+tIDENTIFIER "foo" [0, 3]
+tNL "\n" [3, 4]
+tBDOT2 ".." [4, 6]
+tINTEGER "42" [6, 8]
