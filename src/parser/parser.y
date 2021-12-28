@@ -1033,7 +1033,7 @@ use crate::Loc;
                         $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
                         self.yylexer.in_kwarg = true;
                     }
-                  p_expr
+                  p_top_expr_body
                     {
                         self.pattern_variables.pop();
                         self.yylexer.in_kwarg = $<Bool>3;
@@ -1061,7 +1061,7 @@ use crate::Loc;
                         $<Bool>$ = Value::Bool(self.yylexer.in_kwarg);
                         self.yylexer.in_kwarg = true;
                     }
-                  p_expr
+                  p_top_expr_body
                     {
                         self.pattern_variables.pop();
                         self.yylexer.in_kwarg = $<Bool>3;
