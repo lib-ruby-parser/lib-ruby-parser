@@ -348,6 +348,15 @@ IGNORE = [
   'test_string_single_escape_chars_0',
   'test_string_pct_null_0',
   'test_string_pct_w_null_0',
+
+  # bug in wq/parser, there should be no un-escaping
+  'test_meta_control_hex_escaped_char_0',
+	'test_meta_control_hex_escaped_char_1',
+	'test_meta_control_hex_escaped_char_2',
+	'test_meta_control_hex_escaped_char_3',
+	'test_meta_control_hex_escaped_char_4',
+	'test_meta_control_hex_escaped_char_5',
+	'test_meta_control_hex_escaped_char_6',
 ]
 
 Minitest.after_run do

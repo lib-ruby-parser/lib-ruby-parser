@@ -731,6 +731,15 @@ IGNORE = [
 
   # bug in wq/parser
   'test_dedenting_interpolating_heredoc_fake_line_continuation',
+
+  # bug in wq/parser, there should be no un-escaping
+	'test_control_meta_escape_chars_in_regexp_0',
+	'test_control_meta_escape_chars_in_regexp_1',
+	'test_control_meta_escape_chars_in_regexp_2',
+	'test_control_meta_escape_chars_in_regexp_3',
+	'test_control_meta_escape_chars_in_regexp_4',
+	'test_control_meta_escape_chars_in_regexp_5',
+	'test_control_meta_escape_chars_in_regexp_6',
 ]
 
 Minitest.after_run do
