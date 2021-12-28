@@ -1,0 +1,4 @@
+--INPUT
+ { 1000 => 1, 1000 => 2 } 
+--DIAGNOSTIC
+              ~~~~ (warning) key is duplicated and overwritten

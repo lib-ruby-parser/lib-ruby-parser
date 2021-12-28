@@ -278,6 +278,10 @@ impl DiagnosticMessage {
                 format!("comparison '{}' after comparison", comparison)
             }
 
+            Self::DuplicateHashKey {} => {
+                "key is duplicated and overwritten".to_string()
+            }
+
             // Builder errors
             Self::CircularArgumentReference { arg_name } => {
                 format!("circular argument reference - {}", arg_name)

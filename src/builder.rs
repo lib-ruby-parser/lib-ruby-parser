@@ -848,6 +848,91 @@ impl Builder {
         pairs: Vec<Node>,
         end_t: Option<PoolValue<Token>>,
     ) -> Box<Node> {
+        for i in 0..pairs.len() {
+            for j in i + 1..pairs.len() {
+                let key1 = if let Node::Pair(Pair { key, .. }) = &pairs[i] {
+                    &**key
+                } else {
+                    // kwsplat
+                    continue;
+                };
+                let key2 = if let Node::Pair(Pair { key, .. }) = &pairs[j] {
+                    &**key
+                } else {
+                    // kwsplat
+                    continue;
+                };
+
+                fn keys_are_equal(left: &Node, right: &Node) -> bool {
+                    match (left, right) {
+                        // sym
+                        (
+                            Node::Sym(Sym { name: name1, .. }),
+                            Node::Sym(Sym { name: name2, .. }),
+                        ) if name1 == name2 => true,
+
+                        // str
+                        (
+                            Node::Str(Str { value: value1, .. }),
+                            Node::Str(Str { value: value2, .. }),
+                        ) if value1 == value2 => true,
+
+                        // int
+                        (
+                            Node::Int(Int { value: value1, .. }),
+                            Node::Int(Int { value: value2, .. }),
+                        ) if value1 == value2 => true,
+
+                        // float
+                        (
+                            Node::Float(Float { value: value1, .. }),
+                            Node::Float(Float { value: value2, .. }),
+                        ) if value1 == value2 => true,
+
+                        // rational
+                        (
+                            Node::Rational(Rational { value: value1, .. }),
+                            Node::Rational(Rational { value: value2, .. }),
+                        ) if value1 == value2 => true,
+
+                        // complex
+                        (
+                            Node::Complex(Complex { value: value1, .. }),
+                            Node::Complex(Complex { value: value2, .. }),
+                        ) if value1 == value2 => true,
+
+                        // regexp
+                        (
+                            Node::Regexp(Regexp {
+                                parts: parts1,
+                                options: options1,
+                                ..
+                            }),
+                            Node::Regexp(Regexp {
+                                parts: parts2,
+                                options: options2,
+                                ..
+                            }),
+                        ) if options1 == options2 => {
+                            parts1.len() == parts2.len()
+                                && parts1
+                                    .iter()
+                                    .zip(parts2.iter())
+                                    .all(|(child1, child2)| keys_are_equal(child1, child2))
+                        }
+
+                        _ => false,
+                    }
+                }
+
+                let do_warn = keys_are_equal(key1, key2);
+
+                if do_warn {
+                    self.warn(DiagnosticMessage::DuplicateHashKey {}, key2.expression());
+                }
+            }
+        }
+
         let CollectionMap {
             begin_l,
             end_l,

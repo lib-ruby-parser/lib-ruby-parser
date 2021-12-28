@@ -191,6 +191,7 @@ module ParseHelperPatch
     :unicode_point_too_large => ->(args, range) { 'invalid Unicode codepoint (too large)' },
     :unterminated_heredoc_id => ->(args, range) { 'unterminated here document identifier' },
     :useless_else => ->(args, range) { 'else without rescue is useless' },
+    :duplicate_hash_key => ->(*) { 'key is duplicated and overwritten' },
 
     :embedded_document => ->(*) { 'embedded document meets end of file' },
     :triple_dot_at_eol => ->(*) { '... at EOL, should be parenthesized?' },
