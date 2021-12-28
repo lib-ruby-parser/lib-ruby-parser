@@ -740,6 +740,13 @@ IGNORE = [
 	'test_control_meta_escape_chars_in_regexp_4',
 	'test_control_meta_escape_chars_in_regexp_5',
 	'test_control_meta_escape_chars_in_regexp_6',
+  'test_control_meta_escape_chars_in_regexp_since_31_0',
+  'test_control_meta_escape_chars_in_regexp_since_31_1',
+  'test_control_meta_escape_chars_in_regexp_since_31_2',
+  'test_control_meta_escape_chars_in_regexp_since_31_3',
+  'test_control_meta_escape_chars_in_regexp_since_31_4',
+  'test_control_meta_escape_chars_in_regexp_since_31_5',
+  'test_control_meta_escape_chars_in_regexp_since_31_6',
 ]
 
 Minitest.after_run do
