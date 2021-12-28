@@ -1,0 +1,19 @@
+--INPUT
+case foo; in ^@@TestPatternMatching; end
+--LOCATIONS
+~~~~ keyword (root)
+                                     ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+     ~~~ expression (root -> expr)
+                                   ~ begin (root -> in_bodies -> 0)
+          ~~ keyword (root -> in_bodies -> 0)
+          ~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> in_bodies -> 0)
+             ~ selector (root -> in_bodies -> 0 -> pattern)
+             ~~~~~~~~~~~~~~~~~~~~~~ expression (root -> in_bodies -> 0 -> pattern)
+              ~~~~~~~~~~~~~~~~~~~~~ expression (root -> in_bodies -> 0 -> pattern -> var)
+--AST
+s(:case_match,
+  s(:lvar, "foo"),
+  s(:in_pattern,
+    s(:pin,
+      s(:cvar, "@@TestPatternMatching")), nil, nil), nil)

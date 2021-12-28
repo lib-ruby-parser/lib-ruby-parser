@@ -167,7 +167,7 @@ use crate::Loc;
 %type <node> p_value p_primitive p_variable p_var_ref p_const p_expr_ref
 %type <node> p_kw
 %type <node> f_block_arg keyword_variable program
-%type <node> var_lhs lhs mlhs_node mlhs mlhs_item mlhs_inner for_var
+%type <node> var_lhs lhs mlhs_node mlhs mlhs_item mlhs_inner for_var nonlocal_var
 
 %type <node_list> assocs assoc_list opt_f_block_arg f_rest_arg f_optarg f_args
 %type <node_list> f_block_optarg f_kwrest f_no_kwarg f_kwarg f_block_kwarg f_arg
@@ -5359,6 +5359,16 @@ opt_block_args_tail:
                             self.builder.pin($<Token>1, lvar)
                         );
                     }
+                | tCARET nonlocal_var
+                    {
+                        let non_lvar = self.builder.accessible($<BoxedNode>2);
+                        $$ = Value::Node(
+                            self.builder.pin(
+                                $<Token>1,
+                                non_lvar,
+                            )
+                        );
+                    }
                 ;
 
       p_expr_ref: tCARET tLPAREN expr_value tRPAREN
@@ -5853,6 +5863,26 @@ xstring_contents: /* none */
                     {
                         $$ = Value::Node(
                             self.builder.complex($<Token>1)
+                        );
+                    }
+                ;
+
+    nonlocal_var: tIVAR
+                    {
+                        $$ = Value::Node(
+                            self.builder.ivar($<Token>1)
+                        );
+                    }
+                | tGVAR
+                    {
+                        $$ = Value::Node(
+                            self.builder.gvar($<Token>1)
+                        );
+                    }
+                | tCVAR
+                    {
+                        $$ = Value::Node(
+                            self.builder.cvar($<Token>1)
                         );
                     }
                 ;
