@@ -71,3 +71,4 @@ fixture_file!(
     test_private_endless_method_command_syntax_4
 );
 fixture_file!("fixtures/parser/manual", control_meta_chars_in_regexes);
+fixture_file!("fixtures/parser/manual", slash_u_after_meta_control_chars_0);

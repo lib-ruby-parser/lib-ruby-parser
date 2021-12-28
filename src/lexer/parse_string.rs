@@ -696,8 +696,12 @@ impl Lexer {
                 }
                 c = self.nextc();
                 if c == b'\\' {
-                    if self.buffer.peek(b'u') {
-                        return self.read_escape_eof();
+                    match self.buffer.peekc() {
+                        MaybeByte::Some(b'u') | MaybeByte::Some(b'U') => {
+                            self.nextc();
+                            return self.read_escape_eof();
+                        }
+                        _ => {}
                     }
                     self.read_escape(flags | ESCAPE_META)
                         .map(|byte| MaybeByte::Some(byte | 0x80))
@@ -730,8 +734,12 @@ impl Lexer {
                 }
                 c = self.nextc();
                 if c == b'\\' {
-                    if self.buffer.peek(b'u') {
-                        return self.read_escape_eof();
+                    match self.buffer.peekc() {
+                        MaybeByte::Some(b'u') | MaybeByte::Some(b'U') => {
+                            self.nextc();
+                            return self.read_escape_eof();
+                        }
+                        _ => {}
                     }
                     c = self.read_escape(flags | ESCAPE_CONTROL)
                 } else if c == b'?' {

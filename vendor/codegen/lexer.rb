@@ -333,6 +333,14 @@ IGNORE = [
   'test_float_dot_e_neg_0',
   'test_string_pct_Q_backslash_0',
 
+  # pre-3.1 tests
+  'test_meta_escape_slash_u_before_30_0',
+	'test_meta_escape_slash_u_before_30_1',
+	'test_meta_escape_slash_u_before_30_2',
+	'test_meta_escape_slash_u_before_30_3',
+	'test_meta_escape_slash_u_before_30_4',
+	'test_meta_escape_slash_u_before_30_5',
+
   # fail on rust nightly due to diff in escaping
   'test_string_single_0',
   'test_label_colon2_22_0',

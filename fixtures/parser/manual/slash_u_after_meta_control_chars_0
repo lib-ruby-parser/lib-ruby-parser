@@ -1,0 +1,17 @@
+--INPUT
+"\c\u0000" "\c\U0000" "\C-\u0000" "\C-\U0000" "\M-\u0000" "\M-\U0000"
+--AST
+s(:dstr,
+  s(:str, "\u{0}0000"),
+  s(:str, "\u{0}0000"),
+  s(:str, "\u{0}0000"),
+  s(:str, "\u{0}0000"),
+  s(:str, "\u{0}0000"),
+  s(:str, "\u{0}0000"))
+--DIAGNOSTIC
+ ~~~~ (error) Invalid escape character syntax
+            ~~~~ (error) Invalid escape character syntax
+                       ~~~~~ (error) Invalid escape character syntax
+                                   ~~~~~ (error) Invalid escape character syntax
+                                               ~~~~~ (error) Invalid escape character syntax
+                                                           ~~~~~ (error) Invalid escape character syntax
