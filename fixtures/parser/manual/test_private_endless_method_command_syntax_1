@@ -1,0 +1,5 @@
+// FIXME: update wq/parser to have `rescue number` and remove this file
+--INPUT
+private def foo() = puts "Hello"
+--DIAGNOSTIC
+                         ~ (error) unexpected tSTRING_BEG

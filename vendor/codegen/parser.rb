@@ -718,6 +718,14 @@ IGNORE = [
   'test_regex_error_1',
   'test_regexp_encoding_0',
   'test_lvar_injecting_match_0',
+
+  # FIXME: these tests from wq/parser expect string literals to start with tSTRING
+  # but in MRI there's a tSTRING_BEG. Technically there's no difference, and so
+  # they should be updated in wq/parser to use, let's say, numbers
+  'test_private_endless_method_command_syntax_0',
+  'test_private_endless_method_command_syntax_1',
+  'test_private_endless_method_command_syntax_3',
+  'test_private_endless_method_command_syntax_4',
 ]
 
 Minitest.after_run do

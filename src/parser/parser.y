@@ -803,6 +803,126 @@ use crate::Loc;
                             )?
                         );
                     }
+                | defn_head f_opt_paren_args tEQL command
+                    {
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
+                        self.static_env.unextend();
+                        self.context.pop();
+                        self.current_arg_stack.pop();
+
+                        let DefnHead { def_t, name_t } = $<DefnHead>1;
+                        self.validate_endless_method_name(&name_t)?;
+
+                        $$ = Value::Node(
+                            self.builder.def_endless_method(
+                                def_t,
+                                name_t,
+                                $<MaybeBoxedNode>2,
+                                $<Token>3,
+                                Some($<BoxedNode>4),
+                            )?
+                        );
+                    }
+                | defn_head f_opt_paren_args tEQL command kRESCUE_MOD arg
+                    {
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
+                        self.static_env.unextend();
+                        self.context.pop();
+                        self.current_arg_stack.pop();
+
+                        let DefnHead { def_t, name_t } = $<DefnHead>1;
+                        self.validate_endless_method_name(&name_t)?;
+
+                        let rescue_body = self.builder.rescue_body(
+                            $<Token>5,
+                            None,
+                            None,
+                            None,
+                            None,
+                            Some($<BoxedNode>6),
+                        );
+
+                        let method_body = self.builder.begin_body(
+                            Some($<BoxedNode>4),
+                            vec![ *rescue_body ],
+                            None,
+                            None,
+                        );
+
+                        $$ = Value::Node(
+                            self.builder.def_endless_method(
+                                def_t,
+                                name_t,
+                                $<MaybeBoxedNode>2,
+                                $<Token>3,
+                                method_body,
+                            )?
+                        );
+                    }
+                | defs_head f_opt_paren_args tEQL command
+                    {
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
+                        self.static_env.unextend();
+                        self.context.pop();
+                        self.current_arg_stack.pop();
+
+                        let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
+                        self.validate_endless_method_name(&name_t)?;
+
+                        $$ = Value::Node(
+                            self.builder.def_endless_singleton(
+                                def_t,
+                                definee,
+                                dot_t,
+                                name_t,
+                                $<MaybeBoxedNode>2,
+                                $<Token>3,
+                                Some($<BoxedNode>4),
+                            )?
+                        );
+                    }
+                | defs_head f_opt_paren_args tEQL command kRESCUE_MOD arg
+                    {
+                        self.yylexer.cmdarg.pop();
+                        self.yylexer.cond.pop();
+                        self.static_env.unextend();
+                        self.context.pop();
+                        self.current_arg_stack.pop();
+
+                        let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
+                        self.validate_endless_method_name(&name_t)?;
+
+                        let rescue_body = self.builder.rescue_body(
+                            $<Token>5,
+                            None,
+                            None,
+                            None,
+                            None,
+                            Some($<BoxedNode>6),
+                        );
+
+                        let method_body = self.builder.begin_body(
+                            Some($<BoxedNode>4),
+                            vec![ *rescue_body ],
+                            None,
+                            None,
+                        );
+
+                        $$ = Value::Node(
+                            self.builder.def_endless_singleton(
+                                def_t,
+                                definee,
+                                dot_t,
+                                name_t,
+                                $<MaybeBoxedNode>2,
+                                $<Token>3,
+                                method_body,
+                            )?
+                        );
+                    }
                 | backref tOP_ASGN command_rhs
                     {
                         $$ = Value::Node(

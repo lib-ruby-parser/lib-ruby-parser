@@ -54,3 +54,19 @@ fixture_file!(
     "fixtures/parser/manual",
     random_characters_before_encoding_comment
 );
+fixture_file!(
+    "fixtures/parser/manual",
+    test_private_endless_method_command_syntax_0
+);
+fixture_file!(
+    "fixtures/parser/manual",
+    test_private_endless_method_command_syntax_1
+);
+fixture_file!(
+    "fixtures/parser/manual",
+    test_private_endless_method_command_syntax_3
+);
+fixture_file!(
+    "fixtures/parser/manual",
+    test_private_endless_method_command_syntax_4
+);

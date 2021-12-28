@@ -1,0 +1,4 @@
+--INPUT
+private def foo(x) = puts x
+--DIAGNOSTIC
+                          ~ (error) unexpected tIDENTIFIER
