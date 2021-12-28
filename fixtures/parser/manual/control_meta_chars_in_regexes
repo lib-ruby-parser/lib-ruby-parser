@@ -1,0 +1,31 @@
+--INPUT
+/\c\xFF/
+/\c\M-\xFF/
+/\C-\xFF/
+/\C-\M-\xFF/
+/\M-\xFF/
+/\M-\C-\xFF/
+/\M-\c\xFF/
+--AST
+s(:begin,
+  s(:regexp,
+    s(:str, "\\x9F"),
+    s(:regopt)),
+  s(:regexp,
+    s(:str, "\\x9F"),
+    s(:regopt)),
+  s(:regexp,
+    s(:str, "\\x9F"),
+    s(:regopt)),
+  s(:regexp,
+    s(:str, "\\x9F"),
+    s(:regopt)),
+  s(:regexp,
+    s(:str, "\\xFF"),
+    s(:regopt)),
+  s(:regexp,
+    s(:str, "\\x9F"),
+    s(:regopt)),
+  s(:regexp,
+    s(:str, "\\x9F"),
+    s(:regopt)))

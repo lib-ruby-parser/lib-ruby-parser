@@ -1,4 +1,5 @@
 use std::convert::TryInto;
+use std::io::Write;
 
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
@@ -316,6 +317,22 @@ impl Lexer {
                             self.tokadd(c);
                         }
                         if (func & STR_FUNC_REGEXP) != 0 {
+                            match c {
+                                MaybeByte::Some(b'c')
+                                | MaybeByte::Some(b'C')
+                                | MaybeByte::Some(b'M') => {
+                                    self.buffer.pushback(c);
+                                    c = self.read_escape(0);
+
+                                    let mut escbuf = [0_u8; 5];
+                                    write!(&mut escbuf[..], "\\x{:X}", c.expect("bug")).unwrap();
+                                    for i in 0..4 {
+                                        self.tokadd(MaybeByte::Some(escbuf[i]))
+                                    }
+                                    continue;
+                                }
+                                _ => {}
+                            }
                             if c == term && !self.simple_re_meta(c) {
                                 self.tokadd(c);
                                 continue;
@@ -581,104 +598,37 @@ impl Lexer {
     }
 
     fn tokadd_escape(&mut self) -> Result<(), ()> {
-        let mut c;
-        let mut flags = 0;
+        let c;
         let mut numlen = 0;
 
-        loop {
-            c = self.nextc();
-            match c.as_option() {
-                Some(b'\n') => return Ok(()),
+        c = self.nextc();
+        match c.as_option() {
+            Some(b'\n') => return Ok(()),
 
-                Some(b'0') | Some(b'1') | Some(b'2') | Some(b'3') | Some(b'4') | Some(b'5')
-                | Some(b'6') | Some(b'7') => {
-                    self.buffer.pcur -= 1;
-                    self.scan_oct(self.buffer.pcur, 3, &mut numlen);
-                    self.buffer.pcur += numlen;
-                    self.tokcopy(numlen + 1);
-                    return Ok(());
+            Some(octal) if octal >= b'0' && octal <= b'7' => {
+                self.buffer.pcur -= 1;
+                self.scan_oct(self.buffer.pcur, 3, &mut numlen);
+                self.buffer.pcur += numlen;
+                self.tokcopy(numlen + 1);
+                return Ok(());
+            }
+
+            Some(b'x') => {
+                self.tok_hex(&mut numlen);
+                if numlen == 0 {
+                    return Err(());
                 }
+                self.tokcopy(numlen + 2);
+                return Ok(());
+            }
 
-                Some(b'x') => {
-                    self.tok_hex(&mut numlen);
-                    if numlen == 0 {
-                        return Err(());
-                    }
-                    self.tokcopy(numlen + 2);
-                    return Ok(());
-                }
+            // eof:
+            None => return self.tokadd_escape_eof(),
 
-                Some(b'M') => {
-                    if (flags & ESCAPE_META) != 0 {
-                        return self.tokadd_escape_eof();
-                    }
-                    c = self.nextc();
-                    if c != b'-' {
-                        self.buffer.pushback(c);
-                        return self.tokadd_escape_eof();
-                    }
-                    self.tokcopy(3);
-                    flags |= ESCAPE_META;
-
-                    // goto escaped
-                    c = self.nextc();
-                    if c == b'\\' {
-                        continue;
-                    } else if c.is_eof() {
-                        return self.tokadd_escape_eof();
-                    }
-                    self.tokadd(c);
-                    return Ok(());
-                }
-
-                Some(b'C') => {
-                    if (flags & ESCAPE_CONTROL) != 0 {
-                        return self.tokadd_escape_eof();
-                    }
-                    c = self.nextc();
-                    if c != b'-' {
-                        self.buffer.pushback(c);
-                        return self.tokadd_escape_eof();
-                    }
-                    self.tokcopy(3);
-
-                    // goto escaped
-                    c = self.nextc();
-                    if c == b'\\' {
-                        continue;
-                    } else if c.is_eof() {
-                        return self.tokadd_escape_eof();
-                    }
-                    self.tokadd(c);
-                    return Ok(());
-                }
-
-                Some(b'c') => {
-                    if (flags & ESCAPE_CONTROL) != 0 {
-                        return self.tokadd_escape_eof();
-                    }
-                    self.tokcopy(2);
-                    flags |= ESCAPE_CONTROL;
-
-                    // escaped:
-                    c = self.nextc();
-                    if c == b'\\' {
-                        continue;
-                    } else if c.is_eof() {
-                        return self.tokadd_escape_eof();
-                    }
-                    self.tokadd(c);
-                    return Ok(());
-                }
-
-                // eof:
-                None => return self.tokadd_escape_eof(),
-
-                Some(other) => {
-                    self.tokadd(b'\\');
-                    self.tokadd(other);
-                    return Ok(());
-                }
+            Some(other) => {
+                self.tokadd(b'\\');
+                self.tokadd(other);
+                return Ok(());
             }
         }
     }

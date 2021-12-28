@@ -70,3 +70,4 @@ fixture_file!(
     "fixtures/parser/manual",
     test_private_endless_method_command_syntax_4
 );
+fixture_file!("fixtures/parser/manual", control_meta_chars_in_regexes);
