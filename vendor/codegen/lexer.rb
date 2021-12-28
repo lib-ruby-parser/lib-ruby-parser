@@ -346,6 +346,8 @@ IGNORE = [
   'test_label_colon2_22_0',
   'test_bug_expr_end_colon_0',
   'test_string_single_escape_chars_0',
+  'test_string_pct_null_0',
+  'test_string_pct_w_null_0',
 ]
 
 Minitest.after_run do

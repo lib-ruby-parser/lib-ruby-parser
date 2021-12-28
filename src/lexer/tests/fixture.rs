@@ -36,13 +36,15 @@ impl Fixture {
         let mut cmdarg = false;
 
         for line in content.lines() {
-            match (line, &current_section) {
-                ("--COND", _) => cond = true,
-                ("--CMDARG", _) => cmdarg = true,
-                ("--VARS", _) => current_section = TestSection::Vars,
-                ("--STATE", _) => current_section = TestSection::State,
-                ("--INPUT", _) => current_section = TestSection::Input,
-                ("--TOKENS", _) => current_section = TestSection::Tokens,
+            match (line.as_bytes(), &current_section) {
+                (&[b'/', b'/', b' ', ..], _) => { /* skip comment */ }
+
+                (b"--COND", _) => cond = true,
+                (b"--CMDARG", _) => cmdarg = true,
+                (b"--VARS", _) => current_section = TestSection::Vars,
+                (b"--STATE", _) => current_section = TestSection::State,
+                (b"--INPUT", _) => current_section = TestSection::Input,
+                (b"--TOKENS", _) => current_section = TestSection::Tokens,
                 (_, &TestSection::Vars) => vars = line.split(' ').map(|s| s.to_string()).collect(),
                 (_, &TestSection::State) => state = Some(line.to_string()),
                 (_, &TestSection::Input) => input.push(line.to_string()),

@@ -1,3 +1,5 @@
+// This file has been originally imported from wq/parser,
+// but it has a difference in escaping
 --INPUT
 'foo':'bar'
 --TOKENS
