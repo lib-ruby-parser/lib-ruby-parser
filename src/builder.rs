@@ -1958,14 +1958,19 @@ impl Builder {
     pub(crate) fn blockarg(
         &self,
         amper_t: PoolValue<Token>,
-        name_t: PoolValue<Token>,
+        name_t: Option<PoolValue<Token>>,
     ) -> Result<Box<Node>, ()> {
-        let name_l = self.loc(&name_t);
-        let name = value(name_t);
-        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+        let name_l = self.maybe_loc(&name_t);
+        let name = maybe_value(name_t);
+        match (name_l.as_ref(), name.as_ref()) {
+            (Some(name_l), Some(name)) => {
+                self.check_reserved_for_numparam(name, &name_l)?;
+            }
+            _ => {}
+        }
 
         let operator_l = self.loc(&amper_t);
-        let expression_l = operator_l.join(&name_l);
+        let expression_l = operator_l.maybe_join(&name_l);
 
         Ok(Box::new(Node::Blockarg(Blockarg {
             name,
@@ -2248,9 +2253,13 @@ impl Builder {
 
         Ok(Box::new(result))
     }
-    pub(crate) fn block_pass(&self, amper_t: PoolValue<Token>, value: Box<Node>) -> Box<Node> {
+    pub(crate) fn block_pass(
+        &self,
+        amper_t: PoolValue<Token>,
+        value: Option<Box<Node>>,
+    ) -> Box<Node> {
         let amper_l = self.loc(&amper_t);
-        let expression_l = value.expression().join(&amper_l);
+        let expression_l = amper_l.maybe_join(&value.as_ref().map(|node| *node.expression()));
 
         Box::new(Node::BlockPass(BlockPass {
             value,
@@ -3756,12 +3765,11 @@ impl Builder {
             | Node::Optarg(Optarg { name, .. })
             | Node::Kwarg(Kwarg { name, .. })
             | Node::Kwoptarg(Kwoptarg { name, .. })
-            | Node::Shadowarg(Shadowarg { name, .. })
-            | Node::Blockarg(Blockarg { name, .. }) => Some(name.as_str()),
+            | Node::Shadowarg(Shadowarg { name, .. }) => Some(name.as_str()),
 
-            Node::Restarg(Restarg { name, .. }) | Node::Kwrestarg(Kwrestarg { name, .. }) => {
-                name.as_ref().map(|s| s.as_str())
-            }
+            Node::Restarg(Restarg { name, .. })
+            | Node::Kwrestarg(Kwrestarg { name, .. })
+            | Node::Blockarg(Blockarg { name, .. }) => name.as_ref().map(|s| s.as_str()),
             _ => {
                 unreachable!("unsupported arg {:?}", node)
             }
@@ -3770,18 +3778,34 @@ impl Builder {
 
     fn arg_name_loc<'a>(&self, node: &'a Node) -> &'a Loc {
         match node {
-            Node::Arg(Arg { expression_l, .. }) => expression_l,
-            Node::Optarg(Optarg { name_l, .. }) => name_l,
-            Node::Kwarg(Kwarg { name_l, .. }) => name_l,
-            Node::Kwoptarg(Kwoptarg { name_l, .. }) => name_l,
-            Node::Shadowarg(Shadowarg { expression_l, .. }) => expression_l,
-            Node::Blockarg(Blockarg { name_l, .. }) => name_l,
-            Node::Restarg(Restarg {
+            Node::Arg(Arg {
+                expression_l: output_l,
+                ..
+            })
+            | Node::Optarg(Optarg {
+                name_l: output_l, ..
+            })
+            | Node::Kwarg(Kwarg {
+                name_l: output_l, ..
+            })
+            | Node::Kwoptarg(Kwoptarg {
+                name_l: output_l, ..
+            })
+            | Node::Shadowarg(Shadowarg {
+                expression_l: output_l,
+                ..
+            }) => output_l,
+            Node::Blockarg(Blockarg {
                 name_l,
                 expression_l,
                 ..
-            }) => name_l.as_ref().unwrap_or(expression_l),
-            Node::Kwrestarg(Kwrestarg {
+            })
+            | Node::Restarg(Restarg {
+                name_l,
+                expression_l,
+                ..
+            })
+            | Node::Kwrestarg(Kwrestarg {
                 name_l,
                 expression_l,
                 ..

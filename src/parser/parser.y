@@ -2760,7 +2760,20 @@ use crate::Loc;
                         $$ = Value::Node(
                             self.builder.block_pass(
                                 $<Token>1,
-                                $<BoxedNode>2
+                                Some($<BoxedNode>2)
+                            )
+                        );
+                    }
+                | tAMPER
+                    {
+                        if !self.static_env.is_anonymous_blockarg_declared() {
+                            return self.yyerror(@1, DiagnosticMessage::NoAnonymousBlockarg {});
+                        }
+
+                        $$ = Value::Node(
+                            self.builder.block_pass(
+                                $<Token>1,
+                                None,
                             )
                         );
                     }
@@ -6606,7 +6619,20 @@ f_opt_paren_args: f_paren_args
                         let ident_t = $<Token>2;
                         self.static_env.declare(clone_value(&ident_t).as_str());
                         $$ = Value::Node(
-                            self.builder.blockarg($<Token>1, ident_t)?
+                            self.builder.blockarg(
+                                $<Token>1,
+                                Some(ident_t),
+                            )?
+                        );
+                    }
+                | blkarg_mark
+                    {
+                        self.static_env.declare_anonymous_blockarg();
+                        $$ = Value::Node(
+                            self.builder.blockarg(
+                                $<Token>1,
+                                None
+                            )?
                         );
                     }
                 ;

@@ -50,6 +50,14 @@ impl InspectVec {
         }
     }
 
+    pub(crate) fn push_maybe_str_or_nil(&mut self, string: &Option<String>) {
+        if let Some(string) = string.as_ref() {
+            self.push_str(string)
+        } else {
+            self.push_nil()
+        }
+    }
+
     pub(crate) fn push_nil(&mut self) {
         self.strings.push(", nil".to_string());
     }

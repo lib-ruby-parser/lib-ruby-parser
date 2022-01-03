@@ -1,0 +1,4 @@
+--INPUT
+def foo(&0); end
+--DIAGNOSTIC
+         ~ (error) unexpected tINTEGER

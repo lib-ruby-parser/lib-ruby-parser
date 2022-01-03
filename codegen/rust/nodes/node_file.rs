@@ -129,6 +129,8 @@ mod local_helpers {
             MaybeStr { chars } => {
                 if chars {
                     "push_chars"
+                } else if node_field.always_print {
+                    "push_maybe_str_or_nil"
                 } else {
                     "push_maybe_str"
                 }

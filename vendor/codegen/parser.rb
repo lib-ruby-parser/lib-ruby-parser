@@ -192,6 +192,8 @@ module ParseHelperPatch
     :unterminated_heredoc_id => ->(args, range) { 'unterminated here document identifier' },
     :useless_else => ->(args, range) { 'else without rescue is useless' },
     :duplicate_hash_key => ->(*) { 'key is duplicated and overwritten' },
+    :forward_arg_after_restarg => ->(*) { '... after rest argument' },
+    :no_anonymous_blockarg => ->(*) { 'no anonymous block parameter' },
 
     :embedded_document => ->(*) { 'embedded document meets end of file' },
     :triple_dot_at_eol => ->(*) { '... at EOL, should be parenthesized?' },
@@ -747,6 +749,10 @@ IGNORE = [
   'test_control_meta_escape_chars_in_regexp_since_31_4',
   'test_control_meta_escape_chars_in_regexp_since_31_5',
   'test_control_meta_escape_chars_in_regexp_since_31_6',
+
+  # TODO: enable them, backporting order is different
+  'test_forward_arg_with_open_args_0',
+  'test_forward_arg_with_open_args_1',
 ]
 
 Minitest.after_run do

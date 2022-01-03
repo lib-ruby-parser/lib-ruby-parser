@@ -221,6 +221,14 @@ impl DiagnosticMessage {
                 format!("identifier {} is not valid to get", identifier)
             }
 
+            Self::ForwardArgAfterRestarg {} => {
+                "... after rest argument".to_string()
+            }
+
+            Self::NoAnonymousBlockarg {} => {
+                "no anonymous block parameter".to_string()
+            }
+
             Self::UnexpectedToken { token_name } => {
                 format!("unexpected {}", token_name)
             }

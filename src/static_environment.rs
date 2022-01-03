@@ -28,6 +28,7 @@ pub struct StaticEnvironment {
 }
 
 const FORWARD_ARGS: &str = "FORWARD_ARGS";
+const ANONYMOUS_BLOCKARG: &str = "ANONYMOUS_BLOCKARG";
 
 impl StaticEnvironment {
     /// Constructor
@@ -84,6 +85,14 @@ impl StaticEnvironment {
 
     pub(crate) fn is_forward_args_declared(&self) -> bool {
         self.is_declared(FORWARD_ARGS)
+    }
+
+    pub(crate) fn declare_anonymous_blockarg(&self) {
+        self.declare(ANONYMOUS_BLOCKARG)
+    }
+
+    pub(crate) fn is_anonymous_blockarg_declared(&self) -> bool {
+        self.is_declared(ANONYMOUS_BLOCKARG)
     }
 }
 
