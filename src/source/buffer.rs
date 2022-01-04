@@ -37,6 +37,14 @@ pub(crate) struct Buffer {
     // pub(crate) ruby_sourcefile_string: Vec<char>,
 }
 
+macro_rules! println_if_debug_buffer {
+    ($fmt_string:expr, $( $arg:expr ),*) => {
+        if cfg!(feature = "debug-buffer") {
+            println!($fmt_string, $( $arg ),*);
+        }
+    };
+}
+
 impl Buffer {
     const CTRL_Z_CHAR: u8 = 0x1a;
     const CTRL_D_CHAR: u8 = 0x04;
@@ -85,9 +93,7 @@ impl Buffer {
     pub(crate) fn nextc(&mut self) -> MaybeByte {
         if self.pcur == self.pend || self.eofp || self.nextline != 0 {
             let n = self.nextline();
-            if cfg!(feature = "debug-buffer") {
-                println!("nextline = {:?}", n);
-            }
+            println_if_debug_buffer!("nextline = {:?}", n);
             if n.is_err() {
                 return MaybeByte::EndOfInput;
             }
@@ -100,9 +106,7 @@ impl Buffer {
         if c == b'\r' {
             c = self.parser_cr(c);
         }
-        if cfg!(feature = "debug-buffer") {
-            println!("nextc = {:?}", c);
-        }
+        println_if_debug_buffer!("nextc = {:?}", c);
         MaybeByte::new(c)
     }
 
@@ -183,9 +187,7 @@ impl Buffer {
     pub(crate) fn getline(&mut self) -> Result<usize, ()> {
         if self.line_count < self.input.lines_count() {
             self.line_count += 1;
-            if cfg!(feature = "debug-buffer") {
-                println!("line_count = {}", self.line_count)
-            }
+            println_if_debug_buffer!("line_count = {}", self.line_count);
             Ok(self.line_count - 1)
         } else {
             Err(())
@@ -197,9 +199,7 @@ impl Buffer {
     }
 
     pub(crate) fn set_ptok(&mut self, ptok: usize) {
-        if cfg!(feature = "debug-buffer") {
-            println!("set_ptok({})", ptok);
-        }
+        println_if_debug_buffer!("set_ptok({})", ptok);
         self.ptok = ptok;
     }
 
@@ -340,9 +340,7 @@ impl Pushback<u8> for Buffer {
         {
             self.pcur -= 1;
         }
-        if cfg!(feature = "debug-buffer") {
-            println!("pushback({:?}) pcur = {}", c, self.pcur);
-        }
+        println_if_debug_buffer!("pushback({:?}) pcur = {}", c, self.pcur);
     }
 }
 
