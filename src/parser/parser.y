@@ -7104,7 +7104,7 @@ impl Parser {
     fn validate_endless_method_name(&mut self, name_t: &Token) -> Result<(), ()> {
         let name = clone_value(name_t);
         match &name[..] {
-            "==" | "===" | ">=" | "<=" | "!=" => return Ok(()),
+            "==" | "===" | ">=" | "<=" | "!=" => Ok(()),
             other if other.ends_with('=') => {
                 self.yyerror(&name_t.loc, DiagnosticMessage::EndlessSetterDefinition {}).map(|_| ())
             }

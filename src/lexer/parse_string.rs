@@ -327,8 +327,8 @@ impl Lexer {
 
                                     let mut escbuf = [0_u8; 5];
                                     write!(&mut escbuf[..], "\\x{:X}", c.expect("bug")).unwrap();
-                                    for i in 0..4 {
-                                        self.tokadd(MaybeByte::Some(escbuf[i]))
+                                    for byte in escbuf.iter().take(4) {
+                                        self.tokadd(MaybeByte::Some(*byte));
                                     }
                                     continue;
                                 }
@@ -604,14 +604,14 @@ impl Lexer {
 
         c = self.nextc();
         match c.as_option() {
-            Some(b'\n') => return Ok(()),
+            Some(b'\n') => Ok(()),
 
-            Some(octal) if octal >= b'0' && octal <= b'7' => {
+            Some(octal) if (b'0'..b'8').contains(&octal) => {
                 self.buffer.pcur -= 1;
                 self.scan_oct(self.buffer.pcur, 3, &mut numlen);
                 self.buffer.pcur += numlen;
                 self.tokcopy(numlen + 1);
-                return Ok(());
+                Ok(())
             }
 
             Some(b'x') => {
@@ -620,16 +620,16 @@ impl Lexer {
                     return Err(());
                 }
                 self.tokcopy(numlen + 2);
-                return Ok(());
+                Ok(())
             }
 
             // eof:
-            None => return self.tokadd_escape_eof(),
+            None => self.tokadd_escape_eof(),
 
             Some(other) => {
                 self.tokadd(b'\\');
                 self.tokadd(other);
-                return Ok(());
+                Ok(())
             }
         }
     }

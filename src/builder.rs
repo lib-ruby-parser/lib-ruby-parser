@@ -1945,11 +1945,8 @@ impl Builder {
     ) -> Result<Box<Node>, ()> {
         let name_l = self.maybe_loc(&name_t);
         let name = maybe_value(name_t);
-        match (name_l.as_ref(), name.as_ref()) {
-            (Some(name_l), Some(name)) => {
-                self.check_reserved_for_numparam(name, &name_l)?;
-            }
-            _ => {}
+        if let (Some(name_l), Some(name)) = (name_l.as_ref(), name.as_ref()) {
+            self.check_reserved_for_numparam(name, name_l)?;
         }
 
         let operator_l = self.loc(&amper_t);

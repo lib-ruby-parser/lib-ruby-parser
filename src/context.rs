@@ -25,9 +25,9 @@ macro_rules! context_flag {
                     println!("{}({})", stringify!($setter), value);
                 }
                 if value {
-                    self.value = self.value | Self::$upper;
+                    self.value |= Self::$upper;
                 } else {
-                    self.value = self.value & (!Self::$upper)
+                    self.value &= !Self::$upper;
                 }
             }
         }
@@ -73,10 +73,9 @@ impl SharedContext {
 
 impl Context {
     fn is_empty(&self) -> bool {
-        if cfg!(debug_assertions) {
-            if self.value != 0 {
-                println!(
-                    "Context is not empty;
+        if cfg!(debug_assertions) && self.value != 0 {
+            println!(
+                "Context is not empty;
     value = {};
     IN_DEFINED = {}
     IN_KWARG = {}
@@ -85,16 +84,15 @@ impl Context {
     IN_CLASS = {}
     IN_LAMBDA = {}
     IN_BLOCK = {}",
-                    self.value,
-                    self.in_defined(),
-                    self.in_kwarg(),
-                    self.in_argdef(),
-                    self.in_def(),
-                    self.in_class(),
-                    self.in_lambda(),
-                    self.in_block(),
-                );
-            }
+                self.value,
+                self.in_defined(),
+                self.in_kwarg(),
+                self.in_argdef(),
+                self.in_def(),
+                self.in_class(),
+                self.in_lambda(),
+                self.in_block(),
+            );
         }
         self.value == 0
     }
