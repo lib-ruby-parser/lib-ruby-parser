@@ -158,14 +158,12 @@ impl Lexer {
             lex_state_before,
             lex_state_after: self.lex_state,
         });
-        if cfg!(feature = "debug-lexer") {
-            println!(
-                "yylex ({:?}, {:?}, {:?})",
-                token.token_name(),
-                token.token_value,
-                token.loc
-            );
-        }
+        println_if_debug_lexer!(
+            "yylex ({:?}, {:?}, {:?})",
+            token.token_name(),
+            token.token_value,
+            token.loc
+        );
         token
     }
 
@@ -1099,9 +1097,7 @@ impl Lexer {
     }
 
     pub(crate) fn warn(&mut self, message: DiagnosticMessage, loc: Loc) {
-        if cfg!(feature = "debug-lexer") {
-            println!("WARNING: {}", message.render())
-        }
+        println_if_debug_lexer!("WARNING: {}", message.render());
         let diagnostic = Diagnostic {
             level: ErrorLevel::Warning,
             message,
@@ -1134,9 +1130,7 @@ impl Lexer {
     }
 
     pub(crate) fn compile_error(&mut self, message: DiagnosticMessage, loc: Loc) {
-        if cfg!(feature = "debug-lexer") {
-            println!("Compile error: {}", message.render())
-        }
+        println_if_debug_lexer!("Compile error: {}", message.render());
         let diagnostic = Diagnostic {
             level: ErrorLevel::Error,
             message,
@@ -1197,9 +1191,7 @@ impl Lexer {
     }
 
     pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) {
-        if cfg!(feature = "debug-lexer") {
-            println!("yyerror0: {}", message.render())
-        }
+        println_if_debug_lexer!("yyerror0: {}", message.render());
         let diagnostic = Diagnostic {
             level: ErrorLevel::Error,
             message,

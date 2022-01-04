@@ -1,3 +1,12 @@
+macro_rules! println_if_debug_lexer {
+    ($fmt_string:expr, $( $arg:expr ),*) => {
+        if cfg!(feature = "debug-lexer") {
+            println!($fmt_string, $( $arg ),*);
+        }
+    };
+}
+pub(crate) use println_if_debug_lexer;
+
 mod main;
 mod parse_atmark;
 mod parse_gvar;

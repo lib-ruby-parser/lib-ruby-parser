@@ -32,12 +32,13 @@ impl Lexer {
         let mut space = false;
         self.lval_start = Some(self.buffer.pcur);
 
-        if cfg!(feature = "debug-lexer") {
-            println!(
-                "func = {}, pcur = {}, ptok = {}, term = {}",
-                func, self.buffer.pcur, self.buffer.ptok, quote.term
-            );
-        }
+        println_if_debug_lexer!(
+            "parse_string: func = {}, pcur = {}, ptok = {}, term = {}",
+            func,
+            self.buffer.pcur,
+            self.buffer.ptok,
+            quote.term
+        );
 
         if (func & STR_FUNC_TERM) != 0 {
             if (func & STR_FUNC_QWORDS) != 0 {
