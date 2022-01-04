@@ -1,0 +1,8 @@
+--INPUT
+<<"
+"
+
+
+
+--DIAGNOSTIC
+~~~~ (error) unterminated here document identifier

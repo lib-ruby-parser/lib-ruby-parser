@@ -1,6 +1,7 @@
 use alloc_from_pool::PoolValue;
 
 use crate::builder::{ArgsType, PKwLabel};
+use crate::context::Context;
 use crate::str_term::StrTerm;
 use crate::Node;
 use crate::Token;
@@ -31,6 +32,30 @@ impl Token {
         match value {
             ParseValue::Token(value) => value,
             other => unreachable!("expected Token, got {:?}", other),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct TokenWithContext {
+    pub(crate) token: PoolValue<Token>,
+    pub(crate) ctx: Context,
+}
+
+impl TokenWithContext {
+    pub(crate) fn from(value: ParseValue) -> Self {
+        match value {
+            ParseValue::TokenWithContext(value) => *value,
+            other => unreachable!("expected TokenWithContext, got {:?}", other),
+        }
+    }
+}
+
+impl Context {
+    pub(crate) fn from(value: ParseValue) -> Self {
+        match value {
+            ParseValue::Context(ctx) => ctx,
+            other => unreachable!("expected Context, got {:?}", other),
         }
     }
 }
@@ -322,7 +347,7 @@ pub(crate) struct DefsHead {
     pub(crate) def_t: PoolValue<Token>,
     pub(crate) definee: Box<Node>,
     pub(crate) dot_t: PoolValue<Token>,
-    pub(crate) name_t: PoolValue<Token>,
+    pub(crate) name_t: TokenWithContext,
 }
 impl DefsHead {
     pub(crate) fn from(value: ParseValue) -> DefsHead {
@@ -336,7 +361,7 @@ impl DefsHead {
 #[derive(Debug, Clone)]
 pub(crate) struct DefnHead {
     pub(crate) def_t: PoolValue<Token>,
-    pub(crate) name_t: PoolValue<Token>,
+    pub(crate) name_t: TokenWithContext,
 }
 impl DefnHead {
     pub(crate) fn from(value: ParseValue) -> DefnHead {
@@ -476,6 +501,8 @@ pub(crate) enum ParseValue {
     Uninitialized,
     None,
     Token(PoolValue<Token>),
+    TokenWithContext(Box<TokenWithContext>),
+    Context(Context),
     TokenList(Box<Vec<Token>>),
     Node(Box<Node>),
     NodeList(Box<Vec<Node>>),

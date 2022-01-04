@@ -1,0 +1,8 @@
+--INPUT
+case nil; in "#{ <<-HERE }":;
+a
+HERE
+else
+end
+--DIAGNOSTIC
+             ~~~~~~~~~~~~~~~ (error) symbol literal with interpolation is not allowed

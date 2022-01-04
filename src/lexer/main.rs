@@ -7,8 +7,8 @@ use crate::source::Comment;
 use crate::source::Decoder;
 use crate::source::MagicComment;
 use crate::str_term::{str_types::*, HeredocEnd, StrTerm, StringLiteral};
-use crate::Context;
 use crate::Loc;
+use crate::SharedContext;
 use crate::StackState;
 use crate::StaticEnvironment;
 use crate::Token;
@@ -44,8 +44,7 @@ pub struct Lexer {
     pub(crate) tokenbuf: TokenBuf,
 
     // pub(crate) max_numparam: usize,
-    pub(crate) context: Context,
-    pub(crate) in_kwarg: bool,
+    pub(crate) context: SharedContext,
 
     pub(crate) command_start: bool,
     pub(crate) token_seen: bool,
@@ -263,7 +262,7 @@ impl Lexer {
                         .is_some(EXPR_BEG | EXPR_CLASS | EXPR_FNAME | EXPR_DOT)
                         && !self.lex_state.is_some(EXPR_LABELED);
                     if cc || self.lex_state.is_all(EXPR_ARG | EXPR_LABELED) {
-                        if !cc && self.in_kwarg {
+                        if !cc && self.context.in_kwarg() {
                             return self.normal_newline_leaf_label();
                         }
                         continue 'retrying;
@@ -752,6 +751,10 @@ impl Lexer {
                     if c == b'.' {
                         c = self.nextc();
                         if c == b'.' {
+                            if self.context.in_argdef() {
+                                self.lex_state.set(EXPR_ENDARG);
+                                return Self::tBDOT3;
+                            }
                             if self.paren_nest == 0 && self.buffer.is_looking_at_eol() {
                                 self.warn(DiagnosticMessage::TripleDotAtEol {}, self.current_loc());
                             } else if self.lpar_beg >= 0

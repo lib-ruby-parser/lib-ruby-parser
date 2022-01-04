@@ -12,7 +12,7 @@ use crate::nodes::*;
 use crate::LexState;
 use crate::Loc;
 use crate::{
-    Bytes, Context, CurrentArgStack, Lexer, MaxNumparamStack, Node, StaticEnvironment, Token,
+    Bytes, CurrentArgStack, Lexer, MaxNumparamStack, Node, SharedContext, StaticEnvironment, Token,
     VariablesStack,
 };
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
@@ -62,7 +62,7 @@ pub(crate) enum ArgsType {
 #[derive(Debug)]
 pub(crate) struct Builder {
     static_env: StaticEnvironment,
-    context: Context,
+    context: SharedContext,
     current_arg_stack: CurrentArgStack,
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
@@ -74,7 +74,7 @@ pub(crate) struct Builder {
 impl Builder {
     pub(crate) fn new(
         static_env: StaticEnvironment,
-        context: Context,
+        context: SharedContext,
         current_arg_stack: CurrentArgStack,
         max_numparam_stack: MaxNumparamStack,
         pattern_variables: VariablesStack,
@@ -1207,7 +1207,7 @@ impl Builder {
                 name_l,
                 expression_l,
             }) => {
-                if !self.context.is_dynamic_const_definition_allowed() {
+                if self.context.in_def() {
                     self.error(
                         DiagnosticMessage::DynamicConstantAssignment {},
                         &expression_l,
@@ -1771,6 +1771,7 @@ impl Builder {
         end_t: Option<PoolValue<Token>>,
     ) -> Option<Box<Node>> {
         self.check_duplicate_args(&args, &mut HashMap::new());
+        self.validate_no_forward_arg_after_restarg(&args);
 
         if begin_t.is_none() && args.is_empty() && end_t.is_none() {
             return None;
@@ -1788,24 +1789,6 @@ impl Builder {
             begin_l,
             end_l,
         })))
-    }
-
-    pub(crate) fn forward_only_args(
-        &self,
-        begin_t: PoolValue<Token>,
-        dots_t: PoolValue<Token>,
-        end_t: PoolValue<Token>,
-    ) -> Box<Node> {
-        let args = vec![*self.forward_arg(dots_t)];
-        let begin_l = self.loc(&begin_t);
-        let end_l = self.loc(&end_t);
-        let expression_l = begin_l.join(&end_l);
-        Box::new(Node::Args(Args {
-            args,
-            begin_l: Some(begin_l),
-            end_l: Some(end_l),
-            expression_l,
-        }))
     }
 
     pub(crate) fn forward_arg(&self, dots_t: PoolValue<Token>) -> Box<Node> {
@@ -3865,6 +3848,25 @@ impl Builder {
         Ok(())
     }
 
+    pub(crate) fn validate_no_forward_arg_after_restarg(&self, args: &[Node]) {
+        let mut restarg = None;
+        let mut forward_arg = None;
+        for arg in args {
+            match arg {
+                Node::Restarg(_) => restarg = Some(arg),
+                Node::ForwardArg(_) => forward_arg = Some(arg),
+                _ => {}
+            }
+        }
+
+        if restarg.is_some() && forward_arg.is_some() {
+            self.error(
+                DiagnosticMessage::ForwardArgAfterRestarg {},
+                forward_arg.expect("bug: can't be None").expression(),
+            );
+        }
+    }
+
     pub(crate) fn check_reserved_for_numparam(&self, name: &str, loc: &Loc) -> Result<(), ()> {
         match name {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
@@ -4234,8 +4236,6 @@ impl Builder {
     }
 
     fn try_declare_numparam(&self, name: &str, loc: &Loc) -> bool {
-        use crate::context::ContextItem;
-
         match name.as_bytes()[..] {
             [b'_', n]
                 if (b'1'..=b'9').contains(&n)
@@ -4249,29 +4249,26 @@ impl Builder {
                         self.error(DiagnosticMessage::OrdinaryParamDefined {}, loc);
                     }
 
-                    let mut raw_context = self.context.inner_clone();
                     let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
 
                     /* ignore current block scope */
-                    raw_context.pop();
                     raw_max_numparam_stack.pop();
 
-                    for outer_scope in raw_context.iter().rev() {
-                        if *outer_scope == ContextItem::Block || *outer_scope == ContextItem::Lambda
-                        {
-                            let outer_scope_has_numparams =
-                                raw_max_numparam_stack.pop().unwrap_or(0) > 0;
+                    for outer_scope in raw_max_numparam_stack.iter().rev() {
+                        if outer_scope.is_static {
+                            /* found an outer scope that can't have numparams
+                            like def/class/etc */
+                            break;
+                        } else {
+                            let outer_scope_has_numparams = outer_scope.value > 0;
 
                             if outer_scope_has_numparams {
                                 self.error(DiagnosticMessage::NumparamUsed {}, loc);
                             } else {
                                 /* for now it's ok, but an outer scope can also be a block
+                                like proc { _1; proc { proc { proc { _2 }} }}
                                 with numparams, so we need to continue */
                             }
-                        } else {
-                            /* found an outer scope that can't have numparams
-                            like def/class/etc */
-                            break;
                         }
                     }
 

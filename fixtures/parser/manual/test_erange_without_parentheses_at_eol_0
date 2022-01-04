@@ -1,0 +1,5 @@
+--INPUT
+1...
+2
+--DIAGNOSTIC
+ ~~~ (warning) ... at EOL, should be parenthesized?

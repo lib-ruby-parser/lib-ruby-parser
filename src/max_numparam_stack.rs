@@ -2,8 +2,14 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 #[derive(Debug, Clone, Default)]
+pub(crate) struct StackItem {
+    pub(crate) value: i32,
+    pub(crate) is_static: bool,
+}
+
+#[derive(Debug, Clone, Default)]
 pub(crate) struct MaxNumparamStack {
-    stack: Rc<RefCell<Vec<i32>>>,
+    stack: Rc<RefCell<Vec<StackItem>>>,
 }
 
 impl MaxNumparamStack {
@@ -36,11 +42,18 @@ impl MaxNumparamStack {
     }
 
     pub(crate) fn top(&self) -> i32 {
-        *self.stack.borrow().last().unwrap_or(&i32::MIN)
+        if let Some(stack_item) = self.stack.borrow().last() {
+            stack_item.value
+        } else {
+            i32::MIN
+        }
     }
 
-    pub(crate) fn push(&self) {
-        self.stack.borrow_mut().push(0)
+    pub(crate) fn push(&self, is_static: bool) {
+        self.stack.borrow_mut().push(StackItem {
+            value: 0,
+            is_static,
+        })
     }
 
     pub(crate) fn pop(&self) {
@@ -50,10 +63,10 @@ impl MaxNumparamStack {
     fn set(&self, value: i32) {
         let mut stack = self.stack.borrow_mut();
         let len = stack.len();
-        stack[len - 1] = value;
+        stack[len - 1].value = value;
     }
 
-    pub(crate) fn inner_clone(&self) -> Vec<i32> {
+    pub(crate) fn inner_clone(&self) -> Vec<StackItem> {
         self.stack.borrow().clone()
     }
 }

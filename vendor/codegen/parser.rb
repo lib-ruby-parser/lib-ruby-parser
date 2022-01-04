@@ -243,13 +243,13 @@ module ParseHelperPatch
 
         message = RUBY_MESSAGES.fetch(reason) { raise "unknown diagnostic #{reason}" }.call(arguments, location)
 
-        if code.split("\n").length > 1
+        # if code.split("\n").length > 1
           # importing multi-line errors is complicated
           # all of them are related:
           # 1. multiline block comments =begin/=end
           # 2. heredocs
-          next
-        end
+        #   next
+        # end
 
         diagnostic = (' ' * location.begin_pos) + ('~' * location.size) + ' (' + level.to_s + ') ' + message
 
@@ -750,9 +750,21 @@ IGNORE = [
   'test_control_meta_escape_chars_in_regexp_since_31_5',
   'test_control_meta_escape_chars_in_regexp_since_31_6',
 
-  # TODO: enable them, backporting order is different
-  'test_forward_arg_with_open_args_0',
-  'test_forward_arg_with_open_args_1',
+  # multiline source, breaks locations, imported manually
+  'test_erange_without_parentheses_at_eol_0',
+	'test_numbered_and_ordinary_parameters_13',
+	'test_pattern_matching_hash_with_heredoc_keys_0',
+	'test_rasgn_line_continuation_0',
+	'test_ruby_bug_15839_0',
+	'test_ruby_bug_15839_1',
+	'test_ruby_bug_15839_2',
+	'test_ruby_bug_15839_3',
+	'test_unterimated_heredoc_id_27_0',
+	'test_unterimated_heredoc_id_27_1',
+	'test_unterimated_heredoc_id_27_2',
+	'test_unterimated_heredoc_id_27_3',
+	'test_unterminated_embedded_doc_0',
+	'test_unterminated_embedded_doc_1',
 ]
 
 Minitest.after_run do

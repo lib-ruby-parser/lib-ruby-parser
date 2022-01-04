@@ -1,0 +1,7 @@
+--INPUT
+<<"EOS
+"
+EOS
+
+--DIAGNOSTIC
+~~~~~~~ (error) unterminated here document identifier

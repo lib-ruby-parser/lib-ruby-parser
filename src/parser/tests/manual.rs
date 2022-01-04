@@ -72,3 +72,22 @@ fixture_file!(
 );
 fixture_file!("fixtures/parser/manual", control_meta_chars_in_regexes);
 fixture_file!("fixtures/parser/manual", slash_u_after_meta_control_chars_0);
+fixture_file!(
+    "fixtures/parser/manual",
+    test_erange_without_parentheses_at_eol_0
+);
+fixture_file!(
+    "fixtures/parser/manual",
+    test_numbered_and_ordinary_parameters_13
+);
+fixture_file!(
+    "fixtures/parser/manual",
+    test_pattern_matching_hash_with_heredoc_keys_0
+);
+fixture_file!("fixtures/parser/manual", test_rasgn_line_continuation_0);
+fixture_file!("fixtures/parser/manual", test_unterimated_heredoc_id_27_0);
+fixture_file!("fixtures/parser/manual", test_unterimated_heredoc_id_27_1);
+fixture_file!("fixtures/parser/manual", test_unterimated_heredoc_id_27_2);
+fixture_file!("fixtures/parser/manual", test_unterimated_heredoc_id_27_3);
+fixture_file!("fixtures/parser/manual", test_unterminated_embedded_doc_0);
+fixture_file!("fixtures/parser/manual", test_unterminated_embedded_doc_1);

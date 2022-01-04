@@ -1,0 +1,5 @@
+--INPUT
+13.divmod(5)
+=> a,b; [a, b]
+--DIAGNOSTIC
+             ~~ (error) unexpected tASSOC

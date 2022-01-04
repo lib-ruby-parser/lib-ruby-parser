@@ -1,0 +1,7 @@
+--INPUT
+=begin
+foo
+end
+
+--DIAGNOSTIC
+~~~~~~ (error) embedded document meets end of file
