@@ -15,3 +15,4 @@ src/parser/tests/gen.rs
 src/reserved_words/list.rs
 src/test_helpers/loc_matcher/loc_name_gen.rs
 src/traverse/visitor/visit_gen.rs
+src/traverse/finder/finder_gen.rs

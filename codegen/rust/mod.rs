@@ -1,3 +1,4 @@
+mod finder;
 mod messages;
 mod nodes;
 mod reserved_words;
@@ -8,4 +9,5 @@ pub(crate) fn codegen() {
     nodes::codegen();
     reserved_words::codegen();
     visitor::codegen();
+    finder::codegen();
 }

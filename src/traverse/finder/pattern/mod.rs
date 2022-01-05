@@ -58,4 +58,15 @@ impl Pattern {
     pub fn pop(&mut self) -> Option<Item> {
         self.parts.pop()
     }
+
+    pub(crate) fn unshift(&mut self) -> Option<Item> {
+        let result = if self.parts.is_empty() {
+            None
+        } else {
+            Some(self.parts.remove(0))
+        };
+
+        println!("Returning {:?}", result);
+        result
+    }
 }

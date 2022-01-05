@@ -26,7 +26,7 @@ fn it_finds() {
 #[test]
 fn it_returns_none_if_no_node() {
     let src = "[1,2,3]";
-    let pattern = "body";
+    let pattern = "root -> stmts";
 
     assert_eq!(None, find(src, pattern))
 }

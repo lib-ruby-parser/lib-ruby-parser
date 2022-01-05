@@ -21,7 +21,7 @@ macro_rules! context_flag {
             }
 
             pub(crate) fn $setter(&mut self, value: bool) {
-                if cfg!(debug_assertions) {
+                if cfg!(feature = "debug-parser") {
                     println!("{}({})", stringify!($setter), value);
                 }
                 if value {
