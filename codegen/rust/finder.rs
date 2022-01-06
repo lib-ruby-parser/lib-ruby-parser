@@ -37,15 +37,12 @@ impl Visitor for Finder {
 }
 
 fn visit_node_list(finder: &mut Finder, nodes: &[Node]) {
-    match finder.pattern.unshift() {
-        Some(PatternItem::Idx(idx)) => {
-            if let Some(item) = nodes.get(idx) {
-                finder.visit(item)
-            }
-        },
-        _ => {
-            // end of the search chain, no match
+    if let Some(PatternItem::Idx(idx)) = finder.pattern.unshift() {
+        if let Some(item) = nodes.get(idx) {
+            finder.visit(item)
         }
+    } else {
+        // end of the search chain, no match
     }
 }
 ";
