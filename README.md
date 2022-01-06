@@ -57,6 +57,15 @@ Comparison with [whitequark/parser](https://github.com/whitequark/parser):
 | Ruby version | lib-ruby-parser version |
 |--------------|-------------------------|
 | 3.0.0        | 3.0.0+                  |
+| 3.1.0        | 4.0.0+ruby-3.1.0        |
+
+Starting from `4.0.0` lib-ruby-parser follows SemVer. Base version increments according to API changes,
+while metadata matches current Ruby version, i.e. `X.Y.Z+ruby-A.B.C` means:
+
++ `X.Y.Z` base version
++ that parses Ruby `A.B.C`
+
+Both versions bump separately.
 
 ## Encodings
 
