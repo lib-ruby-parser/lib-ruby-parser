@@ -5,13 +5,13 @@ use super::helpers::*;
 
 #[derive(Debug, Parser)]
 struct Args {
-    #[clap(about = "file/dir to parse")]
+    #[clap(help = "file/dir to parse")]
     pattern: Option<String>,
 
-    #[clap(short = 'e', about = "code to evaluate")]
+    #[clap(short = 'e', help = "code to evaluate")]
     code_to_eval: Option<String>,
 
-    #[clap(short, long, about = "don't print anything except OK/Error per file")]
+    #[clap(short, long, help = "don't print anything except OK/Error per file")]
     quiet: bool,
 }
 

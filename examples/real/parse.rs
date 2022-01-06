@@ -9,28 +9,28 @@ static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 #[derive(Debug, Parser)]
 struct Args {
-    #[clap(about = "file/dir to parse")]
+    #[clap(help = "file/dir to parse")]
     pattern: Option<String>,
 
-    #[clap(short = 'e', about = "code to evaluate")]
+    #[clap(short = 'e', help = "code to evaluate")]
     code_to_eval: Option<String>,
 
-    #[clap(long = "print", about = Printer::ABOUT)]
+    #[clap(long = "print", help = Printer::ABOUT)]
     printer: Option<Printer>,
 
-    #[clap(long = "run-profiler", about = "Run profiling")]
+    #[clap(long = "run-profiler", help = "Run profiling")]
     profiler: Option<Profiler>,
 
-    #[clap(long, about = "Drop tokens info")]
+    #[clap(long, help = "Drop tokens info")]
     drop_tokens: bool,
 
-    #[clap(long = "run-timer", about = "Measure time spent on benchmarking")]
+    #[clap(long = "run-timer", help = "Measure time spent on benchmarking")]
     timer: Option<Timer>,
 
-    #[clap(long, about = "Prints information about executable")]
+    #[clap(long, help = "Prints information about executable")]
     print_build_info: bool,
 
-    #[clap(long, about = "Repeat parsing N times")]
+    #[clap(long, help = "Repeat parsing N times")]
     repeat: Option<usize>,
 }
 

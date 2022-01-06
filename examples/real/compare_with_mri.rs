@@ -8,7 +8,7 @@ use std::process::Command;
 
 #[derive(Debug, Parser)]
 struct Args {
-    #[clap(about = "file/dir to parse")]
+    #[clap(help = "file/dir to parse")]
     pattern: Option<String>,
 }
 

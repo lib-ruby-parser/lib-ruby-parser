@@ -39,10 +39,10 @@ alloc-from-pool = {version = "1.0.3"}
 onig = {version = "6", optional = true}
 
 # Dependencies of examples
-clap = {version = "3.0.0-beta.5", optional = true}
+clap = {version = "3.0.5", optional = true, features = ["derive"]}
 glob = {version = "0.3.0", optional = true}
 jemallocator = {version = "0.3.2", optional = true}
-pprof = {version = "0.6.0", features = ["flamegraph"], optional = true}
+pprof = {version = "0.6.2", features = ["flamegraph"], optional = true}
 
 [build-dependencies]
 lib-ruby-parser-nodes = {version = "0.47.0", optional = true}
