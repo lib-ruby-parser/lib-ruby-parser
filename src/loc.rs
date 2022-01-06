@@ -99,11 +99,6 @@ impl Loc {
         input.line_col_for_pos(self.begin)
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn end_line_col(&self, input: &DecodedInput) -> Option<(usize, usize)> {
-        input.line_col_for_pos(self.end)
-    }
-
     pub(crate) fn expand_to_line(&self, input: &DecodedInput) -> Option<(usize, Loc)> {
         let (begin_line, _) = self.begin_line_col(input)?;
         let line_no = begin_line;
@@ -137,4 +132,20 @@ impl std::fmt::Debug for Loc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!("{}...{}", self.begin, self.end))
     }
+}
+
+#[test]
+fn test_to_range() {
+    assert_eq!(Loc { begin: 10, end: 20 }.to_range(), 10..20)
+}
+
+#[test]
+fn test_fmt() {
+    assert_eq!(format!("{:?}", Loc { begin: 10, end: 20 }), "10...20")
+}
+
+#[test]
+fn test_is_empty() {
+    assert!(Loc { begin: 1, end: 1 }.is_empty());
+    assert!(!Loc { begin: 1, end: 2 }.is_empty());
 }

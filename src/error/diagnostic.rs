@@ -118,3 +118,24 @@ fn test_renders() {
         .join("\n")
     );
 }
+
+#[test]
+fn test_predicates() {
+    let error = Diagnostic {
+        level: ErrorLevel::Error,
+        message: DiagnosticMessage::AliasNthRef {},
+        loc: Loc { begin: 1, end: 2 },
+    };
+
+    let warning = Diagnostic {
+        level: ErrorLevel::Warning,
+        message: DiagnosticMessage::AliasNthRef {},
+        loc: Loc { begin: 1, end: 2 },
+    };
+
+    assert!(error.is_error());
+    assert!(!error.is_warning());
+
+    assert!(!warning.is_error());
+    assert!(warning.is_warning());
+}

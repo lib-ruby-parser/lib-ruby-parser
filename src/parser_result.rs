@@ -49,3 +49,22 @@ impl std::fmt::Debug for ParserResult {
             .finish()
     }
 }
+
+#[test]
+fn test_fmt() {
+    assert_eq!(
+        format!(
+            "{:?}",
+            ParserResult {
+                ast: None,
+                tokens: vec![],
+                diagnostics: vec![],
+                comments: vec![],
+                magic_comments: vec![],
+                input: DecodedInput::default()
+            }
+        ),
+        // All fields except `input`
+        "ParserResult { ast: None, tokens: [], diagnostics: [], comments: [], magic_comments: [] }"
+    )
+}

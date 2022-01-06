@@ -71,3 +71,44 @@ impl std::fmt::Debug for Token {
         ))
     }
 }
+
+#[cfg(test)]
+fn new_token() -> Token {
+    Token {
+        token_type: crate::Lexer::tINTEGER,
+        token_value: Bytes::new(vec![42]),
+        loc: Loc { begin: 1, end: 2 },
+        lex_state_before: LexState::default(),
+        lex_state_after: LexState::default(),
+    }
+}
+
+#[test]
+fn test_as_bytes() {
+    let token = new_token();
+    assert_eq!(token.as_bytes(), &vec![42]);
+}
+
+#[test]
+fn test_into_bytes() {
+    let token = new_token();
+    assert_eq!(token.into_bytes(), vec![42]);
+}
+
+#[test]
+fn test_as_str_lossy() {
+    let token = new_token();
+    assert_eq!(token.as_str_lossy(), Ok("*"));
+}
+
+#[test]
+fn test_to_string_lossy() {
+    let token = new_token();
+    assert_eq!(token.to_string_lossy(), String::from("*"));
+}
+
+#[test]
+fn test_fmt() {
+    let token = new_token();
+    assert_eq!(format!("{:?}", token), "[tINTEGER, \"*\", 1...2]");
+}

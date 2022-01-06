@@ -173,3 +173,13 @@ impl std::fmt::Debug for LexState {
         f.write_str(&states.join("|"))
     }
 }
+
+#[test]
+fn test_fmt() {
+    let mut lex_state = LexState::default();
+    lex_state.set(EXPR_BEG | EXPR_VALUE);
+    assert_eq!(
+        format!("{:?}", lex_state),
+        "EXPR_BEG|Also(EXPR_VALUE)|Also(EXPR_BEG_ANY)"
+    );
+}
