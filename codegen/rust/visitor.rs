@@ -6,9 +6,53 @@ use crate::nodes::*;
 use crate::Node;
 
 /// Common trait for all visitors
+///
+/// ```rust
+/// use lib_ruby_parser::{
+///     nodes::{Class, Const},
+///     traverse::visitor::{visit_class, Visitor},
+///     Node,
+/// };
+///
+/// struct ClassesCollector {
+///     classes: Vec<String>,
+/// }
+///
+/// impl Visitor for ClassesCollector {
+///     fn on_class(&mut self, node: &Class) {
+///         self.classes.push(fetch_const_name(&node.name));
+///         visit_class(self, node);
+///     }
+/// }
+///
+/// fn fetch_const_name(name: &Node) -> String {
+///     match name {
+///         Node::Const(Const { name, .. }) => name.to_owned(),
+///         other => panic!(\"Don't know how to fetch const name from {:?}\", other),
+///     }
+/// }
+///
+/// use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
+/// let parser = Parser::new(
+///     b\"class A; class B; end; end\".to_vec(),
+///     ParserOptions::default(),
+/// );
+/// let ParserResult { ast, .. } = parser.do_parse();
+/// let ast = ast.unwrap();
+///
+/// let mut collector = ClassesCollector { classes: vec![] };
+/// collector.visit(&ast);
+/// assert_eq!(
+///     collector.classes,
+///     vec![String::from(\"A\"), String::from(\"B\")]
+/// );
+/// ```
 pub trait Visitor: Sized {
 {{ each node }}<dnl>
     /// Invoked by a `Visitor` on entering into `{{ helper node-camelcase-name }}` node.
+    ///
+    /// Has a default implementation, but you can override it and (optionally) call
+    /// `visit_{{ helper node-lower-name }}(node)` to continue traversing.
     fn on_{{ helper node-lower-name }}(&mut self, node: &{{ helper node-camelcase-name }}) {
         visit_{{ helper node-lower-name }}(self, node);
     }

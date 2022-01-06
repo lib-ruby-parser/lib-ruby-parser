@@ -19,8 +19,9 @@ impl Finder {
     /// `pattern` is a string slice that is used to construct a `Pattern`.
     pub fn run(pattern: &str, root: &Node) -> Result<Option<Node>, PatternError> {
         let mut pattern = Pattern::new(pattern)?;
-        println!("{:?}", pattern);
-        debug_assert_eq!(pattern.unshift(), Some(PatternItem::Root));
+        if pattern.parts.first() == Some(&PatternItem::Root) {
+            pattern.unshift();
+        }
         let mut finder = Self {
             pattern,
             result: None,

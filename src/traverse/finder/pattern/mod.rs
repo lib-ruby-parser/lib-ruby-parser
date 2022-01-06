@@ -28,7 +28,7 @@ pub use error::PatternError;
 /// 4. enter `.default` of the `Optarg` node (`FIND_ME`)
 #[derive(Debug, PartialEq, Eq)]
 pub struct Pattern {
-    parts: Vec<Item>,
+    pub(crate) parts: Vec<Item>,
 }
 
 impl Pattern {
