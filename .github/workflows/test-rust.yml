@@ -19,7 +19,7 @@ jobs:
         build:
           - { rust: stable,  cargoargs: "--features onig" }
           - { rust: beta,    cargoargs: "--features onig" }
-          - { rust: nightly, cargoargs: "" }
+          # - { rust: nightly, cargoargs: "" }
 
     steps:
       - name: checkout
