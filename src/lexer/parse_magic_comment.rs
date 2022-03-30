@@ -38,7 +38,6 @@ impl Lexer {
 
     pub(crate) fn set_file_encoding(&mut self, mut str_: usize, send: usize) {
         let mut sep = false;
-        let beg;
 
         loop {
             if send - str_ <= 6 {
@@ -107,7 +106,7 @@ impl Lexer {
             sep = true;
             str_ += 1;
         }
-        beg = str_;
+        let beg = str_;
 
         while self.char_at(str_) == b'-'
             || self.char_at(str_) == b'_'
@@ -154,7 +153,6 @@ impl Lexer {
     pub(crate) fn magic_comment(&mut self, mut str_: usize, mut len: usize) -> Result<bool, ()> {
         let mut indicator = false;
         let mut name;
-        let mut beg;
         let mut end;
         let mut vbeg;
         let mut vend;
@@ -162,7 +160,7 @@ impl Lexer {
         if len <= 7 {
             return Ok(false);
         }
-        beg = self.magic_comment_marker(str_, len);
+        let mut beg = self.magic_comment_marker(str_, len);
         if beg != 0 {
             end = self.magic_comment_marker(beg, str_ + len - beg);
             if end == 0 {
@@ -176,8 +174,6 @@ impl Lexer {
         let mut len: i32 = len.try_into().unwrap();
 
         while len > 0 {
-            let n;
-
             loop {
                 let c = self.char_at(str_);
                 if !(len > 0 && c.is_some()) {
@@ -309,7 +305,7 @@ impl Lexer {
                 }
             }
 
-            n = end - beg;
+            let n = end - beg;
             name = String::from_utf8(
                 self.buffer
                     .substr_at(beg, beg + n)
@@ -318,7 +314,7 @@ impl Lexer {
             )
             .map_err(|_| ())?;
 
-            let name_to_compare = name.replace("-", "_");
+            let name_to_compare = name.replace('-', "_");
             for (name, kind) in MAGIC_COMMENTS.iter() {
                 if &name_to_compare == name {
                     if kind == &MagicCommentKind::Encoding && self.comment_at_top() {

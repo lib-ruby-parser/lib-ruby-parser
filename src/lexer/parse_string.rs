@@ -28,7 +28,6 @@ impl Lexer {
         let func = quote.func;
         let term = quote.term;
         let paren = quote.paren;
-        let mut c: MaybeByte;
         let mut space = false;
         self.lval_start = Some(self.buffer.pcur);
 
@@ -57,7 +56,7 @@ impl Lexer {
                 return Self::tSTRING_END;
             }
         }
-        c = self.nextc();
+        let mut c = self.nextc();
         if (func & STR_FUNC_QWORDS) != 0 && c.is_space() {
             loop {
                 c = self.nextc();
@@ -186,13 +185,12 @@ impl Lexer {
     }
 
     pub(crate) fn peek_variable_name(&mut self) -> Option<i32> {
-        let mut c: MaybeByte;
         let mut ptr: usize = self.buffer.pcur;
 
         if ptr + 1 >= self.buffer.pend {
             return None;
         }
-        c = self.char_at(ptr);
+        let mut c = self.char_at(ptr);
         ptr += 1;
 
         match c.as_option() {
@@ -599,10 +597,9 @@ impl Lexer {
     }
 
     fn tokadd_escape(&mut self) -> Result<(), ()> {
-        let c;
         let mut numlen = 0;
 
-        c = self.nextc();
+        let c = self.nextc();
         match c.as_option() {
             Some(b'\n') => Ok(()),
 
@@ -641,9 +638,7 @@ impl Lexer {
     }
 
     fn tok_hex(&mut self, numlen: &mut usize) -> MaybeByte {
-        let c;
-
-        c = self.scan_hex(self.buffer.pcur, 2, numlen);
+        let c = self.scan_hex(self.buffer.pcur, 2, numlen);
         if *numlen == 0 {
             self.yyerror1(DiagnosticMessage::InvalidHexEscape {}, self.current_loc());
             self.token_flush();
@@ -654,10 +649,9 @@ impl Lexer {
     }
 
     pub(crate) fn read_escape(&mut self, flags: usize) -> MaybeByte {
-        let mut c;
         let mut numlen: usize = 0;
 
-        c = self.nextc();
+        let mut c = self.nextc();
         match c.as_option() {
             Some(b'\\') => c,
             Some(b'n') => MaybeByte::new(b'\n'),

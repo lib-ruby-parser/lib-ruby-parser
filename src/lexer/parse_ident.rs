@@ -28,7 +28,6 @@ impl Lexer {
     pub(crate) fn parse_ident(&mut self, mut c: MaybeByte, cmd_state: bool) -> i32 {
         let mut result: i32;
         let last_state = self.lex_state;
-        let ident: String;
 
         loop {
             if !c.is_ascii() { /* mb = ENC_CODERANGE_UNKNOWN */ }
@@ -116,7 +115,7 @@ impl Lexer {
             self.lex_state.set(EXPR_END)
         }
 
-        ident = match self.tokenize_ident() {
+        let ident = match self.tokenize_ident() {
             Some(ident) => ident,
             None => {
                 self.yyerror0(DiagnosticMessage::InvalidMultibyteChar {});

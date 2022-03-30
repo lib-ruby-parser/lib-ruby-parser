@@ -7,12 +7,11 @@ use crate::{lex_states::*, LexState};
 impl Lexer {
     pub(crate) fn parse_gvar(&mut self, last_state: LexState) -> i32 {
         let ptr = self.buffer.pcur;
-        let mut c;
 
         self.lex_state.set(EXPR_END);
         self.buffer.ptok = ptr - 1; // from '$'
         self.newtok();
-        c = self.nextc();
+        let mut c = self.nextc();
         match c.as_option() {
             Some(b'_') => { /* $_: last read line string */
                 c = self.nextc();

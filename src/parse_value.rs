@@ -73,7 +73,7 @@ pub(crate) mod NodeList {
 }
 
 #[allow(non_snake_case)]
-#[allow(clippy::box_vec)]
+#[allow(clippy::box_collection)]
 pub(crate) mod BoxedNodeList {
     use super::{Node, ParseValue};
 
@@ -494,7 +494,7 @@ impl MatchPatternWithTrailingComma {
     }
 }
 
-#[allow(clippy::box_vec)]
+#[allow(clippy::box_collection)]
 #[derive(Clone, Debug)]
 pub(crate) enum ParseValue {
     Stolen,

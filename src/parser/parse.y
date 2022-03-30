@@ -1493,11 +1493,10 @@ use crate::Loc;
                     }
                 | tSTAR mlhs_node tCOMMA mlhs_post
                     {
-                        let mut nodes;
                         let splat = *self.builder.splat($<Token>1, Some($<BoxedNode>2));
                         let mut mlhs_post = $<NodeList>4;
 
-                        nodes = Box::new(Vec::with_capacity(1 + mlhs_post.len()));
+                        let mut nodes = Box::new(Vec::with_capacity(1 + mlhs_post.len()));
                         nodes.push(splat);
                         nodes.append(&mut mlhs_post);
 
@@ -1518,11 +1517,10 @@ use crate::Loc;
                     }
                 | tSTAR tCOMMA mlhs_post
                     {
-                        let mut nodes;
                         let splat = *self.builder.splat($<Token>1, None);
                         let mut mlhs_post = $<NodeList>3;
 
-                        nodes = Box::new(Vec::with_capacity(1 + mlhs_post.len()));
+                        let mut nodes = Box::new(Vec::with_capacity(1 + mlhs_post.len()));
                         nodes.push(splat);
                         nodes.append(&mut mlhs_post);
 
@@ -2704,11 +2702,10 @@ use crate::Loc;
                     }
                 | assocs opt_block_arg
                     {
-                        let mut nodes;
                         let hash = *self.builder.associate(None, $<NodeList>1, None);
                         let mut opt_block_arg = $<NodeList>2;
 
-                        nodes = Box::new(Vec::with_capacity(1 + opt_block_arg.len()));
+                        let mut nodes = Box::new(Vec::with_capacity(1 + opt_block_arg.len()));
                         nodes.push(hash);
                         nodes.append(&mut opt_block_arg);
 
@@ -3732,11 +3729,10 @@ use crate::Loc;
                     }
                 | f_rest_marg tCOMMA f_marg_list
                     {
-                        let mut nodes;
                         let f_rest_marg = $<Node>1;
                         let mut f_marg_list = $<NodeList>3;
 
-                        nodes = Box::new( Vec::with_capacity(1 + f_marg_list.len()) );
+                        let mut nodes = Box::new( Vec::with_capacity(1 + f_marg_list.len()) );
                         nodes.push(f_rest_marg);
                         nodes.append(&mut f_marg_list);
 
@@ -5056,9 +5052,8 @@ opt_block_args_tail:
                     }
                 | p_rest tCOMMA p_args_post
                     {
-                        let mut nodes;
                         let mut p_args_post = $<NodeList>3;
-                        nodes = Box::new(Vec::with_capacity(1 + p_args_post.len()));
+                        let mut nodes = Box::new(Vec::with_capacity(1 + p_args_post.len()));
                         nodes.push($<Node>1);
                         nodes.append(&mut p_args_post);
 
@@ -5068,9 +5063,8 @@ opt_block_args_tail:
 
           p_find: p_rest tCOMMA p_args_post tCOMMA p_rest
                     {
-                        let mut nodes;
                         let mut p_args_post = $<NodeList>3;
-                        nodes = Box::new(Vec::with_capacity(1 + p_args_post.len() + 1));
+                        let mut nodes = Box::new(Vec::with_capacity(1 + p_args_post.len() + 1));
                         nodes.push($<Node>1);
                         nodes.append(&mut p_args_post);
                         nodes.push($<Node>5);
@@ -5475,9 +5469,8 @@ opt_block_args_tail:
                             Some($<Token>4),
                             $<MaybeBoxedNode>5
                         );
-                        let mut nodes;
                         let mut opt_rescue = $<NodeList>6;
-                        nodes = Box::new(Vec::with_capacity(1 + opt_rescue.len()));
+                        let mut nodes = Box::new(Vec::with_capacity(1 + opt_rescue.len()));
                         nodes.push(rescue_body);
                         nodes.append(&mut opt_rescue);
 

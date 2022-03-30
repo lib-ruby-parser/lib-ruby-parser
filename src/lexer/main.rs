@@ -180,7 +180,6 @@ impl Lexer {
     pub(crate) fn parser_yylex(&mut self) -> i32 {
         let mut c: MaybeByte;
         let mut space_seen: bool = false;
-        let cmd_state: bool;
         let label: usize;
         let mut last_state: LexState;
         let token_seen = self.token_seen;
@@ -198,7 +197,7 @@ impl Lexer {
             }
         }
 
-        cmd_state = self.command_start;
+        let cmd_state = self.command_start;
         self.command_start = false;
         self.token_seen = true;
 

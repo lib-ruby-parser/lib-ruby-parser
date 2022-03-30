@@ -129,7 +129,7 @@ fn loc_getter(loc_name: &LocName) -> String {
             format!("")
         } else {
             format!(
-                "{nullable_branches} => {loc_name}.clone(),",
+                "{nullable_branches} => *{loc_name},",
                 nullable_branches = branches(&nullable_variants, loc_name).join("\n            | "),
                 loc_name = loc_name.to_str(),
             )
@@ -139,7 +139,7 @@ fn loc_getter(loc_name: &LocName) -> String {
             format!("")
         } else {
             format!(
-                "{non_nullable_branches} => Some({loc_name}.clone()),",
+                "{non_nullable_branches} => Some(*{loc_name}),",
                 non_nullable_branches =
                     branches(&non_nullable_variants, loc_name).join("\n            | "),
                 loc_name = loc_name.to_str(),

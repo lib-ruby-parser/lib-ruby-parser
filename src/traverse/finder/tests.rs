@@ -11,7 +11,7 @@ fn find(src: &str, pattern: &str) -> Option<String> {
 
     let result = parser.do_parse();
     let ast = result.ast.as_ref().expect("expected AST to be Some");
-    let node = Finder::run(&pattern, ast).unwrap()?;
+    let node = Finder::run(pattern, ast).unwrap()?;
     node.expression().source(&result.input)
 }
 

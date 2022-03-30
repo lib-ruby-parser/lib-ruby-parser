@@ -19,7 +19,7 @@ pub enum LocName {
 
 impl LocName {
     pub fn new(name: &str) -> Self {
-        match &name[..] {
+        match name {
             "begin" => LocName::Begin,
             "end" => LocName::End,
             "expression" => LocName::Expression,

@@ -22,7 +22,6 @@ impl Lexer {
 
     fn percent_quotation(&mut self, c: &mut MaybeByte, ptok: usize) -> i32 {
         let term: MaybeByte;
-        let mut paren: Option<u8>;
 
         if c.is_eof() {
             return self.percent_unterminated();
@@ -48,7 +47,7 @@ impl Lexer {
             MaybeByte::Some(term) => term,
         };
 
-        paren = Some(term);
+        let mut paren = Some(term);
         if term == b'(' {
             term = b')';
         } else if term == b'[' {

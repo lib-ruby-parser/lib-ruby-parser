@@ -14,7 +14,6 @@ impl Lexer {
          * term_len is length of `<<"END"` except `END`,
          * in this case term_len is 4 (<, <, " and ").
          */
-        let len;
         let mut offset = self.buffer.pcur - self.buffer.pbeg;
         let mut c = self.nextc();
         let term;
@@ -84,7 +83,7 @@ impl Lexer {
             self.buffer.pushback(c);
         }
 
-        len = self.buffer.pcur - (self.buffer.pbeg + offset) - quote;
+        let len = self.buffer.pcur - (self.buffer.pbeg + offset) - quote;
 
         let id = self
             .buffer
@@ -119,28 +118,22 @@ impl Lexer {
         };
         self.lval_start = Some(self.buffer.pcur);
 
-        let mut c;
-        let func;
-        let indent;
-        let eos;
         let mut ptr;
         let mut ptr_end;
-        let len;
         let mut str_ = TokenBuf::new(b"");
-        let bol;
 
         let heredoc_end: HeredocEnd;
 
-        eos = self.buffer.input.line_at(here.lastline).start + here.offset;
-        len = here.length;
-        func = here.func;
-        indent = here.func & STR_FUNC_INDENT;
+        let eos = self.buffer.input.line_at(here.lastline).start + here.offset;
+        let len = here.length;
+        let func = here.func;
+        let indent = here.func & STR_FUNC_INDENT;
 
-        c = self.nextc();
+        let mut c = self.nextc();
         if c.is_eof() {
             return self.here_document_error(&here, eos, len);
         }
-        bol = self.buffer.was_bol();
+        let bol = self.buffer.was_bol();
         if !bol {
             /* not beginning of line, cannot be the terminator */
         } else if self.buffer.heredoc_line_indent == -1 {

@@ -344,18 +344,17 @@ impl Lexer {
         self.tokfix();
         if is_float {
             let mut token_type: i32 = Self::tFLOAT;
-            let mut tokenbuf;
 
             let suffix =
                 self.number_literal_suffix(if seen_e { NUM_SUFFIX_I } else { NUM_SUFFIX_ALL });
-            if (suffix & NUM_SUFFIX_R) != 0 {
+            let mut tokenbuf = if (suffix & NUM_SUFFIX_R) != 0 {
                 let mut value = self.tokenbuf.take();
                 value.push(b'r');
                 token_type = Self::tRATIONAL;
-                tokenbuf = value
+                value
             } else {
-                tokenbuf = self.tokenbuf.take();
-            }
+                self.tokenbuf.take()
+            };
             // we don't parse the number
             return self.set_number_literal(&mut tokenbuf, token_type, suffix);
         }

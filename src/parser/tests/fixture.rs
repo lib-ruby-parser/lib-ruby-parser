@@ -4,7 +4,7 @@ use crate::{Parser, ParserOptions, ParserResult};
 enum TestSection {
     None,
     Input,
-    AST,
+    Ast,
     Locations,
     Diagnostic,
     DependsOnFeature,
@@ -44,13 +44,13 @@ impl Fixture {
                 (&[b'/', b'/', b' ', ..], _) => { /* skip comment */ }
 
                 (b"--INPUT", _) => current_section = TestSection::Input,
-                (b"--AST", _) => current_section = TestSection::AST,
+                (b"--AST", _) => current_section = TestSection::Ast,
                 (b"--LOCATIONS", _) => current_section = TestSection::Locations,
                 (b"--DIAGNOSTIC", _) => current_section = TestSection::Diagnostic,
                 (b"--DEPENDS-ON-FEATURES", _) => current_section = TestSection::DependsOnFeature,
 
                 (_, &TestSection::Input) => input.push(line.to_string()),
-                (_, &TestSection::AST) => ast.push(line.to_string()),
+                (_, &TestSection::Ast) => ast.push(line.to_string()),
                 (_, &TestSection::Locations) => locs.push(line.to_string()),
                 (_, &TestSection::Diagnostic) => diagnostics.push(line.to_string()),
                 (_, &TestSection::DependsOnFeature) => depends_on_features.push(line.to_string()),
@@ -67,9 +67,8 @@ impl Fixture {
         let diagnostics = none_if_empty(diagnostics);
         let depends_on_features = none_if_empty(depends_on_features);
 
-        match (&ast, &locs, &diagnostics) {
-            (None, None, None) => panic!("empty test"),
-            _ => {}
+        if let (None, None, None) = (&ast, &locs, &diagnostics) {
+            panic!("empty test")
         }
 
         Self {
@@ -120,7 +119,7 @@ impl Fixture {
         let actual_diagnostics = actual
             .diagnostics
             .iter()
-            .map(|d| render_diagnostic_for_testing(d))
+            .map(render_diagnostic_for_testing)
             .collect::<Vec<_>>();
 
         match &self.diagnostics {

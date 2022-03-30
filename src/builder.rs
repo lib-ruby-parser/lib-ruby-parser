@@ -3856,10 +3856,14 @@ impl Builder {
             }
         }
 
-        if restarg.is_some() && forward_arg.is_some() {
+        if restarg.is_none() {
+            return;
+        }
+
+        if let Some(forward_arg) = forward_arg {
             self.error(
                 DiagnosticMessage::ForwardArgAfterRestarg {},
-                forward_arg.expect("bug: can't be None").expression(),
+                forward_arg.expression(),
             );
         }
     }

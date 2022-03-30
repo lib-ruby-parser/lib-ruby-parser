@@ -12,14 +12,11 @@ impl Lexer {
     }
 
     pub(crate) fn parse_qmark(&mut self, space_seen: bool) -> Result<i32, ()> {
-        // let enc;
-        let mut c;
-
         if self.lex_state.is_end() {
             self.lex_state.set(EXPR_VALUE);
             return Ok(Self::tEH);
         }
-        c = self.nextc();
+        let mut c = self.nextc();
         if c.is_eof() {
             self.compile_error(
                 DiagnosticMessage::IncompleteCharacterSyntax {},
