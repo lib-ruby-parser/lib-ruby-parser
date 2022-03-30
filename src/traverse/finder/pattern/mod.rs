@@ -60,13 +60,10 @@ impl Pattern {
     }
 
     pub(crate) fn unshift(&mut self) -> Option<Item> {
-        let result = if self.parts.is_empty() {
+        if self.parts.is_empty() {
             None
         } else {
             Some(self.parts.remove(0))
-        };
-
-        println!("Returning {:?}", result);
-        result
+        }
     }
 }

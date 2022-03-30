@@ -153,16 +153,16 @@ fn loc_getter(loc_name: &LocName) -> String {
     };
 
     format!(
-        "fn get_{loc_name}(node: &Node) -> Option<Loc> {{
+        r#"fn get_{loc_name}(node: &Node) -> Option<Loc> {{
         match node {{
             {branches}
 
             #[allow(unreachable_patterns)]
             _ => {{
-                panic!(\"node {{}} doesn't support {loc_name} loc\", node.str_type())
+                panic!("node {{}} doesn't support {loc_name} loc", node.str_type())
             }}
         }}
-    }}",
+    }}"#,
         loc_name = loc_name.to_str(),
         branches = branches,
     )

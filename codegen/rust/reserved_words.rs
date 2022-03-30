@@ -339,12 +339,12 @@ fn format_bucket(size: WordSize, bucket: Vec<&'static ReservedWord>) -> String {
 
 fn format_reserved_word(word: &ReservedWord) -> String {
     format!(
-        "ReservedWord {{
-            name: \"{name}\",
+        r#"ReservedWord {{
+            name: "{name}",
             id: {id},
             modifier_id: {modifier_id},
             state: {state},
-        }}",
+        }}"#,
         name = word.name,
         id = word.id,
         modifier_id = word.modifier_id,
