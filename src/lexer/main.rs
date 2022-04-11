@@ -1275,7 +1275,7 @@ impl Lexer {
         result
     }
 
-    pub(crate) fn is_label_suffix(&mut self, n: usize) -> bool {
+    pub(crate) fn is_label_suffix(&self, n: usize) -> bool {
         self.buffer.peek_n(b':', n) && !self.buffer.peek_n(b':', n + 1)
     }
 

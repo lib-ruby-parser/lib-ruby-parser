@@ -70,10 +70,11 @@ mod local_helpers {
     pub(crate) fn imports(node: &Node) -> String {
         use lib_ruby_parser_nodes::NodeFieldType::*;
 
-        let mut imports = vec![];
-        imports.push("use crate::nodes::InnerNode;");
-        imports.push("use crate::nodes::InspectVec;");
-        imports.push("use crate::Loc;");
+        let mut imports = vec![
+            "use crate::nodes::InnerNode;",
+            "use crate::nodes::InspectVec;",
+            "use crate::Loc;",
+        ];
 
         if node_has_field!(node, Node | Nodes | MaybeNode { .. }) {
             imports.push("use crate::Node;");
@@ -117,8 +118,8 @@ mod local_helpers {
                     "push_maybe_node"
                 }
             }
-            Loc => return format!(""),
-            MaybeLoc => return format!(""),
+            Loc => return String::new(),
+            MaybeLoc => return String::new(),
             Str { raw } => {
                 if raw {
                     "push_raw_str"
@@ -178,10 +179,10 @@ mod local_helpers {
                     .strip_suffix("_l")
                     .expect("expected loc field to end with _l"),
             ),
-            Str { .. } => format!(""),
-            MaybeStr { .. } => format!(""),
-            StringValue => format!(""),
-            U8 => format!(""),
+            Str { .. } => String::new(),
+            MaybeStr { .. } => String::new(),
+            StringValue => String::new(),
+            U8 => String::new(),
         }
     }
 }

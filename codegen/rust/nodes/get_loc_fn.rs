@@ -69,7 +69,7 @@ impl LocName {
     }
 }
 
-const LOC_NAMES: &[&'static LocName] = &[
+const LOC_NAMES: &[&LocName] = &[
     &LocName::Begin,
     &LocName::End,
     &LocName::Expression,
@@ -113,7 +113,7 @@ fn loc_getter(loc_name: &LocName) -> String {
 
     let branches = |variants: &[Node], loc_name: &LocName| {
         variants
-            .into_iter()
+            .iter()
             .map(|node| {
                 format!(
                     "Node::{node_name}({node_name} {{ {loc_name}, .. }})",
@@ -126,7 +126,7 @@ fn loc_getter(loc_name: &LocName) -> String {
 
     let branches = {
         let nullable_branches = if nullable_variants.is_empty() {
-            format!("")
+            String::new()
         } else {
             format!(
                 "{nullable_branches} => *{loc_name},",
@@ -136,7 +136,7 @@ fn loc_getter(loc_name: &LocName) -> String {
         };
 
         let non_nullable_branches = if non_nullable_variants.is_empty() {
-            format!("")
+            String::new()
         } else {
             format!(
                 "{non_nullable_branches} => Some(*{loc_name}),",

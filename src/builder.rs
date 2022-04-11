@@ -3962,7 +3962,7 @@ impl Builder {
         options: &Option<String>,
         loc: &Loc,
     ) -> Option<Regex> {
-        let source = self.static_string(&parts)?;
+        let source = self.static_string(parts)?;
         let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
         reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
         if let Some(options_s) = options.as_ref().map(|s| s.as_str()) {
@@ -4008,29 +4008,27 @@ impl Builder {
 
     #[cfg(feature = "onig")]
     pub(crate) fn static_regexp_captures(&self, node: &Node) -> Option<Vec<String>> {
-        match node {
-            Node::Regexp(Regexp {
-                parts,
-                options,
-                expression_l,
-                ..
-            }) => {
-                let mut re_options = &None;
-                if let Some(Node::RegOpt(RegOpt { options, .. })) = options.as_ref().map(|b| &**b) {
-                    re_options = options;
-                };
-                let regex = self.build_static_regexp(parts, re_options, expression_l)?;
+        if let Node::Regexp(Regexp {
+            parts,
+            options,
+            expression_l,
+            ..
+        }) = node
+        {
+            let mut re_options = &None;
+            if let Some(Node::RegOpt(RegOpt { options, .. })) = options.as_ref().map(|b| &**b) {
+                re_options = options;
+            };
+            let regex = self.build_static_regexp(parts, re_options, expression_l)?;
 
-                let mut result: Vec<String> = vec![];
+            let mut result: Vec<String> = vec![];
 
-                regex.foreach_name(|name, _| {
-                    result.push(name.to_string());
-                    true
-                });
+            regex.foreach_name(|name, _| {
+                result.push(name.to_string());
+                true
+            });
 
-                return Some(result);
-            }
-            _ => {}
+            return Some(result);
         }
         None
     }

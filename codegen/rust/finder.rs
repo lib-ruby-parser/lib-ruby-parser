@@ -66,7 +66,7 @@ mod local_helpers {
 
         let variant = {
             fn capitalize_field_name(s: &str) -> String {
-                s.split("_").map(|word| capitalize_word(word)).collect()
+                s.split('_').map(capitalize_word).collect()
             }
 
             fn capitalize_word(s: &str) -> String {
@@ -77,7 +77,7 @@ mod local_helpers {
                 }
             }
 
-            match (&node.wqp_name[..], &field_name[..]) {
+            match (node.wqp_name, &field_name[..]) {
                 (_, "statements") => "Stmts".to_string(),
                 (_, "call") => "MethodCall".to_string(),
                 (_, "default") => "DefaultValue".to_string(),

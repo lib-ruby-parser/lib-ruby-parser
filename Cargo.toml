@@ -46,7 +46,7 @@ pprof = {version = "0.7.0", features = ["flamegraph"], optional = true}
 
 [build-dependencies]
 lib-ruby-parser-nodes = {version = "0.47.0", optional = true}
-rust-bison-skeleton = {version = "0.39.0", optional = true}
+rust-bison-skeleton = {version = "0.40.0", optional = true}
 
 [profile.dev]
 debug-assertions = false

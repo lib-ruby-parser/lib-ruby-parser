@@ -268,10 +268,8 @@ impl ReservedWordsList {
 
         for reserved_word in RESERVED_WORDS.iter() {
             let word_size = reserved_word.name.len();
-            if !inner.contains_key(&word_size) {
-                inner.insert(word_size, vec![]);
-            }
-            inner.get_mut(&word_size).unwrap().push(reserved_word);
+            let entry = inner.entry(word_size).or_insert_with(Vec::new);
+            entry.push(reserved_word);
         }
 
         Self { inner }
