@@ -4951,12 +4951,11 @@ opt_block_args_tail:
                             }
                         );
                     }
-                | p_args_head tSTAR tIDENTIFIER
+                | p_args_head p_rest
                     {
-                        let match_rest = *self.builder.match_rest($<Token>2, Some($<Token>3))?;
-
                         let mut elements = $<MatchPatternWithTrailingComma>1.elements;
-                        elements.push(match_rest);
+                        let p_rest = $<Node>2;
+                        elements.push(p_rest);
 
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
@@ -4965,44 +4964,14 @@ opt_block_args_tail:
                             }
                         );
                     }
-                | p_args_head tSTAR tIDENTIFIER tCOMMA p_args_post
+                | p_args_head p_rest tCOMMA p_args_post
                     {
-                        let match_rest = *self.builder.match_rest($<Token>2, Some($<Token>3))?;
-
                         let mut elements = $<MatchPatternWithTrailingComma>1.elements;
-                        let mut p_args_post = $<NodeList>5;
-                        elements.reserve(1 + p_args_post.len());
-                        elements.push(match_rest);
-                        elements.append(&mut p_args_post);
-
-                        $$ = Value::new_match_pattern_with_trailing_comma(
-                            MatchPatternWithTrailingComma {
-                                elements,
-                                trailing_comma: None
-                            }
-                        );
-                    }
-                | p_args_head tSTAR
-                    {
-                        let match_rest = *self.builder.match_rest($<Token>2, None)?;
-
-                        let mut elements = $<MatchPatternWithTrailingComma>1.elements;
-                        elements.push(match_rest);
-
-                        $$ = Value::new_match_pattern_with_trailing_comma(
-                            MatchPatternWithTrailingComma {
-                                elements,
-                                trailing_comma: None
-                            }
-                        );
-                    }
-                | p_args_head tSTAR tCOMMA p_args_post
-                    {
-                        let match_rest = *self.builder.match_rest($<Token>2, None)?;
-
-                        let mut elements = $<MatchPatternWithTrailingComma>1.elements;
+                        let p_rest = $<Node>2;
                         let mut p_args_post = $<NodeList>4;
-                        elements.push(match_rest);
+
+                        elements.reserve(1 + p_args_post.len());
+                        elements.push(p_rest);
                         elements.append(&mut p_args_post);
 
                         $$ = Value::new_match_pattern_with_trailing_comma(
