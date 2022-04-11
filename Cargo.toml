@@ -2,7 +2,7 @@
 authors = ["Ilya Bylich <ibylich@gmail.com>"]
 description = "Ruby parser"
 edition = "2018"
-include = ["codegen/**/*.rs", "src/**/*.rs", "build.rs", "Cargo.toml", "README.md"]
+include = ["/codegen/**/*.rs", "/src/**/*.rs", "/build.rs", "/Cargo.toml", "/README.md"]
 license = "MIT"
 name = "lib-ruby-parser"
 repository = "https://github.com/lib-ruby-parser/lib-ruby-parser"
