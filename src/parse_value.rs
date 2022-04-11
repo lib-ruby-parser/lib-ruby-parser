@@ -486,10 +486,24 @@ pub(crate) struct MatchPatternWithTrailingComma {
     pub(crate) trailing_comma: Option<PoolValue<Token>>,
 }
 impl MatchPatternWithTrailingComma {
-    pub(crate) fn from(value: ParseValue) -> MatchPatternWithTrailingComma {
+    pub(crate) fn from(value: ParseValue) -> Self {
         match value {
             ParseValue::MatchPatternWithTrailingComma(value) => *value,
             other => unreachable!("expected MatchPatternWithTrailingComma, got {:?}", other),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct NoKwRest {
+    pub(crate) kwrest_mark: PoolValue<Token>,
+    pub(crate) k_nil: PoolValue<Token>,
+}
+impl NoKwRest {
+    pub(crate) fn from(value: ParseValue) -> Self {
+        match value {
+            ParseValue::NoKwRest(value) => *value,
+            other => unreachable!("expected NoKwRest, got {:?}", other),
         }
     }
 }
@@ -584,6 +598,9 @@ pub(crate) enum ParseValue {
 
     /* For pattern matching patterns with trailing comma */
     MatchPatternWithTrailingComma(Box<MatchPatternWithTrailingComma>),
+
+    /* For p_kwnorest and f_no_kwarg rules */
+    NoKwRest(Box<NoKwRest>),
 }
 
 impl ParseValue {
@@ -671,6 +688,9 @@ impl ParseValue {
         value: MatchPatternWithTrailingComma,
     ) -> Self {
         Self::MatchPatternWithTrailingComma(Box::new(value))
+    }
+    pub(crate) fn new_no_kw_rest(value: NoKwRest) -> Self {
+        Self::NoKwRest(Box::new(value))
     }
 }
 

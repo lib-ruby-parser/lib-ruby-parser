@@ -5171,15 +5171,11 @@ opt_block_args_tail:
 
       p_kwnorest: kwrest_mark kNIL
                     {
-                        $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.match_nil_pattern(
-                                        $<Token>1,
-                                        $<Token>2
-                                    )
-                                ]
-                            )
+                        $$ = Value::new_no_kw_rest(
+                            NoKwRest {
+                                kwrest_mark: $<Token>1,
+                                k_nil: $<Token>2
+                            }
                         );
                     }
                 ;
@@ -5190,7 +5186,17 @@ opt_block_args_tail:
                     }
                 | p_kwnorest
                     {
-                        $$ = $1;
+                        let NoKwRest { kwrest_mark, k_nil } = $<NoKwRest>1;
+                        $$ = Value::NodeList(
+                            Box::new(
+                                vec![
+                                    *self.builder.match_nil_pattern(
+                                        kwrest_mark,
+                                        k_nil
+                                    )
+                                ]
+                            )
+                        );
                     }
                 ;
 
@@ -6461,14 +6467,15 @@ f_opt_paren_args: f_paren_args
                     }
                 ;
 
-      f_no_kwarg: kwrest_mark kNIL
+      f_no_kwarg: p_kwnorest
                     {
+                        let NoKwRest { kwrest_mark, k_nil } = $<NoKwRest>1;
                         $$ = Value::NodeList(
                             Box::new(
                                 vec![
                                     *self.builder.kwnilarg(
-                                        $<Token>1,
-                                        $<Token>2
+                                        kwrest_mark,
+                                        k_nil
                                     )
                                 ]
                             )
@@ -6748,15 +6755,7 @@ f_opt_paren_args: f_paren_args
                     }
                 ;
 
-      operation2: tIDENTIFIER
-                    {
-                        $$ = $1;
-                    }
-                | tCONSTANT
-                    {
-                        $$ = $1;
-                    }
-                | tFID
+      operation2: operation
                     {
                         $$ = $1;
                     }
