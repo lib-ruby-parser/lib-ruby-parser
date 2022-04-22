@@ -108,14 +108,14 @@ mod local_helpers {
                     field_name
                 )
             }
-            MaybeNode { .. } => {
+            MaybeNode | RegexpOptions => {
                 format!(
                     "if let Some(inner) = node.{}.as_ref() {{ visitor.visit(inner); }}",
                     field_name
                 )
             }
 
-            Loc | MaybeLoc | Str { .. } | MaybeStr { .. } | StringValue | U8 => {
+            Loc | MaybeLoc | Str | RawStr | MaybeStr | Chars | StringValue | U8 => {
                 return format!("// skip {}", field_name)
             }
         }

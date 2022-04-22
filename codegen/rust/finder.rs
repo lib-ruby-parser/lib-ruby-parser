@@ -48,6 +48,7 @@ fn visit_node_list(finder: &mut Finder, nodes: &[Node]) {
 ";
 
 pub(crate) fn codegen() {
+    return;
     let template = TemplateRoot::new(TEMPLATE).unwrap();
     let mut fns = crate::codegen::fns::default_fns!();
 
@@ -61,60 +62,61 @@ mod local_helpers {
     use lib_ruby_parser_nodes::NodeField;
 
     pub(crate) fn visit_child(node_field: &NodeField) -> String {
-        let node = &node_field.node;
-        let field_name = crate::codegen::fns::rust::node_fields::rust_field_name(node_field);
+        todo!()
+        // let node = &node_field.node;
+        // let field_name = crate::codegen::fns::rust::node_fields::rust_field_name(node_field);
 
-        let variant = {
-            fn capitalize_field_name(s: &str) -> String {
-                s.split('_').map(capitalize_word).collect()
-            }
+        // let variant = {
+        //     fn capitalize_field_name(s: &str) -> String {
+        //         s.split('_').map(capitalize_word).collect()
+        //     }
 
-            fn capitalize_word(s: &str) -> String {
-                let mut c = s.chars();
-                match c.next() {
-                    None => String::new(),
-                    Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
-                }
-            }
+        //     fn capitalize_word(s: &str) -> String {
+        //         let mut c = s.chars();
+        //         match c.next() {
+        //             None => String::new(),
+        //             Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+        //         }
+        //     }
 
-            match (node.wqp_name, &field_name[..]) {
-                (_, "statements") => "Stmts".to_string(),
-                (_, "call") => "MethodCall".to_string(),
-                (_, "default") => "DefaultValue".to_string(),
-                (_, "items") => "MlhsItems".to_string(),
-                ("when", "patterns") => "Args".to_string(),
-                ("undef", "names") => "Args".to_string(),
-                ("args", "args") => "Arglist".to_string(),
-                ("procarg0", "args") => "Arglist".to_string(),
-                ("rescue", "else_") => "ElseBody".to_string(),
-                _ => capitalize_field_name(&field_name),
-            }
-        };
+        //     match (node.wqp_name, &field_name[..]) {
+        //         (_, "statements") => "Stmts".to_string(),
+        //         (_, "call") => "MethodCall".to_string(),
+        //         (_, "default") => "DefaultValue".to_string(),
+        //         (_, "items") => "MlhsItems".to_string(),
+        //         ("when", "patterns") => "Args".to_string(),
+        //         ("undef", "names") => "Args".to_string(),
+        //         ("args", "args") => "Arglist".to_string(),
+        //         ("procarg0", "args") => "Arglist".to_string(),
+        //         ("rescue", "else_") => "ElseBody".to_string(),
+        //         _ => capitalize_field_name(&field_name),
+        //     }
+        // };
 
-        use lib_ruby_parser_nodes::NodeFieldType::*;
-        let code = match node_field.field_type {
-            Node => {
-                format!("self.visit(&node.{});", field_name)
-            }
-            Nodes => {
-                format!("visit_node_list(self, &node.{})", field_name)
-            }
-            MaybeNode { .. } => {
-                format!(
-                    "if let Some(inner) = node.{}.as_ref() {{ self.visit(inner); }}",
-                    field_name
-                )
-            }
+        // use lib_ruby_parser_nodes::NodeFieldType::*;
+        // let code = match node_field.field_type {
+        //     Node => {
+        //         format!("self.visit(&node.{});", field_name)
+        //     }
+        //     Nodes => {
+        //         format!("visit_node_list(self, &node.{})", field_name)
+        //     }
+        //     MaybeNode { .. } => {
+        //         format!(
+        //             "if let Some(inner) = node.{}.as_ref() {{ self.visit(inner); }}",
+        //             field_name
+        //         )
+        //     }
 
-            Loc | MaybeLoc | Str { .. } | MaybeStr { .. } | StringValue | U8 => {
-                return format!("// skip {}", field_name)
-            }
-        };
+        //     Loc | MaybeLoc | Str { .. } | MaybeStr { .. } | StringValue | U8 => {
+        //         return format!("// skip {}", field_name)
+        //     }
+        // };
 
-        format!(
-            "Some(PatternItem::{variant}) => {{ {code} }}",
-            variant = variant,
-            code = code
-        )
+        // format!(
+        //     "Some(PatternItem::{variant}) => {{ {code} }}",
+        //     variant = variant,
+        //     code = code
+        // )
     }
 }

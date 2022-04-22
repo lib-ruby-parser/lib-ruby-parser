@@ -18,11 +18,11 @@ pub(crate) mod node_fields {
         match node_field.field_type {
             Node => "Box<Node>",
             Nodes => "Vec<Node>",
-            MaybeNode { .. } => "Option<Box<Node>>",
+            MaybeNode | RegexpOptions => "Option<Box<Node>>",
             Loc => "Loc",
             MaybeLoc => "Option<Loc>",
-            Str { .. } => "String",
-            MaybeStr { .. } => "Option<String>",
+            Str | RawStr => "String",
+            MaybeStr | Chars => "Option<String>",
             StringValue => "Bytes",
             U8 => "u8",
         }

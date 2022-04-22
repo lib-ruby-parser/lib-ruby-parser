@@ -46,7 +46,8 @@ pub(crate) mod node_fields {
     }
 
     pub(crate) fn is_last(node_field: &NodeField) -> bool {
-        node_field.node.fields.last().unwrap() == &node_field
+        // node_field.node.fields.last().unwrap() == &node_field
+        todo!()
     }
 }
 
@@ -94,7 +95,8 @@ pub(crate) mod message_fields {
     }
 
     pub(crate) fn is_last(message_field: &MessageField) -> bool {
-        message_field.message.fields.last().unwrap() == &message_field
+        // message_field.message.fields.last().unwrap() == &message_field
+        todo!()
     }
 }
 

@@ -1,7 +1,7 @@
 extern crate lib_ruby_parser_nodes;
 
-mod get_loc_fn;
 pub(crate) mod helpers;
+mod loc_name;
 mod node_enum;
 mod node_file;
 mod node_mod;
@@ -17,5 +17,5 @@ pub(crate) fn codegen() {
 
     node_mod::codegen();
     node_enum::codegen();
-    get_loc_fn::codegen();
+    loc_name::codegen();
 }
