@@ -1,7 +1,7 @@
 [package]
 authors = ["Ilya Bylich <ibylich@gmail.com>"]
 description = "Ruby parser"
-edition = "2018"
+edition = "2021"
 include = ["/codegen/**/*.rs", "/src/**/*.rs", "/build.rs", "/Cargo.toml", "/README.md"]
 license = "MIT"
 name = "lib-ruby-parser"
