@@ -6,7 +6,7 @@ include = ["/codegen/**/*.rs", "/src/**/*.rs", "/build.rs", "/Cargo.toml", "/REA
 license = "MIT"
 name = "lib-ruby-parser"
 repository = "https://github.com/lib-ruby-parser/lib-ruby-parser"
-version = "4.0.1+ruby-3.1.1"
+version = "4.0.2+ruby-3.1.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
