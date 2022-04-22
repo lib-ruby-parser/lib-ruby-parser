@@ -4,9 +4,6 @@ mod rust;
 #[cfg(feature = "codegen-y")]
 mod y;
 
-#[cfg(feature = "lib-ruby-parser-nodes")]
-mod fns;
-
 macro_rules! codegen_if_feature {
     ($feature:literal, $codegen:block, otherwise print: $msg:literal) => {
         #[cfg(feature = $feature)]
