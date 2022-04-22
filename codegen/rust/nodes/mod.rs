@@ -1,6 +1,5 @@
 extern crate lib_ruby_parser_nodes;
 
-pub(crate) mod helpers;
 mod loc_name;
 mod node_enum;
 mod node_file;
