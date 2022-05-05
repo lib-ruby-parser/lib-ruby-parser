@@ -1,0 +1,130 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  generate-parse-y:
+    name: generate parse.rs and target/tokens.rs
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: ${{ matrix.build.target }}
+          override: true
+
+      - name: install bison
+        run: |
+          brew update
+          brew install bison
+          echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
+
+      - name: generate parse.rs
+        run: cargo build --features "codegen-y,codegen-rust"
+
+      - name: cbindgen and generate tokens data
+        run: cargo run --example prepare_token_ids --features prepare-token-ids-example
+
+      - name: save compiled parse.rs
+        uses: actions/upload-artifact@v3
+        with:
+          name: parse.rs
+          path: src/parser/parse.rs
+
+      - name: save compiled tokens.rs
+        uses: actions/upload-artifact@v3
+        with:
+          name: tokens.rs
+          path: target/tokens.rs
+
+  build:
+    name: target = ${{ matrix.build.target }}
+    needs: ['generate-parse-y']
+    runs-on: ${{ matrix.build.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - { os: ubuntu-latest,  exe: ,     target: x86_64-unknown-linux-gnu }
+          - { os: macos-latest,   exe: ,     target: x86_64-apple-darwin      }
+          - { os: windows-latest, exe: .exe, target: x86_64-pc-windows-msvc   }
+          - { os: windows-latest, exe: .exe, target: x86_64-pc-windows-gnu    }
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: ${{ matrix.build.target }}
+          override: true
+
+      - name: download compiled parse.rs
+        uses: actions/download-artifact@v3
+        with:
+          name: parse.rs
+
+      - name: download compiled tokens.rs
+        uses: actions/download-artifact@v3
+        with:
+          name: tokens.rs
+
+      - run: mv parse.rs src/parser/parse.rs
+      - run: mkdir -p target && mv tokens.rs target/tokens.rs
+
+      - name: codegen all other rust files
+        run: cargo build --features "codegen-rust"
+
+      - name: compile codegen
+        run: cargo build --release --example codegen --features codegen-example
+
+      - name: give executable representable name
+        run: cp target/release/examples/codegen${{ matrix.build.exe }} ./codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
+
+      - name: upload executable
+        uses: actions/upload-artifact@v2
+        with:
+          name: codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
+          path: codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
+
+  make-release:
+    name: release
+    needs: ['build']
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v2
+        with: { name: codegen-x86_64-unknown-linux-gnu }
+
+      - uses: actions/download-artifact@v2
+        with: { name: codegen-x86_64-apple-darwin }
+
+      - uses: actions/download-artifact@v2
+        with: { name: codegen-x86_64-pc-windows-msvc.exe }
+
+      - uses: actions/download-artifact@v2
+        with: { name: codegen-x86_64-pc-windows-gnu.exe }
+
+      - name: release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: "codegen-*"
+          token: ${{ secrets.GITHUB_TOKEN }}
