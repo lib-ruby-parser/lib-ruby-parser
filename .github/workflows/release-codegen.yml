@@ -1,9 +1,9 @@
-name: release
+name: release-codegen
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'codegen-v*'
 
 defaults:
   run:
