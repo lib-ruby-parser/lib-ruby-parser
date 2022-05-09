@@ -20,7 +20,7 @@ fn main() {
 
     let bindings = std::fs::read_to_string(TMP_BINDINGS).unwrap();
 
-    std::fs::remove_file(TMP_BINDINGS).unwrap();
+    // std::fs::remove_file(TMP_BINDINGS).unwrap();
 
     let mut token_ids = vec![];
     let mut token_id = TokenId::default();
@@ -29,9 +29,9 @@ fn main() {
         if line.starts_with("/// Token") {
             // token comment line
             token_id.comment = line.replace("///", "");
-        } else if line.starts_with("static const int32_t Lexer_") {
+        } else if line.starts_with("constexpr static const int32_t Lexer_") {
             let line = line
-                .replace("static const int32_t Lexer_", "")
+                .replace("constexpr static const int32_t Lexer_", "")
                 .replace(";", "");
 
             let parts = line.split(" = ").collect::<Vec<_>>();
