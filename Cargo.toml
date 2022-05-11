@@ -55,7 +55,7 @@ jemallocator = {version = "0.3.2", optional = true}
 lib-ruby-parser-nodes = {version = "0.53.0", optional = true}
 serde = {version = "1.0", features = ["derive"], optional = true}
 
-pprof = {version = "0.8.0", features = ["flamegraph"], optional = true}
+pprof = {version = "0.9.0", features = ["flamegraph"], optional = true}
 
 [build-dependencies]
 lib-ruby-parser-nodes = {version = "0.53.0", optional = true}
