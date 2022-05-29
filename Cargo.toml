@@ -51,7 +51,7 @@ onig = {version = "6", optional = true}
 cbindgen = {version = "0.23.0", optional = true}
 clap = {version = "3.0.5", optional = true, features = ["derive"]}
 glob = {version = "0.3.0", optional = true}
-jemallocator = {version = "0.3.2", optional = true}
+jemallocator = {version = "0.5.0", optional = true}
 lib-ruby-parser-nodes = {version = "0.53.0", optional = true}
 serde = {version = "1.0", features = ["derive"], optional = true}
 
