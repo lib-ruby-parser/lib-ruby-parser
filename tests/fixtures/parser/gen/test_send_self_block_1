@@ -1,0 +1,13 @@
+--INPUT
+fun() { }
+--LOCATIONS
+      ~ begin (root)
+        ~ end (root)
+~~~~~~~~~ expression (root)
+   ~ begin (root -> method_call)
+    ~ end (root -> method_call)
+~~~ selector (root -> method_call)
+~~~~~ expression (root -> method_call)
+--AST
+s(:block,
+  s(:send, nil, "fun"), nil, nil)

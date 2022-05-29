@@ -1,0 +1,7 @@
+--INPUT
+next
+--LOCATIONS
+~~~~ keyword (root)
+~~~~ expression (root)
+--AST
+s(:next)

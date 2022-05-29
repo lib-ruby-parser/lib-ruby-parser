@@ -1,0 +1,8 @@
+--STATE
+expr_arg
+--INPUT
+x & y
+--TOKENS
+tIDENTIFIER "x" [0, 1]
+tAMPER2 "&" [2, 3]
+tIDENTIFIER "y" [4, 5]

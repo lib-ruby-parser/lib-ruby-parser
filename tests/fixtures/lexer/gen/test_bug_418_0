@@ -1,0 +1,11 @@
+--INPUT
+{
+=begin
+x: 1,
+=end
+y: 2}
+--TOKENS
+tLBRACE "{" [0, 1]
+tLABEL "y" [20, 22]
+tINTEGER "2" [23, 24]
+tRCURLY "}" [24, 25]

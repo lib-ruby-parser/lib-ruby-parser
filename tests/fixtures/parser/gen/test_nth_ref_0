@@ -1,0 +1,6 @@
+--INPUT
+$10
+--LOCATIONS
+~~~ expression (root)
+--AST
+s(:nth_ref, 10)

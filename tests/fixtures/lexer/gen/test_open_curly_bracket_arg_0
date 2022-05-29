@@ -1,0 +1,7 @@
+--INPUT
+m { 3 }
+--TOKENS
+tIDENTIFIER "m" [0, 1]
+tLCURLY "{" [2, 3]
+tINTEGER "3" [4, 5]
+tRCURLY "}" [6, 7]

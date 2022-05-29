@@ -1,0 +1,4 @@
+--INPUT
+42
+--TOKENS
+tINTEGER "42" [0, 2]

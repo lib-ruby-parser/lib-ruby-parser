@@ -1,0 +1,18 @@
+--INPUT
+a = b = raise :x
+--LOCATIONS
+  ~ operator (root)
+~ name (root)
+~~~~~~~~~~~~~~~~ expression (root)
+      ~ operator (root -> value)
+    ~ name (root -> value)
+    ~~~~~~~~~~~~ expression (root -> value)
+        ~~~~~ selector (root -> value -> value)
+        ~~~~~~~~ expression (root -> value -> value)
+              ~ begin (root -> value -> value -> args -> 0)
+              ~~ expression (root -> value -> value -> args -> 0)
+--AST
+s(:lvasgn, "a",
+  s(:lvasgn, "b",
+    s(:send, nil, "raise",
+      s(:sym, "x"))))

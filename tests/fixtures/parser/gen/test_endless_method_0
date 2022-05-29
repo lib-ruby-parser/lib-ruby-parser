@@ -1,0 +1,15 @@
+--INPUT
+def foo() = 42
+--LOCATIONS
+~~~ keyword (root)
+    ~~~ name (root)
+          ~ assignment (root)
+~~~~~~~~~~~~~~ expression (root)
+       ~ begin (root -> args)
+        ~ end (root -> args)
+       ~~ expression (root -> args)
+            ~~ expression (root -> body)
+--AST
+s(:def, "foo",
+  s(:args),
+  s(:int, "42"))

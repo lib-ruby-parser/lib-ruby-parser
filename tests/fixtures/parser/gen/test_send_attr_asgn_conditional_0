@@ -1,0 +1,12 @@
+--INPUT
+a&.b = 1
+--LOCATIONS
+   ~ selector (root)
+~~~~~~~~ expression (root)
+~ selector (root -> recv)
+~ expression (root -> recv)
+       ~ expression (root -> args -> 0)
+--AST
+s(:csend,
+  s(:send, nil, "a"), "b=",
+  s(:int, "1"))

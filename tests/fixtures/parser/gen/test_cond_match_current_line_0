@@ -1,0 +1,18 @@
+--INPUT
+if /wat/; end
+--LOCATIONS
+~~ keyword (root)
+          ~~~ end (root)
+        ~ begin (root)
+~~~~~~~~~~~~~ expression (root)
+   ~~~~~ expression (root -> cond)
+   ~ begin (root -> cond -> re)
+       ~ end (root -> cond -> re)
+   ~~~~~ expression (root -> cond -> re)
+    ~~~ expression (root -> cond -> re -> parts -> 0)
+--AST
+s(:if,
+  s(:match_current_line,
+    s(:regexp,
+      s(:str, "wat"),
+      s(:regopt))), nil, nil)

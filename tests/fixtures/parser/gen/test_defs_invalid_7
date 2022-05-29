@@ -1,0 +1,4 @@
+--INPUT
+def (/foo/).foo; end
+--DIAGNOSTIC
+     ~~~~~ (error) can't define singleton method for literals

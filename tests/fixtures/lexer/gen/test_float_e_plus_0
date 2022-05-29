@@ -1,0 +1,4 @@
+--INPUT
+1e+10
+--TOKENS
+tFLOAT "1e+10" [0, 5]

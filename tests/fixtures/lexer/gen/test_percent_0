@@ -1,0 +1,6 @@
+--INPUT
+a % 2
+--TOKENS
+tIDENTIFIER "a" [0, 1]
+tPERCENT "%" [2, 3]
+tINTEGER "2" [4, 5]

@@ -1,0 +1,4 @@
+--INPUT
+def foo(Abc); end
+--DIAGNOSTIC
+        ~~~ (error) formal argument cannot be a constant

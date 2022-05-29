@@ -1,0 +1,14 @@
+--INPUT
+begin foo!; bar! end
+--LOCATIONS
+~~~~~ begin (root)
+                 ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~~ selector (root -> stmts -> 0)
+      ~~~~ expression (root -> stmts -> 0)
+            ~~~~ selector (root -> stmts -> 1)
+            ~~~~ expression (root -> stmts -> 1)
+--AST
+s(:kwbegin,
+  s(:send, nil, "foo!"),
+  s(:send, nil, "bar!"))

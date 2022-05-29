@@ -1,0 +1,18 @@
+--INPUT
+%I[foo#{bar}]
+--LOCATIONS
+~~~ begin (root)
+            ~ end (root)
+~~~~~~~~~~~~~ expression (root)
+   ~~~~~~~~~ expression (root -> elements -> 0)
+   ~~~ expression (root -> elements -> 0 -> parts -> 0)
+      ~~ begin (root -> elements -> 0 -> parts -> 1)
+           ~ end (root -> elements -> 0 -> parts -> 1)
+      ~~~~~~ expression (root -> elements -> 0 -> parts -> 1)
+        ~~~ expression (root -> elements -> 0 -> parts -> 1 -> stmts -> 0)
+--AST
+s(:array,
+  s(:dsym,
+    s(:str, "foo"),
+    s(:begin,
+      s(:lvar, "bar"))))

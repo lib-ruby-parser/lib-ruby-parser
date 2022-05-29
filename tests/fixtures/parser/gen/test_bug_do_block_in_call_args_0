@@ -1,0 +1,21 @@
+--INPUT
+bar def foo; self.each do end end
+--LOCATIONS
+~~~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+    ~~~ keyword (root -> args -> 0)
+        ~~~ name (root -> args -> 0)
+                              ~~~ end (root -> args -> 0)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> args -> 0)
+                       ~~ begin (root -> args -> 0 -> body)
+                          ~~~ end (root -> args -> 0 -> body)
+             ~~~~~~~~~~~~~~~~ expression (root -> args -> 0 -> body)
+                  ~~~~ selector (root -> args -> 0 -> body -> method_call)
+             ~~~~~~~~~ expression (root -> args -> 0 -> body -> method_call)
+             ~~~~ expression (root -> args -> 0 -> body -> method_call -> recv)
+--AST
+s(:send, nil, "bar",
+  s(:def, "foo", nil,
+    s(:block,
+      s(:send,
+        s(:self), "each"), nil, nil)))

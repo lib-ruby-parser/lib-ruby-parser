@@ -1,0 +1,12 @@
+--INPUT
+alias :foo bar
+--LOCATIONS
+~~~~~ keyword (root)
+~~~~~~~~~~~~~~ expression (root)
+      ~ begin (root -> to)
+      ~~~~ expression (root -> to)
+           ~~~ expression (root -> from)
+--AST
+s(:alias,
+  s(:sym, "foo"),
+  s(:sym, "bar"))

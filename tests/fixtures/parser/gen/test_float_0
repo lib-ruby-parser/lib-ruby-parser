@@ -1,0 +1,6 @@
+--INPUT
+1.33
+--LOCATIONS
+~~~~ expression (root)
+--AST
+s(:float, "1.33")

@@ -1,0 +1,26 @@
+--INPUT
+fun(foo, :foo => 1, &baz)
+--LOCATIONS
+   ~ begin (root)
+                        ~ end (root)
+~~~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+    ~~~ expression (root -> args -> 0)
+         ~~~~~~~~~ expression (root -> args -> 1)
+              ~~ operator (root -> args -> 1 -> pairs -> 0)
+         ~~~~~~~~~ expression (root -> args -> 1 -> pairs -> 0)
+         ~ begin (root -> args -> 1 -> pairs -> 0 -> key)
+         ~~~~ expression (root -> args -> 1 -> pairs -> 0 -> key)
+                 ~ expression (root -> args -> 1 -> pairs -> 0 -> value)
+                    ~ operator (root -> args -> 2)
+                    ~~~~ expression (root -> args -> 2)
+                     ~~~ expression (root -> args -> 2 -> value)
+--AST
+s(:send, nil, "fun",
+  s(:lvar, "foo"),
+  s(:kwargs,
+    s(:pair,
+      s(:sym, "foo"),
+      s(:int, "1"))),
+  s(:block_pass,
+    s(:lvar, "baz")))

@@ -1,0 +1,4 @@
+--INPUT
+==
+--TOKENS
+tEQ "==" [0, 2]

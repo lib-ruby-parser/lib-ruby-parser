@@ -1,0 +1,7 @@
+--INPUT
+return
+--LOCATIONS
+~~~~~~ keyword (root)
+~~~~~~ expression (root)
+--AST
+s(:return)

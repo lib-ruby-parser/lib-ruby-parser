@@ -1,0 +1,6 @@
+--INPUT
+1.23if cond
+--TOKENS
+tFLOAT "1.23" [0, 4]
+kIF_MOD "if" [4, 6]
+tIDENTIFIER "cond" [7, 11]

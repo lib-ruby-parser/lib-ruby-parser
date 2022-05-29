@@ -1,0 +1,7 @@
+--INPUT
+Foo
+--LOCATIONS
+~~~ name (root)
+~~~ expression (root)
+--AST
+s(:const, nil, "Foo")

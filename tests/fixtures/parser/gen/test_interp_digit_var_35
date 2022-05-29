@@ -1,0 +1,10 @@
+--INPUT
+ `#@@1` 
+--LOCATIONS
+ ~ begin (root)
+      ~ end (root)
+ ~~~~~~ expression (root)
+  ~~~~ expression (root -> parts -> 0)
+--AST
+s(:xstr,
+  s(:str, "#@@1"))

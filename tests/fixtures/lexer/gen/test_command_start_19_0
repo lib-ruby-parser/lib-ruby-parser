@@ -1,0 +1,7 @@
+--INPUT
+case a:b
+--TOKENS
+kCASE "case" [0, 4]
+tIDENTIFIER "a" [5, 6]
+tSYMBEG ":" [6, 7]
+tIDENTIFIER "b" [7, 8]

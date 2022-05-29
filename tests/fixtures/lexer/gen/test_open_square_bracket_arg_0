@@ -1,0 +1,7 @@
+--INPUT
+m [ 3 ]
+--TOKENS
+tIDENTIFIER "m" [0, 1]
+tLBRACK "[" [2, 3]
+tINTEGER "3" [4, 5]
+tRBRACK "]" [6, 7]

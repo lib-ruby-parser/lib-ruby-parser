@@ -1,0 +1,18 @@
+--INPUT
+for a in foo; p a; end
+--LOCATIONS
+~~~ keyword (root)
+                   ~~~ end (root)
+            ~ begin (root)
+~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+    ~ expression (root -> iterator)
+         ~~~ expression (root -> iteratee)
+              ~ selector (root -> body)
+              ~~~ expression (root -> body)
+                ~ expression (root -> body -> args -> 0)
+--AST
+s(:for,
+  s(:lvasgn, "a"),
+  s(:lvar, "foo"),
+  s(:send, nil, "p",
+    s(:lvar, "a")))

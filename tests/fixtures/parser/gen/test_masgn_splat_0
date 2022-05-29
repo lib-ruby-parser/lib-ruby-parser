@@ -1,0 +1,20 @@
+--INPUT
+@foo, @@bar = *foo
+--LOCATIONS
+            ~ operator (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+~~~~~~~~~~~ expression (root -> lhs)
+~~~~ expression (root -> lhs -> mlhs_items -> 0)
+      ~~~~~ expression (root -> lhs -> mlhs_items -> 1)
+              ~~~~ expression (root -> rhs)
+              ~ operator (root -> rhs -> elements -> 0)
+              ~~~~ expression (root -> rhs -> elements -> 0)
+               ~~~ expression (root -> rhs -> elements -> 0 -> value)
+--AST
+s(:masgn,
+  s(:mlhs,
+    s(:ivasgn, "@foo"),
+    s(:cvasgn, "@@bar")),
+  s(:array,
+    s(:splat,
+      s(:lvar, "foo"))))

@@ -1,0 +1,12 @@
+--INPUT
+meth while foo
+--LOCATIONS
+     ~~~~~ keyword (root)
+~~~~~~~~~~~~~~ expression (root)
+           ~~~ expression (root -> cond)
+~~~~ selector (root -> body)
+~~~~ expression (root -> body)
+--AST
+s(:while,
+  s(:lvar, "foo"),
+  s(:send, nil, "meth"))

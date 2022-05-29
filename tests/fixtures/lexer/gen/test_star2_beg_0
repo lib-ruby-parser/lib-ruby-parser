@@ -1,0 +1,4 @@
+--INPUT
+** 
+--TOKENS
+tDSTAR "**" [0, 2]

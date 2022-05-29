@@ -1,0 +1,7 @@
+--INPUT
+x
+&.y
+--TOKENS
+tIDENTIFIER "x" [0, 1]
+tANDDOT "&." [2, 4]
+tIDENTIFIER "y" [4, 5]

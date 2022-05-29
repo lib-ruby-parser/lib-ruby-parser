@@ -1,0 +1,7 @@
+--STATE
+expr_dot
+--INPUT
+#foo
+class
+--TOKENS
+tIDENTIFIER "class" [5, 10]

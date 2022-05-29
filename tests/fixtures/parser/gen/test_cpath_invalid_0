@@ -1,0 +1,4 @@
+--INPUT
+module foo; end
+--DIAGNOSTIC
+       ~~~ (error) class/module name must be CONSTANT

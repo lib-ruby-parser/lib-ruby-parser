@@ -1,0 +1,27 @@
+--INPUT
+foo(a:, b:)
+--LOCATIONS
+   ~ begin (root)
+          ~ end (root)
+~~~ selector (root)
+~~~~~~~~~~~ expression (root)
+    ~~~~~~ expression (root -> args -> 0)
+     ~ operator (root -> args -> 0 -> pairs -> 0)
+    ~~ expression (root -> args -> 0 -> pairs -> 0)
+    ~ expression (root -> args -> 0 -> pairs -> 0 -> key)
+    ~ selector (root -> args -> 0 -> pairs -> 0 -> value)
+    ~ expression (root -> args -> 0 -> pairs -> 0 -> value)
+         ~ operator (root -> args -> 0 -> pairs -> 1)
+        ~~ expression (root -> args -> 0 -> pairs -> 1)
+        ~ expression (root -> args -> 0 -> pairs -> 1 -> key)
+        ~ selector (root -> args -> 0 -> pairs -> 1 -> value)
+        ~ expression (root -> args -> 0 -> pairs -> 1 -> value)
+--AST
+s(:send, nil, "foo",
+  s(:kwargs,
+    s(:pair,
+      s(:sym, "a"),
+      s(:send, nil, "a")),
+    s(:pair,
+      s(:sym, "b"),
+      s(:send, nil, "b"))))

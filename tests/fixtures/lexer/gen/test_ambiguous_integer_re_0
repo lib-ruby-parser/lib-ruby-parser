@@ -1,0 +1,5 @@
+--INPUT
+1re
+--TOKENS
+tINTEGER "1" [0, 1]
+tIDENTIFIER "re" [1, 3]

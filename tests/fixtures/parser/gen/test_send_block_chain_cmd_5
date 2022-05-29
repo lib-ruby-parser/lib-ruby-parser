@@ -1,0 +1,24 @@
+--INPUT
+meth 1 do end.fun(bar) {}
+--LOCATIONS
+                       ~ begin (root)
+                        ~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+                 ~ begin (root -> method_call)
+                     ~ end (root -> method_call)
+              ~~~ selector (root -> method_call)
+~~~~~~~~~~~~~~~~~~~~~~ expression (root -> method_call)
+       ~~ begin (root -> method_call -> recv)
+          ~~~ end (root -> method_call -> recv)
+~~~~~~~~~~~~~ expression (root -> method_call -> recv)
+~~~~ selector (root -> method_call -> recv -> method_call)
+~~~~~~ expression (root -> method_call -> recv -> method_call)
+     ~ expression (root -> method_call -> recv -> method_call -> args -> 0)
+                  ~~~ expression (root -> method_call -> args -> 0)
+--AST
+s(:block,
+  s(:send,
+    s(:block,
+      s(:send, nil, "meth",
+        s(:int, "1")), nil, nil), "fun",
+    s(:lvar, "bar")), nil, nil)

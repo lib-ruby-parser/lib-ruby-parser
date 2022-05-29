@@ -1,0 +1,4 @@
+--INPUT
+__FILE__ = foo
+--DIAGNOSTIC
+~~~~~~~~ (error) Can't assign to __FILE__

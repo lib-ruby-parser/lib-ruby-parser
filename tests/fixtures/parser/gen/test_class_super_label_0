@@ -1,0 +1,18 @@
+--INPUT
+class Foo < a:b; end
+--LOCATIONS
+~~~~~ keyword (root)
+          ~ operator (root)
+                 ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~ name (root -> name)
+      ~~~ expression (root -> name)
+            ~ selector (root -> superclass)
+            ~~~ expression (root -> superclass)
+             ~ begin (root -> superclass -> args -> 0)
+             ~~ expression (root -> superclass -> args -> 0)
+--AST
+s(:class,
+  s(:const, nil, "Foo"),
+  s(:send, nil, "a",
+    s(:sym, "b")), nil)

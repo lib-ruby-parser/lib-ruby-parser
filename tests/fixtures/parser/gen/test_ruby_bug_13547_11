@@ -1,0 +1,4 @@
+--INPUT
+m [] {}
+--DIAGNOSTIC
+     ~ (error) unexpected tLCURLY

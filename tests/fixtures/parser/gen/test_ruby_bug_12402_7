@@ -1,0 +1,20 @@
+--INPUT
+foo = raise bar rescue nil
+--LOCATIONS
+    ~ operator (root)
+~~~ name (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~~~~~~~~~~~~~~~~~~ expression (root -> value)
+      ~~~~~ selector (root -> value -> body)
+      ~~~~~~~~~ expression (root -> value -> body)
+            ~~~ expression (root -> value -> body -> args -> 0)
+                ~~~~~~ keyword (root -> value -> rescue_bodies -> 0)
+                ~~~~~~~~~~ expression (root -> value -> rescue_bodies -> 0)
+                       ~~~ expression (root -> value -> rescue_bodies -> 0 -> body)
+--AST
+s(:lvasgn, "foo",
+  s(:rescue,
+    s(:send, nil, "raise",
+      s(:lvar, "bar")),
+    s(:resbody, nil, nil,
+      s(:nil)), nil))

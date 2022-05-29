@@ -1,0 +1,4 @@
+--INPUT
+fun(&bar) do end
+--DIAGNOSTIC
+    ~~~~ (error) both block arg and actual block given

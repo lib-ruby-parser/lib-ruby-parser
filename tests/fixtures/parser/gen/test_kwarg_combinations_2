@@ -1,0 +1,17 @@
+--INPUT
+def f **baz, &b; end
+--LOCATIONS
+~~~ keyword (root)
+    ~ name (root)
+                 ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~~~~~~~ expression (root -> args)
+        ~~~ name (root -> args -> arglist -> 0)
+      ~~~~~ expression (root -> args -> arglist -> 0)
+              ~ name (root -> args -> arglist -> 1)
+             ~~ expression (root -> args -> arglist -> 1)
+--AST
+s(:def, "f",
+  s(:args,
+    s(:kwrestarg, "baz"),
+    s(:blockarg, "b")), nil)

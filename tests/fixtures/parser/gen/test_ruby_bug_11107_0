@@ -1,0 +1,26 @@
+--INPUT
+p ->() do a() do end end
+--LOCATIONS
+~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+       ~~ begin (root -> args -> 0)
+                     ~~~ end (root -> args -> 0)
+  ~~~~~~~~~~~~~~~~~~~~~~ expression (root -> args -> 0)
+  ~~ expression (root -> args -> 0 -> method_call)
+    ~ begin (root -> args -> 0 -> args)
+     ~ end (root -> args -> 0 -> args)
+    ~~ expression (root -> args -> 0 -> args)
+              ~~ begin (root -> args -> 0 -> body)
+                 ~~~ end (root -> args -> 0 -> body)
+          ~~~~~~~~~~ expression (root -> args -> 0 -> body)
+           ~ begin (root -> args -> 0 -> body -> method_call)
+            ~ end (root -> args -> 0 -> body -> method_call)
+          ~ selector (root -> args -> 0 -> body -> method_call)
+          ~~~ expression (root -> args -> 0 -> body -> method_call)
+--AST
+s(:send, nil, "p",
+  s(:block,
+    s(:lambda),
+    s(:args),
+    s(:block,
+      s(:send, nil, "a"), nil, nil)))

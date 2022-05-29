@@ -1,0 +1,9 @@
+--INPUT
+if true
+ return end
+--TOKENS
+kIF "if" [0, 2]
+kTRUE "true" [3, 7]
+tNL "\n" [7, 8]
+kRETURN "return" [9, 15]
+kEND "end" [16, 19]

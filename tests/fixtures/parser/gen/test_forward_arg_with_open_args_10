@@ -1,0 +1,24 @@
+--INPUT
+(def foo ...; bar(...); end)
+--LOCATIONS
+~ begin (root)
+                           ~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+ ~~~ keyword (root -> stmts -> 0)
+     ~~~ name (root -> stmts -> 0)
+                        ~~~ end (root -> stmts -> 0)
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> stmts -> 0)
+         ~~~ expression (root -> stmts -> 0 -> args)
+         ~~~ expression (root -> stmts -> 0 -> args -> arglist -> 0)
+                 ~ begin (root -> stmts -> 0 -> body)
+                     ~ end (root -> stmts -> 0 -> body)
+              ~~~ selector (root -> stmts -> 0 -> body)
+              ~~~~~~~~ expression (root -> stmts -> 0 -> body)
+                  ~~~ expression (root -> stmts -> 0 -> body -> args -> 0)
+--AST
+s(:begin,
+  s(:def, "foo",
+    s(:args,
+      s(:forward_arg)),
+    s(:send, nil, "bar",
+      s(:forwarded_args))))

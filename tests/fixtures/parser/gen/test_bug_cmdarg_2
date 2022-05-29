@@ -1,0 +1,27 @@
+--INPUT
+f x: -> do meth do end end
+--LOCATIONS
+~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+  ~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> args -> 0)
+   ~ operator (root -> args -> 0 -> pairs -> 0)
+  ~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> args -> 0 -> pairs -> 0)
+  ~ expression (root -> args -> 0 -> pairs -> 0 -> key)
+        ~~ begin (root -> args -> 0 -> pairs -> 0 -> value)
+                       ~~~ end (root -> args -> 0 -> pairs -> 0 -> value)
+     ~~~~~~~~~~~~~~~~~~~~~ expression (root -> args -> 0 -> pairs -> 0 -> value)
+     ~~ expression (root -> args -> 0 -> pairs -> 0 -> value -> method_call)
+                ~~ begin (root -> args -> 0 -> pairs -> 0 -> value -> body)
+                   ~~~ end (root -> args -> 0 -> pairs -> 0 -> value -> body)
+           ~~~~~~~~~~~ expression (root -> args -> 0 -> pairs -> 0 -> value -> body)
+           ~~~~ selector (root -> args -> 0 -> pairs -> 0 -> value -> body -> method_call)
+           ~~~~ expression (root -> args -> 0 -> pairs -> 0 -> value -> body -> method_call)
+--AST
+s(:send, nil, "f",
+  s(:kwargs,
+    s(:pair,
+      s(:sym, "x"),
+      s(:block,
+        s(:lambda), nil,
+        s(:block,
+          s(:send, nil, "meth"), nil, nil)))))

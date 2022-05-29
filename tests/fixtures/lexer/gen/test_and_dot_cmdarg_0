@@ -1,0 +1,6 @@
+--STATE
+expr_cmdarg
+--INPUT
+&.
+--TOKENS
+tANDDOT "&." [0, 2]

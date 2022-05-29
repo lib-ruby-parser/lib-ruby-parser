@@ -1,0 +1,9 @@
+--INPUT
+Foo = 10
+--LOCATIONS
+~~~ name (root)
+~~~~~~~~ expression (root)
+      ~~ expression (root -> value)
+--AST
+s(:casgn, nil, "Foo",
+  s(:int, "10"))

@@ -1,0 +1,12 @@
+--INPUT
+[1, 2]
+--LOCATIONS
+~ begin (root)
+     ~ end (root)
+~~~~~~ expression (root)
+ ~ expression (root -> elements -> 0)
+    ~ expression (root -> elements -> 1)
+--AST
+s(:array,
+  s(:int, "1"),
+  s(:int, "2"))

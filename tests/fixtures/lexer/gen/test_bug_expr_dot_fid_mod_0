@@ -1,0 +1,8 @@
+--INPUT
+foo.x!if 1
+--TOKENS
+tIDENTIFIER "foo" [0, 3]
+tDOT "." [3, 4]
+tFID "x!" [4, 6]
+kIF_MOD "if" [6, 8]
+tINTEGER "1" [9, 10]

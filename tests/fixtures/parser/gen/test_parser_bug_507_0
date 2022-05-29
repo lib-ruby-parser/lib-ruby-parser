@@ -1,0 +1,19 @@
+--INPUT
+m = -> *args do end
+--LOCATIONS
+  ~ operator (root)
+~ name (root)
+~~~~~~~~~~~~~~~~~~~ expression (root)
+             ~~ begin (root -> value)
+                ~~~ end (root -> value)
+    ~~~~~~~~~~~~~~~ expression (root -> value)
+    ~~ expression (root -> value -> method_call)
+       ~~~~~ expression (root -> value -> args)
+        ~~~~ name (root -> value -> args -> arglist -> 0)
+       ~~~~~ expression (root -> value -> args -> arglist -> 0)
+--AST
+s(:lvasgn, "m",
+  s(:block,
+    s(:lambda),
+    s(:args,
+      s(:restarg, "args")), nil))

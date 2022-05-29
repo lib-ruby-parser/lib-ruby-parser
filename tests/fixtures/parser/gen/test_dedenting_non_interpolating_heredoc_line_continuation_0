@@ -1,0 +1,15 @@
+--INPUT
+<<~'FOO'
+  baz\
+  qux
+FOO
+--LOCATIONS
+         ~~~~~~~~~~~~~ heredoc_body (root)
+                      ~~~ heredoc_end (root)
+~~~~~~~~ expression (root)
+         ~~~~~~~ expression (root -> parts -> 0)
+                ~~~~~~ expression (root -> parts -> 1)
+--AST
+s(:dstr,
+  s(:str, "baz\\\n"),
+  s(:str, "qux\n"))

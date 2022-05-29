@@ -1,0 +1,4 @@
+--INPUT
+foo { _1; bar { _2 }; }
+--DIAGNOSTIC
+                ~~ (error) numbered parameter is already used

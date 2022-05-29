@@ -1,0 +1,8 @@
+--STATE
+expr_endarg
+--INPUT
+
+{
+--TOKENS
+tNL "\n" [0, 1]
+tLBRACE "{" [1, 2]

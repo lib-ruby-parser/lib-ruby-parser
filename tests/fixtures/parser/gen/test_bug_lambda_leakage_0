@@ -1,0 +1,21 @@
+--INPUT
+->(scope) {}; scope
+--LOCATIONS
+~~~~~~~~~~~~~~~~~~~ expression (root)
+          ~ begin (root -> stmts -> 0)
+           ~ end (root -> stmts -> 0)
+~~~~~~~~~~~~ expression (root -> stmts -> 0)
+~~ expression (root -> stmts -> 0 -> method_call)
+  ~ begin (root -> stmts -> 0 -> args)
+        ~ end (root -> stmts -> 0 -> args)
+  ~~~~~~~ expression (root -> stmts -> 0 -> args)
+   ~~~~~ expression (root -> stmts -> 0 -> args -> arglist -> 0)
+              ~~~~~ selector (root -> stmts -> 1)
+              ~~~~~ expression (root -> stmts -> 1)
+--AST
+s(:begin,
+  s(:block,
+    s(:lambda),
+    s(:args,
+      s(:arg, "scope")), nil),
+  s(:send, nil, "scope"))

@@ -1,0 +1,16 @@
+--INPUT
+next fun foo do end
+--LOCATIONS
+~~~~ keyword (root)
+~~~~~~~~~~~~~~~~~~~ expression (root)
+             ~~ begin (root -> args -> 0)
+                ~~~ end (root -> args -> 0)
+     ~~~~~~~~~~~~~~ expression (root -> args -> 0)
+     ~~~ selector (root -> args -> 0 -> method_call)
+     ~~~~~~~ expression (root -> args -> 0 -> method_call)
+         ~~~ expression (root -> args -> 0 -> method_call -> args -> 0)
+--AST
+s(:next,
+  s(:block,
+    s(:send, nil, "fun",
+      s(:lvar, "foo")), nil, nil))

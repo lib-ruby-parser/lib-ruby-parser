@@ -1,0 +1,32 @@
+--INPUT
+case foo; when 1, *baz; bar; when *foo; end
+--LOCATIONS
+~~~~ keyword (root)
+                                        ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+     ~~~ expression (root -> expr)
+                      ~ begin (root -> when_bodies -> 0)
+          ~~~~ keyword (root -> when_bodies -> 0)
+          ~~~~~~~~~~~~~~~~~ expression (root -> when_bodies -> 0)
+               ~ expression (root -> when_bodies -> 0 -> args -> 0)
+                  ~ operator (root -> when_bodies -> 0 -> args -> 1)
+                  ~~~~ expression (root -> when_bodies -> 0 -> args -> 1)
+                   ~~~ expression (root -> when_bodies -> 0 -> args -> 1 -> value)
+                        ~~~ expression (root -> when_bodies -> 0 -> body)
+                                      ~ begin (root -> when_bodies -> 1)
+                             ~~~~ keyword (root -> when_bodies -> 1)
+                             ~~~~~~~~~ expression (root -> when_bodies -> 1)
+                                  ~ operator (root -> when_bodies -> 1 -> args -> 0)
+                                  ~~~~ expression (root -> when_bodies -> 1 -> args -> 0)
+                                   ~~~ expression (root -> when_bodies -> 1 -> args -> 0 -> value)
+--AST
+s(:case,
+  s(:lvar, "foo"),
+  s(:when,
+    s(:int, "1"),
+    s(:splat,
+      s(:lvar, "baz")),
+    s(:lvar, "bar")),
+  s(:when,
+    s(:splat,
+      s(:lvar, "foo")), nil), nil)

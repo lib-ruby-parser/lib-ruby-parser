@@ -1,0 +1,24 @@
+--INPUT
+begin; meth; rescue; baz; ensure; bar; end
+--LOCATIONS
+~~~~~ begin (root)
+                                       ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+                          ~~~~~~ keyword (root -> stmts -> 0)
+       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> stmts -> 0)
+       ~~~~~~~~~~~~~~~~~ expression (root -> stmts -> 0 -> body)
+       ~~~~ selector (root -> stmts -> 0 -> body -> body)
+       ~~~~ expression (root -> stmts -> 0 -> body -> body)
+             ~~~~~~ keyword (root -> stmts -> 0 -> body -> rescue_bodies -> 0)
+                   ~ begin (root -> stmts -> 0 -> body -> rescue_bodies -> 0)
+             ~~~~~~~~~~~ expression (root -> stmts -> 0 -> body -> rescue_bodies -> 0)
+                     ~~~ expression (root -> stmts -> 0 -> body -> rescue_bodies -> 0 -> body)
+                                  ~~~ expression (root -> stmts -> 0 -> ensure)
+--AST
+s(:kwbegin,
+  s(:ensure,
+    s(:rescue,
+      s(:send, nil, "meth"),
+      s(:resbody, nil, nil,
+        s(:lvar, "baz")), nil),
+    s(:lvar, "bar")))

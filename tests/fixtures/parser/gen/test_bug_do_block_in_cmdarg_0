@@ -1,0 +1,18 @@
+--INPUT
+tap (proc do end)
+--LOCATIONS
+~~~ selector (root)
+~~~~~~~~~~~~~~~~~ expression (root)
+    ~ begin (root -> args -> 0)
+                ~ end (root -> args -> 0)
+    ~~~~~~~~~~~~~ expression (root -> args -> 0)
+          ~~ begin (root -> args -> 0 -> stmts -> 0)
+             ~~~ end (root -> args -> 0 -> stmts -> 0)
+     ~~~~~~~~~~~ expression (root -> args -> 0 -> stmts -> 0)
+     ~~~~ selector (root -> args -> 0 -> stmts -> 0 -> method_call)
+     ~~~~ expression (root -> args -> 0 -> stmts -> 0 -> method_call)
+--AST
+s(:send, nil, "tap",
+  s(:begin,
+    s(:block,
+      s(:send, nil, "proc"), nil, nil)))

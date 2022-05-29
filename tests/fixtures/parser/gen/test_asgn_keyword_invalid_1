@@ -1,0 +1,4 @@
+--INPUT
+self = foo
+--DIAGNOSTIC
+~~~~ (error) Can't change the value of self

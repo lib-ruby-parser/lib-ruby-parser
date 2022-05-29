@@ -1,0 +1,16 @@
+--INPUT
+-> do rescue; end
+--LOCATIONS
+   ~~ begin (root)
+              ~~~ end (root)
+~~~~~~~~~~~~~~~~~ expression (root)
+~~ expression (root -> method_call)
+      ~~~~~~~ expression (root -> body)
+      ~~~~~~ keyword (root -> body -> rescue_bodies -> 0)
+            ~ begin (root -> body -> rescue_bodies -> 0)
+      ~~~~~~~ expression (root -> body -> rescue_bodies -> 0)
+--AST
+s(:block,
+  s(:lambda), nil,
+  s(:rescue, nil,
+    s(:resbody, nil, nil, nil), nil))

@@ -1,0 +1,7 @@
+--INPUT
+:a==>b
+--TOKENS
+tSYMBEG ":" [0, 1]
+tIDENTIFIER "a=" [1, 3]
+tASSOC "=>" [3, 5]
+tIDENTIFIER "b" [5, 6]

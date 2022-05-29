@@ -1,0 +1,19 @@
+--INPUT
+::A, foo = foo
+--LOCATIONS
+         ~ operator (root)
+~~~~~~~~~~~~~~ expression (root)
+~~~~~~~~ expression (root -> lhs)
+  ~ name (root -> lhs -> mlhs_items -> 0)
+~~ double_colon (root -> lhs -> mlhs_items -> 0)
+~~~ expression (root -> lhs -> mlhs_items -> 0)
+~~ expression (root -> lhs -> mlhs_items -> 0 -> scope)
+     ~~~ expression (root -> lhs -> mlhs_items -> 1)
+           ~~~ expression (root -> rhs)
+--AST
+s(:masgn,
+  s(:mlhs,
+    s(:casgn,
+      s(:cbase), "A"),
+    s(:lvasgn, "foo")),
+  s(:lvar, "foo"))

@@ -1,0 +1,4 @@
+--INPUT
+*a&.x = 0
+--DIAGNOSTIC
+  ~~ (error) &. inside multiple assignment destination

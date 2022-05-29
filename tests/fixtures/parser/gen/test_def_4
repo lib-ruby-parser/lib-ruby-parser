@@ -1,0 +1,9 @@
+--INPUT
+def BEGIN; end
+--LOCATIONS
+~~~ keyword (root)
+    ~~~~~ name (root)
+           ~~~ end (root)
+~~~~~~~~~~~~~~ expression (root)
+--AST
+s(:def, "BEGIN", nil, nil)

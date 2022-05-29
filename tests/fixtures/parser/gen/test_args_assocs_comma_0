@@ -1,0 +1,20 @@
+--INPUT
+foo[:baz => 1,]
+--LOCATIONS
+   ~ begin (root)
+              ~ end (root)
+~~~~~~~~~~~~~~~ expression (root)
+~~~ expression (root -> recv)
+    ~~~~~~~~~ expression (root -> indexes -> 0)
+         ~~ operator (root -> indexes -> 0 -> pairs -> 0)
+    ~~~~~~~~~ expression (root -> indexes -> 0 -> pairs -> 0)
+    ~ begin (root -> indexes -> 0 -> pairs -> 0 -> key)
+    ~~~~ expression (root -> indexes -> 0 -> pairs -> 0 -> key)
+            ~ expression (root -> indexes -> 0 -> pairs -> 0 -> value)
+--AST
+s(:index,
+  s(:lvar, "foo"),
+  s(:kwargs,
+    s(:pair,
+      s(:sym, "baz"),
+      s(:int, "1"))))

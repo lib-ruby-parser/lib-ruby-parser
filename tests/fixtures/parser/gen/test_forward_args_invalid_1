@@ -1,0 +1,4 @@
+--INPUT
+foo do |...| end
+--DIAGNOSTIC
+        ~~~ (error) unexpected tBDOT3

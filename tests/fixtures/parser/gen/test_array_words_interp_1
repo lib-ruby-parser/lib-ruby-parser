@@ -1,0 +1,22 @@
+--INPUT
+%W[foo #{bar}foo#@baz]
+--LOCATIONS
+~~~ begin (root)
+                     ~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+   ~~~ expression (root -> elements -> 0)
+       ~~~~~~~~~~~~~~ expression (root -> elements -> 1)
+       ~~ begin (root -> elements -> 1 -> parts -> 0)
+            ~ end (root -> elements -> 1 -> parts -> 0)
+       ~~~~~~ expression (root -> elements -> 1 -> parts -> 0)
+         ~~~ expression (root -> elements -> 1 -> parts -> 0 -> stmts -> 0)
+             ~~~ expression (root -> elements -> 1 -> parts -> 1)
+                 ~~~~ expression (root -> elements -> 1 -> parts -> 2)
+--AST
+s(:array,
+  s(:str, "foo"),
+  s(:dstr,
+    s(:begin,
+      s(:lvar, "bar")),
+    s(:str, "foo"),
+    s(:ivar, "@baz")))

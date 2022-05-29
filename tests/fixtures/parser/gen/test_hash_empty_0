@@ -1,0 +1,8 @@
+--INPUT
+{ }
+--LOCATIONS
+~ begin (root)
+  ~ end (root)
+~~~ expression (root)
+--AST
+s(:hash)

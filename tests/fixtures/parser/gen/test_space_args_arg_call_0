@@ -1,0 +1,16 @@
+--INPUT
+fun (1).to_i
+--LOCATIONS
+~~~ selector (root)
+~~~~~~~~~~~~ expression (root)
+        ~~~~ selector (root -> args -> 0)
+    ~~~~~~~~ expression (root -> args -> 0)
+    ~ begin (root -> args -> 0 -> recv)
+      ~ end (root -> args -> 0 -> recv)
+    ~~~ expression (root -> args -> 0 -> recv)
+     ~ expression (root -> args -> 0 -> recv -> stmts -> 0)
+--AST
+s(:send, nil, "fun",
+  s(:send,
+    s(:begin,
+      s(:int, "1")), "to_i"))

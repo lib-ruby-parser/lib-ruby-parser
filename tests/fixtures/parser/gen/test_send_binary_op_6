@@ -1,0 +1,11 @@
+--INPUT
+foo | 1
+--LOCATIONS
+    ~ selector (root)
+~~~~~~~ expression (root)
+~~~ expression (root -> recv)
+      ~ expression (root -> args -> 0)
+--AST
+s(:send,
+  s(:lvar, "foo"), "|",
+  s(:int, "1"))

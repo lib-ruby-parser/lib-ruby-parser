@@ -1,0 +1,6 @@
+--INPUT
+123rescue cond
+--TOKENS
+tINTEGER "123" [0, 3]
+kRESCUE_MOD "rescue" [3, 9]
+tIDENTIFIER "cond" [10, 14]

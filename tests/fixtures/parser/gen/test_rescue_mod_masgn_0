@@ -1,0 +1,29 @@
+--INPUT
+foo, bar = meth rescue [1, 2]
+--LOCATIONS
+         ~ operator (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~~~~~~~~ expression (root -> lhs)
+~~~ expression (root -> lhs -> mlhs_items -> 0)
+     ~~~ expression (root -> lhs -> mlhs_items -> 1)
+           ~~~~~~~~~~~~~~~~~~ expression (root -> rhs)
+           ~~~~ selector (root -> rhs -> body)
+           ~~~~ expression (root -> rhs -> body)
+                ~~~~~~ keyword (root -> rhs -> rescue_bodies -> 0)
+                ~~~~~~~~~~~~~ expression (root -> rhs -> rescue_bodies -> 0)
+                       ~ begin (root -> rhs -> rescue_bodies -> 0 -> body)
+                            ~ end (root -> rhs -> rescue_bodies -> 0 -> body)
+                       ~~~~~~ expression (root -> rhs -> rescue_bodies -> 0 -> body)
+                        ~ expression (root -> rhs -> rescue_bodies -> 0 -> body -> elements -> 0)
+                           ~ expression (root -> rhs -> rescue_bodies -> 0 -> body -> elements -> 1)
+--AST
+s(:masgn,
+  s(:mlhs,
+    s(:lvasgn, "foo"),
+    s(:lvasgn, "bar")),
+  s(:rescue,
+    s(:send, nil, "meth"),
+    s(:resbody, nil, nil,
+      s(:array,
+        s(:int, "1"),
+        s(:int, "2"))), nil))

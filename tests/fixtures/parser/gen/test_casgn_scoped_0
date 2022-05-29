@@ -1,0 +1,13 @@
+--INPUT
+Bar::Foo = 10
+--LOCATIONS
+     ~~~ name (root)
+   ~~ double_colon (root)
+~~~~~~~~~~~~~ expression (root)
+~~~ name (root -> scope)
+~~~ expression (root -> scope)
+           ~~ expression (root -> value)
+--AST
+s(:casgn,
+  s(:const, nil, "Bar"), "Foo",
+  s(:int, "10"))

@@ -1,0 +1,6 @@
+--INPUT
+false
+--LOCATIONS
+~~~~~ expression (root)
+--AST
+s(:false)

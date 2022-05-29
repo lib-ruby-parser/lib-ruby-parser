@@ -1,0 +1,6 @@
+--INPUT
+42ri
+--LOCATIONS
+~~~~ expression (root)
+--AST
+s(:complex, "42ri")

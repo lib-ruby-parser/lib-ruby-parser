@@ -1,0 +1,16 @@
+--INPUT
+begin; meth; ensure; bar; end
+--LOCATIONS
+~~~~~ begin (root)
+                          ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+             ~~~~~~ keyword (root -> stmts -> 0)
+       ~~~~~~~~~~~~~~~~~ expression (root -> stmts -> 0)
+       ~~~~ selector (root -> stmts -> 0 -> body)
+       ~~~~ expression (root -> stmts -> 0 -> body)
+                     ~~~ expression (root -> stmts -> 0 -> ensure)
+--AST
+s(:kwbegin,
+  s(:ensure,
+    s(:send, nil, "meth"),
+    s(:lvar, "bar")))

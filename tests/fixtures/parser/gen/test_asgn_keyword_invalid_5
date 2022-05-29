@@ -1,0 +1,4 @@
+--INPUT
+__LINE__ = foo
+--DIAGNOSTIC
+~~~~~~~~ (error) Can't assign to __LINE__

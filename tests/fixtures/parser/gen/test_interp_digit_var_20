@@ -1,0 +1,10 @@
+--INPUT
+ %I[#@1] 
+--LOCATIONS
+ ~~~ begin (root)
+       ~ end (root)
+ ~~~~~~~ expression (root)
+    ~~~ expression (root -> elements -> 0)
+--AST
+s(:array,
+  s(:sym, "#@1"))

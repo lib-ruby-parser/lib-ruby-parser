@@ -1,0 +1,4 @@
+--INPUT
+def a; module Foo; end; end
+--DIAGNOSTIC
+       ~~~~~~ (error) module definition in method body

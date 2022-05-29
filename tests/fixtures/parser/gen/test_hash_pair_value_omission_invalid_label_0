@@ -1,0 +1,4 @@
+--INPUT
+{ foo?: }
+--DIAGNOSTIC
+  ~~~~ (error) identifier foo? is not valid to get

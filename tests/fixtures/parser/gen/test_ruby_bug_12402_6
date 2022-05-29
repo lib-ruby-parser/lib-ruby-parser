@@ -1,0 +1,27 @@
+--INPUT
+foo::C ||= raise(bar) rescue nil
+--LOCATIONS
+       ~~~ operator (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+     ~ name (root -> recv)
+   ~~ double_colon (root -> recv)
+~~~~~~ expression (root -> recv)
+~~~ expression (root -> recv -> scope)
+           ~~~~~~~~~~~~~~~~~~~~~ expression (root -> value)
+                ~ begin (root -> value -> body)
+                    ~ end (root -> value -> body)
+           ~~~~~ selector (root -> value -> body)
+           ~~~~~~~~~~ expression (root -> value -> body)
+                 ~~~ expression (root -> value -> body -> args -> 0)
+                      ~~~~~~ keyword (root -> value -> rescue_bodies -> 0)
+                      ~~~~~~~~~~ expression (root -> value -> rescue_bodies -> 0)
+                             ~~~ expression (root -> value -> rescue_bodies -> 0 -> body)
+--AST
+s(:or_asgn,
+  s(:casgn,
+    s(:lvar, "foo"), "C"),
+  s(:rescue,
+    s(:send, nil, "raise",
+      s(:lvar, "bar")),
+    s(:resbody, nil, nil,
+      s(:nil)), nil))

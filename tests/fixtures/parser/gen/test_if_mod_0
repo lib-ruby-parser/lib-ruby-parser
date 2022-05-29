@@ -1,0 +1,11 @@
+--INPUT
+bar if foo
+--LOCATIONS
+    ~~ keyword (root)
+~~~~~~~~~~ expression (root)
+       ~~~ expression (root -> cond)
+~~~ expression (root -> if_true)
+--AST
+s(:if,
+  s(:lvar, "foo"),
+  s(:lvar, "bar"), nil)

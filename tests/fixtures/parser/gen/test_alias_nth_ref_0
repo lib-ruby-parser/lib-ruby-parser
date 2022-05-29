@@ -1,0 +1,4 @@
+--INPUT
+alias $a $1
+--DIAGNOSTIC
+         ~~ (error) can't make alias for the number variables

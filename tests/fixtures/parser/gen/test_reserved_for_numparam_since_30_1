@@ -1,0 +1,4 @@
+--INPUT
+_2 = 1
+--DIAGNOSTIC
+~~ (error) _2 is reserved for numbered parameter

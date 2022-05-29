@@ -1,0 +1,34 @@
+--INPUT
+case foo; in { foo: ^(42) } then nil; end
+--LOCATIONS
+~~~~ keyword (root)
+                                      ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+     ~~~ expression (root -> expr)
+                            ~~~~ begin (root -> in_bodies -> 0)
+          ~~ keyword (root -> in_bodies -> 0)
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> in_bodies -> 0)
+             ~ begin (root -> in_bodies -> 0 -> pattern)
+                          ~ end (root -> in_bodies -> 0 -> pattern)
+             ~~~~~~~~~~~~~~ expression (root -> in_bodies -> 0 -> pattern)
+                  ~ operator (root -> in_bodies -> 0 -> pattern -> elements -> 0)
+               ~~~~~~~~~~ expression (root -> in_bodies -> 0 -> pattern -> elements -> 0)
+               ~~~ expression (root -> in_bodies -> 0 -> pattern -> elements -> 0 -> key)
+                    ~ selector (root -> in_bodies -> 0 -> pattern -> elements -> 0 -> value)
+                    ~~~~~ expression (root -> in_bodies -> 0 -> pattern -> elements -> 0 -> value)
+                     ~ begin (root -> in_bodies -> 0 -> pattern -> elements -> 0 -> value -> var)
+                        ~ end (root -> in_bodies -> 0 -> pattern -> elements -> 0 -> value -> var)
+                     ~~~~ expression (root -> in_bodies -> 0 -> pattern -> elements -> 0 -> value -> var)
+                      ~~ expression (root -> in_bodies -> 0 -> pattern -> elements -> 0 -> value -> var -> stmts -> 0)
+                                 ~~~ expression (root -> in_bodies -> 0 -> body)
+--AST
+s(:case_match,
+  s(:lvar, "foo"),
+  s(:in_pattern,
+    s(:hash_pattern,
+      s(:pair,
+        s(:sym, "foo"),
+        s(:pin,
+          s(:begin,
+            s(:int, "42"))))), nil,
+    s(:nil)), nil)

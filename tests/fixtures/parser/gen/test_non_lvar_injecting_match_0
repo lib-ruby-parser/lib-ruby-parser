@@ -1,0 +1,24 @@
+--INPUT
+/#{1}(?<match>bar)/ =~ 'bar'
+--LOCATIONS
+                    ~~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~ begin (root -> recv)
+                  ~ end (root -> recv)
+~~~~~~~~~~~~~~~~~~~ expression (root -> recv)
+ ~~ begin (root -> recv -> parts -> 0)
+    ~ end (root -> recv -> parts -> 0)
+ ~~~~ expression (root -> recv -> parts -> 0)
+   ~ expression (root -> recv -> parts -> 0 -> stmts -> 0)
+     ~~~~~~~~~~~~~ expression (root -> recv -> parts -> 1)
+                       ~ begin (root -> args -> 0)
+                           ~ end (root -> args -> 0)
+                       ~~~~~ expression (root -> args -> 0)
+--AST
+s(:send,
+  s(:regexp,
+    s(:begin,
+      s(:int, "1")),
+    s(:str, "(?<match>bar)"),
+    s(:regopt)), "=~",
+  s(:str, "bar"))

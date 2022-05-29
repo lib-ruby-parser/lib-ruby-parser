@@ -1,0 +1,10 @@
+--INPUT
+super do end
+--LOCATIONS
+      ~~ begin (root)
+         ~~~ end (root)
+~~~~~~~~~~~~ expression (root)
+~~~~~ expression (root -> method_call)
+--AST
+s(:block,
+  s(:zsuper), nil, nil)

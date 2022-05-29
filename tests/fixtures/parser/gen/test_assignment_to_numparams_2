@@ -1,0 +1,4 @@
+--INPUT
+proc {_9; _1 = nil}
+--DIAGNOSTIC
+          ~~ (error) Can't assign to numbered parameter _1

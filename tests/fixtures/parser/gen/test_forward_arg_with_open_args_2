@@ -1,0 +1,5 @@
+--INPUT
+def foo *rest, ...
+end
+--DIAGNOSTIC
+               ~~~ (error) ... after rest argument

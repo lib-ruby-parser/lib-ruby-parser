@@ -1,0 +1,11 @@
+--INPUT
+foo && bar
+--LOCATIONS
+    ~~ operator (root)
+~~~~~~~~~~ expression (root)
+~~~ expression (root -> lhs)
+       ~~~ expression (root -> rhs)
+--AST
+s(:and,
+  s(:lvar, "foo"),
+  s(:lvar, "bar"))

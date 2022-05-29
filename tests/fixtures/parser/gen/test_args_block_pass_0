@@ -1,0 +1,14 @@
+--INPUT
+fun(&bar)
+--LOCATIONS
+   ~ begin (root)
+        ~ end (root)
+~~~ selector (root)
+~~~~~~~~~ expression (root)
+    ~ operator (root -> args -> 0)
+    ~~~~ expression (root -> args -> 0)
+     ~~~ expression (root -> args -> 0 -> value)
+--AST
+s(:send, nil, "fun",
+  s(:block_pass,
+    s(:lvar, "bar")))

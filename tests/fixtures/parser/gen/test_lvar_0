@@ -1,0 +1,6 @@
+--INPUT
+foo
+--LOCATIONS
+~~~ expression (root)
+--AST
+s(:lvar, "foo")

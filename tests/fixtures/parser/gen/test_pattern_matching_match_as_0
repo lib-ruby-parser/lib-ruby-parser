@@ -1,0 +1,24 @@
+--INPUT
+case foo; in 1 => a then true; end
+--LOCATIONS
+~~~~ keyword (root)
+                               ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+     ~~~ expression (root -> expr)
+                    ~~~~ begin (root -> in_bodies -> 0)
+          ~~ keyword (root -> in_bodies -> 0)
+          ~~~~~~~~~~~~~~~~~~~ expression (root -> in_bodies -> 0)
+               ~~ operator (root -> in_bodies -> 0 -> pattern)
+             ~~~~~~ expression (root -> in_bodies -> 0 -> pattern)
+             ~ expression (root -> in_bodies -> 0 -> pattern -> value)
+                  ~ name (root -> in_bodies -> 0 -> pattern -> as)
+                  ~ expression (root -> in_bodies -> 0 -> pattern -> as)
+                         ~~~~ expression (root -> in_bodies -> 0 -> body)
+--AST
+s(:case_match,
+  s(:lvar, "foo"),
+  s(:in_pattern,
+    s(:match_as,
+      s(:int, "1"),
+      s(:match_var, "a")), nil,
+    s(:true)), nil)

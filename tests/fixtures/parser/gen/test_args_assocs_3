@@ -1,0 +1,21 @@
+--INPUT
+self.[]= foo, :a => 1
+--LOCATIONS
+     ~~~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~~~~ expression (root -> recv)
+         ~~~ expression (root -> args -> 0)
+              ~~~~~~~ expression (root -> args -> 1)
+                 ~~ operator (root -> args -> 1 -> pairs -> 0)
+              ~~~~~~~ expression (root -> args -> 1 -> pairs -> 0)
+              ~ begin (root -> args -> 1 -> pairs -> 0 -> key)
+              ~~ expression (root -> args -> 1 -> pairs -> 0 -> key)
+                    ~ expression (root -> args -> 1 -> pairs -> 0 -> value)
+--AST
+s(:send,
+  s(:self), "[]=",
+  s(:lvar, "foo"),
+  s(:kwargs,
+    s(:pair,
+      s(:sym, "a"),
+      s(:int, "1"))))

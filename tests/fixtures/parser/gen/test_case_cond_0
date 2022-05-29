@@ -1,0 +1,18 @@
+--INPUT
+case; when foo; 'foo'; end
+--LOCATIONS
+~~~~ keyword (root)
+                       ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+              ~ begin (root -> when_bodies -> 0)
+      ~~~~ keyword (root -> when_bodies -> 0)
+      ~~~~~~~~~~~~~~~ expression (root -> when_bodies -> 0)
+           ~~~ expression (root -> when_bodies -> 0 -> args -> 0)
+                ~ begin (root -> when_bodies -> 0 -> body)
+                    ~ end (root -> when_bodies -> 0 -> body)
+                ~~~~~ expression (root -> when_bodies -> 0 -> body)
+--AST
+s(:case, nil,
+  s(:when,
+    s(:lvar, "foo"),
+    s(:str, "foo")), nil)

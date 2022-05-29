@@ -1,0 +1,13 @@
+--INPUT
+foo.a += 1
+--LOCATIONS
+      ~~ operator (root)
+~~~~~~~~~~ expression (root)
+    ~ selector (root -> recv)
+~~~~~ expression (root -> recv)
+~~~ expression (root -> recv -> recv)
+--AST
+s(:op_asgn,
+  s(:send,
+    s(:lvar, "foo"), "a"), "+",
+  s(:int, "1"))

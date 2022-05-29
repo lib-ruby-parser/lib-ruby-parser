@@ -1,0 +1,9 @@
+--INPUT
+1..
+--LOCATIONS
+ ~~ operator (root)
+~~~ expression (root)
+~ expression (root -> left)
+--AST
+s(:irange,
+  s(:int, "1"), nil)

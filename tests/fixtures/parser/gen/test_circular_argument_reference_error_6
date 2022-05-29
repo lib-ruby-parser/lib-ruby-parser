@@ -1,0 +1,4 @@
+--INPUT
+m { |foo = proc { 1 + foo }| } 
+--DIAGNOSTIC
+                      ~~~ (error) circular argument reference - foo

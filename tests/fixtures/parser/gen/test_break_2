@@ -1,0 +1,11 @@
+--INPUT
+break()
+--LOCATIONS
+~~~~~ keyword (root)
+~~~~~~~ expression (root)
+     ~ begin (root -> args -> 0)
+      ~ end (root -> args -> 0)
+     ~~ expression (root -> args -> 0)
+--AST
+s(:break,
+  s(:begin))

@@ -1,0 +1,8 @@
+--COND
+--INPUT
+x do 42 end
+--TOKENS
+tIDENTIFIER "x" [0, 1]
+kDO_COND "do" [2, 4]
+tINTEGER "42" [5, 7]
+kEND "end" [8, 11]

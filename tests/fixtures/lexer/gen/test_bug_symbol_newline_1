@@ -1,0 +1,7 @@
+--INPUT
+:foo=
+
+--TOKENS
+tSYMBEG ":" [0, 1]
+tIDENTIFIER "foo=" [1, 5]
+tNL "\n" [5, 6]

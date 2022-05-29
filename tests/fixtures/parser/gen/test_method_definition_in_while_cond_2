@@ -1,0 +1,30 @@
+--INPUT
+while def foo a = tap do end; end; break; end
+--LOCATIONS
+                                 ~ begin (root)
+                                          ~~~ end (root)
+~~~~~ keyword (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~ keyword (root -> cond)
+          ~~~ name (root -> cond)
+                              ~~~ end (root -> cond)
+      ~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> cond)
+              ~~~~~~~~~~~~~~ expression (root -> cond -> args)
+                ~ operator (root -> cond -> args -> arglist -> 0)
+              ~ name (root -> cond -> args -> arglist -> 0)
+              ~~~~~~~~~~~~~~ expression (root -> cond -> args -> arglist -> 0)
+                      ~~ begin (root -> cond -> args -> arglist -> 0 -> default_value)
+                         ~~~ end (root -> cond -> args -> arglist -> 0 -> default_value)
+                  ~~~~~~~~~~ expression (root -> cond -> args -> arglist -> 0 -> default_value)
+                  ~~~ selector (root -> cond -> args -> arglist -> 0 -> default_value -> method_call)
+                  ~~~ expression (root -> cond -> args -> arglist -> 0 -> default_value -> method_call)
+                                   ~~~~~ keyword (root -> body)
+                                   ~~~~~ expression (root -> body)
+--AST
+s(:while,
+  s(:def, "foo",
+    s(:args,
+      s(:optarg, "a",
+        s(:block,
+          s(:send, nil, "tap"), nil, nil))), nil),
+  s(:break))

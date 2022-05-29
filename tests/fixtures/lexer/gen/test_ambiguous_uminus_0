@@ -1,0 +1,6 @@
+--INPUT
+m -3
+--TOKENS
+tIDENTIFIER "m" [0, 1]
+tUMINUS_NUM "-" [2, 3]
+tINTEGER "3" [3, 4]

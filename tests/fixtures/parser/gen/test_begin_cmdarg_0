@@ -1,0 +1,22 @@
+--INPUT
+p begin 1.times do 1 end end
+--LOCATIONS
+~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+  ~~~~~ begin (root -> args -> 0)
+                         ~~~ end (root -> args -> 0)
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> args -> 0)
+                ~~ begin (root -> args -> 0 -> stmts -> 0)
+                     ~~~ end (root -> args -> 0 -> stmts -> 0)
+        ~~~~~~~~~~~~~~~~ expression (root -> args -> 0 -> stmts -> 0)
+          ~~~~~ selector (root -> args -> 0 -> stmts -> 0 -> method_call)
+        ~~~~~~~ expression (root -> args -> 0 -> stmts -> 0 -> method_call)
+        ~ expression (root -> args -> 0 -> stmts -> 0 -> method_call -> recv)
+                   ~ expression (root -> args -> 0 -> stmts -> 0 -> body)
+--AST
+s(:send, nil, "p",
+  s(:kwbegin,
+    s(:block,
+      s(:send,
+        s(:int, "1"), "times"), nil,
+      s(:int, "1"))))

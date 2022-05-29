@@ -1,0 +1,13 @@
+--INPUT
+def String::foo; end
+--LOCATIONS
+~~~ keyword (root)
+          ~~ operator (root)
+            ~~~ name (root)
+                 ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~ expression (root)
+    ~~~~~~ name (root -> definee)
+    ~~~~~~ expression (root -> definee)
+--AST
+s(:defs,
+  s(:const, nil, "String"), "foo", nil, nil)

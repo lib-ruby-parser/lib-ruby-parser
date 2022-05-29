@@ -1,0 +1,11 @@
+--STATE
+expr_dot
+--INPUT
+a.`(3)
+--TOKENS
+tIDENTIFIER "a" [0, 1]
+tDOT "." [1, 2]
+tBACK_REF2 "`" [2, 3]
+tLPAREN2 "(" [3, 4]
+tINTEGER "3" [4, 5]
+tRPAREN ")" [5, 6]

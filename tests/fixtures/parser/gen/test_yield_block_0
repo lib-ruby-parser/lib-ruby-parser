@@ -1,0 +1,4 @@
+--INPUT
+yield foo do end
+--DIAGNOSTIC
+~~~~~ (error) block given to yield

@@ -1,0 +1,4 @@
+--INPUT
+lambda do |aa; aa| end
+--DIAGNOSTIC
+               ~~ (error) duplicated argument name

@@ -1,0 +1,5 @@
+--INPUT
+ArgumentError;
+--TOKENS
+tCONSTANT "ArgumentError" [0, 13]
+tSEMI ";" [13, 14]

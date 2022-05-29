@@ -1,0 +1,4 @@
+--INPUT
+0x10
+--TOKENS
+tINTEGER "0x10" [0, 4]

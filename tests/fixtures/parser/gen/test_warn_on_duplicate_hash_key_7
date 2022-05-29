@@ -1,0 +1,4 @@
+--INPUT
+ { 1.72723e-77 => 1, 1.72723e-77 => 2 } 
+--DIAGNOSTIC
+                     ~~~~~~~~~~~ (warning) key is duplicated and overwritten

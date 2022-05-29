@@ -1,0 +1,15 @@
+--INPUT
+meth[] {}
+--LOCATIONS
+       ~ begin (root)
+        ~ end (root)
+~~~~~~~~~ expression (root)
+    ~ begin (root -> method_call)
+     ~ end (root -> method_call)
+~~~~~~ expression (root -> method_call)
+~~~~ selector (root -> method_call -> recv)
+~~~~ expression (root -> method_call -> recv)
+--AST
+s(:block,
+  s(:index,
+    s(:send, nil, "meth")), nil, nil)

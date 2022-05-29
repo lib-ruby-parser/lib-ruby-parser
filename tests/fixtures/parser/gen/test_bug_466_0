@@ -1,0 +1,33 @@
+--INPUT
+foo "#{(1+1).to_i}" do; end
+--LOCATIONS
+                    ~~ begin (root)
+                        ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~~~ selector (root -> method_call)
+~~~~~~~~~~~~~~~~~~~ expression (root -> method_call)
+    ~ begin (root -> method_call -> args -> 0)
+                  ~ end (root -> method_call -> args -> 0)
+    ~~~~~~~~~~~~~~~ expression (root -> method_call -> args -> 0)
+     ~~ begin (root -> method_call -> args -> 0 -> parts -> 0)
+                 ~ end (root -> method_call -> args -> 0 -> parts -> 0)
+     ~~~~~~~~~~~~~ expression (root -> method_call -> args -> 0 -> parts -> 0)
+             ~~~~ selector (root -> method_call -> args -> 0 -> parts -> 0 -> stmts -> 0)
+       ~~~~~~~~~~ expression (root -> method_call -> args -> 0 -> parts -> 0 -> stmts -> 0)
+       ~ begin (root -> method_call -> args -> 0 -> parts -> 0 -> stmts -> 0 -> recv)
+           ~ end (root -> method_call -> args -> 0 -> parts -> 0 -> stmts -> 0 -> recv)
+       ~~~~~ expression (root -> method_call -> args -> 0 -> parts -> 0 -> stmts -> 0 -> recv)
+         ~ selector (root -> method_call -> args -> 0 -> parts -> 0 -> stmts -> 0 -> recv -> stmts -> 0)
+        ~~~ expression (root -> method_call -> args -> 0 -> parts -> 0 -> stmts -> 0 -> recv -> stmts -> 0)
+        ~ expression (root -> method_call -> args -> 0 -> parts -> 0 -> stmts -> 0 -> recv -> stmts -> 0 -> recv)
+          ~ expression (root -> method_call -> args -> 0 -> parts -> 0 -> stmts -> 0 -> recv -> stmts -> 0 -> args -> 0)
+--AST
+s(:block,
+  s(:send, nil, "foo",
+    s(:dstr,
+      s(:begin,
+        s(:send,
+          s(:begin,
+            s(:send,
+              s(:int, "1"), "+",
+              s(:int, "1"))), "to_i")))), nil, nil)

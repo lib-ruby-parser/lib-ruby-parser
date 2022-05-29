@@ -1,0 +1,11 @@
+--INPUT
+A += 1
+--LOCATIONS
+  ~~ operator (root)
+~~~~~~ expression (root)
+~ name (root -> recv)
+~ expression (root -> recv)
+--AST
+s(:op_asgn,
+  s(:casgn, nil, "A"), "+",
+  s(:int, "1"))

@@ -1,0 +1,4 @@
+--INPUT
+$__blah
+--TOKENS
+tGVAR "$__blah" [0, 7]

@@ -1,0 +1,24 @@
+--INPUT
+def f a, o=1, p, &b; end
+--LOCATIONS
+~~~ keyword (root)
+    ~ name (root)
+                     ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~~~~~~~~~~~~ expression (root -> args)
+      ~ expression (root -> args -> arglist -> 0)
+          ~ operator (root -> args -> arglist -> 1)
+         ~ name (root -> args -> arglist -> 1)
+         ~~~ expression (root -> args -> arglist -> 1)
+           ~ expression (root -> args -> arglist -> 1 -> default_value)
+              ~ expression (root -> args -> arglist -> 2)
+                  ~ name (root -> args -> arglist -> 3)
+                 ~~ expression (root -> args -> arglist -> 3)
+--AST
+s(:def, "f",
+  s(:args,
+    s(:arg, "a"),
+    s(:optarg, "o",
+      s(:int, "1")),
+    s(:arg, "p"),
+    s(:blockarg, "b")), nil)

@@ -1,0 +1,5 @@
+--INPUT
+-blah
+--TOKENS
+tUMINUS "-" [0, 1]
+tIDENTIFIER "blah" [1, 5]

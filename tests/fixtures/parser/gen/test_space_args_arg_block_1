@@ -1,0 +1,19 @@
+--INPUT
+foo.fun (1) {}
+--LOCATIONS
+            ~ begin (root)
+             ~ end (root)
+~~~~~~~~~~~~~~ expression (root)
+    ~~~ selector (root -> method_call)
+~~~~~~~~~~~ expression (root -> method_call)
+~~~ expression (root -> method_call -> recv)
+        ~ begin (root -> method_call -> args -> 0)
+          ~ end (root -> method_call -> args -> 0)
+        ~~~ expression (root -> method_call -> args -> 0)
+         ~ expression (root -> method_call -> args -> 0 -> stmts -> 0)
+--AST
+s(:block,
+  s(:send,
+    s(:lvar, "foo"), "fun",
+    s(:begin,
+      s(:int, "1"))), nil, nil)

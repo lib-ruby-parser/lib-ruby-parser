@@ -1,0 +1,22 @@
+--INPUT
+def inc(x) = x + 1
+--LOCATIONS
+~~~ keyword (root)
+    ~~~ name (root)
+           ~ assignment (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+       ~ begin (root -> args)
+         ~ end (root -> args)
+       ~~~ expression (root -> args)
+        ~ expression (root -> args -> arglist -> 0)
+               ~ selector (root -> body)
+             ~~~~~ expression (root -> body)
+             ~ expression (root -> body -> recv)
+                 ~ expression (root -> body -> args -> 0)
+--AST
+s(:def, "inc",
+  s(:args,
+    s(:arg, "x")),
+  s(:send,
+    s(:lvar, "x"), "+",
+    s(:int, "1")))

@@ -1,0 +1,24 @@
+--INPUT
+foo || (a, b = bar)
+--LOCATIONS
+    ~~ operator (root)
+~~~~~~~~~~~~~~~~~~~ expression (root)
+~~~ expression (root -> lhs)
+       ~ begin (root -> rhs)
+                  ~ end (root -> rhs)
+       ~~~~~~~~~~~~ expression (root -> rhs)
+             ~ operator (root -> rhs -> stmts -> 0)
+        ~~~~~~~~~~ expression (root -> rhs -> stmts -> 0)
+        ~~~~ expression (root -> rhs -> stmts -> 0 -> lhs)
+        ~ expression (root -> rhs -> stmts -> 0 -> lhs -> mlhs_items -> 0)
+           ~ expression (root -> rhs -> stmts -> 0 -> lhs -> mlhs_items -> 1)
+               ~~~ expression (root -> rhs -> stmts -> 0 -> rhs)
+--AST
+s(:or,
+  s(:lvar, "foo"),
+  s(:begin,
+    s(:masgn,
+      s(:mlhs,
+        s(:lvasgn, "a"),
+        s(:lvasgn, "b")),
+      s(:lvar, "bar"))))

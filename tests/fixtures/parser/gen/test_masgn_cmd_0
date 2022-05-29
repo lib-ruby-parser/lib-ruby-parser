@@ -1,0 +1,18 @@
+--INPUT
+foo, bar = m foo
+--LOCATIONS
+         ~ operator (root)
+~~~~~~~~~~~~~~~~ expression (root)
+~~~~~~~~ expression (root -> lhs)
+~~~ expression (root -> lhs -> mlhs_items -> 0)
+     ~~~ expression (root -> lhs -> mlhs_items -> 1)
+           ~ selector (root -> rhs)
+           ~~~~~ expression (root -> rhs)
+             ~~~ expression (root -> rhs -> args -> 0)
+--AST
+s(:masgn,
+  s(:mlhs,
+    s(:lvasgn, "foo"),
+    s(:lvasgn, "bar")),
+  s(:send, nil, "m",
+    s(:lvar, "foo")))

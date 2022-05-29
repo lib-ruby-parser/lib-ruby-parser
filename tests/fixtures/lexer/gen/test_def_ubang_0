@@ -1,0 +1,6 @@
+--STATE
+expr_fname
+--INPUT
+!@
+--TOKENS
+tBANG "!@" [0, 2]

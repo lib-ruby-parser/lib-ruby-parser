@@ -1,0 +1,18 @@
+--INPUT
+def f(foo: 1); end
+--LOCATIONS
+~~~ keyword (root)
+    ~ name (root)
+               ~~~ end (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+     ~ begin (root -> args)
+            ~ end (root -> args)
+     ~~~~~~~~ expression (root -> args)
+      ~~~ name (root -> args -> arglist -> 0)
+      ~~~~~~ expression (root -> args -> arglist -> 0)
+           ~ expression (root -> args -> arglist -> 0 -> default_value)
+--AST
+s(:def, "f",
+  s(:args,
+    s(:kwoptarg, "foo",
+      s(:int, "1"))), nil)

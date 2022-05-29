@@ -1,0 +1,6 @@
+--INPUT
+1 + 1
+--TOKENS
+tINTEGER "1" [0, 1]
+tPLUS "+" [2, 3]
+tINTEGER "1" [4, 5]

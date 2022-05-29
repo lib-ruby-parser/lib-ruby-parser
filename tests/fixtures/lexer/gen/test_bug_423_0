@@ -1,0 +1,7 @@
+--STATE
+expr_beg
+--INPUT
+:&&
+--TOKENS
+tSYMBEG ":" [0, 1]
+tANDOP "&&" [1, 3]

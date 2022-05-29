@@ -1,0 +1,8 @@
+--STATE
+expr_value
+--INPUT
+rescue::Exception
+--TOKENS
+kRESCUE "rescue" [0, 6]
+tCOLON3 "::" [6, 8]
+tCONSTANT "Exception" [8, 17]

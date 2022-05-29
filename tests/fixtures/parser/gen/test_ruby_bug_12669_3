@@ -1,0 +1,13 @@
+--INPUT
+a += b += raise :x
+--LOCATIONS
+  ~~ operator (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+~ expression (root -> recv)
+--AST
+s(:op_asgn,
+  s(:lvasgn, "a"), "+",
+  s(:op_asgn,
+    s(:lvasgn, "b"), "+",
+    s(:send, nil, "raise",
+      s(:sym, "x"))))

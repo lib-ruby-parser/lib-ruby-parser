@@ -1,0 +1,15 @@
+--INPUT
+def f(**); end
+--LOCATIONS
+~~~ keyword (root)
+    ~ name (root)
+           ~~~ end (root)
+~~~~~~~~~~~~~~ expression (root)
+     ~ begin (root -> args)
+        ~ end (root -> args)
+     ~~~~ expression (root -> args)
+      ~~ expression (root -> args -> arglist -> 0)
+--AST
+s(:def, "f",
+  s(:args,
+    s(:kwrestarg)), nil)

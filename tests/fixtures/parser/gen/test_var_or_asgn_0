@@ -1,0 +1,11 @@
+--INPUT
+a ||= 1
+--LOCATIONS
+  ~~~ operator (root)
+~~~~~~~ expression (root)
+~ expression (root -> recv)
+      ~ expression (root -> value)
+--AST
+s(:or_asgn,
+  s(:lvasgn, "a"),
+  s(:int, "1"))

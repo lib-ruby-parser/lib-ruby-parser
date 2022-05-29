@@ -1,0 +1,20 @@
+--INPUT
+->(a; foo, bar) { }
+--LOCATIONS
+                ~ begin (root)
+                  ~ end (root)
+~~~~~~~~~~~~~~~~~~~ expression (root)
+~~ expression (root -> method_call)
+  ~ begin (root -> args)
+              ~ end (root -> args)
+  ~~~~~~~~~~~~~ expression (root -> args)
+   ~ expression (root -> args -> arglist -> 0)
+      ~~~ expression (root -> args -> arglist -> 1)
+           ~~~ expression (root -> args -> arglist -> 2)
+--AST
+s(:block,
+  s(:lambda),
+  s(:args,
+    s(:arg, "a"),
+    s(:shadowarg, "foo"),
+    s(:shadowarg, "bar")), nil)

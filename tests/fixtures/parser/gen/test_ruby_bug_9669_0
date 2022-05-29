@@ -1,0 +1,19 @@
+--INPUT
+def a b:
+return
+end
+--LOCATIONS
+~~~ keyword (root)
+    ~ name (root)
+                ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~~ expression (root -> args)
+      ~ name (root -> args -> arglist -> 0)
+      ~~ expression (root -> args -> arglist -> 0)
+         ~~~~~~ keyword (root -> body)
+         ~~~~~~ expression (root -> body)
+--AST
+s(:def, "a",
+  s(:args,
+    s(:kwarg, "b")),
+  s(:return))

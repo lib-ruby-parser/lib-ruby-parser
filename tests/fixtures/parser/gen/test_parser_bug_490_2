@@ -1,0 +1,21 @@
+--INPUT
+def m; class << self; A = nil; end; end
+--LOCATIONS
+~~~ keyword (root)
+    ~ name (root)
+                                    ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+       ~~~~~ keyword (root -> body)
+             ~~ operator (root -> body)
+                               ~~~ end (root -> body)
+       ~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> body)
+                ~~~~ expression (root -> body -> expr)
+                      ~ name (root -> body -> body)
+                      ~~~~~~~ expression (root -> body -> body)
+                          ~~~ expression (root -> body -> body -> value)
+--AST
+s(:def, "m", nil,
+  s(:sclass,
+    s(:self),
+    s(:casgn, nil, "A",
+      s(:nil))))

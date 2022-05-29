@@ -1,0 +1,13 @@
+--INPUT
+beginfoo = 5
+p x \
+=beginfoo
+--TOKENS
+tIDENTIFIER "beginfoo" [0, 8]
+tEQL "=" [9, 10]
+tINTEGER "5" [11, 12]
+tNL "\n" [12, 13]
+tIDENTIFIER "p" [13, 14]
+tIDENTIFIER "x" [15, 16]
+tEQL "=" [19, 20]
+tIDENTIFIER "beginfoo" [20, 28]

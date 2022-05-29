@@ -1,0 +1,6 @@
+--INPUT
+1.23rescue cond
+--TOKENS
+tFLOAT "1.23" [0, 4]
+kRESCUE_MOD "rescue" [4, 10]
+tIDENTIFIER "cond" [11, 15]

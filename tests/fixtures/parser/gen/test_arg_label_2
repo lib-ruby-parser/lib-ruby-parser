@@ -1,0 +1,21 @@
+--INPUT
+f { || a:b }
+--LOCATIONS
+  ~ begin (root)
+           ~ end (root)
+~~~~~~~~~~~~ expression (root)
+~ selector (root -> method_call)
+~ expression (root -> method_call)
+    ~ begin (root -> args)
+     ~ end (root -> args)
+    ~~ expression (root -> args)
+       ~ selector (root -> body)
+       ~~~ expression (root -> body)
+        ~ begin (root -> body -> args -> 0)
+        ~~ expression (root -> body -> args -> 0)
+--AST
+s(:block,
+  s(:send, nil, "f"),
+  s(:args),
+  s(:send, nil, "a",
+    s(:sym, "b")))

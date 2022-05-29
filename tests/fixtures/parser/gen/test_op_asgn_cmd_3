@@ -1,0 +1,15 @@
+--INPUT
+foo::A += m foo
+--LOCATIONS
+       ~~ operator (root)
+~~~~~~~~~~~~~~~ expression (root)
+     ~ name (root -> recv)
+   ~~ double_colon (root -> recv)
+~~~~~~ expression (root -> recv)
+~~~ expression (root -> recv -> scope)
+--AST
+s(:op_asgn,
+  s(:casgn,
+    s(:lvar, "foo"), "A"), "+",
+  s(:send, nil, "m",
+    s(:lvar, "foo")))

@@ -1,0 +1,9 @@
+--STATE
+expr_value
+--INPUT
+
+a:b
+--TOKENS
+tIDENTIFIER "a" [1, 2]
+tSYMBEG ":" [2, 3]
+tIDENTIFIER "b" [3, 4]

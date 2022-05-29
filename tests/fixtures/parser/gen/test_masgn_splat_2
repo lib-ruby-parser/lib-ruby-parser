@@ -1,0 +1,18 @@
+--INPUT
+a, *b = bar
+--LOCATIONS
+      ~ operator (root)
+~~~~~~~~~~~ expression (root)
+~~~~~ expression (root -> lhs)
+~ expression (root -> lhs -> mlhs_items -> 0)
+   ~ operator (root -> lhs -> mlhs_items -> 1)
+   ~~ expression (root -> lhs -> mlhs_items -> 1)
+    ~ expression (root -> lhs -> mlhs_items -> 1 -> value)
+        ~~~ expression (root -> rhs)
+--AST
+s(:masgn,
+  s(:mlhs,
+    s(:lvasgn, "a"),
+    s(:splat,
+      s(:lvasgn, "b"))),
+  s(:lvar, "bar"))

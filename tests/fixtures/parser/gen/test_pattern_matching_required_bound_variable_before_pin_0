@@ -1,0 +1,4 @@
+--INPUT
+case 0; in ^a; true; end
+--DIAGNOSTIC
+            ~ (error) a: no such local variable

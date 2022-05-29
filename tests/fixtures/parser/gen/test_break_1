@@ -1,0 +1,9 @@
+--INPUT
+break foo
+--LOCATIONS
+~~~~~ keyword (root)
+~~~~~~~~~ expression (root)
+      ~~~ expression (root -> args -> 0)
+--AST
+s(:break,
+  s(:lvar, "foo"))

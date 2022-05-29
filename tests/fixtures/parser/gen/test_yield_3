@@ -1,0 +1,7 @@
+--INPUT
+yield
+--LOCATIONS
+~~~~~ keyword (root)
+~~~~~ expression (root)
+--AST
+s(:yield)

@@ -1,0 +1,18 @@
+--INPUT
+def !=(other) = do_something
+--LOCATIONS
+~~~ keyword (root)
+    ~~ name (root)
+              ~ assignment (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+      ~ begin (root -> args)
+            ~ end (root -> args)
+      ~~~~~~~ expression (root -> args)
+       ~~~~~ expression (root -> args -> arglist -> 0)
+                ~~~~~~~~~~~~ selector (root -> body)
+                ~~~~~~~~~~~~ expression (root -> body)
+--AST
+s(:def, "!=",
+  s(:args,
+    s(:arg, "other")),
+  s(:send, nil, "do_something"))

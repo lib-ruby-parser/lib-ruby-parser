@@ -1,0 +1,8 @@
+--INPUT
+ %s{#@@1} 
+--LOCATIONS
+ ~~~ begin (root)
+        ~ end (root)
+ ~~~~~~~~ expression (root)
+--AST
+s(:sym, "#@@1")

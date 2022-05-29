@@ -1,0 +1,5 @@
+--INPUT
+-1.0
+--TOKENS
+tUMINUS_NUM "-" [0, 1]
+tFLOAT "1.0" [1, 4]

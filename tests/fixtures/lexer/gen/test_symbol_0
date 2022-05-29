@@ -1,0 +1,5 @@
+--INPUT
+:symbol
+--TOKENS
+tSYMBEG ":" [0, 1]
+tIDENTIFIER "symbol" [1, 7]

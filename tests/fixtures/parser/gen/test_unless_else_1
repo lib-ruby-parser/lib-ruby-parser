@@ -1,0 +1,16 @@
+--INPUT
+unless foo; bar; else baz; end
+--LOCATIONS
+~~~~~~ keyword (root)
+                           ~~~ end (root)
+                 ~~~~ else (root)
+          ~ begin (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+       ~~~ expression (root -> cond)
+                      ~~~ expression (root -> if_true)
+            ~~~ expression (root -> if_false)
+--AST
+s(:if,
+  s(:lvar, "foo"),
+  s(:lvar, "baz"),
+  s(:lvar, "bar"))

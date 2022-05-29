@@ -1,0 +1,13 @@
+--INPUT
+foo += meth rescue bar
+--LOCATIONS
+    ~~ operator (root)
+~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+~~~ expression (root -> recv)
+--AST
+s(:op_asgn,
+  s(:lvasgn, "foo"), "+",
+  s(:rescue,
+    s(:send, nil, "meth"),
+    s(:resbody, nil, nil,
+      s(:lvar, "bar")), nil))

@@ -1,0 +1,6 @@
+--INPUT
+self
+--LOCATIONS
+~~~~ expression (root)
+--AST
+s(:self)

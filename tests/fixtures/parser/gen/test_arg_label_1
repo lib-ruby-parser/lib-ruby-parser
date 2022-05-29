@@ -1,0 +1,16 @@
+--INPUT
+def foo
+ a:b end
+--LOCATIONS
+~~~ keyword (root)
+    ~~~ name (root)
+             ~~~ end (root)
+~~~~~~~~~~~~~~~~ expression (root)
+         ~ selector (root -> body)
+         ~~~ expression (root -> body)
+          ~ begin (root -> body -> args -> 0)
+          ~~ expression (root -> body -> args -> 0)
+--AST
+s(:def, "foo", nil,
+  s(:send, nil, "a",
+    s(:sym, "b")))

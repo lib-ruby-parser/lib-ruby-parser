@@ -1,0 +1,4 @@
+--INPUT
+f(g rescue nil)
+--DIAGNOSTIC
+    ~~~~~~ (error) unexpected kRESCUE_MOD

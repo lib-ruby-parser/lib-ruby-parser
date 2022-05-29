@@ -1,0 +1,16 @@
+--INPUT
+def f(&block); end
+--LOCATIONS
+~~~ keyword (root)
+    ~ name (root)
+               ~~~ end (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+     ~ begin (root -> args)
+            ~ end (root -> args)
+     ~~~~~~~~ expression (root -> args)
+       ~~~~~ name (root -> args -> arglist -> 0)
+      ~~~~~~ expression (root -> args -> arglist -> 0)
+--AST
+s(:def, "f",
+  s(:args,
+    s(:blockarg, "block")), nil)

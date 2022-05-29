@@ -1,0 +1,6 @@
+--INPUT
+"F0"
+--TOKENS
+tSTRING_BEG "\"" [0, 1]
+tSTRING_CONTENT "F0" [1, 3]
+tSTRING_END "\"" [3, 4]

@@ -1,0 +1,27 @@
+--INPUT
+t=1;(foo)?t:T
+--LOCATIONS
+~~~~~~~~~~~~~ expression (root)
+ ~ operator (root -> stmts -> 0)
+~ name (root -> stmts -> 0)
+~~~ expression (root -> stmts -> 0)
+  ~ expression (root -> stmts -> 0 -> value)
+           ~ colon (root -> stmts -> 1)
+         ~ question (root -> stmts -> 1)
+    ~~~~~~~~~ expression (root -> stmts -> 1)
+    ~ begin (root -> stmts -> 1 -> cond)
+        ~ end (root -> stmts -> 1 -> cond)
+    ~~~~~ expression (root -> stmts -> 1 -> cond)
+     ~~~ expression (root -> stmts -> 1 -> cond -> stmts -> 0)
+          ~ expression (root -> stmts -> 1 -> if_true)
+            ~ name (root -> stmts -> 1 -> if_false)
+            ~ expression (root -> stmts -> 1 -> if_false)
+--AST
+s(:begin,
+  s(:lvasgn, "t",
+    s(:int, "1")),
+  s(:if,
+    s(:begin,
+      s(:lvar, "foo")),
+    s(:lvar, "t"),
+    s(:const, nil, "T")))

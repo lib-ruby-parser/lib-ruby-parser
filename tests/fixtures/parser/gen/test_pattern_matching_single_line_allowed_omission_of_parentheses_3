@@ -1,0 +1,27 @@
+--INPUT
+{a: 1} in a:; a
+--LOCATIONS
+~~~~~~~~~~~~~~~ expression (root)
+       ~~ operator (root -> stmts -> 0)
+~~~~~~~~~~~~ expression (root -> stmts -> 0)
+~ begin (root -> stmts -> 0 -> value)
+     ~ end (root -> stmts -> 0 -> value)
+~~~~~~ expression (root -> stmts -> 0 -> value)
+  ~ operator (root -> stmts -> 0 -> value -> pairs -> 0)
+ ~~~~ expression (root -> stmts -> 0 -> value -> pairs -> 0)
+ ~ expression (root -> stmts -> 0 -> value -> pairs -> 0 -> key)
+    ~ expression (root -> stmts -> 0 -> value -> pairs -> 0 -> value)
+          ~~ expression (root -> stmts -> 0 -> pattern)
+          ~ name (root -> stmts -> 0 -> pattern -> elements -> 0)
+          ~~ expression (root -> stmts -> 0 -> pattern -> elements -> 0)
+              ~ expression (root -> stmts -> 1)
+--AST
+s(:begin,
+  s(:match_pattern_p,
+    s(:hash,
+      s(:pair,
+        s(:sym, "a"),
+        s(:int, "1"))),
+    s(:hash_pattern,
+      s(:match_var, "a"))),
+  s(:lvar, "a"))

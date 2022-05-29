@@ -1,0 +1,14 @@
+--INPUT
+class << foo; _1; end
+--LOCATIONS
+~~~~~ keyword (root)
+      ~~ operator (root)
+                  ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~ expression (root)
+         ~~~ expression (root -> expr)
+              ~~ selector (root -> body)
+              ~~ expression (root -> body)
+--AST
+s(:sclass,
+  s(:lvar, "foo"),
+  s(:send, nil, "_1"))

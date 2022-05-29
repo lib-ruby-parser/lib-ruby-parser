@@ -1,0 +1,6 @@
+--STATE
+expr_endfn
+--INPUT
+ foo:
+--TOKENS
+tLABEL "foo" [1, 5]

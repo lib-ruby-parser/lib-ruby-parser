@@ -1,0 +1,15 @@
+--INPUT
+B::A += 1
+--LOCATIONS
+     ~~ operator (root)
+~~~~~~~~~ expression (root)
+   ~ name (root -> recv)
+ ~~ double_colon (root -> recv)
+~~~~ expression (root -> recv)
+~ name (root -> recv -> scope)
+~ expression (root -> recv -> scope)
+--AST
+s(:op_asgn,
+  s(:casgn,
+    s(:const, nil, "B"), "A"), "+",
+  s(:int, "1"))

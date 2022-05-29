@@ -1,0 +1,6 @@
+--INPUT
+"\M-b\C-\M-@\C-\M-Y"
+--TOKENS
+tSTRING_BEG "\"" [0, 1]
+tSTRING_CONTENT "’" [1, 19]
+tSTRING_END "\"" [19, 20]

@@ -1,0 +1,4 @@
+--INPUT
+:@1
+--DIAGNOSTIC
+ ~~ (error) `@1' is not allowed as an instance variable name

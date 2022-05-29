@@ -1,0 +1,40 @@
+--INPUT
+p :foo, {"a": proc do end, b: proc do end}
+--LOCATIONS
+~ selector (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+  ~ begin (root -> args -> 0)
+  ~~~~ expression (root -> args -> 0)
+        ~ begin (root -> args -> 1)
+                                         ~ end (root -> args -> 1)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root -> args -> 1)
+            ~ operator (root -> args -> 1 -> pairs -> 0)
+         ~~~~~~~~~~~~~~~~ expression (root -> args -> 1 -> pairs -> 0)
+         ~ begin (root -> args -> 1 -> pairs -> 0 -> key)
+           ~ end (root -> args -> 1 -> pairs -> 0 -> key)
+         ~~~ expression (root -> args -> 1 -> pairs -> 0 -> key)
+                   ~~ begin (root -> args -> 1 -> pairs -> 0 -> value)
+                      ~~~ end (root -> args -> 1 -> pairs -> 0 -> value)
+              ~~~~~~~~~~~ expression (root -> args -> 1 -> pairs -> 0 -> value)
+              ~~~~ selector (root -> args -> 1 -> pairs -> 0 -> value -> method_call)
+              ~~~~ expression (root -> args -> 1 -> pairs -> 0 -> value -> method_call)
+                            ~ operator (root -> args -> 1 -> pairs -> 1)
+                           ~~~~~~~~~~~~~~ expression (root -> args -> 1 -> pairs -> 1)
+                           ~ expression (root -> args -> 1 -> pairs -> 1 -> key)
+                                   ~~ begin (root -> args -> 1 -> pairs -> 1 -> value)
+                                      ~~~ end (root -> args -> 1 -> pairs -> 1 -> value)
+                              ~~~~~~~~~~~ expression (root -> args -> 1 -> pairs -> 1 -> value)
+                              ~~~~ selector (root -> args -> 1 -> pairs -> 1 -> value -> method_call)
+                              ~~~~ expression (root -> args -> 1 -> pairs -> 1 -> value -> method_call)
+--AST
+s(:send, nil, "p",
+  s(:sym, "foo"),
+  s(:hash,
+    s(:pair,
+      s(:sym, "a"),
+      s(:block,
+        s(:send, nil, "proc"), nil, nil)),
+    s(:pair,
+      s(:sym, "b"),
+      s(:block,
+        s(:send, nil, "proc"), nil, nil))))

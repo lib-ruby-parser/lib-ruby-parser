@@ -1,0 +1,14 @@
+--INPUT
+module ::Foo; end
+--LOCATIONS
+~~~~~~ keyword (root)
+              ~~~ end (root)
+~~~~~~~~~~~~~~~~~ expression (root)
+         ~~~ name (root -> name)
+       ~~ double_colon (root -> name)
+       ~~~~~ expression (root -> name)
+       ~~ expression (root -> name -> scope)
+--AST
+s(:module,
+  s(:const,
+    s(:cbase), "Foo"), nil)

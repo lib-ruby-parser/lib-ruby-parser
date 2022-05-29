@@ -1,0 +1,27 @@
+--INPUT
+def foo raise; raise A::B, ''; end
+--LOCATIONS
+~~~ keyword (root)
+    ~~~ name (root)
+                               ~~~ end (root)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ expression (root)
+        ~~~~~ expression (root -> args)
+        ~~~~~ expression (root -> args -> arglist -> 0)
+               ~~~~~ selector (root -> body)
+               ~~~~~~~~~~~~~~ expression (root -> body)
+                        ~ name (root -> body -> args -> 0)
+                      ~~ double_colon (root -> body -> args -> 0)
+                     ~~~~ expression (root -> body -> args -> 0)
+                     ~ name (root -> body -> args -> 0 -> scope)
+                     ~ expression (root -> body -> args -> 0 -> scope)
+                           ~ begin (root -> body -> args -> 1)
+                            ~ end (root -> body -> args -> 1)
+                           ~~ expression (root -> body -> args -> 1)
+--AST
+s(:def, "foo",
+  s(:args,
+    s(:arg, "raise")),
+  s(:send, nil, "raise",
+    s(:const,
+      s(:const, nil, "A"), "B"),
+    s(:str, "")))

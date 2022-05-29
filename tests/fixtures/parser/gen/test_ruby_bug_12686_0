@@ -1,0 +1,21 @@
+--INPUT
+f (g rescue nil)
+--LOCATIONS
+~ selector (root)
+~~~~~~~~~~~~~~~~ expression (root)
+  ~ begin (root -> args -> 0)
+               ~ end (root -> args -> 0)
+  ~~~~~~~~~~~~~~ expression (root -> args -> 0)
+   ~~~~~~~~~~~~ expression (root -> args -> 0 -> stmts -> 0)
+   ~ selector (root -> args -> 0 -> stmts -> 0 -> body)
+   ~ expression (root -> args -> 0 -> stmts -> 0 -> body)
+     ~~~~~~ keyword (root -> args -> 0 -> stmts -> 0 -> rescue_bodies -> 0)
+     ~~~~~~~~~~ expression (root -> args -> 0 -> stmts -> 0 -> rescue_bodies -> 0)
+            ~~~ expression (root -> args -> 0 -> stmts -> 0 -> rescue_bodies -> 0 -> body)
+--AST
+s(:send, nil, "f",
+  s(:begin,
+    s(:rescue,
+      s(:send, nil, "g"),
+      s(:resbody, nil, nil,
+        s(:nil)), nil)))

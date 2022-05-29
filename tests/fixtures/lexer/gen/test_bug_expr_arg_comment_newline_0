@@ -1,0 +1,8 @@
+--STATE
+expr_arg
+--INPUT
+ #
+foo
+--TOKENS
+tNL "\n" [2, 3]
+tIDENTIFIER "foo" [3, 6]

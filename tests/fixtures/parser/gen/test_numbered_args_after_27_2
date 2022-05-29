@@ -1,0 +1,17 @@
+--INPUT
+-> { _1 + _9}
+--LOCATIONS
+   ~ begin (root)
+            ~ end (root)
+~~~~~~~~~~~~~ expression (root)
+~~ expression (root -> method_call)
+        ~ selector (root -> body)
+     ~~~~~~~ expression (root -> body)
+     ~~ expression (root -> body -> recv)
+          ~~ expression (root -> body -> args -> 0)
+--AST
+s(:numblock,
+  s(:lambda), 9,
+  s(:send,
+    s(:lvar, "_1"), "+",
+    s(:lvar, "_9")))

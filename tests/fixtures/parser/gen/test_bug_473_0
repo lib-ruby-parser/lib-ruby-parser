@@ -1,0 +1,19 @@
+--INPUT
+m "#{[]}"
+--LOCATIONS
+~ selector (root)
+~~~~~~~~~ expression (root)
+  ~ begin (root -> args -> 0)
+        ~ end (root -> args -> 0)
+  ~~~~~~~ expression (root -> args -> 0)
+   ~~ begin (root -> args -> 0 -> parts -> 0)
+       ~ end (root -> args -> 0 -> parts -> 0)
+   ~~~~~ expression (root -> args -> 0 -> parts -> 0)
+     ~ begin (root -> args -> 0 -> parts -> 0 -> stmts -> 0)
+      ~ end (root -> args -> 0 -> parts -> 0 -> stmts -> 0)
+     ~~ expression (root -> args -> 0 -> parts -> 0 -> stmts -> 0)
+--AST
+s(:send, nil, "m",
+  s(:dstr,
+    s(:begin,
+      s(:array))))

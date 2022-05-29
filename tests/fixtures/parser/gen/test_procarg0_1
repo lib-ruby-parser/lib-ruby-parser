@@ -1,0 +1,23 @@
+--INPUT
+m { |(foo, bar)| } 
+--LOCATIONS
+  ~ begin (root)
+                 ~ end (root)
+~~~~~~~~~~~~~~~~~~ expression (root)
+~ selector (root -> method_call)
+~ expression (root -> method_call)
+    ~ begin (root -> args)
+               ~ end (root -> args)
+    ~~~~~~~~~~~~ expression (root -> args)
+     ~ begin (root -> args -> arglist -> 0)
+              ~ end (root -> args -> arglist -> 0)
+     ~~~~~~~~~~ expression (root -> args -> arglist -> 0)
+      ~~~ expression (root -> args -> arglist -> 0 -> arglist -> 0)
+           ~~~ expression (root -> args -> arglist -> 0 -> arglist -> 1)
+--AST
+s(:block,
+  s(:send, nil, "m"),
+  s(:args,
+    s(:procarg0,
+      s(:arg, "foo"),
+      s(:arg, "bar"))), nil)

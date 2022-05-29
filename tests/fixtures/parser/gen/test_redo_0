@@ -1,0 +1,6 @@
+--INPUT
+redo
+--LOCATIONS
+~~~~ expression (root)
+--AST
+s(:redo)
