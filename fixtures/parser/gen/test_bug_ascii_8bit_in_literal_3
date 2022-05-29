@@ -1,4 +1,0 @@
---INPUT
-%I"x .\xc3."
---DIAGNOSTIC
-     ~~~~~~ (error) invalid symbol in encoding UTF-8

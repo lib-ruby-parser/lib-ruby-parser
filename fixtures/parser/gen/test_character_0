@@ -1,7 +1,0 @@
---INPUT
-?a
---LOCATIONS
-~ begin (root)
-~~ expression (root)
---AST
-s(:str, "a")

@@ -1,6 +1,0 @@
---INPUT
-class<<self
---TOKENS
-kCLASS "class" [0, 5]
-tLSHFT "<<" [5, 7]
-kSELF "self" [7, 11]

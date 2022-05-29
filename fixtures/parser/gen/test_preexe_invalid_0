@@ -1,4 +1,0 @@
---INPUT
-def f; BEGIN{}; end
---DIAGNOSTIC
-       ~~~~~ (error) BEGIN is permitted only at toplevel

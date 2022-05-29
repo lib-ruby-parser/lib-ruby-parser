@@ -1,6 +1,0 @@
---STATE
-expr_endarg
---INPUT
-if
---TOKENS
-kIF_MOD "if" [0, 2]

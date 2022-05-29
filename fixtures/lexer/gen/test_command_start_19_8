@@ -1,7 +1,0 @@
---INPUT
-unless a:b
---TOKENS
-kUNLESS "unless" [0, 6]
-tIDENTIFIER "a" [7, 8]
-tSYMBEG ":" [8, 9]
-tIDENTIFIER "b" [9, 10]

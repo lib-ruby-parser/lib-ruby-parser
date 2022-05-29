@@ -1,6 +1,0 @@
---INPUT
-super
---LOCATIONS
-~~~~~ expression (root)
---AST
-s(:zsuper)

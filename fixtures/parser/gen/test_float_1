@@ -1,7 +1,0 @@
---INPUT
--1.33
---LOCATIONS
-~ operator (root)
-~~~~~ expression (root)
---AST
-s(:float, "-1.33")

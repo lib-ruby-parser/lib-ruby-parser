@@ -1,8 +1,0 @@
---INPUT
-%
-foo
-
---TOKENS
-tSTRING_BEG "%\n" [0, 2]
-tSTRING_CONTENT "foo" [2, 5]
-tSTRING_END "\n" [5, 6]

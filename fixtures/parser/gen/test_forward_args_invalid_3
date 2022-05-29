@@ -1,4 +1,0 @@
---INPUT
-def foo(x,y,z); bar(...); end
---DIAGNOSTIC
-                    ~~~ (error) unexpected tBDOT3

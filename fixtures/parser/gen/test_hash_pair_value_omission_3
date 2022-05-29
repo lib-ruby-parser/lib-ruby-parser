@@ -1,4 +1,0 @@
---INPUT
-{"#{x}":}
---DIAGNOSTIC
-        ~ (error) unexpected tRCURLY

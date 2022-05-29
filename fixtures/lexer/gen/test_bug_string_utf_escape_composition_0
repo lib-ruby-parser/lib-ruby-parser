@@ -1,6 +1,0 @@
---INPUT
-"\xE2\x80\x99"
---TOKENS
-tSTRING_BEG "\"" [0, 1]
-tSTRING_CONTENT "’" [1, 13]
-tSTRING_END "\"" [13, 14]

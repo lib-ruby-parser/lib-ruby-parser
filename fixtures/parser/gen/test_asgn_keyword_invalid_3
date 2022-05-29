@@ -1,4 +1,0 @@
---INPUT
-false = foo
---DIAGNOSTIC
-~~~~~ (error) Can't assign to false

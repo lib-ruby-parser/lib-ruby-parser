@@ -1,7 +1,0 @@
---INPUT
-:foo
---LOCATIONS
-~ begin (root)
-~~~~ expression (root)
---AST
-s(:sym, "foo")

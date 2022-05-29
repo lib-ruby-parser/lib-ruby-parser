@@ -1,6 +1,0 @@
---INPUT
-"blah # blah"
---TOKENS
-tSTRING_BEG "\"" [0, 1]
-tSTRING_CONTENT "blah # blah" [1, 12]
-tSTRING_END "\"" [12, 13]

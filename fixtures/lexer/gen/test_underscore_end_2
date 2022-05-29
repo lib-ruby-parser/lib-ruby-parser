@@ -1,5 +1,0 @@
---INPUT
-__END__ foo
---TOKENS
-tIDENTIFIER "__END__" [0, 7]
-tIDENTIFIER "foo" [8, 11]

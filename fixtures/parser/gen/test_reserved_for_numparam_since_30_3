@@ -1,4 +1,0 @@
---INPUT
-proc {|_3,|}
---DIAGNOSTIC
-       ~~ (error) _3 is reserved for numbered parameter

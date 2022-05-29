@@ -1,7 +1,0 @@
---STATE
-expr_fname
---INPUT
-\
-class
---TOKENS
-kCLASS "class" [2, 7]

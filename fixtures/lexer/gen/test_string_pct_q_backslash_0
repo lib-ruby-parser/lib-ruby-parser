@@ -1,6 +1,0 @@
---INPUT
-%q\a\
---TOKENS
-tSTRING_BEG "%q\\" [0, 3]
-tSTRING_CONTENT "a" [3, 4]
-tSTRING_END "\\" [4, 5]

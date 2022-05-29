@@ -1,4 +1,0 @@
---INPUT
-proc { _1; 1 in _1 }
---DIAGNOSTIC
-                ~~ (error) Can't assign to numbered parameter _1

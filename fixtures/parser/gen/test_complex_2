@@ -1,6 +1,0 @@
---INPUT
-42.1i
---LOCATIONS
-~~~~~ expression (root)
---AST
-s(:complex, "42.1i")

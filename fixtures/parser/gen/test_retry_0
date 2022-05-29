@@ -1,6 +1,0 @@
---INPUT
-retry
---LOCATIONS
-~~~~~ expression (root)
---AST
-s(:retry)

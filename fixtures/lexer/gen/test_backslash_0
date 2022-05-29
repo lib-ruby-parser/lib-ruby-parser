@@ -1,7 +1,0 @@
---INPUT
-1 \
-+ 2
---TOKENS
-tINTEGER "1" [0, 1]
-tPLUS "+" [4, 5]
-tINTEGER "2" [6, 7]

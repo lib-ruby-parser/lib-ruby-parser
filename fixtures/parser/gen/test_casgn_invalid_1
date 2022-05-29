@@ -1,4 +1,0 @@
---INPUT
-def f; Foo::Bar = 1; end
---DIAGNOSTIC
-       ~~~~~~~~ (error) dynamic constant assignment

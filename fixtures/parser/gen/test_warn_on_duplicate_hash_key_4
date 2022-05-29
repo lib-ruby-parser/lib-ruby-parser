@@ -1,4 +1,0 @@
---INPUT
- { 1_000_000_000_000_000_000 => 1, 1_000_000_000_000_000_000 => 2 } 
---DIAGNOSTIC
-                                   ~~~~~~~~~~~~~~~~~~~~~~~~~ (warning) key is duplicated and overwritten

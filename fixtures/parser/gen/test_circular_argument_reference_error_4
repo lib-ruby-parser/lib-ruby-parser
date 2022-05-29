@@ -1,4 +1,0 @@
---INPUT
-def m(foo = class << foo; end) end
---DIAGNOSTIC
-                     ~~~ (error) circular argument reference - foo

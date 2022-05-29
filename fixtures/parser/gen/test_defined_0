@@ -1,9 +1,0 @@
---INPUT
-defined? foo
---LOCATIONS
-~~~~~~~~ keyword (root)
-~~~~~~~~~~~~ expression (root)
-         ~~~ expression (root -> value)
---AST
-s(:defined?,
-  s(:lvar, "foo"))

@@ -1,8 +1,0 @@
---INPUT
-begin end
---LOCATIONS
-~~~~~ begin (root)
-      ~~~ end (root)
-~~~~~~~~~ expression (root)
---AST
-s(:kwbegin)

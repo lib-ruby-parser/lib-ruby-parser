@@ -1,6 +1,0 @@
---STATE
-expr_dot
---INPUT
-class
---TOKENS
-tIDENTIFIER "class" [0, 5]

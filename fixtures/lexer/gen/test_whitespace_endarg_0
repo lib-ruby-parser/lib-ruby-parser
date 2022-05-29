@@ -1,6 +1,0 @@
---STATE
-expr_endarg
---INPUT
-{
---TOKENS
-tLBRACE_ARG "{" [0, 1]

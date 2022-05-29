@@ -1,6 +1,0 @@
---INPUT
-foo.S?
---TOKENS
-tIDENTIFIER "foo" [0, 3]
-tDOT "." [3, 4]
-tFID "S?" [4, 6]

@@ -1,7 +1,0 @@
---STATE
-expr_dot
---INPUT
-
-`
---TOKENS
-tBACK_REF2 "`" [1, 2]

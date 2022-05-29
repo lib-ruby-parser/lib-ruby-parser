@@ -1,8 +1,0 @@
---STATE
-expr_end
---INPUT
-rescue a:b
---TOKENS
-kRESCUE_MOD "rescue" [0, 6]
-tLABEL "a" [7, 9]
-tIDENTIFIER "b" [9, 10]

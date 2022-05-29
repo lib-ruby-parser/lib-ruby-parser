@@ -1,4 +1,0 @@
---INPUT
-$_
---TOKENS
-tGVAR "$_" [0, 2]

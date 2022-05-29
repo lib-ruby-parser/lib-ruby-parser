@@ -1,7 +1,0 @@
---INPUT
-1;
-=begin
-=end
---TOKENS
-tINTEGER "1" [0, 1]
-tSEMI ";" [1, 2]

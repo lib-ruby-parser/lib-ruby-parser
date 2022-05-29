@@ -1,4 +1,0 @@
---INPUT
-foo { |...| }
---DIAGNOSTIC
-       ~~~ (error) unexpected tBDOT3

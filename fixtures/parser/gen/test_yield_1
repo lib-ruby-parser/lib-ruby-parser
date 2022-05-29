@@ -1,9 +1,0 @@
---INPUT
-yield foo
---LOCATIONS
-~~~~~ keyword (root)
-~~~~~~~~~ expression (root)
-      ~~~ expression (root -> args -> 0)
---AST
-s(:yield,
-  s(:lvar, "foo"))
