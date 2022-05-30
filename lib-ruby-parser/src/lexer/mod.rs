@@ -22,6 +22,3 @@ mod yylval;
 
 pub use main::Lexer;
 pub(crate) use tokadd::TokAdd;
-
-#[cfg(test)]
-mod tests;

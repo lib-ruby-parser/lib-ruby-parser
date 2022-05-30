@@ -6,7 +6,7 @@ mod gen;
 #[allow(non_snake_case)]
 mod manual;
 
-use crate::{
+use lib_ruby_parser::{
     source::{MagicComment, MagicCommentKind},
     Loc, Parser, ParserOptions, ParserResult,
 };

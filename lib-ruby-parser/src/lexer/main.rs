@@ -80,7 +80,8 @@ pub struct Lexer {
     pub(crate) comments: Vec<Comment>,
     pub(crate) magic_comments: Vec<MagicComment>,
 
-    pub(crate) tokens_factory: PoolFactory<Token>,
+    #[doc(hidden)]
+    pub tokens_factory: PoolFactory<Token>,
 }
 
 impl Lexer {

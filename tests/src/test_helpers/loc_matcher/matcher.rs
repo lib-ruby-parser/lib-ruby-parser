@@ -1,6 +1,6 @@
 use super::LocName;
-use crate::traverse::finder::Finder;
-use crate::Node;
+use lib_ruby_parser::traverse::finder::Finder;
+use lib_ruby_parser::Node;
 
 #[derive(Debug, PartialEq)]
 enum ParseLocState {

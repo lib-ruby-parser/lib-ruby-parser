@@ -1,4 +1,4 @@
-use crate::Diagnostic;
+use lib_ruby_parser::Diagnostic;
 
 pub fn render_diagnostic_for_testing(d: &Diagnostic) -> String {
     format!(

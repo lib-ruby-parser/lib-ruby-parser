@@ -51,33 +51,6 @@ pub(crate) fn codegen() {
         "src/nodes/node_enum.rs",
         no_template_options,
     );
-    /* Node test helper */
-    render(
-        "codegen/rust/loc_name.liquid",
-        "src/test_helpers/loc_matcher/loc_name_gen.rs",
-        |template| {
-            template.with_global(
-                "loc_names",
-                value!(vec![
-                    "begin",
-                    "end",
-                    "expression",
-                    "keyword",
-                    "name",
-                    "assignment",
-                    "colon",
-                    "double_colon",
-                    "else",
-                    "heredoc_body",
-                    "operator",
-                    "selector",
-                    "assoc",
-                    "question",
-                    "heredoc_end",
-                ]),
-            )
-        },
-    );
 
     reserved_words::codegen();
 

@@ -3,5 +3,6 @@
 members = [
   "lib-ruby-parser",
   "tests",
+  "examples",
   "fuzzer",
 ]
