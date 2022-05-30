@@ -2,14 +2,8 @@ name: release-codegen
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
-# on:
-#   push:
-#     tags:
-#       - 'codegen-v*'
+    tags:
+      - 'codegen-v*'
 
 defaults:
   run:
