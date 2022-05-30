@@ -1,9 +1,9 @@
 [package]
 authors = ["Ilya Bylich <ibylich@gmail.com>"]
-description = "Examples for lib-ruby-parser"
+description = "Scripts for lib-ruby-parser"
 edition = "2021"
 license = "MIT"
-name = "examples"
+name = "scripts"
 repository = "https://github.com/lib-ruby-parser/lib-ruby-parser"
 version = "0.0.1"
 

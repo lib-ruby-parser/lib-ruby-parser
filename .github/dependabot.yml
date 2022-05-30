@@ -5,7 +5,7 @@ updates:
     schedule:
       interval: "daily"
   - package-ecosystem: "cargo"
-    directory: "examples/"
+    directory: "scripts/"
     schedule:
       interval: "daily"
   - package-ecosystem: "cargo"

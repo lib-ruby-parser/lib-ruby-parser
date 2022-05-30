@@ -1,4 +1,4 @@
-use examples::helpers::*;
+use scripts::helpers::*;
 
 use clap::Parser;
 use lib_ruby_parser::{DiagnosticMessage, ParserResult};

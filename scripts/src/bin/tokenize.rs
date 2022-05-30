@@ -1,7 +1,7 @@
 extern crate clap;
 use clap::Parser;
 
-use examples::helpers::*;
+use scripts::helpers::*;
 
 #[derive(Debug, Parser)]
 struct Args {

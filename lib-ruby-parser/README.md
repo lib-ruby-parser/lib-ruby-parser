@@ -138,6 +138,7 @@ If you use it from GitHub directly you also need Bison (because `parser.rs` is u
 + [C](https://github.com/lib-ruby-parser/c-bindings)
 + [C++](https://github.com/lib-ruby-parser/cpp-bindings)
 + [Node.js](https://github.com/lib-ruby-parser/node-bindings)
++ [Ruby](https://github.com/lib-ruby-parser/ruby-bindings)
 + [WASM](https://github.com/lib-ruby-parser/wasm-bindings) (with live demo)
 
 ## Profiling
@@ -145,7 +146,7 @@ If you use it from GitHub directly you also need Bison (because `parser.rs` is u
 You can use `parse` example:
 
 ```sh
-$ cargo run --features run-examples --example parse -- --print=N --run-profiler=1 "<pattern>"
+$ cargo run --bin parse -- --print=N --run-profiler=1 "blob/**/*.rb"
 ```
 
 ## Benchmarking
@@ -159,7 +160,7 @@ $ ruby gems/download.rb
 Then, run a script that compares `Ripper` and `lib-ruby-parser` (attached results are from Feb 2021):
 
 ```sh
-$ ./bench/compare.sh
+$ ./scripts/bench.sh
     Finished release [optimized] target(s) in 0.08s
 Running lib-ruby-parser
 Run 1:
@@ -185,50 +186,6 @@ Time taken: 21.44488099985756 (total files: 18017)
 Run 5:
 Time taken: 21.738944000098854 (total files: 18017)
 ```
-
-## Profile-guided optimization
-
-```sh
-# Build recording executable
-RUSTFLAGS="-Cprofile-generate=$(PWD)/target/pgo/pgo.profraw" cargo build --release --example parse
-
-# Record raw profiling data
-target/release/examples/parse --no-output "gems/repos/**/*.rb"
-
-# Merge profiled data
-llvm-profdata merge -o target/pgo/pgo.profraw/merged.profdata target/pgo/pgo.profraw
-
-# Build optimized executable
-RUSTFLAGS="-Cprofile-use=$(PWD)/target/pgo/pgo.profraw/merged.profdata" cargo build --release --example parse
-```
-
-PGO, No LTO:
-
-```sh
-$ repeat 5 time target/release/examples/parse --no-output "gems/repos/**/*.rb"
-9.46s user 1.27s system 80% cpu 13.371 total
-8.51s user 0.66s system 99% cpu 9.171 total
-8.52s user 0.68s system 99% cpu 9.208 total
-9.63s user 0.74s system 99% cpu 10.381 total
-9.70s user 0.73s system 99% cpu 10.443 total
-```
-
-No PGO, LTO=fat:
-
-```sh
-$ repeat 5 time target/release/examples/parse --no-output "gems/repos/**/*.rb"
-9.90s user 1.29s system 80% cpu 13.917 total
-9.42s user 0.71s system 99% cpu 10.138 total
-10.24s user 0.76s system 99% cpu 11.004 total
-10.21s user 0.75s system 99% cpu 10.962 total
-10.22s user 0.74s system 99% cpu 10.966 total
-```
-
-The diff seems to be too small to use this feature.
-
-When both PGO and LTO are enabled building a `parse` example gives a bunch of LLVM errors about wrong types of functions (like `expected a Function or null`).
-
-If you know how to fix them, please open an issue.
 
 ## Fuzz testing
 

@@ -1,4 +1,7 @@
 #!/usr/bin/env ruby
+
+# This script is driven by scripts/bench.sh
+
 require 'ripper'
 
 files = Dir['gems/repos/**/*.rb'].map { |f| [f, File.read(f)] }

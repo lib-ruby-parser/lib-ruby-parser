@@ -1,4 +1,4 @@
-use examples::helpers::*;
+use scripts::helpers::*;
 
 extern crate clap;
 use clap::Parser;

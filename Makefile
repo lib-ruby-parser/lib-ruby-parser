@@ -18,10 +18,10 @@ lib-ruby-parser/src/parser/parse.rs:
 
 target/tokens.rs: lib-ruby-parser/src/parser/parse.rs
 	# generate target/tokens.rs using cbindgen
-	cargo run --bin prepare_token_ids --package examples
+	cargo run --bin prepare_token_ids --package scripts
 
 create-codegen: target/tokens.rs
 	# create `codegen` executable
-	cargo build --bin codegen --features codegen --release --package examples
+	cargo build --bin codegen --features codegen --release --package scripts
 
 .PHONY: codegen
