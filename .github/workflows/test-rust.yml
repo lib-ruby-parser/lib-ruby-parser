@@ -55,6 +55,9 @@ jobs:
       - name: codegen tests
         run: make codegen-tests
 
+      - name: codegen rust
+        run: make codegen-rust
+
       - name: run tests
         env:
           CARGOFLGS: ${{ matrix.build.cargoflags }} -- --nocapture

@@ -45,8 +45,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install ragel
 
-      - name: codegen
-        run: cargo build --package lib-ruby-parser
+      - name: codegen tests
+        run: make codegen-tests
+
+      - name: codegen rust
+        run: make codegen-rust
 
       - name: cargo-tarpaulin
         run: |

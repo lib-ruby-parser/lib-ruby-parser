@@ -3,6 +3,9 @@ codegen-tests:
 	ruby vendor/codegen/parser.rb
 	ruby vendor/codegen/lexer.rb
 
+codegen-rust:
+	cargo build --features="lib-ruby-parser/codegen-y,lib-ruby-parser/codegen-rust" --package lib-ruby-parser
+
 test:
 	cargo test --package tests --package lib-ruby-parser $(CARGOFLAGS)
 
@@ -19,6 +22,6 @@ target/tokens.rs: lib-ruby-parser/src/parser/parse.rs
 
 create-codegen: target/tokens.rs
 	# create `codegen` executable
-	cargo build --bin codegen --features codegen --profile release --package examples
+	cargo build --bin codegen --features codegen --release --package examples
 
 .PHONY: codegen

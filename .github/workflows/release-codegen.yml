@@ -37,10 +37,19 @@ jobs:
           brew install bison
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
 
+      - name: generate parse.rs
+        run: make codegen-rust
+
+      - name: save generated tokens.rs
+        uses: actions/upload-artifact@v3
+        with:
+          name: parse.rs
+          path: lib-ruby-parser/src/parser/parse.rs
+
       - name: cbindgen and generate tokens data
         run: make target/tokens.rs
 
-      - name: save compiled tokens.rs
+      - name: save generated tokens.rs
         uses: actions/upload-artifact@v3
         with:
           name: tokens.rs
@@ -70,27 +79,27 @@ jobs:
           target: ${{ matrix.build.target }}
           override: true
 
-      - name: download compiled parse.rs
+      - name: download generated parse.rs
         uses: actions/download-artifact@v3
         with:
           name: parse.rs
 
-      - name: download compiled tokens.rs
+      - name: download generated tokens.rs
         uses: actions/download-artifact@v3
         with:
           name: tokens.rs
 
-      - run: mv parse.rs src/parser/parse.rs
+      - run: mv parse.rs lib-ruby-parser/src/parser/parse.rs
       - run: mkdir -p target && mv tokens.rs target/tokens.rs
 
       - name: codegen all other rust files
-        run: cargo build --features "codegen-rust"
+        run: cargo build --features "lib-ruby-parser/codegen-rust"
 
       - name: compile codegen
-        run: cargo build --release --example codegen --features codegen-example
+        run: make create-codegen
 
       - name: give executable representable name
-        run: cp target/release/examples/codegen${{ matrix.build.exe }} ./codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
+        run: cp target/release/codegen${{ matrix.build.exe }} ./codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
 
       - name: upload executable
         uses: actions/upload-artifact@v2
