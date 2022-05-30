@@ -1,5 +1,0 @@
---INPUT
-::Array
---TOKENS
-tCOLON3 "::" [0, 2]
-tCONSTANT "Array" [2, 7]

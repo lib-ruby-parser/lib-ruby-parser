@@ -3,6 +3,8 @@ name: coverage
 on:
   push:
     branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -26,7 +28,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.0.0"
+          ruby-version: "3.1.2"
 
       - name: install bison
         run: |
@@ -39,20 +41,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install ragel
 
-      - name: codegen
-        run: |
-          cd vendor/parser
-          bundle install
-          bundle exec rake generate
-          cd ../..
-          ruby vendor/codegen/parser.rb
-          ruby vendor/codegen/lexer.rb
-          cargo build --features "codegen-y,codegen-rust" && cargo clean
+      - name: codegen tests
+        run: make codegen-tests
+
+      - name: codegen rust
+        run: make codegen-rust
 
       - name: cargo-tarpaulin
         run: |
           cargo install cargo-tarpaulin
-          cargo tarpaulin -v --out Xml --exclude-files codegen
+          make test-cov
 
       - name: upload to codecov.io
         uses: codecov/codecov-action@v1.0.2

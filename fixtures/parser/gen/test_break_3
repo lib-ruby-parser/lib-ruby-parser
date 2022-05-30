@@ -1,7 +1,0 @@
---INPUT
-break
---LOCATIONS
-~~~~~ keyword (root)
-~~~~~ expression (root)
---AST
-s(:break)

@@ -1,7 +1,0 @@
---INPUT
-foo. #bar
-baz
---TOKENS
-tIDENTIFIER "foo" [0, 3]
-tDOT "." [3, 4]
-tIDENTIFIER "baz" [10, 13]

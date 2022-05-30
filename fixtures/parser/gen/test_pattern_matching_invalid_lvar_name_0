@@ -1,4 +1,0 @@
---INPUT
-case a; in a?:; end
---DIAGNOSTIC
-           ~~ (error) key must be valid as local variables

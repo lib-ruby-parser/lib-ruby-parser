@@ -1,4 +1,0 @@
---INPUT
-%k[foo]
---DIAGNOSTIC
-~~ (error) unknown type of %string

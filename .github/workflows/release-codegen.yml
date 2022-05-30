@@ -32,18 +32,18 @@ jobs:
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
 
       - name: generate parse.rs
-        run: cargo build --features "codegen-y,codegen-rust"
+        run: make codegen-rust
 
-      - name: cbindgen and generate tokens data
-        run: cargo run --example prepare_token_ids --features prepare-token-ids-example
-
-      - name: save compiled parse.rs
+      - name: save generated tokens.rs
         uses: actions/upload-artifact@v3
         with:
           name: parse.rs
-          path: src/parser/parse.rs
+          path: lib-ruby-parser/src/parser/parse.rs
 
-      - name: save compiled tokens.rs
+      - name: cbindgen and generate tokens data
+        run: make target/tokens.rs
+
+      - name: save generated tokens.rs
         uses: actions/upload-artifact@v3
         with:
           name: tokens.rs
@@ -73,27 +73,27 @@ jobs:
           target: ${{ matrix.build.target }}
           override: true
 
-      - name: download compiled parse.rs
+      - name: download generated parse.rs
         uses: actions/download-artifact@v3
         with:
           name: parse.rs
 
-      - name: download compiled tokens.rs
+      - name: download generated tokens.rs
         uses: actions/download-artifact@v3
         with:
           name: tokens.rs
 
-      - run: mv parse.rs src/parser/parse.rs
+      - run: mv parse.rs lib-ruby-parser/src/parser/parse.rs
       - run: mkdir -p target && mv tokens.rs target/tokens.rs
 
       - name: codegen all other rust files
-        run: cargo build --features "codegen-rust"
+        run: cargo build --features "lib-ruby-parser/codegen-rust"
 
       - name: compile codegen
-        run: cargo build --release --example codegen --features codegen-example
+        run: make create-codegen
 
       - name: give executable representable name
-        run: cp target/release/examples/codegen${{ matrix.build.exe }} ./codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
+        run: cp target/release/codegen${{ matrix.build.exe }} ./codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
 
       - name: upload executable
         uses: actions/upload-artifact@v2
@@ -121,10 +121,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with: { name: codegen-x86_64-pc-windows-gnu.exe }
 
-      - name: release
-        uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          artifacts: "codegen-*"
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: ls -l
+
+      # - name: release
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     allowUpdates: true
+      #     artifactErrorsFailBuild: true
+      #     artifacts: "codegen-*"
+      #     token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,4 +1,0 @@
---INPUT
-def foo(aa, aa=1); end
---DIAGNOSTIC
-            ~~ (error) duplicated argument name

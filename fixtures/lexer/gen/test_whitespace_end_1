@@ -1,7 +1,0 @@
---STATE
-expr_end
---INPUT
- + 1
---TOKENS
-tPLUS "+" [1, 2]
-tINTEGER "1" [3, 4]

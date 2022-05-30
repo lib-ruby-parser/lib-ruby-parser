@@ -1,7 +1,0 @@
---INPUT
-while a:b
---TOKENS
-kWHILE "while" [0, 5]
-tIDENTIFIER "a" [6, 7]
-tSYMBEG ":" [7, 8]
-tIDENTIFIER "b" [8, 9]

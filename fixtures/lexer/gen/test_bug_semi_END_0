@@ -1,6 +1,0 @@
---INPUT
-foo;
-__END__
---TOKENS
-tIDENTIFIER "foo" [0, 3]
-tSEMI ";" [3, 4]

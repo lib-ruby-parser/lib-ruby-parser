@@ -1,4 +1,0 @@
---INPUT
-m { |foo: foo| } 
---DIAGNOSTIC
-          ~~~ (error) circular argument reference - foo

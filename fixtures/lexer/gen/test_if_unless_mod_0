@@ -1,8 +1,0 @@
---INPUT
-return if true unless false
---TOKENS
-kRETURN "return" [0, 6]
-kIF_MOD "if" [7, 9]
-kTRUE "true" [10, 14]
-kUNLESS_MOD "unless" [15, 21]
-kFALSE "false" [22, 27]

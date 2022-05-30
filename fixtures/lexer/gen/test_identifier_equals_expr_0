@@ -1,8 +1,0 @@
---STATE
-expr_dot
---INPUT
-y = arg
---TOKENS
-tIDENTIFIER "y" [0, 1]
-tEQL "=" [2, 3]
-tIDENTIFIER "arg" [4, 7]

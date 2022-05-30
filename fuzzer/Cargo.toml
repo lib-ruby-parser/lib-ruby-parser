@@ -1,0 +1,13 @@
+[package]
+authors = ["Automatically generated"]
+edition = "2018"
+name = "lib-ruby-parser-fuzz"
+publish = false
+version = "0.0.0"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+lib-ruby-parser = {path = "../lib-ruby-parser"}
+libfuzzer-sys = "0.4"

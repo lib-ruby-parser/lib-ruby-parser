@@ -1,8 +1,0 @@
---STATE
-expr_mid
---INPUT
-#foo
-+
---TOKENS
-tNL "\n" [4, 5]
-tUPLUS "+" [5, 6]

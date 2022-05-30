@@ -1,4 +1,0 @@
---INPUT
-nil, foo = bar
---DIAGNOSTIC
-~~~ (error) Can't assign to nil

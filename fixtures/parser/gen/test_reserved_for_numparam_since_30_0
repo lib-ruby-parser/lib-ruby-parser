@@ -1,4 +1,0 @@
---INPUT
-proc {_1 = nil}
---DIAGNOSTIC
-      ~~ (error) _1 is reserved for numbered parameter

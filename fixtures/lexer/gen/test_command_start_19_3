@@ -1,7 +1,0 @@
---INPUT
-in a:b
---TOKENS
-kIN "in" [0, 2]
-tIDENTIFIER "a" [3, 4]
-tSYMBEG ":" [4, 5]
-tIDENTIFIER "b" [5, 6]

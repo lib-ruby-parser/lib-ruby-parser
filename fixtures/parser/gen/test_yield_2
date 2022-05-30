@@ -1,9 +1,0 @@
---INPUT
-yield()
---LOCATIONS
-     ~ begin (root)
-      ~ end (root)
-~~~~~ keyword (root)
-~~~~~~~ expression (root)
---AST
-s(:yield)

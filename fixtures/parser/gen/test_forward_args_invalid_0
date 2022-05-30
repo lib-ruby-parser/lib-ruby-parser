@@ -1,4 +1,0 @@
---INPUT
-def foo(...) bar(...) { }; end
---DIAGNOSTIC
-                 ~~~ (error) both block arg and actual block given

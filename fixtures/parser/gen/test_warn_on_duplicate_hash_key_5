@@ -1,4 +1,0 @@
---INPUT
- { 1.0r => 1, 1.0r => 2 } 
---DIAGNOSTIC
-              ~~~~ (warning) key is duplicated and overwritten

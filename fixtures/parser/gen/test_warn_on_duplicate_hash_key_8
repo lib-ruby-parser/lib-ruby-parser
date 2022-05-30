@@ -1,4 +1,0 @@
---INPUT
- { /foo/ => 1, /foo/ => 2 } 
---DIAGNOSTIC
-               ~~~~~ (warning) key is duplicated and overwritten

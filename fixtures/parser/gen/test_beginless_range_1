@@ -1,9 +1,0 @@
---INPUT
-...100
---LOCATIONS
-~~~ operator (root)
-~~~~~~ expression (root)
-   ~~~ expression (root -> right)
---AST
-s(:erange, nil,
-  s(:int, "100"))

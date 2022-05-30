@@ -18,7 +18,7 @@
 
 PARSER_DIR = File.expand_path('../parser', __dir__)
 TARGET_RUBY_VERSION = "3.1"
-TARGET_DIR = File.expand_path('../../fixtures/parser/gen', __dir__)
+TARGET_DIR = File.expand_path('../../tests/fixtures/parser/gen', __dir__)
 ROOT = File.expand_path('../..', __dir__)
 
 require 'fileutils'
@@ -798,7 +798,7 @@ Minitest.after_run do
     #{fixtures}
   RS
 
-  File.write(File.join(ROOT, 'src/parser/tests/gen.rs'), fixtures)
+  File.write(File.join(ROOT, 'tests/src/parser/gen.rs'), fixtures)
 end
 
 class Parser::AST::Node

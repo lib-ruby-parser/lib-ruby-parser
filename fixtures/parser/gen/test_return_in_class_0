@@ -1,4 +1,0 @@
---INPUT
-class A; return; end
---DIAGNOSTIC
-         ~~~~~~ (error) Invalid return in class/module body

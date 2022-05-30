@@ -1,6 +1,0 @@
---INPUT
-%<blah>
---TOKENS
-tSTRING_BEG "%<" [0, 2]
-tSTRING_CONTENT "blah" [2, 6]
-tSTRING_END ">" [6, 7]

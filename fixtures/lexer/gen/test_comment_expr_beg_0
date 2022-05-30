@@ -1,6 +1,0 @@
---INPUT
-{#1
-}
---TOKENS
-tLBRACE "{" [0, 1]
-tRCURLY "}" [4, 5]

@@ -1,6 +1,0 @@
---STATE
-expr_arg
---INPUT
-&.
---TOKENS
-tANDDOT "&." [0, 2]

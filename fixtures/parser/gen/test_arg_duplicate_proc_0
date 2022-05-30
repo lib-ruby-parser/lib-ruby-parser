@@ -1,4 +1,0 @@
---INPUT
-proc{|a,a|}
---DIAGNOSTIC
-        ~ (error) duplicated argument name

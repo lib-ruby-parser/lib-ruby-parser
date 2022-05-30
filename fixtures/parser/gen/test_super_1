@@ -1,9 +1,0 @@
---INPUT
-super foo
---LOCATIONS
-~~~~~ keyword (root)
-~~~~~~~~~ expression (root)
-      ~~~ expression (root -> args -> 0)
---AST
-s(:super,
-  s(:lvar, "foo"))

@@ -17,9 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - { rust: stable,  cargoargs: "--features onig" }
-          - { rust: beta,    cargoargs: "--features onig" }
-          - { rust: nightly, cargoargs: "" }
+          - { rust: stable,  cargoflags: "--features lib-ruby-parser/onig" }
+          - { rust: beta,    cargoflags: "--features lib-ruby-parser/onig" }
+          - { rust: nightly, cargoflags: "" }
 
     steps:
       - name: checkout
@@ -36,7 +36,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.0.0"
+          ruby-version: "3.1.2"
 
       - name: install bison
         run: |
@@ -52,15 +52,13 @@ jobs:
       - name: show bison version
         run: bison --version
 
-      - name: codegen
-        run: |
-          cd vendor/parser
-          bundle install
-          bundle exec rake generate
-          cd ../..
-          ruby vendor/codegen/parser.rb
-          ruby vendor/codegen/lexer.rb
-          cargo build --features "codegen-y,codegen-rust"
+      - name: codegen tests
+        run: make codegen-tests
+
+      - name: codegen rust
+        run: make codegen-rust
 
       - name: run tests
-        run: cargo test ${{ matrix.build.cargoargs }} -- --nocapture
+        env:
+          CARGOFLGS: ${{ matrix.build.cargoflags }} -- --nocapture
+        run: make test

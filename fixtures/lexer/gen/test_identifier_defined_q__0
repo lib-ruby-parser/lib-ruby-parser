@@ -1,5 +1,0 @@
---INPUT
-def defined? 
---TOKENS
-kDEF "def" [0, 3]
-kDEFINED "defined?" [4, 12]

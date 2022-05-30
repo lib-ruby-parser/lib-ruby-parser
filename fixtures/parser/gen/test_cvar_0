@@ -1,6 +1,0 @@
---INPUT
-@@foo
---LOCATIONS
-~~~~~ expression (root)
---AST
-s(:cvar, "@@foo")

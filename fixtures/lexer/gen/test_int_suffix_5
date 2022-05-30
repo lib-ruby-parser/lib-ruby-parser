@@ -1,5 +1,0 @@
---INPUT
-42if
---TOKENS
-tINTEGER "42" [0, 2]
-kIF_MOD "if" [2, 4]

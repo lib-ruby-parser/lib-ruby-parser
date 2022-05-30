@@ -1,7 +1,0 @@
---STATE
-expr_beg
---INPUT
-#foo
-+
---TOKENS
-tUPLUS "+" [5, 6]

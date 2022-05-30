@@ -1,8 +1,0 @@
---INPUT
-%q(foobar)
---LOCATIONS
-~~~ begin (root)
-         ~ end (root)
-~~~~~~~~~~ expression (root)
---AST
-s(:str, "foobar")

@@ -1,6 +1,0 @@
---INPUT
-"n = \101\102\103"
---TOKENS
-tSTRING_BEG "\"" [0, 1]
-tSTRING_CONTENT "n = ABC" [1, 17]
-tSTRING_END "\"" [17, 18]

@@ -1,5 +1,0 @@
---INPUT
-def <= 
---TOKENS
-kDEF "def" [0, 3]
-tLEQ "<=" [4, 6]

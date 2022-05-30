@@ -1,4 +1,0 @@
---INPUT
-def foo(...); a = (...); end
---DIAGNOSTIC
-                      ~ (error) unexpected tRPAREN

@@ -1,9 +1,0 @@
---INPUT
-+foo
---LOCATIONS
-~ selector (root)
-~~~~ expression (root)
- ~~~ expression (root -> recv)
---AST
-s(:send,
-  s(:lvar, "foo"), "+@")

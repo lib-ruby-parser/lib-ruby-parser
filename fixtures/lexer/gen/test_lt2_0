@@ -1,6 +1,0 @@
---INPUT
-a << b
---TOKENS
-tIDENTIFIER "a" [0, 1]
-tLSHFT "<<" [2, 4]
-tIDENTIFIER "b" [5, 6]

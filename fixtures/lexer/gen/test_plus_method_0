@@ -1,6 +1,0 @@
---STATE
-expr_fname
---INPUT
-+
---TOKENS
-tPLUS "+" [0, 1]

@@ -1,4 +1,0 @@
---INPUT
-yield(&foo)
---DIAGNOSTIC
-~~~~~ (error) block given to yield

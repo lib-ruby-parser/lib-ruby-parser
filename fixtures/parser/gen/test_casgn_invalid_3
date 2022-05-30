@@ -1,4 +1,0 @@
---INPUT
-def self.f; Foo = 1; end
---DIAGNOSTIC
-            ~~~ (error) dynamic constant assignment

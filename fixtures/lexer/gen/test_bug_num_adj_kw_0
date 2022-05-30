@@ -1,5 +1,0 @@
---INPUT
-1if
---TOKENS
-tINTEGER "1" [0, 1]
-kIF_MOD "if" [1, 3]
