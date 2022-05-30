@@ -1,8 +1,7 @@
 use super::InputFile;
 use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
 
-#[allow(dead_code)]
-pub(crate) fn parse(input: InputFile, drop_tokens: bool) -> ParserResult {
+pub fn parse(input: InputFile, drop_tokens: bool) -> ParserResult {
     let options = ParserOptions {
         buffer_name: input.filepath,
         record_tokens: !drop_tokens,

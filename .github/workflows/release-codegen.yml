@@ -2,8 +2,14 @@ name: release-codegen
 
 on:
   push:
-    tags:
-      - 'codegen-v*'
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# on:
+#   push:
+#     tags:
+#       - 'codegen-v*'
 
 defaults:
   run:
@@ -31,17 +37,8 @@ jobs:
           brew install bison
           echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
 
-      - name: generate parse.rs
-        run: cargo build --features "codegen-y,codegen-rust"
-
       - name: cbindgen and generate tokens data
-        run: cargo run --example prepare_token_ids --features prepare-token-ids-example
-
-      - name: save compiled parse.rs
-        uses: actions/upload-artifact@v3
-        with:
-          name: parse.rs
-          path: src/parser/parse.rs
+        run: make target/tokens.rs
 
       - name: save compiled tokens.rs
         uses: actions/upload-artifact@v3
@@ -121,10 +118,12 @@ jobs:
       - uses: actions/download-artifact@v2
         with: { name: codegen-x86_64-pc-windows-gnu.exe }
 
-      - name: release
-        uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          artifacts: "codegen-*"
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: ls -l
+
+      # - name: release
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     allowUpdates: true
+      #     artifactErrorsFailBuild: true
+      #     artifacts: "codegen-*"
+      #     token: ${{ secrets.GITHUB_TOKEN }}

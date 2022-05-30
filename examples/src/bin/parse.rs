@@ -1,4 +1,4 @@
-use super::helpers::*;
+use examples::helpers::*;
 
 extern crate clap;
 use clap::Parser;
@@ -46,8 +46,7 @@ impl From<&Args> for Option<InputFiles> {
     }
 }
 
-#[allow(dead_code)]
-pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     if args.print_build_info {
@@ -75,3 +74,4 @@ pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+

@@ -1,6 +1,5 @@
-use super::helpers::*;
+use examples::helpers::*;
 
-extern crate clap;
 use clap::Parser;
 use lib_ruby_parser::{DiagnosticMessage, ParserResult};
 
@@ -104,8 +103,7 @@ fn compare(file: InputFile) -> Output {
     Output::Ok
 }
 
-#[allow(dead_code)]
-pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     let files = args

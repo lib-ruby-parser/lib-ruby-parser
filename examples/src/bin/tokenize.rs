@@ -1,7 +1,7 @@
 extern crate clap;
 use clap::Parser;
 
-use super::helpers::*;
+use examples::helpers::*;
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -15,8 +15,7 @@ struct Args {
     quiet: bool,
 }
 
-#[allow(dead_code)]
-pub(crate) fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Args = Args::parse();
 
     fn print_nothing(_: TokenList) {}

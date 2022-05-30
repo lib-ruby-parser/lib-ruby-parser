@@ -22,7 +22,7 @@ jobs:
       - name: install ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.7.2
+          ruby-version: "3.1.2"
 
       - name: install ragel
         run: |
@@ -30,13 +30,7 @@ jobs:
           sudo apt-get install ragel
 
       - name: run codegen
-        run: |
-          cd vendor/parser
-          bundle install
-          bundle exec rake generate
-          cd ../..
-          ruby vendor/codegen/lexer.rb
-          ruby vendor/codegen/parser.rb
+        run: make codegen-tests
 
       - name: assert no diff
         run: |

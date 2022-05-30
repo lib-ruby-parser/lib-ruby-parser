@@ -1,7 +1,7 @@
 use lib_ruby_parser::Token;
 
-pub(crate) struct TokenList {
-    pub(crate) tokens: Vec<Token>,
+pub struct TokenList {
+    pub tokens: Vec<Token>,
 }
 
 fn token_value(token: &Token) -> String {

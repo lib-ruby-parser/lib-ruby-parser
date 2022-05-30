@@ -1,4 +1,3 @@
-#[cfg(feature = "prepare-token-ids-example")]
 fn main() {
     #[derive(Debug, Default)]
     struct TokenId {
@@ -10,7 +9,7 @@ fn main() {
     const TMP_BINDINGS: &str = "target/tmp_bindings.h";
 
     cbindgen::Builder::new()
-        .with_crate(".")
+        .with_crate("lib-ruby-parser")
         .with_parse_deps(false)
         .with_no_includes()
         .include_item("Lexer")
@@ -44,11 +43,4 @@ fn main() {
     }
 
     std::fs::write("target/tokens.rs", format!("{:?}", token_ids)).unwrap();
-}
-
-#[cfg(not(feature = "prepare-token-ids-example"))]
-pub fn main() {
-    println!(
-        "'prepare_token_ids' example must be executed with 'prepare-token-ids-example' feature"
-    )
 }

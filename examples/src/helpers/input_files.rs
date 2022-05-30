@@ -1,5 +1,5 @@
 #[derive(Clone)]
-pub(crate) struct InputFile {
+pub struct InputFile {
     pub filepath: String,
     pub code: Vec<u8>,
 }
@@ -13,18 +13,18 @@ impl InputFile {
     }
 }
 
-pub(crate) struct InputFiles {
+pub struct InputFiles {
     pub files: Vec<InputFile>,
 }
 
 impl InputFiles {
-    pub(crate) fn new_eval(code: Vec<u8>) -> Self {
+    pub fn new_eval(code: Vec<u8>) -> Self {
         Self {
             files: vec![InputFile::eval(code)],
         }
     }
 
-    pub(crate) fn new_pattern(pattern: &str) -> Self {
+    pub fn new_pattern(pattern: &str) -> Self {
         let files: Vec<InputFile> = glob::glob(pattern)
             .expect("invalid glob pattern")
             .map(|f| f.unwrap().to_str().unwrap().to_string())
@@ -37,15 +37,15 @@ impl InputFiles {
         Self { files }
     }
 
-    pub(crate) fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.files.len()
     }
 
-    pub(crate) fn into_iter(self) -> std::vec::IntoIter<InputFile> {
+    pub fn into_iter(self) -> std::vec::IntoIter<InputFile> {
         self.files.into_iter()
     }
 
-    pub(crate) fn repeat(&mut self, n: usize) -> Self {
+    pub fn repeat(&mut self, n: usize) -> Self {
         let desired_len = self.len() * n;
         let files = self
             .files
@@ -57,7 +57,7 @@ impl InputFiles {
         Self { files }
     }
 
-    pub(crate) fn new(
+    pub fn new(
         code_to_eval: &Option<String>,
         pattern: &Option<String>,
         repeat: &Option<usize>,
@@ -75,7 +75,7 @@ impl InputFiles {
         .repeat(repeat)
     }
 
-    pub(crate) fn empty() -> Self {
+    pub fn empty() -> Self {
         Self { files: vec![] }
     }
 }
