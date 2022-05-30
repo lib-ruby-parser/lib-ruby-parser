@@ -1,6 +1,14 @@
 version: 2
 updates:
   - package-ecosystem: "cargo"
-    directory: "/"
+    directory: "lib-ruby-parser/"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "cargo"
+    directory: "examples/"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "cargo"
+    directory: "tests/"
     schedule:
       interval: "daily"
