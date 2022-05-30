@@ -1,4 +1,0 @@
---INPUT
-->... {}
---DIAGNOSTIC
-  ~~~ (error) unexpected tDOT3

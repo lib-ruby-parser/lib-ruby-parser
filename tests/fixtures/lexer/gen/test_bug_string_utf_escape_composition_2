@@ -1,6 +1,0 @@
---INPUT
-"\342\200\231"
---TOKENS
-tSTRING_BEG "\"" [0, 1]
-tSTRING_CONTENT "’" [1, 13]
-tSTRING_END "\"" [13, 14]

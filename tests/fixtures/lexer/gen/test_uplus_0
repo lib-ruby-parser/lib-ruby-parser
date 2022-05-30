@@ -1,5 +1,0 @@
---INPUT
-+blah
---TOKENS
-tUPLUS "+" [0, 1]
-tIDENTIFIER "blah" [1, 5]

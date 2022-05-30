@@ -1,4 +1,0 @@
---INPUT
-begin; 1; else; end
---DIAGNOSTIC
-          ~~~~ (error) else without rescue is useless

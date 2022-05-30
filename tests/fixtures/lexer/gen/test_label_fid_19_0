@@ -1,6 +1,0 @@
---INPUT
-{a?:true
---TOKENS
-tLBRACE "{" [0, 1]
-tLABEL "a?" [1, 4]
-kTRUE "true" [4, 8]

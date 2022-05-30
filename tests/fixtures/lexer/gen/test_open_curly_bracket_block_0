@@ -1,8 +1,0 @@
---STATE
-expr_endarg
---INPUT
-{ 4 }
---TOKENS
-tLBRACE_ARG "{" [0, 1]
-tINTEGER "4" [2, 3]
-tRCURLY "}" [4, 5]

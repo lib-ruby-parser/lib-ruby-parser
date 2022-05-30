@@ -1,6 +1,0 @@
---INPUT
-__LINE__
---LOCATIONS
-~~~~~~~~ expression (root)
---AST
-s(:__LINE__)

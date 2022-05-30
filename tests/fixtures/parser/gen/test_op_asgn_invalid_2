@@ -1,4 +1,0 @@
---INPUT
-$+ |= m foo
---DIAGNOSTIC
-~~ (error) Can't set variable $+

@@ -1,4 +1,0 @@
---INPUT
-def self._5() = nil
---DIAGNOSTIC
-         ~~ (error) _5 is reserved for numbered parameter

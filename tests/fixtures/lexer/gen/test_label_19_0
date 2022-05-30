@@ -1,6 +1,0 @@
---INPUT
-{a:b
---TOKENS
-tLBRACE "{" [0, 1]
-tLABEL "a" [1, 3]
-tIDENTIFIER "b" [3, 4]

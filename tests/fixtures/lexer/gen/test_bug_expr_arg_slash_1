@@ -1,7 +1,0 @@
---STATE
-expr_arg
---INPUT
-/ 1
---TOKENS
-tDIVIDE "/" [0, 1]
-tINTEGER "1" [2, 3]

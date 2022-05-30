@@ -1,4 +1,0 @@
---INPUT
- case 0; in "a\x0":a1, "a\0":a2; end 
---DIAGNOSTIC
-                       ~~~~~~ (error) duplicated key name

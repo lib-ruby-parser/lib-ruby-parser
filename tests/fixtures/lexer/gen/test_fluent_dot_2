@@ -1,7 +1,0 @@
---INPUT
-x # comment
-  .y
---TOKENS
-tIDENTIFIER "x" [0, 1]
-tDOT "." [14, 15]
-tIDENTIFIER "y" [15, 16]

@@ -1,5 +1,0 @@
---INPUT
--42
---TOKENS
-tUMINUS_NUM "-" [0, 1]
-tINTEGER "42" [1, 3]

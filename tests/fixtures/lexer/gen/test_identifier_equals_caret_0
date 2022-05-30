@@ -1,5 +1,0 @@
---INPUT
-def ^ 
---TOKENS
-kDEF "def" [0, 3]
-tCARET "^" [4, 5]

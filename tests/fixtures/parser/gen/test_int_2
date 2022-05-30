@@ -1,7 +1,0 @@
---INPUT
--42
---LOCATIONS
-~ operator (root)
-~~~ expression (root)
---AST
-s(:int, "-42")

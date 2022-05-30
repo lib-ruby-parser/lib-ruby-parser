@@ -1,9 +1,0 @@
---STATE
-expr_beg
---INPUT
- 
-=begin
-=end
-end
---TOKENS
-kEND "end" [14, 17]

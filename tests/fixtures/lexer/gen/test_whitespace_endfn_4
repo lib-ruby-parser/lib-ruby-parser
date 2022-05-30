@@ -1,7 +1,0 @@
---STATE
-expr_endfn
---INPUT
-\
-foo:
---TOKENS
-tLABEL "foo" [2, 6]

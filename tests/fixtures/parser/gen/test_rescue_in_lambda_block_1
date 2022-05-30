@@ -1,4 +1,0 @@
---INPUT
--> { rescue; }
---DIAGNOSTIC
-     ~~~~~~ (error) unexpected kRESCUE

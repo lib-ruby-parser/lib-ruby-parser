@@ -1,4 +1,0 @@
---INPUT
-def f; ::A, foo = foo; end
---DIAGNOSTIC
-       ~~~ (error) dynamic constant assignment

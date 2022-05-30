@@ -1,4 +1,0 @@
---INPUT
--> { _1; -> { _2 }; }
---DIAGNOSTIC
-              ~~ (error) numbered parameter is already used

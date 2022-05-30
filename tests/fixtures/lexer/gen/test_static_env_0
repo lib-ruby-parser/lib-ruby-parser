@@ -1,9 +1,0 @@
---VARS
-a
---INPUT
-a [42]
---TOKENS
-tIDENTIFIER "a" [0, 1]
-tLBRACK2 "[" [2, 3]
-tINTEGER "42" [3, 5]
-tRBRACK "]" [5, 6]

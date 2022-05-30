@@ -1,5 +1,0 @@
---INPUT
-1.0if
---TOKENS
-tFLOAT "1.0" [0, 3]
-kIF_MOD "if" [3, 5]

@@ -1,4 +1,0 @@
---INPUT
-def foo($abc); end
---DIAGNOSTIC
-        ~~~~ (error) formal argument cannot be a global variable

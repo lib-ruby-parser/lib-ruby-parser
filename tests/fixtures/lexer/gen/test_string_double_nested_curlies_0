@@ -1,6 +1,0 @@
---INPUT
-%{nest{one{two}one}nest}
---TOKENS
-tSTRING_BEG "%{" [0, 2]
-tSTRING_CONTENT "nest{one{two}one}nest" [2, 23]
-tSTRING_END "}" [23, 24]

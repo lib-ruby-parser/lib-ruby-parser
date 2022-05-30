@@ -1,7 +1,0 @@
---INPUT
-_1
---LOCATIONS
-~~ selector (root)
-~~ expression (root)
---AST
-s(:send, nil, "_1")

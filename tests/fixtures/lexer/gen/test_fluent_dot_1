@@ -1,7 +1,0 @@
---INPUT
-x
-  .y
---TOKENS
-tIDENTIFIER "x" [0, 1]
-tDOT "." [4, 5]
-tIDENTIFIER "y" [5, 6]

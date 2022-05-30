@@ -1,6 +1,0 @@
---STATE
-expr_mid
---INPUT
- +
---TOKENS
-tUPLUS "+" [1, 2]

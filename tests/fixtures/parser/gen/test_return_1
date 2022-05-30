@@ -1,9 +1,0 @@
---INPUT
-return foo
---LOCATIONS
-~~~~~~ keyword (root)
-~~~~~~~~~~ expression (root)
-       ~~~ expression (root -> args -> 0)
---AST
-s(:return,
-  s(:lvar, "foo"))

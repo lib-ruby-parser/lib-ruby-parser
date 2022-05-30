@@ -1,9 +1,0 @@
---INPUT
-def foo() = 42
---TOKENS
-kDEF "def" [0, 3]
-tIDENTIFIER "foo" [4, 7]
-tLPAREN2 "(" [7, 8]
-tRPAREN ")" [8, 9]
-tEQL "=" [10, 11]
-tINTEGER "42" [12, 14]

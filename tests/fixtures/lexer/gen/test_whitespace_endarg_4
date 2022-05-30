@@ -1,8 +1,0 @@
---STATE
-expr_endarg
---INPUT
-#foo
-{
---TOKENS
-tNL "\n" [4, 5]
-tLBRACE "{" [5, 6]

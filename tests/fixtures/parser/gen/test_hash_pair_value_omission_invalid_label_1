@@ -1,4 +1,0 @@
---INPUT
-{ bar!: }
---DIAGNOSTIC
-  ~~~~ (error) identifier bar! is not valid to get

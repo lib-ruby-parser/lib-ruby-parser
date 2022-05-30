@@ -1,4 +1,0 @@
---INPUT
-->() { _1 } 
---DIAGNOSTIC
-       ~~ (error) ordinary parameter is defined

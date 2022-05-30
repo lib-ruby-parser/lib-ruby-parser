@@ -1,6 +1,0 @@
---INPUT
-nil
---LOCATIONS
-~~~ expression (root)
---AST
-s(:nil)

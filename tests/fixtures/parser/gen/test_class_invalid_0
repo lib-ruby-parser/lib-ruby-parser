@@ -1,4 +1,0 @@
---INPUT
-def a; class Foo; end; end
---DIAGNOSTIC
-       ~~~~~ (error) class definition in method body

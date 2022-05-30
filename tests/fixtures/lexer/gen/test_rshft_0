@@ -1,6 +1,0 @@
---INPUT
-a >> 2
---TOKENS
-tIDENTIFIER "a" [0, 1]
-tRSHFT ">>" [2, 4]
-tINTEGER "2" [5, 6]

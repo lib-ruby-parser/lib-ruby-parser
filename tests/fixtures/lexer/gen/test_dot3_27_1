@@ -1,8 +1,0 @@
---INPUT
-foo
-...42
---TOKENS
-tIDENTIFIER "foo" [0, 3]
-tNL "\n" [3, 4]
-tBDOT3 "..." [4, 7]
-tINTEGER "42" [7, 9]

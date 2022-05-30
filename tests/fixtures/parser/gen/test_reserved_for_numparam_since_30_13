@@ -1,4 +1,0 @@
---INPUT
-def self._5; end
---DIAGNOSTIC
-         ~~ (error) _5 is reserved for numbered parameter

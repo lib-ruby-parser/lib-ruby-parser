@@ -1,7 +1,0 @@
---STATE
-expr_fname
---INPUT
-*a
---TOKENS
-tSTAR2 "*" [0, 1]
-tIDENTIFIER "a" [1, 2]

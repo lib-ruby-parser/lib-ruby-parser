@@ -1,5 +1,0 @@
---INPUT
-1e1ri
---TOKENS
-tFLOAT "1e1" [0, 3]
-tIDENTIFIER "ri" [3, 5]

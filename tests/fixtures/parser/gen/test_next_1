@@ -1,9 +1,0 @@
---INPUT
-next foo
---LOCATIONS
-~~~~ keyword (root)
-~~~~~~~~ expression (root)
-     ~~~ expression (root -> args -> 0)
---AST
-s(:next,
-  s(:lvar, "foo"))

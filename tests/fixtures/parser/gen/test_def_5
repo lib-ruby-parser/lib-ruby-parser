@@ -1,9 +1,0 @@
---INPUT
-def END; end
---LOCATIONS
-~~~ keyword (root)
-    ~~~ name (root)
-         ~~~ end (root)
-~~~~~~~~~~~~ expression (root)
---AST
-s(:def, "END", nil, nil)
