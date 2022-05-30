@@ -3,7 +3,7 @@ use examples::helpers::*;
 extern crate clap;
 use clap::Parser;
 
-extern crate jemallocator;
+#[cfg(not(windows))]
 #[global_allocator]
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
