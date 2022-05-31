@@ -25,11 +25,10 @@ jobs:
           target: ${{ matrix.build.target }}
           override: true
 
-      - name: install bison
-        run: |
-          brew update
-          brew install bison
-          echo "/usr/local/opt/bison/bin" >> $GITHUB_PATH
+      - name: setup bison
+        uses: bison-packages/install-bison@v1
+        with:
+          version: '3.8.2'
 
       - name: generate parse.rs
         run: make codegen-rust
