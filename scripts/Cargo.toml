@@ -18,7 +18,7 @@ codegen = []
 [dependencies]
 lib-ruby-parser = {path = "../lib-ruby-parser"}
 
-cbindgen = "0.23.0"
+cbindgen = "0.24.2"
 clap = {version = "3.0.5", features = ["derive"]}
 glob = "0.3.0"
 lib-ruby-parser-nodes = "0.53.0"
