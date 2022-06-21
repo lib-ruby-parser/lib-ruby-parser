@@ -1,0 +1,14 @@
+--INPUT
+case str
+when 'when1'
+when 'when2'
+else 'else-branch'
+end
+--AST
+s(:case,
+  s(:send, nil, "str"),
+  s(:when,
+    s(:str, "when1"), nil),
+  s(:when,
+    s(:str, "when2"), nil),
+  s(:str, "else-branch"))

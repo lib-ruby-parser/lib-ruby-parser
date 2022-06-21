@@ -89,3 +89,4 @@ fixture_file!("fixtures/parser/manual", test_unterimated_heredoc_id_27_2);
 fixture_file!("fixtures/parser/manual", test_unterimated_heredoc_id_27_3);
 fixture_file!("fixtures/parser/manual", test_unterminated_embedded_doc_0);
 fixture_file!("fixtures/parser/manual", test_unterminated_embedded_doc_1);
+fixture_file!("fixtures/parser/manual", case_with_multipl_whens_and_else);

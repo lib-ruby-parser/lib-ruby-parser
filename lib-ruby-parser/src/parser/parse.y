@@ -4551,8 +4551,8 @@ opt_block_args_tail:
                     }
                 | case_body
                     {
-                        let CaseBody { when_bodies, .. } = $<CaseBody>1;
-                        $$ = Value::new_cases(Cases { when_bodies, opt_else: None });
+                        let CaseBody { when_bodies, opt_else } = $<CaseBody>1;
+                        $$ = Value::new_cases(Cases { when_bodies, opt_else });
                     }
                 ;
 
