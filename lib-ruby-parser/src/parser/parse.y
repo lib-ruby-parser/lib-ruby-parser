@@ -4601,8 +4601,8 @@ opt_block_args_tail:
                     }
                 | p_case_body
                     {
-                        let PCaseBody { in_bodies, .. } = $<PCaseBody>1;
-                        $$ = Value::new_p_cases(PCases { in_bodies, opt_else: None });
+                        let PCaseBody { in_bodies, opt_else } = $<PCaseBody>1;
+                        $$ = Value::new_p_cases(PCases { in_bodies, opt_else });
                     }
                 ;
 
