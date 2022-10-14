@@ -1,0 +1,18 @@
+--INPUT
+case str
+in [1, 2]
+in [3, 4]
+else 'else-branch'
+end
+--AST
+s(:case_match,
+  s(:send, nil, "str"),
+  s(:in_pattern,
+    s(:array_pattern,
+      s(:int, "1"),
+      s(:int, "2")), nil, nil),
+  s(:in_pattern,
+    s(:array_pattern,
+      s(:int, "3"),
+      s(:int, "4")), nil, nil),
+  s(:str, "else-branch"))
