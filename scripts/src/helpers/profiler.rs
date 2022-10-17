@@ -55,6 +55,15 @@ mod implementation {
             Ok(Self::new(true))
         }
     }
+
+    impl Clone for Profiler {
+        fn clone(&self) -> Self {
+            Self {
+                enabled: self.enabled,
+                guard: None,
+            }
+        }
+    }
 }
 
 #[cfg(windows)]

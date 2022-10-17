@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Timer {
     enabled: bool,
     started_at: Option<Instant>,
