@@ -68,7 +68,7 @@ mod implementation {
 
 #[cfg(windows)]
 mod implementation {
-    #[derive(Default, Debug)]
+    #[derive(Default, Debug, Clone)]
     pub struct Profiler;
 
     impl Profiler {
