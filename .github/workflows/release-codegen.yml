@@ -56,10 +56,10 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - { os: ubuntu-latest,  exe: ,     target: x86_64-unknown-linux-gnu }
-          - { os: macos-latest,   exe: ,     target: x86_64-apple-darwin      }
-          - { os: windows-latest, exe: .exe, target: x86_64-pc-windows-msvc   }
-          - { os: windows-latest, exe: .exe, target: x86_64-pc-windows-gnu    }
+          - { os: ubuntu-latest,  exe: ,     zig: false, build: build,    target: x86_64-unknown-linux-gnu }
+          - { os: macos-latest,   exe: ,     zig: false, build: build,    target: x86_64-apple-darwin      }
+          - { os: windows-latest, exe: .exe, zig: false, build: build,    target: x86_64-pc-windows-msvc   }
+          - { os: ubuntu-latest,  exe: ,     zig: true,  build: zigbuild, target: aarch64-apple-darwin     }
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -88,11 +88,19 @@ jobs:
       - name: codegen all other rust files
         run: cargo build --features "lib-ruby-parser/codegen-rust"
 
+      - name: install zig
+        uses: goto-bus-stop/setup-zig@v2
+        if: ${{ matrix.build.zig }}
+
+      - name: install cargo-zigbuild
+        run: cargo install cargo-zigbuild
+        if: ${{ matrix.build.zig }}
+
       - name: compile codegen
-        run: make create-codegen
+        run: cargo ${{ matrix.build.build }} --bin codegen --features codegen --release --package scripts --target ${{ matrix.build.target }}
 
       - name: give executable representable name
-        run: cp target/release/codegen${{ matrix.build.exe }} ./codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
+        run: cp target/${{ matrix.build.target }}/release/codegen${{ matrix.build.exe }} ./codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
 
       - name: upload executable
         uses: actions/upload-artifact@v3
@@ -118,7 +126,7 @@ jobs:
         with: { name: codegen-x86_64-pc-windows-msvc.exe }
 
       - uses: actions/download-artifact@v3
-        with: { name: codegen-x86_64-pc-windows-gnu.exe }
+        with: { name: codegen-aarch64-apple-darwin }
 
       - run: ls -l
 
