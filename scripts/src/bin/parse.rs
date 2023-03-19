@@ -4,6 +4,7 @@ extern crate clap;
 use clap::Parser;
 
 #[cfg(not(windows))]
+#[cfg(feature = "jemallocator")]
 #[global_allocator]
 static GLOBAL: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
@@ -74,4 +75,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-

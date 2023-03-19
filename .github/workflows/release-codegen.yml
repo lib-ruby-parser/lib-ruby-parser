@@ -1,13 +1,9 @@
 name: release-codegen
 
 on:
-  pull_request:
-    branches: [ master ]
-
-# on:
-#   push:
-#     tags:
-#       - 'codegen-v*'
+  push:
+    tags:
+      - 'codegen-v*'
 
 defaults:
   run:
@@ -134,10 +130,10 @@ jobs:
 
       - run: ls -l
 
-      # - name: release
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     allowUpdates: true
-      #     artifactErrorsFailBuild: true
-      #     artifacts: "codegen-*"
-      #     token: ${{ secrets.GITHUB_TOKEN }}
+      - name: release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: "codegen-*"
+          token: ${{ secrets.GITHUB_TOKEN }}
