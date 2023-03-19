@@ -95,7 +95,7 @@ jobs:
         run: cp target/release/codegen${{ matrix.build.exe }} ./codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
 
       - name: upload executable
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
           path: codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
