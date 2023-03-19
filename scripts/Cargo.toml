@@ -21,7 +21,7 @@ lib-ruby-parser = {path = "../lib-ruby-parser"}
 cbindgen = "0.24.2"
 clap = {version = "4.0.8", features = ["derive"]}
 glob = "0.3.0"
-lib-ruby-parser-nodes = "0.53.0"
+lib-ruby-parser-nodes = "0.55.0"
 serde = {version = "1.0", features = ["derive"]}
 
 [target.'cfg(not(windows))'.dependencies]

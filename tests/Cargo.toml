@@ -17,4 +17,4 @@ alloc-from-pool = {version = "1.0.3"}
 lib-ruby-parser = {path = "../lib-ruby-parser"}
 
 [build-dependencies]
-lib-ruby-parser-nodes = "0.53.0"
+lib-ruby-parser-nodes = "0.55.0"
