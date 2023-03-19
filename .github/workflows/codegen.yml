@@ -2,9 +2,9 @@ name: codegen
 
 on:
   push:
-    branches: [ master ]
+    branches: [ _master ]
   pull_request:
-    branches: [ master ]
+    branches: [ _master ]
 
 jobs:
   codegen:

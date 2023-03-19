@@ -2,9 +2,9 @@ name: test-rust
 
 on:
   push:
-    branches: [ master ]
+    branches: [ _master ]
   pull_request:
-    branches: [ master ]
+    branches: [ _master ]
 
 env:
   CARGO_TERM_COLOR: always
