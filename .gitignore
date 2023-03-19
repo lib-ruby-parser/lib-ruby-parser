@@ -1,5 +1,4 @@
 /target
-Cargo.lock
 Dockerfile
 flamegraph.svg
 mri-tokenizer
