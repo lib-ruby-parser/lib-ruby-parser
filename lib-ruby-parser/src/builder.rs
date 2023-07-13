@@ -1322,7 +1322,7 @@ impl Builder {
                 expression_l,
             })),
             other => {
-                unreachable!("unsupported const_op_assignable arument: {:?}", other)
+                unreachable!("unsupported const_op_assignable argument: {:?}", other)
             }
         }
     }

@@ -292,7 +292,7 @@ pub enum Item {
     /// + `KwBegin`
     Stmts,
 
-    /// Transitions into `.whn_bodies` from:
+    /// Transitions into `.when_bodies` from:
     ///
     /// + `Case`
     WhenBodies,

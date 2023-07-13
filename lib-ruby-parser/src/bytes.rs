@@ -48,7 +48,7 @@ impl Bytes {
         std::str::from_utf8(self.as_raw())
     }
 
-    /// Converts byte sequnce to a string, all invalid UTF-8 chars are converted into "replacement char"
+    /// Converts byte sequence to a string, all invalid UTF-8 chars are converted into "replacement char"
     pub fn to_string_lossy(&self) -> String {
         String::from_utf8_lossy(self.as_raw()).into_owned()
     }

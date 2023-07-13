@@ -6963,7 +6963,7 @@ impl Parser {
     /// 1. AST
     /// 2. tokens
     /// 3. diagnostics
-    /// 4. coments
+    /// 4. comments
     /// 5. magic comments
     pub fn do_parse(mut self) -> ParserResult  {
         self.parse();

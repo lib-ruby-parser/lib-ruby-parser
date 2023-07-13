@@ -161,7 +161,7 @@ module ParseHelperPatch
       when '__LINE__' then "Can't assign to __LINE__"
       when '__ENCODING__' then "Can't assign to __ENCODING__"
       else
-        raise "unknown invalid_assigment to #{range.source}"
+        raise "unknown invalid_assignment to #{range.source}"
       end
     },
     :invalid_encoding => ->(args, range) { "invalid symbol in encoding #{range.source.encoding.name}" },
