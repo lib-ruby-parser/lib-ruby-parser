@@ -51,7 +51,7 @@ impl StaticEnvironment {
         self.stack.borrow_mut().push(variables);
     }
 
-    /// Performs a puch, inherits previously declared variables in the new scope
+    /// Performs a push, inherits previously declared variables in the new scope
     ///
     /// Handles block/lambda scopes
     pub fn extend_dynamic(&self) {

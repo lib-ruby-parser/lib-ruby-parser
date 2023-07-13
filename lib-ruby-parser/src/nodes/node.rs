@@ -2,7 +2,7 @@ use crate::Loc;
 use crate::Node;
 
 impl Node {
-    /// Returs a whitequark/parser -like representation of `self`.
+    /// Returns a whitequark/parser -like representation of `self`.
     ///
     /// Used in tests and example scripts
     pub fn inspect(&self, indent: usize) -> String {

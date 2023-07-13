@@ -16,7 +16,7 @@ pub struct ParserResult {
     /// Empty unless ParserOptions::record_tokens is set to true.
     pub tokens: Vec<Token>,
 
-    /// List of all diagnostics (errors and warings) that have been
+    /// List of all diagnostics (errors and warnings) that have been
     /// recorded during lexing and parsing
     pub diagnostics: Vec<Diagnostic>,
 
