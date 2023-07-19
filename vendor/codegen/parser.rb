@@ -17,7 +17,7 @@
 # that is handled by the "Rewriter" class which is a simple recursive visitor
 
 PARSER_DIR = File.expand_path('../parser', __dir__)
-TARGET_RUBY_VERSION = "3.1"
+TARGET_RUBY_VERSION = "3.2"
 TARGET_DIR = File.expand_path('../../src/tests/fixtures/parser/gen', __dir__)
 ROOT = File.expand_path('../..', __dir__)
 

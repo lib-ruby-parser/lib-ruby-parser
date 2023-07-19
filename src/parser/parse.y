@@ -1027,6 +1027,7 @@ use crate::Loc;
                         self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.command_start = false;
                         self.pattern_variables.push();
+                        self.pattern_hash_keys.push();
 
                         $<Bool>$ = Value::Bool(self.context.in_kwarg());
                         self.context.set_in_kwarg(true);
@@ -1034,6 +1035,7 @@ use crate::Loc;
                   p_top_expr_body
                     {
                         self.pattern_variables.pop();
+                        self.pattern_hash_keys.pop();
                         self.context.set_in_kwarg($<Bool>3);
 
                         $$ = Value::Node(
@@ -1055,6 +1057,7 @@ use crate::Loc;
                         self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.command_start = false;
                         self.pattern_variables.push();
+                        self.pattern_hash_keys.push();
 
                         $<Bool>$ = Value::Bool(self.context.in_kwarg());
                         self.context.set_in_kwarg(true);
@@ -1062,6 +1065,7 @@ use crate::Loc;
                   p_top_expr_body
                     {
                         self.pattern_variables.pop();
+                        self.pattern_hash_keys.pop();
                         self.context.set_in_kwarg($<Bool>3);
 
                         $$ = Value::Node(

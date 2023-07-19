@@ -1,6 +1,6 @@
 ROOT = File.expand_path('../..', __dir__)
 PARSER_DIR = File.expand_path('../parser', __dir__)
-TARGET_RUBY_VERSION = "3.1"
+TARGET_RUBY_VERSION = "3.2"
 TARGET_DIR = File.expand_path('../../src/tests/fixtures/lexer/gen', __dir__)
 
 require 'fileutils'
