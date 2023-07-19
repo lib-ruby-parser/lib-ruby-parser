@@ -6,7 +6,7 @@ mod gen;
 #[allow(non_snake_case)]
 mod manual;
 
-use lib_ruby_parser::{
+use crate::{
     source::{MagicComment, MagicCommentKind},
     Loc, Parser, ParserOptions, ParserResult,
 };
@@ -34,7 +34,7 @@ fn parse(input: &[u8]) -> ParserResult {
 
 #[test]
 fn test_magic_comment() {
-    let fixture = std::fs::read("fixtures/magic_comments.rb").unwrap();
+    let fixture = std::fs::read("src/tests/fixtures/magic_comments.rb").unwrap();
     let ParserResult { magic_comments, .. } = parse(&fixture);
     assert_eq!(
         magic_comments,

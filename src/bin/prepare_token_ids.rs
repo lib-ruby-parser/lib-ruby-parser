@@ -9,7 +9,7 @@ fn main() {
     const TMP_BINDINGS: &str = "target/tmp_bindings.h";
 
     cbindgen::Builder::new()
-        .with_crate("lib-ruby-parser")
+        .with_crate(".")
         .with_parse_deps(false)
         .with_no_includes()
         .include_item("Lexer")

@@ -42,12 +42,12 @@ jobs:
         run: make codegen-tests
 
       - name: codegen rust
-        run: make codegen-rust
+        run: cargo check --features=development
 
       - name: cargo-tarpaulin
         run: |
           cargo install cargo-tarpaulin
-          make test-cov
+          cargo tarpaulin -v --out Xml
 
       - name: upload to codecov.io
         uses: codecov/codecov-action@v3.1.4

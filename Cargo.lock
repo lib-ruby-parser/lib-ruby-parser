@@ -109,12 +109,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d301b3b94cb4b2f23d7917810addbbaff90738e0ca2be692bd027e70d7e0330c"
 
 [[package]]
-name = "arbitrary"
-version = "1.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2d098ff73c1ca148721f37baad5ea6a465a13f9573aba8641fbbbae8164a54e"
-
-[[package]]
 name = "arrayvec"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -226,9 +220,6 @@ name = "cc"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50d30906286121d95be3d479533b458f87493b30a4b5f79a607db8f5d11aa91f"
-dependencies = [
- "jobserver",
-]
 
 [[package]]
 name = "cexpr"
@@ -288,9 +279,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.3.15"
+version = "4.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f644d0dac522c8b05ddc39aaaccc5b136d5dc4ff216610c5641e3be5becf56c"
+checksum = "5b0827b011f6f8ab38590295339817b0d26f344aa4932c3ced71b45b0c54b4a9"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -299,9 +290,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.3.15"
+version = "4.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af410122b9778e024f9e0fb35682cc09cc3f85cad5e8d3ba8f47a9702df6e73d"
+checksum = "9441b403be87be858db6a23edb493e7f694761acdc3343d5a0fcaafd304cbc9e"
 dependencies = [
  "anstream",
  "anstyle",
@@ -617,15 +608,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "jobserver"
-version = "0.1.26"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "936cfd212a0155903bcbc060e316fb6cc7cbf2e1907329391ebadc1fe0ce77c2"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "kstring"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -652,17 +634,15 @@ name = "lib-ruby-parser"
 version = "4.0.4+ruby-3.1.1"
 dependencies = [
  "alloc-from-pool",
+ "cbindgen",
+ "clap 4.3.17",
+ "glob",
+ "jemallocator",
  "lib-ruby-parser-nodes",
  "onig",
+ "pprof",
  "rust-bison-skeleton",
-]
-
-[[package]]
-name = "lib-ruby-parser-fuzz"
-version = "0.0.0"
-dependencies = [
- "lib-ruby-parser",
- "libfuzzer-sys",
+ "serde",
 ]
 
 [[package]]
@@ -681,17 +661,6 @@ name = "libc"
 version = "0.2.147"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
-
-[[package]]
-name = "libfuzzer-sys"
-version = "0.4.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "beb09950ae85a0a94b27676cccf37da5ff13f27076aa1adbc6545dd0d0e1bd4e"
-dependencies = [
- "arbitrary",
- "cc",
- "once_cell",
-]
 
 [[package]]
 name = "libloading"
@@ -1141,20 +1110,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
-name = "scripts"
-version = "0.0.1"
-dependencies = [
- "cbindgen",
- "clap 4.3.15",
- "glob",
- "jemallocator",
- "lib-ruby-parser",
- "lib-ruby-parser-nodes",
- "pprof",
- "serde",
-]
-
-[[package]]
 name = "serde"
 version = "1.0.171"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1240,9 +1195,9 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "symbolic-common"
-version = "12.2.0"
+version = "12.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38f7afd8bcd36190409e6b71d89928f7f09d918a7aa3460d847bc49a538d672e"
+checksum = "167a4ffd7c35c143fd1030aa3c2caf76ba42220bd5a6b5f4781896434723b8c3"
 dependencies = [
  "debugid",
  "memmap2",
@@ -1252,9 +1207,9 @@ dependencies = [
 
 [[package]]
 name = "symbolic-demangle"
-version = "12.2.0"
+version = "12.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec64922563a36e3fe686b6d99f06f25dacad2a202ac7502ed642930a188fb20a"
+checksum = "e378c50e80686c1c5c205674e1f86a2858bec3d2a7dfdd690331a8a19330f293"
 dependencies = [
  "cpp_demangle",
  "rustc-demangle",
@@ -1304,15 +1259,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be55cf8942feac5c765c2c993422806843c9a9a45d4d5c407ad6dd2ea95eb9b6"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "tests"
-version = "0.0.1"
-dependencies = [
- "alloc-from-pool",
- "lib-ruby-parser",
- "lib-ruby-parser-nodes",
 ]
 
 [[package]]

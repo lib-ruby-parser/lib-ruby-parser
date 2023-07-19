@@ -1,12 +1,8 @@
-use lib_ruby_parser_nodes::{
-    reexports::liquid::value,
-    LiquidTemplate,
-};
+use lib_ruby_parser_nodes::{reexports::liquid::value, LiquidTemplate};
 
-fn main() {
+pub(crate) fn codegen() {
     /* Node test helper */
-    let template = LiquidTemplate::new("codegen/loc_name.liquid")
-    .with_global(
+    let template = LiquidTemplate::new("codegen/rust/loc_name.liquid").with_global(
         "loc_names",
         value!(vec![
             "begin",
@@ -27,5 +23,9 @@ fn main() {
         ]),
     );
     let rendered = template.render();
-    std::fs::write("src/test_helpers/loc_matcher/loc_name_gen.rs", rendered).unwrap();
+    std::fs::write(
+        "src/tests/test_helpers/loc_matcher/loc_name_gen.rs",
+        rendered,
+    )
+    .unwrap();
 }

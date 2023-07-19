@@ -1,7 +1,7 @@
 use alloc_from_pool::Pool;
 
-use lib_ruby_parser::lex_states::*;
-use lib_ruby_parser::Lexer;
+use crate::lex_states::*;
+use crate::Lexer;
 use std::fs;
 use std::panic;
 
