@@ -1,3 +1,4 @@
+mod loc_name;
 mod reserved_words;
 
 use lib_ruby_parser_nodes::{
@@ -67,4 +68,6 @@ pub(crate) fn codegen() {
         "src/traverse/finder/finder_gen.rs",
         no_template_options,
     );
+
+    loc_name::codegen();
 }
