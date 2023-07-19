@@ -1,6 +1,6 @@
-use scripts::helpers::*;
+mod helpers;
+use helpers::*;
 
-extern crate clap;
 use clap::Parser;
 
 #[cfg(not(windows))]

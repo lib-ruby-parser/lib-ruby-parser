@@ -8,7 +8,7 @@ fn main() {
         value: &'static str,
     }
 
-    let tokens: &[TokenId] = &include!("../../../target/tokens.rs");
+    let tokens: &[TokenId] = &include!("../../target/tokens.rs");
 
     fn print_usage_and_exit() -> ! {
         eprintln!("Usage: codegen_token_ids --template <template.liquid> --write-to <outfile>");
