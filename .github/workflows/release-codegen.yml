@@ -10,7 +10,7 @@ defaults:
     shell: bash
 
 jobs:
-  generate-parse-y:
+  generate-parse-y-and-tokens-rs:
     name: generate parse.rs and target/tokens.rs
     runs-on: ubuntu-latest
     steps:
@@ -31,18 +31,18 @@ jobs:
           version: '3.8.2'
 
       - name: generate parse.rs
-        run: make codegen-rust
+        run: cargo check --features=development
 
-      - name: save generated tokens.rs
+      - name: save generated parse.rs
         uses: actions/upload-artifact@v3
         with:
           name: parse.rs
-          path: lib-ruby-parser/src/parser/parse.rs
+          path: src/parser/parse.rs
 
-      - name: cbindgen and generate tokens data
-        run: make target/tokens.rs
+      - name: generate target/tokens.rs
+        run: cargo run --bin prepare_token_ids --features=bin-prepare_token_ids
 
-      - name: save generated tokens.rs
+      - name: save generated target/tokens.rs
         uses: actions/upload-artifact@v3
         with:
           name: tokens.rs
@@ -50,7 +50,7 @@ jobs:
 
   build:
     name: target = ${{ matrix.build.target }}
-    needs: ['generate-parse-y']
+    needs: ['generate-parse-y-and-tokens-rs']
     runs-on: ${{ matrix.build.os }}
     strategy:
       fail-fast: false
@@ -82,11 +82,11 @@ jobs:
         with:
           name: tokens.rs
 
-      - run: mv parse.rs lib-ruby-parser/src/parser/parse.rs
+      - run: mv parse.rs src/parser/parse.rs
       - run: mkdir -p target && mv tokens.rs target/tokens.rs
 
       - name: codegen all other rust files
-        run: cargo build --features "lib-ruby-parser/codegen-rust"
+        run: cargo build --features=codegen-rust
 
       - name: install zig
         uses: goto-bus-stop/setup-zig@v2
@@ -97,7 +97,7 @@ jobs:
         if: ${{ matrix.build.zig }}
 
       - name: compile codegen
-        run: cargo ${{ matrix.build.build }} --bin codegen --features codegen --release --package scripts --target ${{ matrix.build.target }}
+        run: cargo ${{ matrix.build.build }} --bin codegen --features=bin-codegen --release --target ${{ matrix.build.target }}
 
       - name: give executable representable name
         run: cp target/${{ matrix.build.target }}/release/codegen${{ matrix.build.exe }} ./codegen-${{ matrix.build.target }}${{ matrix.build.exe }}

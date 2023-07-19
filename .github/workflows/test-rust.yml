@@ -17,9 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - { rust: stable,  cargoflags: "--features lib-ruby-parser/onig" }
-          - { rust: beta,    cargoflags: "--features lib-ruby-parser/onig" }
-          - { rust: nightly, cargoflags: "" }
+          - { rust: stable }
+          - { rust: beta }
+          - { rust: nightly }
 
     steps:
       - name: checkout
@@ -54,10 +54,8 @@ jobs:
       - name: codegen tests
         run: make codegen-tests
 
-      - name: codegen rust
-        run: make codegen-rust
+      - name: codegen all rust files
+        run: cargo check --features=development
 
       - name: run tests
-        env:
-          CARGOFLGS: ${{ matrix.build.cargoflags }} -- --nocapture
-        run: make test
+        run: cargo test
