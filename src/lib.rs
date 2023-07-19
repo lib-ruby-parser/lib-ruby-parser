@@ -90,3 +90,6 @@ pub use token::Token;
 
 mod bytes;
 pub use bytes::Bytes;
+
+#[cfg(test)]
+mod tests;

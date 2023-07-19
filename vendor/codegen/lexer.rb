@@ -1,7 +1,7 @@
 ROOT = File.expand_path('../..', __dir__)
 PARSER_DIR = File.expand_path('../parser', __dir__)
 TARGET_RUBY_VERSION = "3.1"
-TARGET_DIR = File.expand_path('../../tests/fixtures/lexer/gen', __dir__)
+TARGET_DIR = File.expand_path('../../src/tests/fixtures/lexer/gen', __dir__)
 
 require 'fileutils'
 FileUtils.rm_rf(TARGET_DIR)
@@ -419,7 +419,7 @@ Minitest.after_run do
 
   fixtures = fixtures
     .sort
-    .map { |f| "fixture_file!(\"fixtures/lexer/gen\", #{f});" }
+    .map { |f| "fixture_file!(\"src/tests/fixtures/lexer/gen\", #{f});" }
     .join("\n")
 
   fixtures = <<~RS
@@ -430,5 +430,5 @@ Minitest.after_run do
     #{fixtures}
   RS
 
-  File.write(File.join(ROOT, 'tests/src/lexer/gen.rs'), fixtures)
+  File.write(File.join(ROOT, 'src/tests/lexer/gen.rs'), fixtures)
 end

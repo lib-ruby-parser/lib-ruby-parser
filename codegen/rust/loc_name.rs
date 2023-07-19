@@ -2,7 +2,7 @@ use lib_ruby_parser_nodes::{reexports::liquid::value, LiquidTemplate};
 
 pub(crate) fn codegen() {
     /* Node test helper */
-    let template = LiquidTemplate::new("codegen/loc_name.liquid").with_global(
+    let template = LiquidTemplate::new("codegen/rust/loc_name.liquid").with_global(
         "loc_names",
         value!(vec![
             "begin",

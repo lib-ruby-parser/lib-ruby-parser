@@ -1,5 +1,5 @@
-use crate::test_helpers::{render_diagnostic_for_testing, LocMatcher};
-use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
+use crate::tests::test_helpers::{render_diagnostic_for_testing, LocMatcher};
+use crate::{Parser, ParserOptions, ParserResult};
 
 enum TestSection {
     None,
