@@ -34,7 +34,7 @@ jobs:
         run: cargo check --features=development
 
       - name: save generated parse.rs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: parse.rs
           path: src/parser/parse.rs
@@ -43,7 +43,7 @@ jobs:
         run: cargo run --bin prepare_token_ids --features=bin-prepare_token_ids
 
       - name: save generated target/tokens.rs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tokens.rs
           path: target/tokens.rs
@@ -103,7 +103,7 @@ jobs:
         run: cp target/${{ matrix.build.target }}/release/codegen${{ matrix.build.exe }} ./codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
 
       - name: upload executable
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
           path: codegen-${{ matrix.build.target }}${{ matrix.build.exe }}
