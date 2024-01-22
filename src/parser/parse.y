@@ -6877,11 +6877,11 @@ f_opt_paren_args: f_paren_args
 
            terms: term
                     {
-                        $$ = Value::TokenList( Box::new(vec![]) );
+                        $$ = Value::None;
                     }
                 | terms tSEMI
                     {
-                        $$ = Value::TokenList( Box::new(vec![]) );
+                        $$ = Value::None;
                     }
                 ;
 

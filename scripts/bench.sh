@@ -5,7 +5,7 @@ set -eu
 REPEAT=5
 
 function prepare_lib_ruby_parser {
-    cargo build --release --bin parse
+    cargo build --release --bin parse --features=bin-parse
 }
 
 function run_lib_ruby_parser {

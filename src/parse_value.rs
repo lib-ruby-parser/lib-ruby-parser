@@ -517,7 +517,6 @@ pub(crate) enum ParseValue {
     Token(PoolValue<Token>),
     TokenWithContext(Box<TokenWithContext>),
     Context(Context),
-    TokenList(Box<Vec<Token>>),
     Node(Box<Node>),
     NodeList(Box<Vec<Node>>),
     Bool(bool),
