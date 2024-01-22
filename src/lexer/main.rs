@@ -788,7 +788,7 @@ impl Lexer {
                     return Self::tDOT;
                 }
 
-                Some(c) if (b'0'..=b'9').contains(&c) => {
+                Some(c) if c.is_ascii_digit() => {
                     return self.parse_numeric(c);
                 }
 

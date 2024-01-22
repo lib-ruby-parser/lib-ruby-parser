@@ -2446,7 +2446,7 @@ impl Builder {
             let end_l = self.maybe_loc(&end_t);
 
             Ok(Box::new(Node::Send(Send {
-                recv: Some(self.check_condition(receiver)),
+                recv: Some(Self::check_condition(receiver)),
                 method_name: String::from("!"),
                 args: vec![],
                 dot_l: None,
@@ -2549,7 +2549,7 @@ impl Builder {
         let end_l = self.maybe_loc(&end_t);
 
         Box::new(Node::If(If {
-            cond: self.check_condition(cond),
+            cond: Self::check_condition(cond),
             if_true,
             if_false,
             keyword_l,
@@ -2578,7 +2578,7 @@ impl Builder {
         let keyword_l = self.loc(&cond_t);
 
         Box::new(Node::IfMod(IfMod {
-            cond: self.check_condition(cond),
+            cond: Self::check_condition(cond),
             if_true,
             if_false,
             keyword_l,
@@ -2675,7 +2675,7 @@ impl Builder {
         let end_l = self.loc(&end_t);
         let expression_l = self.loc(&keyword_t).join(&end_l);
 
-        let cond = self.check_condition(cond);
+        let cond = Self::check_condition(cond);
 
         match loop_type {
             LoopType::While => Box::new(Node::While(While {
@@ -2707,7 +2707,7 @@ impl Builder {
         let expression_l = body.expression().join(cond.expression());
         let keyword_l = self.loc(&keyword_t);
 
-        let cond = self.check_condition(cond);
+        let cond = Self::check_condition(cond);
 
         match (loop_type, &*body) {
             (LoopType::While, Node::KwBegin(_)) => Box::new(Node::WhilePost(WhilePost {
@@ -3584,7 +3584,7 @@ impl Builder {
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
                 let label_loc = self.loc(&begin_t).join(&self.loc(&end_t));
 
-                match self.static_string(&parts) {
+                match Self::static_string(&parts) {
                     Some(var_name) => self.check_duplicate_pattern_key(&var_name, &label_loc)?,
                     _ => {
                         self.error(
@@ -3614,7 +3614,7 @@ impl Builder {
     // Verification
     //
 
-    pub(crate) fn check_condition(&self, cond: Box<Node>) -> Box<Node> {
+    pub(crate) fn check_condition(cond: Box<Node>) -> Box<Node> {
         let cond = cond;
 
         match *cond {
@@ -3626,7 +3626,7 @@ impl Builder {
             }) => {
                 if statements.len() == 1 {
                     let stmt = statements.into_iter().next().unwrap();
-                    let stmt = *self.check_condition(Box::new(stmt));
+                    let stmt = *Self::check_condition(Box::new(stmt));
                     Box::new(Node::Begin(Begin {
                         statements: vec![stmt],
                         begin_l,
@@ -3648,8 +3648,8 @@ impl Builder {
                 operator_l,
                 expression_l,
             }) => {
-                let lhs = self.check_condition(lhs);
-                let rhs = self.check_condition(rhs);
+                let lhs = Self::check_condition(lhs);
+                let rhs = Self::check_condition(rhs);
                 Box::new(Node::And(And {
                     lhs,
                     rhs,
@@ -3663,8 +3663,8 @@ impl Builder {
                 operator_l,
                 expression_l,
             }) => {
-                let lhs = self.check_condition(lhs);
-                let rhs = self.check_condition(rhs);
+                let lhs = Self::check_condition(lhs);
+                let rhs = Self::check_condition(rhs);
                 Box::new(Node::Or(Or {
                     lhs,
                     rhs,
@@ -3678,8 +3678,8 @@ impl Builder {
                 operator_l,
                 expression_l,
             }) => Box::new(Node::IFlipFlop(IFlipFlop {
-                left: left.map(|node| self.check_condition(node)),
-                right: right.map(|node| self.check_condition(node)),
+                left: left.map(Self::check_condition),
+                right: right.map(Self::check_condition),
                 operator_l,
                 expression_l,
             })),
@@ -3689,8 +3689,8 @@ impl Builder {
                 operator_l,
                 expression_l,
             }) => Box::new(Node::EFlipFlop(EFlipFlop {
-                left: left.map(|node| self.check_condition(node)),
-                right: right.map(|node| self.check_condition(node)),
+                left: left.map(Self::check_condition),
+                right: right.map(Self::check_condition),
                 operator_l,
                 expression_l,
             })),
@@ -3811,7 +3811,7 @@ impl Builder {
                 map.insert(this_name.to_string(), this_arg);
             }
             Some(that_arg) => {
-                let that_name = match self.arg_name(*that_arg) {
+                let that_name = match self.arg_name(that_arg) {
                     Some(name) => name,
                     None => return,
                 };
@@ -3930,7 +3930,7 @@ impl Builder {
     // Helpers
     //
 
-    pub(crate) fn static_string(&self, nodes: &[Node]) -> Option<String> {
+    pub(crate) fn static_string(nodes: &[Node]) -> Option<String> {
         let mut result = String::from("");
 
         for node in nodes {
@@ -3940,7 +3940,7 @@ impl Builder {
                     result.push_str(value.as_str())
                 }
                 Node::Begin(Begin { statements, .. }) => {
-                    if let Some(s) = self.static_string(statements) {
+                    if let Some(s) = Self::static_string(statements) {
                         result.push_str(&s)
                     } else {
                         return None;
@@ -3962,7 +3962,7 @@ impl Builder {
         options: &Option<String>,
         loc: &Loc,
     ) -> Option<Regex> {
-        let source = self.static_string(parts)?;
+        let source = Self::static_string(parts)?;
         let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
         reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
         if let Some(options_s) = options.as_ref().map(|s| s.as_str()) {
@@ -4116,7 +4116,7 @@ impl Builder {
     }
 
     pub(crate) fn value_expr(&self, node: &Node) -> Result<(), ()> {
-        if let Some(void_node) = self.void_value(node) {
+        if let Some(void_node) = Self::void_value(node) {
             self.error(
                 DiagnosticMessage::VoidValueExpression {},
                 void_node.expression(),
@@ -4127,17 +4127,17 @@ impl Builder {
         }
     }
 
-    fn void_value<'a>(&self, node: &'a Node) -> Option<&'a Node> {
+    fn void_value<'a>(node: &'a Node) -> Option<&'a Node> {
         let check_stmts = |statements: &'a Vec<Node>| {
             if let Some(last_stmt) = statements.last() {
-                self.void_value(last_stmt)
+                Self::void_value(last_stmt)
             } else {
                 None
             }
         };
 
         let check_condition = |if_true: &'a Node, if_false: &'a Node| {
-            if self.void_value(if_true).is_some() && self.void_value(if_false).is_some() {
+            if Self::void_value(if_true).is_some() && Self::void_value(if_false).is_some() {
                 Some(if_true)
             } else {
                 None
@@ -4159,7 +4159,7 @@ impl Builder {
             }
 
             Node::MatchPattern(MatchPattern { value, .. })
-            | Node::MatchPatternP(MatchPatternP { value, .. }) => self.void_value(value),
+            | Node::MatchPatternP(MatchPatternP { value, .. }) => Self::void_value(value),
 
             Node::Begin(Begin { statements, .. }) | Node::KwBegin(KwBegin { statements, .. }) => {
                 check_stmts(statements)
@@ -4176,7 +4176,7 @@ impl Builder {
                 if_true, if_false, ..
             }) => check_maybe_condition(if_true, if_false),
 
-            Node::And(And { lhs, .. }) | Node::Or(Or { lhs, .. }) => self.void_value(lhs),
+            Node::And(And { lhs, .. }) | Node::Or(Or { lhs, .. }) => Self::void_value(lhs),
 
             _ => None,
         }
