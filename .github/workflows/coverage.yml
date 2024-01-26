@@ -50,6 +50,6 @@ jobs:
           cargo tarpaulin -v --out Xml
 
       - name: upload to codecov.io
-        uses: codecov/codecov-action@v3.1.4
+        uses: codecov/codecov-action@v3.1.5
         with:
           token: ${{secrets.CODECOV_TOKEN}}
