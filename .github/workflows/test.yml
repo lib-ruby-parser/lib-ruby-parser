@@ -1,0 +1,50 @@
+name: test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    name: test on ${{ matrix.build.toolchain }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - { toolchain: stable }
+          - { toolchain: beta }
+          - { toolchain: nightly }
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.build.toolchain }}
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1.2'
+      - run: ruby --version
+
+      - uses: bison-packages/install-bison@v1
+        with:
+          version: '3.8.2'
+      - run: bison --version
+
+      - run: sudo apt update && sudo apt install ragel
+      - run: ragel --version
+
+      - run: make codegen-tests
+
+      - run: cargo test --features=development
+
+      - name: assert no diff
+        run: |
+          git add .
+          git diff --staged --exit-code

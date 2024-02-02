@@ -4,52 +4,33 @@ on:
   push:
     branches: [ master ]
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   coverage:
     name: coverage
     runs-on: ubuntu-latest
-
     steps:
-      - name: checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.1.2"
+          ruby-version: '3.1.2'
 
-      - name: setup bison
-        uses: bison-packages/install-bison@v1
+      - uses: bison-packages/install-bison@v1
         with:
           version: '3.8.2'
 
-      - name: install ragel
-        run: |
-          sudo apt-get update
-          sudo apt-get install ragel
+      - run: sudo apt update && sudo apt install ragel
 
-      - name: codegen tests
-        run: make codegen-tests
+      - run: make codegen-tests
+      - run: cargo check --features=development
 
-      - name: codegen rust
-        run: cargo check --features=development
+      - uses: taiki-e/install-action@cargo-tarpaulin
+      - run: cargo tarpaulin -v --out Xml
 
-      - name: cargo-tarpaulin
-        run: |
-          cargo install cargo-tarpaulin
-          cargo tarpaulin -v --out Xml
-
-      - name: upload to codecov.io
-        uses: codecov/codecov-action@v4.0.0
+      - uses: codecov/codecov-action@v4.0.0
         with:
           token: ${{secrets.CODECOV_TOKEN}}
