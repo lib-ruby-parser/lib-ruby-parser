@@ -6,8 +6,8 @@ use crate::str_term::StrTerm;
 use crate::Node;
 use crate::Token;
 
-impl Node {
-    pub(crate) fn from(value: ParseValue) -> Node {
+impl From<ParseValue> for Node {
+    fn from(value: ParseValue) -> Node {
         match value {
             ParseValue::Node(value) => *value,
             other => unreachable!("expected Node, got {:?}", other),

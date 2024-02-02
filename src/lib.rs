@@ -14,10 +14,16 @@ A Ruby parser written in Rust.
 Uses bison under the hood.
 */
 
-extern crate alloc_from_pool;
+// Re-exporting lib_ruby_parser_ast
+/// Module with all known node types
+pub use lib_ruby_parser_ast::nodes;
+pub use lib_ruby_parser_ast::Bytes;
+pub use lib_ruby_parser_ast::DiagnosticMessage;
+pub use lib_ruby_parser_ast::Loc;
+pub use lib_ruby_parser_ast::Node;
 
-mod loc;
-pub use loc::Loc;
+mod loc_ext;
+pub use loc_ext::LocExt;
 
 /// Module with everything related to output of the Parser, but not related to AST,
 /// like `Comment`, `Input`, `Decoder`
@@ -56,7 +62,7 @@ mod variables_stack;
 pub(crate) use variables_stack::VariablesStack;
 
 mod error;
-pub use error::{Diagnostic, DiagnosticMessage, ErrorLevel};
+pub use error::{Diagnostic, ErrorLevel};
 
 pub(crate) mod maybe_byte;
 
@@ -78,18 +84,11 @@ pub(crate) mod str_term;
 mod context;
 pub(crate) use context::SharedContext;
 
-/// Module with all known node types
-pub mod nodes;
-pub use nodes::Node;
-
 /// Module to perform recursive traversing
-pub mod traverse;
+pub use lib_ruby_parser_ast::traverse;
 
 mod token;
 pub use token::Token;
-
-mod bytes;
-pub use bytes::Bytes;
 
 #[cfg(test)]
 mod tests;

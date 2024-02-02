@@ -75,7 +75,7 @@ It's possible to pass a `decoder` function in `ParserOptions` that takes a recog
 
 ```rust
 use lib_ruby_parser::source::{InputError, Decoder, DecoderResult};
-use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
+use lib_ruby_parser::{Parser, ParserOptions, ParserResult, LocExt};
 
 fn decode(encoding: String, input: Vec<u8>) -> DecoderResult {
     if "US-ASCII" == encoding.to_uppercase() {

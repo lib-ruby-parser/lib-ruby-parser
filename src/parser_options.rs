@@ -15,7 +15,7 @@ pub struct ParserOptions {
     /// # Example
     /// ```rust
     /// use lib_ruby_parser::source::{Decoder, DecoderResult, InputError};
-    /// use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
+    /// use lib_ruby_parser::{Parser, ParserOptions, ParserResult, LocExt};
     ///
     /// fn decode(encoding: String, input: Vec<u8>) -> DecoderResult {
     ///     if "US-ASCII" == encoding.to_uppercase() {

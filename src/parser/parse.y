@@ -372,7 +372,7 @@ use crate::Loc;
 
        top_stmts: none
                     {
-                      $$ = Value::NodeList( Box::new(vec![]) );
+                      $$ = Value::NodeList( Box::default() );
                     }
                 | top_stmt
                     {
@@ -468,7 +468,7 @@ use crate::Loc;
 
            stmts: none
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | stmt_or_begin
                     {
@@ -482,7 +482,7 @@ use crate::Loc;
                     }
                 | error
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 ;
 
@@ -2521,7 +2521,7 @@ use crate::Loc;
 
        aref_args: none
                     {
-                        $$ = Value::NodeList( Box::new( vec![] ) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | args trailer
                     {
@@ -2658,7 +2658,7 @@ use crate::Loc;
 
    opt_call_args: none
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | call_args
                     {
@@ -2791,7 +2791,7 @@ use crate::Loc;
                     }
                 | none
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 ;
 
@@ -3817,7 +3817,7 @@ opt_block_args_tail:
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 ;
 
@@ -4050,7 +4050,7 @@ opt_block_args_tail:
 
      opt_bv_decl: opt_nl
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | opt_nl tSEMI bv_decls opt_nl
                     {
@@ -5457,7 +5457,7 @@ opt_block_args_tail:
                     }
                 | none
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 ;
 
@@ -5471,7 +5471,7 @@ opt_block_args_tail:
                     }
                 | none
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 ;
 
@@ -5600,7 +5600,7 @@ opt_block_args_tail:
 
        word_list: /* none */
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
 
                     }
                 | word_list word tSPACE
@@ -5639,7 +5639,7 @@ opt_block_args_tail:
 
      symbol_list: /* none */
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | symbol_list word tSPACE
                     {
@@ -5677,7 +5677,7 @@ opt_block_args_tail:
 
       qword_list: /* none */
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | qword_list tSTRING_CONTENT tSPACE
                     {
@@ -5691,7 +5691,7 @@ opt_block_args_tail:
 
        qsym_list: /* none */
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | qsym_list tSTRING_CONTENT tSPACE
                     {
@@ -5705,7 +5705,7 @@ opt_block_args_tail:
 
  string_contents: /* none */
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | string_contents string_content
                     {
@@ -5717,7 +5717,7 @@ opt_block_args_tail:
 
 xstring_contents: /* none */
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | xstring_contents string_content
                     {
@@ -5729,7 +5729,7 @@ xstring_contents: /* none */
 
  regexp_contents: /* none */
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | regexp_contents string_content
                     {
@@ -6139,7 +6139,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 ;
 
@@ -6302,7 +6302,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 ;
 
@@ -6637,7 +6637,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | none
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 ;
 
@@ -6681,7 +6681,7 @@ f_opt_paren_args: f_paren_args
 
       assoc_list: none
                     {
-                        $$ = Value::NodeList( Box::new(vec![]) );
+                        $$ = Value::NodeList( Box::default() );
                     }
                 | assocs trailer
                     {

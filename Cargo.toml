@@ -2,7 +2,13 @@
 authors = ["Ilya Bylich <ibylich@gmail.com>"]
 description = "Ruby parser"
 edition = "2021"
-include = ["/codegen/**/*.rs", "/src/**/*.rs", "/build.rs", "/Cargo.toml", "/README.md"]
+include = [
+    "/codegen/**/*.rs",
+    "/src/**/*.rs",
+    "/build.rs",
+    "/Cargo.toml",
+    "/README.md",
+]
 license = "MIT"
 name = "lib-ruby-parser"
 repository = "https://github.com/lib-ruby-parser/lib-ruby-parser"
@@ -19,7 +25,7 @@ development = ["codegen-y", "codegen-rust"]
 codegen-y = ["rust-bison-skeleton"]
 
 # Codegen Rust files
-codegen-rust = ["lib-ruby-parser-nodes"]
+codegen-rust = []
 
 # Enables debug output in all structs
 debug-all = ["debug-buffer", "debug-lexer", "debug-parser"]
@@ -40,25 +46,24 @@ bin-parse = ["clap", "pprof", "glob"]
 bin-prepare_token_ids = ["cbindgen"]
 
 # Everything required for `cargo run --bin codegen`
-bin-codegen = ["lib-ruby-parser-nodes", "serde"]
+bin-codegen = ["serde"]
 
 [dependencies]
-alloc-from-pool = {version = "1.0.3"}
-onig = {version = "6", optional = true}
+alloc-from-pool = { version = "1.0.3" }
+onig = { version = "6", optional = true }
 
 # Used for src/bin/*.rs executables
-cbindgen = {optional = true, version = "0.24"}
-clap = {optional = true, version = "4.3", features = ["derive"]}
-glob = {optional = true, version = "0.3"}
-lib-ruby-parser-nodes = {optional = true, version = "0.55.0"}
-serde = {optional = true, version = "1", features = ["derive"]}
+cbindgen = { optional = true, version = "0.24" }
+clap = { optional = true, version = "4.3", features = ["derive"] }
+glob = { optional = true, version = "0.3" }
+serde = { optional = true, version = "1", features = ["derive"] }
+lib-ruby-parser-ast = { version = "0.55.0" }
 [target.'cfg(not(windows))'.dependencies]
-jemallocator = {optional = true, version = "0.5"}
-pprof = {optional = true, version = "0.12", features = ["flamegraph"]}
+jemallocator = { optional = true, version = "0.5" }
+pprof = { optional = true, version = "0.12", features = ["flamegraph"] }
 
 [build-dependencies]
-lib-ruby-parser-nodes = {version = "0.55.0", optional = true}
-rust-bison-skeleton = {version = "0.41.0", optional = true}
+rust-bison-skeleton = { version = "0.41.0", optional = true }
 
 [profile.dev]
 debug-assertions = false

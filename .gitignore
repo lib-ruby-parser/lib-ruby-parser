@@ -6,17 +6,11 @@ Cargo.lock
 
 # codegen
 # must be in sync with rustfmt.toml
-src/error/messages/message_enum.rs
-src/nodes/node_enum.rs
-src/nodes/types/*.rs
 src/parser/parse.rs
 src/reserved_words/list.rs
-src/traverse/visitor/visit_gen.rs
-src/traverse/finder/finder_gen.rs
 
 # auto-generated test fixtures
 src/tests/fixtures/lexer/gen
 src/tests/fixtures/parser/gen
 src/tests/lexer/gen.rs
 src/tests/parser/gen.rs
-src/tests/test_helpers/loc_matcher/loc_name_gen.rs

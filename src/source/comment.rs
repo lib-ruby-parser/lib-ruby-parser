@@ -1,3 +1,4 @@
+use crate::loc_ext::LocExt;
 use crate::source::DecodedInput;
 use crate::Loc;
 
