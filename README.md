@@ -1,6 +1,6 @@
 # lib-ruby-parser
 
-[![test-rust](https://github.com/lib-ruby-parser/lib-ruby-parser/actions/workflows/test-rust.yml/badge.svg)](https://github.com/lib-ruby-parser/lib-ruby-parser/actions/workflows/test-rust.yml)
+[![test](https://github.com/lib-ruby-parser/lib-ruby-parser/actions/workflows/test.yml/badge.svg)](https://github.com/lib-ruby-parser/lib-ruby-parser/actions/workflows/test.yml)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 [![Crates.io](https://img.shields.io/crates/v/lib-ruby-parser?color=orange)](https://crates.io/crates/lib-ruby-parser)
 [![codecov](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser/branch/master/graph/badge.svg)](https://codecov.io/gh/lib-ruby-parser/lib-ruby-parser)
