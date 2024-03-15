@@ -1,4 +1,3 @@
-use crate::source::token_rewriter::TokenRewriter;
 use crate::source::Decoder;
 
 /// Configuration of the parser
@@ -42,45 +41,6 @@ pub struct ParserOptions {
     /// ```
     pub decoder: Option<Decoder>,
 
-    /// Optional token rewriter, see TokenRewriter API
-    ///
-    /// # Example
-    /// ```
-    /// use lib_ruby_parser::{
-    ///     nodes::*,
-    ///     source::token_rewriter::*,
-    ///     Bytes, Node, Parser, ParserOptions, ParserResult, Token,
-    /// };
-    /// fn rewrite_foo_to_bar(mut token: Box<Token>, input: &[u8]) -> TokenRewriterResult {
-    ///     // simply rewrite all tokens "foo" to "bar"
-    ///     if token.to_string_lossy() == "foo" {
-    ///         token.token_value = Bytes::new(b"bar".to_vec());
-    ///     }
-    ///
-    ///     // return token + keep it + keep lexer's state
-    ///     TokenRewriterResult {
-    ///         rewritten_token: token,
-    ///         token_action: RewriteAction::Keep,
-    ///         lex_state_action: LexStateAction::Keep,
-    ///     }
-    /// }
-    /// let token_rewriter = TokenRewriter::new(Box::new(rewrite_foo_to_bar));
-    /// let options = ParserOptions {
-    ///     token_rewriter: Some(token_rewriter),
-    ///     ..Default::default()
-    /// };
-    /// let ParserResult { ast, .. } = Parser::new(b"foo = 1".to_vec(), options).do_parse();
-    ///
-    /// let ast = ast.unwrap();
-    ///
-    /// let lvar_name = match &*ast {
-    ///     Node::Lvasgn(Lvasgn { name, .. }) => name,
-    ///     other => panic!("expected lvasgn node, got {:?}", other),
-    /// };
-    /// assert_eq!(*lvar_name, String::from("bar"));
-    /// ```
-    pub token_rewriter: Option<TokenRewriter>,
-
     /// When set to true Parser records tokens.
     /// When set to false `ParserResult.tokens` is guaranteed to be empty.
     /// If you don't need tokens better set it to false to speed up parsing.
@@ -94,7 +54,6 @@ impl Default for ParserOptions {
         Self {
             buffer_name: DEFAULT_BUFFER_NAME.to_string(),
             decoder: None,
-            token_rewriter: None,
             record_tokens: true,
         }
     }

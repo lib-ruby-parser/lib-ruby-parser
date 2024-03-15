@@ -44,8 +44,9 @@
     pattern_hash_keys: VariablesStack,
     tokens: Vec<Token>,
     diagnostics: Diagnostics,
-    token_rewriter: Option<TokenRewriter>,
     record_tokens: bool,
+
+    #[allow(dead_code)]
     tokens_pool: Pool<Token>,
 }
 
@@ -65,7 +66,6 @@ use crate::Node;
 use crate::nodes;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
-use crate::source::token_rewriter::{TokenRewriter, TokenRewriterResult, LexStateAction, RewriteAction};
 use crate::Loc;
 
 }
@@ -6904,7 +6904,6 @@ impl Parser {
         let ParserOptions {
             buffer_name,
             decoder,
-            token_rewriter,
             record_tokens,
         } = options;
 
@@ -6956,7 +6955,6 @@ impl Parser {
             tokens: vec![],
             diagnostics,
             yylexer: lexer,
-            token_rewriter,
             record_tokens,
             tokens_pool,
         }
@@ -7012,31 +7010,7 @@ impl Parser {
     }
 
     fn next_token(&mut self) -> PoolValue<Token> {
-        let mut token = self.yylex();
-
-        if let Some(token_rewriter) = self.token_rewriter.as_ref() {
-            let boxed_token = token.take_boxed_value();
-            let TokenRewriterResult { rewritten_token, token_action, lex_state_action } =
-                token_rewriter.call(boxed_token, self.yylexer.buffer.input.as_shared_bytes());
-
-            match lex_state_action {
-                LexStateAction::Keep => {
-                    // keep
-                }
-                LexStateAction::Set(next_state) => {
-                    self.yylexer.lex_state.set(next_state);
-                }
-            }
-
-            match token_action {
-                RewriteAction::Drop => {
-                    return self.next_token();
-                }
-                RewriteAction::Keep => {
-                    token = self.tokens_pool.alloc(*rewritten_token);
-                }
-            }
-        }
+        let token = self.yylex();
 
         self.last_token_type = token.token_type;
 

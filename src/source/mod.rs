@@ -6,9 +6,6 @@ mod input;
 mod magic_comment;
 mod source_line;
 
-/// Module to perform token rewriting
-pub mod token_rewriter;
-
 pub use comment::{Comment, CommentType};
 pub use decoded_input::DecodedInput;
 pub(crate) use decoder::decode_input;
