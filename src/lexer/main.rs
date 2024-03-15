@@ -128,7 +128,6 @@ impl Lexer {
     }
 
     pub(crate) fn yylex(&mut self) -> PoolValue<Token> {
-        let lex_state_before = self.lex_state;
         self.lval = None;
 
         let token_type = self.parser_yylex();
@@ -156,8 +155,6 @@ impl Lexer {
             token_type,
             token_value,
             loc: Loc { begin, end },
-            lex_state_before,
-            lex_state_after: self.lex_state,
         });
         println_if_debug_lexer!(
             "yylex ({:?}, {:?}, {:?})",

@@ -1,5 +1,5 @@
 use crate::parser::token_name;
-use crate::{Bytes, LexState, Loc};
+use crate::{Bytes, Loc};
 
 /// A token that is emitted by a lexer and consumed by a parser
 #[derive(Clone, PartialEq, Eq)]
@@ -15,12 +15,6 @@ pub struct Token {
 
     /// Location of the token
     pub loc: Loc,
-
-    /// Lex state **before** reading the token
-    pub lex_state_before: LexState,
-
-    /// Lex state **after** reading the token
-    pub lex_state_after: LexState,
 }
 
 impl Token {
@@ -78,8 +72,6 @@ fn new_token() -> Token {
         token_type: crate::Lexer::tINTEGER,
         token_value: Bytes::new(vec![42]),
         loc: Loc { begin: 1, end: 2 },
-        lex_state_before: LexState::default(),
-        lex_state_after: LexState::default(),
     }
 }
 

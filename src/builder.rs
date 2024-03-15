@@ -9,7 +9,6 @@ use alloc_from_pool::{Factory as PoolFactory, PoolValue};
 use crate::error::Diagnostics;
 #[allow(unused_imports)]
 use crate::nodes::*;
-use crate::LexState;
 use crate::Loc;
 use crate::{
     Bytes, CurrentArgStack, Lexer, MaxNumparamStack, Node, SharedContext, StaticEnvironment, Token,
@@ -790,8 +789,6 @@ impl Builder {
             token_type: end_t.token_type,
             token_value: end_t.take_value().token_value,
             loc: quote_loc,
-            lex_state_before: LexState::default(),
-            lex_state_after: LexState::default(),
         });
         let expression_l = self.loc(&begin_t).join(value.expression());
 
