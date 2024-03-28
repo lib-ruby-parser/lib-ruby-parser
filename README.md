@@ -37,16 +37,24 @@ TLDR; it's fast, it's precise, and it has a beautiful interface.
 
 Comparison with `Ripper`/`RubyVM::AST`:
 1. It's based on MRI's `parse.y`, and so it returns **exactly** the same sequence of tokens.
-2. It's been tested on top 300 gems (by total downloads, that's about 3M LOC), `rubyspec` and `ruby/ruby` repos and there's no difference with `Ripper.lex`.
-3. It's ~3 times faster than `Ripper` (with `jemalloc`), Ripper parses 3.9M LOC in ~16s, `lib-ruby-parser` does it in ~6.5s. That's ~600K LOC/s. You can find some benchmarks in the `bench/` directory, they don't include IO and GC.
+2. It's been tested on top 300 gems (by total downloads, that's about 4M LOC), `rubyspec` and `ruby/ruby` repos and there's no difference with `Ripper.lex`.
+3. It's ~5 times faster than `Ripper`, Ripper parses 4M LOC in ~24s, `lib-ruby-parser` does it in ~4.5s. That's ~950K LOC/s. You can find benchmarks in the `bench/` directory, they don't include any IO or GC.
 4. It has a much, much better interface. AST is strongly typed and well documented.
 5. It doesn't throw away information about tokens. All nodes have information about their source locations.
 
 Comparison with [whitequark/parser](https://github.com/whitequark/parser):
-1. It's much faster (the same corpus of 3M LOC can be parsed in 180s on the same machine)
+1. It's much faster (the same corpus of 4M LOC can be parsed in 245s on the same machine)
 1. It has a very similar interface (both in terms of AST structure and errors reporting)
 3. However, AST is strongly typed, and so if something is nullable it's explicitly defined and documented.
 4. What's important, it doesn't depend on Ruby
+
+Testing corpus has `4,176,379` LOC and `170,114,575` bytes so approximate parsing speed on my local machine is:
+
+| Parser            | Total time | Bytes per second | Lines per second |
+| ----------------- | ---------- | ---------------- | ---------------- |
+| lib-ruby-parser   | ~4.4s      | ~38,000,000      | ~950,000         |
+| ripper            | ~24s       | ~7,000,000       | ~175,000         |
+| whitequark/parser | ~245s      | ~700,000         | ~17,000          |
 
 ## Grammar versioning
 
@@ -151,40 +159,39 @@ $ cargo run --bin parse --features=bin-parse -- --print=N --run-profiler --glob 
 
 ## Benchmarking
 
-A codebase of 3.9M LOCs can be generated using a `download.rb` script:
+A codebase of 4M LOCs can be generated using a `download.rb` script:
 
 ```sh
 $ ruby gems/download.rb
 ```
 
-Then, run a script that compares `Ripper` and `lib-ruby-parser` (attached results are from Feb 2021):
+Then, run a script that compares `Ripper` and `lib-ruby-parser` (attached results are from Mar 2024):
 
 ```sh
 $ ./scripts/bench.sh
-    Finished release [optimized] target(s) in 0.08s
 Running lib-ruby-parser
 Run 1:
-Time taken: 6.6232788220 (total files: 18018)
+Time taken: 4.4287733330 (total files: 17895)
 Run 2:
-Time taken: 6.6498335800 (total files: 18018)
+Time taken: 4.4292764170 (total files: 17895)
 Run 3:
-Time taken: 7.0684415810 (total files: 18018)
+Time taken: 4.4460961250 (total files: 17895)
 Run 4:
-Time taken: 6.7987308510 (total files: 18018)
+Time taken: 4.4284508330 (total files: 17895)
 Run 5:
-Time taken: 6.6954798760 (total files: 18018)
+Time taken: 4.4695665830 (total files: 17895)
 --------
 Running MRI/ripper
 Run 1:
-Time taken: 22.92822499992326 (total files: 18017)
+Time taken: 24.790103999897838 (total files: 17894)
 Run 2:
-Time taken: 21.8613000002224 (total files: 18017)
+Time taken: 23.145863000303507 (total files: 17894)
 Run 3:
-Time taken: 21.96083900006488 (total files: 18017)
+Time taken: 25.50493900012225 (total files: 17894)
 Run 4:
-Time taken: 21.44488099985756 (total files: 18017)
+Time taken: 24.570900999940932 (total files: 17894)
 Run 5:
-Time taken: 21.738944000098854 (total files: 18017)
+Time taken: 26.0963700003922 (total files: 17894)
 ```
 
 ## Fuzz testing
