@@ -7015,7 +7015,7 @@ impl Parser {
         self.last_token_type = token.token_type;
 
         if self.record_tokens {
-            let token = token.clone();
+            let mut token = token.clone();
             self.tokens.push(token.take_value());
         }
 

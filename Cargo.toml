@@ -43,7 +43,7 @@ debug-parser = []
 bin-parse = ["clap", "pprof", "glob"]
 
 [dependencies]
-alloc-from-pool = { version = "1.0.3" }
+alloc-from-pool = { version = "1.0.5" }
 onig = { version = "6", optional = true }
 
 # Used for src/bin/*.rs executables

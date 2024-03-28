@@ -234,7 +234,7 @@ impl Builder {
         }
     }
 
-    pub(crate) fn string_internal(&self, string_t: PoolValue<Token>) -> Box<Node> {
+    pub(crate) fn string_internal(&self, mut string_t: PoolValue<Token>) -> Box<Node> {
         let expression_l = self.loc(&string_t);
         let value = string_t.take_value().token_value;
         Box::new(Node::Str(Str {
@@ -305,7 +305,7 @@ impl Builder {
         }
     }
 
-    pub(crate) fn character(&self, char_t: PoolValue<Token>) -> Box<Node> {
+    pub(crate) fn character(&self, mut char_t: PoolValue<Token>) -> Box<Node> {
         let str_loc = self.loc(&char_t);
 
         let begin_l = Some(str_loc.with_end(str_loc.begin + 1));
@@ -340,7 +340,11 @@ impl Builder {
         }
     }
 
-    pub(crate) fn symbol(&self, start_t: PoolValue<Token>, value_t: PoolValue<Token>) -> Box<Node> {
+    pub(crate) fn symbol(
+        &self,
+        start_t: PoolValue<Token>,
+        mut value_t: PoolValue<Token>,
+    ) -> Box<Node> {
         let expression_l = self.loc(&start_t).join(&self.loc(&value_t));
         let begin_l = Some(self.loc(&start_t));
         let value = value_t.take_value().token_value;
@@ -353,7 +357,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn symbol_internal(&self, symbol_t: PoolValue<Token>) -> Box<Node> {
+    pub(crate) fn symbol_internal(&self, mut symbol_t: PoolValue<Token>) -> Box<Node> {
         let expression_l = self.loc(&symbol_t);
         let value = symbol_t.take_value().token_value;
         self.validate_sym_value(&value, &expression_l);
@@ -746,7 +750,7 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn pair_keyword(&self, key_t: PoolValue<Token>, value: Box<Node>) -> Box<Node> {
+    pub(crate) fn pair_keyword(&self, mut key_t: PoolValue<Token>, value: Box<Node>) -> Box<Node> {
         let key_loc = self.loc(&key_t);
         let key_l = key_loc.adjust_end(-1);
         let colon_l = key_loc.with_begin(key_loc.end - 1);
@@ -784,7 +788,7 @@ impl Builder {
 
         let colon_l = end_l.with_begin(end_l.end - 1);
 
-        let end_t = end_t;
+        let mut end_t = end_t;
         let end_t: PoolValue<Token> = self.pool_factory.alloc(Token {
             token_type: end_t.token_type,
             token_value: end_t.take_value().token_value,
@@ -4293,7 +4297,7 @@ pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Loc> {
     join_maybe_exprs(&nodes.first(), &nodes.last())
 }
 
-pub(crate) fn value(token: PoolValue<Token>) -> String {
+pub(crate) fn value(mut token: PoolValue<Token>) -> String {
     token.take_value().into_string().unwrap()
 }
 
