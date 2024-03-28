@@ -146,7 +146,7 @@ If you use it from GitHub directly you also need Bison (because `parser.rs` is u
 You can use `parse` example:
 
 ```sh
-$ cargo run --bin parse -- --print=N --run-profiler=1 "blob/**/*.rb"
+$ cargo run --bin parse --features=bin-parse -- --print=N --run-profiler --glob "blob/**/*.rb"
 ```
 
 ## Benchmarking

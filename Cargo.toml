@@ -40,17 +40,16 @@ debug-lexer = []
 debug-parser = []
 
 # Everything required for `cargo run --bin parse`
-bin-parse = ["clap", "pprof", "glob"]
+bin-parse = ["lexopt", "pprof", "glob"]
 
 [dependencies]
 alloc-from-pool = { version = "1.0.5" }
 onig = { version = "6", optional = true }
+lib-ruby-parser-ast = { version = "0.55.0" }
 
 # Used for src/bin/*.rs executables
-cbindgen = { optional = true, version = "0.24" }
-clap = { optional = true, version = "4.3", features = ["derive"] }
+lexopt = { optional = true, version = "0.3.0" }
 glob = { optional = true, version = "0.3" }
-lib-ruby-parser-ast = { version = "0.55.0" }
 [target.'cfg(not(windows))'.dependencies]
 jemallocator = { optional = true, version = "0.5" }
 pprof = { optional = true, version = "0.12", features = ["flamegraph"] }

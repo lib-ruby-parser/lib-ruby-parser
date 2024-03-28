@@ -1,47 +1,45 @@
 use std::time::Instant;
 
 #[derive(Debug, Clone)]
-pub struct Timer {
-    enabled: bool,
-    started_at: Option<Instant>,
-}
-
-impl Timer {
-    pub fn new(enabled: bool) -> Self {
-        Self {
-            enabled,
-            started_at: None,
-        }
-    }
-
-    pub fn start(&mut self) {
-        if !self.enabled {
-            return;
-        }
-        self.started_at = Some(Instant::now());
-    }
-
-    pub fn stop(&mut self, files_count: usize) {
-        if !self.enabled {
-            return;
-        }
-
-        let started_at = self.started_at.take().unwrap();
-        let diff = (Instant::now() - started_at).as_secs_f64();
-        println!("Time taken: {:.10} (total files: {})", diff, files_count)
-    }
+pub(crate) enum Timer {
+    Disabled,
+    ReadyToStart,
+    Running { started_at: Instant },
 }
 
 impl Default for Timer {
     fn default() -> Self {
-        Self::new(false)
+        Self::Disabled
     }
 }
 
-impl std::str::FromStr for Timer {
-    type Err = String;
+impl Timer {
+    pub(crate) fn enabled() -> Self {
+        Self::ReadyToStart
+    }
 
-    fn from_str(_: &str) -> Result<Self, Self::Err> {
-        Ok(Timer::new(true))
+    pub(crate) fn start(&mut self) {
+        match self {
+            Timer::Disabled => {}
+            Timer::ReadyToStart => {
+                *self = Timer::Running {
+                    started_at: Instant::now(),
+                }
+            }
+            Timer::Running { .. } => panic!("Timer is already running"),
+        }
+    }
+
+    pub(crate) fn stop(&mut self, files_count: usize) {
+        match self {
+            Timer::Disabled => {}
+            Timer::ReadyToStart => panic!("Timer has not started yet"),
+            Timer::Running { started_at } => {
+                let diff = (Instant::now() - *started_at).as_secs_f64();
+                println!("Time taken: {:.10} (total files: {})", diff, files_count);
+
+                *self = Timer::ReadyToStart;
+            }
+        }
     }
 }

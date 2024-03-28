@@ -1,5 +1,3 @@
-extern crate rust_bison_skeleton;
-
 pub(crate) fn codegen() {
     use std::path::Path;
     const PARSE_Y: &str = "src/parser/parse.y";

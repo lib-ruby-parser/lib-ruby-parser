@@ -12,7 +12,7 @@ function run_lib_ruby_parser {
     for (( x = 1; x <= REPEAT; x += 1));
     do
         echo "Run $x:"
-        ./target/release/parse --print=N --drop-tokens --run-timer=1 "gems/repos/**/*.rb"
+        ./target/release/parse --print=N --drop-tokens --run-timer --glob "gems/repos/**/*.rb"
     done
 }
 

@@ -1,21 +1,26 @@
 #[cfg(not(windows))]
 mod implementation {
-    extern crate pprof;
-
-    pub struct Profiler {
+    pub(crate) struct Profiler {
         enabled: bool,
         guard: Option<pprof::ProfilerGuard<'static>>,
     }
 
     impl Profiler {
-        pub fn new(enabled: bool) -> Self {
+        pub(crate) fn enabled() -> Self {
             Self {
-                enabled,
+                enabled: true,
                 guard: None,
             }
         }
 
-        pub fn start(&mut self) {
+        pub(crate) fn disabled() -> Self {
+            Self {
+                enabled: false,
+                guard: None,
+            }
+        }
+
+        pub(crate) fn start(&mut self) {
             if self.enabled {
                 self.guard = Some(pprof::ProfilerGuard::new(100).unwrap())
             } else {
@@ -23,7 +28,7 @@ mod implementation {
             }
         }
 
-        pub fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        pub(crate) fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
             if self.enabled {
                 println!("Creating flamegraph.svg");
                 let report = self.guard.take().unwrap().report().build()?;
@@ -34,12 +39,6 @@ mod implementation {
         }
     }
 
-    impl Default for Profiler {
-        fn default() -> Self {
-            Self::new(false)
-        }
-    }
-
     impl std::fmt::Debug for Profiler {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             f.debug_struct("Profiler")
@@ -47,44 +46,25 @@ mod implementation {
                 .finish()
         }
     }
-
-    impl std::str::FromStr for Profiler {
-        type Err = String;
-
-        fn from_str(_: &str) -> Result<Self, Self::Err> {
-            Ok(Self::new(true))
-        }
-    }
-
-    impl Clone for Profiler {
-        fn clone(&self) -> Self {
-            Self {
-                enabled: self.enabled,
-                guard: None,
-            }
-        }
-    }
 }
 
 #[cfg(windows)]
 mod implementation {
-    #[derive(Default, Debug, Clone)]
-    pub struct Profiler;
+    #[derive(Debug)]
+    pub(crate) struct Profiler;
 
     impl Profiler {
-        pub fn start(&mut self) {}
-        pub fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-            Ok(())
+        pub(crate) fn enabled() -> Self {
+            Self
         }
-    }
-
-    impl std::str::FromStr for Profiler {
-        type Err = String;
-
-        fn from_str(_: &str) -> Result<Self, Self::Err> {
-            Ok(Self)
+        pub(crate) fn disabled() -> Self {
+            Self
+        }
+        pub(crate) fn start(&mut self) {}
+        pub(crate) fn stop(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+            Ok(())
         }
     }
 }
 
-pub use implementation::Profiler;
+pub(crate) use implementation::Profiler;

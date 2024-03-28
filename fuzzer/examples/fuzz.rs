@@ -1,7 +1,6 @@
 #![no_main]
 use libfuzzer_sys::fuzz_target;
 
-extern crate lib_ruby_parser;
 use lib_ruby_parser::{Parser, ParserOptions};
 
 fuzz_target!(|source: &[u8]| {
