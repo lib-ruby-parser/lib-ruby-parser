@@ -31,6 +31,6 @@ jobs:
       - uses: taiki-e/install-action@cargo-tarpaulin
       - run: cargo tarpaulin -v --out Xml
 
-      - uses: codecov/codecov-action@v4.1.1
+      - uses: codecov/codecov-action@v4.2.0
         with:
           token: ${{secrets.CODECOV_TOKEN}}
