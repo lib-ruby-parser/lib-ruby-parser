@@ -5,7 +5,7 @@ use crate::source::Decoder;
 #[repr(C)]
 pub struct ParserOptions<'b> {
     /// Name of the buffer. Used in all diagnostic messages
-    pub buffer_name: String,
+    pub buffer_name: &'b str,
 
     /// Custom decoder that can be used if the source is encoded
     /// in unknown encoding. Only UTF-8 and ASCII-8BIT/BINARY are
@@ -52,7 +52,7 @@ const DEFAULT_BUFFER_NAME: &str = "(eval)";
 impl Default for ParserOptions<'_> {
     fn default() -> Self {
         Self {
-            buffer_name: DEFAULT_BUFFER_NAME.to_string(),
+            buffer_name: DEFAULT_BUFFER_NAME,
             decoder: None,
             record_tokens: true,
         }

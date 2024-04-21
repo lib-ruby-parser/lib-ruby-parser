@@ -96,7 +96,7 @@ impl<'b> Lexer<'b> {
     /// Constructs an instance of Lexer
     pub fn new(
         bytes: &'b [u8],
-        name: impl Into<String>,
+        name: &'b str,
         decoder: Option<Decoder<'b>>,
         blob: &'b Blob<'b>,
     ) -> Self {
@@ -104,7 +104,7 @@ impl<'b> Lexer<'b> {
             cond: StackState::new("cond"),
             cmdarg: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
-            buffer: Buffer::new(name.into(), bytes, decoder, blob),
+            buffer: Buffer::new(name, bytes, decoder, blob),
             lval: None,
             lval_start: None,
             lval_end: None,

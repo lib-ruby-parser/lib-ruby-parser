@@ -16,7 +16,7 @@ pub struct Input<'b> {
 impl<'b> Input<'b> {
     /// Constructs a new input
     pub fn new(
-        name: impl Into<String>,
+        name: &'b str,
         bytes: &'b [u8],
         decoder: Option<Decoder<'b>>,
         blob: &'b Blob<'b>,

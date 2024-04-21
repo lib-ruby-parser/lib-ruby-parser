@@ -170,7 +170,7 @@ pub(crate) fn test_file(fixture_path: &str) {
     let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
 
     let options = ParserOptions {
-        buffer_name: format!("(test {})", fixture_path),
+        buffer_name: &format!("(test {})", fixture_path),
         record_tokens: false,
         ..Default::default()
     };

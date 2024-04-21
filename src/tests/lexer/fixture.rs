@@ -92,10 +92,12 @@ pub(crate) fn test_file(fixture_path: &str) {
     let mut mem = vec![0; 1000];
     let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
 
+    let buffer_name = format!("(test {})", fixture_path);
+
     let pool = Pool::new();
     let mut lexer = Lexer::new(
         fixture.input.as_bytes(),
-        format!("(test {})", fixture_path),
+        blob.push_str(&buffer_name),
         None,
         &blob,
     );

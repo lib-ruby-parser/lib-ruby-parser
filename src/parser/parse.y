@@ -6918,8 +6918,6 @@ impl<'b> Parser<'b> {
         let diagnostics = Diagnostics::new();
         let tokens_pool = Pool::new();
 
-        let buffer_name: String = buffer_name;
-
         let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
         lexer.context = context.clone();
         lexer.static_env = static_env.clone();

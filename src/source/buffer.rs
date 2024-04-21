@@ -52,7 +52,7 @@ impl<'b> Buffer<'b> {
     const CTRL_D_CHAR: u8 = 0x04;
 
     pub(crate) fn new(
-        name: String,
+        name: &'b str,
         bytes: &'b [u8],
         decoder: Option<Decoder<'b>>,
         blob: &'b Blob<'b>,

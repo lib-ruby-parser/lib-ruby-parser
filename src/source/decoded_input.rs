@@ -7,7 +7,7 @@ use crate::source::SourceLine;
 #[repr(C)]
 pub struct DecodedInput<'b> {
     /// Name of the input
-    pub name: String,
+    pub name: &'b str,
 
     /// Lines list
     pub lines: Vec<SourceLine>,
@@ -20,9 +20,9 @@ pub struct DecodedInput<'b> {
 
 impl<'b> DecodedInput<'b> {
     /// Constructs empty DecodedInput with given name
-    pub fn new(name: impl Into<String>, bytes: &'b [u8], blob: &'b Blob<'b>) -> Self {
+    pub fn new(name: &'b str, bytes: &'b [u8], blob: &'b Blob<'b>) -> Self {
         let mut this = Self {
-            name: name.into(),
+            name,
             lines: vec![],
             bytes: b"",
             blob,

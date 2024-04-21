@@ -8,8 +8,9 @@ pub(crate) fn parse<'b>(
     drop_tokens: bool,
 ) -> ParserResult<'b> {
     let code = blob.push_bytes(file.code.as_slice());
+    let filepath = blob.push_str(&file.filepath);
     let options = ParserOptions {
-        buffer_name: file.filepath,
+        buffer_name: filepath,
         record_tokens: !drop_tokens,
         ..Default::default()
     };
