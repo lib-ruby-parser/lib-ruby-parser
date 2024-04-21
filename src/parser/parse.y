@@ -49,6 +49,8 @@
 
     #[allow(dead_code)]
     tokens_pool: Pool<Token>,
+
+    blob: &'b /*'*/ Blob<'b> /*'*/,
 }
 
 %code use {
@@ -68,6 +70,7 @@ use crate::nodes;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::error::Diagnostics;
 use crate::Loc;
+use lib_ruby_parser_ast_arena::Blob;
 
 }
 
@@ -6898,7 +6901,7 @@ impl<'b, 'i> Parser<'b, 'i> {
     /// Constructs a parser with given `input` and `options`.
     ///
     /// Returns an error if given `input` is invalid.
-    pub fn new<TInput>(input: TInput, options: ParserOptions) -> Self
+    pub fn new<TInput>(input: TInput, options: ParserOptions, blob: &'b Blob<'b /*'*/>) -> Self
     where
         TInput: Into<Vec<u8>>
     {
@@ -6958,6 +6961,7 @@ impl<'b, 'i> Parser<'b, 'i> {
             yylexer: lexer,
             record_tokens,
             tokens_pool,
+            blob,
         }
     }
 
