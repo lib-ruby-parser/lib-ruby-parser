@@ -23,7 +23,7 @@ pub struct ParserResult<'b> {
     pub diagnostics: Vec<Diagnostic>,
 
     /// List of comments extracted from the source code.
-    pub comments: Vec<Comment>,
+    pub comments: &'b IntrusiveList<'b, Comment>,
 
     /// List of magic comments extracted from the source code.
     pub magic_comments: &'b IntrusiveList<'b, MagicComment>,
@@ -54,7 +54,7 @@ impl std::fmt::Debug for ParserResult<'_> {
 
 #[test]
 fn test_fmt() {
-    let mut mem = [0; 0];
+    let mut mem = [0; 100];
     let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
 
     assert_eq!(
@@ -64,12 +64,12 @@ fn test_fmt() {
                 ast: None,
                 tokens: vec![],
                 diagnostics: vec![],
-                comments: vec![],
+                comments: blob.alloc_ref(),
                 magic_comments: blob.alloc_ref(),
                 input: DecodedInput::new("foo", b"", &blob)
             }
         ),
         // All fields except `input`
-        "ParserResult { ast: None, tokens: [], diagnostics: [], comments: [], magic_comments: [] }"
+        "ParserResult { ast: None, tokens: [], diagnostics: [], comments: IntrusiveList { first: None, last: None }, magic_comments: IntrusiveList { first: None, last: None } }"
     )
 }

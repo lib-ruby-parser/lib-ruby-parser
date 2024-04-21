@@ -79,7 +79,7 @@ pub struct Lexer<'b> {
     pub static_env: StaticEnvironment,
 
     pub(crate) diagnostics: Diagnostics,
-    pub(crate) comments: Vec<Comment>,
+    pub(crate) comments: &'b mut IntrusiveList<'b, Comment>,
     pub(crate) magic_comments: &'b mut IntrusiveList<'b, MagicComment>,
 
     #[doc(hidden)]
@@ -119,7 +119,7 @@ impl<'b> Lexer<'b> {
             token_seen: false,
             static_env: StaticEnvironment::default(),
             diagnostics: Diagnostics::default(),
-            comments: vec![],
+            comments: blob.alloc_ref(),
             magic_comments: blob.alloc_ref(),
             tokens_factory: PoolFactory::default(),
             blob,
@@ -268,8 +268,11 @@ impl<'b> Lexer<'b> {
                             Err(_) => return Self::END_OF_INPUT,
                         }
                         self.buffer.goto_eol();
-                        self.comments
-                            .push(Comment::new(self.current_loc(), &self.buffer.input.decoded))
+                        self.comments.push(Comment::from_loc_and_input(
+                            self.current_loc(),
+                            &self.buffer.input.decoded,
+                            self.blob,
+                        ))
                     }
                     self.token_seen = token_seen;
                     let cc = self
@@ -436,9 +439,10 @@ impl<'b> Lexer<'b> {
                                 self.buffer.pushback(c);
                             }
                             self.buffer.goto_eol();
-                            self.comments.push(Comment::new(
+                            self.comments.push(Comment::from_loc_and_input(
                                 begin_loc.with_end(self.buffer.pcur),
                                 &self.buffer.input.decoded,
+                                self.blob,
                             ));
                             continue 'retrying;
                         }
