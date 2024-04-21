@@ -1,4 +1,3 @@
-// use crate::Bytes;
 use lib_ruby_parser_ast_arena::{Blob, Bytes};
 
 #[derive(Debug)]
@@ -15,13 +14,9 @@ impl<'b> TokenBuf<'b> {
         }
     }
 
-    #[allow(mutable_transmutes)]
     pub(crate) fn take(&mut self) -> Self {
-        let result = Self {
-            bytes: unsafe { core::mem::transmute(&*self.bytes) },
-            blob: self.blob,
-        };
-        self.clear();
+        let mut result = Self::empty(self.blob);
+        core::mem::swap(&mut result, self);
         result
     }
 
@@ -33,8 +28,8 @@ impl<'b> TokenBuf<'b> {
         self.bytes.append_invalid_escaped(b, self.blob);
     }
 
-    pub(crate) fn append_borrowed(&mut self, bytes: &[u8]) {
-        let s: &'static str = unsafe { core::mem::transmute(core::str::from_utf8(bytes).unwrap()) };
+    pub(crate) fn append_borrowed(&mut self, bytes: &'b [u8]) {
+        let s = core::str::from_utf8(bytes).unwrap();
         self.bytes.append_borrowed(s, self.blob);
     }
 
@@ -46,21 +41,14 @@ impl<'b> TokenBuf<'b> {
         self.bytes.prepend_invalid_escaped(b, self.blob);
     }
 
-    pub(crate) fn prepend_borrowed(&mut self, bytes: &[u8]) {
-        let s: &'static str = unsafe { core::mem::transmute(core::str::from_utf8(bytes).unwrap()) };
+    pub(crate) fn prepend_borrowed(&mut self, bytes: &'b [u8]) {
+        let s = core::str::from_utf8(bytes).unwrap();
         self.bytes.prepend_borrowed(s, self.blob);
     }
 
     pub(crate) fn as_string(&self) -> Option<String> {
         self.bytes.try_to_string().ok()
     }
-
-    // pub(crate) fn borrow_string(&self) -> Result<&str, &[u8]> {
-    //     match std::str::from_utf8(self.bytes.as_raw()) {
-    //         Ok(s) => Ok(s),
-    //         Err(_) => Err(self.bytes.as_raw()),
-    //     }
-    // }
 
     pub(crate) fn len(&self) -> usize {
         self.bytes.len()
