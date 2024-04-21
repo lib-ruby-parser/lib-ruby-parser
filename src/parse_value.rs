@@ -1,4 +1,5 @@
-use alloc_from_pool::PoolValue;
+use alloc_from_pool::{Pool, PoolValue};
+use lib_ruby_parser_ast_arena::Blob;
 
 use crate::builder::{ArgsType, PKwLabel};
 use crate::context::Context;
@@ -36,7 +37,7 @@ impl Token {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct TokenWithContext {
     pub(crate) token: PoolValue<Token>,
     pub(crate) ctx: Context,
@@ -121,7 +122,7 @@ pub(crate) mod Num {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct Superclass {
     pub(crate) lt_t: Option<PoolValue<Token>>,
     pub(crate) value: Option<Box<Node>>,
@@ -135,7 +136,7 @@ impl Superclass {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct Ensure {
     pub(crate) ensure_t: PoolValue<Token>,
     pub(crate) body: Option<Box<Node>>,
@@ -152,7 +153,7 @@ pub(crate) mod OptEnsure {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct Else {
     pub(crate) else_t: PoolValue<Token>,
     pub(crate) body: Option<Box<Node>>,
@@ -169,7 +170,7 @@ pub(crate) mod OptElse {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct ExcVar {
     pub(crate) assoc_t: Option<PoolValue<Token>>,
     pub(crate) exc_var: Option<Box<Node>>,
@@ -183,7 +184,7 @@ impl ExcVar {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct IfTail {
     pub(crate) keyword_t: Option<PoolValue<Token>>,
     pub(crate) body: Option<Box<Node>>,
@@ -197,7 +198,7 @@ impl IfTail {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct ExprValueDo {
     pub(crate) value: Box<Node>,
     pub(crate) do_t: PoolValue<Token>,
@@ -220,7 +221,7 @@ impl PKwLabel {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct BraceBody {
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
@@ -234,7 +235,7 @@ impl BraceBody {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct CmdBraceBlock {
     pub(crate) begin_t: PoolValue<Token>,
     pub(crate) args_type: ArgsType,
@@ -250,7 +251,7 @@ impl CmdBraceBlock {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct ParenArgs {
     pub(crate) begin_t: PoolValue<Token>,
     pub(crate) args: Vec<Node>,
@@ -265,7 +266,7 @@ impl ParenArgs {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct OptParenArgs {
     pub(crate) begin_t: Option<PoolValue<Token>>,
     pub(crate) args: Vec<Node>,
@@ -280,7 +281,7 @@ impl OptParenArgs {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct BeginBlock {
     pub(crate) begin_t: PoolValue<Token>,
     pub(crate) body: Option<Box<Node>>,
@@ -295,7 +296,7 @@ impl BeginBlock {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct LambdaBody {
     pub(crate) begin_t: PoolValue<Token>,
     pub(crate) body: Option<Box<Node>>,
@@ -310,7 +311,7 @@ impl LambdaBody {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct DoBlock {
     pub(crate) begin_t: PoolValue<Token>,
     pub(crate) args_type: ArgsType,
@@ -326,7 +327,7 @@ impl DoBlock {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct BraceBlock {
     pub(crate) begin_t: PoolValue<Token>,
     pub(crate) args_type: ArgsType,
@@ -342,7 +343,7 @@ impl BraceBlock {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct DefsHead {
     pub(crate) def_t: PoolValue<Token>,
     pub(crate) definee: Box<Node>,
@@ -358,7 +359,7 @@ impl DefsHead {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct DefnHead {
     pub(crate) def_t: PoolValue<Token>,
     pub(crate) name_t: TokenWithContext,
@@ -372,7 +373,7 @@ impl DefnHead {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct Cases {
     pub(crate) when_bodies: Vec<Node>,
     pub(crate) opt_else: Option<Else>,
@@ -386,7 +387,7 @@ impl Cases {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct CaseBody {
     pub(crate) when_bodies: Vec<Node>,
     pub(crate) opt_else: Option<Else>,
@@ -400,7 +401,7 @@ impl CaseBody {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct PCases {
     pub(crate) in_bodies: Vec<Node>,
     pub(crate) opt_else: Option<Else>,
@@ -414,7 +415,7 @@ impl PCases {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct PCaseBody {
     pub(crate) in_bodies: Vec<Node>,
     pub(crate) opt_else: Option<Else>,
@@ -452,7 +453,7 @@ pub(crate) mod MaybeBoxedNode {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct DoBody {
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
@@ -466,7 +467,7 @@ impl DoBody {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct PTopExpr {
     pub(crate) pattern: Box<Node>,
     pub(crate) guard: Option<Box<Node>>,
@@ -480,7 +481,7 @@ impl PTopExpr {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct MatchPatternWithTrailingComma {
     pub(crate) elements: Vec<Node>,
     pub(crate) trailing_comma: Option<PoolValue<Token>>,
@@ -494,7 +495,7 @@ impl MatchPatternWithTrailingComma {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct NoKwRest {
     pub(crate) kwrest_mark: PoolValue<Token>,
     pub(crate) k_nil: PoolValue<Token>,
@@ -509,7 +510,7 @@ impl NoKwRest {
 }
 
 #[allow(clippy::box_collection)]
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub(crate) enum ParseValue<'b> {
     Stolen,
     Uninitialized,
@@ -690,6 +691,52 @@ impl<'b> ParseValue<'b> {
     }
     pub(crate) fn new_no_kw_rest(value: NoKwRest) -> Self {
         Self::NoKwRest(Box::new(value))
+    }
+
+    pub(crate) fn make_copy(&self, blob: &'b Blob<'b>, pool: &Pool<Token>) -> Self {
+        match self {
+            ParseValue::Stolen => ParseValue::Stolen,
+            ParseValue::Uninitialized => ParseValue::Uninitialized,
+            ParseValue::None => ParseValue::None,
+            ParseValue::Token(token) => ParseValue::Token(pool.alloc(Token {
+                token_type: token.token_type,
+                token_value: token.token_value.clone(),
+                loc: token.loc.clone(),
+            })),
+            ParseValue::TokenWithContext(_) => todo!(),
+            ParseValue::Context(_) => todo!(),
+            ParseValue::Node(_) => todo!(),
+            ParseValue::NodeList(_) => todo!(),
+            ParseValue::Bool(_) => todo!(),
+            ParseValue::MaybeStrTerm(_) => todo!(),
+            ParseValue::Num(_) => todo!(),
+            ParseValue::Superclass(_) => todo!(),
+            ParseValue::OptEnsure(_) => todo!(),
+            ParseValue::OptElse(_) => todo!(),
+            ParseValue::ExcVar(_) => todo!(),
+            ParseValue::IfTail(_) => todo!(),
+            ParseValue::ExprValueDo(_) => todo!(),
+            ParseValue::PKwLabel(_) => todo!(),
+            ParseValue::BraceBody(_) => todo!(),
+            ParseValue::CmdBraceBlock(_) => todo!(),
+            ParseValue::ParenArgs(_) => todo!(),
+            ParseValue::OptParenArgs(_) => todo!(),
+            ParseValue::LambdaBody(_) => todo!(),
+            ParseValue::DoBlock(_) => todo!(),
+            ParseValue::BraceBlock(_) => todo!(),
+            ParseValue::DefsHead(_) => todo!(),
+            ParseValue::DefnHead(_) => todo!(),
+            ParseValue::BeginBlock(_) => todo!(),
+            ParseValue::Cases(_) => todo!(),
+            ParseValue::CaseBody(_) => todo!(),
+            ParseValue::PCases(_) => todo!(),
+            ParseValue::PCaseBody(_) => todo!(),
+            ParseValue::MaybeNode(_) => todo!(),
+            ParseValue::DoBody(_) => todo!(),
+            ParseValue::PTopExpr(_) => todo!(),
+            ParseValue::MatchPatternWithTrailingComma(_) => todo!(),
+            ParseValue::NoKwRest(_) => todo!(),
+        }
     }
 }
 

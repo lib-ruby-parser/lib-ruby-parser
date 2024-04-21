@@ -46,7 +46,7 @@ pub(crate) enum LogicalOp {
     Or,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) enum PKwLabel {
     PlainLabel(PoolValue<Token>),
     QuotedLabel((PoolValue<Token>, Vec<Node>, PoolValue<Token>)),
@@ -223,7 +223,11 @@ impl Builder {
                 begin_l,
                 end_l,
                 expression_l,
-            } = self.collection_map(&begin_t, &parts, &end_t);
+            } = self.collection_map(
+                begin_t.as_ref().map(|t| t.loc),
+                &parts,
+                end_t.as_ref().map(|t| t.loc),
+            );
 
             Box::new(Node::Str(Str {
                 value,
@@ -294,7 +298,11 @@ impl Builder {
                 begin_l,
                 end_l,
                 expression_l,
-            } = self.collection_map(&begin_t, &parts, &end_t);
+            } = self.collection_map(
+                begin_t.as_ref().map(|t| t.loc),
+                &parts,
+                end_t.as_ref().map(|t| t.loc),
+            );
 
             Box::new(Node::Dstr(Dstr {
                 parts,
@@ -382,7 +390,7 @@ impl Builder {
                         begin_l,
                         end_l,
                         expression_l,
-                    } = self.collection_map(&Some(begin_t), &[], &Some(end_t));
+                    } = self.collection_map(Some(begin_t.loc), &[], Some(end_t.loc));
 
                     self.validate_sym_value(&value, &expression_l);
 
@@ -401,7 +409,7 @@ impl Builder {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(&Some(begin_t), &parts, &Some(end_t));
+        } = self.collection_map(Some(begin_t.loc), &parts, Some(end_t.loc));
         Box::new(Node::Dsym(Dsym {
             parts,
             begin_l,
@@ -583,13 +591,13 @@ impl Builder {
         &self,
         begin_t: PoolValue<Token>,
         parts: Vec<Node>,
-        end_t: PoolValue<Token>,
+        end_t_l: Loc,
         options: Option<Box<Node>>,
     ) -> Box<Node> {
         let begin_l = self.loc(&begin_t);
-        let end_l = self.loc(&end_t).resize(1);
+        let end_l = end_t_l.resize(1);
         let expression_l =
-            begin_l.join(&maybe_boxed_node_expr(&options).unwrap_or_else(|| self.loc(&end_t)));
+            begin_l.join(&maybe_boxed_node_expr(&options).unwrap_or_else(|| end_t_l));
 
         match options.as_deref() {
             Some(Node::RegOpt(RegOpt {
@@ -621,7 +629,11 @@ impl Builder {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(&begin_t, &elements, &end_t);
+        } = self.collection_map(
+            begin_t.as_ref().map(|t| t.loc),
+            &elements,
+            end_t.as_ref().map(|t| t.loc),
+        );
 
         Box::new(Node::Array(Array {
             elements,
@@ -655,7 +667,7 @@ impl Builder {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(&None, &parts, &None);
+        } = self.collection_map(None, &parts, None);
 
         Box::new(Node::Dstr(Dstr {
             parts,
@@ -808,7 +820,7 @@ impl Builder {
         let key_l = self.loc(&key_t);
         let value_l = key_l.adjust_end(-1);
 
-        let label = value(key_t.clone());
+        let label = key_t.to_string().unwrap();
         let value = if label
             .chars()
             .next()
@@ -938,7 +950,11 @@ impl Builder {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(&begin_t, &pairs, &end_t);
+        } = self.collection_map(
+            begin_t.as_ref().map(|t| t.loc),
+            &pairs,
+            end_t.as_ref().map(|t| t.loc),
+        );
 
         Box::new(Node::Hash(Hash {
             pairs,
@@ -1504,7 +1520,11 @@ impl Builder {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(&begin_t, &items, &end_t);
+        } = self.collection_map(
+            begin_t.as_ref().map(|t| t.loc),
+            &items,
+            end_t.as_ref().map(|t| t.loc),
+        );
 
         Box::new(Node::Mlhs(Mlhs {
             items,
@@ -1782,7 +1802,11 @@ impl Builder {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(&begin_t, &args, &end_t);
+        } = self.collection_map(
+            begin_t.as_ref().map(|t| t.loc),
+            &args,
+            end_t.as_ref().map(|t| t.loc),
+        );
 
         Some(Box::new(Node::Args(Args {
             args,
@@ -2462,7 +2486,11 @@ impl Builder {
                 begin_l,
                 end_l,
                 expression_l,
-            } = self.collection_map(&begin_t, &[], &end_t);
+            } = self.collection_map(
+                begin_t.as_ref().map(|t| t.loc),
+                &[],
+                end_t.as_ref().map(|t| t.loc),
+            );
 
             let nil_node = Box::new(Node::Begin(Begin {
                 statements: vec![],
@@ -2528,7 +2556,7 @@ impl Builder {
 
     pub(crate) fn condition(
         &self,
-        cond_t: PoolValue<Token>,
+        cond_t: &Token,
         cond: Box<Node>,
         then_t: PoolValue<Token>,
         if_true: Option<Box<Node>>,
@@ -2993,7 +3021,7 @@ impl Builder {
                 begin_l,
                 end_l,
                 expression_l,
-            } = self.collection_map(&Some(else_t), &parts, &None);
+            } = self.collection_map(Some(else_t.loc), &parts, None);
 
             statements.push(Node::Begin(Begin {
                 statements: parts,
@@ -3006,7 +3034,7 @@ impl Builder {
                 begin_l,
                 end_l,
                 expression_l,
-            } = self.collection_map(&None, &statements, &None);
+            } = self.collection_map(None, &statements, None);
 
             result = Some(Box::new(Node::Begin(Begin {
                 statements,
@@ -3053,7 +3081,7 @@ impl Builder {
                     begin_l,
                     end_l,
                     expression_l,
-                } = self.collection_map(&None, &statements, &None);
+                } = self.collection_map(None, &statements, None);
 
                 Some(Box::new(Node::Begin(Begin {
                     statements,
@@ -3417,7 +3445,11 @@ impl Builder {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(&lbrace_t, &kwargs, &rbrace_t);
+        } = self.collection_map(
+            lbrace_t.as_ref().map(|t| t.loc),
+            &kwargs,
+            rbrace_t.as_ref().map(|t| t.loc),
+        );
 
         Box::new(Node::HashPattern(HashPattern {
             elements: kwargs,
@@ -3429,16 +3461,16 @@ impl Builder {
 
     pub(crate) fn array_pattern(
         &self,
-        lbrack_t: Option<PoolValue<Token>>,
+        lbrack_l: Option<Loc>,
         elements: Vec<Node>,
         trailing_comma: Option<PoolValue<Token>>,
-        rbrack_t: Option<PoolValue<Token>>,
+        rbrack_l: Option<Loc>,
     ) -> Box<Node> {
         let CollectionMap {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(&lbrack_t, &elements, &rbrack_t);
+        } = self.collection_map(lbrack_l, &elements, rbrack_l);
 
         let expression_l = expression_l.maybe_join(&self.maybe_loc(&trailing_comma));
 
@@ -3470,15 +3502,15 @@ impl Builder {
 
     pub(crate) fn find_pattern(
         &self,
-        lbrack_t: Option<PoolValue<Token>>,
+        lbrack_l: Option<Loc>,
         elements: Vec<Node>,
-        rbrack_t: Option<PoolValue<Token>>,
+        rbrack_l: Option<Loc>,
     ) -> Box<Node> {
         let CollectionMap {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(&lbrack_t, &elements, &rbrack_t);
+        } = self.collection_map(lbrack_l, &elements, rbrack_l);
 
         Box::new(Node::FindPattern(FindPattern {
             elements,
@@ -4049,13 +4081,10 @@ impl Builder {
 
     pub(crate) fn collection_map(
         &self,
-        begin_t: &Option<PoolValue<Token>>,
+        begin_l: Option<Loc>,
         parts: &[Node],
-        end_t: &Option<PoolValue<Token>>,
+        end_l: Option<Loc>,
     ) -> CollectionMap {
-        let begin_l = self.maybe_loc(begin_t);
-        let end_l = self.maybe_loc(end_t);
-
         let expression_l = collection_expr(parts);
         let expression_l = join_maybe_locs(&expression_l, &begin_l);
         let expression_l = join_maybe_locs(&expression_l, &end_l);

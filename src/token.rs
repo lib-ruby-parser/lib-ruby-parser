@@ -2,7 +2,7 @@ use crate::parser::token_name;
 use crate::{Bytes, Loc};
 
 /// A token that is emitted by a lexer and consumed by a parser
-#[derive(Clone, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 #[repr(C)]
 pub struct Token {
     /// Numeric representation of the token type,

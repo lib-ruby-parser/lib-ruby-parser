@@ -3146,7 +3146,7 @@ use lib_ruby_parser_ast_arena::Blob;
 
                         $$ = Value::Node(
                             self.builder.condition(
-                                $<Token>1,
+                                &$<Token>1,
                                 $<BoxedNode>2,
                                 $<Token>3,
                                 $<MaybeBoxedNode>4,
@@ -3165,7 +3165,7 @@ use lib_ruby_parser_ast_arena::Blob;
 
                         $$ = Value::Node(
                             self.builder.condition(
-                                $<Token>1,
+                                &$<Token>1,
                                 $<BoxedNode>2,
                                 $<Token>3,
                                 body,
@@ -3639,20 +3639,20 @@ use lib_ruby_parser_ast_arena::Blob;
 
                         let elsif_t = $<Token>1;
 
+                        let body = self.builder.condition(
+                            &elsif_t,
+                            $<BoxedNode>2,
+                            $<Token>3,
+                            $<MaybeBoxedNode>4,
+                            keyword_t,
+                            else_body,
+                            None
+                        );
+
                         $$ = Value::new_if_tail(
                             IfTail {
-                                keyword_t: Some(elsif_t.clone()),
-                                body: Some(
-                                    self.builder.condition(
-                                        elsif_t,
-                                        $<BoxedNode>2,
-                                        $<Token>3,
-                                        $<MaybeBoxedNode>4,
-                                        keyword_t,
-                                        else_body,
-                                        None
-                                    )
-                                )
+                                keyword_t: Some(elsif_t),
+                                body: Some(body)
                             }
                         );
                     }
@@ -4780,20 +4780,20 @@ opt_block_args_tail:
                     }
                 | p_const tLPAREN2 rparen
                     {
-                        let lparen = $<Token>2;
-                        let rparen = $<Token>3;
+                        let lparen_t = $<Token>2;
+                        let rparen_t = $<Token>3;
                         let pattern = self.builder.array_pattern(
-                            Some(lparen.clone()),
+                            Some(lparen_t.loc),
                             vec![],
                             None,
-                            Some(rparen.clone())
+                            Some(rparen_t.loc)
                         );
                         $$ = Value::Node(
                             self.builder.const_pattern(
                                 $<BoxedNode>1,
-                                lparen,
+                                lparen_t,
                                 pattern,
-                                rparen
+                                rparen_t
                             )
                         );
                     }
@@ -4839,20 +4839,20 @@ opt_block_args_tail:
                     }
                 | p_const tLBRACK2 rbracket
                     {
-                        let lparen = $<Token>2;
-                        let rparen = $<Token>3;
+                        let lparen_t = $<Token>2;
+                        let rparen_t = $<Token>3;
                         let pattern = self.builder.array_pattern(
-                            Some(lparen.clone()),
+                            Some(lparen_t.loc),
                             vec![],
                             None,
-                            Some(rparen.clone())
+                            Some(rparen_t.loc)
                         );
                         $$ = Value::Node(
                             self.builder.const_pattern(
                                 $<BoxedNode>1,
-                                lparen,
+                                lparen_t,
                                 pattern,
-                                rparen
+                                rparen_t
                             )
                         );
                     }
@@ -4861,10 +4861,10 @@ opt_block_args_tail:
                         let MatchPatternWithTrailingComma { elements, trailing_comma } = $<MatchPatternWithTrailingComma>2;
                         $$ = Value::Node(
                             self.builder.array_pattern(
-                                Some($<Token>1),
+                                Some($<Token>1.loc),
                                 elements,
                                 trailing_comma,
-                                Some($<Token>3)
+                                Some($<Token>3.loc)
                             )
                         );
                     }
@@ -4872,9 +4872,9 @@ opt_block_args_tail:
                     {
                         $$ = Value::Node(
                             self.builder.find_pattern(
-                                Some($<Token>1),
+                                Some($<Token>1.loc),
                                 $<NodeList>2,
-                                Some($<Token>3)
+                                Some($<Token>3.loc)
                             )
                         );
                     }
@@ -4882,10 +4882,10 @@ opt_block_args_tail:
                     {
                         $$ = Value::Node(
                             self.builder.array_pattern(
-                                Some($<Token>1),
+                                Some($<Token>1.loc),
                                 vec![],
                                 None,
-                                Some($<Token>2)
+                                Some($<Token>2.loc)
                             )
                         );
                     }
@@ -5578,13 +5578,14 @@ opt_block_args_tail:
 
           regexp: tREGEXP_BEG regexp_contents tREGEXP_END
                     {
-                        let regexp_end = $<Token>3;
-                        let opts = self.builder.regexp_options(regexp_end.clone());
+                        let regexp_end_t = $<Token>3;
+                        let end_t_l = regexp_end_t.loc;
+                        let opts = self.builder.regexp_options(regexp_end_t);
                         $$ = Value::Node(
                             self.builder.regexp_compose(
                                 $<Token>1,
                                 $<NodeList>2,
-                                regexp_end,
+                                end_t_l,
                                 opts
                             )
                         );
@@ -7016,8 +7017,8 @@ impl<'b> Parser<'b> {
         self.last_token_type = token.token_type;
 
         if self.record_tokens {
-            let mut token = token.clone();
-            self.tokens.push(token.take_value());
+            // let mut token = token.clone();
+            // self.tokens.push(token.take_value());
         }
 
         token
