@@ -118,7 +118,8 @@ impl<'b, 'i> Lexer<'b, 'i> {
         }
 
         self.tokfix();
-        self.set_yylval_str(&self.tokenbuf.clone());
+        let str_ = self.tokenbuf.take();
+        self.set_yylval_str(&str_);
         self.flush_string_content();
         self.restore_strterm(quote);
 

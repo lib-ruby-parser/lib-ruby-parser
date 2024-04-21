@@ -269,7 +269,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
                     break;
                 }
             }
-            str_ = self.tokenbuf.clone();
+            str_ = self.tokenbuf.take();
         }
 
         self.heredoc_restore(&here);

@@ -1,6 +1,6 @@
 use crate::Bytes;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Default)]
 pub(crate) struct TokenBuf {
     pub(crate) bytes: Bytes,
 }
