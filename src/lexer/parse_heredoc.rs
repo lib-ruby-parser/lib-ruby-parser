@@ -280,7 +280,7 @@ impl<'b> Lexer<'b> {
         Self::tSTRING_CONTENT
     }
 
-    fn compute_heredoc_end(&self) -> HeredocEnd {
+    fn compute_heredoc_end(&self) -> HeredocEnd<'b> {
         let start = self.buffer.pbeg;
         let mut end_starts_at = start;
         while self.buffer.byte_at(end_starts_at) == b' ' {
@@ -299,11 +299,7 @@ impl<'b> Lexer<'b> {
             .substr_at(end_starts_at, end)
             .expect("failed to get heredoc end");
 
-        HeredocEnd {
-            start,
-            end,
-            value: value.to_vec(),
-        }
+        HeredocEnd { start, end, value }
     }
 
     fn here_document_error(&mut self, here: &HeredocLiteral, eos: usize, len: usize) -> i32 {

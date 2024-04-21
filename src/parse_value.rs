@@ -6,7 +6,7 @@ use crate::str_term::StrTerm;
 use crate::Node;
 use crate::Token;
 
-impl From<ParseValue> for Node {
+impl From<ParseValue<'_>> for Node {
     fn from(value: ParseValue) -> Node {
         match value {
             ParseValue::Node(value) => *value,
@@ -101,7 +101,7 @@ pub(crate) mod Bool {
 pub(crate) mod MaybeStrTerm {
     use super::{ParseValue, StrTerm};
 
-    pub(crate) fn from(value: ParseValue) -> Option<Box<StrTerm>> {
+    pub(crate) fn from<'b>(value: ParseValue<'b>) -> Option<Box<StrTerm<'b>>> {
         match value {
             ParseValue::MaybeStrTerm(value) => value,
             other => unreachable!("expected MaybeStrTerm, got {:?}", other),
@@ -510,7 +510,7 @@ impl NoKwRest {
 
 #[allow(clippy::box_collection)]
 #[derive(Clone, Debug)]
-pub(crate) enum ParseValue {
+pub(crate) enum ParseValue<'b> {
     Stolen,
     Uninitialized,
     None,
@@ -520,7 +520,7 @@ pub(crate) enum ParseValue {
     Node(Box<Node>),
     NodeList(Box<Vec<Node>>),
     Bool(bool),
-    MaybeStrTerm(Option<Box<StrTerm>>),
+    MaybeStrTerm(Option<Box<StrTerm<'b>>>),
     Num(i32),
 
     /* For custom superclass rule */
@@ -602,7 +602,7 @@ pub(crate) enum ParseValue {
     NoKwRest(Box<NoKwRest>),
 }
 
-impl ParseValue {
+impl<'b> ParseValue<'b> {
     // rust-bison-skeleton contract
     pub(crate) fn from_token(token: PoolValue<Token>) -> Self {
         Self::Token(token)
@@ -693,7 +693,7 @@ impl ParseValue {
     }
 }
 
-impl Default for ParseValue {
+impl Default for ParseValue<'_> {
     fn default() -> Self {
         Self::Stolen
     }

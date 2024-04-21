@@ -30,29 +30,29 @@ pub(crate) mod str_types {
 }
 
 #[derive(Debug, Clone, Default)]
-pub(crate) struct HeredocEnd {
+pub(crate) struct HeredocEnd<'b> {
     pub(crate) start: usize,
     pub(crate) end: usize,
-    pub(crate) value: Vec<u8>,
+    pub(crate) value: &'b [u8],
 }
 
 #[derive(Debug, Clone, Default)]
-pub(crate) struct StringLiteral {
+pub(crate) struct StringLiteral<'b> {
     // struct rb_strterm_literal_struct
     pub(crate) nest: usize,
     pub(crate) func: usize,
     pub(crate) paren: Option<u8>,
     pub(crate) term: u8,
-    pub(crate) heredoc_end: Option<HeredocEnd>,
+    pub(crate) heredoc_end: Option<HeredocEnd<'b>>,
 }
 
-impl StringLiteral {
+impl<'b> StringLiteral<'b> {
     pub(crate) fn new(
         nest: usize,
         func: usize,
         paren: Option<u8>,
         term: u8,
-        heredoc_end: Option<HeredocEnd>,
+        heredoc_end: Option<HeredocEnd<'b>>,
     ) -> Self {
         Self {
             nest,
@@ -96,14 +96,14 @@ impl HeredocLiteral {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum StrTerm {
+pub(crate) enum StrTerm<'b> {
     // struct rb_strterm_struct
-    StringLiteral(StringLiteral),
+    StringLiteral(StringLiteral<'b>),
     HeredocLiteral(HeredocLiteral),
 }
 
-impl StrTerm {
-    pub(crate) fn new_literal(literal: StringLiteral) -> Self {
+impl<'b> StrTerm<'b> {
+    pub(crate) fn new_literal(literal: StringLiteral<'b>) -> Self {
         Self::StringLiteral(literal)
     }
 

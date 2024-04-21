@@ -11,13 +11,13 @@ const ESCAPE_CONTROL: usize = 1;
 const ESCAPE_META: usize = 2;
 
 impl<'b> Lexer<'b> {
-    fn take_strterm(&mut self) -> StringLiteral {
+    fn take_strterm(&mut self) -> StringLiteral<'b> {
         match self.strterm.take().map(|v| *v) {
             Some(StrTerm::StringLiteral(s)) => s,
             _ => unreachable!("strterm must be string"),
         }
     }
-    fn restore_strterm(&mut self, literal: StringLiteral) {
+    fn restore_strterm(&mut self, literal: StringLiteral<'b>) {
         self.strterm = Some(Box::new(StrTerm::StringLiteral(literal)));
     }
 

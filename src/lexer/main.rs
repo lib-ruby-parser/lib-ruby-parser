@@ -28,7 +28,7 @@ pub struct Lexer<'b> {
     pub(crate) lval_start: Option<usize>,
     pub(crate) lval_end: Option<usize>,
 
-    pub(crate) strterm: Option<Box<StrTerm>>,
+    pub(crate) strterm: Option<Box<StrTerm<'b>>>,
     /// Current state of the lexer, used internally for testing
     pub lex_state: LexState,
     pub(crate) paren_nest: i32,
@@ -1160,8 +1160,8 @@ impl<'b> Lexer<'b> {
         func: usize,
         term: u8,
         paren: Option<u8>,
-        heredoc_end: Option<HeredocEnd>,
-    ) -> Option<Box<StrTerm>> {
+        heredoc_end: Option<HeredocEnd<'b>>,
+    ) -> Option<Box<StrTerm<'b>>> {
         Some(Box::new(StrTerm::new_literal(StringLiteral::new(
             0,
             func,
