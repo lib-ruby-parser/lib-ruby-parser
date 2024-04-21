@@ -14,10 +14,19 @@ const MAGIC_COMMENTS: &[MagicCommentData] = &[
         MagicCommentKind::FrozenStringLiteral,
     ),
     (
+        "frozen-string-literal",
+        MagicCommentKind::FrozenStringLiteral,
+    ),
+    (
         "shareable_constant_value",
         MagicCommentKind::ShareableConstantValue,
     ),
+    (
+        "shareable-constant-value",
+        MagicCommentKind::ShareableConstantValue,
+    ),
     ("warn_indent", MagicCommentKind::WarnIndent),
+    ("warn-indent", MagicCommentKind::WarnIndent),
 ];
 
 impl<'b> Lexer<'b> {
@@ -152,7 +161,6 @@ impl<'b> Lexer<'b> {
 
     pub(crate) fn magic_comment(&mut self, mut str_: usize, mut len: usize) -> Result<bool, ()> {
         let mut indicator = false;
-        let mut name;
         let mut end;
         let mut vbeg;
         let mut vend;
@@ -306,15 +314,13 @@ impl<'b> Lexer<'b> {
             }
 
             let n = end - beg;
-            name = String::from_utf8(
+            let name_to_compare = core::str::from_utf8(
                 self.buffer
                     .substr_at(beg, beg + n)
-                    .expect("failed to get magic comment name")
-                    .to_vec(),
+                    .expect("failed to get magic comment name"),
             )
             .map_err(|_| ())?;
 
-            let name_to_compare = name.replace('-', "_");
             for (name, kind) in MAGIC_COMMENTS.iter() {
                 if &name_to_compare == name {
                     if kind == &MagicCommentKind::Encoding && self.comment_at_top() {
