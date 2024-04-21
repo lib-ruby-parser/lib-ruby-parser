@@ -14,6 +14,9 @@ name = "lib-ruby-parser"
 repository = "https://github.com/lib-ruby-parser/lib-ruby-parser"
 version = "4.0.6+ruby-3.1.2"
 
+[lib]
+doctest = false
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
