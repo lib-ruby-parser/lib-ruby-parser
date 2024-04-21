@@ -42,40 +42,41 @@ fn test_magic_comment() {
     let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
 
     let ParserResult { magic_comments, .. } = parse(&fixture, &blob);
+    let magic_comments = magic_comments.iter().collect::<Vec<_>>();
     assert_eq!(
         magic_comments,
-        vec![
-            MagicComment {
-                kind: MagicCommentKind::Encoding,
-                key_l: Loc { begin: 2, end: 10 },
-                value_l: Loc { begin: 12, end: 17 },
-            },
-            MagicComment {
-                kind: MagicCommentKind::FrozenStringLiteral,
-                key_l: Loc { begin: 20, end: 41 },
-                value_l: Loc { begin: 43, end: 47 },
-            },
-            MagicComment {
-                kind: MagicCommentKind::Encoding,
-                key_l: Loc { begin: 50, end: 56 },
-                value_l: Loc { begin: 58, end: 63 },
-            },
-            MagicComment {
-                kind: MagicCommentKind::ShareableConstantValue,
-                key_l: Loc { begin: 66, end: 90 },
-                value_l: Loc { begin: 92, end: 99 },
-            },
-            MagicComment {
-                kind: MagicCommentKind::WarnIndent,
-                key_l: Loc {
+        &[
+            &MagicComment::new(
+                MagicCommentKind::Encoding,
+                Loc { begin: 2, end: 10 },
+                Loc { begin: 12, end: 17 },
+            ),
+            &MagicComment::new(
+                MagicCommentKind::FrozenStringLiteral,
+                Loc { begin: 20, end: 41 },
+                Loc { begin: 43, end: 47 },
+            ),
+            &MagicComment::new(
+                MagicCommentKind::Encoding,
+                Loc { begin: 50, end: 56 },
+                Loc { begin: 58, end: 63 },
+            ),
+            &MagicComment::new(
+                MagicCommentKind::ShareableConstantValue,
+                Loc { begin: 66, end: 90 },
+                Loc { begin: 92, end: 99 },
+            ),
+            &MagicComment::new(
+                MagicCommentKind::WarnIndent,
+                Loc {
                     begin: 102,
                     end: 113
                 },
-                value_l: Loc {
+                Loc {
                     begin: 115,
                     end: 119
                 },
-            },
+            ),
         ]
     );
 }

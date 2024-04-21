@@ -1,5 +1,6 @@
 use alloc_from_pool::{Factory as PoolFactory, PoolValue};
 use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast_arena::IntrusiveList;
 
 use crate::lexer::*;
 use crate::maybe_byte::*;
@@ -79,7 +80,7 @@ pub struct Lexer<'b> {
 
     pub(crate) diagnostics: Diagnostics,
     pub(crate) comments: Vec<Comment>,
-    pub(crate) magic_comments: Vec<MagicComment>,
+    pub(crate) magic_comments: &'b mut IntrusiveList<'b, MagicComment>,
 
     #[doc(hidden)]
     pub tokens_factory: PoolFactory<Token>,
@@ -119,7 +120,7 @@ impl<'b> Lexer<'b> {
             static_env: StaticEnvironment::default(),
             diagnostics: Diagnostics::default(),
             comments: vec![],
-            magic_comments: vec![],
+            magic_comments: blob.alloc_ref(),
             tokens_factory: PoolFactory::default(),
             blob,
         }

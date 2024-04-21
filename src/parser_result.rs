@@ -1,3 +1,5 @@
+use lib_ruby_parser_ast_arena::IntrusiveList;
+
 use crate::source::Comment;
 use crate::source::DecodedInput;
 use crate::source::MagicComment;
@@ -24,7 +26,7 @@ pub struct ParserResult<'b> {
     pub comments: Vec<Comment>,
 
     /// List of magic comments extracted from the source code.
-    pub magic_comments: Vec<MagicComment>,
+    pub magic_comments: &'b IntrusiveList<'b, MagicComment>,
 
     /// Input that was used for parsing.
     ///
@@ -63,7 +65,7 @@ fn test_fmt() {
                 tokens: vec![],
                 diagnostics: vec![],
                 comments: vec![],
-                magic_comments: vec![],
+                magic_comments: blob.alloc_ref(),
                 input: DecodedInput::new("foo", b"", &blob)
             }
         ),
