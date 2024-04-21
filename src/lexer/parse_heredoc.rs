@@ -8,7 +8,7 @@ use crate::{lex_states::*, DiagnosticMessage};
 
 const TAB_WIDTH: i32 = 8;
 
-impl<'b, 'i> Lexer<'b, 'i> {
+impl<'b> Lexer<'b> {
     pub(crate) fn heredoc_identifier(&mut self) -> Option<i32> {
         /*
          * term_len is length of `<<"END"` except `END`,

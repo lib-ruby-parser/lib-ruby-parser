@@ -21,7 +21,7 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 /// A struct responsible for converting a given input
 /// into a sequence of tokens
 #[derive(Debug)]
-pub struct Lexer<'b, 'i> {
+pub struct Lexer<'b> {
     pub(crate) buffer: Buffer,
 
     pub(crate) lval: Option<Bytes>,
@@ -42,7 +42,7 @@ pub struct Lexer<'b, 'i> {
     /// exposed for internal testing
     pub cmdarg: StackState,
 
-    pub(crate) tokenbuf: TokenBuf<'b, 'i>,
+    pub(crate) tokenbuf: TokenBuf<'b>,
 
     // pub(crate) max_numparam: usize,
     pub(crate) context: SharedContext,
@@ -84,10 +84,9 @@ pub struct Lexer<'b, 'i> {
     #[doc(hidden)]
     pub tokens_factory: PoolFactory<Token>,
     pub(crate) blob: &'b Blob<'b>,
-    _marker: core::marker::PhantomData<&'i ()>,
 }
 
-impl<'b, 'i> Lexer<'b, 'i> {
+impl<'b> Lexer<'b> {
     pub(crate) const NULL_CHAR: u8 = 0x00;
     pub(crate) const CTRL_D_CHAR: u8 = 0x04;
     pub(crate) const CTRL_Z_CHAR: u8 = 0x1a;
@@ -96,7 +95,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
 
     /// Constructs an instance of Lexer
     pub fn new(
-        bytes: &'i [u8],
+        bytes: &'b [u8],
         name: impl Into<String>,
         decoder: Option<Decoder>,
         blob: &'b Blob<'b>,
@@ -123,7 +122,6 @@ impl<'b, 'i> Lexer<'b, 'i> {
             magic_comments: vec![],
             tokens_factory: PoolFactory::default(),
             blob,
-            _marker: core::marker::PhantomData,
         }
     }
 

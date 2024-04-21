@@ -3,7 +3,7 @@
 %define api.parser.struct { Parser }
 %define api.value.type { Value }
 %define api.parser.check_debug { self.is_debug() }
-%define api.parser.generic {<'b, 'i>}
+%define api.parser.generic {<'b> /*'*/}
 
 %define parse.error custom
 %define parse.trace
@@ -51,7 +51,7 @@
     tokens_pool: Pool<Token>,
 
     blob: &'b /*'*/ Blob<'b> /*'*/,
-    input: &'i /*'*/ [u8],
+    input: &'b /*'*/ [u8],
 }
 
 %code use {
@@ -6898,11 +6898,11 @@ f_opt_paren_args: f_paren_args
 
 %%
 
-impl<'b, 'i> Parser<'b, 'i> {
+impl<'b> Parser<'b> {
     /// Constructs a parser with given `input` and `options`.
     ///
     /// Returns an error if given `input` is invalid.
-    pub fn new(input: &'i /*'*/ [u8], options: ParserOptions, blob: &'b Blob<'b /*'*/>) -> Self {
+    pub fn new(input: &'b /*'*/ [u8], options: ParserOptions, blob: &'b Blob<'b /*'*/>) -> Self {
         let ParserOptions {
             buffer_name,
             decoder,

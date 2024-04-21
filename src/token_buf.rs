@@ -2,12 +2,12 @@
 use lib_ruby_parser_ast_arena::{Blob, Bytes};
 
 #[derive(Debug)]
-pub(crate) struct TokenBuf<'b, 'i> {
-    pub(crate) bytes: &'b mut Bytes<'b, 'i>,
+pub(crate) struct TokenBuf<'b> {
+    pub(crate) bytes: &'b mut Bytes<'b>,
     blob: &'b Blob<'b>,
 }
 
-impl<'b, 'i> TokenBuf<'b, 'i> {
+impl<'b> TokenBuf<'b> {
     pub(crate) fn empty(blob: &'b Blob<'b>) -> Self {
         Self {
             bytes: unsafe { blob.alloc().as_mut() },

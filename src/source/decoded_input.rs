@@ -16,10 +16,7 @@ pub struct DecodedInput {
 
 impl DecodedInput {
     /// Constructs empty DecodedInput with given name
-    pub fn named<T>(name: T) -> Self
-    where
-        T: Into<String>,
-    {
+    pub fn named(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
             ..Default::default()

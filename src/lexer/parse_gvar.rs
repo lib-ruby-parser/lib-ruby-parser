@@ -4,7 +4,7 @@ use crate::source::buffer::*;
 use crate::DiagnosticMessage;
 use crate::{lex_states::*, LexState};
 
-impl<'b, 'i> Lexer<'b, 'i> {
+impl<'b> Lexer<'b> {
     pub(crate) fn parse_gvar(&mut self, last_state: LexState) -> i32 {
         let ptr = self.buffer.pcur;
 
