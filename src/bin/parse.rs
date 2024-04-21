@@ -111,12 +111,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut files = input_to_parse.into_files();
     repeater.repeat(&mut files);
     let files_count = files.len();
+    let mut mem = vec![0; 1000];
 
     profiler.start();
     timer.start();
 
     for file in files {
-        let result = parse(file, drop_tokens);
+        let result = parse(file, &mut mem, drop_tokens);
         printer.print(&result);
     }
 

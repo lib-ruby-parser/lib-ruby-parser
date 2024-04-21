@@ -171,8 +171,8 @@ pub(crate) fn test_file(fixture_path: &str) {
         record_tokens: false,
         ..Default::default()
     };
-    let mut mem = [0; 1000];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
+    let mut mem = vec![0; 1000];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
     let parser = Parser::new(fixture.input.as_bytes(), options, &blob);
 
     parser.static_env.declare("foo");
@@ -185,5 +185,7 @@ pub(crate) fn test_file(fixture_path: &str) {
         parser.do_parse_with_state_validation()
     };
 
-    fixture.compare(&result)
+    fixture.compare(&result);
+
+    drop(mem)
 }

@@ -89,8 +89,8 @@ fn lex_state(state: &str) -> Result<i32, &'static str> {
 pub(crate) fn test_file(fixture_path: &str) {
     let fixture = Fixture::new(fixture_path);
 
-    let mut mem = [0; 1000];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
+    let mut mem = vec![0; 1000];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
 
     let pool = Pool::new();
     let mut lexer = Lexer::new(
@@ -132,4 +132,6 @@ pub(crate) fn test_file(fixture_path: &str) {
         "actual:\n{}\nexpected:\n{}\n",
         tokens, fixture.tokens
     );
+
+    drop(mem)
 }

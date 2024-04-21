@@ -12,10 +12,7 @@ pub struct Input {
 
 impl Input {
     /// Constructs a new input
-    pub fn new<Name>(name: Name, decoder: Option<Decoder>) -> Self
-    where
-        Name: Into<String>,
-    {
+    pub fn new(name: impl Into<String>, decoder: Option<Decoder>) -> Self {
         Self {
             decoded: DecodedInput::named(name),
             decoder,
