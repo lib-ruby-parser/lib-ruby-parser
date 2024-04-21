@@ -16,7 +16,7 @@ pub struct ParserResult<'b> {
 
     /// List of tokens returned by a Lexer and consumed by a Parser.
     /// Empty unless ParserOptions::record_tokens is set to true.
-    pub tokens: Vec<Token>,
+    pub tokens: Vec<Token<'b>>,
 
     /// List of all diagnostics (errors and warnings) that have been
     /// recorded during lexing and parsing

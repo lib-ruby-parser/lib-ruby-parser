@@ -46,7 +46,6 @@ debug-parser = []
 bin-parse = ["lexopt", "pprof", "glob"]
 
 [dependencies]
-alloc-from-pool = { version = "1.0.5" }
 onig = { version = "6", optional = true }
 lib-ruby-parser-ast = { version = "0.55.0" }
 lib-ruby-parser-ast-arena = { version = "0.55.0", path = "../ast", package = "lib-ruby-parser-ast", features = [

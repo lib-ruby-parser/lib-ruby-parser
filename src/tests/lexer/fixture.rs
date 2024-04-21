@@ -1,5 +1,3 @@
-use alloc_from_pool::Pool;
-
 use crate::lex_states::*;
 use crate::Lexer;
 use std::fs;
@@ -94,14 +92,12 @@ pub(crate) fn test_file(fixture_path: &str) {
 
     let buffer_name = format!("(test {})", fixture_path);
 
-    let pool = Pool::new();
     let mut lexer = Lexer::new(
         fixture.input.as_bytes(),
         blob.push_str(&buffer_name),
         None,
         &blob,
     );
-    lexer.tokens_factory = pool.factory();
     for var in fixture.vars {
         lexer.static_env.declare(&var);
     }

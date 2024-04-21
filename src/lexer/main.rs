@@ -1,4 +1,3 @@
-use alloc_from_pool::{Factory as PoolFactory, PoolValue};
 use lib_ruby_parser_ast_arena::Blob;
 use lib_ruby_parser_ast_arena::IntrusiveList;
 
@@ -83,7 +82,6 @@ pub struct Lexer<'b> {
     pub(crate) magic_comments: &'b mut IntrusiveList<'b, MagicComment>,
 
     #[doc(hidden)]
-    pub tokens_factory: PoolFactory<Token>,
     pub(crate) blob: &'b Blob<'b>,
 }
 
@@ -121,7 +119,6 @@ impl<'b> Lexer<'b> {
             diagnostics: Diagnostics::default(),
             comments: blob.alloc_ref(),
             magic_comments: blob.alloc_ref(),
-            tokens_factory: PoolFactory::default(),
             blob,
         }
     }
@@ -133,11 +130,11 @@ impl<'b> Lexer<'b> {
     /// of tokens. It's used internally to test simple inputs.
     ///
     /// If you need to get tokens better use `ParserResult::tokens` field
-    pub fn tokenize_until_eof(&mut self) -> Vec<Token> {
+    pub fn tokenize_until_eof(&mut self) -> Vec<&'b mut Token<'b>> {
         let mut tokens = vec![];
 
         loop {
-            let token = self.yylex().take_value();
+            let token = self.yylex();
             match token.token_type {
                 Self::END_OF_INPUT => break,
                 _ => tokens.push(token),
@@ -147,7 +144,7 @@ impl<'b> Lexer<'b> {
         tokens
     }
 
-    pub(crate) fn yylex(&mut self) -> PoolValue<Token> {
+    pub(crate) fn yylex(&mut self) -> &'b mut Token<'b> {
         self.lval = None;
 
         let token_type = self.parser_yylex();
@@ -171,11 +168,7 @@ impl<'b> Lexer<'b> {
             end = begin + 1;
         }
 
-        let token = self.tokens_factory.alloc(Token {
-            token_type,
-            token_value,
-            loc: Loc { begin, end },
-        });
+        let token = Token::new(token_type, token_value, Loc { begin, end }, self.blob);
         println_if_debug_lexer!(
             "yylex ({:?}, {:?}, {:?})",
             token.token_name(),

@@ -1,4 +1,3 @@
-use alloc_from_pool::{Pool, PoolValue};
 use lib_ruby_parser_ast_arena::Blob;
 
 use crate::builder::{ArgsType, PKwLabel};
@@ -28,8 +27,8 @@ pub(crate) mod BoxedNode {
     }
 }
 
-impl Token {
-    pub(crate) fn from(value: ParseValue) -> PoolValue<Token> {
+impl<'b> Token<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> &'b mut Self {
         match value {
             ParseValue::Token(value) => value,
             other => unreachable!("expected Token, got {:?}", other),
@@ -38,15 +37,15 @@ impl Token {
 }
 
 #[derive(Debug)]
-pub(crate) struct TokenWithContext {
-    pub(crate) token: PoolValue<Token>,
+pub(crate) struct TokenWithContext<'b> {
+    pub(crate) token: &'b mut Token<'b>,
     pub(crate) ctx: Context,
 }
 
-impl TokenWithContext {
-    pub(crate) fn from(value: ParseValue) -> Self {
+impl<'b> TokenWithContext<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> Self {
         match value {
-            ParseValue::TokenWithContext(value) => *value,
+            ParseValue::TokenWithContext(value) => value,
             other => unreachable!("expected TokenWithContext, got {:?}", other),
         }
     }
@@ -123,12 +122,12 @@ pub(crate) mod Num {
 }
 
 #[derive(Debug)]
-pub(crate) struct Superclass {
-    pub(crate) lt_t: Option<PoolValue<Token>>,
+pub(crate) struct Superclass<'b> {
+    pub(crate) lt_t: Option<&'b mut Token<'b>>,
     pub(crate) value: Option<Box<Node>>,
 }
-impl Superclass {
-    pub(crate) fn from(value: ParseValue) -> Superclass {
+impl<'b> Superclass<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> Superclass<'b> {
         match value {
             ParseValue::Superclass(value) => *value,
             other => unreachable!("expected Superclass, got {:?}", other),
@@ -137,15 +136,15 @@ impl Superclass {
 }
 
 #[derive(Debug)]
-pub(crate) struct Ensure {
-    pub(crate) ensure_t: PoolValue<Token>,
+pub(crate) struct Ensure<'b> {
+    pub(crate) ensure_t: &'b mut Token<'b>,
     pub(crate) body: Option<Box<Node>>,
 }
 #[allow(non_snake_case)]
 pub(crate) mod OptEnsure {
     use super::{Ensure, ParseValue};
 
-    pub(crate) fn from(value: ParseValue) -> Option<Ensure> {
+    pub(crate) fn from<'b>(value: ParseValue<'b>) -> Option<Ensure<'b>> {
         match value {
             ParseValue::OptEnsure(value) => value.map(|v| *v),
             other => unreachable!("expected OptEnsure, got {:?}", other),
@@ -154,15 +153,15 @@ pub(crate) mod OptEnsure {
 }
 
 #[derive(Debug)]
-pub(crate) struct Else {
-    pub(crate) else_t: PoolValue<Token>,
+pub(crate) struct Else<'b> {
+    pub(crate) else_t: &'b mut Token<'b>,
     pub(crate) body: Option<Box<Node>>,
 }
 #[allow(non_snake_case)]
 pub(crate) mod OptElse {
     use super::{Else, ParseValue};
 
-    pub(crate) fn from(value: ParseValue) -> Option<Else> {
+    pub(crate) fn from<'b>(value: ParseValue<'b>) -> Option<Else<'b>> {
         match value {
             ParseValue::OptElse(value) => value.map(|v| *v),
             other => unreachable!("expected OptElse, got {:?}", other),
@@ -171,12 +170,12 @@ pub(crate) mod OptElse {
 }
 
 #[derive(Debug)]
-pub(crate) struct ExcVar {
-    pub(crate) assoc_t: Option<PoolValue<Token>>,
+pub(crate) struct ExcVar<'b> {
+    pub(crate) assoc_t: Option<&'b mut Token<'b>>,
     pub(crate) exc_var: Option<Box<Node>>,
 }
-impl ExcVar {
-    pub(crate) fn from(value: ParseValue) -> ExcVar {
+impl<'b> ExcVar<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> ExcVar<'b> {
         match value {
             ParseValue::ExcVar(value) => *value,
             other => unreachable!("expected ExcVar, got {:?}", other),
@@ -185,11 +184,11 @@ impl ExcVar {
 }
 
 #[derive(Debug)]
-pub(crate) struct IfTail {
-    pub(crate) keyword_t: Option<PoolValue<Token>>,
+pub(crate) struct IfTail<'b> {
+    pub(crate) keyword_t: Option<&'b mut Token<'b>>,
     pub(crate) body: Option<Box<Node>>,
 }
-impl IfTail {
+impl<'b> IfTail<'b> {
     pub(crate) fn from(value: ParseValue) -> IfTail {
         match value {
             ParseValue::IfTail(value) => *value,
@@ -199,12 +198,12 @@ impl IfTail {
 }
 
 #[derive(Debug)]
-pub(crate) struct ExprValueDo {
+pub(crate) struct ExprValueDo<'b> {
     pub(crate) value: Box<Node>,
-    pub(crate) do_t: PoolValue<Token>,
+    pub(crate) do_t: &'b mut Token<'b>,
 }
-impl ExprValueDo {
-    pub(crate) fn from(value: ParseValue) -> ExprValueDo {
+impl<'b> ExprValueDo<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> ExprValueDo<'b> {
         match value {
             ParseValue::ExprValueDo(value) => *value,
             other => unreachable!("expected ExprValueDo, got {:?}", other),
@@ -212,8 +211,8 @@ impl ExprValueDo {
     }
 }
 
-impl PKwLabel {
-    pub(crate) fn from(value: ParseValue) -> PKwLabel {
+impl<'b> PKwLabel<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> PKwLabel<'b> {
         match value {
             ParseValue::PKwLabel(value) => *value,
             other => unreachable!("expected PKwLabel, got {:?}", other),
@@ -236,14 +235,14 @@ impl BraceBody {
 }
 
 #[derive(Debug)]
-pub(crate) struct CmdBraceBlock {
-    pub(crate) begin_t: PoolValue<Token>,
+pub(crate) struct CmdBraceBlock<'b> {
+    pub(crate) begin_t: &'b mut Token<'b>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: PoolValue<Token>,
+    pub(crate) end_t: &'b mut Token<'b>,
 }
-impl CmdBraceBlock {
-    pub(crate) fn from(value: ParseValue) -> CmdBraceBlock {
+impl<'b> CmdBraceBlock<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> CmdBraceBlock<'b> {
         match value {
             ParseValue::CmdBraceBlock(value) => *value,
             other => unreachable!("expected CmdBraceBlock, got {:?}", other),
@@ -252,13 +251,13 @@ impl CmdBraceBlock {
 }
 
 #[derive(Debug)]
-pub(crate) struct ParenArgs {
-    pub(crate) begin_t: PoolValue<Token>,
+pub(crate) struct ParenArgs<'b> {
+    pub(crate) begin_t: &'b mut Token<'b>,
     pub(crate) args: Vec<Node>,
-    pub(crate) end_t: PoolValue<Token>,
+    pub(crate) end_t: &'b mut Token<'b>,
 }
-impl ParenArgs {
-    pub(crate) fn from(value: ParseValue) -> ParenArgs {
+impl<'b> ParenArgs<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> ParenArgs<'b> {
         match value {
             ParseValue::ParenArgs(value) => *value,
             other => unreachable!("expected ParenArgs, got {:?}", other),
@@ -267,13 +266,13 @@ impl ParenArgs {
 }
 
 #[derive(Debug)]
-pub(crate) struct OptParenArgs {
-    pub(crate) begin_t: Option<PoolValue<Token>>,
+pub(crate) struct OptParenArgs<'b> {
+    pub(crate) begin_t: Option<&'b mut Token<'b>>,
     pub(crate) args: Vec<Node>,
-    pub(crate) end_t: Option<PoolValue<Token>>,
+    pub(crate) end_t: Option<&'b mut Token<'b>>,
 }
-impl OptParenArgs {
-    pub(crate) fn from(value: ParseValue) -> OptParenArgs {
+impl<'b> OptParenArgs<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> OptParenArgs<'b> {
         match value {
             ParseValue::OptParenArgs(value) => *value,
             other => unreachable!("expected OptParenArgs, got {:?}", other),
@@ -282,13 +281,13 @@ impl OptParenArgs {
 }
 
 #[derive(Debug)]
-pub(crate) struct BeginBlock {
-    pub(crate) begin_t: PoolValue<Token>,
+pub(crate) struct BeginBlock<'b> {
+    pub(crate) begin_t: &'b mut Token<'b>,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: PoolValue<Token>,
+    pub(crate) end_t: &'b mut Token<'b>,
 }
-impl BeginBlock {
-    pub(crate) fn from(value: ParseValue) -> BeginBlock {
+impl<'b> BeginBlock<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> BeginBlock<'b> {
         match value {
             ParseValue::BeginBlock(value) => *value,
             other => unreachable!("expected BeginBlock, got {:?}", other),
@@ -297,13 +296,13 @@ impl BeginBlock {
 }
 
 #[derive(Debug)]
-pub(crate) struct LambdaBody {
-    pub(crate) begin_t: PoolValue<Token>,
+pub(crate) struct LambdaBody<'b> {
+    pub(crate) begin_t: &'b mut Token<'b>,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: PoolValue<Token>,
+    pub(crate) end_t: &'b mut Token<'b>,
 }
-impl LambdaBody {
-    pub(crate) fn from(value: ParseValue) -> LambdaBody {
+impl<'b> LambdaBody<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> LambdaBody<'b> {
         match value {
             ParseValue::LambdaBody(value) => *value,
             other => unreachable!("expected LambdaBody, got {:?}", other),
@@ -312,14 +311,14 @@ impl LambdaBody {
 }
 
 #[derive(Debug)]
-pub(crate) struct DoBlock {
-    pub(crate) begin_t: PoolValue<Token>,
+pub(crate) struct DoBlock<'b> {
+    pub(crate) begin_t: &'b mut Token<'b>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: PoolValue<Token>,
+    pub(crate) end_t: &'b mut Token<'b>,
 }
-impl DoBlock {
-    pub(crate) fn from(value: ParseValue) -> DoBlock {
+impl<'b> DoBlock<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> DoBlock<'b> {
         match value {
             ParseValue::DoBlock(value) => *value,
             other => unreachable!("expected DoBlock, got {:?}", other),
@@ -328,14 +327,14 @@ impl DoBlock {
 }
 
 #[derive(Debug)]
-pub(crate) struct BraceBlock {
-    pub(crate) begin_t: PoolValue<Token>,
+pub(crate) struct BraceBlock<'b> {
+    pub(crate) begin_t: &'b mut Token<'b>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: PoolValue<Token>,
+    pub(crate) end_t: &'b mut Token<'b>,
 }
-impl BraceBlock {
-    pub(crate) fn from(value: ParseValue) -> BraceBlock {
+impl<'b> BraceBlock<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> BraceBlock<'b> {
         match value {
             ParseValue::BraceBlock(value) => *value,
             other => unreachable!("expected BraceBlock, got {:?}", other),
@@ -344,14 +343,14 @@ impl BraceBlock {
 }
 
 #[derive(Debug)]
-pub(crate) struct DefsHead {
-    pub(crate) def_t: PoolValue<Token>,
+pub(crate) struct DefsHead<'b> {
+    pub(crate) def_t: &'b mut Token<'b>,
     pub(crate) definee: Box<Node>,
-    pub(crate) dot_t: PoolValue<Token>,
-    pub(crate) name_t: TokenWithContext,
+    pub(crate) dot_t: &'b mut Token<'b>,
+    pub(crate) name_t: TokenWithContext<'b>,
 }
-impl DefsHead {
-    pub(crate) fn from(value: ParseValue) -> DefsHead {
+impl<'b> DefsHead<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> DefsHead<'b> {
         match value {
             ParseValue::DefsHead(value) => *value,
             other => unreachable!("expected DefsHead, got {:?}", other),
@@ -360,12 +359,12 @@ impl DefsHead {
 }
 
 #[derive(Debug)]
-pub(crate) struct DefnHead {
-    pub(crate) def_t: PoolValue<Token>,
-    pub(crate) name_t: TokenWithContext,
+pub(crate) struct DefnHead<'b> {
+    pub(crate) def_t: &'b mut Token<'b>,
+    pub(crate) name_t: TokenWithContext<'b>,
 }
-impl DefnHead {
-    pub(crate) fn from(value: ParseValue) -> DefnHead {
+impl<'b> DefnHead<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> DefnHead<'b> {
         match value {
             ParseValue::DefnHead(value) => *value,
             other => unreachable!("expected DefnHead, got {:?}", other),
@@ -374,12 +373,12 @@ impl DefnHead {
 }
 
 #[derive(Debug)]
-pub(crate) struct Cases {
+pub(crate) struct Cases<'b> {
     pub(crate) when_bodies: Vec<Node>,
-    pub(crate) opt_else: Option<Else>,
+    pub(crate) opt_else: Option<Else<'b>>,
 }
-impl Cases {
-    pub(crate) fn from(value: ParseValue) -> Cases {
+impl<'b> Cases<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> Cases<'b> {
         match value {
             ParseValue::Cases(value) => *value,
             other => unreachable!("expected Cases, got {:?}", other),
@@ -388,12 +387,12 @@ impl Cases {
 }
 
 #[derive(Debug)]
-pub(crate) struct CaseBody {
+pub(crate) struct CaseBody<'b> {
     pub(crate) when_bodies: Vec<Node>,
-    pub(crate) opt_else: Option<Else>,
+    pub(crate) opt_else: Option<Else<'b>>,
 }
-impl CaseBody {
-    pub(crate) fn from(value: ParseValue) -> CaseBody {
+impl<'b> CaseBody<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> CaseBody<'b> {
         match value {
             ParseValue::CaseBody(value) => *value,
             other => unreachable!("expected CaseBody, got {:?}", other),
@@ -402,12 +401,12 @@ impl CaseBody {
 }
 
 #[derive(Debug)]
-pub(crate) struct PCases {
+pub(crate) struct PCases<'b> {
     pub(crate) in_bodies: Vec<Node>,
-    pub(crate) opt_else: Option<Else>,
+    pub(crate) opt_else: Option<Else<'b>>,
 }
-impl PCases {
-    pub(crate) fn from(value: ParseValue) -> PCases {
+impl<'b> PCases<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> PCases<'b> {
         match value {
             ParseValue::PCases(value) => *value,
             other => unreachable!("expected PCases, got {:?}", other),
@@ -416,12 +415,12 @@ impl PCases {
 }
 
 #[derive(Debug)]
-pub(crate) struct PCaseBody {
+pub(crate) struct PCaseBody<'b> {
     pub(crate) in_bodies: Vec<Node>,
-    pub(crate) opt_else: Option<Else>,
+    pub(crate) opt_else: Option<Else<'b>>,
 }
-impl PCaseBody {
-    pub(crate) fn from(value: ParseValue) -> PCaseBody {
+impl<'b> PCaseBody<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> PCaseBody<'b> {
         match value {
             ParseValue::PCaseBody(value) => *value,
             other => unreachable!("expected PCaseBody, got {:?}", other),
@@ -482,12 +481,12 @@ impl PTopExpr {
 }
 
 #[derive(Debug)]
-pub(crate) struct MatchPatternWithTrailingComma {
+pub(crate) struct MatchPatternWithTrailingComma<'b> {
     pub(crate) elements: Vec<Node>,
-    pub(crate) trailing_comma: Option<PoolValue<Token>>,
+    pub(crate) trailing_comma: Option<&'b mut Token<'b>>,
 }
-impl MatchPatternWithTrailingComma {
-    pub(crate) fn from(value: ParseValue) -> Self {
+impl<'b> MatchPatternWithTrailingComma<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> Self {
         match value {
             ParseValue::MatchPatternWithTrailingComma(value) => *value,
             other => unreachable!("expected MatchPatternWithTrailingComma, got {:?}", other),
@@ -496,12 +495,12 @@ impl MatchPatternWithTrailingComma {
 }
 
 #[derive(Debug)]
-pub(crate) struct NoKwRest {
-    pub(crate) kwrest_mark: PoolValue<Token>,
-    pub(crate) k_nil: PoolValue<Token>,
+pub(crate) struct NoKwRest<'b> {
+    pub(crate) kwrest_mark: &'b mut Token<'b>,
+    pub(crate) k_nil: &'b mut Token<'b>,
 }
-impl NoKwRest {
-    pub(crate) fn from(value: ParseValue) -> Self {
+impl<'b> NoKwRest<'b> {
+    pub(crate) fn from(value: ParseValue<'b>) -> Self {
         match value {
             ParseValue::NoKwRest(value) => *value,
             other => unreachable!("expected NoKwRest, got {:?}", other),
@@ -515,8 +514,8 @@ pub(crate) enum ParseValue<'b> {
     Stolen,
     Uninitialized,
     None,
-    Token(PoolValue<Token>),
-    TokenWithContext(Box<TokenWithContext>),
+    Token(&'b mut Token<'b>),
+    TokenWithContext(TokenWithContext<'b>),
     Context(Context),
     Node(Box<Node>),
     NodeList(Box<Vec<Node>>),
@@ -525,67 +524,67 @@ pub(crate) enum ParseValue<'b> {
     Num(i32),
 
     /* For custom superclass rule */
-    Superclass(Box<Superclass>),
+    Superclass(Box<Superclass<'b>>),
 
     /* For custom opt_ensure rule */
-    OptEnsure(Option<Box<Ensure>>),
+    OptEnsure(Option<Box<Ensure<'b>>>),
 
     /* For custom opt_else rule */
-    OptElse(Option<Box<Else>>),
+    OptElse(Option<Box<Else<'b>>>),
 
     /* For custom exc_var rule */
-    ExcVar(Box<ExcVar>),
+    ExcVar(Box<ExcVar<'b>>),
 
     /* For custom if_tail rule */
-    IfTail(Box<IfTail>),
+    IfTail(Box<IfTail<'b>>),
 
     /* For custom expr_value_do rule */
-    ExprValueDo(Box<ExprValueDo>),
+    ExprValueDo(Box<ExprValueDo<'b>>),
 
     /* For custom p_kw_label rule */
-    PKwLabel(Box<PKwLabel>),
+    PKwLabel(Box<PKwLabel<'b>>),
 
     /* For custom brace_body rule */
     BraceBody(Box<BraceBody>),
 
     /* For custom cmd_brace_block rule */
-    CmdBraceBlock(Box<CmdBraceBlock>),
+    CmdBraceBlock(Box<CmdBraceBlock<'b>>),
 
     /* For custom paren_args rule  */
-    ParenArgs(Box<ParenArgs>),
+    ParenArgs(Box<ParenArgs<'b>>),
 
     /* For custom opt_paren_args rule  */
-    OptParenArgs(Box<OptParenArgs>),
+    OptParenArgs(Box<OptParenArgs<'b>>),
 
     /* For custom lambda_body rule  */
-    LambdaBody(Box<LambdaBody>),
+    LambdaBody(Box<LambdaBody<'b>>),
 
     /* For custom do_block rule  */
-    DoBlock(Box<DoBlock>),
+    DoBlock(Box<DoBlock<'b>>),
 
     /* For custom brace_block rule  */
-    BraceBlock(Box<BraceBlock>),
+    BraceBlock(Box<BraceBlock<'b>>),
 
     /* For custom defs_head rule */
-    DefsHead(Box<DefsHead>),
+    DefsHead(Box<DefsHead<'b>>),
 
     /* For custom defn_head rule */
-    DefnHead(Box<DefnHead>),
+    DefnHead(Box<DefnHead<'b>>),
 
     /* For custom begin_block rule  */
-    BeginBlock(Box<BeginBlock>),
+    BeginBlock(Box<BeginBlock<'b>>),
 
     /* For custom cases rule */
-    Cases(Box<Cases>),
+    Cases(Box<Cases<'b>>),
 
     /* For custom case_body rule */
-    CaseBody(Box<CaseBody>),
+    CaseBody(Box<CaseBody<'b>>),
 
     /* For custom p_cases rule */
-    PCases(Box<PCases>),
+    PCases(Box<PCases<'b>>),
 
     /* For custom p_case_body rule */
-    PCaseBody(Box<PCaseBody>),
+    PCaseBody(Box<PCaseBody<'b>>),
 
     /* For custom compstmt rule */
     MaybeNode(Option<Box<Node>>),
@@ -597,15 +596,15 @@ pub(crate) enum ParseValue<'b> {
     PTopExpr(Box<PTopExpr>),
 
     /* For pattern matching patterns with trailing comma */
-    MatchPatternWithTrailingComma(Box<MatchPatternWithTrailingComma>),
+    MatchPatternWithTrailingComma(Box<MatchPatternWithTrailingComma<'b>>),
 
     /* For p_kwnorest and f_no_kwarg rules */
-    NoKwRest(Box<NoKwRest>),
+    NoKwRest(Box<NoKwRest<'b>>),
 }
 
 impl<'b> ParseValue<'b> {
     // rust-bison-skeleton contract
-    pub(crate) fn from_token(token: PoolValue<Token>) -> Self {
+    pub(crate) fn from_token(token: &'b mut Token<'b>) -> Self {
         Self::Token(token)
     }
     pub(crate) fn new_uninitialized() -> Self {
@@ -615,67 +614,67 @@ impl<'b> ParseValue<'b> {
         matches!(self, Self::Uninitialized)
     }
 
-    pub(crate) fn new_superclass(value: Superclass) -> Self {
+    pub(crate) fn new_superclass(value: Superclass<'b>) -> Self {
         Self::Superclass(Box::new(value))
     }
-    pub(crate) fn new_opt_ensure(value: Option<Ensure>) -> Self {
+    pub(crate) fn new_opt_ensure(value: Option<Ensure<'b>>) -> Self {
         Self::OptEnsure(value.map(Box::new))
     }
-    pub(crate) fn new_opt_else(value: Option<Else>) -> Self {
+    pub(crate) fn new_opt_else(value: Option<Else<'b>>) -> Self {
         Self::OptElse(value.map(Box::new))
     }
-    pub(crate) fn new_exc_var(value: ExcVar) -> Self {
+    pub(crate) fn new_exc_var(value: ExcVar<'b>) -> Self {
         Self::ExcVar(Box::new(value))
     }
-    pub(crate) fn new_if_tail(value: IfTail) -> Self {
+    pub(crate) fn new_if_tail(value: IfTail<'b>) -> Self {
         Self::IfTail(Box::new(value))
     }
-    pub(crate) fn new_expr_value_do(value: ExprValueDo) -> Self {
+    pub(crate) fn new_expr_value_do(value: ExprValueDo<'b>) -> Self {
         Self::ExprValueDo(Box::new(value))
     }
-    pub(crate) fn new_p_kw_label(value: PKwLabel) -> Self {
+    pub(crate) fn new_p_kw_label(value: PKwLabel<'b>) -> Self {
         Self::PKwLabel(Box::new(value))
     }
     pub(crate) fn new_brace_body(value: BraceBody) -> Self {
         Self::BraceBody(Box::new(value))
     }
-    pub(crate) fn new_cmd_brace_block(value: CmdBraceBlock) -> Self {
+    pub(crate) fn new_cmd_brace_block(value: CmdBraceBlock<'b>) -> Self {
         Self::CmdBraceBlock(Box::new(value))
     }
-    pub(crate) fn new_paren_args(value: ParenArgs) -> Self {
+    pub(crate) fn new_paren_args(value: ParenArgs<'b>) -> Self {
         Self::ParenArgs(Box::new(value))
     }
-    pub(crate) fn new_opt_paren_args(value: OptParenArgs) -> Self {
+    pub(crate) fn new_opt_paren_args(value: OptParenArgs<'b>) -> Self {
         Self::OptParenArgs(Box::new(value))
     }
-    pub(crate) fn new_lambda_body(value: LambdaBody) -> Self {
+    pub(crate) fn new_lambda_body(value: LambdaBody<'b>) -> Self {
         Self::LambdaBody(Box::new(value))
     }
-    pub(crate) fn new_do_block(value: DoBlock) -> Self {
+    pub(crate) fn new_do_block(value: DoBlock<'b>) -> Self {
         Self::DoBlock(Box::new(value))
     }
-    pub(crate) fn new_brace_block(value: BraceBlock) -> Self {
+    pub(crate) fn new_brace_block(value: BraceBlock<'b>) -> Self {
         Self::BraceBlock(Box::new(value))
     }
-    pub(crate) fn new_defs_head(value: DefsHead) -> Self {
+    pub(crate) fn new_defs_head(value: DefsHead<'b>) -> Self {
         Self::DefsHead(Box::new(value))
     }
-    pub(crate) fn new_defn_head(value: DefnHead) -> Self {
+    pub(crate) fn new_defn_head(value: DefnHead<'b>) -> Self {
         Self::DefnHead(Box::new(value))
     }
-    pub(crate) fn new_begin_block(value: BeginBlock) -> Self {
+    pub(crate) fn new_begin_block(value: BeginBlock<'b>) -> Self {
         Self::BeginBlock(Box::new(value))
     }
-    pub(crate) fn new_cases(value: Cases) -> Self {
+    pub(crate) fn new_cases(value: Cases<'b>) -> Self {
         Self::Cases(Box::new(value))
     }
-    pub(crate) fn new_case_body(value: CaseBody) -> Self {
+    pub(crate) fn new_case_body(value: CaseBody<'b>) -> Self {
         Self::CaseBody(Box::new(value))
     }
-    pub(crate) fn new_p_cases(value: PCases) -> Self {
+    pub(crate) fn new_p_cases(value: PCases<'b>) -> Self {
         Self::PCases(Box::new(value))
     }
-    pub(crate) fn new_p_case_body(value: PCaseBody) -> Self {
+    pub(crate) fn new_p_case_body(value: PCaseBody<'b>) -> Self {
         Self::PCaseBody(Box::new(value))
     }
     pub(crate) fn new_do_body(value: DoBody) -> Self {
@@ -685,24 +684,26 @@ impl<'b> ParseValue<'b> {
         Self::PTopExpr(Box::new(value))
     }
     pub(crate) fn new_match_pattern_with_trailing_comma(
-        value: MatchPatternWithTrailingComma,
+        value: MatchPatternWithTrailingComma<'b>,
     ) -> Self {
         Self::MatchPatternWithTrailingComma(Box::new(value))
     }
-    pub(crate) fn new_no_kw_rest(value: NoKwRest) -> Self {
+    pub(crate) fn new_no_kw_rest(value: NoKwRest<'b>) -> Self {
         Self::NoKwRest(Box::new(value))
     }
 
-    pub(crate) fn make_copy(&self, blob: &'b Blob<'b>, pool: &Pool<Token>) -> Self {
+    pub(crate) fn make_copy(&self, blob: &'b Blob<'b>) -> Self {
         match self {
             ParseValue::Stolen => ParseValue::Stolen,
             ParseValue::Uninitialized => ParseValue::Uninitialized,
             ParseValue::None => ParseValue::None,
-            ParseValue::Token(token) => ParseValue::Token(pool.alloc(Token {
-                token_type: token.token_type,
-                token_value: token.token_value.clone(),
-                loc: token.loc.clone(),
-            })),
+            ParseValue::Token(token) => {
+                let out = blob.alloc_ref::<Token>();
+                out.token_type = token.token_type;
+                out.token_value = token.token_value.clone();
+                out.loc = token.loc;
+                ParseValue::Token(out)
+            }
             ParseValue::TokenWithContext(_) => todo!(),
             ParseValue::Context(_) => todo!(),
             ParseValue::Node(_) => todo!(),

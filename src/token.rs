@@ -1,10 +1,12 @@
+use lib_ruby_parser_ast_arena::Blob;
+
 use crate::parser::token_name;
 use crate::{Bytes, Loc};
 
 /// A token that is emitted by a lexer and consumed by a parser
 #[derive(PartialEq, Eq)]
 #[repr(C)]
-pub struct Token {
+pub struct Token<'b> {
     /// Numeric representation of the token type,
     /// e.g. 42 (for example) for tINTEGER
     pub token_type: i32,
@@ -15,17 +17,29 @@ pub struct Token {
 
     /// Location of the token
     pub loc: Loc,
+
+    marker: core::marker::PhantomData<&'b ()>,
 }
 
-impl Token {
+impl<'b> Token<'b> {
+    pub(crate) fn new(
+        token_type: i32,
+        token_value: Bytes,
+        loc: Loc,
+        blob: &'b Blob<'b>,
+    ) -> &'b mut Self {
+        let this = blob.alloc_ref::<Self>();
+        *this = Self {
+            token_type,
+            token_value,
+            loc,
+            marker: core::marker::PhantomData,
+        };
+        this
+    }
     /// Returns a byte array of the token value
     pub fn as_bytes(&self) -> &Vec<u8> {
         self.token_value.as_raw()
-    }
-
-    /// Consumes a token and returns an owned byte array of the token value
-    pub fn into_bytes(self) -> Vec<u8> {
-        self.token_value.into_raw()
     }
 
     /// Converts token value into `&str`
@@ -54,7 +68,7 @@ impl Token {
     }
 }
 
-impl std::fmt::Debug for Token {
+impl std::fmt::Debug for Token<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!(
             "[{}, {:?}, {}...{}]",
@@ -67,40 +81,43 @@ impl std::fmt::Debug for Token {
 }
 
 #[cfg(test)]
-fn new_token() -> Token {
-    Token {
-        token_type: crate::Lexer::tINTEGER,
-        token_value: Bytes::new(vec![42]),
-        loc: Loc { begin: 1, end: 2 },
-    }
+fn new_token<'b>(blob: &'b Blob<'b>) -> &'b mut Token<'b> {
+    Token::new(
+        crate::Lexer::tINTEGER,
+        Bytes::new(vec![42]),
+        Loc { begin: 1, end: 2 },
+        blob,
+    )
 }
 
 #[test]
 fn test_as_bytes() {
-    let token = new_token();
+    let mut mem = vec![0; 1000];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+    let token = new_token(&blob);
     assert_eq!(token.as_bytes(), &vec![42]);
 }
 
 #[test]
-fn test_into_bytes() {
-    let token = new_token();
-    assert_eq!(token.into_bytes(), vec![42]);
-}
-
-#[test]
 fn test_as_str_lossy() {
-    let token = new_token();
+    let mut mem = vec![0; 1000];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+    let token = new_token(&blob);
     assert_eq!(token.as_str_lossy(), Ok("*"));
 }
 
 #[test]
 fn test_to_string_lossy() {
-    let token = new_token();
+    let mut mem = vec![0; 1000];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+    let token = new_token(&blob);
     assert_eq!(token.to_string_lossy(), String::from("*"));
 }
 
 #[test]
 fn test_fmt() {
-    let token = new_token();
+    let mut mem = vec![0; 1000];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+    let token = new_token(&blob);
     assert_eq!(format!("{:?}", token), "[tINTEGER, \"*\", 1...2]");
 }

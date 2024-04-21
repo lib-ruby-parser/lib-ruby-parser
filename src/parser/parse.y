@@ -10,7 +10,7 @@
 
 %code parser_fields {
     result: Option<Box<Node>>,
-    builder: Builder,
+    builder: Builder<'b /*'*/>,
     current_arg_stack: CurrentArgStack,
     /// Stack of sets of variables in current scopes.
     /// Each stack item represents locals in the scope.
@@ -43,12 +43,9 @@
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
-    tokens: Vec<Token>,
+    tokens: Vec<Token<'b /*'*/>>,
     diagnostics: Diagnostics,
     record_tokens: bool,
-
-    #[allow(dead_code)]
-    tokens_pool: Pool<Token>,
 
     blob: &'b /*'*/ Blob<'b> /*'*/,
     input: &'b /*'*/ [u8],
@@ -56,7 +53,6 @@
 
 %code use {
 
-use alloc_from_pool::{Pool, PoolValue};
 use crate::{ParserOptions, ParserResult};
 use crate::Token;
 use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
@@ -1093,12 +1089,10 @@ use lib_ruby_parser_ast_arena::Blob;
                         self.current_arg_stack.push(None);
 
                         $$ = Value::TokenWithContext(
-                            Box::new(
-                                TokenWithContext {
-                                    token: $<Token>1,
-                                    ctx: self.context.dump()
-                                }
-                            )
+                            TokenWithContext {
+                                token: $<Token>1,
+                                ctx: self.context.dump()
+                            }
                         );
 
                         self.context.set_in_def(true);
@@ -3514,12 +3508,10 @@ use lib_ruby_parser_ast_arena::Blob;
          k_class: kCLASS
                     {
                         $$ = Value::TokenWithContext(
-                            Box::new(
-                                TokenWithContext {
-                                    token: $<Token>1,
-                                    ctx: self.context.dump(),
-                                }
-                            )
+                            TokenWithContext {
+                                token: $<Token>1,
+                                ctx: self.context.dump(),
+                            }
                         );
                     }
                 ;
@@ -3527,12 +3519,10 @@ use lib_ruby_parser_ast_arena::Blob;
         k_module: kMODULE
                     {
                         $$ = Value::TokenWithContext(
-                            Box::new(
-                                TokenWithContext {
-                                    token: $<Token>1,
-                                    ctx: self.context.dump(),
-                                }
-                            )
+                            TokenWithContext {
+                                token: $<Token>1,
+                                ctx: self.context.dump(),
+                            }
                         );
                     }
                 ;
@@ -6917,13 +6907,11 @@ impl<'b> Parser<'b> {
         let pattern_hash_keys = VariablesStack::new();
         let static_env = StaticEnvironment::new();
         let diagnostics = Diagnostics::new();
-        let tokens_pool = Pool::new();
 
         let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
         lexer.context = context.clone();
         lexer.static_env = static_env.clone();
         lexer.diagnostics = diagnostics.clone();
-        lexer.tokens_factory = tokens_pool.factory();
 
         let builder = Builder::new(
             static_env.clone(),
@@ -6933,7 +6921,7 @@ impl<'b> Parser<'b> {
             pattern_variables.clone(),
             pattern_hash_keys.clone(),
             diagnostics.clone(),
-            tokens_pool.factory(),
+            blob,
         );
 
         let last_token_type = 0;
@@ -6956,7 +6944,6 @@ impl<'b> Parser<'b> {
             diagnostics,
             yylexer: lexer,
             record_tokens,
-            tokens_pool,
             blob,
             input,
         }
@@ -7007,11 +6994,11 @@ impl<'b> Parser<'b> {
         self.diagnostics.emit(diagnostic);
     }
 
-    fn yylex(&mut self) -> PoolValue<Token> {
+    fn yylex(&mut self) -> &'b /*'*/ mut Token<'b /*'*/> {
         self.yylexer.yylex()
     }
 
-    fn next_token(&mut self) -> PoolValue<Token> {
+    fn next_token(&mut self) -> &'b /*'*/ mut Token<'b /*'*/> {
         let token = self.yylex();
 
         self.last_token_type = token.token_type;
