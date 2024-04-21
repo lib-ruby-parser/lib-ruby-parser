@@ -7,7 +7,7 @@ pub(crate) fn parse(input: InputFile, drop_tokens: bool) -> ParserResult {
         record_tokens: !drop_tokens,
         ..Default::default()
     };
-    let mut mem = [0; 100];
+    let mut mem = [0; 1000];
     let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
-    Parser::new(input.code, options, &blob).do_parse()
+    Parser::new(&input.code, options, &blob).do_parse()
 }

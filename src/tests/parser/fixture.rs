@@ -171,7 +171,7 @@ pub(crate) fn test_file(fixture_path: &str) {
         record_tokens: false,
         ..Default::default()
     };
-    let mut mem = [0; 100];
+    let mut mem = [0; 1000];
     let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
     let parser = Parser::new(fixture.input.as_bytes(), options, &blob);
 

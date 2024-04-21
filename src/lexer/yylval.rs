@@ -15,7 +15,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
             self.buffer.ptok,
             self.buffer.pcur
         );
-        self.lval = Some(value.bytes.clone());
+        self.lval = Some(Bytes::new(value.bytes.to_raw()));
     }
 
     pub(crate) fn set_yylval_num(&mut self, flags: String) {
@@ -25,11 +25,11 @@ impl<'b, 'i> Lexer<'b, 'i> {
 
     pub(crate) fn set_yylval_str(&mut self, value: &TokenBuf) {
         println_if_debug_lexer!("set_yylval_str {:#?}", value);
-        self.lval = Some(value.bytes.clone());
+        self.lval = Some(Bytes::new(value.bytes.to_raw()));
     }
 
     pub(crate) fn set_yylval_name(&mut self) {
         println_if_debug_lexer!("set_yyval_name({:#?})", self.tokenbuf);
-        self.lval = Some(self.tokenbuf.bytes.clone());
+        self.lval = Some(Bytes::new(self.tokenbuf.bytes.to_raw()));
     }
 }

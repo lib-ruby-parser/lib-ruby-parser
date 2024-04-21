@@ -51,7 +51,9 @@ impl<'b, 'i> Lexer<'b, 'i> {
                 if let Some(heredoc_end) = quote.heredoc_end {
                     self.lval_start = Some(heredoc_end.start);
                     self.lval_end = Some(heredoc_end.end);
-                    self.set_yylval_str(&TokenBuf::new(&heredoc_end.value));
+                    let mut token_buf = TokenBuf::empty(self.blob);
+                    token_buf.append_borrowed(&heredoc_end.value);
+                    self.set_yylval_str(&token_buf);
                 }
                 return Self::tSTRING_END;
             }
@@ -174,9 +176,8 @@ impl<'b, 'i> Lexer<'b, 'i> {
                 DiagnosticMessage::UnknownRegexOptions {
                     options: self
                         .tokenbuf
-                        .borrow_string()
-                        .expect("expected buffer to have only utf-8 chars")
-                        .to_string(),
+                        .as_string()
+                        .expect("expected buffer to have only utf-8 chars"),
                 },
                 self.current_loc(),
             );
@@ -431,7 +432,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
             .buffer
             .substr_at(self.buffer.pcur - n, self.buffer.pcur)
             .unwrap_or_else(|| panic!("no substr {}..{}", self.buffer.pcur - n, self.buffer.pcur));
-        self.tokenbuf.append(substr);
+        self.tokenbuf.append_borrowed(substr);
     }
 
     fn tokaddmbc(&mut self, codepoint: usize) {

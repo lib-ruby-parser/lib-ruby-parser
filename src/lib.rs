@@ -5,7 +5,7 @@
 #![warn(deprecated_in_future)]
 #![warn(unused_lifetimes)]
 #![allow(clippy::boxed_local)]
-#![forbid(unsafe_code)]
+// #![forbid(unsafe_code)]
 #![doc = include_str!("../README.md")]
 
 /*!

@@ -16,6 +16,6 @@ impl TokAdd<MaybeByte> for Lexer<'_, '_> {
 
 impl TokAdd<u8> for Lexer<'_, '_> {
     fn tokadd(&mut self, c: u8) {
-        self.tokenbuf.push(c)
+        self.tokenbuf.append_invalid_escaped(c)
     }
 }

@@ -42,7 +42,7 @@ pub struct Lexer<'b, 'i> {
     /// exposed for internal testing
     pub cmdarg: StackState,
 
-    pub(crate) tokenbuf: TokenBuf,
+    pub(crate) tokenbuf: TokenBuf<'b, 'i>,
 
     // pub(crate) max_numparam: usize,
     pub(crate) context: SharedContext,
@@ -83,7 +83,7 @@ pub struct Lexer<'b, 'i> {
 
     #[doc(hidden)]
     pub tokens_factory: PoolFactory<Token>,
-    blob: &'b Blob<'b>,
+    pub(crate) blob: &'b Blob<'b>,
     _marker: core::marker::PhantomData<&'i ()>,
 }
 
@@ -95,16 +95,12 @@ impl<'b, 'i> Lexer<'b, 'i> {
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
     /// Constructs an instance of Lexer
-    pub fn new<Bytes, Name>(
-        bytes: Bytes,
-        name: Name,
+    pub fn new(
+        bytes: &'i [u8],
+        name: impl Into<String>,
         decoder: Option<Decoder>,
         blob: &'b Blob<'b>,
-    ) -> Self
-    where
-        Bytes: Into<Vec<u8>>,
-        Name: Into<String>,
-    {
+    ) -> Self {
         Self {
             cond: StackState::new("cond"),
             cmdarg: StackState::new("cmdarg"),
@@ -117,7 +113,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
             lex_state: LexState::default(),
             paren_nest: 0,
             brace_nest: 0,
-            tokenbuf: TokenBuf::default(),
+            tokenbuf: TokenBuf::empty(blob),
             context: SharedContext::default(),
             command_start: false,
             token_seen: false,
@@ -1245,7 +1241,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
     pub(crate) fn newtok(&mut self) {
         self.buffer.tokidx = 0;
         self.buffer.tokline = self.buffer.ruby_sourceline;
-        self.tokenbuf = TokenBuf::default();
+        self.tokenbuf.clear();
     }
 
     pub(crate) fn literal_flush(&mut self, ptok: usize) {

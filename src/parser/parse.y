@@ -51,6 +51,7 @@
     tokens_pool: Pool<Token>,
 
     blob: &'b /*'*/ Blob<'b> /*'*/,
+    input: &'i /*'*/ [u8],
 }
 
 %code use {
@@ -6901,10 +6902,7 @@ impl<'b, 'i> Parser<'b, 'i> {
     /// Constructs a parser with given `input` and `options`.
     ///
     /// Returns an error if given `input` is invalid.
-    pub fn new<TInput>(input: TInput, options: ParserOptions, blob: &'b Blob<'b /*'*/>) -> Self
-    where
-        TInput: Into<Vec<u8>>
-    {
+    pub fn new(input: &'i /*'*/ [u8], options: ParserOptions, blob: &'b Blob<'b /*'*/>) -> Self {
         let ParserOptions {
             buffer_name,
             decoder,
@@ -6920,7 +6918,6 @@ impl<'b, 'i> Parser<'b, 'i> {
         let diagnostics = Diagnostics::new();
         let tokens_pool = Pool::new();
 
-        let input: Vec<u8> = input.into();
         let buffer_name: String = buffer_name;
 
         let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
@@ -6962,6 +6959,7 @@ impl<'b, 'i> Parser<'b, 'i> {
             record_tokens,
             tokens_pool,
             blob,
+            input,
         }
     }
 

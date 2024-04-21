@@ -28,7 +28,7 @@ fn parse(input: &[u8]) -> ParserResult {
         record_tokens: false,
         ..Default::default()
     };
-    let mut mem = [0; 100];
+    let mut mem = [0; 1000];
     let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
     let parser = Parser::new(input, options, &blob);
     parser.do_parse()

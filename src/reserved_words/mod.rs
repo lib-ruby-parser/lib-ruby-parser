@@ -6,10 +6,11 @@ pub(crate) use list::RESERVED_WORDS;
 /// Returns a `ReservedWord` for a given string slice.
 ///
 /// Returns `None` if given word is not a reserved word in Ruby.
-pub fn reserved_word(tok: &[u8]) -> Option<&'static ReservedWord> {
+pub fn reserved_word(tok: Option<String>) -> Option<&'static ReservedWord> {
+    let tok = tok?;
     let bucket = RESERVED_WORDS.get(tok.len())?;
     let idx = bucket
-        .binary_search_by(|e| e.name.as_bytes().cmp(tok))
+        .binary_search_by(|e| e.name.as_bytes().cmp(tok.as_bytes()))
         .ok()?;
 
     Some(&bucket[idx])

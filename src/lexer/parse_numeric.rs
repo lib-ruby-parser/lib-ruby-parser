@@ -67,7 +67,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
                 }
                 suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.take();
-                tok.prepend(b"0");
+                tok.prepend_valid_escaped('0');
                 return self.set_integer_literal(&mut tok, suffix);
             }
             if c == b'b' || c == b'B' {
@@ -109,7 +109,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
                 }
                 suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.take();
-                tok.prepend(b"0");
+                tok.prepend_valid_escaped('0');
                 return self.set_integer_literal(&mut tok, suffix);
             }
             if c == b'd' || c == b'D' {
@@ -151,7 +151,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
                 }
                 suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
                 let mut tok = self.tokenbuf.take();
-                tok.prepend(b"0");
+                tok.prepend_valid_escaped('0');
                 return self.set_integer_literal(&mut tok, suffix);
             }
             if c == b'_' {
@@ -185,7 +185,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
                 suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
 
                 let mut tok = self.tokenbuf.take();
-                tok.push(b'0');
+                tok.append_valid_escaped('0');
                 return self.set_integer_literal(&mut tok, suffix);
             }
         }
@@ -304,7 +304,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
             }
             let suffix = self.number_literal_suffix(NUM_SUFFIX_ALL);
             let mut tok = self.tokenbuf.take();
-            tok.prepend(b"0");
+            tok.prepend_valid_escaped('0');
             return Some(self.set_integer_literal(&mut tok, suffix));
         }
         if let Some(MaybeByte::Some(byte)) = nondigit {
@@ -349,7 +349,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
                 self.number_literal_suffix(if seen_e { NUM_SUFFIX_I } else { NUM_SUFFIX_ALL });
             let mut tokenbuf = if (suffix & NUM_SUFFIX_R) != 0 {
                 let mut value = self.tokenbuf.take();
-                value.push(b'r');
+                value.append_valid_escaped('r');
                 token_type = Self::tRATIONAL;
                 value
             } else {
@@ -366,7 +366,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
     fn set_number_literal(&mut self, value: &mut TokenBuf, token_type: i32, suffix: i8) -> i32 {
         let mut token_type = token_type;
         if suffix & NUM_SUFFIX_I != 0 {
-            value.push(b'i');
+            value.append_valid_escaped('i');
             token_type = Self::tIMAGINARY;
         }
         self.set_yylval_literal(value);
@@ -379,7 +379,9 @@ impl<'b, 'i> Lexer<'b, 'i> {
         if self.buffer.peek(b'_') {
             self.nextc();
         }
-        self.set_integer_literal(&mut TokenBuf::new(b"0"), 0)
+        let mut token_buf = TokenBuf::empty(self.blob);
+        token_buf.append_valid_escaped('0');
+        self.set_integer_literal(&mut token_buf, 0)
     }
 
     fn number_literal_suffix(&mut self, mask: i8) -> i8 {
@@ -421,7 +423,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
     fn set_integer_literal(&mut self, value: &mut TokenBuf, suffix: i8) -> i32 {
         let mut token_type = Self::tINTEGER;
         if suffix & NUM_SUFFIX_R != 0 {
-            value.push(b'r');
+            value.append_valid_escaped('r');
             token_type = Self::tRATIONAL;
         }
         self.set_number_literal(value, token_type, suffix)

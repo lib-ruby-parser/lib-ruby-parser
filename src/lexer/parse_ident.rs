@@ -22,7 +22,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
 
     pub(crate) fn tokenize_ident(&mut self) -> Option<String> {
         self.set_yylval_name();
-        self.tokenbuf.borrow_string().map(|s| s.to_string()).ok()
+        self.tokenbuf.as_string()
     }
 
     pub(crate) fn parse_ident(&mut self, mut c: MaybeByte, cmd_state: bool) -> i32 {
@@ -65,7 +65,7 @@ impl<'b, 'i> Lexer<'b, 'i> {
             return Self::tLABEL;
         }
         if !self.lex_state.is_some(EXPR_DOT) {
-            if let Some(kw) = reserved_word(self.tokenbuf.bytes.as_raw()) {
+            if let Some(kw) = reserved_word(self.tokenbuf.as_string()) {
                 let state = self.lex_state;
                 if state.is_some(EXPR_FNAME) {
                     self.lex_state.set(EXPR_ENDFN);

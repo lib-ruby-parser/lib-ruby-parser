@@ -1,49 +1,72 @@
-use crate::Bytes;
+// use crate::Bytes;
+use lib_ruby_parser_ast_arena::{Blob, Bytes};
 
-#[derive(Debug, Default)]
-pub(crate) struct TokenBuf {
-    pub(crate) bytes: Bytes,
+#[derive(Debug)]
+pub(crate) struct TokenBuf<'b, 'i> {
+    pub(crate) bytes: &'b mut Bytes<'b, 'i>,
+    blob: &'b Blob<'b>,
 }
 
-impl TokenBuf {
-    pub(crate) fn new(bytes: &[u8]) -> Self {
+impl<'b, 'i> TokenBuf<'b, 'i> {
+    pub(crate) fn empty(blob: &'b Blob<'b>) -> Self {
         Self {
-            bytes: Bytes::new(Vec::from(bytes)),
+            bytes: unsafe { blob.alloc().as_mut() },
+            blob,
         }
     }
 
+    #[allow(mutable_transmutes)]
     pub(crate) fn take(&mut self) -> Self {
-        std::mem::take(self)
+        let result = Self {
+            bytes: unsafe { core::mem::transmute(&*self.bytes) },
+            blob: self.blob,
+        };
+        self.clear();
+        result
     }
 
-    pub(crate) fn push(&mut self, byte: u8) {
-        self.bytes.push(byte);
+    pub(crate) fn append_valid_escaped(&mut self, c: char) {
+        self.bytes.append_valid_escaped(c, self.blob);
     }
 
-    pub(crate) fn append(&mut self, bytes: &[u8]) {
-        for byte in bytes {
-            self.push(*byte)
-        }
+    pub(crate) fn append_invalid_escaped(&mut self, b: u8) {
+        self.bytes.append_invalid_escaped(b, self.blob);
     }
 
-    pub(crate) fn prepend(&mut self, part: &[u8]) {
-        let mut tmp = part.to_vec();
-        tmp.extend(self.bytes.as_raw().iter());
-        self.bytes.set_raw(tmp);
+    pub(crate) fn append_borrowed(&mut self, bytes: &[u8]) {
+        let s: &'static str = unsafe { core::mem::transmute(core::str::from_utf8(bytes).unwrap()) };
+        self.bytes.append_borrowed(s, self.blob);
     }
 
-    pub(crate) fn borrow_string(&self) -> Result<&str, &[u8]> {
-        match std::str::from_utf8(self.bytes.as_raw()) {
-            Ok(s) => Ok(s),
-            Err(_) => Err(self.bytes.as_raw()),
-        }
+    pub(crate) fn prepend_valid_escaped(&mut self, c: char) {
+        self.bytes.prepend_valid_escaped(c, self.blob);
     }
+
+    pub(crate) fn prepend_invalid_escaped(&mut self, b: u8) {
+        self.bytes.prepend_invalid_escaped(b, self.blob);
+    }
+
+    pub(crate) fn prepend_borrowed(&mut self, bytes: &[u8]) {
+        let s: &'static str = unsafe { core::mem::transmute(core::str::from_utf8(bytes).unwrap()) };
+        self.bytes.prepend_borrowed(s, self.blob);
+    }
+
+    pub(crate) fn as_string(&self) -> Option<String> {
+        self.bytes.try_to_string().ok()
+    }
+
+    // pub(crate) fn borrow_string(&self) -> Result<&str, &[u8]> {
+    //     match std::str::from_utf8(self.bytes.as_raw()) {
+    //         Ok(s) => Ok(s),
+    //         Err(_) => Err(self.bytes.as_raw()),
+    //     }
+    // }
 
     pub(crate) fn len(&self) -> usize {
         self.bytes.len()
     }
 
     pub(crate) fn clear(&mut self) {
-        self.bytes.clear()
+        self.bytes = unsafe { self.blob.alloc().as_mut() };
     }
 }
