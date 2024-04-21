@@ -3,7 +3,7 @@ use crate::source::buffer::*;
 use crate::DiagnosticMessage;
 use crate::{lex_states::*, LexState};
 
-impl Lexer {
+impl<'b, 'i> Lexer<'b, 'i> {
     pub(crate) fn parse_atmark(&mut self, last_state: LexState) -> i32 {
         let ptr = self.buffer.pcur;
         let mut result: i32 = Self::tIVAR;

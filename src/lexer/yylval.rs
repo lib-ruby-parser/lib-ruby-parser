@@ -2,7 +2,7 @@ use crate::lexer::*;
 use crate::Bytes;
 use crate::TokenBuf;
 
-impl Lexer {
+impl<'b, 'i> Lexer<'b, 'i> {
     pub(crate) fn set_yylval_id(&mut self, id: &str) {
         println_if_debug_lexer!("set_yylval_id({})", id);
         self.lval = Some(Bytes::new(Vec::from(id)));

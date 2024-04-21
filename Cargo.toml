@@ -46,6 +46,7 @@ bin-parse = ["lexopt", "pprof", "glob"]
 alloc-from-pool = { version = "1.0.5" }
 onig = { version = "6", optional = true }
 lib-ruby-parser-ast = { version = "0.55.0" }
+lib-ruby-parser-ast-arena = { version = "0.55.0", path = "../ast", package = "lib-ruby-parser-ast" }
 
 # Used for src/bin/*.rs executables
 lexopt = { optional = true, version = "0.3.0" }
@@ -55,7 +56,7 @@ jemallocator = { optional = true, version = "0.5" }
 pprof = { optional = true, version = "0.12", features = ["flamegraph"] }
 
 [build-dependencies]
-rust-bison-skeleton = { version = "0.41.0", optional = true }
+rust-bison-skeleton = { version = "0.41.0", optional = true, path = "../rust-bison-skeleton/rust-bison-skeleton" }
 
 [profile.dev]
 debug-assertions = false

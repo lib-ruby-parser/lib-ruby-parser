@@ -3,6 +3,7 @@
 %define api.parser.struct { Parser }
 %define api.value.type { Value }
 %define api.parser.check_debug { self.is_debug() }
+%define api.parser.generic {<'b, 'i>}
 
 %define parse.error custom
 %define parse.trace
@@ -54,7 +55,7 @@
 
 use alloc_from_pool::{Pool, PoolValue};
 use crate::{ParserOptions, ParserResult};
-use crate::{Token};
+use crate::Token;
 use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
 use crate::lex_states::*;
 use crate::{SharedContext as ParserContext, context::Context};
@@ -6893,7 +6894,7 @@ f_opt_paren_args: f_paren_args
 
 %%
 
-impl Parser {
+impl<'b, 'i> Parser<'b, 'i> {
     /// Constructs a parser with given `input` and `options`.
     ///
     /// Returns an error if given `input` is invalid.

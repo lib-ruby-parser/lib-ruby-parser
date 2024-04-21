@@ -11,7 +11,7 @@ use crate::{lexer::*, str_term::StringLiteral};
 const ESCAPE_CONTROL: usize = 1;
 const ESCAPE_META: usize = 2;
 
-impl Lexer {
+impl<'b, 'i> Lexer<'b, 'i> {
     fn take_strterm(&mut self) -> StringLiteral {
         match self.strterm.take().map(|v| *v) {
             Some(StrTerm::StringLiteral(s)) => s,

@@ -12,7 +12,7 @@ fn is_var_name(ident: &str) -> bool {
     false
 }
 
-impl Lexer {
+impl<'b, 'i> Lexer<'b, 'i> {
     pub(crate) fn is_identchar(&self) -> bool {
         !self.buffer.eofp
             && self

@@ -5,7 +5,7 @@ use crate::str_term::str_types::*;
 use crate::DiagnosticMessage;
 use crate::{lex_states::*, LexState};
 
-impl Lexer {
+impl<'b, 'i> Lexer<'b, 'i> {
     fn percent_unknown(&mut self, term: MaybeByte) -> i32 {
         self.buffer.pushback(term);
         let len = self.multibyte_char_len(self.buffer.pcur);

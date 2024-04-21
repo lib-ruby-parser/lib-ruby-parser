@@ -5,7 +5,7 @@ pub(crate) trait TokAdd<T> {
     fn tokadd(&mut self, c: T);
 }
 
-impl TokAdd<MaybeByte> for Lexer {
+impl TokAdd<MaybeByte> for Lexer<'_, '_> {
     fn tokadd(&mut self, c: MaybeByte) {
         match c {
             MaybeByte::Some(c) => self.tokadd(c),
@@ -14,7 +14,7 @@ impl TokAdd<MaybeByte> for Lexer {
     }
 }
 
-impl TokAdd<u8> for Lexer {
+impl TokAdd<u8> for Lexer<'_, '_> {
     fn tokadd(&mut self, c: u8) {
         self.tokenbuf.push(c)
     }

@@ -47,9 +47,3 @@ impl TokenBuf {
         self.bytes.clear()
     }
 }
-
-impl PartialEq<str> for TokenBuf {
-    fn eq(&self, other: &str) -> bool {
-        self.bytes.as_raw() == other.as_bytes()
-    }
-}

@@ -20,7 +20,7 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 /// A struct responsible for converting a given input
 /// into a sequence of tokens
 #[derive(Debug, Default)]
-pub struct Lexer {
+pub struct Lexer<'b, 'i> {
     pub(crate) buffer: Buffer,
 
     pub(crate) lval: Option<Bytes>,
@@ -82,9 +82,10 @@ pub struct Lexer {
 
     #[doc(hidden)]
     pub tokens_factory: PoolFactory<Token>,
+    _marker: core::marker::PhantomData<&'b &'i ()>,
 }
 
-impl Lexer {
+impl<'b, 'i> Lexer<'b, 'i> {
     pub(crate) const NULL_CHAR: u8 = 0x00;
     pub(crate) const CTRL_D_CHAR: u8 = 0x04;
     pub(crate) const CTRL_Z_CHAR: u8 = 0x1a;

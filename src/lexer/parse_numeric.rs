@@ -9,7 +9,7 @@ const NUM_SUFFIX_R: i8 = 1 << 0;
 const NUM_SUFFIX_I: i8 = 1 << 1;
 const NUM_SUFFIX_ALL: i8 = 3;
 
-impl Lexer {
+impl<'b, 'i> Lexer<'b, 'i> {
     pub(crate) fn parse_numeric(&mut self, prefix: u8) -> i32 {
         let mut c = MaybeByte::new(prefix);
 

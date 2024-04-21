@@ -4,7 +4,7 @@ use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::DiagnosticMessage;
 
-impl Lexer {
+impl<'b, 'i> Lexer<'b, 'i> {
     fn parse_qmark_ternary(&mut self, c: MaybeByte) -> Result<i32, ()> {
         self.buffer.pushback(c);
         self.lex_state.set(EXPR_VALUE);
