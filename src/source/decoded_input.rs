@@ -1,9 +1,11 @@
+use lib_ruby_parser_ast_arena::Blob;
+
 use crate::source::SourceLine;
 
 /// Decoded input
-#[derive(Debug, Default)]
+#[derive(Debug)]
 #[repr(C)]
-pub struct DecodedInput {
+pub struct DecodedInput<'b> {
     /// Name of the input
     pub name: String,
 
@@ -11,29 +13,26 @@ pub struct DecodedInput {
     pub lines: Vec<SourceLine>,
 
     /// Decoded bytes
-    pub bytes: Vec<u8>,
+    pub bytes: &'b [u8],
+
+    pub(crate) blob: &'b Blob<'b>,
 }
 
-impl DecodedInput {
+impl<'b> DecodedInput<'b> {
     /// Constructs empty DecodedInput with given name
-    pub fn named(name: impl Into<String>) -> Self {
-        Self {
+    pub fn new(name: impl Into<String>, bytes: &'b [u8], blob: &'b Blob<'b>) -> Self {
+        let mut this = Self {
             name: name.into(),
-            ..Default::default()
-        }
-    }
-
-    /// Converts itself into owned vector of bytes
-    pub fn into_bytes(self) -> Vec<u8> {
-        self.bytes
-    }
-
-    pub(crate) fn take_bytes(&mut self) -> Vec<u8> {
-        std::mem::take(&mut self.bytes)
+            lines: vec![],
+            bytes: b"",
+            blob,
+        };
+        this.set_bytes(bytes);
+        this
     }
 
     /// Populates `Input` with a given byte array
-    pub fn update_bytes(&mut self, bytes: Vec<u8>) {
+    pub(crate) fn set_bytes(&mut self, bytes: &'b [u8]) {
         let mut line = SourceLine {
             start: 0,
             end: 0,
@@ -86,7 +85,7 @@ impl DecodedInput {
         &self.lines[idx]
     }
 
-    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&[u8]> {
+    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&'b [u8]> {
         if start <= end && end <= self.bytes.len() {
             Some(&self.bytes[start..end])
         } else {
@@ -96,10 +95,5 @@ impl DecodedInput {
 
     pub(crate) fn len(&self) -> usize {
         self.bytes.len()
-    }
-
-    /// Returns raw bytes after decoding
-    pub fn as_shared_bytes(&self) -> &[u8] {
-        self.bytes.as_slice()
     }
 }

@@ -22,7 +22,7 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 /// into a sequence of tokens
 #[derive(Debug)]
 pub struct Lexer<'b> {
-    pub(crate) buffer: Buffer,
+    pub(crate) buffer: Buffer<'b>,
 
     pub(crate) lval: Option<Bytes>,
     pub(crate) lval_start: Option<usize>,
@@ -97,14 +97,14 @@ impl<'b> Lexer<'b> {
     pub fn new(
         bytes: &'b [u8],
         name: impl Into<String>,
-        decoder: Option<Decoder>,
+        decoder: Option<Decoder<'b>>,
         blob: &'b Blob<'b>,
     ) -> Self {
         Self {
             cond: StackState::new("cond"),
             cmdarg: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
-            buffer: Buffer::new(name.into(), bytes.into(), decoder),
+            buffer: Buffer::new(name.into(), bytes, decoder, blob),
             lval: None,
             lval_start: None,
             lval_end: None,

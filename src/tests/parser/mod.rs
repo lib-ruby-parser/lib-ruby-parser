@@ -1,5 +1,6 @@
 mod fixture;
 pub(crate) use fixture::test_file;
+use lib_ruby_parser_ast_arena::Blob;
 
 #[allow(non_snake_case)]
 mod gen;
@@ -22,23 +23,25 @@ macro_rules! fixture_file {
 }
 pub(crate) use fixture_file;
 
-fn parse(input: &[u8]) -> (ParserResult, Vec<usize>) {
+fn parse<'b>(input: &[u8], blob: &'b Blob<'b>) -> ParserResult<'b> {
     let options = ParserOptions {
         buffer_name: "(eval)".into(),
         record_tokens: false,
         ..Default::default()
     };
-    let mut mem = vec![0; 1000];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+    let input = blob.push_bytes(input);
     let parser = Parser::new(input, options, &blob);
     let result = parser.do_parse();
-    (result, mem)
+    result
 }
 
 #[test]
 fn test_magic_comment() {
     let fixture = std::fs::read("src/tests/fixtures/magic_comments.rb").unwrap();
-    let (ParserResult { magic_comments, .. }, mem) = parse(&fixture);
+    let mut mem = vec![0; 1000];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+
+    let ParserResult { magic_comments, .. } = parse(&fixture, &blob);
     assert_eq!(
         magic_comments,
         vec![
@@ -75,6 +78,4 @@ fn test_magic_comment() {
             },
         ]
     );
-
-    drop(mem);
 }

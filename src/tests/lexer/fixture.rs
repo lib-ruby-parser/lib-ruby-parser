@@ -132,6 +132,4 @@ pub(crate) fn test_file(fixture_path: &str) {
         "actual:\n{}\nexpected:\n{}\n",
         tokens, fixture.tokens
     );
-
-    drop(mem)
 }

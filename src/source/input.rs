@@ -1,27 +1,35 @@
+use lib_ruby_parser_ast_arena::Blob;
+
 use crate::source::Decoder;
 use crate::source::SourceLine;
 use crate::source::{decode_input, DecodedInput, InputError};
 
 /// Representation of the source code.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 #[repr(C)]
-pub struct Input {
-    pub(crate) decoded: DecodedInput,
-    decoder: Option<Decoder>,
+pub struct Input<'b> {
+    pub(crate) decoded: DecodedInput<'b>,
+    decoder: Option<Decoder<'b>>,
+    blob: &'b Blob<'b>,
 }
 
-impl Input {
+impl<'b> Input<'b> {
     /// Constructs a new input
-    pub fn new(name: impl Into<String>, decoder: Option<Decoder>) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        bytes: &'b [u8],
+        decoder: Option<Decoder<'b>>,
+        blob: &'b Blob<'b>,
+    ) -> Self {
         Self {
-            decoded: DecodedInput::named(name),
+            decoded: DecodedInput::new(name, bytes, blob),
             decoder,
+            blob,
         }
     }
 
-    /// Populates `Input` with a given byte array
-    pub fn update_bytes(&mut self, bytes: Vec<u8>) {
-        self.decoded.update_bytes(bytes)
+    pub(crate) fn set_bytes(&mut self, bytes: &'b [u8]) {
+        self.decoded.set_bytes(bytes)
     }
 
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
@@ -32,7 +40,7 @@ impl Input {
         self.decoded.bytes[idx]
     }
 
-    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&[u8]> {
+    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&'b [u8]> {
         self.decoded.substr_at(start, end)
     }
 
@@ -59,24 +67,15 @@ impl Input {
         self.decoded.lines.len()
     }
 
-    pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
-        let new_input = decode_input(
-            self.decoded.take_bytes(),
-            String::from(encoding),
-            &mut self.decoder,
-        )
-        .into_result()?;
-        self.update_bytes(new_input);
+    pub(crate) fn set_encoding(&mut self, encoding: &'b str) -> Result<(), InputError<'b>> {
+        let new_input = decode_input(self.decoded.bytes, encoding, &mut self.decoder, self.blob)
+            .into_result()?;
+        self.set_bytes(new_input);
         Ok(())
     }
 
     /// Returns raw bytes after decoding
-    pub fn as_shared_bytes(&self) -> &[u8] {
-        self.decoded.as_shared_bytes()
-    }
-
-    /// Converts itself into owned vector of bytes
-    pub fn into_bytes(self) -> Vec<u8> {
-        self.decoded.into_bytes()
+    pub fn as_shared_bytes(&self) -> &'b [u8] {
+        self.decoded.bytes
     }
 }

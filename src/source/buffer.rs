@@ -1,13 +1,15 @@
 use std::convert::TryFrom;
 
+use lib_ruby_parser_ast_arena::Blob;
+
 use crate::maybe_byte::*;
 use crate::source::input::Input;
 use crate::source::Decoder;
 use crate::source::InputError;
 
-#[derive(Debug, Default)]
-pub(crate) struct Buffer {
-    pub(crate) input: Input,
+#[derive(Debug)]
+pub(crate) struct Buffer<'b> {
+    pub(crate) input: Input<'b>,
 
     pub(crate) line_count: usize,
     pub(crate) prevline: Option<usize>, // index
@@ -45,18 +47,37 @@ macro_rules! println_if_debug_buffer {
     };
 }
 
-impl Buffer {
+impl<'b> Buffer<'b> {
     const CTRL_Z_CHAR: u8 = 0x1a;
     const CTRL_D_CHAR: u8 = 0x04;
 
-    pub(crate) fn new(name: String, bytes: Vec<u8>, decoder: Option<Decoder>) -> Self {
-        let mut input = Input::new(name, decoder);
-
-        input.update_bytes(bytes);
+    pub(crate) fn new(
+        name: String,
+        bytes: &'b [u8],
+        decoder: Option<Decoder<'b>>,
+        blob: &'b Blob<'b>,
+    ) -> Self {
+        let input = Input::new(name, bytes, decoder, blob);
 
         let mut this = Self {
             input,
-            ..Self::default()
+            line_count: 0,
+            prevline: None,
+            lastline: 0,
+            nextline: 0,
+            pbeg: 0,
+            pcur: 0,
+            pend: 0,
+            ptok: 0,
+            eofp: false,
+            cr_seen: false,
+            heredoc_end: 0,
+            heredoc_indent: 0,
+            heredoc_line_indent: 0,
+            tokidx: 0,
+            tokline: 0,
+            has_shebang: false,
+            ruby_sourceline: 0,
         };
 
         this.prepare();
@@ -218,7 +239,7 @@ impl Buffer {
         }
     }
 
-    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&[u8]> {
+    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&'b [u8]> {
         self.input.substr_at(start, end)
     }
 
@@ -322,7 +343,7 @@ impl Buffer {
         byte.is_ascii_alphanumeric() || byte == b'_' || !byte.is_ascii()
     }
 
-    pub(crate) fn set_encoding(&mut self, encoding: &str) -> Result<(), InputError> {
+    pub(crate) fn set_encoding(&mut self, encoding: &'b str) -> Result<(), InputError<'b>> {
         self.input.set_encoding(encoding)
     }
 }
@@ -331,7 +352,7 @@ pub(crate) trait Pushback<T> {
     fn pushback(&mut self, c: T);
 }
 
-impl Pushback<u8> for Buffer {
+impl Pushback<u8> for Buffer<'_> {
     fn pushback(&mut self, c: u8) {
         self.pcur -= 1;
         if self.pcur > self.pbeg
@@ -344,7 +365,7 @@ impl Pushback<u8> for Buffer {
     }
 }
 
-impl Pushback<Option<u8>> for Buffer {
+impl Pushback<Option<u8>> for Buffer<'_> {
     fn pushback(&mut self, c: Option<u8>) {
         if let Some(c) = c {
             self.pushback(c)
@@ -352,13 +373,13 @@ impl Pushback<Option<u8>> for Buffer {
     }
 }
 
-impl Pushback<MaybeByte> for Buffer {
+impl Pushback<MaybeByte> for Buffer<'_> {
     fn pushback(&mut self, c: MaybeByte) {
         self.pushback(c.as_option())
     }
 }
 
-impl Pushback<&mut MaybeByte> for Buffer {
+impl Pushback<&mut MaybeByte> for Buffer<'_> {
     fn pushback(&mut self, c: &mut MaybeByte) {
         self.pushback(c.as_option())
     }

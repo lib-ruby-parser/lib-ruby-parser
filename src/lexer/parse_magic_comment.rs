@@ -318,19 +318,21 @@ impl<'b> Lexer<'b> {
             for (name, kind) in MAGIC_COMMENTS.iter() {
                 if &name_to_compare == name {
                     if kind == &MagicCommentKind::Encoding && self.comment_at_top() {
-                        let encoding = match String::from_utf8(
-                            self.buffer
-                                .substr_at(vbeg, vend)
-                                .expect("bug: Can't be None")
-                                .to_vec(),
-                        ) {
+                        let encoding_bytes = self
+                            .buffer
+                            .substr_at(vbeg, vend)
+                            .expect("bug: Can't be None");
+                        let encoding = match core::str::from_utf8(encoding_bytes) {
                             Ok(encoding) => encoding,
                             Err(err) => {
                                 self.yyerror1(
                                     DiagnosticMessage::EncodingError {
                                         error: format!(
                                             "unknown encoding name: {}",
-                                            String::from_utf8_lossy(err.as_bytes())
+                                            core::str::from_utf8(
+                                                &encoding_bytes[..err.valid_up_to()]
+                                            )
+                                            .unwrap()
                                         ),
                                     },
                                     self.loc(vbeg, vend),

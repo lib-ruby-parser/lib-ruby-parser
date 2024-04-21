@@ -1,38 +1,40 @@
+use lib_ruby_parser_ast_arena::Blob;
+
 /// An enum with all possible kinds of errors that can be returned
 /// from a decoder
 #[derive(Debug, PartialEq, Eq, Clone)]
 #[repr(C)]
-pub enum InputError {
+pub enum InputError<'b> {
     /// Emitted when no custom decoder provided but input has custom encoding.
     ///
     /// You can return this error from your custom decoder if you don't support given encoding.
-    UnsupportedEncoding(String),
+    UnsupportedEncoding(&'b str),
 
     /// Generic error that can be emitted from a custom decoder
-    DecodingError(String),
+    DecodingError(&'b str),
 }
 
-impl std::fmt::Display for InputError {
+impl std::fmt::Display for InputError<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }
 
-impl std::error::Error for InputError {}
+impl std::error::Error for InputError<'_> {}
 
 /// Result that is returned from decoding function
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub enum DecoderResult {
+pub enum DecoderResult<'b> {
     /// Ok + decoded bytes
-    Ok(Vec<u8>),
+    Ok(&'b [u8]),
 
     /// Err + reason
-    Err(InputError),
+    Err(InputError<'b>),
 }
 
-impl DecoderResult {
-    pub(crate) fn into_result(self) -> Result<Vec<u8>, InputError> {
+impl<'b> DecoderResult<'b> {
+    pub(crate) fn into_result(self) -> Result<&'b [u8], InputError<'b>> {
         match self {
             Self::Ok(value) => Ok(value),
             Self::Err(err) => Err(err),
@@ -62,40 +64,51 @@ impl DecoderResult {
 /// Takes encoding name and initial input as arguments
 /// and returns `Ok(decoded)` vector of bytes or `Err(error)` that will be returned
 /// in the `ParserResult::diagnostics` vector.
-pub type DecoderFn = dyn Fn(String, Vec<u8>) -> DecoderResult;
+pub type DecoderFn<'b> = dyn Fn(&'b str, &'b [u8], &'b Blob<'b>) -> DecoderResult<'b>;
 
 /// Custom decoder, a wrapper around a function
-pub struct Decoder {
-    f: Box<DecoderFn>,
+pub struct Decoder<'b> {
+    f: Box<DecoderFn<'b>>,
 }
 
-impl Decoder {
+impl<'b> Decoder<'b> {
     /// Constructs a rewriter based on a given function
-    pub fn new(f: Box<DecoderFn>) -> Self {
+    pub fn new(f: Box<DecoderFn<'b>>) -> Self {
         Self { f }
     }
 
-    pub(crate) fn call(&self, encoding: String, input: Vec<u8>) -> DecoderResult {
-        let f = &*self.f;
-        f(encoding, input)
+    pub(crate) fn call(
+        &self,
+        encoding: &'b str,
+        input: &'b [u8],
+        blob: &'b Blob<'b>,
+    ) -> DecoderResult<'b> {
+        (self.f)(encoding, input, blob)
     }
 }
 
-impl std::fmt::Debug for Decoder {
+impl std::fmt::Debug for Decoder<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Decoder").finish()
     }
 }
 
-pub fn decode_input(input: Vec<u8>, enc: String, decoder: &mut Option<Decoder>) -> DecoderResult {
-    match enc.to_uppercase().as_str() {
-        "UTF-8" | "ASCII-8BIT" | "BINARY" => DecoderResult::Ok(input),
-        _ => {
-            if let Some(f) = decoder.as_mut() {
-                f.call(enc, input)
-            } else {
-                DecoderResult::Err(InputError::UnsupportedEncoding(enc))
-            }
-        }
+pub fn decode_input<'b>(
+    input: &'b [u8],
+    enc: &'b str,
+    decoder: &mut Option<Decoder<'b>>,
+    blob: &'b Blob<'b>,
+) -> DecoderResult<'b> {
+    if enc.eq_ignore_ascii_case("UTF-8")
+        || enc.eq_ignore_ascii_case("ASCII-8BIT")
+        || enc.eq_ignore_ascii_case("BINARY")
+    {
+        return DecoderResult::Ok(input);
+    }
+
+    if let Some(decoder) = decoder.as_mut() {
+        decoder.call(enc, input, blob)
+    } else {
+        DecoderResult::Err(InputError::UnsupportedEncoding(enc))
     }
 }

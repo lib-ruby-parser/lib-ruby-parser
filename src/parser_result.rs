@@ -7,7 +7,7 @@ use crate::Token;
 
 /// Combination of all data that `Parser` can give you
 #[repr(C)]
-pub struct ParserResult {
+pub struct ParserResult<'b> {
     /// Abstract Syntax Tree that was constructed from you code.
     /// Contains `None` if the code gives no AST nodes
     pub ast: Option<Box<Node>>,
@@ -35,10 +35,10 @@ pub struct ParserResult {
     ///
     /// Pass **this** data to `Loc::source`, otherwise you'll get
     /// incorrect source ranges.
-    pub input: DecodedInput,
+    pub input: DecodedInput<'b>,
 }
 
-impl std::fmt::Debug for ParserResult {
+impl std::fmt::Debug for ParserResult<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ParserResult")
             .field("ast", &self.ast)
@@ -52,6 +52,9 @@ impl std::fmt::Debug for ParserResult {
 
 #[test]
 fn test_fmt() {
+    let mut mem = [0; 0];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
+
     assert_eq!(
         format!(
             "{:?}",
@@ -61,7 +64,7 @@ fn test_fmt() {
                 diagnostics: vec![],
                 comments: vec![],
                 magic_comments: vec![],
-                input: DecodedInput::default()
+                input: DecodedInput::new("foo", b"", &blob)
             }
         ),
         // All fields except `input`

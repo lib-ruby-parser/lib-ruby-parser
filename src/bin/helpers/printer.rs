@@ -52,7 +52,7 @@ fn print_only_diagnostics(result: &ParserResult) {
 }
 
 fn print_compact_ast_with_locations(result: &ParserResult) {
-    let src = result.input.as_shared_bytes();
+    let src = result.input.bytes;
     let src = std::str::from_utf8(src).unwrap_or("invalid-source");
     println!("{}", src);
     print_only_diagnostics(result);

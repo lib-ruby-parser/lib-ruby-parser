@@ -3,7 +3,7 @@ use crate::source::Decoder;
 /// Configuration of the parser
 #[derive(Debug)]
 #[repr(C)]
-pub struct ParserOptions {
+pub struct ParserOptions<'b> {
     /// Name of the buffer. Used in all diagnostic messages
     pub buffer_name: String,
 
@@ -39,7 +39,7 @@ pub struct ParserOptions {
     ///     "decoded".to_string()
     /// )
     /// ```
-    pub decoder: Option<Decoder>,
+    pub decoder: Option<Decoder<'b>>,
 
     /// When set to true Parser records tokens.
     /// When set to false `ParserResult.tokens` is guaranteed to be empty.
@@ -49,7 +49,7 @@ pub struct ParserOptions {
 
 const DEFAULT_BUFFER_NAME: &str = "(eval)";
 
-impl Default for ParserOptions {
+impl Default for ParserOptions<'_> {
     fn default() -> Self {
         Self {
             buffer_name: DEFAULT_BUFFER_NAME.to_string(),

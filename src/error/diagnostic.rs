@@ -100,8 +100,9 @@ impl Diagnostics {
 #[test]
 fn test_renders() {
     let source = "line 1\nvery long line 2\n";
-    let mut input = crate::source::DecodedInput::named("(test_render)");
-    input.update_bytes(Vec::from(source));
+    let mut mem = vec![0; 1000];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+    let input = crate::source::DecodedInput::new("(test_render)", source.as_bytes(), &blob);
 
     let error = Diagnostic {
         level: ErrorLevel::Warning,

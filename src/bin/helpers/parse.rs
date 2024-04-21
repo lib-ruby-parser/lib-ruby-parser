@@ -1,12 +1,17 @@
 use super::InputFile;
 use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
+use lib_ruby_parser_ast_arena::Blob;
 
-pub(crate) fn parse(input: InputFile, mem: &mut [usize], drop_tokens: bool) -> ParserResult {
+pub(crate) fn parse<'b>(
+    file: InputFile,
+    blob: &'b Blob<'b>,
+    drop_tokens: bool,
+) -> ParserResult<'b> {
+    let code = blob.push_bytes(file.code.as_slice());
     let options = ParserOptions {
-        buffer_name: input.filepath,
+        buffer_name: file.filepath,
         record_tokens: !drop_tokens,
         ..Default::default()
     };
-    let blob = lib_ruby_parser_ast_arena::Blob::from(mem);
-    Parser::new(&input.code, options, &blob).do_parse()
+    Parser::new(code, options, &blob).do_parse()
 }

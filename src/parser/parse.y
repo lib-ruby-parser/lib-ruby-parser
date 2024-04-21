@@ -6902,7 +6902,7 @@ impl<'b> Parser<'b> {
     /// Constructs a parser with given `input` and `options`.
     ///
     /// Returns an error if given `input` is invalid.
-    pub fn new(input: &'b /*'*/ [u8], options: ParserOptions, blob: &'b Blob<'b /*'*/>) -> Self {
+    pub fn new(input: &'b /*'*/ [u8], options: ParserOptions<'b>, blob: &'b Blob<'b /*'*/>) -> Self {
         let ParserOptions {
             buffer_name,
             decoder,
@@ -6970,7 +6970,7 @@ impl<'b> Parser<'b> {
     /// 3. diagnostics
     /// 4. comments
     /// 5. magic comments
-    pub fn do_parse(mut self) -> ParserResult  {
+    pub fn do_parse(mut self) -> ParserResult<'b /*'*/> {
         self.parse();
 
         ParserResult {
@@ -6984,7 +6984,7 @@ impl<'b> Parser<'b> {
     }
 
     #[doc(hidden)]
-    pub fn do_parse_with_state_validation(mut self) -> ParserResult {
+    pub fn do_parse_with_state_validation(mut self) -> ParserResult<'b /*'*/> {
         self.parse();
 
         self.assert_state_is_final();
