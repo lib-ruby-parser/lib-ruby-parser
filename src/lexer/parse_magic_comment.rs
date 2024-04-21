@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use core::convert::TryInto;
 
 use crate::source::{MagicComment, MagicCommentKind};
 use crate::DiagnosticMessage;

@@ -1,5 +1,4 @@
-use std::convert::TryInto;
-use std::io::Write;
+use core::convert::TryInto;
 
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
@@ -325,8 +324,11 @@ impl<'b> Lexer<'b> {
                                     self.buffer.pushback(c);
                                     c = self.read_escape(0);
 
+                                    use core::fmt::Write;
+                                    use lib_ruby_parser_ast_arena::Writer;
                                     let mut escbuf = [0_u8; 5];
-                                    write!(&mut escbuf[..], "\\x{:X}", c.expect("bug")).unwrap();
+                                    let mut writer = Writer::new(&mut escbuf);
+                                    write!(&mut writer, "\\x{:X}", c.expect("bug")).unwrap();
                                     for byte in escbuf.iter().take(4) {
                                         self.tokadd(MaybeByte::Some(*byte));
                                     }
@@ -437,7 +439,7 @@ impl<'b> Lexer<'b> {
 
     fn tokaddmbc(&mut self, codepoint: usize) {
         let utf8_char =
-            std::char::from_u32(codepoint.try_into().expect("expected codepoint to be u32"))
+            core::char::from_u32(codepoint.try_into().expect("expected codepoint to be u32"))
                 .expect("expected codepoint to have digits");
         let utf8_bytes = utf8_char.to_string().into_bytes();
         for byte in utf8_bytes {

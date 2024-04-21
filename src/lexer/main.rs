@@ -151,8 +151,8 @@ impl<'b> Lexer<'b> {
 
         let token_type = self.parser_yylex();
 
-        let begin = std::mem::take(&mut self.lval_start).unwrap_or(self.buffer.ptok);
-        let mut end = std::mem::take(&mut self.lval_end).unwrap_or(self.buffer.pcur);
+        let begin = core::mem::take(&mut self.lval_start).unwrap_or(self.buffer.ptok);
+        let mut end = core::mem::take(&mut self.lval_end).unwrap_or(self.buffer.pcur);
 
         let mut token_value = self
             .lval
@@ -1280,7 +1280,7 @@ impl<'b> Lexer<'b> {
         };
 
         let bytes = self.buffer.substr_at(ptr, ptr + len)?;
-        std::str::from_utf8(bytes).ok()?;
+        core::str::from_utf8(bytes).ok()?;
         Some(len)
     }
 
