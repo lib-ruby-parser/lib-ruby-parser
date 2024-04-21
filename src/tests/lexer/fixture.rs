@@ -89,11 +89,15 @@ fn lex_state(state: &str) -> Result<i32, &'static str> {
 pub(crate) fn test_file(fixture_path: &str) {
     let fixture = Fixture::new(fixture_path);
 
+    let mut mem = [0; 100];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
+
     let pool = Pool::new();
     let mut lexer = Lexer::new(
         fixture.input.as_str(),
         format!("(test {})", fixture_path),
         None,
+        &blob,
     );
     lexer.tokens_factory = pool.factory();
     for var in fixture.vars {

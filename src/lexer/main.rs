@@ -1,4 +1,5 @@
 use alloc_from_pool::{Factory as PoolFactory, PoolValue};
+use lib_ruby_parser_ast_arena::Blob;
 
 use crate::lexer::*;
 use crate::maybe_byte::*;
@@ -19,7 +20,7 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 
 /// A struct responsible for converting a given input
 /// into a sequence of tokens
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Lexer<'b, 'i> {
     pub(crate) buffer: Buffer,
 
@@ -82,7 +83,8 @@ pub struct Lexer<'b, 'i> {
 
     #[doc(hidden)]
     pub tokens_factory: PoolFactory<Token>,
-    _marker: core::marker::PhantomData<&'b &'i ()>,
+    blob: &'b Blob<'b>,
+    _marker: core::marker::PhantomData<&'i ()>,
 }
 
 impl<'b, 'i> Lexer<'b, 'i> {
@@ -93,7 +95,12 @@ impl<'b, 'i> Lexer<'b, 'i> {
     pub(crate) const VTAB_CHAR: u8 = 0x0b;
 
     /// Constructs an instance of Lexer
-    pub fn new<Bytes, Name>(bytes: Bytes, name: Name, decoder: Option<Decoder>) -> Self
+    pub fn new<Bytes, Name>(
+        bytes: Bytes,
+        name: Name,
+        decoder: Option<Decoder>,
+        blob: &'b Blob<'b>,
+    ) -> Self
     where
         Bytes: Into<Vec<u8>>,
         Name: Into<String>,
@@ -103,7 +110,24 @@ impl<'b, 'i> Lexer<'b, 'i> {
             cmdarg: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
             buffer: Buffer::new(name.into(), bytes.into(), decoder),
-            ..Self::default()
+            lval: None,
+            lval_start: None,
+            lval_end: None,
+            strterm: None,
+            lex_state: LexState::default(),
+            paren_nest: 0,
+            brace_nest: 0,
+            tokenbuf: TokenBuf::default(),
+            context: SharedContext::default(),
+            command_start: false,
+            token_seen: false,
+            static_env: StaticEnvironment::default(),
+            diagnostics: Diagnostics::default(),
+            comments: vec![],
+            magic_comments: vec![],
+            tokens_factory: PoolFactory::default(),
+            blob,
+            _marker: core::marker::PhantomData,
         }
     }
 

@@ -6923,7 +6923,7 @@ impl<'b, 'i> Parser<'b, 'i> {
         let input: Vec<u8> = input.into();
         let buffer_name: String = buffer_name;
 
-        let mut lexer = Lexer::new(input, buffer_name, decoder);
+        let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
         lexer.context = context.clone();
         lexer.static_env = static_env.clone();
         lexer.diagnostics = diagnostics.clone();
