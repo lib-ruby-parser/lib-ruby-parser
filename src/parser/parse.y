@@ -810,7 +810,7 @@ use lib_ruby_parser_ast_arena::Blob;
                     {
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
                         let TokenWithContext { token: name_t, ctx } = name_t;
-                        self.validate_endless_method_name(&name_t)?;
+                        self.validate_endless_method_name(name_t)?;
 
                         $$ = Value::Node(
                             self.builder.def_endless_method(
@@ -830,7 +830,7 @@ use lib_ruby_parser_ast_arena::Blob;
                     {
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
                         let TokenWithContext { token: name_t, ctx } = name_t;
-                        self.validate_endless_method_name(&name_t)?;
+                        self.validate_endless_method_name(name_t)?;
 
                         let rescue_body = self.builder.rescue_body(
                             $<Token>5,
@@ -866,7 +866,7 @@ use lib_ruby_parser_ast_arena::Blob;
                     {
                         let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
                         let TokenWithContext { token: name_t, ctx } = name_t;
-                        self.validate_endless_method_name(&name_t)?;
+                        self.validate_endless_method_name(name_t)?;
 
                         $$ = Value::Node(
                             self.builder.def_endless_singleton(
@@ -888,7 +888,7 @@ use lib_ruby_parser_ast_arena::Blob;
                     {
                         let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
                         let TokenWithContext { token: name_t, ctx } = name_t;
-                        self.validate_endless_method_name(&name_t)?;
+                        self.validate_endless_method_name(name_t)?;
 
                         let rescue_body = self.builder.rescue_body(
                             $<Token>5,
@@ -2347,7 +2347,7 @@ use lib_ruby_parser_ast_arena::Blob;
                     {
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
                         let TokenWithContext { token: name_t, ctx } = name_t;
-                        self.validate_endless_method_name(&name_t)?;
+                        self.validate_endless_method_name(name_t)?;
 
                         $$ = Value::Node(
                             self.builder.def_endless_method(
@@ -2367,7 +2367,7 @@ use lib_ruby_parser_ast_arena::Blob;
                     {
                         let DefnHead { def_t, name_t } = $<DefnHead>1;
                         let TokenWithContext { token: name_t, ctx } = name_t;
-                        self.validate_endless_method_name(&name_t)?;
+                        self.validate_endless_method_name(name_t)?;
 
                         let rescue_body = self.builder.rescue_body(
                             $<Token>5,
@@ -2403,7 +2403,7 @@ use lib_ruby_parser_ast_arena::Blob;
                     {
                         let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
                         let TokenWithContext { token: name_t, ctx } = name_t;
-                        self.validate_endless_method_name(&name_t)?;
+                        self.validate_endless_method_name(name_t)?;
 
                         $$ = Value::Node(
                             self.builder.def_endless_singleton(
@@ -2425,7 +2425,7 @@ use lib_ruby_parser_ast_arena::Blob;
                     {
                         let DefsHead { def_t, definee, dot_t, name_t } = $<DefsHead>1;
                         let TokenWithContext { token: name_t, ctx } = name_t;
-                        self.validate_endless_method_name(&name_t)?;
+                        self.validate_endless_method_name(name_t)?;
 
                         let rescue_body = self.builder.rescue_body(
                             $<Token>5,

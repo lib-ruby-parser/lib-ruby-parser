@@ -326,7 +326,7 @@ impl<'b> Lexer<'b> {
         self.lval_start = Some(heredoc_end.start);
         self.lval_end = Some(heredoc_end.end);
         let mut token_buf = TokenBuf::empty(self.blob);
-        token_buf.append_borrowed(&heredoc_end.value);
+        token_buf.append_borrowed(heredoc_end.value);
         self.set_yylval_str(&mut token_buf);
 
         self.heredoc_restore(here);

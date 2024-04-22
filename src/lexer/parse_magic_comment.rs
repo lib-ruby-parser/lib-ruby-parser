@@ -347,7 +347,7 @@ impl<'b> Lexer<'b> {
                                 return Err(());
                             }
                         };
-                        match self.buffer.set_encoding(&encoding) {
+                        match self.buffer.set_encoding(encoding) {
                             Ok(_) => {}
                             Err(err) => {
                                 self.yyerror1(

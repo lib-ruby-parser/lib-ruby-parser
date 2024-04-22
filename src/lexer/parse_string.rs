@@ -1,5 +1,3 @@
-use core::convert::TryInto;
-
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::str_term::{str_types::*, StrTerm};
@@ -51,7 +49,7 @@ impl<'b> Lexer<'b> {
                     self.lval_start = Some(heredoc_end.start);
                     self.lval_end = Some(heredoc_end.end);
                     let mut token_buf = TokenBuf::empty(self.blob);
-                    token_buf.append_borrowed(&heredoc_end.value);
+                    token_buf.append_borrowed(heredoc_end.value);
                     self.set_yylval_str(&mut token_buf);
                 }
                 return Self::tSTRING_END;
@@ -438,9 +436,7 @@ impl<'b> Lexer<'b> {
     }
 
     fn tokaddmbc(&mut self, codepoint: u32) {
-        let utf8_char =
-            core::char::from_u32(codepoint.try_into().expect("expected codepoint to be u32"))
-                .expect("expected codepoint to have digits");
+        let utf8_char = core::char::from_u32(codepoint).expect("expected codepoint to have digits");
         let utf8_bytes = utf8_char.to_string().into_bytes();
         for byte in utf8_bytes {
             self.tokadd(byte)
