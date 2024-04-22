@@ -204,12 +204,12 @@ impl<'b> Builder<'b> {
         parts: Vec<Node>,
         end_t: Option<&'b Token<'b>>,
     ) -> Box<Node> {
-        if self.is_heredoc(&begin_t) {
+        if self.is_heredoc(begin_t) {
             let HeredocMap {
                 heredoc_body_l,
                 heredoc_end_l,
                 expression_l,
-            } = self.heredoc_map(&begin_t, &parts, &end_t);
+            } = self.heredoc_map(begin_t, &parts, end_t);
 
             Box::new(Node::Heredoc(Heredoc {
                 parts,
@@ -279,12 +279,12 @@ impl<'b> Builder<'b> {
             _ => {}
         }
 
-        if self.is_heredoc(&begin_t) {
+        if self.is_heredoc(begin_t) {
             let HeredocMap {
                 heredoc_body_l,
                 heredoc_end_l,
                 expression_l,
-            } = self.heredoc_map(&begin_t, &parts, &end_t);
+            } = self.heredoc_map(begin_t, &parts, end_t);
 
             Box::new(Node::Heredoc(Heredoc {
                 parts,
@@ -586,14 +586,15 @@ impl<'b> Builder<'b> {
     ) -> Box<Node> {
         let begin_l = self.loc(begin_t);
         let end_l = end_t_l.resize(1);
-        let expression_l = begin_l.join(&maybe_boxed_node_expr(&options).unwrap_or(end_t_l));
+        let expression_l =
+            begin_l.join(&maybe_boxed_node_expr(options.as_deref()).unwrap_or(end_t_l));
 
         match options.as_deref() {
             Some(Node::RegOpt(RegOpt {
                 options,
                 expression_l,
-            })) => self.validate_static_regexp(&parts, options, *expression_l),
-            None => self.validate_static_regexp(&parts, &None, expression_l),
+            })) => self.validate_static_regexp(&parts, options.as_ref(), *expression_l),
+            None => self.validate_static_regexp(&parts, None, expression_l),
             _ => unreachable!("must be Option<RegOpt>"),
         }
 
@@ -634,7 +635,7 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn splat(&self, star_t: &'b Token<'b>, value: Option<Box<Node>>) -> Box<Node> {
         let operator_l = self.loc(star_t);
-        let expression_l = operator_l.maybe_join(&maybe_boxed_node_expr(&value));
+        let expression_l = operator_l.maybe_join(&maybe_boxed_node_expr(value.as_deref()));
 
         Box::new(Node::Splat(Splat {
             value,
@@ -963,8 +964,8 @@ impl<'b> Builder<'b> {
     ) -> Box<Node> {
         let operator_l = self.loc(dot2_t);
         let expression_l = operator_l
-            .maybe_join(&maybe_boxed_node_expr(&left))
-            .maybe_join(&maybe_boxed_node_expr(&right));
+            .maybe_join(&maybe_boxed_node_expr(left.as_deref()))
+            .maybe_join(&maybe_boxed_node_expr(right.as_deref()));
 
         Box::new(Node::Irange(Irange {
             left,
@@ -982,8 +983,8 @@ impl<'b> Builder<'b> {
     ) -> Box<Node> {
         let operator_l = self.loc(dot3_t);
         let expression_l = operator_l
-            .maybe_join(&maybe_boxed_node_expr(&left))
-            .maybe_join(&maybe_boxed_node_expr(&right));
+            .maybe_join(&maybe_boxed_node_expr(left.as_deref()))
+            .maybe_join(&maybe_boxed_node_expr(right.as_deref()));
 
         Box::new(Node::Erange(Erange {
             left,
@@ -1553,7 +1554,7 @@ impl<'b> Builder<'b> {
     ) -> Box<Node> {
         let keyword_l = self.loc(class_t);
         let end_l = self.loc(end_t);
-        let operator_l = self.maybe_loc(&lt_t);
+        let operator_l = self.maybe_loc(lt_t);
         let expression_l = keyword_l.join(&end_l);
 
         Box::new(Node::Class(Class {
@@ -1650,7 +1651,7 @@ impl<'b> Builder<'b> {
         assignment_t: &'b Token<'b>,
         body: Option<Box<Node>>,
     ) -> Result<Box<Node>, ()> {
-        let body_l = maybe_boxed_node_expr(&body)
+        let body_l = maybe_boxed_node_expr(body.as_deref())
             .unwrap_or_else(|| unreachable!("endless method always has a body"));
 
         let keyword_l = self.loc(def_t);
@@ -1716,7 +1717,7 @@ impl<'b> Builder<'b> {
         assignment_t: &'b Token<'b>,
         body: Option<Box<Node>>,
     ) -> Result<Box<Node>, ()> {
-        let body_l = maybe_boxed_node_expr(&body)
+        let body_l = maybe_boxed_node_expr(body.as_deref())
             .unwrap_or_else(|| unreachable!("endless method always has body"));
 
         let keyword_l = self.loc(def_t);
@@ -1955,7 +1956,7 @@ impl<'b> Builder<'b> {
         amper_t: &'b Token<'b>,
         name_t: Option<&'b Token<'b>>,
     ) -> Result<Box<Node>, ()> {
-        let name_l = self.maybe_loc(&name_t);
+        let name_l = self.maybe_loc(name_t);
         let name = maybe_value(name_t);
         if let (Some(name_l), Some(name)) = (name_l.as_ref(), name.as_ref()) {
             self.check_reserved_for_numparam(name, *name_l)?;
@@ -2001,7 +2002,7 @@ impl<'b> Builder<'b> {
     // Method calls
     //
 
-    fn call_type_for_dot(&self, dot_t: &Option<&'b Token<'b>>) -> MethodCallType {
+    fn call_type_for_dot(&self, dot_t: Option<&'b Token<'b>>) -> MethodCallType {
         match dot_t.as_ref() {
             Some(token) if token.token_type == Lexer::tANDDOT => MethodCallType::CSend,
             _ => MethodCallType::Send,
@@ -2023,28 +2024,28 @@ impl<'b> Builder<'b> {
         mut args: Vec<Node>,
         rparen_t: Option<&'b Token<'b>>,
     ) -> Box<Node> {
-        let begin_l = maybe_boxed_node_expr(&receiver)
-            .or_else(|| self.maybe_loc(&selector_t))
+        let begin_l = maybe_boxed_node_expr(receiver.as_deref())
+            .or_else(|| self.maybe_loc(selector_t))
             .unwrap_or_else(|| unreachable!("can't compute begin_l"));
         let end_l = self
-            .maybe_loc(&rparen_t)
-            .or_else(|| maybe_node_expr(&args.last()))
-            .or_else(|| self.maybe_loc(&selector_t))
+            .maybe_loc(rparen_t)
+            .or_else(|| maybe_node_expr(args.last()))
+            .or_else(|| self.maybe_loc(selector_t))
             .unwrap_or_else(|| unreachable!("can't compute end_l"));
 
         let expression_l = begin_l.join(&end_l);
 
-        let dot_l = self.maybe_loc(&dot_t);
-        let selector_l = self.maybe_loc(&selector_t);
-        let begin_l = self.maybe_loc(&lparen_t);
-        let end_l = self.maybe_loc(&rparen_t);
+        let dot_l = self.maybe_loc(dot_t);
+        let selector_l = self.maybe_loc(selector_t);
+        let begin_l = self.maybe_loc(lparen_t);
+        let end_l = self.maybe_loc(rparen_t);
 
         let method_name = maybe_value(selector_t);
         let method_name = method_name.unwrap_or_else(|| String::from("call"));
 
         self.rewrite_hash_args_to_kwargs(&mut args);
 
-        match self.call_type_for_dot(&dot_t) {
+        match self.call_type_for_dot(dot_t) {
             MethodCallType::Send => Box::new(Node::Send(Send {
                 recv: receiver,
                 method_name,
@@ -2269,7 +2270,7 @@ impl<'b> Builder<'b> {
 
         let method_name = value(selector_t) + "=";
 
-        match self.call_type_for_dot(&Some(dot_t)) {
+        match self.call_type_for_dot(Some(dot_t)) {
             MethodCallType::Send => Box::new(Node::Send(Send {
                 recv: Some(receiver),
                 method_name,
@@ -2444,14 +2445,14 @@ impl<'b> Builder<'b> {
 
             let begin_l = self.loc(not_t);
             let end_l = self
-                .maybe_loc(&end_t)
+                .maybe_loc(end_t)
                 .unwrap_or_else(|| *receiver.expression());
 
             let expression_l = begin_l.join(&end_l);
 
             let selector_l = self.loc(not_t);
-            let begin_l = self.maybe_loc(&begin_t);
-            let end_l = self.maybe_loc(&end_t);
+            let begin_l = self.maybe_loc(begin_t);
+            let end_l = self.maybe_loc(end_t);
 
             Ok(Box::new(Node::Send(Send {
                 recv: Some(Self::check_condition(receiver)),
@@ -2548,17 +2549,17 @@ impl<'b> Builder<'b> {
         end_t: Option<&'b Token<'b>>,
     ) -> Box<Node> {
         let end_l = self
-            .maybe_loc(&end_t)
-            .or_else(|| maybe_boxed_node_expr(&if_false))
-            .or_else(|| self.maybe_loc(&else_t))
-            .or_else(|| maybe_boxed_node_expr(&if_true))
+            .maybe_loc(end_t)
+            .or_else(|| maybe_boxed_node_expr(if_false.as_deref()))
+            .or_else(|| self.maybe_loc(else_t))
+            .or_else(|| maybe_boxed_node_expr(if_true.as_deref()))
             .unwrap_or_else(|| self.loc(then_t));
 
         let expression_l = self.loc(cond_t).join(&end_l);
         let keyword_l = self.loc(cond_t);
         let begin_l = self.loc(then_t);
-        let else_l = self.maybe_loc(&else_t);
-        let end_l = self.maybe_loc(&end_t);
+        let else_l = self.maybe_loc(else_t);
+        let end_l = self.maybe_loc(end_t);
 
         Box::new(Node::If(If {
             cond: Self::check_condition(cond),
@@ -2631,8 +2632,8 @@ impl<'b> Builder<'b> {
     ) -> Box<Node> {
         let begin_l = self.loc(then_t);
 
-        let expr_end_l = maybe_boxed_node_expr(&body)
-            .or_else(|| maybe_node_expr(&patterns.last()))
+        let expr_end_l = maybe_boxed_node_expr(body.as_deref())
+            .or_else(|| maybe_node_expr(patterns.last()))
             .unwrap_or_else(|| self.loc(when_t));
         let when_l = self.loc(when_t);
         let expression_l = when_l.join(&expr_end_l);
@@ -2656,7 +2657,7 @@ impl<'b> Builder<'b> {
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
         let keyword_l = self.loc(case_t);
-        let else_l = self.maybe_loc(&else_t);
+        let else_l = self.maybe_loc(else_t);
         let end_l = self.loc(end_t);
         let expression_l = keyword_l.join(&end_l);
 
@@ -2807,11 +2808,11 @@ impl<'b> Builder<'b> {
             _ => {}
         }
 
-        let begin_l = self.maybe_loc(&lparen_t);
-        let end_l = self.maybe_loc(&rparen_t);
+        let begin_l = self.maybe_loc(lparen_t);
+        let end_l = self.maybe_loc(rparen_t);
 
         let expr_end_l = end_l
-            .or_else(|| maybe_node_expr(&args.last()))
+            .or_else(|| maybe_node_expr(args.last()))
             .unwrap_or(keyword_l);
 
         let expression_l = keyword_l.join(&expr_end_l);
@@ -2915,16 +2916,16 @@ impl<'b> Builder<'b> {
         then_t: Option<&'b Token<'b>>,
         body: Option<Box<Node>>,
     ) -> Box<Node> {
-        let end_l = maybe_boxed_node_expr(&body)
-            .or_else(|| self.maybe_loc(&then_t))
-            .or_else(|| maybe_boxed_node_expr(&exc_var))
-            .or_else(|| maybe_boxed_node_expr(&exc_list))
+        let end_l = maybe_boxed_node_expr(body.as_deref())
+            .or_else(|| self.maybe_loc(then_t))
+            .or_else(|| maybe_boxed_node_expr(exc_var.as_deref()))
+            .or_else(|| maybe_boxed_node_expr(exc_list.as_deref()))
             .unwrap_or_else(|| self.loc(rescue_t));
 
         let expression_l = self.loc(rescue_t).join(&end_l);
         let keyword_l = self.loc(rescue_t);
-        let assoc_l = self.maybe_loc(&assoc_t);
-        let begin_l = self.maybe_loc(&then_t);
+        let assoc_l = self.maybe_loc(assoc_t);
+        let begin_l = self.maybe_loc(then_t);
 
         Box::new(Node::RescueBody(RescueBody {
             exc_list,
@@ -2948,11 +2949,12 @@ impl<'b> Builder<'b> {
 
         if !rescue_bodies.is_empty() {
             if let Some((else_t, else_)) = else_ {
-                let begin_l = maybe_boxed_node_expr(&compound_stmt)
-                    .or_else(|| maybe_node_expr(&rescue_bodies.first()))
+                let begin_l = maybe_boxed_node_expr(compound_stmt.as_deref())
+                    .or_else(|| maybe_node_expr(rescue_bodies.first()))
                     .unwrap_or_else(|| unreachable!("can't compute begin_l"));
 
-                let end_l = maybe_boxed_node_expr(&else_).unwrap_or_else(|| self.loc(else_t));
+                let end_l =
+                    maybe_boxed_node_expr(else_.as_deref()).unwrap_or_else(|| self.loc(else_t));
 
                 let expression_l = begin_l.join(&end_l);
                 let else_l = self.loc(else_t);
@@ -2965,15 +2967,15 @@ impl<'b> Builder<'b> {
                     expression_l,
                 })))
             } else {
-                let begin_l = maybe_boxed_node_expr(&compound_stmt)
-                    .or_else(|| maybe_node_expr(&rescue_bodies.first()))
+                let begin_l = maybe_boxed_node_expr(compound_stmt.as_deref())
+                    .or_else(|| maybe_node_expr(rescue_bodies.first()))
                     .unwrap_or_else(|| unreachable!("can't compute begin_l"));
 
-                let end_l = maybe_node_expr(&rescue_bodies.last())
+                let end_l = maybe_node_expr(rescue_bodies.last())
                     .unwrap_or_else(|| unreachable!("can't compute end_l"));
 
                 let expression_l = begin_l.join(&end_l);
-                let else_l = self.maybe_loc(&None);
+                let else_l = self.maybe_loc(None);
 
                 result = Some(Box::new(Node::Rescue(Rescue {
                     body: compound_stmt,
@@ -3033,10 +3035,11 @@ impl<'b> Builder<'b> {
             let ensure_body = ensure;
             let keyword_l = self.loc(ensure_t);
 
-            let begin_l = maybe_boxed_node_expr(&result).unwrap_or_else(|| self.loc(ensure_t));
+            let begin_l =
+                maybe_boxed_node_expr(result.as_deref()).unwrap_or_else(|| self.loc(ensure_t));
 
-            let end_l = maybe_node_expr(&ensure_body.as_ref().map(|x| x.as_ref()))
-                .unwrap_or_else(|| self.loc(ensure_t));
+            let end_l =
+                maybe_node_expr(ensure_body.as_deref()).unwrap_or_else(|| self.loc(ensure_t));
 
             let expression_l = begin_l.join(&end_l);
 
@@ -3198,7 +3201,7 @@ impl<'b> Builder<'b> {
         };
 
         let keyword_l = self.loc(case_t);
-        let else_l = self.maybe_loc(&else_t);
+        let else_l = self.maybe_loc(else_t);
         let end_l = self.loc(end_t);
         let expression_l = self.loc(case_t).join(&end_l);
 
@@ -3258,8 +3261,8 @@ impl<'b> Builder<'b> {
         let keyword_l = self.loc(in_t);
         let begin_l = self.loc(then_t);
 
-        let expression_l = maybe_boxed_node_expr(&body)
-            .or_else(|| maybe_boxed_node_expr(&guard))
+        let expression_l = maybe_boxed_node_expr(body.as_deref())
+            .or_else(|| maybe_boxed_node_expr(guard.as_deref()))
             .unwrap_or_else(|| *pattern.expression())
             .join(&keyword_l);
 
@@ -3406,7 +3409,7 @@ impl<'b> Builder<'b> {
         };
 
         let operator_l = self.loc(star_t);
-        let expression_l = operator_l.maybe_join(&maybe_boxed_node_expr(&name));
+        let expression_l = operator_l.maybe_join(&maybe_boxed_node_expr(name.as_deref()));
 
         Ok(Box::new(Node::MatchRest(MatchRest {
             name,
@@ -3452,7 +3455,7 @@ impl<'b> Builder<'b> {
             expression_l,
         } = self.collection_map(lbrack_l, &elements, rbrack_l);
 
-        let expression_l = expression_l.maybe_join(&self.maybe_loc(&trailing_comma));
+        let expression_l = expression_l.maybe_join(&self.maybe_loc(trailing_comma));
 
         if elements.is_empty() {
             return Box::new(Node::ArrayPattern(ArrayPattern {
@@ -3969,7 +3972,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn build_static_regexp(
         &self,
         parts: &[Node],
-        options: &Option<String>,
+        options: Option<&String>,
         loc: Loc,
     ) -> Option<Regex> {
         let source = Self::static_string(parts)?;
@@ -4001,7 +4004,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn validate_static_regexp(
         &self,
         parts: &[Node],
-        options: &Option<String>,
+        options: Option<&String>,
         loc: Loc,
     ) {
         self.build_static_regexp(parts, options, loc);
@@ -4011,7 +4014,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn validate_static_regexp(
         &self,
         _parts: &[Node],
-        _options: &Option<String>,
+        _options: Option<&String>,
         _loc: Loc,
     ) {
     }
@@ -4052,8 +4055,8 @@ impl<'b> Builder<'b> {
         token.loc
     }
 
-    pub(crate) fn maybe_loc(&self, token: &Option<&'b Token<'b>>) -> Option<Loc> {
-        token.as_deref().map(|token| self.loc(token))
+    pub(crate) fn maybe_loc(&self, token: Option<&'b Token<'b>>) -> Option<Loc> {
+        token.map(|token| self.loc(token))
     }
 
     pub(crate) fn collection_map(
@@ -4063,8 +4066,8 @@ impl<'b> Builder<'b> {
         end_l: Option<Loc>,
     ) -> CollectionMap {
         let expression_l = collection_expr(parts);
-        let expression_l = join_maybe_locs(&expression_l, &begin_l);
-        let expression_l = join_maybe_locs(&expression_l, &end_l);
+        let expression_l = join_maybe_locs(expression_l, begin_l);
+        let expression_l = join_maybe_locs(expression_l, end_l);
         let expression_l = expression_l.unwrap_or_else(|| {
             unreachable!("empty collection without begin_t/end_t, can't build source map")
         });
@@ -4076,7 +4079,7 @@ impl<'b> Builder<'b> {
         }
     }
 
-    pub(crate) fn is_heredoc(&self, begin_t: &Option<&'b Token<'b>>) -> bool {
+    pub(crate) fn is_heredoc(&self, begin_t: Option<&'b Token<'b>>) -> bool {
         if let Some(begin_t) = begin_t.as_ref() {
             let begin = &begin_t.token_value;
             if begin.len() >= 2 && begin[0] == b'<' && begin[1] == b'<' {
@@ -4088,9 +4091,9 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn heredoc_map(
         &self,
-        begin_t: &Option<&'b Token<'b>>,
+        begin_t: Option<&'b Token<'b>>,
         parts: &[Node],
-        end_t: &Option<&'b Token<'b>>,
+        end_t: Option<&'b Token<'b>>,
     ) -> HeredocMap {
         let begin_t = begin_t.as_ref().expect("bug: begin_t must be Some");
         let end_t = end_t.as_ref().expect("heredoc must have end_t");
@@ -4285,16 +4288,16 @@ impl<'b> Builder<'b> {
     }
 }
 
-pub(crate) fn maybe_node_expr(node: &Option<&Node>) -> Option<Loc> {
+pub(crate) fn maybe_node_expr(node: Option<&Node>) -> Option<Loc> {
     node.map(|node| *node.expression())
 }
 
-pub(crate) fn maybe_boxed_node_expr(node: &Option<Box<Node>>) -> Option<Loc> {
-    node.as_deref().map(|node| *node.expression())
+pub(crate) fn maybe_boxed_node_expr(node: Option<&Node>) -> Option<Loc> {
+    node.map(|node| *node.expression())
 }
 
 pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Loc> {
-    join_maybe_exprs(&nodes.first(), &nodes.last())
+    join_maybe_exprs(nodes.first(), nodes.last())
 }
 
 pub(crate) fn value<'b>(token: &'b Token<'b>) -> String {
@@ -4313,11 +4316,11 @@ pub(crate) fn join_exprs(lhs: &Node, rhs: &Node) -> Loc {
     lhs.expression().join(rhs.expression())
 }
 
-pub(crate) fn join_maybe_exprs(lhs: &Option<&Node>, rhs: &Option<&Node>) -> Option<Loc> {
-    join_maybe_locs(&maybe_node_expr(lhs), &maybe_node_expr(rhs))
+pub(crate) fn join_maybe_exprs(lhs: Option<&Node>, rhs: Option<&Node>) -> Option<Loc> {
+    join_maybe_locs(maybe_node_expr(lhs), maybe_node_expr(rhs))
 }
 
-pub(crate) fn join_maybe_locs(lhs: &Option<Loc>, rhs: &Option<Loc>) -> Option<Loc> {
+pub(crate) fn join_maybe_locs(lhs: Option<Loc>, rhs: Option<Loc>) -> Option<Loc> {
     match (lhs.as_ref(), rhs.as_ref()) {
         (None, None) => None,
         (None, Some(rhs)) => Some(*rhs),
