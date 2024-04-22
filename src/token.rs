@@ -1,6 +1,6 @@
 use core::{cell::Cell, ptr::NonNull};
 
-use lib_ruby_parser_ast_arena::{Blob, IntrusiveListItem};
+use lib_ruby_parser_ast_arena::{Blob, SingleIntrusiveListItem};
 
 use crate::parser::token_name;
 use crate::{Bytes, Loc};
@@ -86,7 +86,7 @@ impl core::fmt::Debug for Token<'_> {
     }
 }
 
-impl IntrusiveListItem for Token<'_> {
+impl SingleIntrusiveListItem for Token<'_> {
     fn next(&self) -> Option<NonNull<Self>> {
         self.next.get()
     }

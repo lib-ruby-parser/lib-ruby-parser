@@ -60,7 +60,7 @@ impl PartialEq for MagicComment {
     }
 }
 
-impl lib_ruby_parser_ast_arena::IntrusiveListItem for MagicComment {
+impl lib_ruby_parser_ast_arena::SingleIntrusiveListItem for MagicComment {
     fn next(&self) -> Option<NonNull<Self>> {
         self.next.get()
     }

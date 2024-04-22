@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
+use lib_ruby_parser_ast_arena::{Blob, SingleIntrusiveList};
 
 use crate::source::SourceLine;
 
@@ -10,7 +10,7 @@ pub struct DecodedInput<'b> {
     pub name: &'b str,
 
     /// Lines list
-    pub lines: &'b IntrusiveList<'b, SourceLine>,
+    pub lines: &'b SingleIntrusiveList<'b, SourceLine>,
 
     /// Decoded bytes
     pub bytes: &'b [u8],
@@ -34,7 +34,7 @@ impl<'b> DecodedInput<'b> {
     /// Populates `Input` with a given byte array
     pub(crate) fn set_bytes(&mut self, bytes: &'b [u8]) {
         let mut line = SourceLine::new(0, 0, true, self.blob);
-        let lines: &'b IntrusiveList<'b, SourceLine> = self.blob.alloc_ref();
+        let lines: &'b SingleIntrusiveList<'b, SourceLine> = self.blob.alloc_ref();
 
         for (idx, c) in bytes.iter().enumerate() {
             line.end = idx + 1;

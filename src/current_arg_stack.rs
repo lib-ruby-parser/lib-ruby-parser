@@ -1,6 +1,6 @@
 use core::{cell::Cell, ptr::NonNull};
 
-use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
+use lib_ruby_parser_ast_arena::{Blob, DoubleIntrusiveList};
 // Stack that holds names of current arguments,
 // i.e. while parsing
 //   def m1(a = (def m2(b = def m3(c = 1); end); end)); end
@@ -11,10 +11,11 @@ use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
 //
 //
 #[derive(Debug)]
-pub(crate) struct CurrentArgStack<'b>(IntrusiveList<'b, CurrentArgStackItem<'b>>);
+pub(crate) struct CurrentArgStack<'b>(DoubleIntrusiveList<'b, CurrentArgStackItem<'b>>);
 
 struct CurrentArgStackItem<'b> {
     s: Option<&'b str>,
+    prev: Cell<Option<NonNull<Self>>>,
     next: Cell<Option<NonNull<Self>>>,
 }
 
@@ -26,7 +27,15 @@ impl core::fmt::Debug for CurrentArgStackItem<'_> {
     }
 }
 
-impl lib_ruby_parser_ast_arena::IntrusiveListItem for CurrentArgStackItem<'_> {
+impl lib_ruby_parser_ast_arena::DoubleIntrusiveListItem for CurrentArgStackItem<'_> {
+    fn prev(&self) -> Option<NonNull<Self>> {
+        self.prev.get()
+    }
+
+    fn set_prev(&self, new_prev: Option<NonNull<Self>>) {
+        self.prev.set(new_prev)
+    }
+
     fn next(&self) -> Option<NonNull<Self>> {
         self.next.get()
     }
@@ -45,6 +54,7 @@ impl<'b> CurrentArgStack<'b> {
         let item = blob.alloc_mut::<CurrentArgStackItem>();
         *item = CurrentArgStackItem {
             s: value,
+            prev: Cell::new(None),
             next: Cell::new(None),
         };
         self.0.push(item);
