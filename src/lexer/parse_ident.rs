@@ -66,7 +66,11 @@ impl<'b> Lexer<'b> {
             return Self::tLABEL;
         }
         if !self.lex_state.is_some(EXPR_DOT) {
-            if let Some(kw) = reserved_word(self.tokenbuf.as_string()) {
+            if let Some(kw) = self
+                .tokenbuf
+                .as_whole_string()
+                .and_then(|s| reserved_word(s))
+            {
                 let state = self.lex_state;
                 if state.is_some(EXPR_FNAME) {
                     self.lex_state.set(EXPR_ENDFN);

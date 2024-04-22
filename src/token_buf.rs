@@ -54,6 +54,11 @@ impl<'b> TokenBuf<'b> {
         self.bytes.try_to_string().ok()
     }
 
+    pub(crate) fn as_whole_string(&self) -> Option<&'b str> {
+        let bytes = self.blob.push_bytes_iter(self.bytes.iter());
+        core::str::from_utf8(bytes).ok()
+    }
+
     pub(crate) fn len(&self) -> usize {
         self.bytes.len()
     }
