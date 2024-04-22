@@ -31,7 +31,7 @@ impl<'b> Token<'b> {
         token_value: Bytes,
         loc: Loc,
         blob: &'b Blob<'b>,
-    ) -> &'b mut Self {
+    ) -> &'b Self {
         let this = blob.alloc_mut::<Self>();
         *this = Self {
             token_type,

@@ -2,7 +2,7 @@ use lib_ruby_parser_ast_arena::{Blob, Bytes};
 
 #[derive(Debug)]
 pub(crate) struct TokenBuf<'b> {
-    pub(crate) bytes: &'b mut Bytes<'b>,
+    pub(crate) bytes: &'b Bytes<'b>,
     blob: &'b Blob<'b>,
 }
 
