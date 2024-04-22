@@ -21,9 +21,8 @@ macro_rules! context_flag {
             }
 
             pub(crate) fn $setter(&mut self, value: bool) {
-                if cfg!(feature = "debug-parser") {
-                    println!("{}({})", stringify!($setter), value);
-                }
+                #[cfg(feature = "debug-parser")]
+                println!("{}({})", stringify!($setter), value);
                 if value {
                     self.value |= Self::$upper;
                 } else {
@@ -73,7 +72,8 @@ impl SharedContext {
 
 impl Context {
     fn is_empty(&self) -> bool {
-        if cfg!(debug_assertions) && self.value != 0 {
+        #[cfg(feature = "debug-all")]
+        if self.value != 0 {
             println!(
                 "Context is not empty;
     value = {};

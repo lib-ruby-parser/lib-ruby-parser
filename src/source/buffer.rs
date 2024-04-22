@@ -39,12 +39,15 @@ pub(crate) struct Buffer<'b> {
     // pub(crate) ruby_sourcefile_string: Vec<char>,
 }
 
+#[cfg(feature = "debug-buffer")]
 macro_rules! println_if_debug_buffer {
     ($fmt_string:expr, $( $arg:expr ),*) => {
-        if cfg!(feature = "debug-buffer") {
-            println!($fmt_string, $( $arg ),*);
-        }
+        println!($fmt_string, $( $arg ),*);
     };
+}
+#[cfg(not(feature = "debug-buffer"))]
+macro_rules! println_if_debug_buffer {
+    ($fmt_string:expr, $( $arg:expr ),*) => {};
 }
 
 impl<'b> Buffer<'b> {

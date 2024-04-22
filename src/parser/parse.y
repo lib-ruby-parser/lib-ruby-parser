@@ -7090,8 +7090,15 @@ impl<'b> Parser<'b> {
     }
 
     #[inline]
-    fn is_debug(&self) -> bool {
-        cfg!(feature = "debug-parser")
+    #[cfg(feature = "debug-parser")]
+    const fn is_debug(&self) -> bool {
+        true
+    }
+
+    #[inline]
+    #[cfg(feature = "debug-parser")]
+    const fn is_debug(&self) -> bool {
+        false
     }
 
     fn local_push(&mut self) {
