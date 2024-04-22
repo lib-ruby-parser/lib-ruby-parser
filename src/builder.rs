@@ -100,26 +100,26 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn nil(&self, nil_t: &'b Token<'b>) -> Box<Node> {
         Box::new(Node::Nil(Nil {
-            expression_l: self.loc(&nil_t),
+            expression_l: self.loc(nil_t),
         }))
     }
 
     pub(crate) fn true_(&self, true_t: &'b Token<'b>) -> Box<Node> {
         Box::new(Node::True(True {
-            expression_l: self.loc(&true_t),
+            expression_l: self.loc(true_t),
         }))
     }
 
     pub(crate) fn false_(&self, false_t: &'b Token<'b>) -> Box<Node> {
         Box::new(Node::False(False {
-            expression_l: self.loc(&false_t),
+            expression_l: self.loc(false_t),
         }))
     }
 
     // Numerics
 
     pub(crate) fn integer(&self, integer_t: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&integer_t);
+        let expression_l = self.loc(integer_t);
         Box::new(Node::Int(Int {
             value: value(integer_t),
             operator_l: None,
@@ -128,7 +128,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn float(&self, float_t: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&float_t);
+        let expression_l = self.loc(float_t);
         Box::new(Node::Float(Float {
             value: value(float_t),
             operator_l: None,
@@ -137,7 +137,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn rational(&self, rational_t: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&rational_t);
+        let expression_l = self.loc(rational_t);
         Box::new(Node::Rational(Rational {
             value: value(rational_t),
             operator_l: None,
@@ -146,7 +146,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn complex(&self, complex_t: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&complex_t);
+        let expression_l = self.loc(complex_t);
         Box::new(Node::Complex(Complex {
             value: value(complex_t),
             operator_l: None,
@@ -155,7 +155,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn unary_num(&self, unary_t: &'b Token<'b>, mut numeric: Box<Node>) -> Box<Node> {
-        let new_operator_l = self.loc(&unary_t);
+        let new_operator_l = self.loc(unary_t);
         let sign = value(unary_t);
 
         match &mut *numeric {
@@ -191,7 +191,7 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn __line__(&self, line_t: &'b Token<'b>) -> Box<Node> {
         Box::new(Node::Line(Line {
-            expression_l: self.loc(&line_t),
+            expression_l: self.loc(line_t),
         }))
     }
 
@@ -238,7 +238,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn string_internal(&self, string_t: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&string_t);
+        let expression_l = self.loc(string_t);
         let value = string_t.token_value.clone();
         Box::new(Node::Str(Str {
             value,
@@ -313,7 +313,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn character(&self, char_t: &'b Token<'b>) -> Box<Node> {
-        let str_loc = self.loc(&char_t);
+        let str_loc = self.loc(char_t);
 
         let begin_l = Some(str_loc.with_end(str_loc.begin + 1));
         let end_l = None;
@@ -330,7 +330,7 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn __file__(&self, file_t: &'b Token<'b>) -> Box<Node> {
         Box::new(Node::File(File {
-            expression_l: self.loc(&file_t),
+            expression_l: self.loc(file_t),
         }))
     }
 
@@ -343,8 +343,8 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn symbol(&self, start_t: &'b Token<'b>, value_t: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&start_t).join(&self.loc(&value_t));
-        let begin_l = Some(self.loc(&start_t));
+        let expression_l = self.loc(start_t).join(&self.loc(value_t));
+        let begin_l = Some(self.loc(start_t));
         let value = value_t.token_value.clone();
         self.validate_sym_value(&value, &expression_l);
         Box::new(Node::Sym(Sym {
@@ -356,7 +356,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn symbol_internal(&self, symbol_t: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&symbol_t);
+        let expression_l = self.loc(symbol_t);
         let value = symbol_t.token_value.clone();
         self.validate_sym_value(&value, &expression_l);
         Box::new(Node::Sym(Sym {
@@ -416,12 +416,12 @@ impl<'b> Builder<'b> {
         parts: Vec<Node>,
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let begin_l = self.loc(&begin_t);
+        let begin_l = self.loc(begin_t);
 
         let begin = &begin_t.token_value;
         if begin.len() >= 2 && begin[0] == b'<' && begin[1] == b'<' {
-            let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(&end_t));
-            let heredoc_end_l = self.loc(&end_t);
+            let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(end_t));
+            let heredoc_end_l = self.loc(end_t);
             let expression_l = begin_l;
 
             Box::new(Node::XHeredoc(XHeredoc {
@@ -431,7 +431,7 @@ impl<'b> Builder<'b> {
                 expression_l,
             }))
         } else {
-            let end_l = self.loc(&end_t);
+            let end_l = self.loc(end_t);
             let expression_l = begin_l.join(&end_l);
 
             Box::new(Node::Xstr(Xstr {
@@ -560,7 +560,7 @@ impl<'b> Builder<'b> {
             // no regexp options, only trailing "/"
             return None;
         }
-        let expression_l = self.loc(&regexp_end_t).adjust_begin(1);
+        let expression_l = self.loc(regexp_end_t).adjust_begin(1);
         let options = value(regexp_end_t);
         let mut options = options.as_str().chars().skip(1).collect::<Vec<_>>();
         options.sort_unstable();
@@ -584,10 +584,9 @@ impl<'b> Builder<'b> {
         end_t_l: Loc,
         options: Option<Box<Node>>,
     ) -> Box<Node> {
-        let begin_l = self.loc(&begin_t);
+        let begin_l = self.loc(begin_t);
         let end_l = end_t_l.resize(1);
-        let expression_l =
-            begin_l.join(&maybe_boxed_node_expr(&options).unwrap_or_else(|| end_t_l));
+        let expression_l = begin_l.join(&maybe_boxed_node_expr(&options).unwrap_or(end_t_l));
 
         match options.as_deref() {
             Some(Node::RegOpt(RegOpt {
@@ -634,7 +633,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn splat(&self, star_t: &'b Token<'b>, value: Option<Box<Node>>) -> Box<Node> {
-        let operator_l = self.loc(&star_t);
+        let operator_l = self.loc(star_t);
         let expression_l = operator_l.maybe_join(&maybe_boxed_node_expr(&value));
 
         Box::new(Node::Splat(Splat {
@@ -673,8 +672,8 @@ impl<'b> Builder<'b> {
         elements: Vec<Node>,
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let begin_l = self.loc(&begin_t);
-        let end_l = self.loc(&end_t);
+        let begin_l = self.loc(begin_t);
+        let end_l = self.loc(end_t);
         let expression_l = begin_l.join(&end_l);
         Box::new(Node::Array(Array {
             elements,
@@ -722,8 +721,8 @@ impl<'b> Builder<'b> {
             })
             .collect::<Vec<_>>();
 
-        let begin_l = self.loc(&begin_t);
-        let end_l = self.loc(&end_t);
+        let begin_l = self.loc(begin_t);
+        let end_l = self.loc(end_t);
         let expression_l = begin_l.join(&end_l);
         Box::new(Node::Array(Array {
             elements: parts,
@@ -741,7 +740,7 @@ impl<'b> Builder<'b> {
         assoc_t: &'b Token<'b>,
         value: Box<Node>,
     ) -> Box<Node> {
-        let operator_l = self.loc(&assoc_t);
+        let operator_l = self.loc(assoc_t);
         let expression_l = join_exprs(&key, &value);
 
         Box::new(Node::Pair(Pair {
@@ -753,7 +752,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn pair_keyword(&self, key_t: &'b Token<'b>, value: Box<Node>) -> Box<Node> {
-        let key_loc = self.loc(&key_t);
+        let key_loc = self.loc(key_t);
         let key_l = key_loc.adjust_end(-1);
         let colon_l = key_loc.with_begin(key_loc.end - 1);
         let expression_l = key_loc.join(value.expression());
@@ -781,7 +780,7 @@ impl<'b> Builder<'b> {
         end_t: &'b Token<'b>,
         value: Box<Node>,
     ) -> Box<Node> {
-        let end_l = self.loc(&end_t);
+        let end_l = self.loc(end_t);
 
         let quote_loc = Loc {
             begin: end_l.end - 2,
@@ -790,14 +789,13 @@ impl<'b> Builder<'b> {
 
         let colon_l = end_l.with_begin(end_l.end - 1);
 
-        let end_t = end_t;
         let end_t: &'b Token<'b> = Token::new(
             end_t.token_type,
             end_t.token_value.clone(),
             quote_loc,
             self.blob,
         );
-        let expression_l = self.loc(&begin_t).join(value.expression());
+        let expression_l = self.loc(begin_t).join(value.expression());
 
         Box::new(Node::Pair(Pair {
             key: self.symbol_compose(begin_t, parts, end_t),
@@ -808,7 +806,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn pair_label(&self, key_t: &'b Token<'b>) -> Box<Node> {
-        let key_l = self.loc(&key_t);
+        let key_l = self.loc(key_t);
         let value_l = key_l.adjust_end(-1);
 
         let label = key_t.to_string().unwrap();
@@ -836,7 +834,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn kwsplat(&self, dstar_t: &'b Token<'b>, value: Box<Node>) -> Box<Node> {
-        let operator_l = self.loc(&dstar_t);
+        let operator_l = self.loc(dstar_t);
         let expression_l = value.expression().join(&operator_l);
 
         Box::new(Node::Kwsplat(Kwsplat {
@@ -963,7 +961,7 @@ impl<'b> Builder<'b> {
         dot2_t: &'b Token<'b>,
         right: Option<Box<Node>>,
     ) -> Box<Node> {
-        let operator_l = self.loc(&dot2_t);
+        let operator_l = self.loc(dot2_t);
         let expression_l = operator_l
             .maybe_join(&maybe_boxed_node_expr(&left))
             .maybe_join(&maybe_boxed_node_expr(&right));
@@ -982,7 +980,7 @@ impl<'b> Builder<'b> {
         dot3_t: &'b Token<'b>,
         right: Option<Box<Node>>,
     ) -> Box<Node> {
-        let operator_l = self.loc(&dot3_t);
+        let operator_l = self.loc(dot3_t);
         let expression_l = operator_l
             .maybe_join(&maybe_boxed_node_expr(&left))
             .maybe_join(&maybe_boxed_node_expr(&right));
@@ -1001,12 +999,12 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn self_(&self, token: &'b Token<'b>) -> Box<Node> {
         Box::new(Node::Self_(Self_ {
-            expression_l: self.loc(&token),
+            expression_l: self.loc(token),
         }))
     }
 
     pub(crate) fn lvar(&self, token: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&token);
+        let expression_l = self.loc(token);
         Box::new(Node::Lvar(Lvar {
             name: value(token),
             expression_l,
@@ -1014,7 +1012,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn ivar(&self, token: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&token);
+        let expression_l = self.loc(token);
         Box::new(Node::Ivar(Ivar {
             name: value(token),
             expression_l,
@@ -1022,7 +1020,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn gvar(&self, token: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&token);
+        let expression_l = self.loc(token);
         Box::new(Node::Gvar(Gvar {
             name: value(token),
             expression_l,
@@ -1030,7 +1028,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn cvar(&self, token: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&token);
+        let expression_l = self.loc(token);
         Box::new(Node::Cvar(Cvar {
             name: value(token),
             expression_l,
@@ -1038,7 +1036,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn back_ref(&self, token: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&token);
+        let expression_l = self.loc(token);
         Box::new(Node::BackRef(BackRef {
             name: value(token),
             expression_l,
@@ -1048,7 +1046,7 @@ impl<'b> Builder<'b> {
     const MAX_NTH_REF: usize = 0b111111111111111111111111111111;
 
     pub(crate) fn nth_ref(&self, token: &'b Token<'b>) -> Box<Node> {
-        let expression_l = self.loc(&token);
+        let expression_l = self.loc(token);
         let name = value(token);
         let name = &name.as_str()[1..];
         let parsed = name.parse::<usize>();
@@ -1074,7 +1072,7 @@ impl<'b> Builder<'b> {
                     if name_s.ends_with('?') || name_s.ends_with('!') {
                         self.error(
                             DiagnosticMessage::InvalidIdToGet {
-                                identifier: self.blob.push_str(&name_s),
+                                identifier: self.blob.push_str(name_s),
                             },
                             &expression_l,
                         );
@@ -1121,7 +1119,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn const_(&self, name_t: &'b Token<'b>) -> Box<Node> {
-        let name_l = self.loc(&name_t);
+        let name_l = self.loc(name_t);
         let expression_l = name_l;
 
         Box::new(Node::Const(Const {
@@ -1135,12 +1133,12 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn const_global(&self, t_colon3: &'b Token<'b>, name_t: &'b Token<'b>) -> Box<Node> {
         let scope = Box::new(Node::Cbase(Cbase {
-            expression_l: self.loc(&t_colon3),
+            expression_l: self.loc(t_colon3),
         }));
 
-        let name_l = self.loc(&name_t);
+        let name_l = self.loc(name_t);
         let expression_l = scope.expression().join(&name_l);
-        let double_colon_l = self.loc(&t_colon3);
+        let double_colon_l = self.loc(t_colon3);
 
         Box::new(Node::Const(Const {
             scope: Some(scope),
@@ -1158,9 +1156,9 @@ impl<'b> Builder<'b> {
         name_t: &'b Token<'b>,
     ) -> Box<Node> {
         let scope: Box<Node> = scope;
-        let name_l = self.loc(&name_t);
+        let name_l = self.loc(name_t);
         let expression_l = scope.expression().join(&name_l);
-        let double_colon_l = self.loc(&t_colon2);
+        let double_colon_l = self.loc(t_colon2);
 
         Box::new(Node::Const(Const {
             scope: Some(scope),
@@ -1173,7 +1171,7 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn __encoding__(&self, encoding_t: &'b Token<'b>) -> Box<Node> {
         Box::new(Node::Encoding(Encoding {
-            expression_l: self.loc(&encoding_t),
+            expression_l: self.loc(encoding_t),
         }))
     }
 
@@ -1339,7 +1337,7 @@ impl<'b> Builder<'b> {
         eql_t: &'b Token<'b>,
         new_rhs: Box<Node>,
     ) -> Box<Node> {
-        let op_l = Some(self.loc(&eql_t));
+        let op_l = Some(self.loc(eql_t));
         let expr_l = join_exprs(&lhs, &new_rhs);
 
         match &mut *lhs {
@@ -1415,7 +1413,7 @@ impl<'b> Builder<'b> {
         op_t: &'b Token<'b>,
         rhs: Box<Node>,
     ) -> Result<Box<Node>, ()> {
-        let operator_l = self.loc(&op_t);
+        let operator_l = self.loc(op_t);
         let mut operator = value(op_t);
         operator.pop();
         let expression_l = join_exprs(&lhs, &rhs);
@@ -1453,7 +1451,7 @@ impl<'b> Builder<'b> {
             Node::BackRef(BackRef { name, expression_l }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: self.blob.push_str(&name),
+                        var_name: self.blob.push_str(name),
                     },
                     expression_l,
                 );
@@ -1529,7 +1527,7 @@ impl<'b> Builder<'b> {
         eql_t: &'b Token<'b>,
         rhs: Box<Node>,
     ) -> Box<Node> {
-        let operator_l = self.loc(&eql_t);
+        let operator_l = self.loc(eql_t);
         let expression_l = join_exprs(&lhs, &rhs);
 
         Box::new(Node::Masgn(Masgn {
@@ -1553,8 +1551,8 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&class_t);
-        let end_l = self.loc(&end_t);
+        let keyword_l = self.loc(class_t);
+        let end_l = self.loc(end_t);
         let operator_l = self.maybe_loc(&lt_t);
         let expression_l = keyword_l.join(&end_l);
 
@@ -1577,9 +1575,9 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&class_t);
-        let end_l = self.loc(&end_t);
-        let operator_l = self.loc(&lshift_t);
+        let keyword_l = self.loc(class_t);
+        let end_l = self.loc(end_t);
+        let operator_l = self.loc(lshift_t);
         let expression_l = keyword_l.join(&end_l);
 
         Box::new(Node::SClass(SClass {
@@ -1599,8 +1597,8 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&module_t);
-        let end_l = self.loc(&end_t);
+        let keyword_l = self.loc(module_t);
+        let end_l = self.loc(end_t);
         let expression_l = keyword_l.join(&end_l);
 
         Box::new(Node::Module(Module {
@@ -1624,9 +1622,9 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         end_t: &'b Token<'b>,
     ) -> Result<Box<Node>, ()> {
-        let name_l = self.loc(&name_t);
-        let keyword_l = self.loc(&def_t);
-        let end_l = self.loc(&end_t);
+        let name_l = self.loc(name_t);
+        let keyword_l = self.loc(def_t);
+        let end_l = self.loc(end_t);
         let expression_l = keyword_l.join(&end_l);
 
         let name = value(name_t);
@@ -1655,10 +1653,10 @@ impl<'b> Builder<'b> {
         let body_l = maybe_boxed_node_expr(&body)
             .unwrap_or_else(|| unreachable!("endless method always has a body"));
 
-        let keyword_l = self.loc(&def_t);
+        let keyword_l = self.loc(def_t);
         let expression_l = keyword_l.join(&body_l);
-        let name_l = self.loc(&name_t);
-        let assignment_l = self.loc(&assignment_t);
+        let name_l = self.loc(name_t);
+        let assignment_l = self.loc(assignment_t);
 
         let name = value(name_t);
         self.check_reserved_for_numparam(name.as_str(), &name_l)?;
@@ -1685,10 +1683,10 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         end_t: &'b Token<'b>,
     ) -> Result<Box<Node>, ()> {
-        let keyword_l = self.loc(&def_t);
-        let operator_l = self.loc(&dot_t);
-        let name_l = self.loc(&name_t);
-        let end_l = self.loc(&end_t);
+        let keyword_l = self.loc(def_t);
+        let operator_l = self.loc(dot_t);
+        let name_l = self.loc(name_t);
+        let end_l = self.loc(end_t);
         let expression_l = keyword_l.join(&end_l);
 
         let name = value(name_t);
@@ -1721,10 +1719,10 @@ impl<'b> Builder<'b> {
         let body_l = maybe_boxed_node_expr(&body)
             .unwrap_or_else(|| unreachable!("endless method always has body"));
 
-        let keyword_l = self.loc(&def_t);
-        let operator_l = self.loc(&dot_t);
-        let name_l = self.loc(&name_t);
-        let assignment_l = self.loc(&assignment_t);
+        let keyword_l = self.loc(def_t);
+        let operator_l = self.loc(dot_t);
+        let name_l = self.loc(name_t);
+        let assignment_l = self.loc(assignment_t);
         let expression_l = keyword_l.join(&body_l);
 
         let name = value(name_t);
@@ -1745,7 +1743,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn undef_method(&self, undef_t: &'b Token<'b>, names: Vec<Node>) -> Box<Node> {
-        let keyword_l = self.loc(&undef_t);
+        let keyword_l = self.loc(undef_t);
         let expression_l = keyword_l.maybe_join(&collection_expr(&names));
         Box::new(Node::Undef(Undef {
             names,
@@ -1760,7 +1758,7 @@ impl<'b> Builder<'b> {
         to: Box<Node>,
         from: Box<Node>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&alias_t);
+        let keyword_l = self.loc(alias_t);
         let expression_l = keyword_l.join(from.expression());
         Box::new(Node::Alias(Alias {
             to,
@@ -1807,12 +1805,12 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn forward_arg(&self, dots_t: &'b Token<'b>) -> Box<Node> {
         Box::new(Node::ForwardArg(ForwardArg {
-            expression_l: self.loc(&dots_t),
+            expression_l: self.loc(dots_t),
         }))
     }
 
     pub(crate) fn arg(&self, name_t: &'b Token<'b>) -> Result<Box<Node>, ()> {
-        let name_l = self.loc(&name_t);
+        let name_l = self.loc(name_t);
         let name = value(name_t);
 
         self.check_reserved_for_numparam(name.as_str(), &name_l)?;
@@ -1829,9 +1827,9 @@ impl<'b> Builder<'b> {
         eql_t: &'b Token<'b>,
         default: Box<Node>,
     ) -> Result<Box<Node>, ()> {
-        let operator_l = self.loc(&eql_t);
-        let name_l = self.loc(&name_t);
-        let expression_l = self.loc(&name_t).join(default.expression());
+        let operator_l = self.loc(eql_t);
+        let name_l = self.loc(name_t);
+        let expression_l = self.loc(name_t).join(default.expression());
 
         let name = value(name_t);
         self.check_reserved_for_numparam(name.as_str(), &name_l)?;
@@ -1851,7 +1849,7 @@ impl<'b> Builder<'b> {
         name_t: Option<&'b Token<'b>>,
     ) -> Result<Box<Node>, ()> {
         let (name, name_l) = if let Some(name_t) = name_t {
-            let name_l = self.loc(&name_t);
+            let name_l = self.loc(name_t);
             let name = value(name_t);
             self.check_reserved_for_numparam(name.as_str(), &name_l)?;
             (Some(name), Some(name_l))
@@ -1859,7 +1857,7 @@ impl<'b> Builder<'b> {
             (None, None)
         };
 
-        let operator_l = self.loc(&star_t);
+        let operator_l = self.loc(star_t);
         let expression_l = operator_l.maybe_join(&name_l);
 
         Ok(Box::new(Node::Restarg(Restarg {
@@ -1871,7 +1869,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn kwarg(&self, name_t: &'b Token<'b>) -> Result<Box<Node>, ()> {
-        let name_l = self.loc(&name_t);
+        let name_l = self.loc(name_t);
         let name = value(name_t);
         self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
@@ -1890,7 +1888,7 @@ impl<'b> Builder<'b> {
         name_t: &'b Token<'b>,
         default: Box<Node>,
     ) -> Result<Box<Node>, ()> {
-        let name_l = self.loc(&name_t);
+        let name_l = self.loc(name_t);
         let name = value(name_t);
         self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
@@ -1912,7 +1910,7 @@ impl<'b> Builder<'b> {
         name_t: Option<&'b Token<'b>>,
     ) -> Result<Box<Node>, ()> {
         let (name, name_l) = if let Some(name_t) = name_t {
-            let name_l = self.loc(&name_t);
+            let name_l = self.loc(name_t);
             let name = value(name_t);
             self.check_reserved_for_numparam(name.as_str(), &name_l)?;
             (Some(name), Some(name_l))
@@ -1920,7 +1918,7 @@ impl<'b> Builder<'b> {
             (None, None)
         };
 
-        let operator_l = self.loc(&dstar_t);
+        let operator_l = self.loc(dstar_t);
         let expression_l = operator_l.maybe_join(&name_l);
 
         Ok(Box::new(Node::Kwrestarg(Kwrestarg {
@@ -1932,8 +1930,8 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn kwnilarg(&self, dstar_t: &'b Token<'b>, nil_t: &'b Token<'b>) -> Box<Node> {
-        let dstar_l = self.loc(&dstar_t);
-        let nil_l = self.loc(&nil_t);
+        let dstar_l = self.loc(dstar_t);
+        let nil_l = self.loc(nil_t);
         let expression_l = dstar_l.join(&nil_l);
         Box::new(Node::Kwnilarg(Kwnilarg {
             name_l: nil_l,
@@ -1942,7 +1940,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn shadowarg(&self, name_t: &'b Token<'b>) -> Result<Box<Node>, ()> {
-        let name_l = self.loc(&name_t);
+        let name_l = self.loc(name_t);
         let name = value(name_t);
         self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
@@ -1963,7 +1961,7 @@ impl<'b> Builder<'b> {
             self.check_reserved_for_numparam(name, name_l)?;
         }
 
-        let operator_l = self.loc(&amper_t);
+        let operator_l = self.loc(amper_t);
         let expression_l = operator_l.maybe_join(&name_l);
 
         Ok(Box::new(Node::Blockarg(Blockarg {
@@ -2012,7 +2010,7 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn forwarded_args(&self, dots_t: &'b Token<'b>) -> Box<Node> {
         Box::new(Node::ForwardedArgs(ForwardedArgs {
-            expression_l: self.loc(&dots_t),
+            expression_l: self.loc(dots_t),
         }))
     }
 
@@ -2075,7 +2073,7 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn call_lambda(&self, lambda_t: &'b Token<'b>) -> Box<Node> {
         Box::new(Node::Lambda(Lambda {
-            expression_l: self.loc(&lambda_t),
+            expression_l: self.loc(lambda_t),
         }))
     }
 
@@ -2129,8 +2127,8 @@ impl<'b> Builder<'b> {
                 // Here, method_call is actually (return).
                 let actual_send = method_args.into_iter().next().unwrap();
 
-                let begin_l = self.loc(&begin_t);
-                let end_l = self.loc(&end_t);
+                let begin_l = self.loc(begin_t);
+                let end_l = self.loc(end_t);
                 let expression_l = actual_send.expression().join(&end_l);
 
                 let block = match block_args {
@@ -2168,8 +2166,8 @@ impl<'b> Builder<'b> {
             | Node::Super(_)
             | Node::ZSuper(_)
             | Node::Lambda(_) => {
-                let begin_l = self.loc(&begin_t);
-                let end_l = self.loc(&end_t);
+                let begin_l = self.loc(begin_t);
+                let end_l = self.loc(end_t);
                 let expression_l = method_call.expression().join(&end_l);
 
                 let result = match block_args {
@@ -2248,7 +2246,7 @@ impl<'b> Builder<'b> {
         Ok(Box::new(result))
     }
     pub(crate) fn block_pass(&self, amper_t: &'b Token<'b>, value: Option<Box<Node>>) -> Box<Node> {
-        let amper_l = self.loc(&amper_t);
+        let amper_l = self.loc(amper_t);
         let expression_l = amper_l.maybe_join(&value.as_ref().map(|node| *node.expression()));
 
         Box::new(Node::BlockPass(BlockPass {
@@ -2264,8 +2262,8 @@ impl<'b> Builder<'b> {
         dot_t: &'b Token<'b>,
         selector_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let dot_l = self.loc(&dot_t);
-        let selector_l = self.loc(&selector_t);
+        let dot_l = self.loc(dot_t);
+        let selector_l = self.loc(selector_t);
         let expression_l = receiver.expression().join(&selector_l);
         let receiver: Box<Node> = receiver;
 
@@ -2305,8 +2303,8 @@ impl<'b> Builder<'b> {
         mut indexes: Vec<Node>,
         rbrack_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let begin_l = self.loc(&lbrack_t);
-        let end_l = self.loc(&rbrack_t);
+        let begin_l = self.loc(lbrack_t);
+        let end_l = self.loc(rbrack_t);
         let expression_l = recv.expression().join(&end_l);
 
         self.rewrite_hash_args_to_kwargs(&mut indexes);
@@ -2327,8 +2325,8 @@ impl<'b> Builder<'b> {
         indexes: Vec<Node>,
         rbrack_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let begin_l = self.loc(&lbrack_t);
-        let end_l = self.loc(&rbrack_t);
+        let begin_l = self.loc(lbrack_t);
+        let end_l = self.loc(rbrack_t);
         let expression_l = recv.expression().join(&end_l);
 
         Box::new(Node::IndexAsgn(IndexAsgn {
@@ -2351,7 +2349,7 @@ impl<'b> Builder<'b> {
         self.value_expr(&receiver)?;
         self.value_expr(&arg)?;
 
-        let selector_l = Some(self.loc(&operator_t));
+        let selector_l = Some(self.loc(operator_t));
         let expression_l = join_exprs(&receiver, &arg);
 
         Ok(Box::new(Node::Send(Send {
@@ -2376,7 +2374,7 @@ impl<'b> Builder<'b> {
         self.value_expr(&receiver)?;
         self.value_expr(&arg)?;
 
-        let selector_l = self.loc(&match_t);
+        let selector_l = self.loc(match_t);
         let expression_l = join_exprs(&receiver, &arg);
 
         let result = match self.static_regexp_captures(&receiver) {
@@ -2415,7 +2413,7 @@ impl<'b> Builder<'b> {
     ) -> Result<Box<Node>, ()> {
         self.value_expr(&receiver)?;
 
-        let selector_l = self.loc(&op_t);
+        let selector_l = self.loc(op_t);
         let expression_l = receiver.expression().join(&selector_l);
 
         let op = value(op_t);
@@ -2444,14 +2442,14 @@ impl<'b> Builder<'b> {
             let receiver = receiver;
             self.value_expr(&receiver)?;
 
-            let begin_l = self.loc(&not_t);
+            let begin_l = self.loc(not_t);
             let end_l = self
                 .maybe_loc(&end_t)
                 .unwrap_or_else(|| *receiver.expression());
 
             let expression_l = begin_l.join(&end_l);
 
-            let selector_l = self.loc(&not_t);
+            let selector_l = self.loc(not_t);
             let begin_l = self.maybe_loc(&begin_t);
             let end_l = self.maybe_loc(&end_t);
 
@@ -2484,7 +2482,7 @@ impl<'b> Builder<'b> {
                 expression_l,
             }));
 
-            let selector_l = self.loc(&not_t);
+            let selector_l = self.loc(not_t);
             let expression_l = nil_node.expression().join(&selector_l);
             Ok(Box::new(Node::Send(Send {
                 recv: Some(nil_node),
@@ -2515,7 +2513,7 @@ impl<'b> Builder<'b> {
     ) -> Result<Box<Node>, ()> {
         self.value_expr(&lhs)?;
 
-        let operator_l = self.loc(&op_t);
+        let operator_l = self.loc(op_t);
         let expression_l = join_exprs(&lhs, &rhs);
         let lhs: Box<Node> = lhs;
         let rhs: Box<Node> = rhs;
@@ -2554,11 +2552,11 @@ impl<'b> Builder<'b> {
             .or_else(|| maybe_boxed_node_expr(&if_false))
             .or_else(|| self.maybe_loc(&else_t))
             .or_else(|| maybe_boxed_node_expr(&if_true))
-            .unwrap_or_else(|| self.loc(&then_t));
+            .unwrap_or_else(|| self.loc(then_t));
 
-        let expression_l = self.loc(&cond_t).join(&end_l);
-        let keyword_l = self.loc(&cond_t);
-        let begin_l = self.loc(&then_t);
+        let expression_l = self.loc(cond_t).join(&end_l);
+        let keyword_l = self.loc(cond_t);
+        let begin_l = self.loc(then_t);
         let else_l = self.maybe_loc(&else_t);
         let end_l = self.maybe_loc(&end_t);
 
@@ -2589,7 +2587,7 @@ impl<'b> Builder<'b> {
         };
 
         let expression_l = pre.expression().join(cond.expression());
-        let keyword_l = self.loc(&cond_t);
+        let keyword_l = self.loc(cond_t);
 
         Box::new(Node::IfMod(IfMod {
             cond: Self::check_condition(cond),
@@ -2609,8 +2607,8 @@ impl<'b> Builder<'b> {
         if_false: Box<Node>,
     ) -> Box<Node> {
         let expression_l = join_exprs(&cond, &if_false);
-        let question_l = self.loc(&question_t);
-        let colon_l = self.loc(&colon_t);
+        let question_l = self.loc(question_t);
+        let colon_l = self.loc(colon_t);
 
         Box::new(Node::IfTernary(IfTernary {
             cond,
@@ -2631,12 +2629,12 @@ impl<'b> Builder<'b> {
         then_t: &'b Token<'b>,
         body: Option<Box<Node>>,
     ) -> Box<Node> {
-        let begin_l = self.loc(&then_t);
+        let begin_l = self.loc(then_t);
 
         let expr_end_l = maybe_boxed_node_expr(&body)
             .or_else(|| maybe_node_expr(&patterns.last()))
-            .unwrap_or_else(|| self.loc(&when_t));
-        let when_l = self.loc(&when_t);
+            .unwrap_or_else(|| self.loc(when_t));
+        let when_l = self.loc(when_t);
         let expression_l = when_l.join(&expr_end_l);
 
         Box::new(Node::When(When {
@@ -2657,9 +2655,9 @@ impl<'b> Builder<'b> {
         else_body: Option<Box<Node>>,
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&case_t);
+        let keyword_l = self.loc(case_t);
         let else_l = self.maybe_loc(&else_t);
-        let end_l = self.loc(&end_t);
+        let end_l = self.loc(end_t);
         let expression_l = keyword_l.join(&end_l);
 
         Box::new(Node::Case(Case {
@@ -2684,10 +2682,10 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&keyword_t);
-        let begin_l = self.loc(&do_t);
-        let end_l = self.loc(&end_t);
-        let expression_l = self.loc(&keyword_t).join(&end_l);
+        let keyword_l = self.loc(keyword_t);
+        let begin_l = self.loc(do_t);
+        let end_l = self.loc(end_t);
+        let expression_l = self.loc(keyword_t).join(&end_l);
 
         let cond = Self::check_condition(cond);
 
@@ -2719,7 +2717,7 @@ impl<'b> Builder<'b> {
         cond: Box<Node>,
     ) -> Box<Node> {
         let expression_l = body.expression().join(cond.expression());
-        let keyword_l = self.loc(&keyword_t);
+        let keyword_l = self.loc(keyword_t);
 
         let cond = Self::check_condition(cond);
 
@@ -2765,10 +2763,10 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&for_t);
-        let operator_l = self.loc(&in_t);
-        let begin_l = self.loc(&do_t);
-        let end_l = self.loc(&end_t);
+        let keyword_l = self.loc(for_t);
+        let operator_l = self.loc(in_t);
+        let begin_l = self.loc(do_t);
+        let end_l = self.loc(end_t);
         let expression_l = keyword_l.join(&end_l);
 
         Box::new(Node::For(For {
@@ -2793,7 +2791,7 @@ impl<'b> Builder<'b> {
         mut args: Vec<Node>,
         rparen_t: Option<&'b Token<'b>>,
     ) -> Result<Box<Node>, ()> {
-        let keyword_l = self.loc(&keyword_t);
+        let keyword_l = self.loc(keyword_t);
 
         if type_ == KeywordCmd::Yield && !args.is_empty() {
             if let Some(Node::BlockPass(_)) = args.last() {
@@ -2872,9 +2870,9 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         rbrace_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&preexe_t);
-        let begin_l = self.loc(&lbrace_t);
-        let end_l = self.loc(&rbrace_t);
+        let keyword_l = self.loc(preexe_t);
+        let begin_l = self.loc(lbrace_t);
+        let end_l = self.loc(rbrace_t);
         let expression_l = keyword_l.join(&end_l);
 
         Box::new(Node::Preexe(Preexe {
@@ -2892,9 +2890,9 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         rbrace_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&postexe_t);
-        let begin_l = self.loc(&lbrace_t);
-        let end_l = self.loc(&rbrace_t);
+        let keyword_l = self.loc(postexe_t);
+        let begin_l = self.loc(lbrace_t);
+        let end_l = self.loc(rbrace_t);
         let expression_l = keyword_l.join(&end_l);
 
         Box::new(Node::Postexe(Postexe {
@@ -2921,10 +2919,10 @@ impl<'b> Builder<'b> {
             .or_else(|| self.maybe_loc(&then_t))
             .or_else(|| maybe_boxed_node_expr(&exc_var))
             .or_else(|| maybe_boxed_node_expr(&exc_list))
-            .unwrap_or_else(|| self.loc(&rescue_t));
+            .unwrap_or_else(|| self.loc(rescue_t));
 
-        let expression_l = self.loc(&rescue_t).join(&end_l);
-        let keyword_l = self.loc(&rescue_t);
+        let expression_l = self.loc(rescue_t).join(&end_l);
+        let keyword_l = self.loc(rescue_t);
         let assoc_l = self.maybe_loc(&assoc_t);
         let begin_l = self.maybe_loc(&then_t);
 
@@ -2954,10 +2952,10 @@ impl<'b> Builder<'b> {
                     .or_else(|| maybe_node_expr(&rescue_bodies.first()))
                     .unwrap_or_else(|| unreachable!("can't compute begin_l"));
 
-                let end_l = maybe_boxed_node_expr(&else_).unwrap_or_else(|| self.loc(&else_t));
+                let end_l = maybe_boxed_node_expr(&else_).unwrap_or_else(|| self.loc(else_t));
 
                 let expression_l = begin_l.join(&end_l);
-                let else_l = self.loc(&else_t);
+                let else_l = self.loc(else_t);
 
                 result = Some(Box::new(Node::Rescue(Rescue {
                     body: compound_stmt,
@@ -3033,12 +3031,12 @@ impl<'b> Builder<'b> {
 
         if let Some((ensure_t, ensure)) = ensure {
             let ensure_body = ensure;
-            let keyword_l = self.loc(&ensure_t);
+            let keyword_l = self.loc(ensure_t);
 
-            let begin_l = maybe_boxed_node_expr(&result).unwrap_or_else(|| self.loc(&ensure_t));
+            let begin_l = maybe_boxed_node_expr(&result).unwrap_or_else(|| self.loc(ensure_t));
 
             let end_l = maybe_node_expr(&ensure_body.as_ref().map(|x| x.as_ref()))
-                .unwrap_or_else(|| self.loc(&ensure_t));
+                .unwrap_or_else(|| self.loc(ensure_t));
 
             let expression_l = begin_l.join(&end_l);
 
@@ -3084,8 +3082,8 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let new_begin_l = self.loc(&begin_t);
-        let new_end_l = self.loc(&end_t);
+        let new_begin_l = self.loc(begin_t);
+        let new_end_l = self.loc(end_t);
         let new_expression_l = new_begin_l.join(&new_end_l);
 
         let new_begin_l = Some(new_begin_l);
@@ -3142,8 +3140,8 @@ impl<'b> Builder<'b> {
         body: Option<Box<Node>>,
         end_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let begin_l = self.loc(&begin_t);
-        let end_l = self.loc(&end_t);
+        let begin_l = self.loc(begin_t);
+        let end_l = self.loc(end_t);
         let expression_l = begin_l.join(&end_l);
 
         let begin_l = Some(begin_l);
@@ -3199,10 +3197,10 @@ impl<'b> Builder<'b> {
             _ => else_body,
         };
 
-        let keyword_l = self.loc(&case_t);
+        let keyword_l = self.loc(case_t);
         let else_l = self.maybe_loc(&else_t);
-        let end_l = self.loc(&end_t);
-        let expression_l = self.loc(&case_t).join(&end_l);
+        let end_l = self.loc(end_t);
+        let expression_l = self.loc(case_t).join(&end_l);
 
         Box::new(Node::CaseMatch(CaseMatch {
             expr,
@@ -3221,7 +3219,7 @@ impl<'b> Builder<'b> {
         assoc_t: &'b Token<'b>,
         pattern: Box<Node>,
     ) -> Box<Node> {
-        let operator_l = self.loc(&assoc_t);
+        let operator_l = self.loc(assoc_t);
         let expression_l = join_exprs(&value, &pattern);
 
         Box::new(Node::MatchPattern(MatchPattern {
@@ -3238,7 +3236,7 @@ impl<'b> Builder<'b> {
         in_t: &'b Token<'b>,
         pattern: Box<Node>,
     ) -> Box<Node> {
-        let operator_l = self.loc(&in_t);
+        let operator_l = self.loc(in_t);
         let expression_l = join_exprs(&value, &pattern);
 
         Box::new(Node::MatchPatternP(MatchPatternP {
@@ -3257,8 +3255,8 @@ impl<'b> Builder<'b> {
         then_t: &'b Token<'b>,
         body: Option<Box<Node>>,
     ) -> Box<Node> {
-        let keyword_l = self.loc(&in_t);
-        let begin_l = self.loc(&then_t);
+        let keyword_l = self.loc(in_t);
+        let begin_l = self.loc(then_t);
 
         let expression_l = maybe_boxed_node_expr(&body)
             .or_else(|| maybe_boxed_node_expr(&guard))
@@ -3276,7 +3274,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn if_guard(&self, if_t: &'b Token<'b>, cond: Box<Node>) -> Box<Node> {
-        let keyword_l = self.loc(&if_t);
+        let keyword_l = self.loc(if_t);
         let expression_l = keyword_l.join(cond.expression());
 
         Box::new(Node::IfGuard(IfGuard {
@@ -3286,7 +3284,7 @@ impl<'b> Builder<'b> {
         }))
     }
     pub(crate) fn unless_guard(&self, unless_t: &'b Token<'b>, cond: Box<Node>) -> Box<Node> {
-        let keyword_l = self.loc(&unless_t);
+        let keyword_l = self.loc(unless_t);
         let expression_l = keyword_l.join(cond.expression());
 
         Box::new(Node::UnlessGuard(UnlessGuard {
@@ -3297,7 +3295,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn match_var(&self, name_t: &'b Token<'b>) -> Result<Box<Node>, ()> {
-        let name_l = self.loc(&name_t);
+        let name_l = self.loc(name_t);
         let expression_l = name_l;
         let name = value(name_t);
 
@@ -3313,7 +3311,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn match_hash_var(&self, name_t: &'b Token<'b>) -> Result<Box<Node>, ()> {
-        let expression_l = self.loc(&name_t);
+        let expression_l = self.loc(name_t);
         let name_l = expression_l.adjust_end(-1);
 
         let name = value(name_t);
@@ -3337,7 +3335,7 @@ impl<'b> Builder<'b> {
         if strings.len() != 1 {
             self.error(
                 DiagnosticMessage::SymbolLiteralWithInterpolation {},
-                &self.loc(&begin_t).join(&self.loc(&end_t)),
+                &self.loc(begin_t).join(&self.loc(end_t)),
             );
             return Err(());
         }
@@ -3374,10 +3372,7 @@ impl<'b> Builder<'b> {
                     name_l = name_l.adjust_end(-end_d)
                 }
 
-                let expression_l = self
-                    .loc(&begin_t)
-                    .join(&expression_l)
-                    .join(&self.loc(&end_t));
+                let expression_l = self.loc(begin_t).join(&expression_l).join(&self.loc(end_t));
                 Box::new(Node::MatchVar(MatchVar {
                     name,
                     name_l,
@@ -3390,7 +3385,7 @@ impl<'b> Builder<'b> {
             _ => {
                 self.error(
                     DiagnosticMessage::SymbolLiteralWithInterpolation {},
-                    &self.loc(&begin_t).join(&self.loc(&end_t)),
+                    &self.loc(begin_t).join(&self.loc(end_t)),
                 );
                 return Err(());
             }
@@ -3410,7 +3405,7 @@ impl<'b> Builder<'b> {
             None
         };
 
-        let operator_l = self.loc(&star_t);
+        let operator_l = self.loc(star_t);
         let expression_l = operator_l.maybe_join(&maybe_boxed_node_expr(&name));
 
         Ok(Box::new(Node::MatchRest(MatchRest {
@@ -3512,9 +3507,9 @@ impl<'b> Builder<'b> {
         pattern: Box<Node>,
         rdelim_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let begin_l = self.loc(&ldelim_t);
-        let end_l = self.loc(&rdelim_t);
-        let expression_l = const_.expression().join(&self.loc(&rdelim_t));
+        let begin_l = self.loc(ldelim_t);
+        let end_l = self.loc(rdelim_t);
+        let expression_l = const_.expression().join(&self.loc(rdelim_t));
 
         Box::new(Node::ConstPattern(ConstPattern {
             const_,
@@ -3526,7 +3521,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn pin(&self, pin_t: &'b Token<'b>, var: Box<Node>) -> Box<Node> {
-        let operator_l = self.loc(&pin_t);
+        let operator_l = self.loc(pin_t);
         let expression_l = var.expression().join(&operator_l);
 
         Box::new(Node::Pin(Pin {
@@ -3542,7 +3537,7 @@ impl<'b> Builder<'b> {
         pipe_t: &'b Token<'b>,
         rhs: Box<Node>,
     ) -> Box<Node> {
-        let operator_l = self.loc(&pipe_t);
+        let operator_l = self.loc(pipe_t);
         let expression_l = join_exprs(&lhs, &rhs);
 
         Box::new(Node::MatchAlt(MatchAlt {
@@ -3559,7 +3554,7 @@ impl<'b> Builder<'b> {
         assoc_t: &'b Token<'b>,
         as_: Box<Node>,
     ) -> Box<Node> {
-        let operator_l = self.loc(&assoc_t);
+        let operator_l = self.loc(assoc_t);
         let expression_l = join_exprs(&value, &as_);
 
         Box::new(Node::MatchAs(MatchAs {
@@ -3575,8 +3570,8 @@ impl<'b> Builder<'b> {
         dstar_t: &'b Token<'b>,
         nil_t: &'b Token<'b>,
     ) -> Box<Node> {
-        let operator_l = self.loc(&dstar_t);
-        let name_l = self.loc(&nil_t);
+        let operator_l = self.loc(dstar_t);
+        let name_l = self.loc(nil_t);
         let expression_l = operator_l.join(&name_l);
 
         Box::new(Node::MatchNilPattern(MatchNilPattern {
@@ -3594,13 +3589,13 @@ impl<'b> Builder<'b> {
         let result = match p_kw_label {
             PKwLabel::PlainLabel(label_t) => {
                 self.check_duplicate_pattern_key(
-                    clone_value(&label_t).as_str(),
-                    &self.loc(&label_t),
+                    clone_value(label_t).as_str(),
+                    &self.loc(label_t),
                 )?;
                 self.pair_keyword(label_t, value)
             }
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
-                let label_loc = self.loc(&begin_t).join(&self.loc(&end_t));
+                let label_loc = self.loc(begin_t).join(&self.loc(end_t));
 
                 match Self::static_string(&parts) {
                     Some(var_name) => self.check_duplicate_pattern_key(&var_name, &label_loc)?,

@@ -24,7 +24,7 @@ impl<'b> Lexer<'b> {
     pub(crate) fn set_yylval_num(&mut self, flags: &str) {
         println_if_debug_lexer!("set_yylval_num {:#?}", flags);
         let bytes = self.blob.alloc_ref::<Bytes>();
-        let flags = self.blob.push_str(&flags);
+        let flags = self.blob.push_str(flags);
         bytes.append_borrowed(flags, self.blob);
         self.lval = Some(bytes);
     }

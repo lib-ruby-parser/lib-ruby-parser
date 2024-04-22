@@ -101,7 +101,7 @@ pub(crate) mod Bool {
 pub(crate) mod MaybeStrTerm {
     use super::{ParseValue, StrTerm};
 
-    pub(crate) fn from<'b>(value: ParseValue<'b>) -> Option<StrTerm<'b>> {
+    pub(crate) fn from(value: ParseValue) -> Option<StrTerm> {
         match value {
             ParseValue::MaybeStrTerm(value) => value,
             other => unreachable!("expected MaybeStrTerm, got {:?}", other),
@@ -144,7 +144,7 @@ pub(crate) struct Ensure<'b> {
 pub(crate) mod OptEnsure {
     use super::{Ensure, ParseValue};
 
-    pub(crate) fn from<'b>(value: ParseValue<'b>) -> Option<Ensure<'b>> {
+    pub(crate) fn from(value: ParseValue) -> Option<Ensure> {
         match value {
             ParseValue::OptEnsure(value) => value.map(|v| *v),
             other => unreachable!("expected OptEnsure, got {:?}", other),
@@ -161,7 +161,7 @@ pub(crate) struct Else<'b> {
 pub(crate) mod OptElse {
     use super::{Else, ParseValue};
 
-    pub(crate) fn from<'b>(value: ParseValue<'b>) -> Option<Else<'b>> {
+    pub(crate) fn from(value: ParseValue) -> Option<Else> {
         match value {
             ParseValue::OptElse(value) => value.map(|v| *v),
             other => unreachable!("expected OptElse, got {:?}", other),

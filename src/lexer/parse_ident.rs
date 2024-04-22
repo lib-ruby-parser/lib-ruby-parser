@@ -66,11 +66,7 @@ impl<'b> Lexer<'b> {
             return Self::tLABEL;
         }
         if !self.lex_state.is_some(EXPR_DOT) {
-            if let Some(kw) = self
-                .tokenbuf
-                .as_whole_string()
-                .and_then(|s| reserved_word(s))
-            {
+            if let Some(kw) = self.tokenbuf.as_whole_string().and_then(reserved_word) {
                 let state = self.lex_state;
                 if state.is_some(EXPR_FNAME) {
                     self.lex_state.set(EXPR_ENDFN);
@@ -127,12 +123,12 @@ impl<'b> Lexer<'b> {
                 return Self::END_OF_INPUT;
             }
         };
-        if result == Self::tCONSTANT && is_var_name(&ident) {
+        if result == Self::tCONSTANT && is_var_name(ident) {
             result = Self::tIDENTIFIER
         }
         if !last_state.is_some(EXPR_DOT|EXPR_FNAME) &&
             result == Self::tIDENTIFIER && /* not EXPR_FNAME, not attrasgn */
-            self.is_lvar_defined(&ident)
+            self.is_lvar_defined(ident)
         {
             self.lex_state.set(EXPR_END | EXPR_LABEL);
         }

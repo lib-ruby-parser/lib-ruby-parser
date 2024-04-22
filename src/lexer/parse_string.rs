@@ -133,9 +133,7 @@ impl<'b> Lexer<'b> {
             let (flags, flags_count) = self.regx_options();
             let mut mem = [0; 11];
             mem[0] = term;
-            for i in 0..flags_count {
-                mem[i + 1] = flags[i];
-            }
+            mem[1..(flags_count + 1)].copy_from_slice(&flags[..flags_count]);
             let flags = core::str::from_utf8(&mem[..flags_count + 1]).unwrap();
             self.set_yylval_num(flags);
             self.lex_state.set(EXPR_END);

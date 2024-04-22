@@ -3141,7 +3141,7 @@ use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
 
                         $$ = Value::Node(
                             self.builder.condition(
-                                &$<Token>1,
+                                $<Token>1,
                                 $<BoxedNode>2,
                                 $<Token>3,
                                 $<MaybeBoxedNode>4,
@@ -3160,7 +3160,7 @@ use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
 
                         $$ = Value::Node(
                             self.builder.condition(
-                                &$<Token>1,
+                                $<Token>1,
                                 $<BoxedNode>2,
                                 $<Token>3,
                                 body,
@@ -3631,7 +3631,7 @@ use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
                         let elsif_t = $<Token>1;
 
                         let body = self.builder.condition(
-                            &elsif_t,
+                            elsif_t,
                             $<BoxedNode>2,
                             $<Token>3,
                             $<MaybeBoxedNode>4,
@@ -4069,7 +4069,7 @@ opt_block_args_tail:
             bvar: tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
-                        self.static_env.declare(clone_value(&ident_t).as_str());
+                        self.static_env.declare(clone_value(ident_t).as_str());
                         $$ = Value::Node(
                             self.builder.shadowarg(ident_t)?
                         );
@@ -5359,7 +5359,7 @@ opt_block_args_tail:
        p_var_ref: tCARET tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        let name = clone_value(&ident_t);
+                        let name = clone_value(ident_t);
 
                         if !self.static_env.is_declared(name.as_str()) {
                             return self.yyerror(
@@ -6336,7 +6336,7 @@ f_opt_paren_args: f_paren_args
                 | tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
-                        let name = clone_value(&ident_t);
+                        let name = clone_value(ident_t);
                         self.static_env.declare(name.as_str());
                         self.max_numparam_stack.set_has_ordinary_params();
                         $$ = Value::Token(ident_t);
@@ -6346,7 +6346,7 @@ f_opt_paren_args: f_paren_args
       f_arg_asgn: f_norm_arg
                     {
                         let arg_t = $<Token>1;
-                        let arg_name = clone_value(&arg_t);
+                        let arg_name = clone_value(arg_t);
                         self.current_arg_stack.set(Some(arg_name));
                         $$ = Value::Token(arg_t);
                     }
@@ -6387,9 +6387,9 @@ f_opt_paren_args: f_paren_args
          f_label: tLABEL
                     {
                         let ident_t = $<Token>1;
-                        self.check_kwarg_name(&ident_t)?;
+                        self.check_kwarg_name(ident_t)?;
 
-                        let ident = clone_value(&ident_t);
+                        let ident = clone_value(ident_t);
                         self.static_env.declare(&ident);
 
                         self.max_numparam_stack.set_has_ordinary_params();
@@ -6489,7 +6489,7 @@ f_opt_paren_args: f_paren_args
         f_kwrest: kwrest_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(clone_value(&ident_t).as_str());
+                        self.static_env.declare(clone_value(ident_t).as_str());
                         $$ = Value::NodeList(
                             Box::new(
                                 vec![
@@ -6575,7 +6575,7 @@ f_opt_paren_args: f_paren_args
       f_rest_arg: restarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(clone_value(&ident_t).as_str());
+                        self.static_env.declare(clone_value(ident_t).as_str());
 
                         $$ = Value::NodeList(
                             Box::new(
@@ -6610,7 +6610,7 @@ f_opt_paren_args: f_paren_args
      f_block_arg: blkarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(clone_value(&ident_t).as_str());
+                        self.static_env.declare(clone_value(ident_t).as_str());
                         $$ = Value::Node(
                             self.builder.blockarg(
                                 $<Token>1,
