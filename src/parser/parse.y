@@ -6994,11 +6994,11 @@ impl<'b> Parser<'b> {
         self.diagnostics.emit(diagnostic);
     }
 
-    fn yylex(&mut self) -> &'b /*'*/ mut Token<'b /*'*/> {
+    fn yylex(&mut self) -> &'b /*'*/ Token<'b /*'*/> {
         self.yylexer.yylex()
     }
 
-    fn next_token(&mut self) -> &'b /*'*/ mut Token<'b /*'*/> {
+    fn next_token(&mut self) -> &'b /*'*/ Token<'b /*'*/> {
         let token = self.yylex();
 
         self.last_token_type = token.token_type;

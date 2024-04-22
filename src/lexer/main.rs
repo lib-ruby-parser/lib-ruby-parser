@@ -144,7 +144,7 @@ impl<'b> Lexer<'b> {
         tokens
     }
 
-    pub(crate) fn yylex(&mut self) -> &'b mut Token<'b> {
+    pub(crate) fn yylex(&mut self) -> &'b Token<'b> {
         self.lval = None;
 
         let token_type = self.parser_yylex();

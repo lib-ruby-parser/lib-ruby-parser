@@ -97,7 +97,7 @@ impl IntrusiveListItem for Token<'_> {
 }
 
 #[cfg(test)]
-fn new_token<'b>(blob: &'b Blob<'b>) -> &'b mut Token<'b> {
+fn new_token<'b>(blob: &'b Blob<'b>) -> &'b Token<'b> {
     Token::new(
         crate::Lexer::tINTEGER,
         Bytes::new(vec![42]),

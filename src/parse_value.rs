@@ -28,7 +28,7 @@ pub(crate) mod BoxedNode {
 }
 
 impl<'b> Token<'b> {
-    pub(crate) fn from(value: ParseValue<'b>) -> &'b mut Self {
+    pub(crate) fn from(value: ParseValue<'b>) -> &'b Self {
         match value {
             ParseValue::Token(value) => value,
             other => unreachable!("expected Token, got {:?}", other),
@@ -38,7 +38,7 @@ impl<'b> Token<'b> {
 
 #[derive(Debug)]
 pub(crate) struct TokenWithContext<'b> {
-    pub(crate) token: &'b mut Token<'b>,
+    pub(crate) token: &'b Token<'b>,
     pub(crate) ctx: Context,
 }
 
@@ -123,7 +123,7 @@ pub(crate) mod Num {
 
 #[derive(Debug)]
 pub(crate) struct Superclass<'b> {
-    pub(crate) lt_t: Option<&'b mut Token<'b>>,
+    pub(crate) lt_t: Option<&'b Token<'b>>,
     pub(crate) value: Option<Box<Node>>,
 }
 impl<'b> Superclass<'b> {
@@ -137,7 +137,7 @@ impl<'b> Superclass<'b> {
 
 #[derive(Debug)]
 pub(crate) struct Ensure<'b> {
-    pub(crate) ensure_t: &'b mut Token<'b>,
+    pub(crate) ensure_t: &'b Token<'b>,
     pub(crate) body: Option<Box<Node>>,
 }
 #[allow(non_snake_case)]
@@ -154,7 +154,7 @@ pub(crate) mod OptEnsure {
 
 #[derive(Debug)]
 pub(crate) struct Else<'b> {
-    pub(crate) else_t: &'b mut Token<'b>,
+    pub(crate) else_t: &'b Token<'b>,
     pub(crate) body: Option<Box<Node>>,
 }
 #[allow(non_snake_case)]
@@ -171,7 +171,7 @@ pub(crate) mod OptElse {
 
 #[derive(Debug)]
 pub(crate) struct ExcVar<'b> {
-    pub(crate) assoc_t: Option<&'b mut Token<'b>>,
+    pub(crate) assoc_t: Option<&'b Token<'b>>,
     pub(crate) exc_var: Option<Box<Node>>,
 }
 impl<'b> ExcVar<'b> {
@@ -185,7 +185,7 @@ impl<'b> ExcVar<'b> {
 
 #[derive(Debug)]
 pub(crate) struct IfTail<'b> {
-    pub(crate) keyword_t: Option<&'b mut Token<'b>>,
+    pub(crate) keyword_t: Option<&'b Token<'b>>,
     pub(crate) body: Option<Box<Node>>,
 }
 impl<'b> IfTail<'b> {
@@ -200,7 +200,7 @@ impl<'b> IfTail<'b> {
 #[derive(Debug)]
 pub(crate) struct ExprValueDo<'b> {
     pub(crate) value: Box<Node>,
-    pub(crate) do_t: &'b mut Token<'b>,
+    pub(crate) do_t: &'b Token<'b>,
 }
 impl<'b> ExprValueDo<'b> {
     pub(crate) fn from(value: ParseValue<'b>) -> ExprValueDo<'b> {
@@ -236,10 +236,10 @@ impl BraceBody {
 
 #[derive(Debug)]
 pub(crate) struct CmdBraceBlock<'b> {
-    pub(crate) begin_t: &'b mut Token<'b>,
+    pub(crate) begin_t: &'b Token<'b>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: &'b mut Token<'b>,
+    pub(crate) end_t: &'b Token<'b>,
 }
 impl<'b> CmdBraceBlock<'b> {
     pub(crate) fn from(value: ParseValue<'b>) -> CmdBraceBlock<'b> {
@@ -252,9 +252,9 @@ impl<'b> CmdBraceBlock<'b> {
 
 #[derive(Debug)]
 pub(crate) struct ParenArgs<'b> {
-    pub(crate) begin_t: &'b mut Token<'b>,
+    pub(crate) begin_t: &'b Token<'b>,
     pub(crate) args: Vec<Node>,
-    pub(crate) end_t: &'b mut Token<'b>,
+    pub(crate) end_t: &'b Token<'b>,
 }
 impl<'b> ParenArgs<'b> {
     pub(crate) fn from(value: ParseValue<'b>) -> ParenArgs<'b> {
@@ -267,9 +267,9 @@ impl<'b> ParenArgs<'b> {
 
 #[derive(Debug)]
 pub(crate) struct OptParenArgs<'b> {
-    pub(crate) begin_t: Option<&'b mut Token<'b>>,
+    pub(crate) begin_t: Option<&'b Token<'b>>,
     pub(crate) args: Vec<Node>,
-    pub(crate) end_t: Option<&'b mut Token<'b>>,
+    pub(crate) end_t: Option<&'b Token<'b>>,
 }
 impl<'b> OptParenArgs<'b> {
     pub(crate) fn from(value: ParseValue<'b>) -> OptParenArgs<'b> {
@@ -282,9 +282,9 @@ impl<'b> OptParenArgs<'b> {
 
 #[derive(Debug)]
 pub(crate) struct BeginBlock<'b> {
-    pub(crate) begin_t: &'b mut Token<'b>,
+    pub(crate) begin_t: &'b Token<'b>,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: &'b mut Token<'b>,
+    pub(crate) end_t: &'b Token<'b>,
 }
 impl<'b> BeginBlock<'b> {
     pub(crate) fn from(value: ParseValue<'b>) -> BeginBlock<'b> {
@@ -297,9 +297,9 @@ impl<'b> BeginBlock<'b> {
 
 #[derive(Debug)]
 pub(crate) struct LambdaBody<'b> {
-    pub(crate) begin_t: &'b mut Token<'b>,
+    pub(crate) begin_t: &'b Token<'b>,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: &'b mut Token<'b>,
+    pub(crate) end_t: &'b Token<'b>,
 }
 impl<'b> LambdaBody<'b> {
     pub(crate) fn from(value: ParseValue<'b>) -> LambdaBody<'b> {
@@ -312,10 +312,10 @@ impl<'b> LambdaBody<'b> {
 
 #[derive(Debug)]
 pub(crate) struct DoBlock<'b> {
-    pub(crate) begin_t: &'b mut Token<'b>,
+    pub(crate) begin_t: &'b Token<'b>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: &'b mut Token<'b>,
+    pub(crate) end_t: &'b Token<'b>,
 }
 impl<'b> DoBlock<'b> {
     pub(crate) fn from(value: ParseValue<'b>) -> DoBlock<'b> {
@@ -328,10 +328,10 @@ impl<'b> DoBlock<'b> {
 
 #[derive(Debug)]
 pub(crate) struct BraceBlock<'b> {
-    pub(crate) begin_t: &'b mut Token<'b>,
+    pub(crate) begin_t: &'b Token<'b>,
     pub(crate) args_type: ArgsType,
     pub(crate) body: Option<Box<Node>>,
-    pub(crate) end_t: &'b mut Token<'b>,
+    pub(crate) end_t: &'b Token<'b>,
 }
 impl<'b> BraceBlock<'b> {
     pub(crate) fn from(value: ParseValue<'b>) -> BraceBlock<'b> {
@@ -344,9 +344,9 @@ impl<'b> BraceBlock<'b> {
 
 #[derive(Debug)]
 pub(crate) struct DefsHead<'b> {
-    pub(crate) def_t: &'b mut Token<'b>,
+    pub(crate) def_t: &'b Token<'b>,
     pub(crate) definee: Box<Node>,
-    pub(crate) dot_t: &'b mut Token<'b>,
+    pub(crate) dot_t: &'b Token<'b>,
     pub(crate) name_t: TokenWithContext<'b>,
 }
 impl<'b> DefsHead<'b> {
@@ -360,7 +360,7 @@ impl<'b> DefsHead<'b> {
 
 #[derive(Debug)]
 pub(crate) struct DefnHead<'b> {
-    pub(crate) def_t: &'b mut Token<'b>,
+    pub(crate) def_t: &'b Token<'b>,
     pub(crate) name_t: TokenWithContext<'b>,
 }
 impl<'b> DefnHead<'b> {
@@ -483,7 +483,7 @@ impl PTopExpr {
 #[derive(Debug)]
 pub(crate) struct MatchPatternWithTrailingComma<'b> {
     pub(crate) elements: Vec<Node>,
-    pub(crate) trailing_comma: Option<&'b mut Token<'b>>,
+    pub(crate) trailing_comma: Option<&'b Token<'b>>,
 }
 impl<'b> MatchPatternWithTrailingComma<'b> {
     pub(crate) fn from(value: ParseValue<'b>) -> Self {
@@ -496,8 +496,8 @@ impl<'b> MatchPatternWithTrailingComma<'b> {
 
 #[derive(Debug)]
 pub(crate) struct NoKwRest<'b> {
-    pub(crate) kwrest_mark: &'b mut Token<'b>,
-    pub(crate) k_nil: &'b mut Token<'b>,
+    pub(crate) kwrest_mark: &'b Token<'b>,
+    pub(crate) k_nil: &'b Token<'b>,
 }
 impl<'b> NoKwRest<'b> {
     pub(crate) fn from(value: ParseValue<'b>) -> Self {
@@ -514,7 +514,7 @@ pub(crate) enum ParseValue<'b> {
     Stolen,
     Uninitialized,
     None,
-    Token(&'b mut Token<'b>),
+    Token(&'b Token<'b>),
     TokenWithContext(TokenWithContext<'b>),
     Context(Context),
     Node(Box<Node>),
@@ -604,7 +604,7 @@ pub(crate) enum ParseValue<'b> {
 
 impl<'b> ParseValue<'b> {
     // rust-bison-skeleton contract
-    pub(crate) fn from_token(token: &'b mut Token<'b>) -> Self {
+    pub(crate) fn from_token(token: &'b Token<'b>) -> Self {
         Self::Token(token)
     }
     pub(crate) fn new_uninitialized() -> Self {
