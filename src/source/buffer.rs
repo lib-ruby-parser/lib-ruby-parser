@@ -356,7 +356,7 @@ pub(crate) trait Pushback<T> {
 }
 
 impl Pushback<u8> for Buffer<'_> {
-    fn pushback(&mut self, c: u8) {
+    fn pushback(&mut self, _c: u8) {
         self.pcur -= 1;
         if self.pcur > self.pbeg
             && self.byte_at(self.pcur) == b'\n'
@@ -364,7 +364,7 @@ impl Pushback<u8> for Buffer<'_> {
         {
             self.pcur -= 1;
         }
-        println_if_debug_buffer!("pushback({:?}) pcur = {}", c, self.pcur);
+        println_if_debug_buffer!("pushback({:?}) pcur = {}", _c, self.pcur);
     }
 }
 

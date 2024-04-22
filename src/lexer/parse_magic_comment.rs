@@ -3,8 +3,8 @@ use core::convert::TryInto;
 use lib_ruby_parser_ast_arena::write_to;
 
 use crate::source::{MagicComment, MagicCommentKind};
-use crate::DiagnosticMessage;
 use crate::Lexer;
+use lib_ruby_parser_ast_arena::DiagnosticMessage;
 
 type MagicCommentData = (&'static str, MagicCommentKind);
 
@@ -344,11 +344,10 @@ impl<'b> Lexer<'b> {
                                     format_args!("unknown encoding name: {}", encoding_name),
                                 )
                                 .unwrap();
+                                let error = self.blob.push_str(error);
 
                                 self.yyerror1(
-                                    DiagnosticMessage::EncodingError {
-                                        error: error.to_string(),
-                                    },
+                                    DiagnosticMessage::EncodingError { error },
                                     self.loc(vbeg, vend),
                                 );
 
@@ -360,7 +359,7 @@ impl<'b> Lexer<'b> {
                             Err(err) => {
                                 self.yyerror1(
                                     DiagnosticMessage::EncodingError {
-                                        error: err.to_string(),
+                                        error: err.as_str(),
                                     },
                                     self.loc(vbeg, vend),
                                 );

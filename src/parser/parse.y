@@ -3,7 +3,7 @@
 %define api.parser.struct { Parser }
 %define api.value.type { Value }
 %define api.parser.check_debug { self.is_debug() }
-%define api.parser.generic {<'b> /*'*/}
+%define api.parser.generic {<'b /*'*/>}
 
 %define parse.error custom
 %define parse.trace
@@ -44,10 +44,10 @@
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
     tokens: Vec<Token<'b /*'*/>>,
-    diagnostics: Diagnostics,
+    diagnostics: &'b /*'*/ IntrusiveList<'b /*'*/, Diagnostic<'b /*'*/>>,
     record_tokens: bool,
 
-    blob: &'b /*'*/ Blob<'b> /*'*/,
+    blob: &'b /*'*/ Blob<'b /*'*/>,
     input: &'b /*'*/ [u8],
 }
 
@@ -65,9 +65,8 @@ use crate::parse_value::*;
 use crate::Node;
 use crate::nodes;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
-use crate::error::Diagnostics;
 use crate::Loc;
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
 
 }
 
@@ -2498,7 +2497,9 @@ use lib_ruby_parser_ast_arena::Blob;
                         let op_t = $<Token>2;
                         self.warn(
                             @2,
-                            DiagnosticMessage::ComparisonAfterComparison { comparison: clone_value(&op_t) }
+                            DiagnosticMessage::ComparisonAfterComparison {
+                                comparison: self.blob.push_str(&op_t.to_string_lossy())
+                            }
                         );
                         $$ = Value::Node(
                             self.builder.binary_op(
@@ -2600,7 +2601,7 @@ use lib_ruby_parser_ast_arena::Blob;
                         if !self.static_env.is_forward_args_declared() {
                             return self.yyerror(
                                 @4,
-                                DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3".to_string() }
+                                DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3" }
                             );
                         }
 
@@ -2619,7 +2620,7 @@ use lib_ruby_parser_ast_arena::Blob;
                 | tLPAREN2 args_forward rparen
                     {
                         if !self.static_env.is_forward_args_declared() {
-                            return self.yyerror(@2, DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3".to_string() });
+                            return self.yyerror(@2, DiagnosticMessage::UnexpectedToken { token_name: "tBDOT3" });
                         }
 
                         $$ = Value::new_paren_args(
@@ -5363,7 +5364,9 @@ opt_block_args_tail:
                         if !self.static_env.is_declared(name.as_str()) {
                             return self.yyerror(
                                 @2,
-                                DiagnosticMessage::NoSuchLocalVariable { var_name: name }
+                                DiagnosticMessage::NoSuchLocalVariable {
+                                    var_name: self.blob.push_str(&ident_t.to_string_lossy())
+                                }
                             );
                         }
 
@@ -6889,29 +6892,28 @@ f_opt_paren_args: f_paren_args
 
 %%
 
-impl<'b> Parser<'b> {
+impl<'b /*'*/> Parser<'b /*'*/> {
     /// Constructs a parser with given `input` and `options`.
     ///
     /// Returns an error if given `input` is invalid.
-    pub fn new(input: &'b /*'*/ [u8], options: ParserOptions<'b>, blob: &'b Blob<'b /*'*/>) -> Self {
+    pub fn new(input: &'b /*'*/ [u8], options: ParserOptions<'b /*'*/>, blob: &'b Blob<'b /*'*/>) -> Self {
         let ParserOptions {
             buffer_name,
             decoder,
             record_tokens,
         } = options;
 
+        let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
         let context = ParserContext::new();
         let current_arg_stack = CurrentArgStack::new();
         let max_numparam_stack = MaxNumparamStack::new();
         let pattern_variables = VariablesStack::new();
         let pattern_hash_keys = VariablesStack::new();
         let static_env = StaticEnvironment::new();
-        let diagnostics = Diagnostics::new();
+        let diagnostics = lexer.diagnostics;
 
-        let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
         lexer.context = context.clone();
         lexer.static_env = static_env.clone();
-        lexer.diagnostics = diagnostics.clone();
 
         let builder = Builder::new(
             static_env.clone(),
@@ -6920,7 +6922,7 @@ impl<'b> Parser<'b> {
             max_numparam_stack.clone(),
             pattern_variables.clone(),
             pattern_hash_keys.clone(),
-            diagnostics.clone(),
+            diagnostics,
             blob,
         );
 
@@ -6962,7 +6964,7 @@ impl<'b> Parser<'b> {
         ParserResult {
             ast: self.result,
             tokens: self.tokens,
-            diagnostics: self.diagnostics.take_inner(),
+            diagnostics: self.diagnostics,
             comments: self.yylexer.comments,
             magic_comments: self.yylexer.magic_comments,
             input: self.yylexer.buffer.input.decoded,
@@ -6978,20 +6980,21 @@ impl<'b> Parser<'b> {
         ParserResult {
             ast: self.result,
             tokens: self.tokens,
-            diagnostics: self.diagnostics.take_inner(),
+            diagnostics: self.diagnostics,
             comments: self.yylexer.comments,
             magic_comments: self.yylexer.magic_comments,
             input: self.yylexer.buffer.input.decoded,
         }
     }
 
-    fn warn(&mut self, loc: &Loc, message: DiagnosticMessage) {
-        let diagnostic = Diagnostic {
-            level: ErrorLevel::Warning,
+    fn warn(&mut self, loc: &Loc, message: DiagnosticMessage<'b /*'*/>) {
+        let diagnostic = Diagnostic::new(
+            ErrorLevel::Warning,
             message,
-            loc: *loc,
-        };
-        self.diagnostics.emit(diagnostic);
+            *loc,
+            self.blob
+        );
+        self.diagnostics.push(diagnostic);
     }
 
     fn yylex(&mut self) -> &'b /*'*/ Token<'b /*'*/> {
@@ -7018,12 +7021,13 @@ impl<'b> Parser<'b> {
             Ok(())
         } else {
             let loc = ident_t.loc;
-            self.diagnostics.emit(
-                Diagnostic {
-                    level: ErrorLevel::Error,
-                    message: DiagnosticMessage::ConstArgument {},
-                    loc
-                }
+            self.diagnostics.push(
+                Diagnostic::new(
+                    ErrorLevel::Error,
+                    DiagnosticMessage::ConstArgument {},
+                    loc,
+                    self.blob
+                )
             );
             Err(())
         }
@@ -7040,34 +7044,33 @@ impl<'b> Parser<'b> {
         }
     }
 
-    fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage) -> Result<i32, ()> {
+    fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage<'b /*'*/>) -> Result<i32, ()> {
         self.yyerror1(
             message,
             *loc
         )
     }
 
-    fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) -> Result<i32, ()> {
-        let diagnostic = Diagnostic { level: ErrorLevel::Error, message, loc };
-        self.diagnostics.emit(diagnostic);
+    fn yyerror1(&mut self, message: DiagnosticMessage<'b /*'*/>, loc: Loc) -> Result<i32, ()> {
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc, self.blob);
+        self.diagnostics.push(diagnostic);
         Err(())
     }
 
     fn report_syntax_error(&mut self, _stack: &YYStack, yytoken: &SymbolKind, loc: YYLoc) {
         let id: usize = yytoken.code().try_into().expect("failed to convert token code into i32, is it too big?");
-        let diagnostic = Diagnostic {
-            level: ErrorLevel::Error,
-            message: DiagnosticMessage::UnexpectedToken {
-                token_name: Lexer::TOKEN_NAMES[id].to_string()
-            },
+        let diagnostic = Diagnostic::new(
+            ErrorLevel::Error,
+            DiagnosticMessage::UnexpectedToken { token_name: Lexer::TOKEN_NAMES[id] },
             loc,
-        };
-        self.diagnostics.emit(diagnostic);
+            self.blob
+        );
+        self.diagnostics.push(diagnostic);
     }
 
-    fn warn_eol(&mut self, loc: &Loc, tok: &str) {
+    fn warn_eol(&mut self, loc: &Loc, tok: &'static /*'*/ str) {
         if self.yylexer.buffer.is_looking_at_eol() {
-            self.warn(loc, DiagnosticMessage::TokAtEolWithoutExpression { token_name: tok.to_string() });
+            self.warn(loc, DiagnosticMessage::TokAtEolWithoutExpression { token_name: tok });
         }
     }
 
@@ -7096,7 +7099,7 @@ impl<'b> Parser<'b> {
     }
 
     #[inline]
-    #[cfg(feature = "debug-parser")]
+    #[cfg(not(feature = "debug-parser"))]
     const fn is_debug(&self) -> bool {
         false
     }

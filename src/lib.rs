@@ -19,9 +19,9 @@ Uses bison under the hood.
 /// Module with all known node types
 pub use lib_ruby_parser_ast::nodes;
 pub use lib_ruby_parser_ast::Bytes;
-pub use lib_ruby_parser_ast::DiagnosticMessage;
 pub use lib_ruby_parser_ast::Loc;
 pub use lib_ruby_parser_ast::Node;
+pub use lib_ruby_parser_ast_arena::DiagnosticMessage;
 
 mod loc_ext;
 pub use loc_ext::LocExt;

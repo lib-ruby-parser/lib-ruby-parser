@@ -1,10 +1,11 @@
+use crate::lex_states::*;
 use crate::lexer::TokAdd;
 use crate::maybe_byte::MaybeByte;
 use crate::source::buffer::*;
 use crate::str_term::{str_types::*, HeredocEnd, HeredocLiteral, StrTerm};
 use crate::Lexer;
 use crate::TokenBuf;
-use crate::{lex_states::*, DiagnosticMessage};
+use lib_ruby_parser_ast_arena::DiagnosticMessage;
 
 const TAB_WIDTH: i32 = 8;
 
@@ -304,16 +305,14 @@ impl<'b> Lexer<'b> {
 
     fn here_document_error(&mut self, here: &HeredocLiteral, eos: u32, len: u32) -> i32 {
         self.heredoc_restore(here);
+        let heredoc_id = core::str::from_utf8(
+            self.buffer
+                .substr_at(eos, eos + len)
+                .expect("failed to get heredoc id for comparison"),
+        )
+        .unwrap();
         self.compile_error(
-            DiagnosticMessage::UnterminatedHeredoc {
-                heredoc_id: core::str::from_utf8(
-                    self.buffer
-                        .substr_at(eos, eos + len)
-                        .expect("failed to get heredoc id for comparison"),
-                )
-                .unwrap()
-                .to_string(),
-            },
+            DiagnosticMessage::UnterminatedHeredoc { heredoc_id },
             self.current_loc(),
         );
         self.token_flush();

@@ -1,4 +1,5 @@
 use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast_arena::DiagnosticMessage;
 use lib_ruby_parser_ast_arena::IntrusiveList;
 
 use crate::lexer::*;
@@ -8,15 +9,15 @@ use crate::source::Comment;
 use crate::source::Decoder;
 use crate::source::MagicComment;
 use crate::str_term::{str_types::*, HeredocEnd, StrTerm, StringLiteral};
+use crate::Bytes;
 use crate::Loc;
 use crate::SharedContext;
 use crate::StackState;
 use crate::StaticEnvironment;
 use crate::Token;
 use crate::TokenBuf;
-use crate::{error::Diagnostics, Bytes};
 use crate::{lex_states::*, LexState};
-use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
+use crate::{Diagnostic, ErrorLevel};
 
 /// A struct responsible for converting a given input
 /// into a sequence of tokens
@@ -77,7 +78,7 @@ pub struct Lexer<'b> {
     /// ```
     pub static_env: StaticEnvironment,
 
-    pub(crate) diagnostics: Diagnostics,
+    pub(crate) diagnostics: &'b IntrusiveList<'b, Diagnostic<'b>>,
     pub(crate) comments: &'b IntrusiveList<'b, Comment>,
     pub(crate) magic_comments: &'b IntrusiveList<'b, MagicComment>,
 
@@ -116,7 +117,7 @@ impl<'b> Lexer<'b> {
             command_start: false,
             token_seen: false,
             static_env: StaticEnvironment::default(),
-            diagnostics: Diagnostics::default(),
+            diagnostics: blob.alloc_ref(),
             comments: blob.alloc_ref(),
             magic_comments: blob.alloc_ref(),
             blob,
@@ -1123,20 +1124,16 @@ impl<'b> Lexer<'b> {
         Self::tNL
     }
 
-    pub(crate) fn warn(&mut self, message: DiagnosticMessage, loc: Loc) {
+    pub(crate) fn warn(&mut self, message: DiagnosticMessage<'b>, loc: Loc) {
         println_if_debug_lexer!("WARNING: {}", message.render());
-        let diagnostic = Diagnostic {
-            level: ErrorLevel::Warning,
-            message,
-            loc,
-        };
-        self.diagnostics.emit(diagnostic);
+        let diagnostic = Diagnostic::new(ErrorLevel::Warning, message, loc, self.blob);
+        self.diagnostics.push(diagnostic);
     }
 
     pub(crate) fn warn_balanced(
         &mut self,
         token_type: i32,
-        op: &'static str,
+        operator: &'static str,
         syn: &'static str,
         c: MaybeByte,
         space_seen: bool,
@@ -1147,8 +1144,8 @@ impl<'b> Lexer<'b> {
         {
             self.warn(
                 DiagnosticMessage::AmbiguousOperator {
-                    operator: op.to_string(),
-                    interpreted_as: syn.to_string(),
+                    operator,
+                    interpreted_as: syn,
                 },
                 self.current_loc(),
             );
@@ -1156,14 +1153,10 @@ impl<'b> Lexer<'b> {
         token_type
     }
 
-    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage, loc: Loc) {
+    pub(crate) fn compile_error(&mut self, message: DiagnosticMessage<'b>, loc: Loc) {
         println_if_debug_lexer!("Compile error: {}", message.render());
-        let diagnostic = Diagnostic {
-            level: ErrorLevel::Error,
-            message,
-            loc,
-        };
-        self.diagnostics.emit(diagnostic);
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc, self.blob);
+        self.diagnostics.push(diagnostic);
     }
 
     pub(crate) fn new_strterm(
@@ -1213,18 +1206,14 @@ impl<'b> Lexer<'b> {
         // nop
     }
 
-    pub(crate) fn yyerror0(&mut self, message: DiagnosticMessage) {
+    pub(crate) fn yyerror0(&mut self, message: DiagnosticMessage<'b>) {
         self.yyerror1(message, self.current_loc());
     }
 
-    pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage, loc: Loc) {
+    pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage<'b>, loc: Loc) {
         println_if_debug_lexer!("yyerror0: {}", message.render());
-        let diagnostic = Diagnostic {
-            level: ErrorLevel::Error,
-            message,
-            loc,
-        };
-        self.diagnostics.emit(diagnostic);
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc, self.blob);
+        self.diagnostics.push(diagnostic);
     }
 
     pub(crate) fn is_lambda_beginning(&self) -> bool {

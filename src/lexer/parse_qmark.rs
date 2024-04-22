@@ -2,7 +2,7 @@ use crate::lex_states::*;
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
-use crate::DiagnosticMessage;
+use lib_ruby_parser_ast_arena::DiagnosticMessage;
 
 impl<'b> Lexer<'b> {
     fn parse_qmark_ternary(&mut self, c: MaybeByte) -> Result<i32, ()> {
@@ -60,8 +60,7 @@ impl<'b> Lexer<'b> {
                 self.warn(
                     DiagnosticMessage::AmbiguousTernaryOperator {
                         condition: core::str::from_utf8(self.buffer.substr_at(start, ptr).unwrap())
-                            .unwrap()
-                            .to_string(),
+                            .unwrap(),
                     },
                     self.loc(start - 1, start),
                 )

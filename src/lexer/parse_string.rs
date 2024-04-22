@@ -183,7 +183,7 @@ impl<'b> Lexer<'b> {
                 DiagnosticMessage::UnknownRegexOptions {
                     options: self
                         .tokenbuf
-                        .as_string()
+                        .as_whole_string()
                         .expect("expected buffer to have only utf-8 chars"),
                 },
                 self.current_loc(),
@@ -780,10 +780,9 @@ impl<'b> Lexer<'b> {
     pub(crate) fn warn_space_char(&mut self, c: u8, prefix: &'static str) {
         let mut mem = [0; 10];
         let suggestion = write_to(&mut mem, format_args!("{}\\{}", prefix, c)).unwrap();
+        let suggestion = self.blob.push_str(suggestion);
         self.warn(
-            DiagnosticMessage::InvalidCharacterSyntax {
-                suggestion: suggestion.to_string(),
-            },
+            DiagnosticMessage::InvalidCharacterSyntax { suggestion },
             self.current_loc(),
         )
     }

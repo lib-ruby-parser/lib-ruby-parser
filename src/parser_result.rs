@@ -20,7 +20,7 @@ pub struct ParserResult<'b> {
 
     /// List of all diagnostics (errors and warnings) that have been
     /// recorded during lexing and parsing
-    pub diagnostics: Vec<Diagnostic>,
+    pub diagnostics: &'b IntrusiveList<'b, Diagnostic<'b>>,
 
     /// List of comments extracted from the source code.
     pub comments: &'b IntrusiveList<'b, Comment>,
@@ -63,7 +63,7 @@ fn test_fmt() {
             ParserResult {
                 ast: None,
                 tokens: vec![],
-                diagnostics: vec![],
+                diagnostics: blob.alloc_ref(),
                 comments: blob.alloc_ref(),
                 magic_comments: blob.alloc_ref(),
                 input: DecodedInput::new("foo", b"", &blob)

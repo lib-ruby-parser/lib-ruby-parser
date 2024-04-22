@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
 
 #[cfg(feature = "onig")]
 use onig::{Regex, RegexOptions};
@@ -6,7 +6,6 @@ use onig::{Regex, RegexOptions};
 use core::convert::TryInto;
 use std::collections::HashMap;
 
-use crate::error::Diagnostics;
 #[allow(unused_imports)]
 use crate::nodes::*;
 use crate::Loc;
@@ -66,7 +65,7 @@ pub(crate) struct Builder<'b> {
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
-    diagnostics: Diagnostics,
+    diagnostics: &'b IntrusiveList<'b, Diagnostic<'b>>,
     blob: &'b Blob<'b>,
 }
 
@@ -78,7 +77,7 @@ impl<'b> Builder<'b> {
         max_numparam_stack: MaxNumparamStack,
         pattern_variables: VariablesStack,
         pattern_hash_keys: VariablesStack,
-        diagnostics: Diagnostics,
+        diagnostics: &'b IntrusiveList<'b, Diagnostic<'b>>,
         blob: &'b Blob<'b>,
     ) -> Self {
         Self {
@@ -339,12 +338,7 @@ impl<'b> Builder<'b> {
 
     fn validate_sym_value(&self, value: &Bytes, loc: &Loc) {
         if !value.is_valid_utf8() {
-            self.error(
-                DiagnosticMessage::InvalidSymbol {
-                    symbol: String::from("UTF-8"),
-                },
-                loc,
-            )
+            self.error(DiagnosticMessage::InvalidSymbol { symbol: "UTF-8" }, loc)
         }
     }
 
@@ -1063,7 +1057,7 @@ impl<'b> Builder<'b> {
         if parsed.is_err() || parsed.map(|n| n > Self::MAX_NTH_REF) == Ok(true) {
             self.warn(
                 DiagnosticMessage::NthRefIsTooBig {
-                    nth_ref: name.clone(),
+                    nth_ref: self.blob.push_str(&name),
                 },
                 &expression_l,
             )
@@ -1080,7 +1074,7 @@ impl<'b> Builder<'b> {
                     if name_s.ends_with('?') || name_s.ends_with('!') {
                         self.error(
                             DiagnosticMessage::InvalidIdToGet {
-                                identifier: name_s.to_string(),
+                                identifier: self.blob.push_str(&name_s),
                             },
                             &expression_l,
                         );
@@ -1110,7 +1104,7 @@ impl<'b> Builder<'b> {
                         if current_arg == name_s {
                             self.error(
                                 DiagnosticMessage::CircularArgumentReference {
-                                    arg_name: name.clone(),
+                                    arg_name: self.blob.push_str(&name),
                                 },
                                 &expression_l,
                             );
@@ -1294,7 +1288,9 @@ impl<'b> Builder<'b> {
             }
             Node::BackRef(BackRef { name, expression_l }) => {
                 self.error(
-                    DiagnosticMessage::CantSetVariable { var_name: name },
+                    DiagnosticMessage::CantSetVariable {
+                        var_name: self.blob.push_str(&name),
+                    },
                     &expression_l,
                 );
                 return Err(());
@@ -1302,7 +1298,7 @@ impl<'b> Builder<'b> {
             Node::NthRef(NthRef { name, expression_l }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: format!("${}", name),
+                        var_name: self.blob.push_str(&format!("${}", name)),
                     },
                     &expression_l,
                 );
@@ -1457,7 +1453,7 @@ impl<'b> Builder<'b> {
             Node::BackRef(BackRef { name, expression_l }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: name.clone(),
+                        var_name: self.blob.push_str(&name),
                     },
                     expression_l,
                 );
@@ -1466,7 +1462,7 @@ impl<'b> Builder<'b> {
             Node::NthRef(NthRef { name, expression_l }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: format!("${}", name),
+                        var_name: self.blob.push_str(&format!("${}", name)),
                     },
                     expression_l,
                 );
@@ -3858,7 +3854,7 @@ impl<'b> Builder<'b> {
         if assigning_to_numparam {
             self.error(
                 DiagnosticMessage::CantAssignToNumparam {
-                    numparam: String::from(name),
+                    numparam: self.blob.push_str(name),
                 },
                 loc,
             );
@@ -3895,7 +3891,7 @@ impl<'b> Builder<'b> {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
                 self.error(
                     DiagnosticMessage::ReservedForNumparam {
-                        numparam: String::from(name),
+                        numparam: self.blob.push_str(name),
                     },
                     loc,
                 );
@@ -4118,20 +4114,14 @@ impl<'b> Builder<'b> {
         }
     }
 
-    pub(crate) fn error(&self, message: DiagnosticMessage, loc: &Loc) {
-        self.diagnostics.emit(Diagnostic {
-            level: ErrorLevel::Error,
-            message,
-            loc: *loc,
-        })
+    pub(crate) fn error(&self, message: DiagnosticMessage<'b>, loc: &Loc) {
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, *loc, self.blob);
+        self.diagnostics.push(diagnostic)
     }
 
-    pub(crate) fn warn(&self, message: DiagnosticMessage, loc: &Loc) {
-        self.diagnostics.emit(Diagnostic {
-            level: ErrorLevel::Warning,
-            message,
-            loc: *loc,
-        })
+    pub(crate) fn warn(&self, message: DiagnosticMessage<'b>, loc: &Loc) {
+        let diagnostic = Diagnostic::new(ErrorLevel::Warning, message, *loc, self.blob);
+        self.diagnostics.push(diagnostic)
     }
 
     pub(crate) fn value_expr(&self, node: &Node) -> Result<(), ()> {

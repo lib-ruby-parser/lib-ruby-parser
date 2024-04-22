@@ -14,6 +14,15 @@ pub enum InputError<'b> {
     DecodingError(&'b str),
 }
 
+impl<'b> InputError<'b> {
+    pub(crate) fn as_str(&self) -> &'b str {
+        match self {
+            InputError::UnsupportedEncoding(_) => "unsupported encoding",
+            InputError::DecodingError(message) => message,
+        }
+    }
+}
+
 impl core::fmt::Display for InputError<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{:?}", self)
