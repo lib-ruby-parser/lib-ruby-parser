@@ -363,7 +363,7 @@ impl<'b> Lexer<'b> {
         self.set_integer_literal(&mut tokenbuf, suffix)
     }
 
-    fn set_number_literal(&mut self, value: &mut TokenBuf, token_type: i32, suffix: i8) -> i32 {
+    fn set_number_literal(&mut self, value: &mut TokenBuf<'b>, token_type: i32, suffix: i8) -> i32 {
         let mut token_type = token_type;
         if suffix & NUM_SUFFIX_I != 0 {
             value.append_valid_escaped('i');
@@ -420,7 +420,7 @@ impl<'b> Lexer<'b> {
         result
     }
 
-    fn set_integer_literal(&mut self, value: &mut TokenBuf, suffix: i8) -> i32 {
+    fn set_integer_literal(&mut self, value: &mut TokenBuf<'b>, suffix: i8) -> i32 {
         let mut token_type = Self::tINTEGER;
         if suffix & NUM_SUFFIX_R != 0 {
             value.append_valid_escaped('r');

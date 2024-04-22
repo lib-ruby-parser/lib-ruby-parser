@@ -91,7 +91,7 @@ impl<'b> Lexer<'b> {
             .expect("failed to get heredoc id");
         let mut id = TokenBuf::empty(self.blob);
         id.append_borrowed(id_bytes);
-        self.set_yylval_str(&id);
+        self.set_yylval_str(&mut id);
         self.lval_start = Some(self.buffer.ptok);
         self.lval_end = Some(self.buffer.pcur);
 
@@ -195,7 +195,7 @@ impl<'b> Lexer<'b> {
                 }
                 self.buffer.goto_eol();
                 if self.buffer.heredoc_indent > 0 {
-                    return self.heredoc_flush_str(&str_);
+                    return self.heredoc_flush_str(&mut str_);
                 }
                 if self.nextc().is_eof() {
                     str_.clear();
@@ -276,7 +276,7 @@ impl<'b> Lexer<'b> {
         self.heredoc_restore(&here);
         self.token_flush();
         self.strterm = self.new_strterm(func | STR_FUNC_TERM, 0, Some(0), Some(heredoc_end));
-        self.set_yylval_str(&str_);
+        self.set_yylval_str(&mut str_);
         Self::tSTRING_CONTENT
     }
 
@@ -327,7 +327,7 @@ impl<'b> Lexer<'b> {
         self.lval_end = Some(heredoc_end.end);
         let mut token_buf = TokenBuf::empty(self.blob);
         token_buf.append_borrowed(&heredoc_end.value);
-        self.set_yylval_str(&token_buf);
+        self.set_yylval_str(&mut token_buf);
 
         self.heredoc_restore(here);
         self.token_flush();
@@ -337,15 +337,15 @@ impl<'b> Lexer<'b> {
         Self::tSTRING_END
     }
 
-    fn heredoc_flush_str(&mut self, str_: &TokenBuf) -> i32 {
+    fn heredoc_flush_str(&mut self, str_: &mut TokenBuf<'b>) -> i32 {
         self.set_yylval_str(str_);
         self.flush_string_content();
         Self::tSTRING_CONTENT
     }
 
     fn heredoc_flush(&mut self) -> i32 {
-        let tokenbuf = self.tokenbuf.take();
-        self.heredoc_flush_str(&tokenbuf)
+        let mut tokenbuf = self.tokenbuf.take();
+        self.heredoc_flush_str(&mut tokenbuf)
     }
 
     fn heredoc_restore(&mut self, here: &HeredocLiteral) {

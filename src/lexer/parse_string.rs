@@ -52,7 +52,7 @@ impl<'b> Lexer<'b> {
                     self.lval_end = Some(heredoc_end.end);
                     let mut token_buf = TokenBuf::empty(self.blob);
                     token_buf.append_borrowed(&heredoc_end.value);
-                    self.set_yylval_str(&token_buf);
+                    self.set_yylval_str(&mut token_buf);
                 }
                 return Self::tSTRING_END;
             }
@@ -119,8 +119,8 @@ impl<'b> Lexer<'b> {
         }
 
         self.tokfix();
-        let str_ = self.tokenbuf.take();
-        self.set_yylval_str(&str_);
+        let mut str_ = self.tokenbuf.take();
+        self.set_yylval_str(&mut str_);
         self.flush_string_content();
         self.restore_strterm(quote);
 

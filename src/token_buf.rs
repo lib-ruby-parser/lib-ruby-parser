@@ -9,7 +9,7 @@ pub(crate) struct TokenBuf<'b> {
 impl<'b> TokenBuf<'b> {
     pub(crate) fn empty(blob: &'b Blob<'b>) -> Self {
         Self {
-            bytes: unsafe { blob.alloc().as_mut() },
+            bytes: blob.alloc_ref(),
             blob,
         }
     }
@@ -29,6 +29,10 @@ impl<'b> TokenBuf<'b> {
     }
 
     pub(crate) fn append_borrowed(&mut self, bytes: &'b [u8]) {
+        if bytes.is_empty() {
+            // FIXME: just strip out callers that make redundant pushes
+            return;
+        }
         let s = core::str::from_utf8(bytes).unwrap();
         self.bytes.append_borrowed(s, self.blob);
     }
@@ -55,6 +59,6 @@ impl<'b> TokenBuf<'b> {
     }
 
     pub(crate) fn clear(&mut self) {
-        self.bytes = unsafe { self.blob.alloc().as_mut() };
+        self.bytes = self.blob.alloc_ref();
     }
 }

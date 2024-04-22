@@ -6,6 +6,7 @@ use crate::source::buffer::*;
 use crate::DiagnosticMessage;
 
 fn is_var_name(ident: &str) -> bool {
+    debug_assert!(!ident.is_empty());
     if let Some(first_char) = ident.chars().next() {
         return !first_char.is_uppercase();
     }

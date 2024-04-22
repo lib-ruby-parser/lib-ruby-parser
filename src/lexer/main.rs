@@ -24,7 +24,7 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 pub struct Lexer<'b> {
     pub(crate) buffer: Buffer<'b>,
 
-    pub(crate) lval: Option<Bytes>,
+    pub(crate) lval: Option<&'b mut lib_ruby_parser_ast_arena::Bytes<'b>>,
     pub(crate) lval_start: Option<usize>,
     pub(crate) lval_end: Option<usize>,
 
@@ -157,18 +157,28 @@ impl<'b> Lexer<'b> {
             .take()
             .or_else(|| {
                 // take raw value if nothing was manually captured
-                self.buffer
-                    .substr_at(begin, end)
-                    .map(|s| Bytes::new(Vec::from(s)))
+                self.buffer.substr_at(begin, end).map(|s| {
+                    let bytes = self.blob.alloc_ref::<lib_ruby_parser_ast_arena::Bytes>();
+                    let s = core::str::from_utf8(s).unwrap();
+                    bytes.append_borrowed(s, self.blob);
+                    bytes
+                })
             })
-            .unwrap_or_else(|| Bytes::new(vec![]));
+            .unwrap_or_else(|| self.blob.alloc_ref::<lib_ruby_parser_ast_arena::Bytes>());
 
         if token_type == Self::tNL {
-            token_value = Bytes::new(vec![b'\n']);
+            let nl_bytes = self.blob.alloc_ref::<lib_ruby_parser_ast_arena::Bytes>();
+            nl_bytes.append_valid_escaped('\n', self.blob);
+            token_value = nl_bytes;
             end = begin + 1;
         }
 
-        let token = Token::new(token_type, token_value, Loc { begin, end }, self.blob);
+        let token = Token::new(
+            token_type,
+            Bytes::new(token_value.iter().collect()),
+            Loc { begin, end },
+            self.blob,
+        );
         println_if_debug_lexer!(
             "yylex ({:?}, {:?}, {:?})",
             token.token_name(),
