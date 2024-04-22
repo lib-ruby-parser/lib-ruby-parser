@@ -372,9 +372,9 @@ impl<'b> Lexer<'b> {
                     let key_l = self.loc(beg, beg + n);
                     let value_l = self.loc(vbeg, vend);
 
-                    let magic_comment = self.blob.alloc_ref::<MagicComment>();
+                    let magic_comment = self.blob.alloc_mut::<MagicComment>();
                     *magic_comment = MagicComment::new(*kind, key_l, value_l);
-                    self.magic_comments.push(magic_comment);
+                    self.magic_comments.push(&*magic_comment);
                 }
             }
         }

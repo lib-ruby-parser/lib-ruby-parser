@@ -10,7 +10,7 @@ pub struct DecodedInput<'b> {
     pub name: &'b str,
 
     /// Lines list
-    pub lines: &'b mut IntrusiveList<'b, SourceLine>,
+    pub lines: &'b IntrusiveList<'b, SourceLine>,
 
     /// Decoded bytes
     pub bytes: &'b [u8],
@@ -34,7 +34,7 @@ impl<'b> DecodedInput<'b> {
     /// Populates `Input` with a given byte array
     pub(crate) fn set_bytes(&mut self, bytes: &'b [u8]) {
         let mut line = SourceLine::new(0, 0, true, self.blob);
-        let lines: &'b mut IntrusiveList<'b, SourceLine> = self.blob.alloc_ref();
+        let lines: &'b IntrusiveList<'b, SourceLine> = self.blob.alloc_ref();
 
         for (idx, c) in bytes.iter().enumerate() {
             line.end = idx + 1;

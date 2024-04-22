@@ -39,8 +39,8 @@ impl<'b> Lexer<'b> {
             "set_yylval_name({:#?})",
             self.tokenbuf.bytes.iter().collect::<Vec<_>>()
         );
-        let lval = self.blob.alloc_ref::<Bytes>();
-        *lval = *self.tokenbuf.bytes;
+        let lval = self.blob.alloc_mut::<Bytes>();
+        Bytes::shallow_copy(self.tokenbuf.bytes, lval);
         self.lval = Some(lval);
     }
 }

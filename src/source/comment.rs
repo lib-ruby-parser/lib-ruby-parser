@@ -64,7 +64,7 @@ impl Comment {
         location: Loc,
         input: &DecodedInput,
         blob: &'b Blob<'b>,
-    ) -> &'b mut Self {
+    ) -> &'b Self {
         let kind = match location.source(input) {
             Some(source) => {
                 if source.starts_with('#') {
@@ -80,8 +80,8 @@ impl Comment {
         Self::new(location, kind, blob)
     }
 
-    pub(crate) fn new<'b>(location: Loc, kind: CommentType, blob: &'b Blob<'b>) -> &'b mut Self {
-        let this = blob.alloc_ref();
+    pub(crate) fn new<'b>(location: Loc, kind: CommentType, blob: &'b Blob<'b>) -> &'b Self {
+        let this = blob.alloc_mut();
         *this = Self {
             location,
             kind,
@@ -96,7 +96,7 @@ impl lib_ruby_parser_ast_arena::IntrusiveListItem for Comment {
         self.next.get()
     }
 
-    fn set_next(&mut self, new_next: NonNull<Self>) {
+    fn set_next(&self, new_next: NonNull<Self>) {
         self.next.set(Some(new_next))
     }
 }

@@ -24,7 +24,7 @@ use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 pub struct Lexer<'b> {
     pub(crate) buffer: Buffer<'b>,
 
-    pub(crate) lval: Option<&'b mut lib_ruby_parser_ast_arena::Bytes<'b>>,
+    pub(crate) lval: Option<&'b lib_ruby_parser_ast_arena::Bytes<'b>>,
     pub(crate) lval_start: Option<u32>,
     pub(crate) lval_end: Option<u32>,
 
@@ -78,8 +78,8 @@ pub struct Lexer<'b> {
     pub static_env: StaticEnvironment,
 
     pub(crate) diagnostics: Diagnostics,
-    pub(crate) comments: &'b mut IntrusiveList<'b, Comment>,
-    pub(crate) magic_comments: &'b mut IntrusiveList<'b, MagicComment>,
+    pub(crate) comments: &'b IntrusiveList<'b, Comment>,
+    pub(crate) magic_comments: &'b IntrusiveList<'b, MagicComment>,
 
     #[doc(hidden)]
     pub(crate) blob: &'b Blob<'b>,
@@ -130,8 +130,8 @@ impl<'b> Lexer<'b> {
     /// of tokens. It's used internally to test simple inputs.
     ///
     /// If you need to get tokens better use `ParserResult::tokens` field
-    pub fn tokenize_until_eof(&mut self) -> &'b mut IntrusiveList<'b, Token<'b>> {
-        let tokens: &'b mut IntrusiveList<'b, Token<'b>> = self.blob.alloc_ref();
+    pub fn tokenize_until_eof(&mut self) -> &'b IntrusiveList<'b, Token<'b>> {
+        let tokens: &'b IntrusiveList<'b, Token<'b>> = self.blob.alloc_ref();
 
         loop {
             let token = self.yylex();

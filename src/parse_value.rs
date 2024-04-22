@@ -698,7 +698,7 @@ impl<'b> ParseValue<'b> {
             ParseValue::Uninitialized => ParseValue::Uninitialized,
             ParseValue::None => ParseValue::None,
             ParseValue::Token(token) => {
-                let out = blob.alloc_ref::<Token>();
+                let out = blob.alloc_mut::<Token>();
                 out.token_type = token.token_type;
                 out.token_value = token.token_value.clone();
                 out.loc = token.loc;

@@ -9,7 +9,7 @@ pub(crate) struct TokenBuf<'b> {
 impl<'b> TokenBuf<'b> {
     pub(crate) fn empty(blob: &'b Blob<'b>) -> Self {
         Self {
-            bytes: blob.alloc_ref(),
+            bytes: blob.alloc_mut(),
             blob,
         }
     }
@@ -64,6 +64,6 @@ impl<'b> TokenBuf<'b> {
     }
 
     pub(crate) fn clear(&mut self) {
-        self.bytes = self.blob.alloc_ref();
+        self.bytes = self.blob.alloc_mut();
     }
 }

@@ -65,7 +65,7 @@ impl lib_ruby_parser_ast_arena::IntrusiveListItem for MagicComment {
         self.next.get()
     }
 
-    fn set_next(&mut self, new_next: NonNull<Self>) {
+    fn set_next(&self, new_next: NonNull<Self>) {
         self.next.set(Some(new_next))
     }
 }

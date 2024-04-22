@@ -70,6 +70,6 @@ fn test_fmt() {
             }
         ),
         // All fields except `input`
-        "ParserResult { ast: None, tokens: [], diagnostics: [], comments: IntrusiveList { first: None, last: None }, magic_comments: IntrusiveList { first: None, last: None } }"
+        "ParserResult { ast: None, tokens: [], diagnostics: [], comments: [], magic_comments: [] }"
     )
 }

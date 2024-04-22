@@ -25,7 +25,7 @@ impl SourceLine {
         ends_with_eof: bool,
         blob: &'b Blob<'b>,
     ) -> &'b mut Self {
-        let this = blob.alloc_ref();
+        let this = blob.alloc_mut();
         *this = Self {
             start,
             end,
@@ -59,7 +59,7 @@ impl lib_ruby_parser_ast_arena::IntrusiveListItem for SourceLine {
         self.next.get()
     }
 
-    fn set_next(&mut self, new_next: NonNull<Self>) {
+    fn set_next(&self, new_next: NonNull<Self>) {
         self.next.set(Some(new_next))
     }
 }

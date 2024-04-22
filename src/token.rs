@@ -32,7 +32,7 @@ impl<'b> Token<'b> {
         loc: Loc,
         blob: &'b Blob<'b>,
     ) -> &'b mut Self {
-        let this = blob.alloc_ref::<Self>();
+        let this = blob.alloc_mut::<Self>();
         *this = Self {
             token_type,
             token_value,
@@ -91,7 +91,7 @@ impl IntrusiveListItem for Token<'_> {
         self.next.get()
     }
 
-    fn set_next(&mut self, new_next: NonNull<Self>) {
+    fn set_next(&self, new_next: NonNull<Self>) {
         self.next.set(Some(new_next))
     }
 }
