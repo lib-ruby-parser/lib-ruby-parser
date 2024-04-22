@@ -43,11 +43,9 @@ impl Printer {
 
 fn print_only_diagnostics(result: &ParserResult) {
     for d in result.diagnostics.iter() {
-        println!(
-            "{}",
-            d.render(&result.input)
-                .expect("Failed to render a diagnostic")
-        )
+        let mut buf = String::new();
+        d.render(&mut buf, &result.input).unwrap();
+        println!("{}", buf);
     }
 }
 

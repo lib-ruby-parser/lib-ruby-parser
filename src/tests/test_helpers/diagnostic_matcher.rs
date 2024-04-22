@@ -1,11 +1,13 @@
 use crate::Diagnostic;
 
 pub fn render_diagnostic_for_testing(d: &Diagnostic) -> String {
-    format!(
-        "{prefix}{highlight} ({level}) {message}",
+    let first = format!(
+        "{prefix}{highlight} ({level}) ",
         prefix = " ".repeat(d.loc.begin),
         highlight = "~".repeat(d.loc.size()),
         level = d.level.to_string(),
-        message = d.render_message()
-    )
+    );
+    let mut second = String::new();
+    d.render_message(&mut second).unwrap();
+    first + &second
 }

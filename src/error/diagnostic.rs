@@ -59,10 +59,8 @@ impl<'b> Diagnostic<'b> {
     }
 
     /// Returns rendered message
-    pub fn render_message(&self) -> String {
-        let mut out = String::new();
-        self.message.render(&mut out).unwrap();
-        out
+    pub fn render_message<W: core::fmt::Write>(&self, w: &mut W) -> core::fmt::Result {
+        self.message.render(w)
     }
 
     /// Renders all data into a single String, produces an output like:
@@ -72,12 +70,16 @@ impl<'b> Diagnostic<'b> {
     /// (test.rb):1: foo++
     /// (test.rb):1:      ^
     /// ```
-    pub fn render(&self, input: &DecodedInput) -> Option<String> {
-        let (line_no, line_loc) = self.loc.expand_to_line(input)?;
-        let line = line_loc.source(input)?;
+    pub fn render<W: core::fmt::Write>(
+        &self,
+        w: &mut W,
+        input: &DecodedInput,
+    ) -> core::fmt::Result {
+        let (line_no, line_loc) = self.loc.expand_to_line(input).ok_or(core::fmt::Error)?;
+        let line = line_loc.source(input).ok_or(core::fmt::Error)?;
 
         let filename = &input.name;
-        let (_, start_col) = self.loc.begin_line_col(input)?;
+        let (_, start_col) = self.loc.begin_line_col(input).ok_or(core::fmt::Error)?;
 
         let prefix = format!("{}:{}", filename, line_no + 1);
         let highlight = format!(
@@ -90,19 +92,14 @@ impl<'b> Diagnostic<'b> {
             }
         );
 
-        Some(
-            format!(
-                "{prefix}:{start_col}: {level}: {message}\n{prefix}: {line}\n{prefix}: {highlight}",
-                prefix = prefix,
-                start_col = start_col,
-                level = self.level.to_string(),
-                message = self.render_message(),
-                line = line,
-                highlight = highlight
-            )
-            .trim()
-            .to_string(),
-        )
+        write!(w, "{}:{}: {}: ", prefix, start_col, self.level)?;
+        self.render_message(w)?;
+        writeln!(w)?;
+
+        writeln!(w, "{}: {}", prefix, line)?;
+        write!(w, "{}: {}", prefix, highlight)?;
+
+        Ok(())
     }
 
     /// Returns `true` if level of the diagnostic is `Warning`
@@ -128,6 +125,8 @@ impl lib_ruby_parser_ast_arena::IntrusiveListItem for Diagnostic<'_> {
 
 #[test]
 fn test_renders() {
+    use lib_ruby_parser_ast_arena::Writer;
+
     let source = "line 1\nvery long line 2\n";
     let mut mem = vec![0; 1000];
     let blob = Blob::from(mem.as_mut_slice());
@@ -140,8 +139,13 @@ fn test_renders() {
         &blob,
     );
 
+    let mut scratch = [0; 1000];
+    let mut writer = Writer::new(&mut scratch);
+    error.render(&mut writer, &input).unwrap();
+    let written = writer.as_str().unwrap();
+
     assert_eq!(
-        error.render(&input).expect("failed to render diagnostic"),
+        written,
         vec![
             "(test_render):2:1: warning: unexpected fraction part after numeric literal",
             "(test_render):2: very long line 2",
