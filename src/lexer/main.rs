@@ -130,8 +130,8 @@ impl<'b> Lexer<'b> {
     /// of tokens. It's used internally to test simple inputs.
     ///
     /// If you need to get tokens better use `ParserResult::tokens` field
-    pub fn tokenize_until_eof(&mut self) -> Vec<&'b mut Token<'b>> {
-        let mut tokens = vec![];
+    pub fn tokenize_until_eof(&mut self) -> &'b mut IntrusiveList<'b, Token<'b>> {
+        let tokens: &'b mut IntrusiveList<'b, Token<'b>> = self.blob.alloc_ref();
 
         loop {
             let token = self.yylex();

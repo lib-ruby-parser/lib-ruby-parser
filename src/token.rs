@@ -1,4 +1,6 @@
-use lib_ruby_parser_ast_arena::Blob;
+use core::{cell::Cell, ptr::NonNull};
+
+use lib_ruby_parser_ast_arena::{Blob, IntrusiveListItem};
 
 use crate::parser::token_name;
 use crate::{Bytes, Loc};
@@ -18,6 +20,8 @@ pub struct Token<'b> {
     /// Location of the token
     pub loc: Loc,
 
+    next: Cell<Option<NonNull<Self>>>,
+
     marker: core::marker::PhantomData<&'b ()>,
 }
 
@@ -33,6 +37,7 @@ impl<'b> Token<'b> {
             token_type,
             token_value,
             loc,
+            next: Cell::new(None),
             marker: core::marker::PhantomData,
         };
         this
@@ -77,6 +82,16 @@ impl std::fmt::Debug for Token<'_> {
             self.loc.begin,
             self.loc.end,
         ))
+    }
+}
+
+impl IntrusiveListItem for Token<'_> {
+    fn next(&self) -> Option<NonNull<Self>> {
+        self.next.get()
+    }
+
+    fn set_next(&mut self, new_next: NonNull<Self>) {
+        self.next.set(Some(new_next))
     }
 }
 
