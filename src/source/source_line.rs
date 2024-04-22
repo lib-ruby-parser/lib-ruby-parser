@@ -1,3 +1,7 @@
+use core::{cell::Cell, ptr::NonNull};
+
+use lib_ruby_parser_ast_arena::Blob;
+
 #[repr(C)]
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 /// Representation of a source line in a source file
@@ -10,9 +14,26 @@ pub struct SourceLine {
 
     /// `true` if line ends with EOF char (which is true for the last line in the file)
     pub ends_with_eof: bool,
+
+    next: Cell<Option<NonNull<Self>>>,
 }
 
 impl SourceLine {
+    pub(crate) fn new<'b>(
+        start: usize,
+        end: usize,
+        ends_with_eof: bool,
+        blob: &'b Blob<'b>,
+    ) -> &'b mut Self {
+        let this = blob.alloc_ref();
+        *this = Self {
+            start,
+            end,
+            ends_with_eof,
+            next: Cell::new(None),
+        };
+        this
+    }
     /// Returns length of the line
     pub fn len(&self) -> usize {
         self.end - self.start
@@ -30,5 +51,15 @@ impl SourceLine {
             result -= 1 // exclude trailing \n
         }
         result
+    }
+}
+
+impl lib_ruby_parser_ast_arena::IntrusiveListItem for SourceLine {
+    fn next(&self) -> Option<NonNull<Self>> {
+        self.next.get()
+    }
+
+    fn set_next(&mut self, new_next: NonNull<Self>) {
+        self.next.set(Some(new_next))
     }
 }

@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
 
 use crate::source::SourceLine;
 
@@ -10,7 +10,7 @@ pub struct DecodedInput<'b> {
     pub name: &'b str,
 
     /// Lines list
-    pub lines: Vec<SourceLine>,
+    pub lines: &'b mut IntrusiveList<'b, SourceLine>,
 
     /// Decoded bytes
     pub bytes: &'b [u8],
@@ -23,7 +23,7 @@ impl<'b> DecodedInput<'b> {
     pub fn new(name: &'b str, bytes: &'b [u8], blob: &'b Blob<'b>) -> Self {
         let mut this = Self {
             name,
-            lines: vec![],
+            lines: blob.alloc_ref(),
             bytes: b"",
             blob,
         };
@@ -33,23 +33,15 @@ impl<'b> DecodedInput<'b> {
 
     /// Populates `Input` with a given byte array
     pub(crate) fn set_bytes(&mut self, bytes: &'b [u8]) {
-        let mut line = SourceLine {
-            start: 0,
-            end: 0,
-            ends_with_eof: true,
-        };
-        let mut lines = vec![];
+        let mut line = SourceLine::new(0, 0, true, self.blob);
+        let lines: &'b mut IntrusiveList<'b, SourceLine> = self.blob.alloc_ref();
 
         for (idx, c) in bytes.iter().enumerate() {
             line.end = idx + 1;
             if *c == b'\n' {
                 line.ends_with_eof = false;
                 lines.push(line);
-                line = SourceLine {
-                    start: idx + 1,
-                    end: 0,
-                    ends_with_eof: true,
-                }
+                line = SourceLine::new(idx + 1, 0, true, self.blob)
             }
         }
         line.end = bytes.len();
@@ -82,7 +74,7 @@ impl<'b> DecodedInput<'b> {
     }
 
     pub(crate) fn line_at(&self, idx: u32) -> &SourceLine {
-        &self.lines[idx as usize]
+        self.lines.item_at(idx as usize).unwrap()
     }
 
     pub(crate) fn substr_at(&self, start: u32, end: u32) -> Option<&'b [u8]> {

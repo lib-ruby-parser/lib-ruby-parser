@@ -45,7 +45,7 @@ pub struct MagicComment {
 }
 
 impl core::fmt::Debug for MagicComment {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("MagicComment")
             .field("kind", &self.kind)
             .field("key_l", &self.key_l)

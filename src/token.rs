@@ -48,8 +48,8 @@ impl<'b> Token<'b> {
     }
 
     /// Converts token value into `&str`
-    pub fn as_str_lossy(&self) -> Result<&str, std::str::Utf8Error> {
-        std::str::from_utf8(self.token_value.as_raw())
+    pub fn as_str_lossy(&self) -> Result<&str, core::str::Utf8Error> {
+        core::str::from_utf8(self.token_value.as_raw())
     }
 
     /// Converts token to a string, replaces unknown chars to `U+FFFD`
@@ -73,15 +73,16 @@ impl<'b> Token<'b> {
     }
 }
 
-impl std::fmt::Debug for Token<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!(
+impl core::fmt::Debug for Token<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(
+            f,
             "[{}, {:?}, {}...{}]",
             self.token_name(),
             self.token_value.to_string_lossy(),
             self.loc.begin,
             self.loc.end,
-        ))
+        )
     }
 }
 
