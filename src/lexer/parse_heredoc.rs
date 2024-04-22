@@ -97,14 +97,14 @@ impl<'b> Lexer<'b> {
 
         self.buffer.goto_eol();
 
-        self.strterm = Some(Box::new(StrTerm::new_heredoc(HeredocLiteral::new(
+        self.strterm = Some(StrTerm::new_heredoc(HeredocLiteral::new(
             self.buffer.lastline,
             offset,
             self.buffer.ruby_sourceline,
             len,
             quote,
             func,
-        ))));
+        )));
 
         self.token_flush();
         self.buffer.heredoc_indent = indent;
@@ -113,7 +113,7 @@ impl<'b> Lexer<'b> {
     }
 
     pub(crate) fn here_document(&mut self) -> i32 {
-        let here = match self.strterm.as_ref().unwrap().as_ref() {
+        let here = match self.strterm.as_ref().unwrap() {
             StrTerm::StringLiteral(_) => unreachable!("strterm must be heredoc"),
             StrTerm::HeredocLiteral(h) => h.clone(),
         };

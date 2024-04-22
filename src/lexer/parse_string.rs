@@ -10,13 +10,13 @@ const ESCAPE_META: u32 = 2;
 
 impl<'b> Lexer<'b> {
     fn take_strterm(&mut self) -> StringLiteral<'b> {
-        match self.strterm.take().map(|v| *v) {
+        match self.strterm.take() {
             Some(StrTerm::StringLiteral(s)) => s,
             _ => unreachable!("strterm must be string"),
         }
     }
     fn restore_strterm(&mut self, literal: StringLiteral<'b>) {
-        self.strterm = Some(Box::new(StrTerm::StringLiteral(literal)));
+        self.strterm = Some(StrTerm::StringLiteral(literal));
     }
 
     pub(crate) fn parse_string(&mut self) -> i32 {

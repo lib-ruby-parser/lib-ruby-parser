@@ -101,7 +101,7 @@ pub(crate) mod Bool {
 pub(crate) mod MaybeStrTerm {
     use super::{ParseValue, StrTerm};
 
-    pub(crate) fn from<'b>(value: ParseValue<'b>) -> Option<Box<StrTerm<'b>>> {
+    pub(crate) fn from<'b>(value: ParseValue<'b>) -> Option<StrTerm<'b>> {
         match value {
             ParseValue::MaybeStrTerm(value) => value,
             other => unreachable!("expected MaybeStrTerm, got {:?}", other),
@@ -520,7 +520,7 @@ pub(crate) enum ParseValue<'b> {
     Node(Box<Node>),
     NodeList(Box<Vec<Node>>),
     Bool(bool),
-    MaybeStrTerm(Option<Box<StrTerm<'b>>>),
+    MaybeStrTerm(Option<StrTerm<'b>>),
     Num(i32),
 
     /* For custom superclass rule */

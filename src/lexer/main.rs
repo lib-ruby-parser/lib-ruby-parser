@@ -28,7 +28,7 @@ pub struct Lexer<'b> {
     pub(crate) lval_start: Option<u32>,
     pub(crate) lval_end: Option<u32>,
 
-    pub(crate) strterm: Option<Box<StrTerm<'b>>>,
+    pub(crate) strterm: Option<StrTerm<'b>>,
     /// Current state of the lexer, used internally for testing
     pub lex_state: LexState,
     pub(crate) paren_nest: i32,
@@ -208,7 +208,7 @@ impl<'b> Lexer<'b> {
         let mut last_state: LexState;
         let token_seen = self.token_seen;
 
-        if let Some(strterm) = self.strterm.as_ref().map(|i| i.as_ref()) {
+        if let Some(strterm) = self.strterm.as_ref() {
             match strterm {
                 StrTerm::HeredocLiteral(_) => {
                     return self.here_document();
@@ -1172,14 +1172,14 @@ impl<'b> Lexer<'b> {
         term: u8,
         paren: Option<u8>,
         heredoc_end: Option<HeredocEnd<'b>>,
-    ) -> Option<Box<StrTerm<'b>>> {
-        Some(Box::new(StrTerm::new_literal(StringLiteral::new(
+    ) -> Option<StrTerm<'b>> {
+        Some(StrTerm::new_literal(StringLiteral::new(
             0,
             func,
             paren,
             term,
             heredoc_end,
-        ))))
+        )))
     }
 
     pub(crate) fn loc(&self, begin_pos: u32, end_pos: u32) -> Loc {
