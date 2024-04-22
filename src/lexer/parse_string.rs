@@ -778,9 +778,11 @@ impl<'b> Lexer<'b> {
     }
 
     pub(crate) fn warn_space_char(&mut self, c: u8, prefix: &'static str) {
+        let mut mem = [0; 10];
+        let suggestion = write_to(&mut mem, format_args!("{}\\{}", prefix, c)).unwrap();
         self.warn(
             DiagnosticMessage::InvalidCharacterSyntax {
-                suggestion: format!("{}\\{}", prefix, c),
+                suggestion: suggestion.to_string(),
             },
             self.current_loc(),
         )
