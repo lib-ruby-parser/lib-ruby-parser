@@ -91,8 +91,8 @@ impl IntrusiveListItem for Token<'_> {
         self.next.get()
     }
 
-    fn set_next(&self, new_next: NonNull<Self>) {
-        self.next.set(Some(new_next))
+    fn set_next(&self, new_next: Option<NonNull<Self>>) {
+        self.next.set(new_next)
     }
 }
 

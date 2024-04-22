@@ -11,7 +11,7 @@
 %code parser_fields {
     result: Option<Box<Node>>,
     builder: Builder<'b /*'*/>,
-    current_arg_stack: CurrentArgStack,
+    current_arg_stack: &'b /*'*/ CurrentArgStack<'b /*'*/>,
     /// Stack of sets of variables in current scopes.
     /// Each stack item represents locals in the scope.
     ///
@@ -347,7 +347,7 @@ use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
 
          program:   {
                         self.yylexer.lex_state.set(EXPR_BEG);
-                        self.current_arg_stack.push(None);
+                        self.current_arg_stack.push(None, self.blob);
                         self.max_numparam_stack.push(true);
 
                         $<None>$ = Value::None;
@@ -1087,7 +1087,7 @@ use lib_ruby_parser_ast_arena::{Blob, IntrusiveList};
         def_name: fname
                     {
                         self.local_push();
-                        self.current_arg_stack.push(None);
+                        self.current_arg_stack.push(None, self.blob);
 
                         $$ = Value::TokenWithContext(
                             TokenWithContext {
@@ -4015,7 +4015,7 @@ opt_block_args_tail:
  block_param_def: tPIPE opt_bv_decl tPIPE
                     {
                         self.max_numparam_stack.set_has_ordinary_params();
-                        self.current_arg_stack.set(None);
+                        self.current_arg_stack.set(None, self.blob);
                         self.context.set_in_argdef(false);
 
                         $$ = Value::MaybeNode(
@@ -4029,7 +4029,7 @@ opt_block_args_tail:
                 | tPIPE block_param opt_bv_decl tPIPE
                     {
                         self.max_numparam_stack.set_has_ordinary_params();
-                        self.current_arg_stack.set(None);
+                        self.current_arg_stack.set(None, self.blob);
                         self.context.set_in_argdef(false);
 
                         let mut nodes = $<NodeList>2;
@@ -6348,15 +6348,15 @@ f_opt_paren_args: f_paren_args
       f_arg_asgn: f_norm_arg
                     {
                         let arg_t = $<Token>1;
-                        let arg_name = clone_value(arg_t);
-                        self.current_arg_stack.set(Some(arg_name));
+                        let arg_name = self.blob.push_str(&arg_t.to_string_lossy());
+                        self.current_arg_stack.set(Some(arg_name), self.blob);
                         $$ = Value::Token(arg_t);
                     }
                 ;
 
       f_arg_item: f_arg_asgn
                     {
-                        self.current_arg_stack.set(None);
+                        self.current_arg_stack.set(None, self.blob);
                         $$ = Value::Node(
                             self.builder.arg($<Token>1)?
                         );
@@ -6391,12 +6391,12 @@ f_opt_paren_args: f_paren_args
                         let ident_t = $<Token>1;
                         self.check_kwarg_name(ident_t)?;
 
-                        let ident = clone_value(ident_t);
+                        let ident = self.blob.push_str(&ident_t.to_string_lossy());
                         self.static_env.declare(&ident);
 
                         self.max_numparam_stack.set_has_ordinary_params();
 
-                        self.current_arg_stack.set(Some(ident));
+                        self.current_arg_stack.set(Some(ident), self.blob);
                         self.context.set_in_argdef(false);
 
                         $$ = Value::Token(ident_t);
@@ -6405,7 +6405,7 @@ f_opt_paren_args: f_paren_args
 
             f_kw: f_label arg_value
                     {
-                        self.current_arg_stack.set(None);
+                        self.current_arg_stack.set(None, self.blob);
                         self.context.set_in_argdef(true);
                         $$ = Value::Node(
                             self.builder.kwoptarg($<Token>1, $<BoxedNode>2)?
@@ -6413,7 +6413,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | f_label
                     {
-                        self.current_arg_stack.set(None);
+                        self.current_arg_stack.set(None, self.blob);
                         self.context.set_in_argdef(true);
                         $$ = Value::Node(
                             self.builder.kwarg($<Token>1)?
@@ -6514,7 +6514,7 @@ f_opt_paren_args: f_paren_args
 
            f_opt: f_arg_asgn f_eq arg_value
                     {
-                        self.current_arg_stack.set(None);
+                        self.current_arg_stack.set(None, self.blob);
                         self.context.set_in_argdef(true);
                         $$ = Value::Node(
                             self.builder.optarg(
@@ -6528,7 +6528,7 @@ f_opt_paren_args: f_paren_args
 
      f_block_opt: f_arg_asgn f_eq primary_value
                     {
-                        self.current_arg_stack.set(None);
+                        self.current_arg_stack.set(None, self.blob);
                         self.context.set_in_argdef(true);
                         $$ = Value::Node(
                             self.builder.optarg(
@@ -6907,7 +6907,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
 
         let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
         let context = lexer.context;
-        let current_arg_stack = CurrentArgStack::new();
+        let current_arg_stack = blob.alloc_ref::<CurrentArgStack>();
         let max_numparam_stack = MaxNumparamStack::new();
         let pattern_variables = VariablesStack::new();
         let pattern_hash_keys = VariablesStack::new();
@@ -6920,7 +6920,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         let builder = Builder::new(
             static_env.clone(),
             context,
-            current_arg_stack.clone(),
+            current_arg_stack,
             max_numparam_stack.clone(),
             pattern_variables.clone(),
             pattern_hash_keys.clone(),
