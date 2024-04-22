@@ -40,7 +40,7 @@
     pub static_env: StaticEnvironment,
     context: &'b /*'*/ SharedContext,
     last_token_type: i32,
-    max_numparam_stack: MaxNumparamStack,
+    max_numparam_stack: &'b /*'*/ MaxNumparamStack<'b /*'*/>,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
     tokens: &'b /*'*/ SingleLinkedIntrusiveList<'b /*'*/, Token<'b /*'*/>>,
@@ -348,7 +348,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
          program:   {
                         self.yylexer.lex_state.set(EXPR_BEG);
                         self.current_arg_stack.push(None, self.blob);
-                        self.max_numparam_stack.push(true);
+                        self.max_numparam_stack.push(true, self.blob);
 
                         $<None>$ = Value::None;
                     }
@@ -4085,7 +4085,7 @@ opt_block_args_tail:
           lambda: tLAMBDA
                     {
                         self.static_env.extend_dynamic();
-                        self.max_numparam_stack.push(false);
+                        self.max_numparam_stack.push(false, self.blob);
                         $<Num>$ = Value::Num(self.yylexer.lpar_beg);
                         self.yylexer.lpar_beg = self.yylexer.paren_nest;
                     }
@@ -4453,7 +4453,7 @@ opt_block_args_tail:
 
       brace_body:   {
                         self.static_env.extend_dynamic();
-                        self.max_numparam_stack.push(false);
+                        self.max_numparam_stack.push(false, self.blob);
                         $<None>$ = Value::None;
                     }
                   opt_block_param compstmt
@@ -4478,7 +4478,7 @@ opt_block_args_tail:
 
          do_body:   {
                         self.static_env.extend_dynamic();
-                        self.max_numparam_stack.push(false);
+                        self.max_numparam_stack.push(false, self.blob);
                         self.yylexer.cmdarg.push(false);
                         $<None>$ = Value::None;
                     }
@@ -6908,7 +6908,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
         let context = lexer.context;
         let current_arg_stack = blob.alloc_ref::<CurrentArgStack>();
-        let max_numparam_stack = MaxNumparamStack::new();
+        let max_numparam_stack = blob.alloc_ref::<MaxNumparamStack>();
         let pattern_variables = VariablesStack::new();
         let pattern_hash_keys = VariablesStack::new();
         let static_env = StaticEnvironment::new();
@@ -6921,7 +6921,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
             static_env.clone(),
             context,
             current_arg_stack,
-            max_numparam_stack.clone(),
+            max_numparam_stack,
             pattern_variables.clone(),
             pattern_hash_keys.clone(),
             diagnostics,
@@ -7109,7 +7109,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         self.static_env.extend_static();
         self.yylexer.cmdarg.push(false);
         self.yylexer.cond.push(false);
-        self.max_numparam_stack.push(true);
+        self.max_numparam_stack.push(true, self.blob);
     }
 
     fn local_pop(&mut self) {

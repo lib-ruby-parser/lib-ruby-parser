@@ -62,7 +62,7 @@ pub(crate) struct Builder<'b> {
     static_env: StaticEnvironment,
     context: &'b SharedContext,
     current_arg_stack: &'b CurrentArgStack<'b>,
-    max_numparam_stack: MaxNumparamStack,
+    max_numparam_stack: &'b MaxNumparamStack<'b>,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
     diagnostics: &'b SingleLinkedIntrusiveList<'b, Diagnostic<'b>>,
@@ -74,7 +74,7 @@ impl<'b> Builder<'b> {
         static_env: StaticEnvironment,
         context: &'b SharedContext,
         current_arg_stack: &'b CurrentArgStack<'b>,
-        max_numparam_stack: MaxNumparamStack,
+        max_numparam_stack: &'b MaxNumparamStack<'b>,
         pattern_variables: VariablesStack,
         pattern_hash_keys: VariablesStack,
         diagnostics: &'b SingleLinkedIntrusiveList<'b, Diagnostic<'b>>,
@@ -4252,18 +4252,18 @@ impl<'b> Builder<'b> {
                         self.error(DiagnosticMessage::OrdinaryParamDefined {}, loc);
                     }
 
-                    let mut raw_max_numparam_stack = self.max_numparam_stack.inner_clone();
+                    let iter = self.max_numparam_stack.iter().rev();
 
                     /* ignore current block scope */
-                    raw_max_numparam_stack.pop();
+                    let iter = iter.skip(1);
 
-                    for outer_scope in raw_max_numparam_stack.iter().rev() {
+                    for outer_scope in iter {
                         if outer_scope.is_static {
                             /* found an outer scope that can't have numparams
                             like def/class/etc */
                             break;
                         } else {
-                            let outer_scope_has_numparams = outer_scope.value > 0;
+                            let outer_scope_has_numparams = outer_scope.value.get() > 0;
 
                             if outer_scope_has_numparams {
                                 self.error(DiagnosticMessage::NumparamUsed {}, loc);
