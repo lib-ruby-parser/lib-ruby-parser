@@ -38,7 +38,7 @@
     /// parser.parse()
     /// ```
     pub static_env: StaticEnvironment,
-    context: ParserContext,
+    context: &'b /*'*/ SharedContext,
     last_token_type: i32,
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
@@ -59,7 +59,7 @@ use crate::{ParserOptions, ParserResult};
 use crate::Token;
 use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack, VariablesStack};
 use crate::lex_states::*;
-use crate::{SharedContext as ParserContext, context::Context};
+use crate::{SharedContext, context::Context};
 use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel, ArgsType};
 use crate::builder::clone_value;
 use crate::parse_value::ParseValue as Value;
@@ -6906,7 +6906,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         } = options;
 
         let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
-        let context = ParserContext::new();
+        let context = lexer.context;
         let current_arg_stack = CurrentArgStack::new();
         let max_numparam_stack = MaxNumparamStack::new();
         let pattern_variables = VariablesStack::new();
@@ -6914,12 +6914,12 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         let static_env = StaticEnvironment::new();
         let diagnostics = lexer.diagnostics;
 
-        lexer.context = context.clone();
+        lexer.context = context;
         lexer.static_env = static_env.clone();
 
         let builder = Builder::new(
             static_env.clone(),
-            context.clone(),
+            context,
             current_arg_stack.clone(),
             max_numparam_stack.clone(),
             pattern_variables.clone(),

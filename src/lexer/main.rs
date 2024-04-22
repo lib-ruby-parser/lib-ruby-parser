@@ -46,7 +46,7 @@ pub struct Lexer<'b> {
     pub(crate) tokenbuf: TokenBuf<'b>,
 
     // pub(crate) max_numparam: usize,
-    pub(crate) context: SharedContext,
+    pub(crate) context: &'b SharedContext,
 
     pub(crate) command_start: bool,
     pub(crate) token_seen: bool,
@@ -113,7 +113,7 @@ impl<'b> Lexer<'b> {
             paren_nest: 0,
             brace_nest: 0,
             tokenbuf: TokenBuf::empty(blob),
-            context: SharedContext::default(),
+            context: blob.alloc_ref(),
             command_start: false,
             token_seen: false,
             static_env: StaticEnvironment::default(),

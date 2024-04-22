@@ -60,7 +60,7 @@ pub(crate) enum ArgsType {
 #[derive(Debug)]
 pub(crate) struct Builder<'b> {
     static_env: StaticEnvironment,
-    context: SharedContext,
+    context: &'b SharedContext,
     current_arg_stack: CurrentArgStack,
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
@@ -72,7 +72,7 @@ pub(crate) struct Builder<'b> {
 impl<'b> Builder<'b> {
     pub(crate) fn new(
         static_env: StaticEnvironment,
-        context: SharedContext,
+        context: &'b SharedContext,
         current_arg_stack: CurrentArgStack,
         max_numparam_stack: MaxNumparamStack,
         pattern_variables: VariablesStack,

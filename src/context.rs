@@ -1,44 +1,41 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use core::cell::Cell;
 
-#[derive(Debug, Clone, Eq, PartialEq, Default)]
+#[derive(Debug)]
 pub(crate) struct SharedContext {
-    value: Rc<RefCell<Context>>,
+    value: Cell<usize>,
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
+#[derive(Debug)]
 pub(crate) struct Context {
     value: usize,
 }
 
 macro_rules! context_flag {
     ($upper:ident, $getter:ident, $setter: ident, $value:expr) => {
-        impl Context {
+        impl SharedContext {
             const $upper: usize = $value;
 
+            #[allow(dead_code)]
             pub(crate) fn $getter(&self) -> bool {
-                (self.value & Self::$upper) != 0
+                (self.value.get() & Self::$upper) != 0
             }
 
-            pub(crate) fn $setter(&mut self, value: bool) {
+            pub(crate) fn $setter(&self, value: bool) {
                 #[cfg(feature = "debug-parser")]
                 println!("{}({})", stringify!($setter), value);
+
                 if value {
-                    self.value |= Self::$upper;
+                    self.value.set(self.value.get() | Self::$upper);
                 } else {
-                    self.value &= !Self::$upper;
+                    self.value.set(self.value.get() & !Self::$upper);
                 }
             }
         }
 
-        impl SharedContext {
+        impl Context {
             #[allow(dead_code)]
             pub(crate) fn $getter(&self) -> bool {
-                self.value.borrow().$getter()
-            }
-
-            pub(crate) fn $setter(&mut self, value: bool) {
-                self.value.borrow_mut().$setter(value)
+                (self.value & $crate::context::SharedContext::$upper) != 0
             }
         }
     };
@@ -53,12 +50,10 @@ context_flag!(IN_LAMBDA, in_lambda, set_in_lambda, 1 << 5);
 context_flag!(IN_BLOCK, in_block, set_in_block, 1 << 6);
 
 impl SharedContext {
-    pub(crate) fn new() -> Self {
-        Self::default()
-    }
-
     pub(crate) fn dump(&self) -> Context {
-        *self.value.borrow()
+        Context {
+            value: self.value.get(),
+        }
     }
 
     pub(crate) fn is_in_dynamic_block(&self) -> bool {
@@ -66,12 +61,6 @@ impl SharedContext {
     }
 
     pub(crate) fn is_empty(&self) -> bool {
-        self.value.borrow().is_empty()
-    }
-}
-
-impl Context {
-    fn is_empty(&self) -> bool {
         #[cfg(feature = "debug-all")]
         if self.value != 0 {
             println!(
@@ -94,13 +83,16 @@ impl Context {
                 self.in_block(),
             );
         }
-        self.value == 0
+        self.value.get() == 0
     }
 }
 
 #[test]
 fn test_context() {
-    let mut context = Context::default();
+    let mut mem = [0; 10];
+    let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
+
+    let context = blob.alloc_ref::<SharedContext>();
 
     context.set_in_def(true);
     context.set_in_class(true);
@@ -116,4 +108,6 @@ fn test_context() {
     assert!(!context.in_class());
 
     assert!(context.is_empty());
+
+    assert_eq!(context.dump().value, 0);
 }
