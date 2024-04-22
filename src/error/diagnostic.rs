@@ -81,23 +81,26 @@ impl<'b> Diagnostic<'b> {
         let filename = &input.name;
         let (_, start_col) = self.loc.begin_line_col(input).ok_or(core::fmt::Error)?;
 
-        let prefix = format!("{}:{}", filename, line_no + 1);
-        let highlight = format!(
-            "{indent}^{tildes}",
-            indent = " ".repeat(start_col),
-            tildes = if self.loc.size() > 0 {
-                "~".repeat(self.loc.size() - 1)
-            } else {
-                "".to_string()
-            }
-        );
+        let write_prefix = |w: &mut W| write!(w, "{}:{}:", filename, line_no + 1);
 
-        write!(w, "{}:{}: {}: ", prefix, start_col, self.level)?;
+        write_prefix(w)?;
+        write!(w, "{}: {}: ", start_col, self.level)?;
         self.render_message(w)?;
         writeln!(w)?;
 
-        writeln!(w, "{}: {}", prefix, line)?;
-        write!(w, "{}: {}", prefix, highlight)?;
+        write_prefix(w)?;
+        writeln!(w, " {}", line)?;
+        write_prefix(w)?;
+
+        for _ in 0..start_col {
+            write!(w, " ")?;
+        }
+        write!(w, " ^")?;
+        if self.loc.size() > 0 {
+            for _ in 0..self.loc.size() - 1 {
+                write!(w, "~")?;
+            }
+        }
 
         Ok(())
     }
@@ -128,8 +131,8 @@ fn test_renders() {
     use lib_ruby_parser_ast_arena::Writer;
 
     let source = "line 1\nvery long line 2\n";
-    let mut mem = vec![0; 1000];
-    let blob = Blob::from(mem.as_mut_slice());
+    let mut mem = [0; 1000];
+    let blob = Blob::from(&mut mem);
     let input = DecodedInput::new("(test_render)", source.as_bytes(), &blob);
 
     let error = Diagnostic::new(
@@ -146,19 +149,16 @@ fn test_renders() {
 
     assert_eq!(
         written,
-        vec![
-            "(test_render):2:1: warning: unexpected fraction part after numeric literal",
-            "(test_render):2: very long line 2",
-            "(test_render):2:  ^~~~"
-        ]
-        .join("\n")
+        r#"(test_render):2:1: warning: unexpected fraction part after numeric literal
+(test_render):2: very long line 2
+(test_render):2:  ^~~~"#
     );
 }
 
 #[test]
 fn test_predicates() {
-    let mut mem = vec![0; 1000];
-    let blob = Blob::from(mem.as_mut_slice());
+    let mut mem = [0; 1000];
+    let blob = Blob::from(&mut mem);
 
     let error = Diagnostic::new(
         ErrorLevel::Error,

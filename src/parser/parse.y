@@ -48,6 +48,8 @@
     record_tokens: bool,
 
     blob: &'b /*'*/ Blob<'b /*'*/>,
+
+    #[allow(dead_code)]
     input: &'b /*'*/ [u8],
 }
 

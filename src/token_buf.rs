@@ -41,19 +41,6 @@ impl<'b> TokenBuf<'b> {
         self.bytes.prepend_valid_escaped(c, self.blob);
     }
 
-    pub(crate) fn prepend_invalid_escaped(&mut self, b: u8) {
-        self.bytes.prepend_invalid_escaped(b, self.blob);
-    }
-
-    pub(crate) fn prepend_borrowed(&mut self, bytes: &'b [u8]) {
-        let s = core::str::from_utf8(bytes).unwrap();
-        self.bytes.prepend_borrowed(s, self.blob);
-    }
-
-    pub(crate) fn as_string(&self) -> Option<String> {
-        self.bytes.try_to_string().ok()
-    }
-
     pub(crate) fn as_whole_string(&self) -> Option<&'b str> {
         let bytes = self.blob.push_bytes_iter(self.bytes.iter());
         core::str::from_utf8(bytes).ok()

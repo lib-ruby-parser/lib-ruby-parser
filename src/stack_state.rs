@@ -29,6 +29,6 @@ impl StackState {
 
 impl core::fmt::Debug for StackState {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str(&format!("[{:b} <= {}]", self.stack, self.name))
+        write!(f, "[{:b} <= {}]", self.stack, self.name)
     }
 }
