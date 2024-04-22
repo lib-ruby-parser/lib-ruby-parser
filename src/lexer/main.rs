@@ -25,8 +25,8 @@ pub struct Lexer<'b> {
     pub(crate) buffer: Buffer<'b>,
 
     pub(crate) lval: Option<&'b mut lib_ruby_parser_ast_arena::Bytes<'b>>,
-    pub(crate) lval_start: Option<usize>,
-    pub(crate) lval_end: Option<usize>,
+    pub(crate) lval_start: Option<u32>,
+    pub(crate) lval_end: Option<u32>,
 
     pub(crate) strterm: Option<Box<StrTerm<'b>>>,
     /// Current state of the lexer, used internally for testing
@@ -176,7 +176,10 @@ impl<'b> Lexer<'b> {
         let token = Token::new(
             token_type,
             Bytes::new(token_value.iter().collect()),
-            Loc { begin, end },
+            Loc {
+                begin: begin as usize,
+                end: end as usize,
+            },
             self.blob,
         );
         println_if_debug_lexer!(
@@ -191,7 +194,7 @@ impl<'b> Lexer<'b> {
     pub(crate) fn nextc(&mut self) -> MaybeByte {
         self.buffer.nextc()
     }
-    pub(crate) fn char_at(&self, idx: usize) -> MaybeByte {
+    pub(crate) fn char_at(&self, idx: u32) -> MaybeByte {
         self.buffer.byte_at(idx)
     }
     pub(crate) fn token_flush(&mut self) {
@@ -201,7 +204,7 @@ impl<'b> Lexer<'b> {
     pub(crate) fn parser_yylex(&mut self) -> i32 {
         let mut c: MaybeByte;
         let mut space_seen: bool = false;
-        let label: usize;
+        let label: u32;
         let mut last_state: LexState;
         let token_seen = self.token_seen;
 
@@ -443,7 +446,7 @@ impl<'b> Lexer<'b> {
                             }
                             self.buffer.goto_eol();
                             self.comments.push(Comment::from_loc_and_input(
-                                begin_loc.with_end(self.buffer.pcur),
+                                begin_loc.with_end(self.buffer.pcur as usize),
                                 &self.buffer.input.decoded,
                                 self.blob,
                             ));
@@ -1165,7 +1168,7 @@ impl<'b> Lexer<'b> {
 
     pub(crate) fn new_strterm(
         &self,
-        func: usize,
+        func: u32,
         term: u8,
         paren: Option<u8>,
         heredoc_end: Option<HeredocEnd<'b>>,
@@ -1179,10 +1182,10 @@ impl<'b> Lexer<'b> {
         ))))
     }
 
-    pub(crate) fn loc(&self, begin_pos: usize, end_pos: usize) -> Loc {
+    pub(crate) fn loc(&self, begin_pos: u32, end_pos: u32) -> Loc {
         Loc {
-            begin: begin_pos,
-            end: end_pos,
+            begin: begin_pos as usize,
+            end: end_pos as usize,
         }
     }
 
@@ -1250,7 +1253,7 @@ impl<'b> Lexer<'b> {
         self.tokenbuf.clear();
     }
 
-    pub(crate) fn literal_flush(&mut self, ptok: usize) {
+    pub(crate) fn literal_flush(&mut self, ptok: u32) {
         self.buffer.set_ptok(ptok);
     }
 
@@ -1271,7 +1274,7 @@ impl<'b> Lexer<'b> {
         Ok(())
     }
 
-    fn _multibyte_char_len(&self, ptr: usize) -> Option<usize> {
+    fn _multibyte_char_len(&self, ptr: u32) -> Option<u32> {
         let c1 = self.buffer.byte_at(ptr).as_option()?;
 
         let len = if c1 & 0x80 == 0 {
@@ -1292,7 +1295,7 @@ impl<'b> Lexer<'b> {
         Some(len)
     }
 
-    pub(crate) fn multibyte_char_len(&mut self, ptr: usize) -> Option<usize> {
+    pub(crate) fn multibyte_char_len(&mut self, ptr: u32) -> Option<u32> {
         let result = self._multibyte_char_len(ptr);
         if result.is_none() {
             self.yyerror0(DiagnosticMessage::InvalidMultibyteChar {});
@@ -1300,7 +1303,7 @@ impl<'b> Lexer<'b> {
         result
     }
 
-    pub(crate) fn is_label_suffix(&self, n: usize) -> bool {
+    pub(crate) fn is_label_suffix(&self, n: u32) -> bool {
         self.buffer.peek_n(b':', n) && !self.buffer.peek_n(b':', n + 1)
     }
 

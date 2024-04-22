@@ -20,7 +20,7 @@ impl<'b> Lexer<'b> {
         Self::END_OF_INPUT
     }
 
-    fn percent_quotation(&mut self, c: &mut MaybeByte, ptok: usize) -> i32 {
+    fn percent_quotation(&mut self, c: &mut MaybeByte, ptok: u32) -> i32 {
         let term: MaybeByte;
 
         if c.is_eof() {

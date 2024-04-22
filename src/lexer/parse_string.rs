@@ -7,8 +7,8 @@ use crate::TokenBuf;
 use crate::{lex_states::*, DiagnosticMessage};
 use crate::{lexer::*, str_term::StringLiteral};
 
-const ESCAPE_CONTROL: usize = 1;
-const ESCAPE_META: usize = 2;
+const ESCAPE_CONTROL: u32 = 1;
+const ESCAPE_META: u32 = 2;
 
 impl<'b> Lexer<'b> {
     fn take_strterm(&mut self) -> StringLiteral<'b> {
@@ -127,7 +127,7 @@ impl<'b> Lexer<'b> {
         Self::tSTRING_CONTENT
     }
 
-    fn string_term(&mut self, term: u8, func: usize) -> i32 {
+    fn string_term(&mut self, term: u8, func: u32) -> i32 {
         self.strterm = None;
         if (func & STR_FUNC_REGEXP) != 0 {
             let flags = self.regx_options();
@@ -186,7 +186,7 @@ impl<'b> Lexer<'b> {
     }
 
     pub(crate) fn peek_variable_name(&mut self) -> Option<i32> {
-        let mut ptr: usize = self.buffer.pcur;
+        let mut ptr = self.buffer.pcur;
 
         if ptr + 1 >= self.buffer.pend {
             return None;
@@ -237,10 +237,10 @@ impl<'b> Lexer<'b> {
 
     pub(crate) fn tokadd_string(
         &mut self,
-        func: usize,
+        func: u32,
         term: u8,
         paren: Option<u8>,
-        nest: &mut usize,
+        nest: &mut u32,
     ) -> Option<MaybeByte> {
         let mut c: MaybeByte;
         let _erred = false;
@@ -388,14 +388,14 @@ impl<'b> Lexer<'b> {
         );
     }
 
-    fn scan_hex(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
+    fn scan_hex(&mut self, start: u32, len: u32, numlen: &mut u32) -> u32 {
         let mut s = start;
         let mut result = 0;
 
         for _ in 0..len {
             match self.buffer.byte_at(s).as_option() {
                 None => break,
-                Some(c) => match usize::from_str_radix(&(c as char).to_string(), 16) {
+                Some(c) => match u32::from_str_radix(&(c as char).to_string(), 16) {
                     Ok(hex) => {
                         result <<= 4;
                         result |= hex;
@@ -410,15 +410,15 @@ impl<'b> Lexer<'b> {
         result
     }
 
-    fn scan_oct(&mut self, start: usize, len: usize, numlen: &mut usize) -> usize {
+    fn scan_oct(&mut self, start: u32, len: u32, numlen: &mut u32) -> u32 {
         let mut s = start;
-        let mut result: usize = 0;
+        let mut result = 0;
 
         for _ in 0..len {
             match self.buffer.byte_at(s).as_option() {
                 Some(c) if (b'0'..=b'7').contains(&c) => {
                     result <<= 3;
-                    result |= (c - b'0') as usize;
+                    result |= (c - b'0') as u32;
                 }
                 _ => break,
             }
@@ -429,7 +429,7 @@ impl<'b> Lexer<'b> {
         result
     }
 
-    pub(crate) fn tokcopy(&mut self, n: usize) {
+    pub(crate) fn tokcopy(&mut self, n: u32) {
         let substr = self
             .buffer
             .substr_at(self.buffer.pcur - n, self.buffer.pcur)
@@ -437,7 +437,7 @@ impl<'b> Lexer<'b> {
         self.tokenbuf.append_borrowed(substr);
     }
 
-    fn tokaddmbc(&mut self, codepoint: usize) {
+    fn tokaddmbc(&mut self, codepoint: u32) {
         let utf8_char =
             core::char::from_u32(codepoint.try_into().expect("expected codepoint to be u32"))
                 .expect("expected codepoint to have digits");
@@ -447,7 +447,7 @@ impl<'b> Lexer<'b> {
         }
     }
 
-    fn tokadd_codepoint(&mut self, regexp_literal: usize, wide: bool) -> bool {
+    fn tokadd_codepoint(&mut self, regexp_literal: u32, wide: bool) -> bool {
         let mut numlen = 0;
         let codepoint = self.scan_hex(
             self.buffer.pcur,
@@ -496,8 +496,8 @@ impl<'b> Lexer<'b> {
     pub(crate) fn tokadd_utf8(
         &mut self,
         term: Option<u8>,
-        _symbol_literal: usize,
-        regexp_literal: usize,
+        _symbol_literal: u32,
+        regexp_literal: u32,
     ) {
         let open_brace = b'{';
         let close_brace = b'}';
@@ -509,7 +509,7 @@ impl<'b> Lexer<'b> {
         }
 
         if self.buffer.peek(open_brace) {
-            let mut second: Option<usize> = None;
+            let mut second: Option<u32> = None;
             let mut c;
             let mut last = self.nextc();
             if self.buffer.pcur >= self.buffer.pend {
@@ -641,7 +641,7 @@ impl<'b> Lexer<'b> {
         MaybeByte::new(0)
     }
 
-    fn tok_hex(&mut self, numlen: &mut usize) -> MaybeByte {
+    fn tok_hex(&mut self, numlen: &mut u32) -> MaybeByte {
         let c = self.scan_hex(self.buffer.pcur, 2, numlen);
         if *numlen == 0 {
             self.yyerror1(DiagnosticMessage::InvalidHexEscape {}, self.current_loc());
@@ -652,8 +652,8 @@ impl<'b> Lexer<'b> {
         MaybeByte::new(c as u8)
     }
 
-    pub(crate) fn read_escape(&mut self, flags: usize) -> MaybeByte {
-        let mut numlen: usize = 0;
+    pub(crate) fn read_escape(&mut self, flags: u32) -> MaybeByte {
+        let mut numlen: u32 = 0;
 
         let mut c = self.nextc();
         match c.as_option() {

@@ -44,7 +44,7 @@ pub struct Comment {
 }
 
 impl core::fmt::Debug for Comment {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Comment")
             .field("location", &self.location)
             .field("kind", &self.kind)

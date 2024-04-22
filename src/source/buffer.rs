@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use lib_ruby_parser_ast_arena::Blob;
 
@@ -11,30 +11,30 @@ use crate::source::InputError;
 pub(crate) struct Buffer<'b> {
     pub(crate) input: Input<'b>,
 
-    pub(crate) line_count: usize,
-    pub(crate) prevline: Option<usize>, // index
-    pub(crate) lastline: usize,         // index
-    pub(crate) nextline: usize,         // index
-    pub(crate) pbeg: usize,
-    pub(crate) pcur: usize,
-    pub(crate) pend: usize,
-    pub(crate) ptok: usize,
+    pub(crate) line_count: u32,
+    pub(crate) prevline: Option<u32>, // index
+    pub(crate) lastline: u32,         // index
+    pub(crate) nextline: u32,         // index
+    pub(crate) pbeg: u32,
+    pub(crate) pcur: u32,
+    pub(crate) pend: u32,
+    pub(crate) ptok: u32,
 
     pub(crate) eofp: bool,
     pub(crate) cr_seen: bool,
 
-    pub(crate) heredoc_end: usize,
+    pub(crate) heredoc_end: u32,
     pub(crate) heredoc_indent: i32,
     pub(crate) heredoc_line_indent: i32,
 
-    pub(crate) tokidx: usize,
-    // pub(crate) toksize: usize,
-    pub(crate) tokline: usize,
+    pub(crate) tokidx: u32,
+    // pub(crate) toksize: u32,
+    pub(crate) tokline: u32,
 
     pub(crate) has_shebang: bool,
 
     /* current line no. */
-    pub(crate) ruby_sourceline: usize,
+    pub(crate) ruby_sourceline: u32,
     // pub(crate) ruby_sourcefile: Vec<char>, /* current source file */
     // pub(crate) ruby_sourcefile_string: Vec<char>,
 }
@@ -139,20 +139,20 @@ impl<'b> Buffer<'b> {
         self.pcur >= self.pend
     }
 
-    pub(crate) fn is_eol_n(&self, n: usize) -> bool {
+    pub(crate) fn is_eol_n(&self, n: u32) -> bool {
         self.pcur + n >= self.pend
     }
 
     pub(crate) fn peek(&self, c: u8) -> bool {
         self.peek_n(c, 0)
     }
-    pub(crate) fn peek_n(&self, c: u8, n: usize) -> bool {
+    pub(crate) fn peek_n(&self, c: u8, n: u32) -> bool {
         !self.is_eol_n(n) && c == self.input.unchecked_byte_at(self.pcur + n)
     }
     pub(crate) fn peekc(&self) -> MaybeByte {
         self.peekc_n(0)
     }
-    pub(crate) fn peekc_n(&self, n: usize) -> MaybeByte {
+    pub(crate) fn peekc_n(&self, n: u32) -> MaybeByte {
         if self.is_eol_n(n) {
             MaybeByte::EndOfInput
         } else {
@@ -195,9 +195,9 @@ impl<'b> Buffer<'b> {
             self.heredoc_end = 0;
         }
         self.ruby_sourceline += 1;
-        self.pbeg = line.start;
-        self.pcur = line.start;
-        self.pend = line.end;
+        self.pbeg = line.start as u32;
+        self.pcur = line.start as u32;
+        self.pend = line.end as u32;
         self.token_flush();
         self.prevline = Some(self.lastline);
         self.lastline = v;
@@ -205,7 +205,7 @@ impl<'b> Buffer<'b> {
         Ok(())
     }
 
-    pub(crate) fn getline(&mut self) -> Result<usize, ()> {
+    pub(crate) fn getline(&mut self) -> Result<u32, ()> {
         if self.line_count < self.input.lines_count() {
             self.line_count += 1;
             println_if_debug_buffer!("line_count = {}", self.line_count);
@@ -219,7 +219,7 @@ impl<'b> Buffer<'b> {
         self.set_ptok(self.pcur);
     }
 
-    pub(crate) fn set_ptok(&mut self, ptok: usize) {
+    pub(crate) fn set_ptok(&mut self, ptok: u32) {
         println_if_debug_buffer!("set_ptok({})", ptok);
         self.ptok = ptok;
     }
@@ -232,14 +232,14 @@ impl<'b> Buffer<'b> {
         c
     }
 
-    pub(crate) fn byte_at(&self, idx: usize) -> MaybeByte {
+    pub(crate) fn byte_at(&self, idx: u32) -> MaybeByte {
         match self.input.byte_at(idx) {
             Some(byte) => MaybeByte::Some(byte),
             None => MaybeByte::EndOfInput,
         }
     }
 
-    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&'b [u8]> {
+    pub(crate) fn substr_at(&self, start: u32, end: u32) -> Option<&'b [u8]> {
         self.input.substr_at(start, end)
     }
 
@@ -248,7 +248,7 @@ impl<'b> Buffer<'b> {
     }
 
     pub(crate) fn is_word_match(&self, word: &str) -> bool {
-        let len = word.len();
+        let len = word.len() as u32;
 
         if self.substr_at(self.pcur, self.pcur + len) != Some(word.as_bytes()) {
             return false;
@@ -281,9 +281,9 @@ impl<'b> Buffer<'b> {
         true
     }
 
-    pub(crate) fn is_whole_match(&self, eos: &[u8], indent: usize) -> bool {
+    pub(crate) fn is_whole_match(&self, eos: &[u8], indent: u32) -> bool {
         let mut ptr = self.pbeg;
-        let len = eos.len();
+        let len = eos.len() as u32;
 
         if indent > 0 {
             while let Some(c) = self.input.byte_at(ptr) {
@@ -327,14 +327,14 @@ impl<'b> Buffer<'b> {
                 self.lastline = prevline;
             }
         }
-        self.pbeg = self.input.line_at(self.lastline).start;
-        self.pend = self.pbeg + self.input.line_at(self.lastline).len();
+        self.pbeg = self.input.line_at(self.lastline).start as u32;
+        self.pend = self.pbeg + self.input.line_at(self.lastline).len() as u32;
         self.pcur = self.pend;
         self.pushback(1);
         self.set_ptok(self.pcur);
     }
 
-    pub(crate) fn is_identchar(&self, begin: usize, _end: usize) -> bool {
+    pub(crate) fn is_identchar(&self, begin: u32, _end: u32) -> bool {
         let byte = match self.input.byte_at(begin) {
             Some(byte) => byte,
             None => return false,

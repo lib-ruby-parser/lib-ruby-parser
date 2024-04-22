@@ -32,15 +32,15 @@ impl<'b> Input<'b> {
         self.decoded.set_bytes(bytes)
     }
 
-    pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
-        self.decoded.bytes.get(idx).copied()
+    pub(crate) fn byte_at(&self, idx: u32) -> Option<u8> {
+        self.decoded.bytes.get(idx as usize).copied()
     }
 
-    pub(crate) fn unchecked_byte_at(&self, idx: usize) -> u8 {
-        self.decoded.bytes[idx]
+    pub(crate) fn unchecked_byte_at(&self, idx: u32) -> u8 {
+        self.decoded.bytes[idx as usize]
     }
 
-    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&'b [u8]> {
+    pub(crate) fn substr_at(&self, start: u32, end: u32) -> Option<&'b [u8]> {
         self.decoded.substr_at(start, end)
     }
 
@@ -59,12 +59,12 @@ impl<'b> Input<'b> {
     //     self.decoded.bytes.is_empty()
     // }
 
-    pub(crate) fn line_at(&self, idx: usize) -> &SourceLine {
+    pub(crate) fn line_at(&self, idx: u32) -> &SourceLine {
         self.decoded.line_at(idx)
     }
 
-    pub(crate) fn lines_count(&self) -> usize {
-        self.decoded.lines.len()
+    pub(crate) fn lines_count(&self) -> u32 {
+        self.decoded.lines.len() as u32
     }
 
     pub(crate) fn set_encoding(&mut self, encoding: &'b str) -> Result<(), InputError<'b>> {

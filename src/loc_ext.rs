@@ -19,7 +19,7 @@ impl LocExt for Loc {
     fn expand_to_line(&self, input: &DecodedInput) -> Option<(usize, Loc)> {
         let (begin_line, _) = self.begin_line_col(input)?;
         let line_no = begin_line;
-        let line = input.line_at(line_no);
+        let line = input.line_at(line_no as u32);
         Some((
             line_no,
             Self {
@@ -31,7 +31,7 @@ impl LocExt for Loc {
 
     /// Returns source code of the current `Loc` on a given `Input`
     fn source(&self, input: &DecodedInput) -> Option<String> {
-        let bytes = input.substr_at(self.begin, self.end)?;
+        let bytes = input.substr_at(self.begin as u32, self.end as u32)?;
         Some(String::from_utf8_lossy(bytes).into_owned())
     }
 }

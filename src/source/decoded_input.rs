@@ -81,13 +81,13 @@ impl<'b> DecodedInput<'b> {
         None
     }
 
-    pub(crate) fn line_at(&self, idx: usize) -> &SourceLine {
-        &self.lines[idx]
+    pub(crate) fn line_at(&self, idx: u32) -> &SourceLine {
+        &self.lines[idx as usize]
     }
 
-    pub(crate) fn substr_at(&self, start: usize, end: usize) -> Option<&'b [u8]> {
-        if start <= end && end <= self.bytes.len() {
-            Some(&self.bytes[start..end])
+    pub(crate) fn substr_at(&self, start: u32, end: u32) -> Option<&'b [u8]> {
+        if start <= end && end as usize <= self.bytes.len() {
+            Some(&self.bytes[start as usize..end as usize])
         } else {
             None
         }

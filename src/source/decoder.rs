@@ -14,8 +14,8 @@ pub enum InputError<'b> {
     DecodingError(&'b str),
 }
 
-impl std::fmt::Display for InputError<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for InputError<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{:?}", self)
     }
 }
@@ -64,16 +64,16 @@ impl<'b> DecoderResult<'b> {
 /// Takes encoding name and initial input as arguments
 /// and returns `Ok(decoded)` vector of bytes or `Err(error)` that will be returned
 /// in the `ParserResult::diagnostics` vector.
-pub type DecoderFn<'b> = dyn Fn(&'b str, &'b [u8], &'b Blob<'b>) -> DecoderResult<'b>;
+pub type DecoderFn<'b> = fn(&'b str, &'b [u8], &'b Blob<'b>) -> DecoderResult<'b>;
 
 /// Custom decoder, a wrapper around a function
 pub struct Decoder<'b> {
-    f: Box<DecoderFn<'b>>,
+    f: DecoderFn<'b>,
 }
 
 impl<'b> Decoder<'b> {
     /// Constructs a rewriter based on a given function
-    pub fn new(f: Box<DecoderFn<'b>>) -> Self {
+    pub fn new(f: DecoderFn<'b>) -> Self {
         Self { f }
     }
 
@@ -87,8 +87,8 @@ impl<'b> Decoder<'b> {
     }
 }
 
-impl std::fmt::Debug for Decoder<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for Decoder<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Decoder").finish()
     }
 }

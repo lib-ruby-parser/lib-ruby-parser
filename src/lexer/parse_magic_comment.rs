@@ -45,7 +45,7 @@ impl<'b> Lexer<'b> {
         true
     }
 
-    pub(crate) fn set_file_encoding(&mut self, mut str_: usize, send: usize) {
+    pub(crate) fn set_file_encoding(&mut self, mut str_: u32, send: u32) {
         let mut sep = false;
 
         loop {
@@ -130,7 +130,7 @@ impl<'b> Lexer<'b> {
             .expect("failed to get encoding comment value");
     }
 
-    fn magic_comment_marker(&self, str_: usize, len: usize) -> usize {
+    fn magic_comment_marker(&self, str_: u32, len: u32) -> u32 {
         let mut i = 2;
 
         while i < len {
@@ -159,7 +159,7 @@ impl<'b> Lexer<'b> {
         0
     }
 
-    pub(crate) fn magic_comment(&mut self, mut str_: usize, mut len: usize) -> Result<bool, ()> {
+    pub(crate) fn magic_comment(&mut self, mut str_: u32, mut len: u32) -> Result<bool, ()> {
         let mut indicator = false;
         let mut end;
         let mut vbeg;
