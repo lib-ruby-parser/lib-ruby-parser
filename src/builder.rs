@@ -336,7 +336,7 @@ impl<'b> Builder<'b> {
 
     // Symbols
 
-    fn validate_sym_value(&self, value: &Bytes, loc: &Loc) {
+    fn validate_sym_value(&self, value: &Bytes, loc: Loc) {
         if !value.is_valid_utf8() {
             self.error(DiagnosticMessage::InvalidSymbol { symbol: "UTF-8" }, loc)
         }
@@ -346,7 +346,7 @@ impl<'b> Builder<'b> {
         let expression_l = self.loc(start_t).join(&self.loc(value_t));
         let begin_l = Some(self.loc(start_t));
         let value = value_t.token_value.clone();
-        self.validate_sym_value(&value, &expression_l);
+        self.validate_sym_value(&value, expression_l);
         Box::new(Node::Sym(Sym {
             name: value,
             begin_l,
@@ -358,7 +358,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn symbol_internal(&self, symbol_t: &'b Token<'b>) -> Box<Node> {
         let expression_l = self.loc(symbol_t);
         let value = symbol_t.token_value.clone();
-        self.validate_sym_value(&value, &expression_l);
+        self.validate_sym_value(&value, expression_l);
         Box::new(Node::Sym(Sym {
             name: value,
             begin_l: None,
@@ -382,7 +382,7 @@ impl<'b> Builder<'b> {
                         expression_l,
                     } = self.collection_map(Some(begin_t.loc), &[], Some(end_t.loc));
 
-                    self.validate_sym_value(&value, &expression_l);
+                    self.validate_sym_value(&value, expression_l);
 
                     return Box::new(Node::Sym(Sym {
                         name: value,
@@ -592,8 +592,8 @@ impl<'b> Builder<'b> {
             Some(Node::RegOpt(RegOpt {
                 options,
                 expression_l,
-            })) => self.validate_static_regexp(&parts, options, expression_l),
-            None => self.validate_static_regexp(&parts, &None, &expression_l),
+            })) => self.validate_static_regexp(&parts, options, *expression_l),
+            None => self.validate_static_regexp(&parts, &None, expression_l),
             _ => unreachable!("must be Option<RegOpt>"),
         }
 
@@ -698,7 +698,7 @@ impl<'b> Builder<'b> {
                     end_l,
                     expression_l,
                 }) => {
-                    self.validate_sym_value(&value, &expression_l);
+                    self.validate_sym_value(&value, expression_l);
                     Node::Sym(Sym {
                         name: value,
                         begin_l,
@@ -758,7 +758,7 @@ impl<'b> Builder<'b> {
         let expression_l = key_loc.join(value.expression());
 
         let key = key_t.token_value.clone();
-        self.validate_sym_value(&key, &key_l);
+        self.validate_sym_value(&key, key_l);
 
         Box::new(Node::Pair(Pair {
             key: Box::new(Node::Sym(Sym {
@@ -930,7 +930,7 @@ impl<'b> Builder<'b> {
                 let do_warn = keys_are_equal(key1, key2);
 
                 if do_warn {
-                    self.warn(DiagnosticMessage::DuplicateHashKey {}, key2.expression());
+                    self.warn(DiagnosticMessage::DuplicateHashKey {}, *key2.expression());
                 }
             }
         }
@@ -1057,7 +1057,7 @@ impl<'b> Builder<'b> {
                 DiagnosticMessage::NthRefIsTooBig {
                     nth_ref: self.blob.push_str(&name),
                 },
-                &expression_l,
+                expression_l,
             )
         }
 
@@ -1074,13 +1074,13 @@ impl<'b> Builder<'b> {
                             DiagnosticMessage::InvalidIdToGet {
                                 identifier: self.blob.push_str(name_s),
                             },
-                            &expression_l,
+                            expression_l,
                         );
                     }
 
                     // Numbered parameters are not declared anywhere,
                     // so they take precedence over method calls in numblock contexts
-                    if self.try_declare_numparam(name_s, &expression_l) {
+                    if self.try_declare_numparam(name_s, expression_l) {
                         return Box::new(Node::Lvar(Lvar { name, expression_l }));
                     }
 
@@ -1104,7 +1104,7 @@ impl<'b> Builder<'b> {
                                 DiagnosticMessage::CircularArgumentReference {
                                     arg_name: self.blob.push_str(&name),
                                 },
-                                &expression_l,
+                                expression_l,
                             );
                         }
                     }
@@ -1212,7 +1212,7 @@ impl<'b> Builder<'b> {
                 if self.context.in_def() {
                     self.error(
                         DiagnosticMessage::DynamicConstantAssignment {},
-                        &expression_l,
+                        expression_l,
                     );
                     return Err(());
                 }
@@ -1228,8 +1228,8 @@ impl<'b> Builder<'b> {
             }
             Node::Lvar(Lvar { name, expression_l }) => {
                 let name_s = name.as_str();
-                self.check_assignment_to_numparam(name_s, &expression_l)?;
-                self.check_reserved_for_numparam(name_s, &expression_l)?;
+                self.check_assignment_to_numparam(name_s, expression_l)?;
+                self.check_reserved_for_numparam(name_s, expression_l)?;
 
                 self.static_env.declare(name_s);
 
@@ -1247,8 +1247,8 @@ impl<'b> Builder<'b> {
                 expression_l,
             }) => {
                 let name_s = name.as_str();
-                self.check_assignment_to_numparam(name_s, &name_l)?;
-                self.check_reserved_for_numparam(name_s, &name_l)?;
+                self.check_assignment_to_numparam(name_s, name_l)?;
+                self.check_reserved_for_numparam(name_s, name_l)?;
 
                 Node::MatchVar(MatchVar {
                     name,
@@ -1257,31 +1257,31 @@ impl<'b> Builder<'b> {
                 })
             }
             Node::Self_(Self_ { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToSelf {}, &expression_l);
+                self.error(DiagnosticMessage::CantAssignToSelf {}, expression_l);
                 return Err(());
             }
             Node::Nil(Nil { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToNil {}, &expression_l);
+                self.error(DiagnosticMessage::CantAssignToNil {}, expression_l);
                 return Err(());
             }
             Node::True(True { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToTrue {}, &expression_l);
+                self.error(DiagnosticMessage::CantAssignToTrue {}, expression_l);
                 return Err(());
             }
             Node::False(False { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToFalse {}, &expression_l);
+                self.error(DiagnosticMessage::CantAssignToFalse {}, expression_l);
                 return Err(());
             }
             Node::File(File { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToFile {}, &expression_l);
+                self.error(DiagnosticMessage::CantAssignToFile {}, expression_l);
                 return Err(());
             }
             Node::Line(Line { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToLine {}, &expression_l);
+                self.error(DiagnosticMessage::CantAssignToLine {}, expression_l);
                 return Err(());
             }
             Node::Encoding(Encoding { expression_l }) => {
-                self.error(DiagnosticMessage::CantAssignToEncoding {}, &expression_l);
+                self.error(DiagnosticMessage::CantAssignToEncoding {}, expression_l);
                 return Err(());
             }
             Node::BackRef(BackRef { name, expression_l }) => {
@@ -1289,7 +1289,7 @@ impl<'b> Builder<'b> {
                     DiagnosticMessage::CantSetVariable {
                         var_name: self.blob.push_str(&name),
                     },
-                    &expression_l,
+                    expression_l,
                 );
                 return Err(());
             }
@@ -1298,7 +1298,7 @@ impl<'b> Builder<'b> {
                     DiagnosticMessage::CantSetVariable {
                         var_name: self.blob.push_str(&format!("${}", name)),
                     },
-                    &expression_l,
+                    expression_l,
                 );
                 return Err(());
             }
@@ -1453,7 +1453,7 @@ impl<'b> Builder<'b> {
                     DiagnosticMessage::CantSetVariable {
                         var_name: self.blob.push_str(name),
                     },
-                    expression_l,
+                    *expression_l,
                 );
                 return Err(());
             }
@@ -1462,7 +1462,7 @@ impl<'b> Builder<'b> {
                     DiagnosticMessage::CantSetVariable {
                         var_name: self.blob.push_str(&format!("${}", name)),
                     },
-                    expression_l,
+                    *expression_l,
                 );
                 return Err(());
             }
@@ -1628,7 +1628,7 @@ impl<'b> Builder<'b> {
         let expression_l = keyword_l.join(&end_l);
 
         let name = value(name_t);
-        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), name_l)?;
 
         Ok(Box::new(Node::Def(Def {
             name,
@@ -1659,7 +1659,7 @@ impl<'b> Builder<'b> {
         let assignment_l = self.loc(assignment_t);
 
         let name = value(name_t);
-        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), name_l)?;
 
         Ok(Box::new(Node::Def(Def {
             name,
@@ -1690,7 +1690,7 @@ impl<'b> Builder<'b> {
         let expression_l = keyword_l.join(&end_l);
 
         let name = value(name_t);
-        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), name_l)?;
 
         Ok(Box::new(Node::Defs(Defs {
             definee,
@@ -1726,7 +1726,7 @@ impl<'b> Builder<'b> {
         let expression_l = keyword_l.join(&body_l);
 
         let name = value(name_t);
-        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), name_l)?;
 
         Ok(Box::new(Node::Defs(Defs {
             definee,
@@ -1813,7 +1813,7 @@ impl<'b> Builder<'b> {
         let name_l = self.loc(name_t);
         let name = value(name_t);
 
-        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), name_l)?;
 
         Ok(Box::new(Node::Arg(Arg {
             name,
@@ -1832,7 +1832,7 @@ impl<'b> Builder<'b> {
         let expression_l = self.loc(name_t).join(default.expression());
 
         let name = value(name_t);
-        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), name_l)?;
 
         Ok(Box::new(Node::Optarg(Optarg {
             name,
@@ -1851,7 +1851,7 @@ impl<'b> Builder<'b> {
         let (name, name_l) = if let Some(name_t) = name_t {
             let name_l = self.loc(name_t);
             let name = value(name_t);
-            self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+            self.check_reserved_for_numparam(name.as_str(), name_l)?;
             (Some(name), Some(name_l))
         } else {
             (None, None)
@@ -1871,7 +1871,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn kwarg(&self, name_t: &'b Token<'b>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(name_t);
         let name = value(name_t);
-        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), name_l)?;
 
         let expression_l = name_l;
         let name_l = expression_l.adjust_end(-1);
@@ -1890,7 +1890,7 @@ impl<'b> Builder<'b> {
     ) -> Result<Box<Node>, ()> {
         let name_l = self.loc(name_t);
         let name = value(name_t);
-        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), name_l)?;
 
         let label_l = name_l;
         let name_l = label_l.adjust_end(-1);
@@ -1912,7 +1912,7 @@ impl<'b> Builder<'b> {
         let (name, name_l) = if let Some(name_t) = name_t {
             let name_l = self.loc(name_t);
             let name = value(name_t);
-            self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+            self.check_reserved_for_numparam(name.as_str(), name_l)?;
             (Some(name), Some(name_l))
         } else {
             (None, None)
@@ -1942,7 +1942,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn shadowarg(&self, name_t: &'b Token<'b>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(name_t);
         let name = value(name_t);
-        self.check_reserved_for_numparam(name.as_str(), &name_l)?;
+        self.check_reserved_for_numparam(name.as_str(), name_l)?;
 
         Ok(Box::new(Node::Shadowarg(Shadowarg {
             name,
@@ -1958,7 +1958,7 @@ impl<'b> Builder<'b> {
         let name_l = self.maybe_loc(&name_t);
         let name = maybe_value(name_t);
         if let (Some(name_l), Some(name)) = (name_l.as_ref(), name.as_ref()) {
-            self.check_reserved_for_numparam(name, name_l)?;
+            self.check_reserved_for_numparam(name, *name_l)?;
         }
 
         let operator_l = self.loc(amper_t);
@@ -2093,7 +2093,7 @@ impl<'b> Builder<'b> {
                     Node::BlockPass(_) | Node::ForwardedArgs(_) => {
                         self.error(
                             DiagnosticMessage::BlockAndBlockArgGiven {},
-                            last_arg.expression(),
+                            *last_arg.expression(),
                         );
                         Err(())
                     }
@@ -2106,7 +2106,7 @@ impl<'b> Builder<'b> {
 
         match &*method_call {
             Node::Yield(Yield { keyword_l, .. }) => {
-                self.error(DiagnosticMessage::BlockGivenToYield {}, keyword_l);
+                self.error(DiagnosticMessage::BlockGivenToYield {}, *keyword_l);
                 return Err(());
             }
             Node::Send(Send { args, .. }) => {
@@ -2795,7 +2795,7 @@ impl<'b> Builder<'b> {
 
         if type_ == KeywordCmd::Yield && !args.is_empty() {
             if let Some(Node::BlockPass(_)) = args.last() {
-                self.error(DiagnosticMessage::BlockGivenToYield {}, &keyword_l);
+                self.error(DiagnosticMessage::BlockGivenToYield {}, keyword_l);
                 return Err(());
             }
         }
@@ -3299,8 +3299,8 @@ impl<'b> Builder<'b> {
         let expression_l = name_l;
         let name = value(name_t);
 
-        self.check_lvar_name(name.as_str(), &name_l)?;
-        self.check_duplicate_pattern_variable(name.as_str(), &name_l)?;
+        self.check_lvar_name(name.as_str(), name_l)?;
+        self.check_duplicate_pattern_variable(name.as_str(), name_l)?;
         self.static_env.declare(name.as_str());
 
         Ok(Box::new(Node::MatchVar(MatchVar {
@@ -3316,8 +3316,8 @@ impl<'b> Builder<'b> {
 
         let name = value(name_t);
 
-        self.check_lvar_name(name.as_str(), &name_l)?;
-        self.check_duplicate_pattern_variable(name.as_str(), &name_l)?;
+        self.check_lvar_name(name.as_str(), name_l)?;
+        self.check_duplicate_pattern_variable(name.as_str(), name_l)?;
         self.static_env.declare(name.as_str());
 
         Ok(Box::new(Node::MatchVar(MatchVar {
@@ -3335,7 +3335,7 @@ impl<'b> Builder<'b> {
         if strings.len() != 1 {
             self.error(
                 DiagnosticMessage::SymbolLiteralWithInterpolation {},
-                &self.loc(begin_t).join(&self.loc(end_t)),
+                self.loc(begin_t).join(&self.loc(end_t)),
             );
             return Err(());
         }
@@ -3351,8 +3351,8 @@ impl<'b> Builder<'b> {
                 let name = value.to_string_lossy();
                 let mut name_l = expression_l;
 
-                self.check_lvar_name(name.as_str(), &name_l)?;
-                self.check_duplicate_pattern_variable(name.as_str(), &name_l)?;
+                self.check_lvar_name(name.as_str(), name_l)?;
+                self.check_duplicate_pattern_variable(name.as_str(), name_l)?;
 
                 self.static_env.declare(name.as_str());
 
@@ -3385,7 +3385,7 @@ impl<'b> Builder<'b> {
             _ => {
                 self.error(
                     DiagnosticMessage::SymbolLiteralWithInterpolation {},
-                    &self.loc(begin_t).join(&self.loc(end_t)),
+                    self.loc(begin_t).join(&self.loc(end_t)),
                 );
                 return Err(());
             }
@@ -3588,21 +3588,18 @@ impl<'b> Builder<'b> {
     ) -> Result<Box<Node>, ()> {
         let result = match p_kw_label {
             PKwLabel::PlainLabel(label_t) => {
-                self.check_duplicate_pattern_key(
-                    clone_value(label_t).as_str(),
-                    &self.loc(label_t),
-                )?;
+                self.check_duplicate_pattern_key(clone_value(label_t).as_str(), self.loc(label_t))?;
                 self.pair_keyword(label_t, value)
             }
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
                 let label_loc = self.loc(begin_t).join(&self.loc(end_t));
 
                 match Self::static_string(&parts) {
-                    Some(var_name) => self.check_duplicate_pattern_key(&var_name, &label_loc)?,
+                    Some(var_name) => self.check_duplicate_pattern_key(&var_name, label_loc)?,
                     _ => {
                         self.error(
                             DiagnosticMessage::SymbolLiteralWithInterpolation {},
-                            &label_loc,
+                            label_loc,
                         );
                         return Err(());
                     }
@@ -3769,7 +3766,7 @@ impl<'b> Builder<'b> {
         }
     }
 
-    fn arg_name_loc<'a>(&self, node: &'a Node) -> &'a Loc {
+    fn arg_name_loc(&self, node: &Node) -> Loc {
         match node {
             Node::Arg(Arg {
                 expression_l: output_l,
@@ -3787,7 +3784,7 @@ impl<'b> Builder<'b> {
             | Node::Shadowarg(Shadowarg {
                 expression_l: output_l,
                 ..
-            }) => output_l,
+            }) => *output_l,
             Node::Blockarg(Blockarg {
                 name_l,
                 expression_l,
@@ -3802,7 +3799,7 @@ impl<'b> Builder<'b> {
                 name_l,
                 expression_l,
                 ..
-            }) => name_l.as_ref().unwrap_or(expression_l),
+            }) => name_l.unwrap_or(*expression_l),
             _ => unreachable!("unsupported arg {:?}", node),
         }
     }
@@ -3838,7 +3835,7 @@ impl<'b> Builder<'b> {
         }
     }
 
-    pub(crate) fn check_assignment_to_numparam(&self, name: &str, loc: &Loc) -> Result<(), ()> {
+    pub(crate) fn check_assignment_to_numparam(&self, name: &str, loc: Loc) -> Result<(), ()> {
         let assigning_to_numparam = self.context.is_in_dynamic_block()
             && matches!(
                 name,
@@ -3876,12 +3873,12 @@ impl<'b> Builder<'b> {
         if let Some(forward_arg) = forward_arg {
             self.error(
                 DiagnosticMessage::ForwardArgAfterRestarg {},
-                forward_arg.expression(),
+                *forward_arg.expression(),
             );
         }
     }
 
-    pub(crate) fn check_reserved_for_numparam(&self, name: &str, loc: &Loc) -> Result<(), ()> {
+    pub(crate) fn check_reserved_for_numparam(&self, name: &str, loc: Loc) -> Result<(), ()> {
         match name {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
                 self.error(
@@ -3900,7 +3897,7 @@ impl<'b> Builder<'b> {
         &this_name[0..1] != "_" && this_name == that_name
     }
 
-    pub(crate) fn check_lvar_name(&self, name: &str, loc: &Loc) -> Result<(), ()> {
+    pub(crate) fn check_lvar_name(&self, name: &str, loc: Loc) -> Result<(), ()> {
         let mut all_chars = name.chars();
         let first = all_chars
             .next()
@@ -3915,7 +3912,7 @@ impl<'b> Builder<'b> {
         }
     }
 
-    pub(crate) fn check_duplicate_pattern_variable(&self, name: &str, loc: &Loc) -> Result<(), ()> {
+    pub(crate) fn check_duplicate_pattern_variable(&self, name: &str, loc: Loc) -> Result<(), ()> {
         if name.starts_with('_') {
             return Ok(());
         }
@@ -3929,7 +3926,7 @@ impl<'b> Builder<'b> {
         Ok(())
     }
 
-    pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: &Loc) -> Result<(), ()> {
+    pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: Loc) -> Result<(), ()> {
         if self.pattern_hash_keys.is_declared(name) {
             self.error(DiagnosticMessage::DuplicateKeyName {}, loc);
             return Err(());
@@ -3973,7 +3970,7 @@ impl<'b> Builder<'b> {
         &self,
         parts: &[Node],
         options: &Option<String>,
-        loc: &Loc,
+        loc: Loc,
     ) -> Option<Regex> {
         let source = Self::static_string(parts)?;
         let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
@@ -4005,7 +4002,7 @@ impl<'b> Builder<'b> {
         &self,
         parts: &[Node],
         options: &Option<String>,
-        loc: &Loc,
+        loc: Loc,
     ) {
         self.build_static_regexp(parts, options, loc);
     }
@@ -4015,7 +4012,7 @@ impl<'b> Builder<'b> {
         &self,
         _parts: &[Node],
         _options: &Option<String>,
-        _loc: &Loc,
+        _loc: Loc,
     ) {
     }
 
@@ -4109,13 +4106,13 @@ impl<'b> Builder<'b> {
         }
     }
 
-    pub(crate) fn error(&self, message: DiagnosticMessage<'b>, loc: &Loc) {
-        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, *loc, self.blob);
+    pub(crate) fn error(&self, message: DiagnosticMessage<'b>, loc: Loc) {
+        let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc, self.blob);
         self.diagnostics.push(diagnostic)
     }
 
-    pub(crate) fn warn(&self, message: DiagnosticMessage<'b>, loc: &Loc) {
-        let diagnostic = Diagnostic::new(ErrorLevel::Warning, message, *loc, self.blob);
+    pub(crate) fn warn(&self, message: DiagnosticMessage<'b>, loc: Loc) {
+        let diagnostic = Diagnostic::new(ErrorLevel::Warning, message, loc, self.blob);
         self.diagnostics.push(diagnostic)
     }
 
@@ -4123,7 +4120,7 @@ impl<'b> Builder<'b> {
         if let Some(void_node) = Self::void_value(node) {
             self.error(
                 DiagnosticMessage::VoidValueExpression {},
-                void_node.expression(),
+                *void_node.expression(),
             );
             Err(())
         } else {
@@ -4238,7 +4235,7 @@ impl<'b> Builder<'b> {
         )
     }
 
-    fn try_declare_numparam(&self, name: &str, loc: &Loc) -> bool {
+    fn try_declare_numparam(&self, name: &str, loc: Loc) -> bool {
         match name.as_bytes()[..] {
             [b'_', n]
                 if (b'1'..=b'9').contains(&n)
