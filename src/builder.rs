@@ -3,8 +3,8 @@ use lib_ruby_parser_ast_arena::Blob;
 #[cfg(feature = "onig")]
 use onig::{Regex, RegexOptions};
 
+use core::convert::TryInto;
 use std::collections::HashMap;
-use std::convert::TryInto;
 
 use crate::error::Diagnostics;
 #[allow(unused_imports)]

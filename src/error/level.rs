@@ -8,12 +8,11 @@ pub enum ErrorLevel {
     Error,
 }
 
-impl ToString for ErrorLevel {
-    fn to_string(&self) -> String {
+impl core::fmt::Display for ErrorLevel {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::Warning => "warning",
-            Self::Error => "error",
+            Self::Warning => write!(f, "warning"),
+            Self::Error => write!(f, "error"),
         }
-        .to_string()
     }
 }

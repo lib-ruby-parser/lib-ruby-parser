@@ -155,10 +155,10 @@ impl PartialEq for MaybeByte {
 }
 
 impl PartialOrd<u8> for MaybeByte {
-    fn partial_cmp(&self, other: &u8) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &u8) -> Option<core::cmp::Ordering> {
         match self.as_option() {
             Some(c) => Some(c.cmp(other)),
-            _ => Some(std::cmp::Ordering::Less),
+            _ => Some(core::cmp::Ordering::Less),
         }
     }
 }

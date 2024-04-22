@@ -40,8 +40,8 @@ pub struct ParserResult<'b> {
     pub input: DecodedInput<'b>,
 }
 
-impl std::fmt::Debug for ParserResult<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for ParserResult<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("ParserResult")
             .field("ast", &self.ast)
             .field("tokens", &self.tokens)
