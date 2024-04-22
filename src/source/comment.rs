@@ -91,7 +91,7 @@ impl Comment {
     }
 }
 
-impl lib_ruby_parser_ast_arena::SingleIntrusiveListItem for Comment {
+impl lib_ruby_parser_ast_arena::SingleLinkedIntrusiveListItem for Comment {
     fn next(&self) -> Option<NonNull<Self>> {
         self.next.get()
     }

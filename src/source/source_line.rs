@@ -54,7 +54,7 @@ impl SourceLine {
     }
 }
 
-impl lib_ruby_parser_ast_arena::SingleIntrusiveListItem for SourceLine {
+impl lib_ruby_parser_ast_arena::SingleLinkedIntrusiveListItem for SourceLine {
     fn next(&self) -> Option<NonNull<Self>> {
         self.next.get()
     }

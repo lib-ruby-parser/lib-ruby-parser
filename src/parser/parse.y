@@ -43,8 +43,8 @@
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
-    tokens: &'b /*'*/ SingleIntrusiveList<'b /*'*/, Token<'b /*'*/>>,
-    diagnostics: &'b /*'*/ SingleIntrusiveList<'b /*'*/, Diagnostic<'b /*'*/>>,
+    tokens: &'b /*'*/ SingleLinkedIntrusiveList<'b /*'*/, Token<'b /*'*/>>,
+    diagnostics: &'b /*'*/ SingleLinkedIntrusiveList<'b /*'*/, Diagnostic<'b /*'*/>>,
     record_tokens: bool,
 
     blob: &'b /*'*/ Blob<'b /*'*/>,
@@ -68,7 +68,7 @@ use crate::Node;
 use crate::nodes;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::Loc;
-use lib_ruby_parser_ast_arena::{Blob, SingleIntrusiveList};
+use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
 }
 

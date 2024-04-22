@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::SingleIntrusiveList;
+use lib_ruby_parser_ast_arena::SingleLinkedIntrusiveList;
 
 use crate::source::Comment;
 use crate::source::DecodedInput;
@@ -16,17 +16,17 @@ pub struct ParserResult<'b> {
 
     /// List of tokens returned by a Lexer and consumed by a Parser.
     /// Empty unless ParserOptions::record_tokens is set to true.
-    pub tokens: &'b SingleIntrusiveList<'b, Token<'b>>,
+    pub tokens: &'b SingleLinkedIntrusiveList<'b, Token<'b>>,
 
     /// List of all diagnostics (errors and warnings) that have been
     /// recorded during lexing and parsing
-    pub diagnostics: &'b SingleIntrusiveList<'b, Diagnostic<'b>>,
+    pub diagnostics: &'b SingleLinkedIntrusiveList<'b, Diagnostic<'b>>,
 
     /// List of comments extracted from the source code.
-    pub comments: &'b SingleIntrusiveList<'b, Comment>,
+    pub comments: &'b SingleLinkedIntrusiveList<'b, Comment>,
 
     /// List of magic comments extracted from the source code.
-    pub magic_comments: &'b SingleIntrusiveList<'b, MagicComment>,
+    pub magic_comments: &'b SingleLinkedIntrusiveList<'b, MagicComment>,
 
     /// Input that was used for parsing.
     ///

@@ -116,7 +116,7 @@ impl<'b> Diagnostic<'b> {
     }
 }
 
-impl lib_ruby_parser_ast_arena::SingleIntrusiveListItem for Diagnostic<'_> {
+impl lib_ruby_parser_ast_arena::SingleLinkedIntrusiveListItem for Diagnostic<'_> {
     fn next(&self) -> Option<NonNull<Self>> {
         self.next.get()
     }

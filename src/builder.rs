@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::{Blob, SingleIntrusiveList};
+use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
 #[cfg(feature = "onig")]
 use onig::{Regex, RegexOptions};
@@ -65,7 +65,7 @@ pub(crate) struct Builder<'b> {
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
-    diagnostics: &'b SingleIntrusiveList<'b, Diagnostic<'b>>,
+    diagnostics: &'b SingleLinkedIntrusiveList<'b, Diagnostic<'b>>,
     blob: &'b Blob<'b>,
 }
 
@@ -77,7 +77,7 @@ impl<'b> Builder<'b> {
         max_numparam_stack: MaxNumparamStack,
         pattern_variables: VariablesStack,
         pattern_hash_keys: VariablesStack,
-        diagnostics: &'b SingleIntrusiveList<'b, Diagnostic<'b>>,
+        diagnostics: &'b SingleLinkedIntrusiveList<'b, Diagnostic<'b>>,
         blob: &'b Blob<'b>,
     ) -> Self {
         Self {
