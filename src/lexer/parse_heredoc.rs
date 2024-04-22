@@ -306,12 +306,13 @@ impl<'b> Lexer<'b> {
         self.heredoc_restore(here);
         self.compile_error(
             DiagnosticMessage::UnterminatedHeredoc {
-                heredoc_id: String::from_utf8_lossy(
+                heredoc_id: core::str::from_utf8(
                     self.buffer
                         .substr_at(eos, eos + len)
                         .expect("failed to get heredoc id for comparison"),
                 )
-                .into_owned(),
+                .unwrap()
+                .to_string(),
             },
             self.current_loc(),
         );

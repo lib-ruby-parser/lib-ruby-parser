@@ -59,10 +59,9 @@ impl<'b> Lexer<'b> {
                 }
                 self.warn(
                     DiagnosticMessage::AmbiguousTernaryOperator {
-                        condition: String::from_utf8_lossy(
-                            self.buffer.substr_at(start, ptr).unwrap(),
-                        )
-                        .into_owned(),
+                        condition: core::str::from_utf8(self.buffer.substr_at(start, ptr).unwrap())
+                            .unwrap()
+                            .to_string(),
                     },
                     self.loc(start - 1, start),
                 )
