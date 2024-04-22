@@ -43,7 +43,7 @@
     max_numparam_stack: MaxNumparamStack,
     pattern_variables: VariablesStack,
     pattern_hash_keys: VariablesStack,
-    tokens: Vec<Token<'b /*'*/>>,
+    tokens: &'b /*'*/ IntrusiveList<'b /*'*/, Token<'b /*'*/>>,
     diagnostics: &'b /*'*/ IntrusiveList<'b /*'*/, Diagnostic<'b /*'*/>>,
     record_tokens: bool,
 
@@ -6942,7 +6942,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
             pattern_hash_keys,
             static_env,
             last_token_type,
-            tokens: vec![],
+            tokens: blob.alloc_ref(),
             diagnostics,
             yylexer: lexer,
             record_tokens,
@@ -7007,8 +7007,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         self.last_token_type = token.token_type;
 
         if self.record_tokens {
-            // let mut token = token.clone();
-            // self.tokens.push(token.take_value());
+            self.tokens.push(token);
         }
 
         token
