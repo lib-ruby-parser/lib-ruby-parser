@@ -21,9 +21,9 @@ impl<'b> Lexer<'b> {
                 .is_identchar(self.buffer.pcur - 1, self.buffer.pend)
     }
 
-    pub(crate) fn tokenize_ident(&mut self) -> Option<String> {
+    pub(crate) fn tokenize_ident(&mut self) -> Option<&'b str> {
         self.set_yylval_name();
-        self.tokenbuf.as_string()
+        self.tokenbuf.as_whole_string()
     }
 
     pub(crate) fn parse_ident(&mut self, mut c: MaybeByte, cmd_state: bool) -> i32 {

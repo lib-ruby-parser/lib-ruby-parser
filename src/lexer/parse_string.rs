@@ -1,3 +1,5 @@
+use lib_ruby_parser_ast_arena::write_to;
+
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::str_term::{str_types::*, StrTerm};
@@ -322,11 +324,9 @@ impl<'b> Lexer<'b> {
                                     self.buffer.pushback(c);
                                     c = self.read_escape(0);
 
-                                    use core::fmt::Write;
-                                    use lib_ruby_parser_ast_arena::Writer;
                                     let mut escbuf = [0_u8; 5];
-                                    let mut writer = Writer::new(&mut escbuf);
-                                    write!(&mut writer, "\\x{:X}", c.expect("bug")).unwrap();
+                                    write_to(&mut escbuf, format_args!("\\x{:X}", c.expect("bug")))
+                                        .unwrap();
                                     for byte in escbuf.iter().take(4) {
                                         self.tokadd(MaybeByte::Some(*byte));
                                     }

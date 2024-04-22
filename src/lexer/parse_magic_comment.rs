@@ -1,5 +1,7 @@
 use core::convert::TryInto;
 
+use lib_ruby_parser_ast_arena::write_to;
+
 use crate::source::{MagicComment, MagicCommentKind};
 use crate::DiagnosticMessage;
 use crate::Lexer;
@@ -331,15 +333,21 @@ impl<'b> Lexer<'b> {
                         let encoding = match core::str::from_utf8(encoding_bytes) {
                             Ok(encoding) => encoding,
                             Err(err) => {
+                                let encoding_name =
+                                    core::str::from_utf8(&encoding_bytes[..err.valid_up_to()])
+                                        .unwrap();
+
+                                debug_assert!(encoding_name.len() < 20);
+                                let mut mem = [0; 50];
+                                let error = write_to(
+                                    &mut mem,
+                                    format_args!("unknown encoding name: {}", encoding_name),
+                                )
+                                .unwrap();
+
                                 self.yyerror1(
                                     DiagnosticMessage::EncodingError {
-                                        error: format!(
-                                            "unknown encoding name: {}",
-                                            core::str::from_utf8(
-                                                &encoding_bytes[..err.valid_up_to()]
-                                            )
-                                            .unwrap()
-                                        ),
+                                        error: error.to_string(),
                                     },
                                     self.loc(vbeg, vend),
                                 );
