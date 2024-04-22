@@ -130,8 +130,14 @@ impl<'b> Lexer<'b> {
     fn string_term(&mut self, term: u8, func: u32) -> i32 {
         self.strterm = None;
         if (func & STR_FUNC_REGEXP) != 0 {
-            let flags = self.regx_options();
-            self.set_yylval_num(format!("{}{}", term as char, flags));
+            let (flags, flags_count) = self.regx_options();
+            let mut mem = [0; 11];
+            mem[0] = term;
+            for i in 0..flags_count {
+                mem[i + 1] = flags[i];
+            }
+            let flags = core::str::from_utf8(&mem[..flags_count + 1]).unwrap();
+            self.set_yylval_num(flags);
             self.lex_state.set(EXPR_END);
             return Self::tREGEXP_END;
         }
@@ -144,9 +150,10 @@ impl<'b> Lexer<'b> {
         Self::tSTRING_END
     }
 
-    fn regx_options(&mut self) -> String {
+    fn regx_options(&mut self) -> ([u8; 10], usize) {
         let mut c: MaybeByte;
-        let mut result = String::from("");
+        let mut flags = [0; 10];
+        let mut flags_count = 0;
 
         self.newtok();
         loop {
@@ -160,7 +167,8 @@ impl<'b> Lexer<'b> {
 
             match ch {
                 b'o' | b'n' | b'e' | b's' | b'u' | b'i' | b'x' | b'm' => {
-                    result.push(ch as char);
+                    flags[flags_count] = ch;
+                    flags_count += 1;
                 }
                 _ => {
                     self.tokadd(c);
@@ -182,7 +190,7 @@ impl<'b> Lexer<'b> {
             );
         }
 
-        result
+        (flags, flags_count)
     }
 
     pub(crate) fn peek_variable_name(&mut self) -> Option<i32> {
