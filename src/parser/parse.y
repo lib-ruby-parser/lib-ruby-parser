@@ -6392,7 +6392,7 @@ f_opt_paren_args: f_paren_args
                         self.check_kwarg_name(ident_t)?;
 
                         let ident = self.blob.push_str(&ident_t.to_string_lossy());
-                        self.static_env.declare(&ident);
+                        self.static_env.declare(ident);
 
                         self.max_numparam_stack.set_has_ordinary_params();
 

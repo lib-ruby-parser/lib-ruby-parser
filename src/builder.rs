@@ -239,7 +239,7 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn string_internal(&self, string_t: &'b Token<'b>) -> Box<Node> {
         let expression_l = self.loc(string_t);
-        let value = string_t.token_value.clone();
+        let value = string_t.to_bytes_tmp();
         Box::new(Node::Str(Str {
             value,
             begin_l: None,
@@ -319,7 +319,7 @@ impl<'b> Builder<'b> {
         let end_l = None;
         let expression_l = str_loc;
 
-        let value = char_t.token_value.clone();
+        let value = char_t.to_bytes_tmp();
         Box::new(Node::Str(Str {
             value,
             begin_l,
@@ -336,7 +336,13 @@ impl<'b> Builder<'b> {
 
     // Symbols
 
-    fn validate_sym_value(&self, value: &Bytes, loc: Loc) {
+    fn validate_sym_value(&self, value: &lib_ruby_parser_ast_arena::Bytes, loc: Loc) {
+        if !value.is_valid_utf8() {
+            self.error(DiagnosticMessage::InvalidSymbol { symbol: "UTF-8" }, loc)
+        }
+    }
+
+    fn validate_sym_value_tmp(&self, value: &Bytes, loc: Loc) {
         if !value.is_valid_utf8() {
             self.error(DiagnosticMessage::InvalidSymbol { symbol: "UTF-8" }, loc)
         }
@@ -345,10 +351,9 @@ impl<'b> Builder<'b> {
     pub(crate) fn symbol(&self, start_t: &'b Token<'b>, value_t: &'b Token<'b>) -> Box<Node> {
         let expression_l = self.loc(start_t).join(&self.loc(value_t));
         let begin_l = Some(self.loc(start_t));
-        let value = value_t.token_value.clone();
-        self.validate_sym_value(&value, expression_l);
+        self.validate_sym_value(value_t.token_value, expression_l);
         Box::new(Node::Sym(Sym {
-            name: value,
+            name: value_t.to_bytes_tmp(),
             begin_l,
             end_l: None,
             expression_l,
@@ -357,10 +362,9 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn symbol_internal(&self, symbol_t: &'b Token<'b>) -> Box<Node> {
         let expression_l = self.loc(symbol_t);
-        let value = symbol_t.token_value.clone();
-        self.validate_sym_value(&value, expression_l);
+        self.validate_sym_value(symbol_t.token_value, expression_l);
         Box::new(Node::Sym(Sym {
-            name: value,
+            name: symbol_t.to_bytes_tmp(),
             begin_l: None,
             end_l: None,
             expression_l,
@@ -382,7 +386,7 @@ impl<'b> Builder<'b> {
                         expression_l,
                     } = self.collection_map(Some(begin_t.loc), &[], Some(end_t.loc));
 
-                    self.validate_sym_value(&value, expression_l);
+                    self.validate_sym_value_tmp(&value, expression_l);
 
                     return Box::new(Node::Sym(Sym {
                         name: value,
@@ -418,8 +422,8 @@ impl<'b> Builder<'b> {
     ) -> Box<Node> {
         let begin_l = self.loc(begin_t);
 
-        let begin = &begin_t.token_value;
-        if begin.len() >= 2 && begin[0] == b'<' && begin[1] == b'<' {
+        let mut begin = begin_t.token_value.iter();
+        if begin.len() >= 2 && begin.next() == Some(b'<') && begin.next() == Some(b'<') {
             let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(end_t));
             let heredoc_end_l = self.loc(end_t);
             let expression_l = begin_l;
@@ -699,7 +703,7 @@ impl<'b> Builder<'b> {
                     end_l,
                     expression_l,
                 }) => {
-                    self.validate_sym_value(&value, expression_l);
+                    self.validate_sym_value_tmp(&value, expression_l);
                     Node::Sym(Sym {
                         name: value,
                         begin_l,
@@ -758,12 +762,11 @@ impl<'b> Builder<'b> {
         let colon_l = key_loc.with_begin(key_loc.end - 1);
         let expression_l = key_loc.join(value.expression());
 
-        let key = key_t.token_value.clone();
-        self.validate_sym_value(&key, key_l);
+        self.validate_sym_value(key_t.token_value, key_l);
 
         Box::new(Node::Pair(Pair {
             key: Box::new(Node::Sym(Sym {
-                name: key,
+                name: key_t.to_bytes_tmp(),
                 begin_l: None,
                 end_l: None,
                 expression_l: key_l,
@@ -790,12 +793,8 @@ impl<'b> Builder<'b> {
 
         let colon_l = end_l.with_begin(end_l.end - 1);
 
-        let end_t: &'b Token<'b> = Token::new(
-            end_t.token_type,
-            end_t.token_value.clone(),
-            quote_loc,
-            self.blob,
-        );
+        let end_t: &'b Token<'b> =
+            Token::new(end_t.token_type, end_t.token_value, quote_loc, self.blob);
         let expression_l = self.loc(begin_t).join(value.expression());
 
         Box::new(Node::Pair(Pair {
@@ -4081,8 +4080,8 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn is_heredoc(&self, begin_t: Option<&'b Token<'b>>) -> bool {
         if let Some(begin_t) = begin_t.as_ref() {
-            let begin = &begin_t.token_value;
-            if begin.len() >= 2 && begin[0] == b'<' && begin[1] == b'<' {
+            let mut begin = begin_t.token_value.iter();
+            if begin.len() >= 2 && begin.next() == Some(b'<') && begin.next() == Some(b'<') {
                 return true;
             }
         }
@@ -4301,7 +4300,7 @@ pub(crate) fn collection_expr(nodes: &[Node]) -> Option<Loc> {
 }
 
 pub(crate) fn value<'b>(token: &'b Token<'b>) -> String {
-    token.token_value.to_string().unwrap()
+    token.to_string().unwrap()
 }
 
 pub(crate) fn clone_value(token: &Token) -> String {

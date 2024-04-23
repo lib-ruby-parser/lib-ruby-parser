@@ -9,7 +9,6 @@ use crate::source::Comment;
 use crate::source::Decoder;
 use crate::source::MagicComment;
 use crate::str_term::{str_types::*, HeredocEnd, StrTerm, StringLiteral};
-use crate::Bytes;
 use crate::Loc;
 use crate::SharedContext;
 use crate::StackState;
@@ -176,7 +175,7 @@ impl<'b> Lexer<'b> {
 
         let token = Token::new(
             token_type,
-            Bytes::new(token_value.iter().collect()),
+            lib_ruby_parser_ast_arena::Bytes::compress(token_value, self.blob),
             Loc {
                 begin: begin as usize,
                 end: end as usize,

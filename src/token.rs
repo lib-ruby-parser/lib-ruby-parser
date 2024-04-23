@@ -1,12 +1,11 @@
 use core::{cell::Cell, ptr::NonNull};
 
-use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveListItem};
+use lib_ruby_parser_ast_arena::{Blob, Bytes, SingleLinkedIntrusiveListItem};
 
 use crate::parser::token_name;
-use crate::{Bytes, Loc};
+use crate::Loc;
 
 /// A token that is emitted by a lexer and consumed by a parser
-#[derive(PartialEq, Eq)]
 #[repr(C)]
 pub struct Token<'b> {
     /// Numeric representation of the token type,
@@ -15,7 +14,7 @@ pub struct Token<'b> {
 
     /// Value of the token,
     /// e.g "42" for 42
-    pub token_value: Bytes,
+    pub token_value: &'b Bytes<'b>,
 
     /// Location of the token
     pub loc: Loc,
@@ -28,7 +27,7 @@ pub struct Token<'b> {
 impl<'b> Token<'b> {
     pub(crate) fn new(
         token_type: i32,
-        token_value: Bytes,
+        token_value: &'b Bytes<'b>,
         loc: Loc,
         blob: &'b Blob<'b>,
     ) -> &'b Self {
@@ -43,14 +42,14 @@ impl<'b> Token<'b> {
         this
     }
     /// Returns a byte array of the token value
-    pub fn as_bytes(&self) -> &Vec<u8> {
-        self.token_value.as_raw()
-    }
+    // pub fn as_bytes(&self) -> &Vec<u8> {
+    //     self.token_value.as_raw()
+    // }
 
     /// Converts token value into `&str`
-    pub fn as_str_lossy(&self) -> Result<&str, core::str::Utf8Error> {
-        core::str::from_utf8(self.token_value.as_raw())
-    }
+    // pub fn as_str_lossy(&self) -> Result<&str, core::str::Utf8Error> {
+    //     core::str::from_utf8(self.token_value.as_raw())
+    // }
 
     /// Converts token to a string, replaces unknown chars to `U+FFFD`
     pub fn to_string_lossy(&self) -> String {
@@ -59,17 +58,23 @@ impl<'b> Token<'b> {
 
     /// Converts token to a string
     pub fn to_string(&self) -> Result<String, std::string::FromUtf8Error> {
-        self.token_value.to_string()
+        let bytes = self.token_value.iter().collect::<Vec<_>>();
+        String::from_utf8(bytes)
     }
 
     /// Consumes a token and converts it into a string
-    pub fn into_string(self) -> Result<String, std::string::FromUtf8Error> {
-        self.token_value.into_string()
-    }
+    // pub fn into_string(self) -> Result<String, std::string::FromUtf8Error> {
+    //     self.token_value.into_string()
+    // }
 
     /// Returns name of the token
     pub fn token_name(&self) -> &'static str {
         token_name(self.token_type)
+    }
+
+    pub(crate) fn to_bytes_tmp(&self) -> lib_ruby_parser_ast::Bytes {
+        let bytes = self.token_value.iter().collect::<Vec<_>>();
+        lib_ruby_parser_ast::Bytes::new(bytes)
     }
 }
 
@@ -98,29 +103,31 @@ impl SingleLinkedIntrusiveListItem for Token<'_> {
 
 #[cfg(test)]
 fn new_token<'b>(blob: &'b Blob<'b>) -> &'b Token<'b> {
+    let bytes = blob.alloc_ref::<Bytes>();
+    bytes.append_invalid_escaped(42, blob);
     Token::new(
         crate::Lexer::tINTEGER,
-        Bytes::new(vec![42]),
+        bytes,
         Loc { begin: 1, end: 2 },
         blob,
     )
 }
 
-#[test]
-fn test_as_bytes() {
-    let mut mem = vec![0; 1000];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
-    let token = new_token(&blob);
-    assert_eq!(token.as_bytes(), &vec![42]);
-}
+// #[test]
+// fn test_as_bytes() {
+//     let mut mem = vec![0; 1000];
+//     let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+//     let token = new_token(&blob);
+//     assert_eq!(token.as_bytes(), &vec![42]);
+// }
 
-#[test]
-fn test_as_str_lossy() {
-    let mut mem = vec![0; 1000];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
-    let token = new_token(&blob);
-    assert_eq!(token.as_str_lossy(), Ok("*"));
-}
+// #[test]
+// fn test_as_str_lossy() {
+//     let mut mem = vec![0; 1000];
+//     let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+//     let token = new_token(&blob);
+//     assert_eq!(token.as_str_lossy(), Ok("*"));
+// }
 
 #[test]
 fn test_to_string_lossy() {

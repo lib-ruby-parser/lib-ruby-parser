@@ -700,7 +700,7 @@ impl<'b> ParseValue<'b> {
             ParseValue::Token(token) => {
                 let out = blob.alloc_mut::<Token>();
                 out.token_type = token.token_type;
-                out.token_value = token.token_value.clone();
+                out.token_value = token.token_value;
                 out.loc = token.loc;
                 ParseValue::Token(out)
             }
