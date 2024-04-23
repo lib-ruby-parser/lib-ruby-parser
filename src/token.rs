@@ -76,6 +76,10 @@ impl<'b> Token<'b> {
         let bytes = self.token_value.iter().collect::<Vec<_>>();
         lib_ruby_parser_ast::Bytes::new(bytes)
     }
+
+    pub(crate) fn as_whole_string(&self) -> &'b str {
+        self.token_value.as_whole_string().unwrap()
+    }
 }
 
 impl core::fmt::Debug for Token<'_> {

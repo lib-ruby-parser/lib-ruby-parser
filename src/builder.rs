@@ -63,8 +63,8 @@ pub(crate) struct Builder<'b> {
     context: &'b SharedContext,
     current_arg_stack: &'b CurrentArgStack<'b>,
     max_numparam_stack: &'b MaxNumparamStack<'b>,
-    pattern_variables: VariablesStack,
-    pattern_hash_keys: VariablesStack,
+    pattern_variables: &'b VariablesStack<'b>,
+    pattern_hash_keys: &'b VariablesStack<'b>,
     diagnostics: &'b SingleLinkedIntrusiveList<'b, Diagnostic<'b>>,
     blob: &'b Blob<'b>,
 }
@@ -75,8 +75,8 @@ impl<'b> Builder<'b> {
         context: &'b SharedContext,
         current_arg_stack: &'b CurrentArgStack<'b>,
         max_numparam_stack: &'b MaxNumparamStack<'b>,
-        pattern_variables: VariablesStack,
-        pattern_hash_keys: VariablesStack,
+        pattern_variables: &'b VariablesStack<'b>,
+        pattern_hash_keys: &'b VariablesStack<'b>,
         diagnostics: &'b SingleLinkedIntrusiveList<'b, Diagnostic<'b>>,
         blob: &'b Blob<'b>,
     ) -> Self {
@@ -3299,14 +3299,13 @@ impl<'b> Builder<'b> {
     pub(crate) fn match_var(&self, name_t: &'b Token<'b>) -> Result<Box<Node>, ()> {
         let name_l = self.loc(name_t);
         let expression_l = name_l;
-        let name = value(name_t);
 
-        self.check_lvar_name(name.as_str(), name_l)?;
-        self.check_duplicate_pattern_variable(name.as_str(), name_l)?;
-        self.static_env.declare(name.as_str());
+        self.check_lvar_name(name_t.as_whole_string(), name_l)?;
+        self.check_duplicate_pattern_variable(name_t.as_whole_string(), name_l)?;
+        self.static_env.declare(name_t.as_whole_string());
 
         Ok(Box::new(Node::MatchVar(MatchVar {
-            name,
+            name: name_t.to_string().unwrap(),
             name_l,
             expression_l,
         })))
@@ -3318,9 +3317,9 @@ impl<'b> Builder<'b> {
 
         let name = value(name_t);
 
-        self.check_lvar_name(name.as_str(), name_l)?;
-        self.check_duplicate_pattern_variable(name.as_str(), name_l)?;
-        self.static_env.declare(name.as_str());
+        self.check_lvar_name(name_t.as_whole_string(), name_l)?;
+        self.check_duplicate_pattern_variable(name_t.as_whole_string(), name_l)?;
+        self.static_env.declare(name_t.as_whole_string());
 
         Ok(Box::new(Node::MatchVar(MatchVar {
             name,
@@ -3353,8 +3352,10 @@ impl<'b> Builder<'b> {
                 let name = value.to_string_lossy();
                 let mut name_l = expression_l;
 
+                let name_s = self.blob.push_str(value.as_str_lossy().unwrap());
+
                 self.check_lvar_name(name.as_str(), name_l)?;
-                self.check_duplicate_pattern_variable(name.as_str(), name_l)?;
+                self.check_duplicate_pattern_variable(name_s, name_l)?;
 
                 self.static_env.declare(name.as_str());
 
@@ -3590,14 +3591,17 @@ impl<'b> Builder<'b> {
     ) -> Result<Box<Node>, ()> {
         let result = match p_kw_label {
             PKwLabel::PlainLabel(label_t) => {
-                self.check_duplicate_pattern_key(clone_value(label_t).as_str(), self.loc(label_t))?;
+                self.check_duplicate_pattern_key(label_t.as_whole_string(), self.loc(label_t))?;
                 self.pair_keyword(label_t, value)
             }
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
                 let label_loc = self.loc(begin_t).join(&self.loc(end_t));
 
                 match Self::static_string(&parts) {
-                    Some(var_name) => self.check_duplicate_pattern_key(&var_name, label_loc)?,
+                    Some(var_name) => {
+                        let var_name = self.blob.push_str(&var_name);
+                        self.check_duplicate_pattern_key(var_name, label_loc)?
+                    }
                     _ => {
                         self.error(
                             DiagnosticMessage::SymbolLiteralWithInterpolation {},
@@ -3914,7 +3918,11 @@ impl<'b> Builder<'b> {
         }
     }
 
-    pub(crate) fn check_duplicate_pattern_variable(&self, name: &str, loc: Loc) -> Result<(), ()> {
+    pub(crate) fn check_duplicate_pattern_variable(
+        &self,
+        name: &'b str,
+        loc: Loc,
+    ) -> Result<(), ()> {
         if name.starts_with('_') {
             return Ok(());
         }
@@ -3924,17 +3932,17 @@ impl<'b> Builder<'b> {
             return Err(());
         }
 
-        self.pattern_variables.declare(name);
+        self.pattern_variables.declare(name, self.blob);
         Ok(())
     }
 
-    pub(crate) fn check_duplicate_pattern_key(&self, name: &str, loc: Loc) -> Result<(), ()> {
+    pub(crate) fn check_duplicate_pattern_key(&self, name: &'b str, loc: Loc) -> Result<(), ()> {
         if self.pattern_hash_keys.is_declared(name) {
             self.error(DiagnosticMessage::DuplicateKeyName {}, loc);
             return Err(());
         }
 
-        self.pattern_hash_keys.declare(name);
+        self.pattern_hash_keys.declare(name, self.blob);
         Ok(())
     }
 

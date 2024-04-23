@@ -1,44 +1,36 @@
-use std::cell::RefCell;
-use std::collections::BTreeSet;
-use std::rc::Rc;
+use lib_ruby_parser_ast_arena::{Blob, DoubleLinkedIntrusiveList, IntrusiveStrHashMap};
 
-#[derive(Debug, Clone, Default)]
-pub(crate) struct VariablesStack {
-    stack: Rc<RefCell<Vec<BTreeSet<String>>>>,
-}
+#[derive(Debug)]
+pub(crate) struct VariablesStack<'b>(DoubleLinkedIntrusiveList<'b, IntrusiveStrHashMap<'b, ()>>);
 
-impl VariablesStack {
-    pub(crate) fn new() -> Self {
-        Self {
-            stack: Rc::new(RefCell::new(vec![])),
-        }
-    }
-
+impl<'b> VariablesStack<'b> {
     pub(crate) fn is_empty(&self) -> bool {
-        self.stack.borrow().is_empty()
+        self.0.is_empty()
     }
 
-    pub(crate) fn push(&self) {
-        self.stack.borrow_mut().push(BTreeSet::new())
+    pub(crate) fn push(&self, blob: &'b Blob<'b>) {
+        let new_map = IntrusiveStrHashMap::new_in(blob);
+        self.0.push(new_map)
     }
 
     pub(crate) fn pop(&self) {
-        self.stack.borrow_mut().pop();
+        self.0.pop();
     }
 
-    pub(crate) fn declare(&self, name: &str) {
-        self.stack
-            .borrow_mut()
-            .last_mut()
-            .expect("expected variables_stack to have at least 1 layer")
-            .insert(name.to_string());
+    pub(crate) fn declare(&self, name: &'b str, blob: &'b Blob<'b>) {
+        let mut top = self
+            .0
+            .last()
+            .expect("expected variables_stack to have at least 1 layer");
+        self.pop();
+        IntrusiveStrHashMap::insert(&mut top, name, (), blob);
+        self.0.push(top);
     }
 
     pub(crate) fn is_declared(&self, name: &str) -> bool {
-        self.stack
-            .borrow()
+        self.0
             .last()
             .expect("expected variables_stack to have at least 1 layer")
-            .contains(name)
+            .has_member(name)
     }
 }

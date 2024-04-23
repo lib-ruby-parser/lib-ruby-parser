@@ -41,8 +41,8 @@
     context: &'b /*'*/ SharedContext,
     last_token_type: i32,
     max_numparam_stack: &'b /*'*/ MaxNumparamStack<'b /*'*/>,
-    pattern_variables: VariablesStack,
-    pattern_hash_keys: VariablesStack,
+    pattern_variables: &'b /*'*/ VariablesStack<'b /*'*/>,
+    pattern_hash_keys: &'b /*'*/ VariablesStack<'b /*'*/>,
     tokens: &'b /*'*/ SingleLinkedIntrusiveList<'b /*'*/, Token<'b /*'*/>>,
     diagnostics: &'b /*'*/ SingleLinkedIntrusiveList<'b /*'*/, Diagnostic<'b /*'*/>>,
     record_tokens: bool,
@@ -1028,8 +1028,8 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
                         self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.command_start = false;
-                        self.pattern_variables.push();
-                        self.pattern_hash_keys.push();
+                        self.pattern_variables.push(self.blob);
+                        self.pattern_hash_keys.push(self.blob);
 
                         $<Bool>$ = Value::Bool(self.context.in_kwarg());
                         self.context.set_in_kwarg(true);
@@ -1058,8 +1058,8 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
                         self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.command_start = false;
-                        self.pattern_variables.push();
-                        self.pattern_hash_keys.push();
+                        self.pattern_variables.push(self.blob);
+                        self.pattern_hash_keys.push(self.blob);
 
                         $<Bool>$ = Value::Bool(self.context.in_kwarg());
                         self.context.set_in_kwarg(true);
@@ -4562,8 +4562,8 @@ opt_block_args_tail:
                     {
                         self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.command_start = false;
-                        self.pattern_variables.push();
-                        self.pattern_hash_keys.push();
+                        self.pattern_variables.push(self.blob);
+                        self.pattern_hash_keys.push(self.blob);
 
                         $<Bool>$ = Value::Bool(self.context.in_kwarg());
                         self.context.set_in_kwarg(true);
@@ -4712,14 +4712,14 @@ opt_block_args_tail:
         p_lparen: tLPAREN2
                     {
                         $$ = $1;
-                        self.pattern_hash_keys.push();
+                        self.pattern_hash_keys.push(self.blob);
                     }
                 ;
 
       p_lbracket: tLBRACK2
                     {
                         $$ = $1;
-                        self.pattern_hash_keys.push();
+                        self.pattern_hash_keys.push(self.blob);
                     }
                 ;
 
@@ -4884,7 +4884,7 @@ opt_block_args_tail:
                     }
                 | tLBRACE
                     {
-                        self.pattern_hash_keys.push();
+                        self.pattern_hash_keys.push(self.blob);
                         $<Bool>$ = Value::Bool(self.context.in_kwarg());
                         self.context.set_in_kwarg(false);
                     }
@@ -4912,7 +4912,7 @@ opt_block_args_tail:
                     }
                 | tLPAREN
                     {
-                        self.pattern_hash_keys.push();
+                        self.pattern_hash_keys.push(self.blob);
                         $<None>$ = Value::None;
                     }
                   p_expr rparen
@@ -6909,8 +6909,8 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         let context = lexer.context;
         let current_arg_stack = blob.alloc_ref::<CurrentArgStack>();
         let max_numparam_stack = blob.alloc_ref::<MaxNumparamStack>();
-        let pattern_variables = VariablesStack::new();
-        let pattern_hash_keys = VariablesStack::new();
+        let pattern_variables = blob.alloc_ref::<VariablesStack>();
+        let pattern_hash_keys = blob.alloc_ref::<VariablesStack>();
         let static_env = StaticEnvironment::new();
         let diagnostics = lexer.diagnostics;
 
@@ -6922,8 +6922,8 @@ impl<'b /*'*/> Parser<'b /*'*/> {
             context,
             current_arg_stack,
             max_numparam_stack,
-            pattern_variables.clone(),
-            pattern_hash_keys.clone(),
+            pattern_variables,
+            pattern_hash_keys,
             diagnostics,
             blob,
         );
