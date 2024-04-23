@@ -99,7 +99,7 @@ pub(crate) fn test_file(fixture_path: &str) {
         &blob,
     );
     for var in fixture.vars {
-        lexer.static_env.declare(&var);
+        lexer.static_env.declare(blob.push_str(&var), &blob);
     }
     if let Some(state) = fixture.state {
         lexer.lex_state.set(lex_state(&state).unwrap());

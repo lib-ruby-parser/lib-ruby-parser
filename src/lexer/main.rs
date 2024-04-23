@@ -75,7 +75,7 @@ pub struct Lexer<'b> {
     /// parser.lexer.static_env.declare("b")
     /// parser.parse()
     /// ```
-    pub static_env: StaticEnvironment,
+    pub static_env: &'b StaticEnvironment<'b>,
 
     pub(crate) diagnostics: &'b SingleLinkedIntrusiveList<'b, Diagnostic<'b>>,
     pub(crate) comments: &'b SingleLinkedIntrusiveList<'b, Comment>,
@@ -115,7 +115,7 @@ impl<'b> Lexer<'b> {
             context: blob.alloc_ref(),
             command_start: false,
             token_seen: false,
-            static_env: StaticEnvironment::default(),
+            static_env: StaticEnvironment::new(blob),
             diagnostics: blob.alloc_ref(),
             comments: blob.alloc_ref(),
             magic_comments: blob.alloc_ref(),

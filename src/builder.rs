@@ -59,7 +59,7 @@ pub(crate) enum ArgsType {
 
 #[derive(Debug)]
 pub(crate) struct Builder<'b> {
-    static_env: StaticEnvironment,
+    static_env: &'b StaticEnvironment<'b>,
     context: &'b SharedContext,
     current_arg_stack: &'b CurrentArgStack<'b>,
     max_numparam_stack: &'b MaxNumparamStack<'b>,
@@ -71,7 +71,7 @@ pub(crate) struct Builder<'b> {
 
 impl<'b> Builder<'b> {
     pub(crate) fn new(
-        static_env: StaticEnvironment,
+        static_env: &'b StaticEnvironment<'b>,
         context: &'b SharedContext,
         current_arg_stack: &'b CurrentArgStack<'b>,
         max_numparam_stack: &'b MaxNumparamStack<'b>,
@@ -1067,7 +1067,7 @@ impl<'b> Builder<'b> {
         if matches!(&*node, Node::Lvar(_)) {
             match *node {
                 Node::Lvar(Lvar { name, expression_l }) => {
-                    let name_s = name.as_str();
+                    let name_s = self.blob.push_str(&name);
 
                     if name_s.ends_with('?') || name_s.ends_with('!') {
                         self.error(
@@ -1227,11 +1227,11 @@ impl<'b> Builder<'b> {
                 })
             }
             Node::Lvar(Lvar { name, expression_l }) => {
-                let name_s = name.as_str();
+                let name_s = self.blob.push_str(&name);
                 self.check_assignment_to_numparam(name_s, expression_l)?;
                 self.check_reserved_for_numparam(name_s, expression_l)?;
 
-                self.static_env.declare(name_s);
+                self.static_env.declare(name_s, self.blob);
 
                 Node::Lvasgn(Lvasgn {
                     name,
@@ -2380,7 +2380,8 @@ impl<'b> Builder<'b> {
         let result = match self.static_regexp_captures(&receiver) {
             Some(captures) => {
                 for capture in captures {
-                    self.static_env.declare(&capture);
+                    self.static_env
+                        .declare(self.blob.push_str(&capture), self.blob);
                 }
 
                 Node::MatchWithLvasgn(MatchWithLvasgn {
@@ -3300,9 +3301,9 @@ impl<'b> Builder<'b> {
         let name_l = self.loc(name_t);
         let expression_l = name_l;
 
-        self.check_lvar_name(name_t.as_whole_string(), name_l)?;
-        self.check_duplicate_pattern_variable(name_t.as_whole_string(), name_l)?;
-        self.static_env.declare(name_t.as_whole_string());
+        self.check_lvar_name(name_t.as_whole_str(), name_l)?;
+        self.check_duplicate_pattern_variable(name_t.as_whole_str(), name_l)?;
+        self.static_env.declare(name_t.as_whole_str(), self.blob);
 
         Ok(Box::new(Node::MatchVar(MatchVar {
             name: name_t.to_string().unwrap(),
@@ -3317,9 +3318,9 @@ impl<'b> Builder<'b> {
 
         let name = value(name_t);
 
-        self.check_lvar_name(name_t.as_whole_string(), name_l)?;
-        self.check_duplicate_pattern_variable(name_t.as_whole_string(), name_l)?;
-        self.static_env.declare(name_t.as_whole_string());
+        self.check_lvar_name(name_t.as_whole_str(), name_l)?;
+        self.check_duplicate_pattern_variable(name_t.as_whole_str(), name_l)?;
+        self.static_env.declare(name_t.as_whole_str(), self.blob);
 
         Ok(Box::new(Node::MatchVar(MatchVar {
             name,
@@ -3352,12 +3353,12 @@ impl<'b> Builder<'b> {
                 let name = value.to_string_lossy();
                 let mut name_l = expression_l;
 
-                let name_s = self.blob.push_str(value.as_str_lossy().unwrap());
+                let name_s = self.blob.push_str(&name);
 
-                self.check_lvar_name(name.as_str(), name_l)?;
+                self.check_lvar_name(name_s, name_l)?;
                 self.check_duplicate_pattern_variable(name_s, name_l)?;
 
-                self.static_env.declare(name.as_str());
+                self.static_env.declare(name_s, self.blob);
 
                 if let Some(begin_l) = begin_l.as_ref() {
                     let begin_d: i32 = begin_l
@@ -3591,7 +3592,7 @@ impl<'b> Builder<'b> {
     ) -> Result<Box<Node>, ()> {
         let result = match p_kw_label {
             PKwLabel::PlainLabel(label_t) => {
-                self.check_duplicate_pattern_key(label_t.as_whole_string(), self.loc(label_t))?;
+                self.check_duplicate_pattern_key(label_t.as_whole_str(), self.loc(label_t))?;
                 self.pair_keyword(label_t, value)
             }
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
@@ -4245,7 +4246,7 @@ impl<'b> Builder<'b> {
         )
     }
 
-    fn try_declare_numparam(&self, name: &str, loc: Loc) -> bool {
+    fn try_declare_numparam(&self, name: &'b str, loc: Loc) -> bool {
         match name.as_bytes()[..] {
             [b'_', n]
                 if (b'1'..=b'9').contains(&n)
@@ -4282,7 +4283,7 @@ impl<'b> Builder<'b> {
                         }
                     }
 
-                    self.static_env.declare(name);
+                    self.static_env.declare(name, self.blob);
                     self.max_numparam_stack.register((n - b'0') as i32);
 
                     true

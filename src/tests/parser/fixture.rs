@@ -177,9 +177,9 @@ pub(crate) fn test_file(fixture_path: &str) {
 
     let parser = Parser::new(fixture.input.as_bytes(), options, &blob);
 
-    parser.static_env.declare("foo");
-    parser.static_env.declare("bar");
-    parser.static_env.declare("baz");
+    parser.static_env.declare("foo", &blob);
+    parser.static_env.declare("bar", &blob);
+    parser.static_env.declare("baz", &blob);
 
     let result = if fixture.diagnostics.is_some() {
         parser.do_parse()

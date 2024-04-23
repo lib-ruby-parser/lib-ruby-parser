@@ -77,7 +77,7 @@ impl<'b> Token<'b> {
         lib_ruby_parser_ast::Bytes::new(bytes)
     }
 
-    pub(crate) fn as_whole_string(&self) -> &'b str {
+    pub(crate) fn as_whole_str(&self) -> &'b str {
         self.token_value.as_whole_string().unwrap()
     }
 }
