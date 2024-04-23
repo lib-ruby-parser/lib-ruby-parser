@@ -8,7 +8,7 @@ pub trait LocExt {
     /// Expands `Loc` to the whole line and returns line number and new `Loc`
     fn expand_to_line(&self, input: &DecodedInput) -> Option<(usize, Loc)>;
     /// Returns source code of the current `Loc` on a given `Input`
-    fn source(&self, input: &DecodedInput) -> Option<String>;
+    fn source<'b>(&self, input: &DecodedInput<'b>) -> Option<&'b str>;
 }
 
 impl LocExt for Loc {
@@ -30,8 +30,8 @@ impl LocExt for Loc {
     }
 
     /// Returns source code of the current `Loc` on a given `Input`
-    fn source(&self, input: &DecodedInput) -> Option<String> {
+    fn source<'b>(&self, input: &DecodedInput<'b>) -> Option<&'b str> {
         let bytes = input.substr_at(self.begin as u32, self.end as u32)?;
-        Some(String::from_utf8_lossy(bytes).into_owned())
+        core::str::from_utf8(bytes).ok()
     }
 }
