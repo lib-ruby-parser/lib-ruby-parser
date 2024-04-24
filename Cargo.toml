@@ -47,8 +47,7 @@ bin-parse = ["lexopt", "pprof", "glob"]
 
 [dependencies]
 onig = { version = "6", optional = true }
-lib-ruby-parser-ast = { version = "0.55.0" }
-lib-ruby-parser-ast-arena = { version = "0.55.0", path = "../ast", package = "lib-ruby-parser-ast", features = [
+lib-ruby-parser-ast = { version = "0.55.0", path = "../ast", package = "lib-ruby-parser-ast", features = [
     "std",
 ] }
 

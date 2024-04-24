@@ -1,5 +1,5 @@
 use core::{cell::Cell, ptr::NonNull};
-use lib_ruby_parser_ast_arena::{Blob, DoubleLinkedIntrusiveList, DoubleLinkedIntrusiveListItem};
+use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, DoubleLinkedIntrusiveListItem};
 
 pub(crate) struct MaxNumparamStackItem {
     pub(crate) value: Cell<i32>,

@@ -1,7 +1,7 @@
 mod helpers;
 
 use helpers::{parse, print_build_info, InputToParse, Printer, Profiler, Repeater, Timer};
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast::Blob;
 
 #[cfg(not(windows))]
 #[cfg(feature = "jemallocator")]

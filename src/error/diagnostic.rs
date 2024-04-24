@@ -1,6 +1,6 @@
 use core::{cell::Cell, ptr::NonNull};
 
-use lib_ruby_parser_ast_arena::{Blob, DiagnosticMessage};
+use lib_ruby_parser_ast::{Blob, DiagnosticMessage};
 
 use crate::loc_ext::LocExt;
 use crate::source::DecodedInput;
@@ -116,7 +116,7 @@ impl<'b> Diagnostic<'b> {
     }
 }
 
-impl lib_ruby_parser_ast_arena::SingleLinkedIntrusiveListItem for Diagnostic<'_> {
+impl lib_ruby_parser_ast::SingleLinkedIntrusiveListItem for Diagnostic<'_> {
     fn next(&self) -> Option<NonNull<Self>> {
         self.next.get()
     }
@@ -128,7 +128,7 @@ impl lib_ruby_parser_ast_arena::SingleLinkedIntrusiveListItem for Diagnostic<'_>
 
 #[test]
 fn test_renders() {
-    use lib_ruby_parser_ast_arena::Writer;
+    use lib_ruby_parser_ast::Writer;
 
     let source = "line 1\nvery long line 2\n";
     let mut mem = [0; 1000];
@@ -138,7 +138,7 @@ fn test_renders() {
     let error = Diagnostic::new(
         ErrorLevel::Warning,
         DiagnosticMessage::FractionAfterNumeric {},
-        Loc { begin: 8, end: 12 },
+        Loc::new(8, 12),
         &blob,
     );
 
@@ -163,14 +163,14 @@ fn test_predicates() {
     let error = Diagnostic::new(
         ErrorLevel::Error,
         DiagnosticMessage::AliasNthRef {},
-        Loc { begin: 1, end: 2 },
+        Loc::new(1, 2),
         &blob,
     );
 
     let warning = Diagnostic::new(
         ErrorLevel::Warning,
         DiagnosticMessage::AliasNthRef {},
-        Loc { begin: 1, end: 2 },
+        Loc::new(1, 2),
         &blob,
     );
 

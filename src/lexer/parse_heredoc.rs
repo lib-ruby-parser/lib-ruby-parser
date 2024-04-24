@@ -5,7 +5,7 @@ use crate::source::buffer::*;
 use crate::str_term::{str_types::*, HeredocEnd, HeredocLiteral, StrTerm};
 use crate::Lexer;
 use crate::TokenBuf;
-use lib_ruby_parser_ast_arena::DiagnosticMessage;
+use lib_ruby_parser_ast::DiagnosticMessage;
 
 const TAB_WIDTH: i32 = 8;
 

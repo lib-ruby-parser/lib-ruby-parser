@@ -2,7 +2,7 @@ use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
 use crate::{lex_states::*, LexState};
-use lib_ruby_parser_ast_arena::DiagnosticMessage;
+use lib_ruby_parser_ast::DiagnosticMessage;
 
 impl<'b> Lexer<'b> {
     pub(crate) fn parse_gvar(&mut self, last_state: LexState) -> i32 {

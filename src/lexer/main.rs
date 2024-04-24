@@ -1,6 +1,6 @@
-use lib_ruby_parser_ast_arena::Blob;
-use lib_ruby_parser_ast_arena::DiagnosticMessage;
-use lib_ruby_parser_ast_arena::SingleLinkedIntrusiveList;
+use lib_ruby_parser_ast::Blob;
+use lib_ruby_parser_ast::DiagnosticMessage;
+use lib_ruby_parser_ast::SingleLinkedIntrusiveList;
 
 use crate::lexer::*;
 use crate::maybe_byte::*;
@@ -24,7 +24,7 @@ use crate::{Diagnostic, ErrorLevel};
 pub struct Lexer<'b> {
     pub(crate) buffer: Buffer<'b>,
 
-    pub(crate) lval: Option<&'b lib_ruby_parser_ast_arena::Bytes<'b>>,
+    pub(crate) lval: Option<&'b lib_ruby_parser_ast::Bytes<'b>>,
     pub(crate) lval_start: Option<u32>,
     pub(crate) lval_end: Option<u32>,
 
@@ -158,16 +158,16 @@ impl<'b> Lexer<'b> {
             .or_else(|| {
                 // take raw value if nothing was manually captured
                 self.buffer.substr_at(begin, end).map(|s| {
-                    let bytes = self.blob.alloc_ref::<lib_ruby_parser_ast_arena::Bytes>();
+                    let bytes = self.blob.alloc_ref::<lib_ruby_parser_ast::Bytes>();
                     let s = core::str::from_utf8(s).unwrap();
                     bytes.append_borrowed(s, self.blob);
                     bytes
                 })
             })
-            .unwrap_or_else(|| self.blob.alloc_ref::<lib_ruby_parser_ast_arena::Bytes>());
+            .unwrap_or_else(|| self.blob.alloc_ref::<lib_ruby_parser_ast::Bytes>());
 
         if token_type == Self::tNL {
-            let nl_bytes = self.blob.alloc_ref::<lib_ruby_parser_ast_arena::Bytes>();
+            let nl_bytes = self.blob.alloc_ref::<lib_ruby_parser_ast::Bytes>();
             nl_bytes.append_valid_escaped('\n', self.blob);
             token_value = nl_bytes;
             end = begin + 1;
@@ -175,11 +175,8 @@ impl<'b> Lexer<'b> {
 
         let token = Token::new(
             token_type,
-            lib_ruby_parser_ast_arena::Bytes::compress(token_value, self.blob),
-            Loc {
-                begin: begin as usize,
-                end: end as usize,
-            },
+            lib_ruby_parser_ast::Bytes::compress(token_value, self.blob),
+            Loc::new(begin as usize, end as usize),
             self.blob,
         );
         println_if_debug_lexer!(
@@ -1124,7 +1121,11 @@ impl<'b> Lexer<'b> {
     }
 
     pub(crate) fn warn(&mut self, message: DiagnosticMessage<'b>, loc: Loc) {
-        println_if_debug_lexer!("WARNING: {}", message.render());
+        println_if_debug_lexer!("WARNING: {}", {
+            let mut buf = String::new();
+            message.render(&mut buf).unwrap();
+            buf
+        });
         let diagnostic = Diagnostic::new(ErrorLevel::Warning, message, loc, self.blob);
         self.diagnostics.push(diagnostic);
     }
@@ -1153,7 +1154,11 @@ impl<'b> Lexer<'b> {
     }
 
     pub(crate) fn compile_error(&mut self, message: DiagnosticMessage<'b>, loc: Loc) {
-        println_if_debug_lexer!("Compile error: {}", message.render());
+        println_if_debug_lexer!("Compile error: {}", {
+            let mut buf = String::new();
+            message.render(&mut buf).unwrap();
+            buf
+        });
         let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc, self.blob);
         self.diagnostics.push(diagnostic);
     }
@@ -1175,10 +1180,7 @@ impl<'b> Lexer<'b> {
     }
 
     pub(crate) fn loc(&self, begin_pos: u32, end_pos: u32) -> Loc {
-        Loc {
-            begin: begin_pos as usize,
-            end: end_pos as usize,
-        }
+        Loc::new(begin_pos as usize, end_pos as usize)
     }
 
     pub(crate) fn current_loc(&self) -> Loc {
@@ -1210,7 +1212,11 @@ impl<'b> Lexer<'b> {
     }
 
     pub(crate) fn yyerror1(&mut self, message: DiagnosticMessage<'b>, loc: Loc) {
-        println_if_debug_lexer!("yyerror0: {}", message.render());
+        println_if_debug_lexer!("yyerror0: {}", {
+            let mut buf = String::new();
+            message.render(&mut buf).unwrap();
+            buf
+        });
         let diagnostic = Diagnostic::new(ErrorLevel::Error, message, loc, self.blob);
         self.diagnostics.push(diagnostic);
     }

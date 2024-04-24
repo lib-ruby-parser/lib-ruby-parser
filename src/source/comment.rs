@@ -1,6 +1,6 @@
 use core::{cell::Cell, ptr::NonNull};
 
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast::Blob;
 
 use crate::loc_ext::LocExt;
 use crate::source::DecodedInput;
@@ -91,7 +91,7 @@ impl Comment {
     }
 }
 
-impl lib_ruby_parser_ast_arena::SingleLinkedIntrusiveListItem for Comment {
+impl lib_ruby_parser_ast::SingleLinkedIntrusiveListItem for Comment {
     fn next(&self) -> Option<NonNull<Self>> {
         self.next.get()
     }

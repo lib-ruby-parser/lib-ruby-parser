@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::{Blob, Bytes};
+use lib_ruby_parser_ast::{Blob, Bytes};
 
 #[derive(Debug)]
 pub(crate) struct TokenBuf<'b> {

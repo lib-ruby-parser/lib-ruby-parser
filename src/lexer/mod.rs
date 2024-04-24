@@ -1,7 +1,7 @@
 #[cfg(feature = "debug-lexer")]
 macro_rules! println_if_debug_lexer {
     ($fmt_string:expr, $( $arg:expr ),*) => {
-        println!($fmt_string, $( $arg ),*);
+        eprintln!($fmt_string, $( $arg ),*);
     };
 }
 #[cfg(not(feature = "debug-lexer"))]

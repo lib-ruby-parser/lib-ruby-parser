@@ -1,4 +1,7 @@
+use lib_ruby_parser_ast::Blob;
+
 use crate::lex_states::*;
+use crate::tests::test_helpers::InlineArray;
 use crate::Lexer;
 use std::fs;
 use std::panic;
@@ -12,20 +15,20 @@ enum TestSection {
 }
 
 #[derive(Debug)]
-struct Fixture {
+struct Fixture<'b> {
     cond: bool,
     cmdarg: bool,
-    vars: Vec<String>,
+    vars: InlineArray<10, &'b str>,
     state: Option<String>,
     input: String,
     tokens: String,
 }
-impl Fixture {
-    fn new(path: &str) -> Self {
+impl<'b> Fixture<'b> {
+    fn new(path: &str, blob: &'b Blob<'b>) -> Self {
         let content =
             fs::read_to_string(path).unwrap_or_else(|_| panic!("failed to read fixture {}", path));
 
-        let mut vars: Vec<String> = vec![];
+        let mut vars = InlineArray::new();
         let mut input: Vec<String> = vec![];
         let mut tokens: Vec<String> = vec![];
         let mut state: Option<String> = None;
@@ -43,7 +46,12 @@ impl Fixture {
                 (b"--STATE", _) => current_section = TestSection::State,
                 (b"--INPUT", _) => current_section = TestSection::Input,
                 (b"--TOKENS", _) => current_section = TestSection::Tokens,
-                (_, &TestSection::Vars) => vars = line.split(' ').map(|s| s.to_string()).collect(),
+                (_, &TestSection::Vars) => {
+                    for var in line.split(' ') {
+                        let var = blob.push_str(var);
+                        vars.push(var);
+                    }
+                }
                 (_, &TestSection::State) => state = Some(line.to_string()),
                 (_, &TestSection::Input) => input.push(line.to_string()),
                 (_, &TestSection::Tokens) => tokens.push(line.to_string()),
@@ -85,10 +93,10 @@ fn lex_state(state: &str) -> Result<i32, &'static str> {
 }
 
 pub(crate) fn test_file(fixture_path: &str) {
-    let fixture = Fixture::new(fixture_path);
-
     let mut mem = vec![0; 1000];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+    let blob = lib_ruby_parser_ast::Blob::from(mem.as_mut_slice());
+
+    let fixture = Fixture::new(fixture_path, &blob);
 
     let buffer_name = format!("(test {})", fixture_path);
 
@@ -98,7 +106,7 @@ pub(crate) fn test_file(fixture_path: &str) {
         None,
         &blob,
     );
-    for var in fixture.vars {
+    for var in fixture.vars.iter() {
         lexer.static_env.declare(blob.push_str(&var), &blob);
     }
     if let Some(state) = fixture.state {
@@ -117,9 +125,9 @@ pub(crate) fn test_file(fixture_path: &str) {
             format!(
                 "{} {:?} [{}, {}]",
                 token.token_name(),
-                token.to_string_lossy(),
-                token.loc.begin,
-                token.loc.end
+                token.token_value.as_whole_string().unwrap_or_default(),
+                token.loc.begin(),
+                token.loc.end()
             )
         })
         .collect::<Vec<_>>()

@@ -3,7 +3,7 @@ use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::reserved_word;
 use crate::source::buffer::*;
-use lib_ruby_parser_ast_arena::DiagnosticMessage;
+use lib_ruby_parser_ast::DiagnosticMessage;
 
 fn is_var_name(ident: &str) -> bool {
     debug_assert!(!ident.is_empty());

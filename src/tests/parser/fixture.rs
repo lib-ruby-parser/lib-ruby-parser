@@ -1,4 +1,7 @@
-use crate::tests::test_helpers::{render_diagnostic_for_testing, LocMatcher};
+use core::fmt::Write;
+use lib_ruby_parser_ast::{Blob, Writer};
+
+use crate::tests::test_helpers::{render_diagnostic_for_testing, InlineArray, LocMatcher};
 use crate::{Parser, ParserOptions, ParserResult};
 
 enum TestSection {
@@ -11,49 +14,66 @@ enum TestSection {
 }
 
 #[derive(Debug)]
-struct Fixture {
-    input: String,
-    ast: Option<String>,
-    locs: Option<Vec<String>>,
-    diagnostics: Option<Vec<String>>,
-    depends_on_features: Option<Vec<String>>,
+struct Fixture<'s> {
+    input: &'s str,
+    ast: Option<&'s str>,
+    locs: Option<InlineArray<50, &'s str>>,
+    diagnostics: Option<InlineArray<50, &'s str>>,
+    depends_on_features: Option<InlineArray<5, &'s str>>,
 }
 
-fn none_if_empty<T: PartialEq<&'static str>>(v: Vec<T>) -> Option<Vec<T>> {
-    if v.is_empty() || (v.len() == 1 && v[0] == "") {
+fn none_if_empty<'s, const MAX: usize>(
+    v: InlineArray<MAX, &'s str>,
+) -> Option<InlineArray<MAX, &'s str>> {
+    if v.len == 0 || (v.len == 1 && v.iter().next().unwrap() == "") {
         None
     } else {
         Some(v)
     }
 }
 
-impl Fixture {
-    fn new(path: &str) -> Self {
-        let content = std::fs::read_to_string(path)
-            .unwrap_or_else(|_| panic!("failed to read file {:?}", path));
+impl<'s> Fixture<'s> {
+    fn new(content: &'s str) -> Self {
+        let mut input_start_at = None;
+        let mut input_ends_at = None;
 
-        let mut input: Vec<String> = vec![];
-        let mut ast: Vec<String> = vec![];
-        let mut locs: Vec<String> = vec![];
-        let mut diagnostics: Vec<String> = vec![];
-        let mut depends_on_features: Vec<String> = vec![];
+        let mut ast_start_at = None;
+        let mut ast_ends_at = None;
+
+        let mut locs = InlineArray::new();
+        let mut diagnostics = InlineArray::new();
+        let mut depends_on_features = InlineArray::new();
+
         let mut current_section = TestSection::None;
+        let mut pos = 0;
 
         for line in content.lines() {
+            pos += line.len() + 1;
+
             match (line.as_bytes(), &current_section) {
                 (&[b'/', b'/', b' ', ..], _) => { /* skip comment */ }
 
-                (b"--INPUT", _) => current_section = TestSection::Input,
-                (b"--AST", _) => current_section = TestSection::Ast,
+                (b"--INPUT", _) => {
+                    current_section = TestSection::Input;
+                    input_start_at = Some(pos);
+                }
+                (b"--AST", _) => {
+                    current_section = TestSection::Ast;
+                    ast_start_at = Some(pos);
+                }
                 (b"--LOCATIONS", _) => current_section = TestSection::Locations,
                 (b"--DIAGNOSTIC", _) => current_section = TestSection::Diagnostic,
                 (b"--DEPENDS-ON-FEATURES", _) => current_section = TestSection::DependsOnFeature,
 
-                (_, &TestSection::Input) => input.push(line.to_string()),
-                (_, &TestSection::Ast) => ast.push(line.to_string()),
-                (_, &TestSection::Locations) => locs.push(line.to_string()),
-                (_, &TestSection::Diagnostic) => diagnostics.push(line.to_string()),
-                (_, &TestSection::DependsOnFeature) => depends_on_features.push(line.to_string()),
+                (_, &TestSection::Input) => {
+                    input_ends_at = Some(pos - 1);
+                }
+                (_, &TestSection::Ast) => {
+                    ast_ends_at = Some(pos - 1);
+                }
+                (_, &TestSection::Locations) => locs.push(line),
+                (_, &TestSection::Diagnostic) => diagnostics.push(line),
+                (_, &TestSection::DependsOnFeature) => depends_on_features.push(line),
 
                 (_, &TestSection::None) => {
                     panic!("empty state while parsing fixture on line {:#?}", line)
@@ -61,8 +81,12 @@ impl Fixture {
             }
         }
 
-        let input = input.join("\n");
-        let ast = none_if_empty(ast).map(|lines| lines.join("\n"));
+        let input = &content[input_start_at.unwrap()..input_ends_at.unwrap()];
+        let ast = if ast_start_at == ast_ends_at {
+            None
+        } else {
+            Some(&content[ast_start_at.unwrap()..ast_ends_at.unwrap()])
+        };
         let locs = none_if_empty(locs);
         let diagnostics = none_if_empty(diagnostics);
         let depends_on_features = none_if_empty(depends_on_features);
@@ -83,16 +107,19 @@ impl Fixture {
     fn compare(&self, actual: &ParserResult) {
         match &self.ast {
             Some(expected_ast) => {
-                let actual_ast = actual
-                    .ast
-                    .as_ref()
-                    .map(|node| node.inspect(0))
-                    .unwrap_or_else(|| "nil".to_string());
+                let mut buf = [0; 1000];
+                let mut writer = Writer::new(&mut buf);
+                let inspected = if let Some(actual_ast) = actual.ast {
+                    actual_ast.inspect(0, &mut writer).unwrap();
+                    writer.as_str().unwrap_or("<nothing>")
+                } else {
+                    "nil"
+                };
 
                 assert_eq!(
-                    &actual_ast, expected_ast,
+                    inspected, *expected_ast,
                     "AST diff:\nactual:\n{}\nexpected:\n{}\n",
-                    actual_ast, expected_ast
+                    inspected, expected_ast
                 );
             }
             None => {}
@@ -106,49 +133,60 @@ impl Fixture {
                     panic!("can't compare locs, ast is empty");
                 };
 
-                for loc in locs {
+                for loc in locs.iter() {
                     match LocMatcher::new(loc).test(ast) {
                         Ok(_) => {}
-                        Err(err) => panic!("{}", err),
+                        Err(err) => panic!("{}", core::str::from_utf8(&err).unwrap()),
                     }
                 }
             }
             None => {}
         }
 
-        let actual_diagnostics = actual
-            .diagnostics
-            .iter()
-            .map(render_diagnostic_for_testing)
-            .collect::<Vec<_>>();
-
         match &self.diagnostics {
             None => {
+                let mut buf = [0; 1000];
+                let mut writer = lib_ruby_parser_ast::Writer::new(&mut buf);
+                for d in actual.diagnostics.iter() {
+                    render_diagnostic_for_testing(d, &mut writer).unwrap();
+                    writeln!(&mut writer).unwrap();
+                }
+                let emitted = writer.as_str().unwrap_or_default();
+
                 assert_eq!(
                     actual.diagnostics.len(),
                     0,
                     "expected no diagnostics to be emitted, got:\n{}",
-                    actual_diagnostics.join("\n")
+                    emitted
                 );
             }
             Some(diagnostics) => {
                 let expected = diagnostics;
-                let actual = actual_diagnostics;
 
-                assert_eq!(
-                    expected,
-                    &actual,
-                    "expected diagnostcs:\n{}\nactual diagnostics:\n{}",
-                    expected.join("\n"),
-                    actual.join("\n")
-                );
+                for (expected, actual) in expected.iter().zip(actual.diagnostics.iter()) {
+                    let mut buf = [0; 1000];
+                    let mut writer = lib_ruby_parser_ast::Writer::new(&mut buf);
+                    render_diagnostic_for_testing(actual, &mut writer).unwrap();
+                    let actual = writer.as_str().unwrap();
+
+                    assert_eq!(
+                        expected, actual,
+                        "expected diagnostc:\n{}\nactual diagnostic:\n{}",
+                        expected, actual
+                    )
+                }
             }
         }
     }
 }
 
 pub(crate) fn test_file(fixture_path: &str) {
-    let fixture = Fixture::new(fixture_path);
+    let mut mem = [0; 1000];
+    let blob = Blob::from(&mut mem);
+
+    let src = std::fs::read_to_string(fixture_path)
+        .unwrap_or_else(|_| panic!("failed to read file {:?}", fixture_path));
+    let fixture = Fixture::new(&src);
 
     if let Some(depends_on_features) = &fixture.depends_on_features {
         for feature in depends_on_features.iter() {
@@ -165,9 +203,6 @@ pub(crate) fn test_file(fixture_path: &str) {
             }
         }
     }
-
-    let mut mem = vec![0; 1000];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
 
     let options = ParserOptions {
         buffer_name: &format!("(test {})", fixture_path),

@@ -62,7 +62,9 @@ fn print_compact_ast_with_locations(result: &ParserResult) {
 fn print_compact_ast(result: &ParserResult) {
     print_only_diagnostics(result);
     if let Some(ast) = result.ast.as_ref() {
-        println!("{}", ast.inspect(0));
+        let mut buf = String::new();
+        ast.inspect(0, &mut buf);
+        println!("{}", buf);
     }
 }
 

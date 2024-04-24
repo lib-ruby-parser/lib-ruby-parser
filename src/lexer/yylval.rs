@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::Bytes;
+use lib_ruby_parser_ast::Bytes;
 
 use crate::lexer::*;
 use crate::TokenBuf;
@@ -39,8 +39,8 @@ impl<'b> Lexer<'b> {
             "set_yylval_name({:#?})",
             self.tokenbuf.bytes.iter().collect::<Vec<_>>()
         );
-        let lval = self.blob.alloc_mut::<Bytes>();
-        Bytes::shallow_copy(self.tokenbuf.bytes, lval);
-        self.lval = Some(lval);
+        // let lval = self.blob.alloc_mut::<Bytes>();
+        // Bytes::shallow_copy(self.tokenbuf.bytes, lval);
+        self.lval = Some(self.tokenbuf.bytes);
     }
 }

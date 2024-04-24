@@ -19,9 +19,9 @@ Uses bison under the hood.
 /// Module with all known node types
 pub use lib_ruby_parser_ast::nodes;
 pub use lib_ruby_parser_ast::Bytes;
+pub use lib_ruby_parser_ast::DiagnosticMessage;
 pub use lib_ruby_parser_ast::Loc;
 pub use lib_ruby_parser_ast::Node;
-pub use lib_ruby_parser_ast_arena::DiagnosticMessage;
 
 mod loc_ext;
 pub use loc_ext::LocExt;
@@ -35,7 +35,6 @@ pub mod source;
 mod lexer;
 
 pub use lexer::Lexer;
-
 mod static_environment;
 pub use static_environment::StaticEnvironment;
 
@@ -50,6 +49,7 @@ pub use parser_result::ParserResult;
 mod parser;
 pub use parser::Parser;
 
+#[allow(dead_code, unused_variables)]
 mod builder;
 pub(crate) use builder::Builder;
 
@@ -87,7 +87,6 @@ pub(crate) use context::SharedContext;
 
 /// Module to perform recursive traversing
 pub use lib_ruby_parser_ast::traverse;
-
 mod token;
 pub use token::Token;
 

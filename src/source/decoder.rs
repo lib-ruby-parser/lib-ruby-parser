@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast::Blob;
 
 /// An enum with all possible kinds of errors that can be returned
 /// from a decoder
@@ -29,7 +29,7 @@ impl core::fmt::Display for InputError<'_> {
     }
 }
 
-impl std::error::Error for InputError<'_> {}
+// impl std::error::Error for InputError<'_> {}
 
 /// Result that is returned from decoding function
 #[repr(C)]

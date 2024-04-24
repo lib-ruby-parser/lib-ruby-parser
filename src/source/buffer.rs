@@ -1,6 +1,6 @@
 use core::convert::TryFrom;
 
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast::Blob;
 
 use crate::maybe_byte::*;
 use crate::source::input::Input;
@@ -42,7 +42,7 @@ pub(crate) struct Buffer<'b> {
 #[cfg(feature = "debug-buffer")]
 macro_rules! println_if_debug_buffer {
     ($fmt_string:expr, $( $arg:expr ),*) => {
-        println!($fmt_string, $( $arg ),*);
+        eprintln!($fmt_string, $( $arg ),*);
     };
 }
 #[cfg(not(feature = "debug-buffer"))]

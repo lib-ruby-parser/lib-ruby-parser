@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast::Blob;
 
 use crate::source::Decoder;
 use crate::source::SourceLine;

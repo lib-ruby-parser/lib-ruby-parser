@@ -22,7 +22,7 @@ macro_rules! context_flag {
 
             pub(crate) fn $setter(&self, value: bool) {
                 #[cfg(feature = "debug-parser")]
-                println!("{}({})", stringify!($setter), value);
+                eprintln!("{}({})", stringify!($setter), value);
 
                 if value {
                     self.value.set(self.value.get() | Self::$upper);
@@ -62,8 +62,8 @@ impl SharedContext {
 
     pub(crate) fn is_empty(&self) -> bool {
         #[cfg(feature = "debug-all")]
-        if self.value != 0 {
-            println!(
+        if self.value.get() != 0 {
+            eprintln!(
                 "Context is not empty;
     value = {};
     IN_DEFINED = {}
@@ -73,7 +73,7 @@ impl SharedContext {
     IN_CLASS = {}
     IN_LAMBDA = {}
     IN_BLOCK = {}",
-                self.value,
+                self.value.get(),
                 self.in_defined(),
                 self.in_kwarg(),
                 self.in_argdef(),
@@ -90,7 +90,7 @@ impl SharedContext {
 #[test]
 fn test_context() {
     let mut mem = [0; 10];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
+    let blob = lib_ruby_parser_ast::Blob::from(&mut mem);
 
     let context = blob.alloc_ref::<SharedContext>();
 

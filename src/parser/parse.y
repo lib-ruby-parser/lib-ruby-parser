@@ -9,7 +9,7 @@
 %define parse.trace
 
 %code parser_fields {
-    result: Option<Box<Node>>,
+    result: Option<&'b /*'*/ Node<'b /*'*/>>,
     builder: Builder<'b /*'*/>,
     current_arg_stack: &'b /*'*/ CurrentArgStack<'b /*'*/>,
     /// Stack of sets of variables in current scopes.
@@ -61,14 +61,13 @@ use crate::{Lexer, Builder, CurrentArgStack, StaticEnvironment, MaxNumparamStack
 use crate::lex_states::*;
 use crate::{SharedContext, context::Context};
 use crate::builder::{LoopType, KeywordCmd, LogicalOp, PKwLabel, ArgsType};
-use crate::builder::clone_value;
-use crate::parse_value::ParseValue as Value;
+use crate::parse_value::{ParseValue as Value, FromParseValue};
 use crate::parse_value::*;
 use crate::Node;
 use crate::nodes;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::Loc;
-use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
+use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
 
 }
 
@@ -355,7 +354,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                   top_compstmt
                     {
                         let top_compstmt = $<MaybeNode>2;
-                        self.result = top_compstmt.map(Box::new);
+                        self.result = top_compstmt;
                         $$ = Value::None;
 
                         self.current_arg_stack.pop();
@@ -374,21 +373,21 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
        top_stmts: none
                     {
-                      $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | top_stmt
                     {
-                      $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | top_stmts terms top_stmt
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList( nodes );
                     }
                 | error top_stmt
                     {
-                      $$ = Value::NodeList( Box::new(vec![ $<Node>2 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>2) );
                     }
                 ;
 
@@ -410,7 +409,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::new_begin_block(
                             BeginBlock {
                                 begin_t: $<Token>1,
-                                body: $<MaybeBoxedNode>2,
+                                body: $<MaybeNode>2,
                                 end_t: $<Token>3
                             }
                         );
@@ -422,13 +421,13 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                   compstmt
                   opt_ensure
                     {
-                        let compound_stmt = $<MaybeBoxedNode>1;
+                        let compound_stmt = $<MaybeNode>1;
                         let rescue_bodies = $<NodeList>2;
                         if rescue_bodies.is_empty() {
                             return self.yyerror(@3, DiagnosticMessage::ElseWithoutRescue {});
                         }
 
-                        let else_ = Some(( $<Token>3, $<MaybeBoxedNode>4 ));
+                        let else_ = Some(( $<Token>3, $<MaybeNode>4 ));
                         let ensure = $<OptEnsure>5.map(|ensure| (ensure.ensure_t, ensure.body));
 
                         $$ = Value::MaybeNode(
@@ -444,7 +443,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                   opt_rescue
                   opt_ensure
                     {
-                        let compound_stmt = $<MaybeBoxedNode>1;
+                        let compound_stmt = $<MaybeNode>1;
                         let rescue_bodies = $<NodeList>2;
                         let ensure = $<OptEnsure>3.map(|ensure| (ensure.ensure_t, ensure.body));
 
@@ -470,21 +469,21 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
            stmts: none
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | stmt_or_begin
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | stmts terms stmt_or_begin
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
                 | error
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 ;
 
@@ -510,7 +509,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                   fitem
                     {
                         $$ = Value::Node(
-                            self.builder.alias($<Token>1, $<BoxedNode>2, $<BoxedNode>4)
+                            self.builder.alias($<Token>1, $<Node>2, $<Node>4)
                         );
                     }
                 | kALIAS tGVAR tGVAR
@@ -550,10 +549,10 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.condition_mod(
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 None,
                                 $<Token>2,
-                                $<BoxedNode>3,
+                                $<Node>3,
                             )
                         );
                     }
@@ -562,9 +561,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.condition_mod(
                                 None,
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 $<Token>2,
-                                $<BoxedNode>3,
+                                $<Node>3,
                             )
                         );
                     }
@@ -573,9 +572,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.loop_mod(
                                 LoopType::While,
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3,
+                                $<Node>3,
                             )
                         );
                     }
@@ -584,9 +583,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.loop_mod(
                                 LoopType::Until,
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3,
+                                $<Node>3,
                             )
                         );
                     }
@@ -598,13 +597,13 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             None,
                             None,
                             None,
-                            Some($<BoxedNode>3)
+                            Some($<Node>3)
                         );
 
                         $$ = Value::Node(
                             self.builder.begin_body(
-                                Some($<BoxedNode>1),
-                                vec![*rescue_body],
+                                Some($<Node>1),
+                                self.new_node_list1(rescue_body),
                                 None,
                                 None,
                             ).expect("expected begin_body to return Some (compound_stmt was given)")
@@ -620,7 +619,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.postexe(
                                 $<Token>1,
                                 $<Token>2,
-                                $<MaybeBoxedNode>3,
+                                $<MaybeNode>3,
                                 $<Token>4,
                             )
                         );
@@ -631,12 +630,12 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                 | mlhs tEQL command_call
                     {
-                        let command_call = $<BoxedNode>3;
+                        let command_call = $<Node>3;
                         self.value_expr(&command_call)?;
 
                         $$ = Value::Node(
                             self.builder.multi_assign(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 command_call
                             )
@@ -653,7 +652,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
                         $$ = Value::Node(
                             self.builder.assign(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 mrhs
                             )
@@ -667,22 +666,21 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             None,
                             None,
                             None,
-                            Some($<BoxedNode>5)
+                            Some($<Node>5)
                         );
-
-                        let mrhs_arg = $<BoxedNode>3;
+                        let mrhs_arg = $<Node>3;
                         self.value_expr(&mrhs_arg)?;
 
                         let begin_body = self.builder.begin_body(
                             Some(mrhs_arg),
-                            vec![ *rescue_body ],
+                            self.new_node_list1(rescue_body),
                             None,
                             None,
                         ).expect("expected begin_body to return Some (compound_stmt was given)");
 
                         $$ = Value::Node(
                             self.builder.multi_assign(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 begin_body
                             )
@@ -692,9 +690,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.multi_assign(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )
                         );
                     }
@@ -708,9 +706,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.assign(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )
                         );
                     }
@@ -718,9 +716,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.op_assign(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -729,13 +727,13 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.op_assign(
                                 self.builder.index(
-                                    $<BoxedNode>1,
+                                    $<Node>1,
                                     $<Token>2,
                                     $<NodeList>3,
                                     $<Token>4
                                 ),
                                 $<Token>5,
-                                $<BoxedNode>6
+                                $<Node>6
                             )?
                         );
                     }
@@ -744,15 +742,15 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<BoxedNode>1),
+                                    Some($<Node>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    vec![],
+                                    self.new_node_list(),
                                     None
                                 ),
                                 $<Token>4,
-                                $<BoxedNode>5
+                                $<Node>5
                             )?
                         );
                     }
@@ -761,15 +759,15 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<BoxedNode>1),
+                                    Some($<Node>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    vec![],
+                                    self.new_node_list(),
                                     None
                                 ),
                                 $<Token>4,
-                                $<BoxedNode>5
+                                $<Node>5
                             )?
                         );
                     }
@@ -777,7 +775,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         let const_ = self.builder.const_op_assignable(
                             self.builder.const_fetch(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -786,7 +784,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.op_assign(
                                 const_,
                                 $<Token>4,
-                                $<BoxedNode>5
+                                $<Node>5
                             )?
                         );
                     }
@@ -795,15 +793,15 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<BoxedNode>1),
+                                    Some($<Node>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    vec![],
+                                    self.new_node_list(),
                                     None
                                 ),
                                 $<Token>4,
-                                $<BoxedNode>5
+                                $<Node>5
                             )?
                         );
                     }
@@ -817,9 +815,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.def_endless_method(
                                 def_t,
                                 name_t,
-                                $<MaybeBoxedNode>2,
+                                $<MaybeNode>2,
                                 $<Token>3,
-                                Some($<BoxedNode>4),
+                                Some($<Node>4),
                             )?
                         );
 
@@ -839,12 +837,12 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             None,
                             None,
                             None,
-                            Some($<BoxedNode>6),
+                            Some($<Node>6),
                         );
 
                         let method_body = self.builder.begin_body(
-                            Some($<BoxedNode>4),
-                            vec![ *rescue_body ],
+                            Some($<Node>4),
+                            self.new_node_list1(rescue_body),
                             None,
                             None,
                         );
@@ -853,7 +851,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.def_endless_method(
                                 def_t,
                                 name_t,
-                                $<MaybeBoxedNode>2,
+                                $<MaybeNode>2,
                                 $<Token>3,
                                 method_body,
                             )?
@@ -875,9 +873,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 definee,
                                 dot_t,
                                 name_t,
-                                $<MaybeBoxedNode>2,
+                                $<MaybeNode>2,
                                 $<Token>3,
-                                Some($<BoxedNode>4),
+                                Some($<Node>4),
                             )?
                         );
 
@@ -897,12 +895,12 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             None,
                             None,
                             None,
-                            Some($<BoxedNode>6),
+                            Some($<Node>6),
                         );
 
                         let method_body = self.builder.begin_body(
-                            Some($<BoxedNode>4),
-                            vec![ *rescue_body ],
+                            Some($<Node>4),
+                            self.new_node_list1(rescue_body),
                             None,
                             None,
                         );
@@ -913,7 +911,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 definee,
                                 dot_t,
                                 name_t,
-                                $<MaybeBoxedNode>2,
+                                $<MaybeNode>2,
                                 $<Token>3,
                                 method_body,
                             )?
@@ -927,9 +925,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.op_assign(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -937,13 +935,13 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
      command_rhs: command_call   %prec tOP_ASGN
                     {
-                        let command_call = $<BoxedNode>1;
+                        let command_call = $<Node>1;
                         self.value_expr(&command_call)?;
                         $$ = Value::Node(command_call);
                     }
                 | command_call kRESCUE_MOD stmt
                     {
-                        let command_call = $<BoxedNode>1;
+                        let command_call = $<Node>1;
                         self.value_expr(&command_call)?;
 
                         let rescue_body = self.builder.rescue_body(
@@ -952,13 +950,13 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             None,
                             None,
                             None,
-                            Some($<BoxedNode>3)
+                            Some($<Node>3)
                         );
 
                         $$ = Value::Node(
                             self.builder.begin_body(
                                 Some(command_call),
-                                vec![ *rescue_body ],
+                                self.new_node_list1(rescue_body),
                                 None,
                                 None,
                             ).expect("expected begin_body to return Some (compound_stmt was given)")
@@ -979,9 +977,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.logical_op(
                                 LogicalOp::And,
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -990,9 +988,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.logical_op(
                                 LogicalOp::Or,
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -1002,7 +1000,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.not_op(
                                 $<Token>1,
                                 None,
-                                Some($<BoxedNode>3),
+                                Some($<Node>3),
                                 None
                             )?
                         );
@@ -1013,7 +1011,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.not_op(
                                 $<Token>1,
                                 None,
-                                Some($<BoxedNode>2),
+                                Some($<Node>2),
                                 None
                             )?
                         );
@@ -1042,9 +1040,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
                         $$ = Value::Node(
                             self.builder.match_pattern(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>4
+                                $<Node>4
                             )
                         );
                     }
@@ -1072,9 +1070,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
                         $$ = Value::Node(
                             self.builder.match_pattern_p(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>4
+                                $<Node>4
                             )
                         );
                     }
@@ -1124,7 +1122,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::new_defs_head(
                             DefsHead {
                                 def_t: $<Token>1,
-                                definee: $<BoxedNode>2,
+                                definee: $<Node>2,
                                 dot_t: $<Token>3,
                                 name_t: $<TokenWithContext>5
                             }
@@ -1134,7 +1132,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
       expr_value: expr
                     {
-                        let expr = $<BoxedNode>1;
+                        let expr = $<Node>1;
                         self.value_expr(&expr)?;
                         $$ = Value::Node(expr);
                     }
@@ -1150,7 +1148,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
                         $$ = Value::new_expr_value_do(
                             ExprValueDo {
-                                value: $<BoxedNode>2,
+                                value: $<Node>2,
                                 do_t: $<Token>3
                             }
                         );
@@ -1176,7 +1174,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.call_method(
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 None,
@@ -1252,7 +1250,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.call_method(
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 None,
@@ -1264,7 +1262,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                 | primary_value call_op operation2 command_args cmd_brace_block
                     {
                         let method_call = self.builder.call_method(
-                            Some($<BoxedNode>1),
+                            Some($<Node>1),
                             Some($<Token>2),
                             Some($<Token>3),
                             None,
@@ -1287,7 +1285,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.call_method(
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 None,
@@ -1299,7 +1297,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                 | primary_value tCOLON2 operation2 command_args cmd_brace_block
                     {
                         let method_call = self.builder.call_method(
-                            Some($<BoxedNode>1),
+                            Some($<Node>1),
                             Some($<Token>2),
                             Some($<Token>3),
                             None,
@@ -1395,7 +1393,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.begin(
                                 $<Token>1,
-                                Some($<BoxedNode>2),
+                                Some($<Node>2),
                                 $<Token>3
                             )
                         );
@@ -1440,93 +1438,87 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                 | mlhs_head mlhs_item
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>2 );
                         $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR mlhs_node
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mlhs_node = *self.builder.splat($<Token>2, Some($<BoxedNode>3));
+                        let nodes = $<NodeList>1;
+                        let mlhs_node = self.builder.splat($<Token>2, Some($<Node>3));
                         nodes.push(mlhs_node);
                         $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR mlhs_node tCOMMA mlhs_post
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mlhs_node = *self.builder.splat($<Token>2, Some($<BoxedNode>3));
-                        let mut mlhs_post = $<NodeList>5;
+                        let nodes = $<NodeList>1;
+                        let mlhs_node = self.builder.splat($<Token>2, Some($<Node>3));
+                        let mlhs_post = $<NodeList>5;
 
-                        nodes.reserve(1 + mlhs_post.len());
                         nodes.push(mlhs_node);
-                        nodes.append(&mut mlhs_post);
+                        nodes.concat(mlhs_post);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let splat = *self.builder.splat($<Token>2, None);
+                        let nodes = $<NodeList>1;
+                        let splat = self.builder.splat($<Token>2, None);
                         nodes.push(splat);
                         $$ = Value::NodeList(nodes);
                     }
                 | mlhs_head tSTAR tCOMMA mlhs_post
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let splat = *self.builder.splat($<Token>2, None);
-                        let mut mlhs_post = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let splat = self.builder.splat($<Token>2, None);
+                        let mlhs_post = $<NodeList>4;
 
-                        nodes.reserve(1 + mlhs_post.len());
                         nodes.push(splat);
-                        nodes.append(&mut mlhs_post);
+                        nodes.concat(mlhs_post);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | tSTAR mlhs_node
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.splat(
-                                        $<Token>1,
-                                        Some($<BoxedNode>2)
-                                    )
-                                ]
+                            self.new_node_list1(
+                                self.builder.splat(
+                                    $<Token>1,
+                                    Some($<Node>2)
+                                )
                             )
                         );
                     }
                 | tSTAR mlhs_node tCOMMA mlhs_post
                     {
-                        let splat = *self.builder.splat($<Token>1, Some($<BoxedNode>2));
-                        let mut mlhs_post = $<NodeList>4;
+                        let splat = self.builder.splat($<Token>1, Some($<Node>2));
+                        let mlhs_post = $<NodeList>4;
 
-                        let mut nodes = Box::new(Vec::with_capacity(1 + mlhs_post.len()));
+                        let nodes = self.new_node_list();
                         nodes.push(splat);
-                        nodes.append(&mut mlhs_post);
+                        nodes.concat(mlhs_post);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | tSTAR
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.splat(
-                                        $<Token>1,
-                                        None
-                                    )
-                                ]
+                            self.new_node_list1(
+                                self.builder.splat(
+                                    $<Token>1,
+                                    None
+                                )
                             )
                         );
                     }
                 | tSTAR tCOMMA mlhs_post
                     {
-                        let splat = *self.builder.splat($<Token>1, None);
-                        let mut mlhs_post = $<NodeList>3;
+                        let splat = self.builder.splat($<Token>1, None);
+                        let mlhs_post = $<NodeList>3;
 
-                        let mut nodes = Box::new(Vec::with_capacity(1 + mlhs_post.len()));
+                        let nodes = self.new_node_list();
                         nodes.push(splat);
-                        nodes.append(&mut mlhs_post);
+                        nodes.concat(mlhs_post);
 
                         $$ = Value::NodeList(nodes);
                     }
@@ -1541,7 +1533,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.begin(
                                 $<Token>1,
-                                Some($<BoxedNode>2),
+                                Some($<Node>2),
                                 $<Token>3
                             )
                         );
@@ -1550,11 +1542,11 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
        mlhs_head: mlhs_item tCOMMA
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | mlhs_head mlhs_item tCOMMA
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>2 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -1562,11 +1554,11 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
        mlhs_post: mlhs_item
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | mlhs_post tCOMMA mlhs_item
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -1575,20 +1567,20 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
        mlhs_node: user_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<BoxedNode>1)?
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<BoxedNode>1)?
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
                         $$ = Value::Node(
                             self.builder.index_asgn(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<NodeList>3,
                                 $<Token>4
@@ -1604,7 +1596,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
                         $$ = Value::Node(
                             self.builder.attr_asgn(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 op_t,
                                 $<Token>3
                             )
@@ -1614,7 +1606,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.attr_asgn(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -1629,7 +1621,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
                         $$ = Value::Node(
                             self.builder.attr_asgn(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 op_t,
                                 $<Token>3
                             )
@@ -1640,7 +1632,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.assignable(
                                 self.builder.const_fetch(
-                                    $<BoxedNode>1,
+                                    $<Node>1,
                                     $<Token>2,
                                     $<Token>3
                                 )
@@ -1662,7 +1654,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.assignable(
-                                $<BoxedNode>1
+                                $<Node>1
                             )?
                         );
                     }
@@ -1671,20 +1663,20 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
              lhs: user_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<BoxedNode>1)?
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<BoxedNode>1)?
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 | primary_value tLBRACK2 opt_call_args rbracket
                     {
                         $$ = Value::Node(
                             self.builder.index_asgn(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<NodeList>3,
                                 $<Token>4
@@ -1695,7 +1687,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.attr_asgn(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -1705,7 +1697,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.attr_asgn(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -1715,7 +1707,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.attr_asgn(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -1726,7 +1718,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.assignable(
                                 self.builder.const_fetch(
-                                    $<BoxedNode>1,
+                                    $<Node>1,
                                     $<Token>2,
                                     $<Token>3,
                                 )
@@ -1748,7 +1740,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.assignable(
-                                $<BoxedNode>1
+                                $<Node>1
                             )?
                         );
                     }
@@ -1780,7 +1772,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.const_fetch(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<Token>3,
                             )
@@ -1825,7 +1817,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
       undef_list: fitem
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | undef_list tCOMMA
                     {
@@ -1834,7 +1826,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                   fitem
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>4 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -1919,9 +1911,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.assign(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )
                         );
                     }
@@ -1929,9 +1921,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.op_assign(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -1940,13 +1932,13 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.op_assign(
                                 self.builder.index(
-                                    $<BoxedNode>1,
+                                    $<Node>1,
                                     $<Token>2,
                                     $<NodeList>3,
                                     $<Token>4
                                 ),
                                 $<Token>5,
-                                $<BoxedNode>6
+                                $<Node>6
                             )?
                         );
                     }
@@ -1955,15 +1947,15 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<BoxedNode>1),
+                                    Some($<Node>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    vec![],
+                                    self.new_node_list(),
                                     None
                                 ),
                                 $<Token>4,
-                                $<BoxedNode>5
+                                $<Node>5
                             )?
                         );
                     }
@@ -1972,15 +1964,15 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<BoxedNode>1),
+                                    Some($<Node>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    vec![],
+                                    self.new_node_list(),
                                     None
                                 ),
                                 $<Token>4,
-                                $<BoxedNode>5
+                                $<Node>5
                             )?
                         );
                     }
@@ -1989,15 +1981,15 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.op_assign(
                                 self.builder.call_method(
-                                    Some($<BoxedNode>1),
+                                    Some($<Node>1),
                                     Some($<Token>2),
                                     Some($<Token>3),
                                     None,
-                                    vec![],
+                                    self.new_node_list(),
                                     None
                                 ),
                                 $<Token>4,
-                                $<BoxedNode>5
+                                $<Node>5
                             )?
                         );
                     }
@@ -2005,7 +1997,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         let const_ = self.builder.const_op_assignable(
                             self.builder.const_fetch(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<Token>3
                             )
@@ -2014,7 +2006,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.op_assign(
                                 const_,
                                 $<Token>4,
-                                $<BoxedNode>5
+                                $<Node>5
                             )?
                         );
                     }
@@ -2030,7 +2022,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.op_assign(
                                 const_,
                                 $<Token>3,
-                                $<BoxedNode>4
+                                $<Node>4
                             )?
                         );
                     }
@@ -2038,18 +2030,18 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.op_assign(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
                 | arg tDOT2 arg
                     {
-                        let left = $<BoxedNode>1;
+                        let left = $<Node>1;
                         self.value_expr(&left)?;
 
-                        let right = $<BoxedNode>3;
+                        let right = $<Node>3;
                         self.value_expr(&right)?;
 
                         $$ = Value::Node(
@@ -2062,10 +2054,10 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                 | arg tDOT3 arg
                     {
-                        let left = $<BoxedNode>1;
+                        let left = $<Node>1;
                         self.value_expr(&left)?;
 
-                        let right = $<BoxedNode>3;
+                        let right = $<Node>3;
                         self.value_expr(&right)?;
 
                         $$ = Value::Node(
@@ -2078,7 +2070,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                 | arg tDOT2
                     {
-                        let left = $<BoxedNode>1;
+                        let left = $<Node>1;
                         self.value_expr(&left)?;
 
                         $$ = Value::Node(
@@ -2091,7 +2083,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                 | arg tDOT3
                     {
-                        let left = $<BoxedNode>1;
+                        let left = $<Node>1;
                         self.value_expr(&left)?;
 
                         $$ = Value::Node(
@@ -2104,7 +2096,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                 | tBDOT2 arg
                     {
-                        let right = $<BoxedNode>2;
+                        let right = $<Node>2;
                         self.value_expr(&right)?;
 
                         $$ = Value::Node(
@@ -2117,7 +2109,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                 | tBDOT3 arg
                     {
-                        let right = $<BoxedNode>2;
+                        let right = $<Node>2;
                         self.value_expr(&right)?;
 
                         $$ = Value::Node(
@@ -2131,37 +2123,37 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                 | arg tPLUS arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tMINUS arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tSTAR2 arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tDIVIDE arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tPERCENT arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tPOW arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | tUMINUS_NUM simple_numeric tPOW arg
@@ -2170,9 +2162,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.unary_op(
                                 $<Token>1,
                                 self.builder.binary_op(
-                                    $<BoxedNode>2,
+                                    $<Node>2,
                                     $<Token>3,
-                                    $<BoxedNode>4
+                                    $<Node>4
                                 )?
                             )?
                         );
@@ -2182,7 +2174,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.unary_op(
                                 $<Token>1,
-                                $<BoxedNode>2
+                                $<Node>2
                             )?
                         );
                     }
@@ -2191,32 +2183,32 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.unary_op(
                                 $<Token>1,
-                                $<BoxedNode>2
+                                $<Node>2
                             )?
                         );
                     }
                 | arg tPIPE arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tCARET arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tAMPER2 arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tCMP arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | rel_expr   %prec tCMP
@@ -2226,34 +2218,34 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                 | arg tEQ arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tEQQ arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tNEQ arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tMATCH arg
                     {
                         $$ = Value::Node(
-                            self.builder.match_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.match_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tNMATCH arg
                     {
                         $$ = Value::Node(
                             self.builder.binary_op(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -2263,7 +2255,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.not_op(
                                 $<Token>1,
                                 None,
-                                Some($<BoxedNode>2),
+                                Some($<Node>2),
                                 None
                             )?
                         );
@@ -2273,20 +2265,20 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.unary_op(
                                 $<Token>1,
-                                $<BoxedNode>2
+                                $<Node>2
                             )?
                         );
                     }
                 | arg tLSHFT arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tRSHFT arg
                     {
                         $$ = Value::Node(
-                            self.builder.binary_op($<BoxedNode>1, $<Token>2, $<BoxedNode>3)?
+                            self.builder.binary_op($<Node>1, $<Token>2, $<Node>3)?
                         );
                     }
                 | arg tANDOP arg
@@ -2294,9 +2286,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.logical_op(
                                 LogicalOp::And,
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -2305,9 +2297,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.logical_op(
                                 LogicalOp::Or,
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -2324,23 +2316,23 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 KeywordCmd::Defined,
                                 $<Token>1,
                                 None,
-                                vec![ $<Node>4 ],
+                                self.new_node_list1($<Node>4),
                                 None
                             )?
                         );
                     }
                 | arg tEH arg opt_nl tCOLON arg
                     {
-                        let expr = $<BoxedNode>1;
+                        let expr = $<Node>1;
                         self.value_expr(&expr)?;
 
                         $$ = Value::Node(
                             self.builder.ternary(
                                 expr,
                                 $<Token>2,
-                                $<BoxedNode>3,
+                                $<Node>3,
                                 $<Token>5,
-                                $<BoxedNode>6
+                                $<Node>6
                             )
                         );
                     }
@@ -2354,9 +2346,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.def_endless_method(
                                 def_t,
                                 name_t,
-                                $<MaybeBoxedNode>2,
+                                $<MaybeNode>2,
                                 $<Token>3,
-                                Some($<BoxedNode>4)
+                                Some($<Node>4)
                             )?
                         );
 
@@ -2376,12 +2368,12 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             None,
                             None,
                             None,
-                            Some($<BoxedNode>6)
+                            Some($<Node>6)
                         );
 
                         let method_body = self.builder.begin_body(
-                            Some($<BoxedNode>4),
-                            vec![ *rescue_body ],
+                            Some($<Node>4),
+                            self.new_node_list1(rescue_body),
                             None,
                             None,
                         );
@@ -2390,7 +2382,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.def_endless_method(
                                 def_t,
                                 name_t,
-                                $<MaybeBoxedNode>2,
+                                $<MaybeNode>2,
                                 $<Token>3,
                                 method_body
                             )?
@@ -2412,9 +2404,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 definee,
                                 dot_t,
                                 name_t,
-                                $<MaybeBoxedNode>2,
+                                $<MaybeNode>2,
                                 $<Token>3,
-                                Some($<BoxedNode>4)
+                                Some($<Node>4)
                             )?
                         );
 
@@ -2434,12 +2426,12 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             None,
                             None,
                             None,
-                            Some($<BoxedNode>6)
+                            Some($<Node>6)
                         );
 
                         let method_body = self.builder.begin_body(
-                            Some($<BoxedNode>4),
-                            vec![ *rescue_body ],
+                            Some($<Node>4),
+                            self.new_node_list1(rescue_body),
                             None,
                             None,
                         );
@@ -2450,7 +2442,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 definee,
                                 dot_t,
                                 name_t,
-                                $<MaybeBoxedNode>2,
+                                $<MaybeNode>2,
                                 $<Token>3,
                                 method_body
                             )?
@@ -2488,9 +2480,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.binary_op(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -2500,14 +2492,14 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         self.warn(
                             @2,
                             DiagnosticMessage::ComparisonAfterComparison {
-                                comparison: self.blob.push_str(&op_t.to_string_lossy())
+                                comparison: op_t.as_whole_str()
                             }
                         );
                         $$ = Value::Node(
                             self.builder.binary_op(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 op_t,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -2515,7 +2507,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
        arg_value: arg
                     {
-                        let arg = $<BoxedNode>1;
+                        let arg = $<Node>1;
                         self.value_expr(&arg)?;
                         $$ = Value::Node(arg);
                     }
@@ -2523,7 +2515,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
        aref_args: none
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | args trailer
                     {
@@ -2531,9 +2523,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                 | args tCOMMA assocs trailer
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push(
-                            *self.builder.associate(
+                            self.builder.associate(
                                 None,
                                 $<NodeList>3,
                                 None
@@ -2544,14 +2536,12 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                 | assocs trailer
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.associate(
-                                        None,
-                                        $<NodeList>1,
-                                        None
-                                    )
-                                ]
+                            self.new_node_list1(
+                                self.builder.associate(
+                                    None,
+                                    $<NodeList>1,
+                                    None
+                                )
                             )
                         );
                     }
@@ -2559,13 +2549,13 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
          arg_rhs: arg   %prec tOP_ASGN
                     {
-                        let arg = $<BoxedNode>1;
+                        let arg = $<Node>1;
                         self.value_expr(&arg)?;
                         $$ = Value::Node(arg);
                     }
                 | arg kRESCUE_MOD arg
                     {
-                        let arg = $<BoxedNode>1;
+                        let arg = $<Node>1;
                         self.value_expr(&arg)?;
 
                         let rescue_body = self.builder.rescue_body(
@@ -2574,13 +2564,13 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             None,
                             None,
                             None,
-                            Some($<BoxedNode>3)
+                            Some($<Node>3)
                         );
 
                         $$ = Value::Node(
                             self.builder.begin_body(
                                 Some(arg),
-                                vec![ *rescue_body ],
+                                self.new_node_list1(rescue_body),
                                 None,
                                 None,
                             ).expect("expected begin_body to return Some (compound_stmt was given)")
@@ -2607,8 +2597,8 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             );
                         }
 
-                        let mut args = $<NodeList>2;
-                        let forwarded_args = *self.builder.forwarded_args($<Token>4);
+                        let args = $<NodeList>2;
+                        let forwarded_args = self.builder.forwarded_args($<Token>4);
                         args.push(forwarded_args);
 
                         $$ = Value::new_paren_args(
@@ -2628,7 +2618,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::new_paren_args(
                             ParenArgs {
                                 begin_t: $<Token>1,
-                                args: vec![ *self.builder.forwarded_args($<Token>2) ],
+                                args: self.new_node_list1(self.builder.forwarded_args($<Token>2)),
                                 end_t: $<Token>3
                             }
                         );
@@ -2640,7 +2630,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::new_opt_paren_args(
                             OptParenArgs {
                                 begin_t: None,
-                                args: vec![],
+                                args: self.new_node_list(),
                                 end_t: None
                             }
                         );
@@ -2660,7 +2650,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
    opt_call_args: none
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | call_args
                     {
@@ -2672,22 +2662,20 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                 | args tCOMMA assocs tCOMMA
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let pair = *self.builder.associate(None, $<NodeList>3, None);
+                        let nodes = $<NodeList>1;
+                        let pair = self.builder.associate(None, $<NodeList>3, None);
                         nodes.push(pair);
                         $$ = Value::NodeList(nodes);
                     }
                 | assocs tCOMMA
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.associate(
-                                        None,
-                                        $<NodeList>1,
-                                        None
-                                    )
-                                ]
+                            self.new_node_list1(
+                                self.builder.associate(
+                                    None,
+                                    $<NodeList>1,
+                                    None
+                                )
                             )
                         );
                     }
@@ -2697,41 +2685,40 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         let command = $<Node>1;
                         self.value_expr(&command)?;
-                        $$ = Value::NodeList( Box::new(vec![ command ]) );
+                        $$ = Value::NodeList( self.new_node_list1(command) );
                     }
                 | args opt_block_arg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>2);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | assocs opt_block_arg
                     {
-                        let hash = *self.builder.associate(None, $<NodeList>1, None);
-                        let mut opt_block_arg = $<NodeList>2;
+                        let hash = self.builder.associate(None, $<NodeList>1, None);
+                        let opt_block_arg = $<NodeList>2;
 
-                        let mut nodes = Box::new(Vec::with_capacity(1 + opt_block_arg.len()));
+                        let nodes = self.new_node_list();
                         nodes.push(hash);
-                        nodes.append(&mut opt_block_arg);
+                        nodes.concat(opt_block_arg);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | args tCOMMA assocs opt_block_arg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let hash = *self.builder.associate(None, $<NodeList>3, None);
-                        let mut opt_block_arg = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let hash = self.builder.associate(None, $<NodeList>3, None);
+                        let opt_block_arg = $<NodeList>4;
 
-                        nodes.reserve(1 + opt_block_arg.len());
                         nodes.push(hash);
-                        nodes.append(&mut opt_block_arg);
+                        nodes.concat(opt_block_arg);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | block_arg
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 ;
 
@@ -2768,7 +2755,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.block_pass(
                                 $<Token>1,
-                                Some($<BoxedNode>2)
+                                Some($<Node>2)
                             )
                         );
                     }
@@ -2789,41 +2776,39 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
    opt_block_arg: tCOMMA block_arg
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>2 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>2) );
                     }
                 | none
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 ;
 
             args: arg_value
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | tSTAR arg_value
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.splat(
-                                        $<Token>1,
-                                        Some($<BoxedNode>2)
-                                    )
-                                ]
+                            self.new_node_list1(
+                                self.builder.splat(
+                                    $<Token>1,
+                                    Some($<Node>2)
+                                )
                             )
                         );
                     }
                 | args tCOMMA arg_value
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
                 | args tCOMMA tSTAR arg_value
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let splat = *self.builder.splat($<Token>3, Some($<BoxedNode>4));
+                        let nodes = $<NodeList>1;
+                        let splat = self.builder.splat($<Token>3, Some($<Node>4));
                         nodes.push(splat);
                         $$ = Value::NodeList(nodes);
                     }
@@ -2843,28 +2828,26 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
             mrhs: args tCOMMA arg_value
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
                 | args tCOMMA tSTAR arg_value
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push(
-                            *self.builder.splat($<Token>3, Some($<BoxedNode>4))
+                            self.builder.splat($<Token>3, Some($<Node>4))
                         );
                         $$ = Value::NodeList(nodes);
                     }
                 | tSTAR arg_value
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.splat(
-                                        $<Token>1,
-                                        Some($<BoxedNode>2)
-                                    )
-                                ]
+                            self.new_node_list1(
+                                self.builder.splat(
+                                    $<Token>1,
+                                    Some($<Node>2)
+                                )
                             )
                         );
                     }
@@ -2918,7 +2901,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 None,
                                 Some($<Token>1),
                                 None,
-                                vec![],
+                                self.new_node_list(),
                                 None
                             )
                         );
@@ -2934,7 +2917,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         self.yylexer.cmdarg.pop();
 
                         $$ = Value::Node(
-                            self.builder.begin_keyword($<Token>1, $<MaybeBoxedNode>3, $<Token>4)
+                            self.builder.begin_keyword($<Token>1, $<MaybeNode>3, $<Token>4)
                         );
                     }
                 | tLPAREN_ARG { self.yylexer.lex_state.set(EXPR_ENDARG); $<None>$ = Value::None; } rparen
@@ -2952,7 +2935,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.begin(
                                 $<Token>1,
-                                Some($<BoxedNode>2),
+                                Some($<Node>2),
                                 $<Token>4
                             )
                         );
@@ -2962,7 +2945,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.begin(
                                 $<Token>1,
-                                $<MaybeBoxedNode>2,
+                                $<MaybeNode>2,
                                 $<Token>3
                             )
                         );
@@ -2971,7 +2954,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     {
                         $$ = Value::Node(
                             self.builder.const_fetch(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<Token>3,
                             )
@@ -3010,7 +2993,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 KeywordCmd::Return,
                                 $<Token>1,
                                 None,
-                                vec![],
+                                self.new_node_list(),
                                 None
                             )?
                         );
@@ -3034,7 +3017,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 KeywordCmd::Yield,
                                 $<Token>1,
                                 Some($<Token>2),
-                                vec![],
+                                self.new_node_list(),
                                 Some($<Token>3)
                             )?
                         );
@@ -3046,7 +3029,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 KeywordCmd::Yield,
                                 $<Token>1,
                                 None,
-                                vec![],
+                                self.new_node_list(),
                                 None
                             )?
                         );
@@ -3064,7 +3047,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 KeywordCmd::Defined,
                                 $<Token>1,
                                 Some($<Token>3),
-                                vec![ $<Node>5 ],
+                                self.new_node_list1($<Node>5),
                                 Some($<Token>6)
                             )?
                         );
@@ -3075,7 +3058,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.not_op(
                                 $<Token>1,
                                 Some($<Token>2),
-                                Some($<BoxedNode>3),
+                                Some($<Node>3),
                                 Some($<Token>4)
                             )?
                         );
@@ -3098,7 +3081,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             None,
                             Some($<Token>1),
                             None,
-                            vec![],
+                            self.new_node_list(),
                             None
                         );
                         let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>2;
@@ -3122,7 +3105,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         let BraceBlock { begin_t, args_type, body, end_t } = $<BraceBlock>2;
                         $$ = Value::Node(
                             self.builder.block(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 begin_t,
                                 args_type,
                                 body,
@@ -3144,9 +3127,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.condition(
                                 $<Token>1,
-                                $<BoxedNode>2,
+                                $<Node>2,
                                 $<Token>3,
-                                $<MaybeBoxedNode>4,
+                                $<MaybeNode>4,
                                 keyword_t,
                                 else_body,
                                 Some($<Token>6)
@@ -3163,11 +3146,11 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.condition(
                                 $<Token>1,
-                                $<BoxedNode>2,
+                                $<Node>2,
                                 $<Token>3,
                                 body,
                                 else_t,
-                                $<MaybeBoxedNode>4,
+                                $<MaybeNode>4,
                                 Some($<Token>6)
                             )
                         );
@@ -3183,7 +3166,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 $<Token>1,
                                 value,
                                 do_t,
-                                $<MaybeBoxedNode>3,
+                                $<MaybeNode>3,
                                 $<Token>4
                             )
                         );
@@ -3199,7 +3182,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 $<Token>1,
                                 value,
                                 do_t,
-                                $<MaybeBoxedNode>3,
+                                $<MaybeNode>3,
                                 $<Token>4
                             )
                         );
@@ -3219,7 +3202,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.case(
                                 $<Token>1,
-                                Some($<BoxedNode>2),
+                                Some($<Node>2),
                                 when_bodies,
                                 else_t,
                                 else_body,
@@ -3260,7 +3243,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.case_match(
                                 $<Token>1,
-                                $<BoxedNode>2,
+                                $<Node>2,
                                 in_bodies,
                                 else_t,
                                 else_body,
@@ -3276,11 +3259,11 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.for_(
                                 $<Token>1,
-                                $<BoxedNode>2,
+                                $<Node>2,
                                 $<Token>3,
                                 value,
                                 do_t,
-                                $<MaybeBoxedNode>5,
+                                $<MaybeNode>5,
                                 $<Token>6
                             )
                         );
@@ -3304,10 +3287,10 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.def_class(
                                 k_class,
-                                $<BoxedNode>2,
+                                $<Node>2,
                                 lt_t,
                                 value,
-                                $<MaybeBoxedNode>5,
+                                $<MaybeNode>5,
                                 $<Token>6
                             )
                         );
@@ -3331,8 +3314,8 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.def_sclass(
                                 k_class,
                                 $<Token>2,
-                                $<BoxedNode>3,
-                                $<MaybeBoxedNode>6,
+                                $<Node>3,
+                                $<MaybeNode>6,
                                 $<Token>7
                             )
                         );
@@ -3358,8 +3341,8 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                         $$ = Value::Node(
                             self.builder.def_module(
                                 k_module,
-                                $<BoxedNode>2,
-                                $<MaybeBoxedNode>4,
+                                $<Node>2,
+                                $<MaybeNode>4,
                                 $<Token>5
                             )
                         );
@@ -3376,8 +3359,8 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                             self.builder.def_method(
                                 def_t,
                                 name_t,
-                                $<MaybeBoxedNode>2,
-                                $<MaybeBoxedNode>3,
+                                $<MaybeNode>2,
+                                $<MaybeNode>3,
                                 $<Token>4
                             )?
                         );
@@ -3397,8 +3380,8 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 definee,
                                 dot_t,
                                 name_t,
-                                $<MaybeBoxedNode>2,
-                                $<MaybeBoxedNode>3,
+                                $<MaybeNode>2,
+                                $<MaybeNode>3,
                                 $<Token>4
                             )?
                         );
@@ -3414,7 +3397,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 KeywordCmd::Break,
                                 $<Token>1,
                                 None,
-                                vec![],
+                                self.new_node_list(),
                                 None
                             )?
                         );
@@ -3426,7 +3409,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 KeywordCmd::Next,
                                 $<Token>1,
                                 None,
-                                vec![],
+                                self.new_node_list(),
                                 None
                             )?
                         );
@@ -3438,7 +3421,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 KeywordCmd::Redo,
                                 $<Token>1,
                                 None,
-                                vec![],
+                                self.new_node_list(),
                                 None
                             )?
                         );
@@ -3450,7 +3433,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                                 KeywordCmd::Retry,
                                 $<Token>1,
                                 None,
-                                vec![],
+                                self.new_node_list(),
                                 None
                             )?
                         );
@@ -3459,7 +3442,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
    primary_value: primary
                     {
-                        let primary = $<BoxedNode>1;
+                        let primary = $<Node>1;
                         self.value_expr(&primary)?;
                         $$ = Value::Node(primary);
                     }
@@ -3634,9 +3617,9 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
                         let body = self.builder.condition(
                             elsif_t,
-                            $<BoxedNode>2,
+                            $<Node>2,
                             $<Token>3,
-                            $<MaybeBoxedNode>4,
+                            $<MaybeNode>4,
                             keyword_t,
                             else_body,
                             None
@@ -3658,7 +3641,7 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                 | k_else compstmt
                     {
                         let else_t = $<Token>1;
-                        let body   = $<MaybeBoxedNode>2;
+                        let body   = $<MaybeNode>2;
                         $$ = Value::new_opt_else(Some(Else { else_t, body }));
                     }
                 ;
@@ -3693,11 +3676,11 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
      f_marg_list: f_marg
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | f_marg_list tCOMMA f_marg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -3709,34 +3692,33 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
                     }
                 | f_marg_list tCOMMA f_rest_marg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
                 | f_marg_list tCOMMA f_rest_marg tCOMMA f_marg_list
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         let f_rest_marg = $<Node>3;
-                        let mut f_marg_list = $<NodeList>5;
+                        let f_marg_list = $<NodeList>5;
 
-                        nodes.reserve(1 + f_marg_list.len());
                         nodes.push(f_rest_marg);
-                        nodes.append(&mut f_marg_list);
+                        nodes.concat(f_marg_list);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_rest_marg
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | f_rest_marg tCOMMA f_marg_list
                     {
                         let f_rest_marg = $<Node>1;
-                        let mut f_marg_list = $<NodeList>3;
+                        let f_marg_list = $<NodeList>3;
 
-                        let mut nodes = Box::new( Vec::with_capacity(1 + f_marg_list.len()) );
+                        let nodes = self.new_node_list();
                         nodes.push(f_rest_marg);
-                        nodes.append(&mut f_marg_list);
+                        nodes.concat(f_marg_list);
 
                         $$ = Value::NodeList(nodes);
                     }
@@ -3778,33 +3760,32 @@ use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
 
  block_args_tail: f_block_kwarg tCOMMA f_kwrest opt_f_block_arg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_kwrest = $<NodeList>3;
-                        let mut opt_f_block_arg = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_kwrest = $<NodeList>3;
+                        let opt_f_block_arg = $<NodeList>4;
 
-                        nodes.reserve(f_kwrest.len() + opt_f_block_arg.len());
-                        nodes.append(&mut f_kwrest);
-                        nodes.append(&mut opt_f_block_arg);
+                        nodes.concat(f_kwrest);
+                        nodes.concat(opt_f_block_arg);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_block_kwarg opt_f_block_arg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>2);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_any_kwrest opt_f_block_arg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>2);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_block_arg
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 ;
 
@@ -3815,7 +3796,7 @@ opt_block_args_tail:
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 ;
 
@@ -3827,69 +3808,64 @@ opt_block_args_tail:
 
      block_param: f_arg tCOMMA f_block_optarg tCOMMA f_rest_arg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_block_optarg = $<NodeList>3;
-                        let mut f_rest_arg = $<NodeList>5;
-                        let mut opt_block_args_tail = $<NodeList>6;
+                        let nodes = $<NodeList>1;
+                        let f_block_optarg = $<NodeList>3;
+                        let f_rest_arg = $<NodeList>5;
+                        let opt_block_args_tail = $<NodeList>6;
 
-                        nodes.reserve(f_block_optarg.len() + f_rest_arg.len() + opt_block_args_tail.len());
-                        nodes.append(&mut f_block_optarg);
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut opt_block_args_tail);
+                        nodes.concat(f_block_optarg);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(opt_block_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_block_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_block_optarg = $<NodeList>3;
-                        let mut f_rest_arg = $<NodeList>5;
-                        let mut f_arg = $<NodeList>7;
-                        let mut opt_block_args_tail = $<NodeList>8;
+                        let nodes = $<NodeList>1;
+                        let f_block_optarg = $<NodeList>3;
+                        let f_rest_arg = $<NodeList>5;
+                        let f_arg = $<NodeList>7;
+                        let opt_block_args_tail = $<NodeList>8;
 
-                        nodes.reserve(f_block_optarg.len() + f_rest_arg.len() + f_arg.len() + opt_block_args_tail.len());
-                        nodes.append(&mut f_block_optarg);
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_block_args_tail);
+                        nodes.concat(f_block_optarg);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_block_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_block_optarg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_block_optarg = $<NodeList>3;
-                        let mut opt_block_args_tail = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_block_optarg = $<NodeList>3;
+                        let opt_block_args_tail = $<NodeList>4;
 
-                        nodes.reserve(f_block_optarg.len() + opt_block_args_tail.len());
-                        nodes.append(&mut f_block_optarg);
-                        nodes.append(&mut opt_block_args_tail);
+                        nodes.concat(f_block_optarg);
+                        nodes.concat(opt_block_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_block_optarg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_block_optarg = $<NodeList>3;
-                        let mut f_arg = $<NodeList>5;
-                        let mut opt_block_args_tail = $<NodeList>6;
+                        let nodes = $<NodeList>1;
+                        let f_block_optarg = $<NodeList>3;
+                        let f_arg = $<NodeList>5;
+                        let opt_block_args_tail = $<NodeList>6;
 
-                        nodes.reserve(f_block_optarg.len() + f_arg.len() + opt_block_args_tail.len());
-                        nodes.append(&mut f_block_optarg);
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_block_args_tail);
+                        nodes.concat(f_block_optarg);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_block_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_rest_arg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_rest_arg = $<NodeList>3;
-                        let mut opt_block_args_tail = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_rest_arg = $<NodeList>3;
+                        let opt_block_args_tail = $<NodeList>4;
 
-                        nodes.reserve(f_rest_arg.len() + opt_block_args_tail.len());
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut opt_block_args_tail);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(opt_block_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
@@ -3899,97 +3875,92 @@ opt_block_args_tail:
                     }
                 | f_arg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_rest_arg = $<NodeList>3;
-                        let mut f_arg = $<NodeList>5;
-                        let mut opt_block_args_tail = $<NodeList>6;
+                        let nodes = $<NodeList>1;
+                        let f_rest_arg = $<NodeList>3;
+                        let f_arg = $<NodeList>5;
+                        let opt_block_args_tail = $<NodeList>6;
 
-                        nodes.reserve(f_rest_arg.len() + f_arg.len() + opt_block_args_tail.len());
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_block_args_tail);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_block_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg opt_block_args_tail
                     {
-                        let f_arg = $<BoxedNodeList>1;
-                        let mut opt_block_args_tail = $<NodeList>2;
-                        let mut nodes;
+                        let f_arg = $<NodeList>1;
+                        let opt_block_args_tail = $<NodeList>2;
+                        let nodes;
 
                         if opt_block_args_tail.is_empty() && f_arg.len() == 1 {
-                            let procarg0 = *self.builder.procarg0(
-                                Box::new(f_arg.into_iter().next().unwrap())
+                            let procarg0 = self.builder.procarg0(
+                                f_arg.first().unwrap()
                             );
-                            nodes = Box::new( vec![ procarg0 ] );
+                            nodes = self.new_node_list1(procarg0);
                         } else {
                             nodes = f_arg;
-                            nodes.append(&mut opt_block_args_tail);
+                            nodes.concat(opt_block_args_tail);
                         }
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_block_optarg tCOMMA f_rest_arg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_rest_arg = $<NodeList>3;
-                        let mut opt_block_args_tail = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_rest_arg = $<NodeList>3;
+                        let opt_block_args_tail = $<NodeList>4;
 
-                        nodes.reserve(f_rest_arg.len() + opt_block_args_tail.len());
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut opt_block_args_tail);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(opt_block_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_block_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_rest_arg = $<NodeList>3;
-                        let mut f_arg = $<NodeList>5;
-                        let mut opt_block_args_tail = $<NodeList>6;
+                        let nodes = $<NodeList>1;
+                        let f_rest_arg = $<NodeList>3;
+                        let f_arg = $<NodeList>5;
+                        let opt_block_args_tail = $<NodeList>6;
 
-                        nodes.reserve(f_rest_arg.len() + f_arg.len() + opt_block_args_tail.len());
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_block_args_tail);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_block_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_block_optarg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>2);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_block_optarg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_arg = $<NodeList>3;
-                        let mut opt_block_args_tail = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_arg = $<NodeList>3;
+                        let opt_block_args_tail = $<NodeList>4;
 
-                        nodes.reserve(f_arg.len() + opt_block_args_tail.len());
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_block_args_tail);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_block_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_rest_arg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>2);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_rest_arg tCOMMA f_arg opt_block_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_arg = $<NodeList>3;
-                        let mut opt_block_args_tail = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_arg = $<NodeList>3;
+                        let opt_block_args_tail = $<NodeList>4;
 
-                        nodes.reserve(f_arg.len() + opt_block_args_tail.len());
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_block_args_tail);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_block_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
@@ -4002,7 +3973,7 @@ opt_block_args_tail:
  opt_block_param: none
                     {
                         $$ = Value::MaybeNode(
-                            self.builder.args(None, vec![], None)
+                            self.builder.args(None, self.new_node_list(), None)
                         );
                     }
                 | block_param_def
@@ -4032,8 +4003,8 @@ opt_block_args_tail:
                         self.current_arg_stack.set(None, self.blob);
                         self.context.set_in_argdef(false);
 
-                        let mut nodes = $<NodeList>2;
-                        nodes.append(&mut $<NodeList>3);
+                        let nodes = $<NodeList>2;
+                        nodes.concat($<NodeList>3);
 
                         $$ = Value::MaybeNode(
                             self.builder.args(
@@ -4048,7 +4019,7 @@ opt_block_args_tail:
 
      opt_bv_decl: opt_nl
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | opt_nl tSEMI bv_decls opt_nl
                     {
@@ -4058,11 +4029,11 @@ opt_block_args_tail:
 
         bv_decls: bvar
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | bv_decls tCOMMA bvar
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -4106,7 +4077,7 @@ opt_block_args_tail:
                         let args = if self.max_numparam_stack.has_numparams() {
                             ArgsType::Numargs(self.max_numparam_stack.top() as u8)
                         } else {
-                            ArgsType::Args($<MaybeBoxedNode>4)
+                            ArgsType::Args($<MaybeNode>4)
                         };
                         let LambdaBody { begin_t, body, end_t } = $<LambdaBody>6;
 
@@ -4132,8 +4103,8 @@ opt_block_args_tail:
                         self.context.set_in_argdef(false);
                         self.max_numparam_stack.set_has_ordinary_params();
 
-                        let mut nodes = $<NodeList>2;
-                        nodes.append(&mut $<NodeList>3);
+                        let nodes = $<NodeList>2;
+                        nodes.concat($<NodeList>3);
 
                         $$ = Value::MaybeNode(
                             self.builder.args(
@@ -4167,7 +4138,7 @@ opt_block_args_tail:
                         $$ = Value::new_lambda_body(
                             LambdaBody {
                                 begin_t: $<Token>1,
-                                body: $<MaybeBoxedNode>3,
+                                body: $<MaybeNode>3,
                                 end_t: $<Token>4
                             }
                         );
@@ -4183,7 +4154,7 @@ opt_block_args_tail:
                         $$ = Value::new_lambda_body(
                             LambdaBody {
                                 begin_t: $<Token>1,
-                                body: $<MaybeBoxedNode>3,
+                                body: $<MaybeNode>3,
                                 end_t: $<Token>4
                             }
                         );
@@ -4215,7 +4186,7 @@ opt_block_args_tail:
                         let DoBlock { begin_t, args_type, body, end_t } = $<DoBlock>2;
                         $$ = Value::Node(
                             self.builder.block(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 begin_t,
                                 args_type,
                                 body,
@@ -4228,7 +4199,7 @@ opt_block_args_tail:
                         let OptParenArgs { begin_t, args, end_t } = $<OptParenArgs>4;
                         $$ = Value::Node(
                             self.builder.call_method(
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 begin_t,
@@ -4241,7 +4212,7 @@ opt_block_args_tail:
                     {
                         let OptParenArgs { begin_t, args, end_t } = $<OptParenArgs>4;
                         let method_call = self.builder.call_method(
-                            Some($<BoxedNode>1),
+                            Some($<Node>1),
                             Some($<Token>2),
                             Some($<Token>3),
                             begin_t,
@@ -4263,7 +4234,7 @@ opt_block_args_tail:
                 | block_call call_op2 operation2 command_args do_block
                     {
                         let method_call = self.builder.call_method(
-                            Some($<BoxedNode>1),
+                            Some($<Node>1),
                             Some($<Token>2),
                             Some($<Token>3),
                             None,
@@ -4305,7 +4276,7 @@ opt_block_args_tail:
 
                         $$ = Value::Node(
                             self.builder.call_method(
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 begin_t,
@@ -4320,7 +4291,7 @@ opt_block_args_tail:
 
                         $$ = Value::Node(
                             self.builder.call_method(
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 Some(begin_t),
@@ -4333,11 +4304,11 @@ opt_block_args_tail:
                     {
                         $$ = Value::Node(
                             self.builder.call_method(
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 Some($<Token>2),
                                 Some($<Token>3),
                                 None,
-                                vec![],
+                                self.new_node_list(),
                                 None
                             )
                         );
@@ -4348,7 +4319,7 @@ opt_block_args_tail:
 
                         $$ = Value::Node(
                             self.builder.call_method(
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 Some($<Token>2),
                                 None,
                                 Some(begin_t),
@@ -4363,7 +4334,7 @@ opt_block_args_tail:
 
                         $$ = Value::Node(
                             self.builder.call_method(
-                                Some($<BoxedNode>1),
+                                Some($<Node>1),
                                 Some($<Token>2),
                                 None,
                                 Some(begin_t),
@@ -4393,7 +4364,7 @@ opt_block_args_tail:
                                 KeywordCmd::Zsuper,
                                 $<Token>1,
                                 None,
-                                vec![],
+                                self.new_node_list(),
                                 None
                             )?
                         );
@@ -4402,7 +4373,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::Node(
                             self.builder.index(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<NodeList>3,
                                 $<Token>4
@@ -4461,7 +4432,7 @@ opt_block_args_tail:
                         let args_type = if self.max_numparam_stack.has_numparams() {
                             ArgsType::Numargs(self.max_numparam_stack.top() as u8)
                         } else {
-                            ArgsType::Args($<MaybeBoxedNode>2)
+                            ArgsType::Args($<MaybeNode>2)
                         };
 
                         self.max_numparam_stack.pop();
@@ -4470,7 +4441,7 @@ opt_block_args_tail:
                         $$ = Value::new_brace_body(
                             BraceBody {
                                 args_type,
-                                body: $<MaybeBoxedNode>3
+                                body: $<MaybeNode>3
                             }
                         );
                     }
@@ -4487,7 +4458,7 @@ opt_block_args_tail:
                         let args_type = if self.max_numparam_stack.has_numparams() {
                             ArgsType::Numargs(self.max_numparam_stack.top() as u8)
                         } else {
-                            ArgsType::Args($<MaybeBoxedNode>2)
+                            ArgsType::Args($<MaybeNode>2)
                         };
 
                         self.max_numparam_stack.pop();
@@ -4495,38 +4466,36 @@ opt_block_args_tail:
                         self.yylexer.cmdarg.pop();
 
                         $$ = Value::new_do_body(
-                            DoBody { args_type, body: $<MaybeBoxedNode>3 }
+                            DoBody { args_type, body: $<MaybeNode>3 }
                         );
                     }
                 ;
 
        case_args: arg_value
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | tSTAR arg_value
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.splat(
-                                        $<Token>1,
-                                        Some($<BoxedNode>2)
-                                    )
-                                ]
+                            self.new_node_list1(
+                                self.builder.splat(
+                                    $<Token>1,
+                                    Some($<Node>2)
+                                )
                             )
                         );
                     }
                 | case_args tCOMMA arg_value
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
                 | case_args tCOMMA tSTAR arg_value
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let splat = *self.builder.splat($<Token>3, Some($<BoxedNode>4));
+                        let nodes = $<NodeList>1;
+                        let splat = self.builder.splat($<Token>3, Some($<Node>4));
                         nodes.push(splat);
                         $$ = Value::NodeList(nodes);
                     }
@@ -4536,12 +4505,12 @@ opt_block_args_tail:
                   compstmt
                   cases
                     {
-                        let when = *self.builder.when($<Token>1, $<NodeList>2, $<Token>3, $<MaybeBoxedNode>4);
-                        let Cases { mut when_bodies, opt_else } = $<Cases>5;
+                        let when = self.builder.when($<Token>1, $<NodeList>2, $<Token>3, $<MaybeNode>4);
+                        let Cases { when_bodies, opt_else } = $<Cases>5;
 
-                        let mut nodes = Vec::with_capacity(1 + when_bodies.len());
+                        let nodes = self.new_node_list();
                         nodes.push(when);
-                        nodes.append(&mut when_bodies);
+                        nodes.concat(when_bodies);
 
                         $$ = Value::new_case_body(CaseBody { when_bodies: nodes, opt_else });
                     }
@@ -4549,7 +4518,7 @@ opt_block_args_tail:
 
            cases: opt_else
                     {
-                        $$ = Value::new_cases(Cases { when_bodies: vec![], opt_else: $<OptElse>1 });
+                        $$ = Value::new_cases(Cases { when_bodies: self.new_node_list(), opt_else: $<OptElse>1 });
                     }
                 | case_body
                     {
@@ -4578,20 +4547,20 @@ opt_block_args_tail:
                   compstmt
                   p_cases
                     {
-                        let PCases { mut in_bodies, opt_else } = $<PCases>7;
+                        let PCases { in_bodies, opt_else } = $<PCases>7;
                         let PTopExpr { pattern, guard } = $<PTopExpr>3;
 
-                        let mut nodes = Vec::with_capacity(1 + in_bodies.len());
+                        let nodes = self.new_node_list();
                         nodes.push(
-                            *self.builder.in_pattern(
+                            self.builder.in_pattern(
                                 $<Token>1,
                                 pattern,
                                 guard,
                                 $<Token>4,
-                                $<MaybeBoxedNode>6
+                                $<MaybeNode>6
                             )
                         );
-                        nodes.append(&mut in_bodies);
+                        nodes.concat(in_bodies);
 
                         $$ = Value::new_p_case_body(PCaseBody { in_bodies: nodes, opt_else  });
                     }
@@ -4599,7 +4568,7 @@ opt_block_args_tail:
 
          p_cases: opt_else
                     {
-                        $$ = Value::new_p_cases(PCases { in_bodies: vec![], opt_else: $<OptElse>1 });
+                        $$ = Value::new_p_cases(PCases { in_bodies: self.new_node_list(), opt_else: $<OptElse>1 });
                     }
                 | p_case_body
                     {
@@ -4610,17 +4579,17 @@ opt_block_args_tail:
 
       p_top_expr: p_top_expr_body
                     {
-                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<BoxedNode>1, guard: None });
+                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<Node>1, guard: None });
                     }
                 | p_top_expr_body kIF_MOD expr_value
                     {
-                        let guard = self.builder.if_guard($<Token>2, $<BoxedNode>3);
-                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<BoxedNode>1, guard: Some(guard) });
+                        let guard = self.builder.if_guard($<Token>2, $<Node>3);
+                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<Node>1, guard: Some(guard) });
                     }
                 | p_top_expr_body kUNLESS_MOD expr_value
                     {
-                        let guard = self.builder.unless_guard($<Token>2, $<BoxedNode>3);
-                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<BoxedNode>1, guard: Some(guard) });
+                        let guard = self.builder.unless_guard($<Token>2, $<Node>3);
+                        $$ = Value::new_p_top_expr(PTopExpr { pattern: $<Node>1, guard: Some(guard) });
                     }
                 ;
 
@@ -4633,7 +4602,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.array_pattern(
                                 None,
-                                vec![ $<Node>1 ],
+                                self.new_node_list1($<Node>1),
                                 Some($<Token>2),
                                 None
                             )
@@ -4641,11 +4610,11 @@ opt_block_args_tail:
                     }
                 | p_expr tCOMMA p_args
                     {
-                        let MatchPatternWithTrailingComma { mut elements, trailing_comma } = $<MatchPatternWithTrailingComma>3;
+                        let MatchPatternWithTrailingComma { elements, trailing_comma } = $<MatchPatternWithTrailingComma>3;
 
-                        let mut nodes = Vec::with_capacity(1 + elements.len());
+                        let nodes = self.new_node_list();
                         nodes.push($<Node>1);
-                        nodes.append(&mut elements);
+                        nodes.concat(elements);
 
                         $$ = Value::Node(
                             self.builder.array_pattern(None, nodes, trailing_comma, None)
@@ -4681,9 +4650,9 @@ opt_block_args_tail:
                     {
                         $$ = Value::Node(
                             self.builder.match_as(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )
                         );
                     }
@@ -4697,9 +4666,9 @@ opt_block_args_tail:
                     {
                         $$ = Value::Node(
                             self.builder.match_alt(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )
                         );
                     }
@@ -4738,7 +4707,7 @@ opt_block_args_tail:
                         let pattern = self.builder.array_pattern(None, elements, trailing_comma, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4751,7 +4720,7 @@ opt_block_args_tail:
                         let pattern = self.builder.find_pattern(None, $<NodeList>3, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4764,7 +4733,7 @@ opt_block_args_tail:
                         let pattern = self.builder.hash_pattern(None, $<NodeList>3, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4777,13 +4746,13 @@ opt_block_args_tail:
                         let rparen_t = $<Token>3;
                         let pattern = self.builder.array_pattern(
                             Some(lparen_t.loc),
-                            vec![],
+                            self.new_node_list(),
                             None,
                             Some(rparen_t.loc)
                         );
                         $$ = Value::Node(
                             self.builder.const_pattern(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 lparen_t,
                                 pattern,
                                 rparen_t
@@ -4797,7 +4766,7 @@ opt_block_args_tail:
                         let pattern = self.builder.array_pattern(None, elements, trailing_comma, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4810,7 +4779,7 @@ opt_block_args_tail:
                         let pattern = self.builder.find_pattern(None, $<NodeList>3, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4823,7 +4792,7 @@ opt_block_args_tail:
                         let pattern = self.builder.hash_pattern(None, $<NodeList>3, None);
                         $$ = Value::Node(
                             self.builder.const_pattern(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 pattern,
                                 $<Token>4
@@ -4836,13 +4805,13 @@ opt_block_args_tail:
                         let rparen_t = $<Token>3;
                         let pattern = self.builder.array_pattern(
                             Some(lparen_t.loc),
-                            vec![],
+                            self.new_node_list(),
                             None,
                             Some(rparen_t.loc)
                         );
                         $$ = Value::Node(
                             self.builder.const_pattern(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 lparen_t,
                                 pattern,
                                 rparen_t
@@ -4876,7 +4845,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.array_pattern(
                                 Some($<Token>1.loc),
-                                vec![],
+                                self.new_node_list(),
                                 None,
                                 Some($<Token>2.loc)
                             )
@@ -4905,7 +4874,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.hash_pattern(
                                 Some($<Token>1),
-                                vec![],
+                                self.new_node_list(),
                                 Some($<Token>2),
                             )
                         );
@@ -4921,7 +4890,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.begin(
                                 $<Token>1,
-                                Some($<BoxedNode>3),
+                                Some($<Node>3),
                                 $<Token>4
                             )
                         );
@@ -4932,7 +4901,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
-                                elements: vec![ $<Node>1 ],
+                                elements: self.new_node_list1($<Node>1),
                                 trailing_comma: None
                             }
                         );
@@ -4943,7 +4912,7 @@ opt_block_args_tail:
                     }
                 | p_args_head p_arg
                     {
-                        let mut elements = $<MatchPatternWithTrailingComma>1.elements;
+                        let elements = $<MatchPatternWithTrailingComma>1.elements;
                         elements.push($<Node>2);
 
                         $$ = Value::new_match_pattern_with_trailing_comma(
@@ -4955,7 +4924,7 @@ opt_block_args_tail:
                     }
                 | p_args_head p_rest
                     {
-                        let mut elements = $<MatchPatternWithTrailingComma>1.elements;
+                        let elements = $<MatchPatternWithTrailingComma>1.elements;
                         let p_rest = $<Node>2;
                         elements.push(p_rest);
 
@@ -4968,13 +4937,12 @@ opt_block_args_tail:
                     }
                 | p_args_head p_rest tCOMMA p_args_post
                     {
-                        let mut elements = $<MatchPatternWithTrailingComma>1.elements;
+                        let elements = $<MatchPatternWithTrailingComma>1.elements;
                         let p_rest = $<Node>2;
-                        let mut p_args_post = $<NodeList>4;
+                        let p_args_post = $<NodeList>4;
 
-                        elements.reserve(1 + p_args_post.len());
                         elements.push(p_rest);
-                        elements.append(&mut p_args_post);
+                        elements.concat(p_args_post);
 
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
@@ -4998,14 +4966,14 @@ opt_block_args_tail:
                     {
                         $$ = Value::new_match_pattern_with_trailing_comma(
                             MatchPatternWithTrailingComma {
-                                elements: vec![$<Node>1],
+                                elements: self.new_node_list1($<Node>1),
                                 trailing_comma: Some($<Token>2),
                             }
                         );
                     }
                 | p_args_head p_arg tCOMMA
                     {
-                        let mut elements = $<MatchPatternWithTrailingComma>1.elements;
+                        let elements = $<MatchPatternWithTrailingComma>1.elements;
                         elements.push($<Node>2);
 
                         $$ = Value::new_match_pattern_with_trailing_comma(
@@ -5019,14 +4987,14 @@ opt_block_args_tail:
 
      p_args_tail: p_rest
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | p_rest tCOMMA p_args_post
                     {
-                        let mut p_args_post = $<NodeList>3;
-                        let mut nodes = Box::new(Vec::with_capacity(1 + p_args_post.len()));
+                        let p_args_post = $<NodeList>3;
+                        let nodes = self.new_node_list();
                         nodes.push($<Node>1);
-                        nodes.append(&mut p_args_post);
+                        nodes.concat(p_args_post);
 
                         $$ = Value::NodeList(nodes);
                     }
@@ -5034,10 +5002,10 @@ opt_block_args_tail:
 
           p_find: p_rest tCOMMA p_args_post tCOMMA p_rest
                     {
-                        let mut p_args_post = $<NodeList>3;
-                        let mut nodes = Box::new(Vec::with_capacity(1 + p_args_post.len() + 1));
+                        let p_args_post = $<NodeList>3;
+                        let nodes = self.new_node_list();
                         nodes.push($<Node>1);
-                        nodes.append(&mut p_args_post);
+                        nodes.concat(p_args_post);
                         nodes.push($<Node>5);
 
                         $$ = Value::NodeList(nodes);
@@ -5061,11 +5029,11 @@ opt_block_args_tail:
 
      p_args_post: p_arg
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | p_args_post tCOMMA p_arg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5079,8 +5047,8 @@ opt_block_args_tail:
 
         p_kwargs: p_kwarg tCOMMA p_any_kwrest
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>3);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>3);
 
                         $$ = Value::NodeList(nodes);
                     }
@@ -5100,11 +5068,11 @@ opt_block_args_tail:
 
          p_kwarg: p_kw
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | p_kwarg tCOMMA p_kw
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5115,7 +5083,7 @@ opt_block_args_tail:
                         $$ = Value::Node(
                             self.builder.match_pair(
                                 $<PKwLabel>1,
-                                $<BoxedNode>2
+                                $<Node>2
                             )?
                         );
                     }
@@ -5146,26 +5114,22 @@ opt_block_args_tail:
         p_kwrest: kwrest_mark tIDENTIFIER
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.match_rest(
-                                        $<Token>1,
-                                        Some($<Token>2)
-                                    )?
-                                ]
+                            self.new_node_list1(
+                                self.builder.match_rest(
+                                    $<Token>1,
+                                    Some($<Token>2)
+                                )?
                             )
                         );
                     }
                 | kwrest_mark
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.match_rest(
-                                        $<Token>1,
-                                        None
-                                    )?
-                                ]
+                            self.new_node_list1(
+                                self.builder.match_rest(
+                                    $<Token>1,
+                                    None
+                                )?
                             )
                         );
                     }
@@ -5190,13 +5154,11 @@ opt_block_args_tail:
                     {
                         let NoKwRest { kwrest_mark, k_nil } = $<NoKwRest>1;
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.match_nil_pattern(
-                                        kwrest_mark,
-                                        k_nil
-                                    )
-                                ]
+                            self.new_node_list1(
+                                self.builder.match_nil_pattern(
+                                    kwrest_mark,
+                                    k_nil
+                                )
                             )
                         );
                     }
@@ -5208,10 +5170,10 @@ opt_block_args_tail:
                     }
                 | p_primitive tDOT2 p_primitive
                     {
-                        let left = $<BoxedNode>1;
+                        let left = $<Node>1;
                         self.value_expr(&left)?;
 
-                        let right = $<BoxedNode>3;
+                        let right = $<Node>3;
                         self.value_expr(&right)?;
 
                         $$ = Value::Node(
@@ -5224,10 +5186,10 @@ opt_block_args_tail:
                     }
                 | p_primitive tDOT3 p_primitive
                     {
-                        let left = $<BoxedNode>1;
+                        let left = $<Node>1;
                         self.value_expr(&left)?;
 
-                        let right = $<BoxedNode>3;
+                        let right = $<Node>3;
                         self.value_expr(&right)?;
 
                         $$ = Value::Node(
@@ -5240,7 +5202,7 @@ opt_block_args_tail:
                     }
                 | p_primitive tDOT2
                     {
-                        let left = $<BoxedNode>1;
+                        let left = $<Node>1;
                         self.value_expr(&left)?;
 
                         $$ = Value::Node(
@@ -5253,7 +5215,7 @@ opt_block_args_tail:
                     }
                 | p_primitive tDOT3
                     {
-                        let left = $<BoxedNode>1;
+                        let left = $<Node>1;
                         self.value_expr(&left)?;
 
                         $$ = Value::Node(
@@ -5278,7 +5240,7 @@ opt_block_args_tail:
                     }
                 | tBDOT2 p_primitive
                     {
-                        let right = $<BoxedNode>2;
+                        let right = $<Node>2;
                         self.value_expr(&right)?;
 
                         $$ = Value::Node(
@@ -5291,7 +5253,7 @@ opt_block_args_tail:
                     }
                 | tBDOT3 p_primitive
                     {
-                        let right = $<BoxedNode>2;
+                        let right = $<Node>2;
                         self.value_expr(&right)?;
 
                         $$ = Value::Node(
@@ -5339,7 +5301,7 @@ opt_block_args_tail:
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.accessible($<BoxedNode>1)
+                            self.builder.accessible($<Node>1)
                         );
                     }
                 | lambda
@@ -5361,13 +5323,13 @@ opt_block_args_tail:
        p_var_ref: tCARET tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        let name = clone_value(ident_t);
+                        let ident_s = ident_t.as_whole_str();
 
-                        if !self.static_env.is_declared(name.as_str()) {
+                        if !self.static_env.is_declared(ident_s) {
                             return self.yyerror(
                                 @2,
                                 DiagnosticMessage::NoSuchLocalVariable {
-                                    var_name: self.blob.push_str(&ident_t.to_string_lossy())
+                                    var_name: ident_s
                                 }
                             );
                         }
@@ -5379,7 +5341,7 @@ opt_block_args_tail:
                     }
                 | tCARET nonlocal_var
                     {
-                        let non_lvar = self.builder.accessible($<BoxedNode>2);
+                        let non_lvar = self.builder.accessible($<Node>2);
                         $$ = Value::Node(
                             self.builder.pin(
                                 $<Token>1,
@@ -5393,7 +5355,7 @@ opt_block_args_tail:
                     {
                         let expr = self.builder.begin(
                             $<Token>2,
-                            Some($<BoxedNode>3),
+                            Some($<Node>3),
                             $<Token>4
                         );
                         $$ = Value::Node(
@@ -5415,7 +5377,7 @@ opt_block_args_tail:
                     {
                         $$ = Value::Node(
                             self.builder.const_fetch(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
                                 $<Token>3,
                             )
@@ -5440,30 +5402,30 @@ opt_block_args_tail:
                             Some(self.builder.array(None, exc_list, None))
                         };
 
-                        let rescue_body = *self.builder.rescue_body(
+                        let rescue_body = self.builder.rescue_body(
                             $<Token>1,
                             exc_list,
                             assoc_t,
                             exc_var,
                             Some($<Token>4),
-                            $<MaybeBoxedNode>5
+                            $<MaybeNode>5
                         );
-                        let mut opt_rescue = $<NodeList>6;
-                        let mut nodes = Box::new(Vec::with_capacity(1 + opt_rescue.len()));
+                        let opt_rescue = $<NodeList>6;
+                        let nodes = self.new_node_list();
                         nodes.push(rescue_body);
-                        nodes.append(&mut opt_rescue);
+                        nodes.concat(opt_rescue);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | none
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 ;
 
         exc_list: arg_value
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | mrhs
                     {
@@ -5471,14 +5433,14 @@ opt_block_args_tail:
                     }
                 | none
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 ;
 
          exc_var: tASSOC lhs
                     {
                         let assoc_t = Some($<Token>1);
-                        let exc_var = Some($<BoxedNode>2);
+                        let exc_var = Some($<Node>2);
                         $$ = Value::new_exc_var(ExcVar { assoc_t, exc_var });
                     }
                 | none
@@ -5490,7 +5452,7 @@ opt_block_args_tail:
       opt_ensure: k_ensure compstmt
                     {
                         let ensure_t = $<Token>1;
-                        let body = $<MaybeBoxedNode>2;
+                        let body = $<MaybeNode>2;
                         $$ = Value::new_opt_ensure(Some(Ensure { ensure_t, body }));
                     }
                 | none
@@ -5524,20 +5486,18 @@ opt_block_args_tail:
           string: tCHAR
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.character($<Token>1)
-                                ]
+                            self.new_node_list1(
+                                self.builder.character($<Token>1)
                             )
                         );
                     }
                 | string1
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | string string1
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>2 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5601,14 +5561,14 @@ opt_block_args_tail:
 
        word_list: /* none */
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
 
                     }
                 | word_list word tSPACE
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push(
-                            *self.builder.word( $<NodeList>2 )
+                            self.builder.word( $<NodeList>2 )
                         );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5616,11 +5576,11 @@ opt_block_args_tail:
 
             word: string_content
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | word string_content
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>2 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5640,13 +5600,13 @@ opt_block_args_tail:
 
      symbol_list: /* none */
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | symbol_list word tSPACE
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push(
-                            *self.builder.word( $<NodeList>2 )
+                            self.builder.word( $<NodeList>2 )
                         );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5678,13 +5638,13 @@ opt_block_args_tail:
 
       qword_list: /* none */
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | qword_list tSTRING_CONTENT tSPACE
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push(
-                            *self.builder.string_internal( $<Token>2 )
+                            self.builder.string_internal( $<Token>2 )
                         );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5692,13 +5652,13 @@ opt_block_args_tail:
 
        qsym_list: /* none */
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | qsym_list tSTRING_CONTENT tSPACE
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push(
-                            *self.builder.symbol_internal( $<Token>2 )
+                            self.builder.symbol_internal( $<Token>2 )
                         );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5706,11 +5666,11 @@ opt_block_args_tail:
 
  string_contents: /* none */
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | string_contents string_content
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push($<Node>2);
                         $$ = Value::NodeList(nodes);
                     }
@@ -5718,11 +5678,11 @@ opt_block_args_tail:
 
 xstring_contents: /* none */
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | xstring_contents string_content
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push($<Node>2);
                         $$ = Value::NodeList(nodes);
                     }
@@ -5730,11 +5690,11 @@ xstring_contents: /* none */
 
  regexp_contents: /* none */
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | regexp_contents string_content
                     {
-                        let mut  nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>2 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -5748,7 +5708,7 @@ xstring_contents: /* none */
                     }
                 | tSTRING_DVAR
                     {
-                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(std::mem::take(&mut self.yylexer.strterm));
+                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(core::mem::take(&mut self.yylexer.strterm));
                         self.yylexer.lex_state.set(EXPR_BEG);
                     }
                   string_dvar
@@ -5763,7 +5723,7 @@ xstring_contents: /* none */
                         $<None>$ = Value::None;
                     }
                     {
-                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(std::mem::take(&mut self.yylexer.strterm));
+                        $<MaybeStrTerm>$ = Value::MaybeStrTerm(core::mem::take(&mut self.yylexer.strterm));
                     }
                     {
                         $<Num>$ = Value::Num( self.yylexer.lex_state.get() );
@@ -5790,7 +5750,7 @@ xstring_contents: /* none */
                         $$ = Value::Node(
                             self.builder.begin(
                                 $<Token>1,
-                                $<MaybeBoxedNode>7,
+                                $<MaybeNode>7,
                                 $<Token>8
                             )
                         );
@@ -5853,7 +5813,7 @@ xstring_contents: /* none */
                         $$ = Value::Node(
                             self.builder.unary_num(
                                 $<Token>1,
-                                $<BoxedNode>2
+                                $<Node>2
                             )
                         );
                     }
@@ -5984,13 +5944,13 @@ keyword_variable: kNIL
          var_ref: user_variable
                     {
                         $$ = Value::Node(
-                            self.builder.accessible($<BoxedNode>1)
+                            self.builder.accessible($<Node>1)
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.accessible($<BoxedNode>1)
+                            self.builder.accessible($<Node>1)
                         );
                     }
                 ;
@@ -5998,13 +5958,13 @@ keyword_variable: kNIL
          var_lhs: user_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<BoxedNode>1)?
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 | keyword_variable
                     {
                         $$ = Value::Node(
-                            self.builder.assignable($<BoxedNode>1)?
+                            self.builder.assignable($<Node>1)?
                         );
                     }
                 ;
@@ -6032,7 +5992,7 @@ keyword_variable: kNIL
                   expr_value term
                     {
                         let lt_t  = Some($<Token>1);
-                        let value = Some($<BoxedNode>3);
+                        let value = Some($<Node>3);
                         $$ = Value::new_superclass(
                             Superclass { lt_t, value }
                         );
@@ -6090,47 +6050,38 @@ f_opt_paren_args: f_paren_args
 
        args_tail: f_kwarg tCOMMA f_kwrest opt_f_block_arg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_kwrest = $<NodeList>3;
-                        let mut opt_f_block_arg = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_kwrest = $<NodeList>3;
+                        let opt_f_block_arg = $<NodeList>4;
 
-                        nodes.reserve(f_kwrest.len() + opt_f_block_arg.len());
-                        nodes.append(&mut f_kwrest);
-                        nodes.append(&mut opt_f_block_arg);
+                        nodes.concat(f_kwrest);
+                        nodes.concat(opt_f_block_arg);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_kwarg opt_f_block_arg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>2);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_any_kwrest opt_f_block_arg
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>2);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_block_arg
                     {
-                        $$ = Value::NodeList(
-                            Box::new(
-                                vec![ $<Node>1 ]
-                            )
-                        );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | args_forward
                     {
-                        let forward_arg = *self.builder.forward_arg($<Token>1);
+                        let forward_arg = self.builder.forward_arg($<Token>1);
                         self.static_env.declare_forward_args(self.blob);
-                        $$ = Value::NodeList(
-                            Box::new(
-                                vec![ forward_arg ]
-                            )
-                        );
+                        $$ = Value::NodeList( self.new_node_list1(forward_arg) );
                     }
                 ;
 
@@ -6140,170 +6091,160 @@ f_opt_paren_args: f_paren_args
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 ;
 
           f_args: f_arg tCOMMA f_optarg tCOMMA f_rest_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_optarg = $<NodeList>3;
-                        let mut f_rest_arg = $<NodeList>5;
-                        let mut opt_args_tail = $<NodeList>6;
+                        let nodes = $<NodeList>1;
+                        let f_optarg = $<NodeList>3;
+                        let f_rest_arg = $<NodeList>5;
+                        let opt_args_tail = $<NodeList>6;
 
-                        nodes.reserve(f_optarg.len() + f_rest_arg.len() + opt_args_tail.len());
-                        nodes.append(&mut f_optarg);
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut opt_args_tail);
+                        nodes.concat(f_optarg);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(opt_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_optarg = $<NodeList>3;
-                        let mut f_rest_arg = $<NodeList>5;
-                        let mut f_arg = $<NodeList>7;
-                        let mut opt_args_tail = $<NodeList>8;
+                        let nodes = $<NodeList>1;
+                        let f_optarg = $<NodeList>3;
+                        let f_rest_arg = $<NodeList>5;
+                        let f_arg = $<NodeList>7;
+                        let opt_args_tail = $<NodeList>8;
 
-                        nodes.reserve(f_optarg.len() + f_rest_arg.len() + f_arg.len() + opt_args_tail.len());
-                        nodes.append(&mut f_optarg);
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_args_tail);
+                        nodes.concat(f_optarg);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_optarg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_optarg = $<NodeList>3;
-                        let mut opt_args_tail = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_optarg = $<NodeList>3;
+                        let opt_args_tail = $<NodeList>4;
 
-                        nodes.reserve(f_optarg.len() + opt_args_tail.len());
-                        nodes.append(&mut f_optarg);
-                        nodes.append(&mut opt_args_tail);
+                        nodes.concat(f_optarg);
+                        nodes.concat(opt_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_optarg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_optarg = $<NodeList>3;
-                        let mut f_arg = $<NodeList>5;
-                        let mut opt_args_tail = $<NodeList>6;
+                        let nodes = $<NodeList>1;
+                        let f_optarg = $<NodeList>3;
+                        let f_arg = $<NodeList>5;
+                        let opt_args_tail = $<NodeList>6;
 
-                        nodes.reserve(f_optarg.len() + f_arg.len() + opt_args_tail.len());
-                        nodes.append(&mut f_optarg);
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_args_tail);
+                        nodes.concat(f_optarg);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_rest_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_rest_arg = $<NodeList>3;
-                        let mut opt_args_tail = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_rest_arg = $<NodeList>3;
+                        let opt_args_tail = $<NodeList>4;
 
-                        nodes.reserve(f_rest_arg.len() + opt_args_tail.len());
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut opt_args_tail);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(opt_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_rest_arg = $<NodeList>3;
-                        let mut f_arg = $<NodeList>5;
-                        let mut opt_args_tail = $<NodeList>6;
+                        let nodes = $<NodeList>1;
+                        let f_rest_arg = $<NodeList>3;
+                        let f_arg = $<NodeList>5;
+                        let opt_args_tail = $<NodeList>6;
 
-                        nodes.reserve(f_rest_arg.len() + f_arg.len() + opt_args_tail.len());
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_args_tail);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>2);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_optarg tCOMMA f_rest_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_rest_arg = $<NodeList>3;
-                        let mut opt_args_tail = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_rest_arg = $<NodeList>3;
+                        let opt_args_tail = $<NodeList>4;
 
-                        nodes.reserve(f_rest_arg.len() + opt_args_tail.len());
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut opt_args_tail);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(opt_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_optarg tCOMMA f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_rest_arg = $<NodeList>3;
-                        let mut f_arg = $<NodeList>5;
-                        let mut opt_args_tail = $<NodeList>6;
+                        let nodes = $<NodeList>1;
+                        let f_rest_arg = $<NodeList>3;
+                        let f_arg = $<NodeList>5;
+                        let opt_args_tail = $<NodeList>6;
 
-                        nodes.reserve(f_rest_arg.len() + f_arg.len() + opt_args_tail.len());
-                        nodes.append(&mut f_rest_arg);
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_args_tail);
+                        nodes.concat(f_rest_arg);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_optarg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>2);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_optarg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_arg = $<NodeList>3;
-                        let mut opt_args_tail = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_arg = $<NodeList>3;
+                        let opt_args_tail = $<NodeList>4;
 
-                        nodes.reserve(f_arg.len() + opt_args_tail.len());
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_args_tail);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_rest_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        nodes.append(&mut $<NodeList>2);
+                        let nodes = $<NodeList>1;
+                        nodes.concat($<NodeList>2);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | f_rest_arg tCOMMA f_arg opt_args_tail
                     {
-                        let mut nodes = $<BoxedNodeList>1;
-                        let mut f_arg = $<NodeList>3;
-                        let mut opt_args_tail = $<NodeList>4;
+                        let nodes = $<NodeList>1;
+                        let f_arg = $<NodeList>3;
+                        let opt_args_tail = $<NodeList>4;
 
-                        nodes.reserve(f_arg.len() + opt_args_tail.len());
-                        nodes.append(&mut f_arg);
-                        nodes.append(&mut opt_args_tail);
+                        nodes.concat(f_arg);
+                        nodes.concat(opt_args_tail);
 
                         $$ = Value::NodeList(nodes);
                     }
                 | args_tail
                     {
-                        $$ = Value::NodeList($<BoxedNodeList>1);
+                        $$ = Value::NodeList($<NodeList>1);
                     }
                 | /* none */
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 ;
 
@@ -6347,8 +6288,7 @@ f_opt_paren_args: f_paren_args
       f_arg_asgn: f_norm_arg
                     {
                         let arg_t = $<Token>1;
-                        let arg_name = self.blob.push_str(&arg_t.to_string_lossy());
-                        self.current_arg_stack.set(Some(arg_name), self.blob);
+                        self.current_arg_stack.set(Some(arg_t.as_whole_str()), self.blob);
                         $$ = Value::Token(arg_t);
                     }
                 ;
@@ -6374,11 +6314,11 @@ f_opt_paren_args: f_paren_args
 
            f_arg: f_arg_item
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | f_arg tCOMMA f_arg_item
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -6390,12 +6330,11 @@ f_opt_paren_args: f_paren_args
                         let ident_t = $<Token>1;
                         self.check_kwarg_name(ident_t)?;
 
-                        let ident = self.blob.push_str(&ident_t.to_string_lossy());
-                        self.static_env.declare(ident, self.blob);
+                        self.static_env.declare(ident_t.as_whole_str(), self.blob);
 
                         self.max_numparam_stack.set_has_ordinary_params();
 
-                        self.current_arg_stack.set(Some(ident), self.blob);
+                        self.current_arg_stack.set(Some(ident_t.as_whole_str()), self.blob);
                         self.context.set_in_argdef(false);
 
                         $$ = Value::Token(ident_t);
@@ -6407,7 +6346,7 @@ f_opt_paren_args: f_paren_args
                         self.current_arg_stack.set(None, self.blob);
                         self.context.set_in_argdef(true);
                         $$ = Value::Node(
-                            self.builder.kwoptarg($<Token>1, $<BoxedNode>2)?
+                            self.builder.kwoptarg($<Token>1, $<Node>2)?
                         );
                     }
                 | f_label
@@ -6424,7 +6363,7 @@ f_opt_paren_args: f_paren_args
                     {
                         self.context.set_in_argdef(true);
                         $$ = Value::Node(
-                            self.builder.kwoptarg($<Token>1, $<BoxedNode>2)?
+                            self.builder.kwoptarg($<Token>1, $<Node>2)?
                         );
                     }
                 | f_label
@@ -6438,11 +6377,11 @@ f_opt_paren_args: f_paren_args
 
    f_block_kwarg: f_block_kw
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | f_block_kwarg tCOMMA f_block_kw
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -6451,11 +6390,11 @@ f_opt_paren_args: f_paren_args
 
          f_kwarg: f_kw
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | f_kwarg tCOMMA f_kw
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -6475,13 +6414,11 @@ f_opt_paren_args: f_paren_args
                     {
                         let NoKwRest { kwrest_mark, k_nil } = $<NoKwRest>1;
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *self.builder.kwnilarg(
-                                        kwrest_mark,
-                                        k_nil
-                                    )
-                                ]
+                            self.new_node_list1(
+                                self.builder.kwnilarg(
+                                    kwrest_mark,
+                                    k_nil
+                                )
                             )
                         );
                     }
@@ -6492,20 +6429,16 @@ f_opt_paren_args: f_paren_args
                         let ident_t = $<Token>2;
                         self.static_env.declare(ident_t.as_whole_str(), self.blob);
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *(self.builder.kwrestarg($<Token>1, Some(ident_t))?)
-                                ]
+                            self.new_node_list1(
+                                self.builder.kwrestarg($<Token>1, Some(ident_t))?
                             )
                         );
                     }
                 | kwrest_mark
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *(self.builder.kwrestarg($<Token>1, None)?)
-                                ]
+                            self.new_node_list1(
+                                self.builder.kwrestarg($<Token>1, None)?
                             )
                         );
                     }
@@ -6519,7 +6452,7 @@ f_opt_paren_args: f_paren_args
                             self.builder.optarg(
                                 $<Token>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -6533,7 +6466,7 @@ f_opt_paren_args: f_paren_args
                             self.builder.optarg(
                                 $<Token>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )?
                         );
                     }
@@ -6541,11 +6474,11 @@ f_opt_paren_args: f_paren_args
 
   f_block_optarg: f_block_opt
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | f_block_optarg tCOMMA f_block_opt
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -6553,11 +6486,11 @@ f_opt_paren_args: f_paren_args
 
         f_optarg: f_opt
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | f_optarg tCOMMA f_opt
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push( $<Node>3 );
                         $$ = Value::NodeList(nodes);
                     }
@@ -6579,20 +6512,16 @@ f_opt_paren_args: f_paren_args
                         self.static_env.declare(ident_t.as_whole_str(), self.blob);
 
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *(self.builder.restarg($<Token>1, Some(ident_t))?)
-                                ]
+                            self.new_node_list1(
+                                self.builder.restarg($<Token>1, Some(ident_t))?
                             )
                         );
                     }
                 | restarg_mark
                     {
                         $$ = Value::NodeList(
-                            Box::new(
-                                vec![
-                                    *(self.builder.restarg($<Token>1, None)?)
-                                ]
+                            self.new_node_list1(
+                                self.builder.restarg($<Token>1, None)?
                             )
                         );
                     }
@@ -6633,23 +6562,23 @@ f_opt_paren_args: f_paren_args
 
  opt_f_block_arg: tCOMMA f_block_arg
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>2 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>2) );
                     }
                 | none
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 ;
 
        singleton: var_ref
                     {
-                        let var_ref = $<BoxedNode>1;
+                        let var_ref = $<Node>1;
                         self.value_expr(&var_ref)?;
                         $$ = Value::Node(var_ref);
                     }
                 | tLPAREN2 { self.yylexer.lex_state.set(EXPR_BEG); $<None>$ = Value::None; } expr rparen
                     {
-                        let expr = $<BoxedNode>3;
+                        let expr = $<Node>3;
 
                         match &*expr {
                             Node::Int(nodes::Int { expression_l, .. })
@@ -6681,7 +6610,7 @@ f_opt_paren_args: f_paren_args
 
       assoc_list: none
                     {
-                        $$ = Value::NodeList( Box::default() );
+                        $$ = Value::NodeList( self.new_node_list() );
                     }
                 | assocs trailer
                     {
@@ -6691,11 +6620,11 @@ f_opt_paren_args: f_paren_args
 
           assocs: assoc
                     {
-                        $$ = Value::NodeList( Box::new(vec![ $<Node>1 ]) );
+                        $$ = Value::NodeList( self.new_node_list1($<Node>1) );
                     }
                 | assocs tCOMMA assoc
                     {
-                        let mut nodes = $<BoxedNodeList>1;
+                        let nodes = $<NodeList>1;
                         nodes.push($<Node>3);
                         $$ = Value::NodeList(nodes);
                     }
@@ -6705,9 +6634,9 @@ f_opt_paren_args: f_paren_args
                     {
                         $$ = Value::Node(
                             self.builder.pair(
-                                $<BoxedNode>1,
+                                $<Node>1,
                                 $<Token>2,
-                                $<BoxedNode>3
+                                $<Node>3
                             )
                         );
                     }
@@ -6716,7 +6645,7 @@ f_opt_paren_args: f_paren_args
                         $$ = Value::Node(
                             self.builder.pair_keyword(
                                 $<Token>1,
-                                $<BoxedNode>2
+                                $<Node>2
                             )
                         );
                     }
@@ -6733,14 +6662,14 @@ f_opt_paren_args: f_paren_args
                                 $<Token>1,
                                 $<NodeList>2,
                                 $<Token>3,
-                                $<BoxedNode>4
+                                $<Node>4
                             )
                         );
                     }
                 | tDSTAR arg_value
                     {
                         $$ = Value::Node(
-                            self.builder.kwsplat($<Token>1, $<BoxedNode>2)
+                            self.builder.kwsplat($<Token>1, $<Node>2)
                         );
                     }
                 ;
@@ -7014,8 +6943,8 @@ impl<'b /*'*/> Parser<'b /*'*/> {
     }
 
     fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), ()> {
-        let name = clone_value(ident_t);
-        let first_char = name.as_str().chars().next().expect("kwarg name can't be empty");
+        let name = ident_t.as_whole_str();
+        let first_char = name.chars().next().expect("kwarg name can't be empty");
         if first_char.is_lowercase() || first_char == '_' {
             Ok(())
         } else {
@@ -7033,7 +6962,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
     }
 
     fn validate_endless_method_name(&mut self, name_t: &Token) -> Result<(), ()> {
-        let name = clone_value(name_t);
+        let name = name_t.as_whole_str();
         match &name[..] {
             "==" | "===" | ">=" | "<=" | "!=" => Ok(()),
             other if other.ends_with('=') => {
@@ -7073,7 +7002,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         }
     }
 
-    fn value_expr(&self, node: &Node) -> Result<(), ()> {
+    fn value_expr(&self, node: &'b Node<'b>) -> Result<(), ()> {
         self.builder.value_expr(node)
     }
 
@@ -7115,5 +7044,15 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         self.yylexer.cmdarg.pop();
         self.yylexer.cond.pop();
         self.max_numparam_stack.pop();
+    }
+
+    fn new_node_list(&self) -> &'b /*'*/ NodeList<'b /*'*/> {
+        self.blob.alloc_ref::<NodeList>()
+    }
+
+    fn new_node_list1(&self, node: &'b /*'*/ Node<'b /*'*/>) -> &'b /*'*/ NodeList<'b /*'*/> {
+        let list = self.blob.alloc_ref::<NodeList>();
+        list.push(node);
+        list
     }
 }

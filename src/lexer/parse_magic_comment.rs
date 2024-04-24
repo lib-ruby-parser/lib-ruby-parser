@@ -1,10 +1,10 @@
 use core::convert::TryInto;
 
-use lib_ruby_parser_ast_arena::write_to;
+use lib_ruby_parser_ast::write_to;
 
 use crate::source::{MagicComment, MagicCommentKind};
 use crate::Lexer;
-use lib_ruby_parser_ast_arena::DiagnosticMessage;
+use lib_ruby_parser_ast::DiagnosticMessage;
 
 type MagicCommentData = (&'static str, MagicCommentKind);
 

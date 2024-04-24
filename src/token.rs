@@ -1,6 +1,6 @@
 use core::{cell::Cell, ptr::NonNull};
 
-use lib_ruby_parser_ast_arena::{Blob, Bytes, SingleLinkedIntrusiveListItem};
+use lib_ruby_parser_ast::{Blob, Bytes, SingleLinkedIntrusiveListItem};
 
 use crate::parser::token_name;
 use crate::Loc;
@@ -52,15 +52,15 @@ impl<'b> Token<'b> {
     // }
 
     /// Converts token to a string, replaces unknown chars to `U+FFFD`
-    pub fn to_string_lossy(&self) -> String {
-        self.token_value.to_string_lossy()
-    }
+    // pub fn to_string_lossy(&self) -> String {
+    //     self.token_value.to_string_lossy()
+    // }
 
     /// Converts token to a string
-    pub fn to_string(&self) -> Result<String, std::string::FromUtf8Error> {
-        let bytes = self.token_value.iter().collect::<Vec<_>>();
-        String::from_utf8(bytes)
-    }
+    // pub fn to_string(&self) -> Result<String, std::string::FromUtf8Error> {
+    //     let bytes = self.token_value.iter().collect::<Vec<_>>();
+    //     String::from_utf8(bytes)
+    // }
 
     /// Consumes a token and converts it into a string
     // pub fn into_string(self) -> Result<String, std::string::FromUtf8Error> {
@@ -72,11 +72,6 @@ impl<'b> Token<'b> {
         token_name(self.token_type)
     }
 
-    pub(crate) fn to_bytes_tmp(&self) -> lib_ruby_parser_ast::Bytes {
-        let bytes = self.token_value.iter().collect::<Vec<_>>();
-        lib_ruby_parser_ast::Bytes::new(bytes)
-    }
-
     pub(crate) fn as_whole_str(&self) -> &'b str {
         self.token_value.as_whole_string().unwrap()
     }
@@ -86,11 +81,10 @@ impl core::fmt::Debug for Token<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
-            "[{}, {:?}, {}...{}]",
+            "[{}, {:?}, {:?}]",
             self.token_name(),
             self.token_value.to_string_lossy(),
-            self.loc.begin,
-            self.loc.end,
+            self.loc,
         )
     }
 }
@@ -109,18 +103,13 @@ impl SingleLinkedIntrusiveListItem for Token<'_> {
 fn new_token<'b>(blob: &'b Blob<'b>) -> &'b Token<'b> {
     let bytes = blob.alloc_ref::<Bytes>();
     bytes.append_invalid_escaped(42, blob);
-    Token::new(
-        crate::Lexer::tINTEGER,
-        bytes,
-        Loc { begin: 1, end: 2 },
-        blob,
-    )
+    Token::new(crate::Lexer::tINTEGER, bytes, Loc::new(1, 2), blob)
 }
 
 // #[test]
 // fn test_as_bytes() {
 //     let mut mem = vec![0; 1000];
-//     let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+//     let blob = lib_ruby_parser_ast::Blob::from(mem.as_mut_slice());
 //     let token = new_token(&blob);
 //     assert_eq!(token.as_bytes(), &vec![42]);
 // }
@@ -128,23 +117,26 @@ fn new_token<'b>(blob: &'b Blob<'b>) -> &'b Token<'b> {
 // #[test]
 // fn test_as_str_lossy() {
 //     let mut mem = vec![0; 1000];
-//     let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+//     let blob = lib_ruby_parser_ast::Blob::from(mem.as_mut_slice());
 //     let token = new_token(&blob);
 //     assert_eq!(token.as_str_lossy(), Ok("*"));
 // }
 
-#[test]
-fn test_to_string_lossy() {
-    let mut mem = vec![0; 1000];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
-    let token = new_token(&blob);
-    assert_eq!(token.to_string_lossy(), String::from("*"));
-}
+// #[test]
+// fn test_to_string_lossy() {
+//     let mut mem = vec![0; 1000];
+//     let blob = lib_ruby_parser_ast::Blob::from(mem.as_mut_slice());
+//     let token = new_token(&blob);
+//     assert_eq!(token.to_string_lossy(), String::from("*"));
+// }
 
 #[test]
 fn test_fmt() {
-    let mut mem = vec![0; 1000];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+    let mut mem = [0; 100];
+    let blob = lib_ruby_parser_ast::Blob::from(&mut mem);
     let token = new_token(&blob);
-    assert_eq!(format!("{:?}", token), "[tINTEGER, \"*\", 1...2]");
+
+    let mut tmp = [0; 100];
+    let written = lib_ruby_parser_ast::write_to(&mut tmp, format_args!("{:?}", token)).unwrap();
+    assert_eq!(written, "[tINTEGER, \"*\", 1...2]");
 }

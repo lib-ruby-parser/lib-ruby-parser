@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::SingleLinkedIntrusiveList;
+use lib_ruby_parser_ast::SingleLinkedIntrusiveList;
 
 use crate::source::Comment;
 use crate::source::DecodedInput;
@@ -12,7 +12,7 @@ use crate::Token;
 pub struct ParserResult<'b> {
     /// Abstract Syntax Tree that was constructed from you code.
     /// Contains `None` if the code gives no AST nodes
-    pub ast: Option<Box<Node>>,
+    pub ast: Option<&'b Node<'b>>,
 
     /// List of tokens returned by a Lexer and consumed by a Parser.
     /// Empty unless ParserOptions::record_tokens is set to true.
@@ -55,10 +55,12 @@ impl core::fmt::Debug for ParserResult<'_> {
 #[test]
 fn test_fmt() {
     let mut mem = [0; 100];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(&mut mem);
+    let blob = lib_ruby_parser_ast::Blob::from(&mut mem);
 
-    assert_eq!(
-        format!(
+    let mut tmp = [0; 100];
+    let formatted = lib_ruby_parser_ast::write_to(
+        &mut tmp,
+        format_args!(
             "{:?}",
             ParserResult {
                 ast: None,
@@ -69,6 +71,11 @@ fn test_fmt() {
                 input: DecodedInput::new("foo", b"", &blob)
             }
         ),
+    )
+    .unwrap();
+
+    assert_eq!(
+        formatted,
         // All fields except `input`
         "ParserResult { ast: None, tokens: [], diagnostics: [], comments: [], magic_comments: [] }"
     )

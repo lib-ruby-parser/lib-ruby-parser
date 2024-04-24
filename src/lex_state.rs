@@ -205,7 +205,7 @@ impl core::fmt::Debug for LexState {
 
 #[test]
 fn test_fmt() {
-    use lib_ruby_parser_ast_arena::write_to;
+    use lib_ruby_parser_ast::write_to;
 
     let mut lex_state = LexState::default();
     lex_state.set(EXPR_BEG | EXPR_VALUE);

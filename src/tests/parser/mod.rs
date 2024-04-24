@@ -1,6 +1,6 @@
 mod fixture;
 pub(crate) use fixture::test_file;
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast::Blob;
 
 #[allow(non_snake_case)]
 mod gen;
@@ -38,45 +38,51 @@ fn parse<'b>(input: &[u8], blob: &'b Blob<'b>) -> ParserResult<'b> {
 #[test]
 fn test_magic_comment() {
     let fixture = std::fs::read("src/tests/fixtures/magic_comments.rb").unwrap();
-    let mut mem = vec![0; 1000];
-    let blob = lib_ruby_parser_ast_arena::Blob::from(mem.as_mut_slice());
+    let mut mem = [0; 1000];
+    let blob = lib_ruby_parser_ast::Blob::from(&mut mem);
 
     let ParserResult { magic_comments, .. } = parse(&fixture, &blob);
-    let magic_comments = magic_comments.iter().collect::<Vec<_>>();
+    let mut iter = magic_comments.iter();
+
     assert_eq!(
-        magic_comments,
-        &[
-            &MagicComment::new(
-                MagicCommentKind::Encoding,
-                Loc { begin: 2, end: 10 },
-                Loc { begin: 12, end: 17 },
-            ),
-            &MagicComment::new(
-                MagicCommentKind::FrozenStringLiteral,
-                Loc { begin: 20, end: 41 },
-                Loc { begin: 43, end: 47 },
-            ),
-            &MagicComment::new(
-                MagicCommentKind::Encoding,
-                Loc { begin: 50, end: 56 },
-                Loc { begin: 58, end: 63 },
-            ),
-            &MagicComment::new(
-                MagicCommentKind::ShareableConstantValue,
-                Loc { begin: 66, end: 90 },
-                Loc { begin: 92, end: 99 },
-            ),
-            &MagicComment::new(
-                MagicCommentKind::WarnIndent,
-                Loc {
-                    begin: 102,
-                    end: 113
-                },
-                Loc {
-                    begin: 115,
-                    end: 119
-                },
-            ),
-        ]
+        iter.next(),
+        Some(&MagicComment::new(
+            MagicCommentKind::Encoding,
+            Loc::new(2, 10),
+            Loc::new(12, 17),
+        ))
     );
+    assert_eq!(
+        iter.next(),
+        Some(&MagicComment::new(
+            MagicCommentKind::FrozenStringLiteral,
+            Loc::new(20, 41),
+            Loc::new(43, 47),
+        ))
+    );
+    assert_eq!(
+        iter.next(),
+        Some(&MagicComment::new(
+            MagicCommentKind::Encoding,
+            Loc::new(50, 56),
+            Loc::new(58, 63),
+        ))
+    );
+    assert_eq!(
+        iter.next(),
+        Some(&MagicComment::new(
+            MagicCommentKind::ShareableConstantValue,
+            Loc::new(66, 90),
+            Loc::new(92, 99),
+        ))
+    );
+    assert_eq!(
+        iter.next(),
+        Some(&MagicComment::new(
+            MagicCommentKind::WarnIndent,
+            Loc::new(102, 113),
+            Loc::new(115, 119),
+        ))
+    );
+    assert_eq!(iter.next(), None);
 }

@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::{Blob, SingleLinkedIntrusiveList};
+use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList};
 
 use crate::source::SourceLine;
 

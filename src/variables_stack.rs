@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::{Blob, DoubleLinkedIntrusiveList, IntrusiveStrHashMap};
+use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, IntrusiveStrHashMap};
 
 #[derive(Debug)]
 pub(crate) struct VariablesStack<'b>(DoubleLinkedIntrusiveList<'b, IntrusiveStrHashMap<'b, ()>>);

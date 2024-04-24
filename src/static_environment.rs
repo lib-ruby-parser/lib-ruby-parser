@@ -1,5 +1,5 @@
 use core::cell::Cell;
-use lib_ruby_parser_ast_arena::{Blob, DoubleLinkedIntrusiveList, IntrusiveStrHashMap};
+use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, IntrusiveStrHashMap};
 
 /// Stack of local variables in nested scopes
 ///

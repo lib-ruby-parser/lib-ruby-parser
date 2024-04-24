@@ -1,6 +1,6 @@
 use super::InputFile;
 use lib_ruby_parser::{Parser, ParserOptions, ParserResult};
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast::Blob;
 
 pub(crate) fn parse<'b>(
     file: InputFile,

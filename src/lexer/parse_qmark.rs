@@ -2,7 +2,7 @@ use crate::lex_states::*;
 use crate::lexer::*;
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
-use lib_ruby_parser_ast_arena::DiagnosticMessage;
+use lib_ruby_parser_ast::DiagnosticMessage;
 
 impl<'b> Lexer<'b> {
     fn parse_qmark_ternary(&mut self, c: MaybeByte) -> Result<i32, ()> {

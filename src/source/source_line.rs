@@ -1,6 +1,6 @@
 use core::{cell::Cell, ptr::NonNull};
 
-use lib_ruby_parser_ast_arena::Blob;
+use lib_ruby_parser_ast::Blob;
 
 #[repr(C)]
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -54,7 +54,7 @@ impl SourceLine {
     }
 }
 
-impl lib_ruby_parser_ast_arena::SingleLinkedIntrusiveListItem for SourceLine {
+impl lib_ruby_parser_ast::SingleLinkedIntrusiveListItem for SourceLine {
     fn next(&self) -> Option<NonNull<Self>> {
         self.next.get()
     }

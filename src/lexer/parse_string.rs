@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast_arena::write_to;
+use lib_ruby_parser_ast::write_to;
 
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
@@ -392,6 +392,28 @@ impl<'b> Lexer<'b> {
         );
     }
 
+    fn hex_byte_to_decimal(c: u8) -> Option<u32> {
+        match c {
+            b'0' => Some(0),
+            b'1' => Some(1),
+            b'2' => Some(2),
+            b'3' => Some(3),
+            b'4' => Some(4),
+            b'5' => Some(5),
+            b'6' => Some(6),
+            b'7' => Some(7),
+            b'8' => Some(8),
+            b'9' => Some(9),
+            b'A' | b'a' => Some(10),
+            b'B' | b'b' => Some(11),
+            b'C' | b'c' => Some(12),
+            b'D' | b'd' => Some(13),
+            b'E' | b'e' => Some(14),
+            b'F' | b'f' => Some(15),
+            _ => None,
+        }
+    }
+
     fn scan_hex(&mut self, start: u32, len: u32, numlen: &mut u32) -> u32 {
         let mut s = start;
         let mut result = 0;
@@ -399,12 +421,12 @@ impl<'b> Lexer<'b> {
         for _ in 0..len {
             match self.buffer.byte_at(s).as_option() {
                 None => break,
-                Some(c) => match u32::from_str_radix(&(c as char).to_string(), 16) {
-                    Ok(hex) => {
+                Some(c) => match Self::hex_byte_to_decimal(c) {
+                    Some(hex) => {
                         result <<= 4;
                         result |= hex;
                     }
-                    Err(_) => break,
+                    None => break,
                 },
             }
             s += 1;
@@ -443,7 +465,8 @@ impl<'b> Lexer<'b> {
 
     fn tokaddmbc(&mut self, codepoint: u32) {
         let utf8_char = core::char::from_u32(codepoint).expect("expected codepoint to have digits");
-        let utf8_bytes = utf8_char.to_string().into_bytes();
+        let mut buf = [0; 4];
+        let utf8_bytes = utf8_char.encode_utf8(&mut buf).bytes();
         for byte in utf8_bytes {
             self.tokadd(byte)
         }
