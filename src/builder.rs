@@ -6,7 +6,7 @@ use onig::{Regex, RegexOptions};
 use core::convert::TryInto;
 use core::fmt::Write;
 
-// use std::collections::HashMap;
+use std::collections::HashMap;
 
 #[allow(unused_imports)]
 use crate::nodes::*;
@@ -886,108 +886,120 @@ impl<'b> Builder<'b> {
         pairs: &'b NodeList<'b>,
         end_t: Option<&'b Token<'b>>,
     ) -> &'b Node<'b> {
-        // for i in 0..pairs.len() {
-        //     for j in i + 1..pairs.len() {
-        //         let key1 = if let Node::Pair(Pair { key, .. }) = &pairs[i] {
-        //             &**key
-        //         } else {
-        //             // kwsplat
-        //             continue;
-        //         };
-        //         let key2 = if let Node::Pair(Pair { key, .. }) = &pairs[j] {
-        //             &**key
-        //         } else {
-        //             // kwsplat
-        //             continue;
-        //         };
+        for i in 0..pairs.len() {
+            for j in i + 1..pairs.len() {
+                let key1 = if let Node::Pair(Pair { key, .. }) = pairs.node_at(i).unwrap() {
+                    key
+                } else {
+                    // kwsplat
+                    continue;
+                };
+                let key2 = if let Node::Pair(Pair { key, .. }) = pairs.node_at(j).unwrap() {
+                    key
+                } else {
+                    // kwsplat
+                    continue;
+                };
 
-        //         fn keys_are_equal(left: &Node, right: &Node) -> bool {
-        //             match (left, right) {
-        //                 // sym
-        //                 (
-        //                     Node::Sym(Sym { name: name1, .. }),
-        //                     Node::Sym(Sym { name: name2, .. }),
-        //                 ) if name1 == name2 => true,
+                fn reg_opts_are_equal(left: Option<&Node>, right: Option<&Node>) -> bool {
+                    match (left, right) {
+                        (None, None) => true,
+                        (
+                            Some(Node::RegOpt(RegOpt { options: left, .. })),
+                            Some(Node::RegOpt(RegOpt { options: right, .. })),
+                        ) => {
+                            left.map(|b| b.as_whole_string()) == right.map(|b| b.as_whole_string())
+                        }
+                        _ => false,
+                    }
+                }
 
-        //                 // str
-        //                 (
-        //                     Node::Str(Str { value: value1, .. }),
-        //                     Node::Str(Str { value: value2, .. }),
-        //                 ) if value1 == value2 => true,
+                fn keys_are_equal(left: &Node, right: &Node) -> bool {
+                    match (left, right) {
+                        // sym
+                        (
+                            Node::Sym(Sym { name: name1, .. }),
+                            Node::Sym(Sym { name: name2, .. }),
+                        ) if name1.as_whole_string() == name2.as_whole_string() => true,
 
-        //                 // int
-        //                 (
-        //                     Node::Int(Int { value: value1, .. }),
-        //                     Node::Int(Int { value: value2, .. }),
-        //                 ) if value1 == value2 => true,
+                        // str
+                        (
+                            Node::Str(Str { value: value1, .. }),
+                            Node::Str(Str { value: value2, .. }),
+                        ) if value1.as_whole_string() == value2.as_whole_string() => true,
 
-        //                 // float
-        //                 (
-        //                     Node::Float(Float { value: value1, .. }),
-        //                     Node::Float(Float { value: value2, .. }),
-        //                 ) if value1 == value2 => true,
+                        // int
+                        (
+                            Node::Int(Int { value: value1, .. }),
+                            Node::Int(Int { value: value2, .. }),
+                        ) if value1.as_whole_string() == value2.as_whole_string() => true,
 
-        //                 // rational
-        //                 (
-        //                     Node::Rational(Rational { value: value1, .. }),
-        //                     Node::Rational(Rational { value: value2, .. }),
-        //                 ) if value1 == value2 => true,
+                        // float
+                        (
+                            Node::Float(Float { value: value1, .. }),
+                            Node::Float(Float { value: value2, .. }),
+                        ) if value1.as_whole_string() == value2.as_whole_string() => true,
 
-        //                 // complex
-        //                 (
-        //                     Node::Complex(Complex { value: value1, .. }),
-        //                     Node::Complex(Complex { value: value2, .. }),
-        //                 ) if value1 == value2 => true,
+                        // rational
+                        (
+                            Node::Rational(Rational { value: value1, .. }),
+                            Node::Rational(Rational { value: value2, .. }),
+                        ) if value1.as_whole_string() == value2.as_whole_string() => true,
 
-        //                 // regexp
-        //                 (
-        //                     Node::Regexp(Regexp {
-        //                         parts: parts1,
-        //                         options: options1,
-        //                         ..
-        //                     }),
-        //                     Node::Regexp(Regexp {
-        //                         parts: parts2,
-        //                         options: options2,
-        //                         ..
-        //                     }),
-        //                 ) if options1 == options2 => {
-        //                     parts1.len() == parts2.len()
-        //                         && parts1
-        //                             .iter()
-        //                             .zip(parts2.iter())
-        //                             .all(|(child1, child2)| keys_are_equal(child1, child2))
-        //                 }
+                        // complex
+                        (
+                            Node::Complex(Complex { value: value1, .. }),
+                            Node::Complex(Complex { value: value2, .. }),
+                        ) if value1.as_whole_string() == value2.as_whole_string() => true,
 
-        //                 _ => false,
-        //             }
-        //         }
+                        // regexp
+                        (
+                            Node::Regexp(Regexp {
+                                parts: parts1,
+                                options: options1,
+                                ..
+                            }),
+                            Node::Regexp(Regexp {
+                                parts: parts2,
+                                options: options2,
+                                ..
+                            }),
+                        ) if reg_opts_are_equal(*options1, *options2) => {
+                            parts1.len() == parts2.len()
+                                && parts1
+                                    .iter()
+                                    .zip(parts2.iter())
+                                    .all(|(child1, child2)| keys_are_equal(child1, child2))
+                        }
 
-        //         let do_warn = keys_are_equal(key1, key2);
+                        _ => false,
+                    }
+                }
 
-        //         if do_warn {
-        //             self.warn(DiagnosticMessage::DuplicateHashKey {}, *key2.expression());
-        //         }
-        //     }
-        // }
+                let do_warn = keys_are_equal(key1, key2);
 
-        // let CollectionMap {
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // } = self.collection_map(
-        //     begin_t.as_ref().map(|t| t.loc),
-        //     &pairs,
-        //     end_t.as_ref().map(|t| t.loc),
-        // );
+                if do_warn {
+                    self.warn(DiagnosticMessage::DuplicateHashKey {}, key2.expression());
+                }
+            }
+        }
 
-        // Box::new(Node::Hash(Hash {
-        //     pairs,
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(
+            begin_t.as_ref().map(|t| t.loc),
+            &pairs,
+            end_t.as_ref().map(|t| t.loc),
+        );
+
+        Hash::new_in(self.blob, |hash| {
+            hash.pairs = pairs;
+            hash.begin_l = begin_l;
+            hash.end_l = end_l;
+            hash.expression_l = expression_l;
+        })
     }
 
     // Ranges
@@ -998,18 +1010,17 @@ impl<'b> Builder<'b> {
         dot2_t: &'b Token<'b>,
         right: Option<&'b Node<'b>>,
     ) -> &'b Node<'b> {
-        // let operator_l = self.loc(dot2_t);
-        // let expression_l = operator_l
-        //     .maybe_join(&maybe_boxed_node_expr(left.as_deref()))
-        //     .maybe_join(&maybe_boxed_node_expr(right.as_deref()));
+        let operator_l = self.loc(dot2_t);
+        let expression_l = operator_l
+            .maybe_join(maybe_boxed_node_expr(left.as_deref()))
+            .maybe_join(maybe_boxed_node_expr(right.as_deref()));
 
-        // Box::new(Node::Irange(Irange {
-        //     left,
-        //     right,
-        //     operator_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Irange::new_in(self.blob, |irange| {
+            irange.left = left;
+            irange.right = right;
+            irange.operator_l = operator_l;
+            irange.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn range_exclusive(
@@ -1018,18 +1029,17 @@ impl<'b> Builder<'b> {
         dot3_t: &'b Token<'b>,
         right: Option<&'b Node<'b>>,
     ) -> &'b Node<'b> {
-        // let operator_l = self.loc(dot3_t);
-        // let expression_l = operator_l
-        //     .maybe_join(&maybe_boxed_node_expr(left.as_deref()))
-        //     .maybe_join(&maybe_boxed_node_expr(right.as_deref()));
+        let operator_l = self.loc(dot3_t);
+        let expression_l = operator_l
+            .maybe_join(maybe_boxed_node_expr(left.as_deref()))
+            .maybe_join(maybe_boxed_node_expr(right.as_deref()));
 
-        // Box::new(Node::Erange(Erange {
-        //     left,
-        //     right,
-        //     operator_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Erange::new_in(self.blob, |erange| {
+            erange.left = left;
+            erange.right = right;
+            erange.operator_l = operator_l;
+            erange.expression_l = expression_l;
+        })
     }
 
     //
@@ -1037,78 +1047,73 @@ impl<'b> Builder<'b> {
     //
 
     pub(crate) fn self_(&self, token: &'b Token<'b>) -> &'b Node<'b> {
-        // Box::new(Node::Self_(Self_ {
-        //     expression_l: self.loc(token),
-        // }))
-        todo!()
+        Self_::new_in(self.blob, |self_| {
+            self_.expression_l = self.loc(token);
+        })
     }
 
     pub(crate) fn lvar(&self, token: &'b Token<'b>) -> &'b Node<'b> {
-        // let expression_l = self.loc(token);
-        // Box::new(Node::Lvar(Lvar {
-        //     name: value(token),
-        //     expression_l,
-        // }))
-        todo!()
+        let expression_l = self.loc(token);
+        Lvar::new_in(self.blob, |lvar| {
+            lvar.name = token.token_value;
+            lvar.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn ivar(&self, token: &'b Token<'b>) -> &'b Node<'b> {
-        // let expression_l = self.loc(token);
-        // Box::new(Node::Ivar(Ivar {
-        //     name: value(token),
-        //     expression_l,
-        // }))
-        todo!()
+        let expression_l = self.loc(token);
+        Ivar::new_in(self.blob, |ivar| {
+            ivar.name = token.token_value;
+            ivar.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn gvar(&self, token: &'b Token<'b>) -> &'b Node<'b> {
-        // let expression_l = self.loc(token);
-        // Box::new(Node::Gvar(Gvar {
-        //     name: value(token),
-        //     expression_l,
-        // }))
-        todo!()
+        let expression_l = self.loc(token);
+        Gvar::new_in(self.blob, |gvar| {
+            gvar.name = token.token_value;
+            gvar.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn cvar(&self, token: &'b Token<'b>) -> &'b Node<'b> {
-        // let expression_l = self.loc(token);
-        // Box::new(Node::Cvar(Cvar {
-        //     name: value(token),
-        //     expression_l,
-        // }))
-        todo!()
+        let expression_l = self.loc(token);
+        Cvar::new_in(self.blob, |cvar| {
+            cvar.name = token.token_value;
+            cvar.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn back_ref(&self, token: &'b Token<'b>) -> &'b Node<'b> {
-        // let expression_l = self.loc(token);
-        // Box::new(Node::BackRef(BackRef {
-        //     name: value(token),
-        //     expression_l,
-        // }))
-        todo!()
+        let expression_l = self.loc(token);
+        BackRef::new_in(self.blob, |back_ref| {
+            back_ref.name = token.token_value;
+            back_ref.expression_l = expression_l;
+        })
     }
 
     const MAX_NTH_REF: usize = 0b111111111111111111111111111111;
 
     pub(crate) fn nth_ref(&self, token: &'b Token<'b>) -> &'b Node<'b> {
-        // let expression_l = self.loc(token);
-        // let name = value(token);
-        // let name = &name.as_str()[1..];
-        // let parsed = name.parse::<usize>();
-        // let name = String::from(name);
+        let expression_l = self.loc(token);
+        let name = &token.as_whole_str()[1..];
+        let parsed = name.parse::<usize>();
 
-        // if parsed.is_err() || parsed.map(|n| n > Self::MAX_NTH_REF) == Ok(true) {
-        //     self.warn(
-        //         DiagnosticMessage::NthRefIsTooBig {
-        //             nth_ref: self.blob.push_str(&name),
-        //         },
-        //         expression_l,
-        //     )
-        // }
+        if parsed.is_err() || parsed.map(|n| n > Self::MAX_NTH_REF) == Ok(true) {
+            self.warn(
+                DiagnosticMessage::NthRefIsTooBig { nth_ref: name },
+                expression_l,
+            )
+        }
 
-        // Box::new(Node::NthRef(NthRef { name, expression_l }))
-        todo!()
+        NthRef::new_in(self.blob, |nth_ref| {
+            let name_without_dollar = self.blob.alloc_ref::<Bytes>();
+            name_without_dollar.append_borrowed(name, self.blob);
+            nth_ref.name = name_without_dollar;
+            nth_ref.expression_l = expression_l;
+        })
     }
+
     pub(crate) fn accessible(&self, node: &'b Node<'b>) -> &'b Node<'b> {
         match node {
             Node::Lvar(Lvar {
@@ -1163,17 +1168,16 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn const_(&self, name_t: &'b Token<'b>) -> &'b Node<'b> {
-        // let name_l = self.loc(name_t);
-        // let expression_l = name_l;
+        let name_l = self.loc(name_t);
+        let expression_l = name_l;
 
-        // Box::new(Node::Const(Const {
-        //     scope: None,
-        //     name: value(name_t),
-        //     double_colon_l: None,
-        //     name_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Const::new_in(self.blob, |const_| {
+            const_.scope = None;
+            const_.name = name_t.token_value;
+            const_.double_colon_l = None;
+            const_.name_l = name_l;
+            const_.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn const_global(
@@ -1181,22 +1185,21 @@ impl<'b> Builder<'b> {
         t_colon3: &'b Token<'b>,
         name_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let scope = Box::new(Node::Cbase(Cbase {
-        //     expression_l: self.loc(t_colon3),
-        // }));
+        let scope = Cbase::new_in(self.blob, |cbase| {
+            cbase.expression_l = self.loc(t_colon3);
+        });
 
-        // let name_l = self.loc(name_t);
-        // let expression_l = scope.expression().join(&name_l);
-        // let double_colon_l = self.loc(t_colon3);
+        let name_l = self.loc(name_t);
+        let expression_l = scope.expression().join(name_l);
+        let double_colon_l = self.loc(t_colon3);
 
-        // Box::new(Node::Const(Const {
-        //     scope: Some(scope),
-        //     name: value(name_t),
-        //     double_colon_l: Some(double_colon_l),
-        //     name_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Const::new_in(self.blob, |const_| {
+            const_.scope = Some(scope);
+            const_.name = name_t.token_value;
+            const_.double_colon_l = Some(double_colon_l);
+            const_.name_l = name_l;
+            const_.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn const_fetch(
@@ -1205,26 +1208,24 @@ impl<'b> Builder<'b> {
         t_colon2: &'b Token<'b>,
         name_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let scope: &'b Node<'b> = scope;
-        // let name_l = self.loc(name_t);
-        // let expression_l = scope.expression().join(&name_l);
-        // let double_colon_l = self.loc(t_colon2);
+        let scope: &'b Node<'b> = scope;
+        let name_l = self.loc(name_t);
+        let expression_l = scope.expression().join(name_l);
+        let double_colon_l = self.loc(t_colon2);
 
-        // Box::new(Node::Const(Const {
-        //     scope: Some(scope),
-        //     name: value(name_t),
-        //     double_colon_l: Some(double_colon_l),
-        //     name_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Const::new_in(self.blob, |const_| {
+            const_.scope = Some(scope);
+            const_.name = name_t.token_value;
+            const_.double_colon_l = Some(double_colon_l);
+            const_.name_l = name_l;
+            const_.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn __encoding__(&self, encoding_t: &'b Token<'b>) -> &'b Node<'b> {
-        // Box::new(Node::Encoding(Encoding {
-        //     expression_l: self.loc(encoding_t),
-        // }))
-        todo!()
+        Encoding::new_in(self.blob, |encoding| {
+            encoding.expression_l = self.loc(encoding_t);
+        })
     }
 
     //
@@ -1232,133 +1233,148 @@ impl<'b> Builder<'b> {
     //
 
     pub(crate) fn assignable(&self, node: &'b Node<'b>) -> Result<&'b Node<'b>, ()> {
-        // let node = match *node {
-        //     Node::Cvar(Cvar { name, expression_l }) => Node::Cvasgn(Cvasgn {
-        //         name,
-        //         value: None,
-        //         name_l: expression_l,
-        //         operator_l: None,
-        //         expression_l,
-        //     }),
-        //     Node::Ivar(Ivar { name, expression_l }) => Node::Ivasgn(Ivasgn {
-        //         name,
-        //         value: None,
-        //         name_l: expression_l,
-        //         operator_l: None,
-        //         expression_l,
-        //     }),
-        //     Node::Gvar(Gvar { name, expression_l }) => Node::Gvasgn(Gvasgn {
-        //         name,
-        //         value: None,
-        //         name_l: expression_l,
-        //         operator_l: None,
-        //         expression_l,
-        //     }),
-        //     Node::Const(Const {
-        //         scope,
-        //         name,
-        //         double_colon_l,
-        //         name_l,
-        //         expression_l,
-        //     }) => {
-        //         if self.context.in_def() {
-        //             self.error(
-        //                 DiagnosticMessage::DynamicConstantAssignment {},
-        //                 expression_l,
-        //             );
-        //             return Err(());
-        //         }
-        //         Node::Casgn(Casgn {
-        //             scope,
-        //             name,
-        //             value: None,
-        //             double_colon_l,
-        //             name_l,
-        //             operator_l: None,
-        //             expression_l,
-        //         })
-        //     }
-        //     Node::Lvar(Lvar { name, expression_l }) => {
-        //         let name_s = self.blob.push_str(&name);
-        //         self.check_assignment_to_numparam(name_s, expression_l)?;
-        //         self.check_reserved_for_numparam(name_s, expression_l)?;
+        let node = match node {
+            Node::Cvar(Cvar {
+                name, expression_l, ..
+            }) => Cvasgn::new_in(self.blob, |cvasgn| {
+                cvasgn.name = name;
+                cvasgn.value = None;
+                cvasgn.name_l = *expression_l;
+                cvasgn.operator_l = None;
+                cvasgn.expression_l = *expression_l;
+            }),
+            Node::Ivar(Ivar {
+                name, expression_l, ..
+            }) => Ivasgn::new_in(self.blob, |ivasgn| {
+                ivasgn.name = name;
+                ivasgn.value = None;
+                ivasgn.name_l = *expression_l;
+                ivasgn.operator_l = None;
+                ivasgn.expression_l = *expression_l;
+            }),
+            Node::Gvar(Gvar {
+                name, expression_l, ..
+            }) => Gvasgn::new_in(self.blob, |gvasgn| {
+                gvasgn.name = name;
+                gvasgn.value = None;
+                gvasgn.name_l = *expression_l;
+                gvasgn.operator_l = None;
+                gvasgn.expression_l = *expression_l;
+            }),
+            Node::Const(Const {
+                scope,
+                name,
+                double_colon_l,
+                name_l,
+                expression_l,
+                ..
+            }) => {
+                if self.context.in_def() {
+                    self.error(
+                        DiagnosticMessage::DynamicConstantAssignment {},
+                        *expression_l,
+                    );
+                    return Err(());
+                }
+                Casgn::new_in(self.blob, |casgn| {
+                    casgn.scope = *scope;
+                    casgn.name = name;
+                    casgn.value = None;
+                    casgn.double_colon_l = *double_colon_l;
+                    casgn.name_l = *name_l;
+                    casgn.operator_l = None;
+                    casgn.expression_l = *expression_l;
+                })
+            }
+            Node::Lvar(Lvar {
+                name, expression_l, ..
+            }) => {
+                let name_s = name.as_whole_string().unwrap();
+                self.check_assignment_to_numparam(name_s, *expression_l)?;
+                self.check_reserved_for_numparam(name_s, *expression_l)?;
 
-        //         self.static_env.declare(name_s, self.blob);
+                self.static_env.declare(name_s, self.blob);
 
-        //         Node::Lvasgn(Lvasgn {
-        //             name,
-        //             value: None,
-        //             name_l: expression_l,
-        //             operator_l: None,
-        //             expression_l,
-        //         })
-        //     }
-        //     Node::MatchVar(MatchVar {
-        //         name,
-        //         name_l,
-        //         expression_l,
-        //     }) => {
-        //         let name_s = name.as_str();
-        //         self.check_assignment_to_numparam(name_s, name_l)?;
-        //         self.check_reserved_for_numparam(name_s, name_l)?;
+                Lvasgn::new_in(self.blob, |lvasgn| {
+                    lvasgn.name = name;
+                    lvasgn.value = None;
+                    lvasgn.name_l = *expression_l;
+                    lvasgn.operator_l = None;
+                    lvasgn.expression_l = *expression_l;
+                })
+            }
+            Node::MatchVar(MatchVar {
+                name,
+                name_l,
+                expression_l,
+                ..
+            }) => {
+                let name_s = name.as_whole_string().unwrap();
+                self.check_assignment_to_numparam(name_s, *name_l)?;
+                self.check_reserved_for_numparam(name_s, *name_l)?;
 
-        //         Node::MatchVar(MatchVar {
-        //             name,
-        //             name_l,
-        //             expression_l,
-        //         })
-        //     }
-        //     Node::Self_(Self_ { expression_l }) => {
-        //         self.error(DiagnosticMessage::CantAssignToSelf {}, expression_l);
-        //         return Err(());
-        //     }
-        //     Node::Nil(Nil { expression_l }) => {
-        //         self.error(DiagnosticMessage::CantAssignToNil {}, expression_l);
-        //         return Err(());
-        //     }
-        //     Node::True(True { expression_l }) => {
-        //         self.error(DiagnosticMessage::CantAssignToTrue {}, expression_l);
-        //         return Err(());
-        //     }
-        //     Node::False(False { expression_l }) => {
-        //         self.error(DiagnosticMessage::CantAssignToFalse {}, expression_l);
-        //         return Err(());
-        //     }
-        //     Node::File(File { expression_l }) => {
-        //         self.error(DiagnosticMessage::CantAssignToFile {}, expression_l);
-        //         return Err(());
-        //     }
-        //     Node::Line(Line { expression_l }) => {
-        //         self.error(DiagnosticMessage::CantAssignToLine {}, expression_l);
-        //         return Err(());
-        //     }
-        //     Node::Encoding(Encoding { expression_l }) => {
-        //         self.error(DiagnosticMessage::CantAssignToEncoding {}, expression_l);
-        //         return Err(());
-        //     }
-        //     Node::BackRef(BackRef { name, expression_l }) => {
-        //         self.error(
-        //             DiagnosticMessage::CantSetVariable {
-        //                 var_name: self.blob.push_str(&name),
-        //             },
-        //             expression_l,
-        //         );
-        //         return Err(());
-        //     }
-        //     Node::NthRef(NthRef { name, expression_l }) => {
-        //         self.error(
-        //             DiagnosticMessage::CantSetVariable {
-        //                 var_name: self.blob.push_str(&format!("${}", name)),
-        //             },
-        //             expression_l,
-        //         );
-        //         return Err(());
-        //     }
-        //     other => unreachable!("{:?} can't be used in assignment", other),
-        // };
+                MatchVar::new_in(self.blob, |match_var| {
+                    match_var.name = name;
+                    match_var.name_l = *name_l;
+                    match_var.expression_l = *expression_l;
+                })
+            }
+            Node::Self_(Self_ { expression_l, .. }) => {
+                self.error(DiagnosticMessage::CantAssignToSelf {}, *expression_l);
+                return Err(());
+            }
+            Node::Nil(Nil { expression_l, .. }) => {
+                self.error(DiagnosticMessage::CantAssignToNil {}, *expression_l);
+                return Err(());
+            }
+            Node::True(True { expression_l, .. }) => {
+                self.error(DiagnosticMessage::CantAssignToTrue {}, *expression_l);
+                return Err(());
+            }
+            Node::False(False { expression_l, .. }) => {
+                self.error(DiagnosticMessage::CantAssignToFalse {}, *expression_l);
+                return Err(());
+            }
+            Node::File(File { expression_l, .. }) => {
+                self.error(DiagnosticMessage::CantAssignToFile {}, *expression_l);
+                return Err(());
+            }
+            Node::Line(Line { expression_l, .. }) => {
+                self.error(DiagnosticMessage::CantAssignToLine {}, *expression_l);
+                return Err(());
+            }
+            Node::Encoding(Encoding { expression_l, .. }) => {
+                self.error(DiagnosticMessage::CantAssignToEncoding {}, *expression_l);
+                return Err(());
+            }
+            Node::BackRef(BackRef {
+                name, expression_l, ..
+            }) => {
+                self.error(
+                    DiagnosticMessage::CantSetVariable {
+                        var_name: name.as_whole_string().unwrap(),
+                    },
+                    *expression_l,
+                );
+                return Err(());
+            }
+            Node::NthRef(NthRef {
+                name, expression_l, ..
+            }) => {
+                self.error(
+                    DiagnosticMessage::CantSetVariable {
+                        var_name: self
+                            .blob
+                            .push_str(&format!("${}", name.as_whole_string().unwrap())),
+                    },
+                    *expression_l,
+                );
+                return Err(());
+            }
+            other => unreachable!("{:?} can't be used in assignment", other),
+        };
 
-        // Ok(Box::new(node))
-        todo!()
+        Ok(node)
     }
 
     pub(crate) fn const_op_assignable(&self, node: &'b Node<'b>) -> &'b Node<'b> {
@@ -1559,23 +1575,22 @@ impl<'b> Builder<'b> {
         items: &'b NodeList<'b>,
         end_t: Option<&'b Token<'b>>,
     ) -> &'b Node<'b> {
-        // let CollectionMap {
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // } = self.collection_map(
-        //     begin_t.as_ref().map(|t| t.loc),
-        //     &items,
-        //     end_t.as_ref().map(|t| t.loc),
-        // );
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(
+            begin_t.as_ref().map(|t| t.loc),
+            &items,
+            end_t.as_ref().map(|t| t.loc),
+        );
 
-        // Box::new(Node::Mlhs(Mlhs {
-        //     items,
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Mlhs::new_in(self.blob, |mlhs| {
+            mlhs.items = items;
+            mlhs.begin_l = begin_l;
+            mlhs.end_l = end_l;
+            mlhs.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn multi_assign(
@@ -1584,16 +1599,15 @@ impl<'b> Builder<'b> {
         eql_t: &'b Token<'b>,
         rhs: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        // let operator_l = self.loc(eql_t);
-        // let expression_l = join_exprs(&lhs, &rhs);
+        let operator_l = self.loc(eql_t);
+        let expression_l = join_exprs(&lhs, &rhs);
 
-        // Box::new(Node::Masgn(Masgn {
-        //     lhs,
-        //     rhs,
-        //     operator_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Masgn::new_in(self.blob, |masgn| {
+            masgn.lhs = lhs;
+            masgn.rhs = rhs;
+            masgn.operator_l = operator_l;
+            masgn.expression_l = expression_l;
+        })
     }
 
     //
@@ -1609,21 +1623,20 @@ impl<'b> Builder<'b> {
         body: Option<&'b Node<'b>>,
         end_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let keyword_l = self.loc(class_t);
-        // let end_l = self.loc(end_t);
-        // let operator_l = self.maybe_loc(lt_t);
-        // let expression_l = keyword_l.join(&end_l);
+        let keyword_l = self.loc(class_t);
+        let end_l = self.loc(end_t);
+        let operator_l = self.maybe_loc(lt_t);
+        let expression_l = keyword_l.join(end_l);
 
-        // Box::new(Node::Class(Class {
-        //     name,
-        //     superclass,
-        //     body,
-        //     keyword_l,
-        //     operator_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Class::new_in(self.blob, |class| {
+            class.name = name;
+            class.superclass = superclass;
+            class.body = body;
+            class.keyword_l = keyword_l;
+            class.operator_l = operator_l;
+            class.end_l = end_l;
+            class.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn def_sclass(
@@ -1634,20 +1647,19 @@ impl<'b> Builder<'b> {
         body: Option<&'b Node<'b>>,
         end_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let keyword_l = self.loc(class_t);
-        // let end_l = self.loc(end_t);
-        // let operator_l = self.loc(lshift_t);
-        // let expression_l = keyword_l.join(&end_l);
+        let keyword_l = self.loc(class_t);
+        let end_l = self.loc(end_t);
+        let operator_l = self.loc(lshift_t);
+        let expression_l = keyword_l.join(end_l);
 
-        // Box::new(Node::SClass(SClass {
-        //     expr,
-        //     body,
-        //     keyword_l,
-        //     operator_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        SClass::new_in(self.blob, |sclass| {
+            sclass.expr = expr;
+            sclass.body = body;
+            sclass.keyword_l = keyword_l;
+            sclass.operator_l = operator_l;
+            sclass.end_l = end_l;
+            sclass.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn def_module(
@@ -1657,18 +1669,17 @@ impl<'b> Builder<'b> {
         body: Option<&'b Node<'b>>,
         end_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let keyword_l = self.loc(module_t);
-        // let end_l = self.loc(end_t);
-        // let expression_l = keyword_l.join(&end_l);
+        let keyword_l = self.loc(module_t);
+        let end_l = self.loc(end_t);
+        let expression_l = keyword_l.join(end_l);
 
-        // Box::new(Node::Module(Module {
-        //     name,
-        //     body,
-        //     keyword_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Module::new_in(self.blob, |module| {
+            module.name = name;
+            module.body = body;
+            module.keyword_l = keyword_l;
+            module.end_l = end_l;
+            module.expression_l = expression_l;
+        })
     }
 
     //
@@ -1683,25 +1694,23 @@ impl<'b> Builder<'b> {
         body: Option<&'b Node<'b>>,
         end_t: &'b Token<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        // let name_l = self.loc(name_t);
-        // let keyword_l = self.loc(def_t);
-        // let end_l = self.loc(end_t);
-        // let expression_l = keyword_l.join(&end_l);
+        let name_l = self.loc(name_t);
+        let keyword_l = self.loc(def_t);
+        let end_l = self.loc(end_t);
+        let expression_l = keyword_l.join(end_l);
 
-        // let name = value(name_t);
-        // self.check_reserved_for_numparam(name.as_str(), name_l)?;
+        self.check_reserved_for_numparam(name_t.as_whole_str(), name_l)?;
 
-        // Ok(Box::new(Node::Def(Def {
-        //     name,
-        //     args,
-        //     body,
-        //     keyword_l,
-        //     name_l,
-        //     end_l: Some(end_l),
-        //     assignment_l: None,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(Def::new_in(self.blob, |def| {
+            def.name = name_t.token_value;
+            def.args = args;
+            def.body = body;
+            def.keyword_l = keyword_l;
+            def.name_l = name_l;
+            def.end_l = Some(end_l);
+            def.assignment_l = None;
+            def.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn def_endless_method(
@@ -1746,28 +1755,27 @@ impl<'b> Builder<'b> {
         body: Option<&'b Node<'b>>,
         end_t: &'b Token<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        // let keyword_l = self.loc(def_t);
-        // let operator_l = self.loc(dot_t);
-        // let name_l = self.loc(name_t);
-        // let end_l = self.loc(end_t);
-        // let expression_l = keyword_l.join(&end_l);
+        let keyword_l = self.loc(def_t);
+        let operator_l = self.loc(dot_t);
+        let name_l = self.loc(name_t);
+        let end_l = self.loc(end_t);
+        let expression_l = keyword_l.join(end_l);
 
-        // let name = value(name_t);
-        // self.check_reserved_for_numparam(name.as_str(), name_l)?;
+        let name = name_t.token_value;
+        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
 
-        // Ok(Box::new(Node::Defs(Defs {
-        //     definee,
-        //     name,
-        //     args,
-        //     body,
-        //     keyword_l,
-        //     operator_l,
-        //     name_l,
-        //     assignment_l: None,
-        //     end_l: Some(end_l),
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(Defs::new_in(self.blob, |defs| {
+            defs.definee = definee;
+            defs.name = name;
+            defs.args = args;
+            defs.body = body;
+            defs.keyword_l = keyword_l;
+            defs.operator_l = operator_l;
+            defs.name_l = name_l;
+            defs.assignment_l = None;
+            defs.end_l = Some(end_l);
+            defs.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn def_endless_singleton(
@@ -1828,15 +1836,14 @@ impl<'b> Builder<'b> {
         to: &'b Node<'b>,
         from: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        // let keyword_l = self.loc(alias_t);
-        // let expression_l = keyword_l.join(from.expression());
-        // Box::new(Node::Alias(Alias {
-        //     to,
-        //     from,
-        //     keyword_l,
-        //     expression_l,
-        // }))
-        todo!()
+        let keyword_l = self.loc(alias_t);
+        let expression_l = keyword_l.join(from.expression());
+        Alias::new_in(self.blob, |alias| {
+            alias.to = to;
+            alias.from = from;
+            alias.keyword_l = keyword_l;
+            alias.expression_l = expression_l;
+        })
     }
 
     //
@@ -1849,50 +1856,46 @@ impl<'b> Builder<'b> {
         args: &'b NodeList<'b>,
         end_t: Option<&'b Token<'b>>,
     ) -> Option<&'b Node<'b>> {
-        // self.check_duplicate_args(&args, &mut HashMap::new());
-        // self.validate_no_forward_arg_after_restarg(&args);
+        self.check_duplicate_args(&args, &mut HashMap::new());
+        self.validate_no_forward_arg_after_restarg(&args);
 
-        // if begin_t.is_none() && args.is_empty() && end_t.is_none() {
-        //     return None;
-        // }
+        if begin_t.is_none() && args.is_empty() && end_t.is_none() {
+            return None;
+        }
 
-        // let CollectionMap {
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // } = self.collection_map(
-        //     begin_t.as_ref().map(|t| t.loc),
-        //     &args,
-        //     end_t.as_ref().map(|t| t.loc),
-        // );
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(
+            begin_t.as_ref().map(|t| t.loc),
+            &args,
+            end_t.as_ref().map(|t| t.loc),
+        );
 
-        // Some(Box::new(Node::Args(Args {
-        //     args,
-        //     expression_l,
-        //     begin_l,
-        //     end_l,
-        // })))
-        todo!()
+        Some(Args::new_in(self.blob, |args_node| {
+            args_node.args = args;
+            args_node.expression_l = expression_l;
+            args_node.begin_l = begin_l;
+            args_node.end_l = end_l;
+        }))
     }
 
     pub(crate) fn forward_arg(&self, dots_t: &'b Token<'b>) -> &'b Node<'b> {
-        // Box::new(Node::ForwardArg(ForwardArg {
-        //     expression_l: self.loc(dots_t),
-        // }))
-        todo!()
+        ForwardArg::new_in(self.blob, |farg| {
+            farg.expression_l = self.loc(dots_t);
+        })
     }
 
     pub(crate) fn arg(&self, name_t: &'b Token<'b>) -> Result<&'b Node<'b>, ()> {
-        // let name_l = self.loc(name_t);
-        // let name = value(name_t);
+        let name_l = self.loc(name_t);
 
-        // self.check_reserved_for_numparam(name.as_str(), name_l)?;
+        self.check_reserved_for_numparam(name_t.as_whole_str(), name_l)?;
 
-        // Ok(Box::new(Node::Arg(Arg {
-        //     name,
-        //     expression_l: name_l,
-        // })))
-        todo!()
+        Ok(Arg::new_in(self.blob, |arg| {
+            arg.name = name_t.token_value;
+            arg.expression_l = name_l;
+        }))
     }
 
     pub(crate) fn optarg(
@@ -1901,21 +1904,20 @@ impl<'b> Builder<'b> {
         eql_t: &'b Token<'b>,
         default: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        // let operator_l = self.loc(eql_t);
-        // let name_l = self.loc(name_t);
-        // let expression_l = self.loc(name_t).join(default.expression());
+        let operator_l = self.loc(eql_t);
+        let name_l = self.loc(name_t);
+        let expression_l = self.loc(name_t).join(default.expression());
 
-        // let name = value(name_t);
-        // self.check_reserved_for_numparam(name.as_str(), name_l)?;
+        let name = name_t.token_value;
+        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
 
-        // Ok(Box::new(Node::Optarg(Optarg {
-        //     name,
-        //     default,
-        //     name_l,
-        //     operator_l,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(Optarg::new_in(self.blob, |optarg| {
+            optarg.name = name;
+            optarg.default = default;
+            optarg.name_l = name_l;
+            optarg.operator_l = operator_l;
+            optarg.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn restarg(
@@ -1923,41 +1925,39 @@ impl<'b> Builder<'b> {
         star_t: &'b Token<'b>,
         name_t: Option<&'b Token<'b>>,
     ) -> Result<&'b Node<'b>, ()> {
-        // let (name, name_l) = if let Some(name_t) = name_t {
-        //     let name_l = self.loc(name_t);
-        //     let name = value(name_t);
-        //     self.check_reserved_for_numparam(name.as_str(), name_l)?;
-        //     (Some(name), Some(name_l))
-        // } else {
-        //     (None, None)
-        // };
+        let (name, name_l) = if let Some(name_t) = name_t {
+            let name_l = self.loc(name_t);
+            let name = name_t.token_value;
+            self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+            (Some(name), Some(name_l))
+        } else {
+            (None, None)
+        };
 
-        // let operator_l = self.loc(star_t);
-        // let expression_l = operator_l.maybe_join(&name_l);
+        let operator_l = self.loc(star_t);
+        let expression_l = operator_l.maybe_join(name_l);
 
-        // Ok(Box::new(Node::Restarg(Restarg {
-        //     name,
-        //     operator_l,
-        //     name_l,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(Restarg::new_in(self.blob, |restarg| {
+            restarg.name = name;
+            restarg.operator_l = operator_l;
+            restarg.name_l = name_l;
+            restarg.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn kwarg(&self, name_t: &'b Token<'b>) -> Result<&'b Node<'b>, ()> {
-        // let name_l = self.loc(name_t);
-        // let name = value(name_t);
-        // self.check_reserved_for_numparam(name.as_str(), name_l)?;
+        let name_l = self.loc(name_t);
+        let name = name_t.token_value;
+        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
 
-        // let expression_l = name_l;
-        // let name_l = expression_l.adjust_end(-1);
+        let expression_l = name_l;
+        let name_l = expression_l.adjust_end(-1);
 
-        // Ok(Box::new(Node::Kwarg(Kwarg {
-        //     name,
-        //     name_l,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(Kwarg::new_in(self.blob, |kwarg| {
+            kwarg.name = name;
+            kwarg.name_l = name_l;
+            kwarg.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn kwoptarg(
@@ -1965,21 +1965,20 @@ impl<'b> Builder<'b> {
         name_t: &'b Token<'b>,
         default: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        // let name_l = self.loc(name_t);
-        // let name = value(name_t);
-        // self.check_reserved_for_numparam(name.as_str(), name_l)?;
+        let name_l = self.loc(name_t);
+        let name = name_t.token_value;
+        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
 
-        // let label_l = name_l;
-        // let name_l = label_l.adjust_end(-1);
-        // let expression_l = default.expression().join(&label_l);
+        let label_l = name_l;
+        let name_l = label_l.adjust_end(-1);
+        let expression_l = default.expression().join(label_l);
 
-        // Ok(Box::new(Node::Kwoptarg(Kwoptarg {
-        //     name,
-        //     default,
-        //     name_l,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(Kwoptarg::new_in(self.blob, |kwoptarg| {
+            kwoptarg.name = name;
+            kwoptarg.default = default;
+            kwoptarg.name_l = name_l;
+            kwoptarg.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn kwrestarg(
@@ -1987,36 +1986,34 @@ impl<'b> Builder<'b> {
         dstar_t: &'b Token<'b>,
         name_t: Option<&'b Token<'b>>,
     ) -> Result<&'b Node<'b>, ()> {
-        // let (name, name_l) = if let Some(name_t) = name_t {
-        //     let name_l = self.loc(name_t);
-        //     let name = value(name_t);
-        //     self.check_reserved_for_numparam(name.as_str(), name_l)?;
-        //     (Some(name), Some(name_l))
-        // } else {
-        //     (None, None)
-        // };
+        let (name, name_l) = if let Some(name_t) = name_t {
+            let name_l = self.loc(name_t);
+            let name = name_t.token_value;
+            self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+            (Some(name), Some(name_l))
+        } else {
+            (None, None)
+        };
 
-        // let operator_l = self.loc(dstar_t);
-        // let expression_l = operator_l.maybe_join(&name_l);
+        let operator_l = self.loc(dstar_t);
+        let expression_l = operator_l.maybe_join(name_l);
 
-        // Ok(Box::new(Node::Kwrestarg(Kwrestarg {
-        //     name,
-        //     operator_l,
-        //     name_l,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(Kwrestarg::new_in(self.blob, |kwrestarg| {
+            kwrestarg.name = name;
+            kwrestarg.operator_l = operator_l;
+            kwrestarg.name_l = name_l;
+            kwrestarg.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn kwnilarg(&self, dstar_t: &'b Token<'b>, nil_t: &'b Token<'b>) -> &'b Node<'b> {
-        // let dstar_l = self.loc(dstar_t);
-        // let nil_l = self.loc(nil_t);
-        // let expression_l = dstar_l.join(&nil_l);
-        // Box::new(Node::Kwnilarg(Kwnilarg {
-        //     name_l: nil_l,
-        //     expression_l,
-        // }))
-        todo!()
+        let dstar_l = self.loc(dstar_t);
+        let nil_l = self.loc(nil_t);
+        let expression_l = dstar_l.join(nil_l);
+        Kwnilarg::new_in(self.blob, |kwnilarg| {
+            kwnilarg.name_l = nil_l;
+            kwnilarg.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn shadowarg(&self, name_t: &'b Token<'b>) -> Result<&'b Node<'b>, ()> {
@@ -2036,48 +2033,49 @@ impl<'b> Builder<'b> {
         amper_t: &'b Token<'b>,
         name_t: Option<&'b Token<'b>>,
     ) -> Result<&'b Node<'b>, ()> {
-        // let name_l = self.maybe_loc(name_t);
-        // let name = maybe_value(name_t);
-        // if let (Some(name_l), Some(name)) = (name_l.as_ref(), name.as_ref()) {
-        //     self.check_reserved_for_numparam(name, *name_l)?;
-        // }
+        let name_l = self.maybe_loc(name_t);
+        let name = maybe_value(name_t);
+        if let (Some(name_l), Some(name)) = (name_l, name) {
+            self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+        }
 
-        // let operator_l = self.loc(amper_t);
-        // let expression_l = operator_l.maybe_join(&name_l);
+        let operator_l = self.loc(amper_t);
+        let expression_l = operator_l.maybe_join(name_l);
 
-        // Ok(Box::new(Node::Blockarg(Blockarg {
-        //     name,
-        //     operator_l,
-        //     name_l,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(Blockarg::new_in(self.blob, |blockarg| {
+            blockarg.name = name;
+            blockarg.operator_l = operator_l;
+            blockarg.name_l = name_l;
+            blockarg.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn procarg0(&self, arg: &'b Node<'b>) -> &'b Node<'b> {
-        // match *arg {
-        //     Node::Mlhs(Mlhs {
-        //         items,
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     }) => Box::new(Node::Procarg0(Procarg0 {
-        //         args: items,
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     })),
-        //     Node::Arg(Arg { name, expression_l }) => Box::new(Node::Procarg0(Procarg0 {
-        //         args: vec![Node::Arg(Arg { name, expression_l })],
-        //         begin_l: None,
-        //         end_l: None,
-        //         expression_l,
-        //     })),
-        //     other => {
-        //         unreachable!("unsupported procarg0 child {:?}", other)
-        //     }
-        // }
-        todo!()
+        match arg {
+            Node::Mlhs(Mlhs {
+                items,
+                begin_l,
+                end_l,
+                expression_l,
+                ..
+            }) => Procarg0::new_in(self.blob, |procarg0| {
+                procarg0.args = items;
+                procarg0.begin_l = *begin_l;
+                procarg0.end_l = *end_l;
+                procarg0.expression_l = *expression_l;
+            }),
+            Node::Arg(Arg {
+                name, expression_l, ..
+            }) => Procarg0::new_in(self.blob, |procarg0| {
+                procarg0.args.push(arg);
+                procarg0.begin_l = None;
+                procarg0.end_l = None;
+                procarg0.expression_l = *expression_l;
+            }),
+            other => {
+                unreachable!("unsupported procarg0 child {:?}", other)
+            }
+        }
     }
 
     //
@@ -2107,53 +2105,55 @@ impl<'b> Builder<'b> {
         args: &'b NodeList<'b>,
         rparen_t: Option<&'b Token<'b>>,
     ) -> &'b Node<'b> {
-        // let begin_l = maybe_boxed_node_expr(receiver.as_deref())
-        //     .or_else(|| self.maybe_loc(selector_t))
-        //     .unwrap_or_else(|| unreachable!("can't compute begin_l"));
-        // let end_l = self
-        //     .maybe_loc(rparen_t)
-        //     .or_else(|| maybe_node_expr(args.last()))
-        //     .or_else(|| self.maybe_loc(selector_t))
-        //     .unwrap_or_else(|| unreachable!("can't compute end_l"));
+        let begin_l = maybe_boxed_node_expr(receiver.as_deref())
+            .or_else(|| self.maybe_loc(selector_t))
+            .unwrap_or_else(|| unreachable!("can't compute begin_l"));
+        let end_l = self
+            .maybe_loc(rparen_t)
+            .or_else(|| maybe_node_expr(args.last()))
+            .or_else(|| self.maybe_loc(selector_t))
+            .unwrap_or_else(|| unreachable!("can't compute end_l"));
 
-        // let expression_l = begin_l.join(&end_l);
+        let expression_l = begin_l.join(end_l);
 
-        // let dot_l = self.maybe_loc(dot_t);
-        // let selector_l = self.maybe_loc(selector_t);
-        // let begin_l = self.maybe_loc(lparen_t);
-        // let end_l = self.maybe_loc(rparen_t);
+        let dot_l = self.maybe_loc(dot_t);
+        let selector_l = self.maybe_loc(selector_t);
+        let begin_l = self.maybe_loc(lparen_t);
+        let end_l = self.maybe_loc(rparen_t);
 
-        // let method_name = maybe_value(selector_t);
-        // let method_name = method_name.unwrap_or_else(|| String::from("call"));
+        let method_name = selector_t.map(|t| t.token_value).unwrap_or_else(|| {
+            let bytes = self.blob.alloc_ref::<Bytes>();
+            bytes.append_borrowed("call", self.blob);
+            bytes
+        });
 
-        // self.rewrite_hash_args_to_kwargs(&mut args);
+        self.rewrite_hash_args_to_kwargs(&args);
 
-        // match self.call_type_for_dot(dot_t) {
-        //     MethodCallType::Send => Box::new(Node::Send(Send {
-        //         recv: receiver,
-        //         method_name,
-        //         args,
-        //         dot_l,
-        //         selector_l,
-        //         begin_l,
-        //         end_l,
-        //         operator_l: None,
-        //         expression_l,
-        //     })),
+        match self.call_type_for_dot(dot_t) {
+            MethodCallType::Send => Send::new_in(self.blob, |send| {
+                send.recv = receiver;
+                send.method_name = method_name;
+                send.args = args;
+                send.dot_l = dot_l;
+                send.selector_l = selector_l;
+                send.begin_l = begin_l;
+                send.end_l = end_l;
+                send.operator_l = None;
+                send.expression_l = expression_l;
+            }),
 
-        //     MethodCallType::CSend => Box::new(Node::CSend(CSend {
-        //         recv: receiver.expect("csend node must have a receiver"),
-        //         method_name,
-        //         args,
-        //         dot_l: dot_l.expect("csend node must have &."),
-        //         selector_l,
-        //         begin_l,
-        //         end_l,
-        //         operator_l: None,
-        //         expression_l,
-        //     })),
-        // }
-        todo!()
+            MethodCallType::CSend => CSend::new_in(self.blob, |csend| {
+                csend.recv = receiver.expect("csend node must have a receiver");
+                csend.method_name = method_name;
+                csend.args = args;
+                csend.dot_l = dot_l.expect("csend node must have &.");
+                csend.selector_l = selector_l;
+                csend.begin_l = begin_l;
+                csend.end_l = end_l;
+                csend.operator_l = None;
+                csend.expression_l = expression_l;
+            }),
+        }
     }
 
     pub(crate) fn call_lambda(&self, lambda_t: &'b Token<'b>) -> &'b Node<'b> {
@@ -2337,15 +2337,14 @@ impl<'b> Builder<'b> {
         amper_t: &'b Token<'b>,
         value: Option<&'b Node<'b>>,
     ) -> &'b Node<'b> {
-        // let amper_l = self.loc(amper_t);
-        // let expression_l = amper_l.maybe_join(&value.as_ref().map(|node| *node.expression()));
+        let amper_l = self.loc(amper_t);
+        let expression_l = amper_l.maybe_join(value.as_ref().map(|node| node.expression()));
 
-        // Box::new(Node::BlockPass(BlockPass {
-        //     value,
-        //     operator_l: amper_l,
-        //     expression_l,
-        // }))
-        todo!()
+        BlockPass::new_in(self.blob, |block_pass| {
+            block_pass.value = value;
+            block_pass.operator_l = amper_l;
+            block_pass.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn attr_asgn(
@@ -2648,30 +2647,29 @@ impl<'b> Builder<'b> {
         if_false: Option<&'b Node<'b>>,
         end_t: Option<&'b Token<'b>>,
     ) -> &'b Node<'b> {
-        // let end_l = self
-        //     .maybe_loc(end_t)
-        //     .or_else(|| maybe_boxed_node_expr(if_false.as_deref()))
-        //     .or_else(|| self.maybe_loc(else_t))
-        //     .or_else(|| maybe_boxed_node_expr(if_true.as_deref()))
-        //     .unwrap_or_else(|| self.loc(then_t));
+        let end_l = self
+            .maybe_loc(end_t)
+            .or_else(|| maybe_boxed_node_expr(if_false.as_deref()))
+            .or_else(|| self.maybe_loc(else_t))
+            .or_else(|| maybe_boxed_node_expr(if_true.as_deref()))
+            .unwrap_or_else(|| self.loc(then_t));
 
-        // let expression_l = self.loc(cond_t).join(&end_l);
-        // let keyword_l = self.loc(cond_t);
-        // let begin_l = self.loc(then_t);
-        // let else_l = self.maybe_loc(else_t);
-        // let end_l = self.maybe_loc(end_t);
+        let expression_l = self.loc(cond_t).join(end_l);
+        let keyword_l = self.loc(cond_t);
+        let begin_l = self.loc(then_t);
+        let else_l = self.maybe_loc(else_t);
+        let end_l = self.maybe_loc(end_t);
 
-        // Box::new(Node::If(If {
-        //     cond: Self::check_condition(cond),
-        //     if_true,
-        //     if_false,
-        //     keyword_l,
-        //     begin_l,
-        //     else_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        If::new_in(self.blob, |if_| {
+            if_.cond = Self::check_condition(cond);
+            if_.if_true = if_true;
+            if_.if_false = if_false;
+            if_.keyword_l = keyword_l;
+            if_.begin_l = begin_l;
+            if_.else_l = else_l;
+            if_.end_l = end_l;
+            if_.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn condition_mod(
@@ -3198,57 +3196,58 @@ impl<'b> Builder<'b> {
         body: Option<&'b Node<'b>>,
         end_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let new_begin_l = self.loc(begin_t);
-        // let new_end_l = self.loc(end_t);
-        // let new_expression_l = new_begin_l.join(&new_end_l);
+        let new_begin_l = self.loc(begin_t);
+        let new_end_l = self.loc(end_t);
+        let new_expression_l = new_begin_l.join(new_end_l);
 
-        // let new_begin_l = Some(new_begin_l);
-        // let new_end_l = Some(new_end_l);
+        let new_begin_l = Some(new_begin_l);
+        let new_end_l = Some(new_end_l);
 
-        // if let Some(body) = body {
-        //     let mut body = *body;
-        //     match &mut body {
-        //         Node::Mlhs(Mlhs {
-        //             begin_l,
-        //             end_l,
-        //             expression_l,
-        //             ..
-        //         }) => {
-        //             // Synthesized (begin) from compstmt "a; b" or (mlhs)
-        //             // from multi_lhs "(a, b) = *foo".
-        //             *begin_l = new_begin_l;
-        //             *end_l = new_end_l;
-        //             *expression_l = new_expression_l;
-        //             Box::new(body)
-        //         }
-        //         Node::Begin(Begin {
-        //             begin_l,
-        //             end_l,
-        //             expression_l,
-        //             ..
-        //         }) if begin_l.is_none() && end_l.is_none() => {
-        //             *begin_l = new_begin_l;
-        //             *end_l = new_end_l;
-        //             *expression_l = new_expression_l;
-        //             Box::new(body)
-        //         }
-        //         _ => Box::new(Node::Begin(Begin {
-        //             statements: vec![body],
-        //             begin_l: new_begin_l,
-        //             end_l: new_end_l,
-        //             expression_l: new_expression_l,
-        //         })),
-        //     }
-        // } else {
-        //     // A nil expression: `()'.
-        //     Box::new(Node::Begin(Begin {
-        //         statements: vec![],
-        //         begin_l: new_begin_l,
-        //         end_l: new_end_l,
-        //         expression_l: new_expression_l,
-        //     }))
-        // }
-        todo!()
+        if let Some(body) = body {
+            match body {
+                Node::Mlhs(Mlhs {
+                    items,
+                    begin_l,
+                    end_l,
+                    expression_l,
+                    ..
+                }) => {
+                    // Synthesized (begin) from compstmt "a; b" or (mlhs)
+                    // from multi_lhs "(a, b) = *foo".
+                    Mlhs::new_in(self.blob, |mlhs| {
+                        mlhs.items = items;
+                        mlhs.begin_l = new_begin_l;
+                        mlhs.end_l = new_end_l;
+                        mlhs.expression_l = new_expression_l;
+                    })
+                }
+                Node::Begin(Begin {
+                    begin_l,
+                    end_l,
+                    expression_l,
+                    statements,
+                    ..
+                }) if begin_l.is_none() && end_l.is_none() => Begin::new_in(self.blob, |begin| {
+                    begin.statements = statements;
+                    begin.begin_l = new_begin_l;
+                    begin.end_l = new_end_l;
+                    begin.expression_l = new_expression_l;
+                }),
+                _ => Begin::new_in(self.blob, |begin| {
+                    begin.statements.push(body);
+                    begin.begin_l = new_begin_l;
+                    begin.end_l = new_end_l;
+                    begin.expression_l = new_expression_l;
+                }),
+            }
+        } else {
+            // A nil expression: `()'.
+            Begin::new_in(self.blob, |begin| {
+                begin.begin_l = new_begin_l;
+                begin.end_l = new_end_l;
+                begin.expression_l = new_expression_l;
+            })
+        }
     }
 
     pub(crate) fn begin_keyword(
@@ -3861,8 +3860,8 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn check_duplicate_args<'a>(
         &self,
-        args: &'a [Node],
-        // map: &mut HashMap<String, &'a Node>,
+        args: &'a NodeList<'a>,
+        map: &mut HashMap<String, &'a Node>,
     ) {
         // for arg in args {
         //     match arg {
@@ -4336,45 +4335,28 @@ impl<'b> Builder<'b> {
     }
 
     fn rewrite_hash_args_to_kwargs(&self, args: &'b NodeList<'b>) {
-        // let len = args.len();
+        let len = args.len();
 
-        // if !args.is_empty() && self.is_kwargs(&args[len - 1]) {
-        //     match args.pop().unwrap() {
-        //         Node::Hash(Hash {
-        //             pairs,
-        //             expression_l,
-        //             ..
-        //         }) => {
-        //             let kwargs = Node::Kwargs(Kwargs {
-        //                 pairs,
-        //                 expression_l,
-        //             });
-        //             args.push(kwargs);
-        //         }
-        //         _ => unreachable!(),
-        //     }
-        // } else if len > 1
-        //     && matches!(args[len - 1], Node::BlockPass(_))
-        //     && self.is_kwargs(&args[len - 2])
-        // {
-        //     let block_pass = args.pop().unwrap();
-        //     match args.pop().unwrap() {
-        //         Node::Hash(Hash {
-        //             pairs,
-        //             expression_l,
-        //             ..
-        //         }) => {
-        //             let kwargs = Node::Kwargs(Kwargs {
-        //                 pairs,
-        //                 expression_l,
-        //             });
-        //             args.push(kwargs);
-        //             args.push(block_pass);
-        //         }
-        //         _ => unreachable!(),
-        //     }
-        // }
-        todo!()
+        if len == 0 {
+            return;
+        }
+
+        let last = args.last().unwrap();
+
+        if matches!(last, Node::Hash(_)) {
+            last.change_type_to_kwargs();
+            return;
+        }
+
+        if len == 1 {
+            return;
+        }
+
+        let second_last = args.iter().nth(len - 2).unwrap();
+
+        if matches!(last, Node::BlockPass(_)) && self.is_kwargs(second_last) {
+            second_last.change_type_to_kwargs()
+        }
     }
 
     fn is_kwargs(&self, node: &Node) -> bool {
