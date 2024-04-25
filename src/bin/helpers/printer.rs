@@ -54,8 +54,9 @@ fn print_compact_ast_with_locations(result: &ParserResult) {
     let src = std::str::from_utf8(src).unwrap_or("invalid-source");
     println!("{}", src);
     print_only_diagnostics(result);
-    if let Some(ast) = result.ast {
-        ast.print_with_locs()
+    if let Some(_ast) = result.ast {
+        panic!("Unsupprted for now");
+        // ast.print_with_locs()
     }
 }
 
@@ -63,7 +64,7 @@ fn print_compact_ast(result: &ParserResult) {
     print_only_diagnostics(result);
     if let Some(ast) = result.ast {
         let mut buf = String::new();
-        ast.inspect(0, &mut buf);
+        ast.inspect(0, &mut buf).unwrap();
         println!("{}", buf);
     }
 }

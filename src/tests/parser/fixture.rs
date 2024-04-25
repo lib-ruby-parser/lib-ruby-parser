@@ -146,7 +146,7 @@ impl<'s> Fixture<'s> {
         match &self.diagnostics {
             None => {
                 let mut buf = [0; 1000];
-                let mut writer = lib_ruby_parser_ast::Writer::new(&mut buf);
+                let mut writer = Writer::new(&mut buf);
                 for d in actual.diagnostics.iter() {
                     render_diagnostic_for_testing(d, &mut writer).unwrap();
                     writeln!(&mut writer).unwrap();
@@ -165,7 +165,7 @@ impl<'s> Fixture<'s> {
 
                 for (expected, actual) in expected.iter().zip(actual.diagnostics.iter()) {
                     let mut buf = [0; 1000];
-                    let mut writer = lib_ruby_parser_ast::Writer::new(&mut buf);
+                    let mut writer = Writer::new(&mut buf);
                     render_diagnostic_for_testing(actual, &mut writer).unwrap();
                     let actual = writer.as_str().unwrap();
 

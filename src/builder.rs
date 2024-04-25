@@ -876,103 +876,7 @@ impl<'b> Builder<'b> {
         pairs: &'b NodeList<'b>,
         end_t: Option<&'b Token<'b>>,
     ) -> &'b Node<'b> {
-        for i in 0..pairs.len() {
-            for j in i + 1..pairs.len() {
-                let key1 = if let Node::Pair(Pair { key, .. }) = pairs.node_at(i).unwrap() {
-                    key
-                } else {
-                    // kwsplat
-                    continue;
-                };
-                let key2 = if let Node::Pair(Pair { key, .. }) = pairs.node_at(j).unwrap() {
-                    key
-                } else {
-                    // kwsplat
-                    continue;
-                };
-
-                fn reg_opts_are_equal(left: Option<&Node>, right: Option<&Node>) -> bool {
-                    match (left, right) {
-                        (None, None) => true,
-                        (
-                            Some(Node::RegOpt(RegOpt { options: left, .. })),
-                            Some(Node::RegOpt(RegOpt { options: right, .. })),
-                        ) => {
-                            left.map(|b| b.as_whole_string()) == right.map(|b| b.as_whole_string())
-                        }
-                        _ => false,
-                    }
-                }
-
-                fn keys_are_equal(left: &Node, right: &Node) -> bool {
-                    match (left, right) {
-                        // sym
-                        (
-                            Node::Sym(Sym { name: name1, .. }),
-                            Node::Sym(Sym { name: name2, .. }),
-                        ) if name1.as_whole_string() == name2.as_whole_string() => true,
-
-                        // str
-                        (
-                            Node::Str(Str { value: value1, .. }),
-                            Node::Str(Str { value: value2, .. }),
-                        ) if value1.as_whole_string() == value2.as_whole_string() => true,
-
-                        // int
-                        (
-                            Node::Int(Int { value: value1, .. }),
-                            Node::Int(Int { value: value2, .. }),
-                        ) if value1.as_whole_string() == value2.as_whole_string() => true,
-
-                        // float
-                        (
-                            Node::Float(Float { value: value1, .. }),
-                            Node::Float(Float { value: value2, .. }),
-                        ) if value1.as_whole_string() == value2.as_whole_string() => true,
-
-                        // rational
-                        (
-                            Node::Rational(Rational { value: value1, .. }),
-                            Node::Rational(Rational { value: value2, .. }),
-                        ) if value1.as_whole_string() == value2.as_whole_string() => true,
-
-                        // complex
-                        (
-                            Node::Complex(Complex { value: value1, .. }),
-                            Node::Complex(Complex { value: value2, .. }),
-                        ) if value1.as_whole_string() == value2.as_whole_string() => true,
-
-                        // regexp
-                        (
-                            Node::Regexp(Regexp {
-                                parts: parts1,
-                                options: options1,
-                                ..
-                            }),
-                            Node::Regexp(Regexp {
-                                parts: parts2,
-                                options: options2,
-                                ..
-                            }),
-                        ) if reg_opts_are_equal(*options1, *options2) => {
-                            parts1.len() == parts2.len()
-                                && parts1
-                                    .iter()
-                                    .zip(parts2.iter())
-                                    .all(|(child1, child2)| keys_are_equal(child1, child2))
-                        }
-
-                        _ => false,
-                    }
-                }
-
-                let do_warn = keys_are_equal(key1, key2);
-
-                if do_warn {
-                    self.warn(DiagnosticMessage::DuplicateHashKey {}, key2.expression());
-                }
-            }
-        }
+        self.warn_duplicate_hash_keys(pairs);
 
         let CollectionMap {
             begin_l,
@@ -986,6 +890,106 @@ impl<'b> Builder<'b> {
             hash.end_l = end_l;
             hash.expression_l = expression_l;
         })
+    }
+
+    fn warn_duplicate_hash_keys(&self, pairs: &'b NodeList<'b>) {
+        // for i in 0..pairs.len() {
+        //     for j in i + 1..pairs.len() {
+        //         let key1 = if let Node::Pair(Pair { key, .. }) = pairs.node_at(i).unwrap() {
+        //             key
+        //         } else {
+        //             // kwsplat
+        //             continue;
+        //         };
+        //         let key2 = if let Node::Pair(Pair { key, .. }) = pairs.node_at(j).unwrap() {
+        //             key
+        //         } else {
+        //             // kwsplat
+        //             continue;
+        //         };
+
+        //         fn reg_opts_are_equal(left: Option<&Node>, right: Option<&Node>) -> bool {
+        //             match (left, right) {
+        //                 (None, None) => true,
+        //                 (
+        //                     Some(Node::RegOpt(RegOpt { options: left, .. })),
+        //                     Some(Node::RegOpt(RegOpt { options: right, .. })),
+        //                 ) => {
+        //                     left.map(|b| b.as_whole_string()) == right.map(|b| b.as_whole_string())
+        //                 }
+        //                 _ => false,
+        //             }
+        //         }
+
+        //         fn keys_are_equal(left: &Node, right: &Node) -> bool {
+        //             match (left, right) {
+        //                 // sym
+        //                 (
+        //                     Node::Sym(Sym { name: name1, .. }),
+        //                     Node::Sym(Sym { name: name2, .. }),
+        //                 ) if name1.as_whole_string() == name2.as_whole_string() => true,
+
+        //                 // str
+        //                 (
+        //                     Node::Str(Str { value: value1, .. }),
+        //                     Node::Str(Str { value: value2, .. }),
+        //                 ) if value1.as_whole_string() == value2.as_whole_string() => true,
+
+        //                 // int
+        //                 (
+        //                     Node::Int(Int { value: value1, .. }),
+        //                     Node::Int(Int { value: value2, .. }),
+        //                 ) if value1.as_whole_string() == value2.as_whole_string() => true,
+
+        //                 // float
+        //                 (
+        //                     Node::Float(Float { value: value1, .. }),
+        //                     Node::Float(Float { value: value2, .. }),
+        //                 ) if value1.as_whole_string() == value2.as_whole_string() => true,
+
+        //                 // rational
+        //                 (
+        //                     Node::Rational(Rational { value: value1, .. }),
+        //                     Node::Rational(Rational { value: value2, .. }),
+        //                 ) if value1.as_whole_string() == value2.as_whole_string() => true,
+
+        //                 // complex
+        //                 (
+        //                     Node::Complex(Complex { value: value1, .. }),
+        //                     Node::Complex(Complex { value: value2, .. }),
+        //                 ) if value1.as_whole_string() == value2.as_whole_string() => true,
+
+        //                 // regexp
+        //                 (
+        //                     Node::Regexp(Regexp {
+        //                         parts: parts1,
+        //                         options: options1,
+        //                         ..
+        //                     }),
+        //                     Node::Regexp(Regexp {
+        //                         parts: parts2,
+        //                         options: options2,
+        //                         ..
+        //                     }),
+        //                 ) if reg_opts_are_equal(*options1, *options2) => {
+        //                     parts1.len() == parts2.len()
+        //                         && parts1
+        //                             .iter()
+        //                             .zip(parts2.iter())
+        //                             .all(|(child1, child2)| keys_are_equal(child1, child2))
+        //                 }
+
+        //                 _ => false,
+        //             }
+        //         }
+
+        //         let do_warn = keys_are_equal(key1, key2);
+
+        //         if do_warn {
+        //             self.warn(DiagnosticMessage::DuplicateHashKey {}, key2.expression());
+        //         }
+        //     }
+        // }
     }
 
     // Ranges

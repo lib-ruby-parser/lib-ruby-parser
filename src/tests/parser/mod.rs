@@ -39,7 +39,7 @@ fn parse<'b>(input: &[u8], blob: &'b Blob<'b>) -> ParserResult<'b> {
 fn test_magic_comment() {
     let fixture = std::fs::read("src/tests/fixtures/magic_comments.rb").unwrap();
     let mut mem = [0; 1000];
-    let blob = lib_ruby_parser_ast::Blob::from(&mut mem);
+    let blob = Blob::from(&mut mem);
 
     let ParserResult { magic_comments, .. } = parse(&fixture, &blob);
     let mut iter = magic_comments.iter();

@@ -133,7 +133,7 @@ fn new_token<'b>(blob: &'b Blob<'b>) -> &'b Token<'b> {
 #[test]
 fn test_fmt() {
     let mut mem = [0; 100];
-    let blob = lib_ruby_parser_ast::Blob::from(&mut mem);
+    let blob = Blob::from(&mut mem);
     let token = new_token(&blob);
 
     let mut tmp = [0; 100];

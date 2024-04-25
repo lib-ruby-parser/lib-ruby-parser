@@ -94,7 +94,7 @@ fn lex_state(state: &str) -> Result<i32, &'static str> {
 
 pub(crate) fn test_file(fixture_path: &str) {
     let mut mem = vec![0; 1000];
-    let blob = lib_ruby_parser_ast::Blob::from(mem.as_mut_slice());
+    let blob = Blob::from(mem.as_mut_slice());
 
     let fixture = Fixture::new(fixture_path, &blob);
 
