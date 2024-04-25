@@ -1,12 +1,14 @@
-use core::{cell::Cell, ptr::NonNull};
-use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, DoubleLinkedIntrusiveListItem};
+use core::cell::Cell;
+use lib_ruby_parser_ast::{
+    Blob, ConstNonNull, DoubleLinkedIntrusiveList, DoubleLinkedIntrusiveListItem,
+};
 
 pub(crate) struct MaxNumparamStackItem {
     pub(crate) value: Cell<i32>,
     pub(crate) is_static: bool,
 
-    prev: Cell<Option<NonNull<Self>>>,
-    next: Cell<Option<NonNull<Self>>>,
+    prev: Cell<Option<ConstNonNull<Self>>>,
+    next: Cell<Option<ConstNonNull<Self>>>,
 }
 impl core::fmt::Debug for MaxNumparamStackItem {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -17,19 +19,19 @@ impl core::fmt::Debug for MaxNumparamStackItem {
     }
 }
 impl DoubleLinkedIntrusiveListItem for MaxNumparamStackItem {
-    fn prev(&self) -> Option<NonNull<Self>> {
+    fn prev(&self) -> Option<ConstNonNull<Self>> {
         self.prev.get()
     }
 
-    fn set_prev(&self, new_prev: Option<NonNull<Self>>) {
+    fn set_prev(&self, new_prev: Option<ConstNonNull<Self>>) {
         self.prev.set(new_prev)
     }
 
-    fn next(&self) -> Option<NonNull<Self>> {
+    fn next(&self) -> Option<ConstNonNull<Self>> {
         self.next.get()
     }
 
-    fn set_next(&self, new_next: Option<NonNull<Self>>) {
+    fn set_next(&self, new_next: Option<ConstNonNull<Self>>) {
         self.next.set(new_next)
     }
 }

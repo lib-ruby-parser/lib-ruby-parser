@@ -1,6 +1,6 @@
-use core::{cell::Cell, ptr::NonNull};
+use core::cell::Cell;
 
-use lib_ruby_parser_ast::{Blob, DiagnosticMessage};
+use lib_ruby_parser_ast::{Blob, ConstNonNull, DiagnosticMessage};
 
 use crate::loc_ext::LocExt;
 use crate::source::DecodedInput;
@@ -19,7 +19,7 @@ pub struct Diagnostic<'b> {
     /// Location of the diagnostic
     pub loc: Loc,
 
-    next: Cell<Option<NonNull<Self>>>,
+    next: Cell<Option<ConstNonNull<Self>>>,
 
     blob: &'b Blob<'b>,
 }
@@ -117,11 +117,11 @@ impl<'b> Diagnostic<'b> {
 }
 
 impl lib_ruby_parser_ast::SingleLinkedIntrusiveListItem for Diagnostic<'_> {
-    fn next(&self) -> Option<NonNull<Self>> {
+    fn next(&self) -> Option<ConstNonNull<Self>> {
         self.next.get()
     }
 
-    fn set_next(&self, new_next: Option<NonNull<Self>>) {
+    fn set_next(&self, new_next: Option<ConstNonNull<Self>>) {
         self.next.set(new_next)
     }
 }

@@ -1,6 +1,6 @@
-use core::{cell::Cell, ptr::NonNull};
+use core::cell::Cell;
 
-use lib_ruby_parser_ast::{Blob, Bytes, SingleLinkedIntrusiveListItem};
+use lib_ruby_parser_ast::{Blob, Bytes, ConstNonNull, SingleLinkedIntrusiveListItem};
 
 use crate::parser::token_name;
 use crate::Loc;
@@ -19,7 +19,7 @@ pub struct Token<'b> {
     /// Location of the token
     pub loc: Loc,
 
-    next: Cell<Option<NonNull<Self>>>,
+    next: Cell<Option<ConstNonNull<Self>>>,
 
     marker: core::marker::PhantomData<&'b ()>,
 }
@@ -90,11 +90,11 @@ impl core::fmt::Debug for Token<'_> {
 }
 
 impl SingleLinkedIntrusiveListItem for Token<'_> {
-    fn next(&self) -> Option<NonNull<Self>> {
+    fn next(&self) -> Option<ConstNonNull<Self>> {
         self.next.get()
     }
 
-    fn set_next(&self, new_next: Option<NonNull<Self>>) {
+    fn set_next(&self, new_next: Option<ConstNonNull<Self>>) {
         self.next.set(new_next)
     }
 }

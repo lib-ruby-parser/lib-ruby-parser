@@ -1,6 +1,8 @@
-use core::{cell::Cell, ptr::NonNull};
+use core::cell::Cell;
 
-use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, DoubleLinkedIntrusiveListItem};
+use lib_ruby_parser_ast::{
+    Blob, ConstNonNull, DoubleLinkedIntrusiveList, DoubleLinkedIntrusiveListItem,
+};
 // Stack that holds names of current arguments,
 // i.e. while parsing
 //   def m1(a = (def m2(b = def m3(c = 1); end); end)); end
@@ -15,8 +17,8 @@ pub(crate) struct CurrentArgStack<'b>(DoubleLinkedIntrusiveList<'b, CurrentArgSt
 
 struct CurrentArgStackItem<'b> {
     s: Option<&'b str>,
-    prev: Cell<Option<NonNull<Self>>>,
-    next: Cell<Option<NonNull<Self>>>,
+    prev: Cell<Option<ConstNonNull<Self>>>,
+    next: Cell<Option<ConstNonNull<Self>>>,
 }
 
 impl core::fmt::Debug for CurrentArgStackItem<'_> {
@@ -28,19 +30,19 @@ impl core::fmt::Debug for CurrentArgStackItem<'_> {
 }
 
 impl DoubleLinkedIntrusiveListItem for CurrentArgStackItem<'_> {
-    fn prev(&self) -> Option<NonNull<Self>> {
+    fn prev(&self) -> Option<ConstNonNull<Self>> {
         self.prev.get()
     }
 
-    fn set_prev(&self, new_prev: Option<NonNull<Self>>) {
+    fn set_prev(&self, new_prev: Option<ConstNonNull<Self>>) {
         self.prev.set(new_prev)
     }
 
-    fn next(&self) -> Option<NonNull<Self>> {
+    fn next(&self) -> Option<ConstNonNull<Self>> {
         self.next.get()
     }
 
-    fn set_next(&self, new_next: Option<NonNull<Self>>) {
+    fn set_next(&self, new_next: Option<ConstNonNull<Self>>) {
         self.next.set(new_next)
     }
 }

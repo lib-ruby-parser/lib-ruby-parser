@@ -1,6 +1,6 @@
-use core::{cell::Cell, ptr::NonNull};
+use core::cell::Cell;
 
-use lib_ruby_parser_ast::Blob;
+use lib_ruby_parser_ast::{Blob, ConstNonNull};
 
 use crate::loc_ext::LocExt;
 use crate::source::DecodedInput;
@@ -40,7 +40,7 @@ pub struct Comment {
     /// Kind of the comment
     pub kind: CommentType,
 
-    next: Cell<Option<NonNull<Self>>>,
+    next: Cell<Option<ConstNonNull<Self>>>,
 }
 
 impl core::fmt::Debug for Comment {
@@ -92,11 +92,11 @@ impl Comment {
 }
 
 impl lib_ruby_parser_ast::SingleLinkedIntrusiveListItem for Comment {
-    fn next(&self) -> Option<NonNull<Self>> {
+    fn next(&self) -> Option<ConstNonNull<Self>> {
         self.next.get()
     }
 
-    fn set_next(&self, new_next: Option<NonNull<Self>>) {
+    fn set_next(&self, new_next: Option<ConstNonNull<Self>>) {
         self.next.set(new_next)
     }
 }

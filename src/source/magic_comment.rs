@@ -1,4 +1,5 @@
-use core::{cell::Cell, ptr::NonNull};
+use core::cell::Cell;
+use lib_ruby_parser_ast::ConstNonNull;
 
 use crate::Loc;
 
@@ -41,7 +42,7 @@ pub struct MagicComment {
     /// ```
     pub value_l: Loc,
 
-    next: Cell<Option<NonNull<Self>>>,
+    next: Cell<Option<ConstNonNull<Self>>>,
 }
 
 impl core::fmt::Debug for MagicComment {
@@ -61,11 +62,11 @@ impl PartialEq for MagicComment {
 }
 
 impl lib_ruby_parser_ast::SingleLinkedIntrusiveListItem for MagicComment {
-    fn next(&self) -> Option<NonNull<Self>> {
+    fn next(&self) -> Option<ConstNonNull<Self>> {
         self.next.get()
     }
 
-    fn set_next(&self, new_next: Option<NonNull<Self>>) {
+    fn set_next(&self, new_next: Option<ConstNonNull<Self>>) {
         self.next.set(new_next)
     }
 }

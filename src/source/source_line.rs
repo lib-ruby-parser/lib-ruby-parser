@@ -1,6 +1,6 @@
-use core::{cell::Cell, ptr::NonNull};
+use core::cell::Cell;
 
-use lib_ruby_parser_ast::Blob;
+use lib_ruby_parser_ast::{Blob, ConstNonNull};
 
 #[repr(C)]
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -15,7 +15,7 @@ pub struct SourceLine {
     /// `true` if line ends with EOF char (which is true for the last line in the file)
     pub ends_with_eof: bool,
 
-    next: Cell<Option<NonNull<Self>>>,
+    next: Cell<Option<ConstNonNull<Self>>>,
 }
 
 impl SourceLine {
@@ -55,11 +55,11 @@ impl SourceLine {
 }
 
 impl lib_ruby_parser_ast::SingleLinkedIntrusiveListItem for SourceLine {
-    fn next(&self) -> Option<NonNull<Self>> {
+    fn next(&self) -> Option<ConstNonNull<Self>> {
         self.next.get()
     }
 
-    fn set_next(&self, new_next: Option<NonNull<Self>>) {
+    fn set_next(&self, new_next: Option<ConstNonNull<Self>>) {
         self.next.set(new_next)
     }
 }
