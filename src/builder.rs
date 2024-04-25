@@ -418,7 +418,7 @@ impl<'b> Builder<'b> {
                         sym.expression_l = expression_l;
                     });
                 }
-                _ => unreachable!(),
+                other => {}
             }
         }
 
@@ -493,7 +493,7 @@ impl<'b> Builder<'b> {
                         expression_l,
                         ..
                     }) => {
-                        let value = Self::dedent_string(value, dedent_level);
+                        let value = self.dedent_string(value, dedent_level);
                         if !value.is_empty() {
                             let node = Str::new_in(self.blob, |str_| {
                                 str_.value = value;
@@ -557,7 +557,7 @@ impl<'b> Builder<'b> {
 
     const TAB_WIDTH: usize = 8;
 
-    pub(crate) fn dedent_string(s: &'b Bytes<'b>, width: usize) -> &'b Bytes<'b> {
+    pub(crate) fn dedent_string(&self, s: &'b Bytes<'b>, width: usize) -> &'b Bytes<'b> {
         let mut col: usize = 0;
         let mut i: usize = 0;
         let len = s.len();
@@ -582,8 +582,11 @@ impl<'b> Builder<'b> {
             i += 1;
         }
 
-        // Bytes::new(Vec::from(&s.as_raw()[i..]))
-        todo!()
+        let dedented = self.blob.alloc_ref::<Bytes>();
+        for byte in s.iter().skip(i) {
+            dedented.append_invalid_escaped(byte, self.blob);
+        }
+        Bytes::compress(dedented, self.blob)
     }
 
     // Regular expressions
@@ -2437,39 +2440,38 @@ impl<'b> Builder<'b> {
         dot_t: &'b Token<'b>,
         selector_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let dot_l = self.loc(dot_t);
-        // let selector_l = self.loc(selector_t);
-        // let expression_l = receiver.expression().join(&selector_l);
-        // let receiver: &'b Node<'b> = receiver;
+        let dot_l = self.loc(dot_t);
+        let selector_l = self.loc(selector_t);
+        let expression_l = receiver.expression().join(selector_l);
+        let receiver: &'b Node<'b> = receiver;
 
-        // let method_name = value(selector_t) + "=";
+        let method_name = self.blob.alloc_ref::<Bytes>();
+        method_name.append_borrowed(selector_t.as_whole_str(), self.blob);
+        method_name.append_valid_escaped('=', self.blob);
 
-        // match self.call_type_for_dot(Some(dot_t)) {
-        //     MethodCallType::Send => Box::new(Node::Send(Send {
-        //         recv: Some(receiver),
-        //         method_name,
-        //         args: vec![],
-        //         dot_l: Some(dot_l),
-        //         selector_l: Some(selector_l),
-        //         begin_l: None,
-        //         end_l: None,
-        //         operator_l: None,
-        //         expression_l,
-        //     })),
+        match self.call_type_for_dot(Some(dot_t)) {
+            MethodCallType::Send => Send::new_in(self.blob, |send| {
+                send.recv = Some(receiver);
+                send.method_name = method_name;
+                send.dot_l = Some(dot_l);
+                send.selector_l = Some(selector_l);
+                send.begin_l = None;
+                send.end_l = None;
+                send.operator_l = None;
+                send.expression_l = expression_l;
+            }),
 
-        //     MethodCallType::CSend => Box::new(Node::CSend(CSend {
-        //         recv: receiver,
-        //         method_name,
-        //         args: vec![],
-        //         dot_l,
-        //         selector_l: Some(selector_l),
-        //         begin_l: None,
-        //         end_l: None,
-        //         operator_l: None,
-        //         expression_l,
-        //     })),
-        // }
-        todo!()
+            MethodCallType::CSend => CSend::new_in(self.blob, |csend| {
+                csend.recv = receiver;
+                csend.method_name = method_name;
+                csend.dot_l = dot_l;
+                csend.selector_l = Some(selector_l);
+                csend.begin_l = None;
+                csend.end_l = None;
+                csend.operator_l = None;
+                csend.expression_l = expression_l;
+            }),
+        }
     }
 
     pub(crate) fn index(
@@ -2479,20 +2481,19 @@ impl<'b> Builder<'b> {
         indexes: &'b NodeList<'b>,
         rbrack_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let begin_l = self.loc(lbrack_t);
-        // let end_l = self.loc(rbrack_t);
-        // let expression_l = recv.expression().join(&end_l);
+        let begin_l = self.loc(lbrack_t);
+        let end_l = self.loc(rbrack_t);
+        let expression_l = recv.expression().join(end_l);
 
-        // self.rewrite_hash_args_to_kwargs(&mut indexes);
+        self.rewrite_hash_args_to_kwargs(&indexes);
 
-        // Box::new(Node::Index(Index {
-        //     recv,
-        //     indexes,
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Index::new_in(self.blob, |index| {
+            index.recv = recv;
+            index.indexes = indexes;
+            index.begin_l = begin_l;
+            index.end_l = end_l;
+            index.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn index_asgn(
@@ -2502,20 +2503,19 @@ impl<'b> Builder<'b> {
         indexes: &'b NodeList<'b>,
         rbrack_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let begin_l = self.loc(lbrack_t);
-        // let end_l = self.loc(rbrack_t);
-        // let expression_l = recv.expression().join(&end_l);
+        let begin_l = self.loc(lbrack_t);
+        let end_l = self.loc(rbrack_t);
+        let expression_l = recv.expression().join(end_l);
 
-        // Box::new(Node::IndexAsgn(IndexAsgn {
-        //     recv,
-        //     indexes,
-        //     value: None,
-        //     begin_l,
-        //     end_l,
-        //     operator_l: None,
-        //     expression_l,
-        // }))
-        todo!()
+        IndexAsgn::new_in(self.blob, |index_asgn| {
+            index_asgn.recv = recv;
+            index_asgn.indexes = indexes;
+            index_asgn.value = None;
+            index_asgn.begin_l = begin_l;
+            index_asgn.end_l = end_l;
+            index_asgn.operator_l = None;
+            index_asgn.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn binary_op(
@@ -2524,24 +2524,23 @@ impl<'b> Builder<'b> {
         operator_t: &'b Token<'b>,
         arg: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        // self.value_expr(&receiver)?;
-        // self.value_expr(&arg)?;
+        self.value_expr(&receiver)?;
+        self.value_expr(&arg)?;
 
-        // let selector_l = Some(self.loc(operator_t));
-        // let expression_l = join_exprs(&receiver, &arg);
+        let selector_l = Some(self.loc(operator_t));
+        let expression_l = join_exprs(&receiver, &arg);
 
-        // Ok(Box::new(Node::Send(Send {
-        //     recv: Some(receiver),
-        //     method_name: value(operator_t),
-        //     args: vec![*arg],
-        //     dot_l: None,
-        //     selector_l,
-        //     begin_l: None,
-        //     end_l: None,
-        //     operator_l: None,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(Send::new_in(self.blob, |send| {
+            send.recv = Some(receiver);
+            send.method_name = operator_t.token_value;
+            send.args.push(arg);
+            send.dot_l = None;
+            send.selector_l = selector_l;
+            send.begin_l = None;
+            send.end_l = None;
+            send.operator_l = None;
+            send.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn match_op(
@@ -2550,41 +2549,40 @@ impl<'b> Builder<'b> {
         match_t: &'b Token<'b>,
         arg: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        // self.value_expr(&receiver)?;
-        // self.value_expr(&arg)?;
+        self.value_expr(&receiver)?;
+        self.value_expr(&arg)?;
 
-        // let selector_l = self.loc(match_t);
-        // let expression_l = join_exprs(&receiver, &arg);
+        let selector_l = self.loc(match_t);
+        let expression_l = join_exprs(&receiver, &arg);
 
-        // let result = match self.static_regexp_captures(&receiver) {
-        //     Some(captures) => {
-        //         for capture in captures {
-        //             self.static_env
-        //                 .declare(self.blob.push_str(&capture), self.blob);
-        //         }
+        let result = match self.static_regexp_captures(&receiver) {
+            Some(captures) => {
+                for capture in captures {
+                    self.static_env
+                        .declare(capture.as_whole_string().unwrap(), self.blob);
+                }
 
-        //         Node::MatchWithLvasgn(MatchWithLvasgn {
-        //             re: receiver,
-        //             value: arg,
-        //             operator_l: selector_l,
-        //             expression_l,
-        //         })
-        //     }
-        //     None => Node::Send(Send {
-        //         recv: Some(receiver),
-        //         method_name: String::from("=~"),
-        //         args: vec![*arg],
-        //         dot_l: None,
-        //         selector_l: Some(selector_l),
-        //         begin_l: None,
-        //         end_l: None,
-        //         operator_l: None,
-        //         expression_l,
-        //     }),
-        // };
+                MatchWithLvasgn::new_in(self.blob, |match_with_lvasgn| {
+                    match_with_lvasgn.re = receiver;
+                    match_with_lvasgn.value = arg;
+                    match_with_lvasgn.operator_l = selector_l;
+                    match_with_lvasgn.expression_l = expression_l;
+                })
+            }
+            None => Send::new_in(self.blob, |send| {
+                send.recv = Some(receiver);
+                send.method_name.append_borrowed("=~", self.blob);
+                send.args.push(arg);
+                send.dot_l = None;
+                send.selector_l = Some(selector_l);
+                send.begin_l = None;
+                send.end_l = None;
+                send.operator_l = None;
+                send.expression_l = expression_l;
+            }),
+        };
 
-        // Ok(Box::new(result))
-        todo!()
+        Ok(result)
     }
 
     pub(crate) fn unary_op(
@@ -2592,25 +2590,30 @@ impl<'b> Builder<'b> {
         op_t: &'b Token<'b>,
         receiver: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        // self.value_expr(&receiver)?;
+        self.value_expr(&receiver)?;
 
-        // let selector_l = self.loc(op_t);
-        // let expression_l = receiver.expression().join(&selector_l);
+        let selector_l = self.loc(op_t);
+        let expression_l = receiver.expression().join(selector_l);
 
-        // let op = value(op_t);
-        // let method_name = if op == "+" || op == "-" { op + "@" } else { op };
-        // Ok(Box::new(Node::Send(Send {
-        //     recv: Some(receiver),
-        //     method_name,
-        //     args: vec![],
-        //     dot_l: None,
-        //     selector_l: Some(selector_l),
-        //     begin_l: None,
-        //     end_l: None,
-        //     operator_l: None,
-        //     expression_l,
-        // })))
-        todo!()
+        let op = op_t.as_whole_str();
+        let method_name = if op == "+" || op == "-" {
+            let bytes = self.blob.alloc_ref::<Bytes>();
+            bytes.append_borrowed(op, self.blob);
+            bytes.append_borrowed("@", self.blob);
+            bytes
+        } else {
+            op_t.token_value
+        };
+        Ok(Send::new_in(self.blob, |send| {
+            send.recv = Some(receiver);
+            send.method_name = method_name;
+            send.dot_l = None;
+            send.selector_l = Some(selector_l);
+            send.begin_l = None;
+            send.end_l = None;
+            send.operator_l = None;
+            send.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn not_op(
@@ -2620,65 +2623,61 @@ impl<'b> Builder<'b> {
         receiver: Option<&'b Node<'b>>,
         end_t: Option<&'b Token<'b>>,
     ) -> Result<&'b Node<'b>, ()> {
-        // if let Some(receiver) = receiver {
-        //     let receiver = receiver;
-        //     self.value_expr(&receiver)?;
+        if let Some(receiver) = receiver {
+            let receiver = receiver;
+            self.value_expr(&receiver)?;
 
-        //     let begin_l = self.loc(not_t);
-        //     let end_l = self
-        //         .maybe_loc(end_t)
-        //         .unwrap_or_else(|| *receiver.expression());
+            let begin_l = self.loc(not_t);
+            let end_l = self
+                .maybe_loc(end_t)
+                .unwrap_or_else(|| receiver.expression());
 
-        //     let expression_l = begin_l.join(&end_l);
+            let expression_l = begin_l.join(end_l);
 
-        //     let selector_l = self.loc(not_t);
-        //     let begin_l = self.maybe_loc(begin_t);
-        //     let end_l = self.maybe_loc(end_t);
+            let selector_l = self.loc(not_t);
+            let begin_l = self.maybe_loc(begin_t);
+            let end_l = self.maybe_loc(end_t);
 
-        //     Ok(Box::new(Node::Send(Send {
-        //         recv: Some(Self::check_condition(receiver)),
-        //         method_name: String::from("!"),
-        //         args: vec![],
-        //         dot_l: None,
-        //         selector_l: Some(selector_l),
-        //         begin_l,
-        //         end_l,
-        //         operator_l: None,
-        //         expression_l,
-        //     })))
-        // } else {
-        //     let CollectionMap {
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     } = self.collection_map(
-        //         begin_t.as_ref().map(|t| t.loc),
-        //         &[],
-        //         end_t.as_ref().map(|t| t.loc),
-        //     );
+            Ok(Send::new_in(self.blob, |send| {
+                send.recv = Some(self.check_condition(receiver));
+                send.method_name.append_borrowed("!", self.blob);
+                send.dot_l = None;
+                send.selector_l = Some(selector_l);
+                send.begin_l = begin_l;
+                send.end_l = end_l;
+                send.operator_l = None;
+                send.expression_l = expression_l;
+            }))
+        } else {
+            let CollectionMap {
+                begin_l,
+                end_l,
+                expression_l,
+            } = self.collection_map(
+                begin_t.as_ref().map(|t| t.loc),
+                self.blob.alloc_ref(),
+                end_t.as_ref().map(|t| t.loc),
+            );
 
-        //     let nil_node = Box::new(Node::Begin(Begin {
-        //         statements: vec![],
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     }));
+            let nil_node = Begin::new_in(self.blob, |begin| {
+                begin.begin_l = begin_l;
+                begin.end_l = end_l;
+                begin.expression_l = expression_l;
+            });
 
-        //     let selector_l = self.loc(not_t);
-        //     let expression_l = nil_node.expression().join(&selector_l);
-        //     Ok(Box::new(Node::Send(Send {
-        //         recv: Some(nil_node),
-        //         method_name: String::from("!"),
-        //         args: vec![],
-        //         dot_l: None,
-        //         selector_l: Some(selector_l),
-        //         begin_l: None,
-        //         end_l: None,
-        //         operator_l: None,
-        //         expression_l,
-        //     })))
-        // }
-        todo!()
+            let selector_l = self.loc(not_t);
+            let expression_l = nil_node.expression().join(selector_l);
+            Ok(Send::new_in(self.blob, |send| {
+                send.recv = Some(nil_node);
+                send.method_name.append_borrowed("!", self.blob);
+                send.dot_l = None;
+                send.selector_l = Some(selector_l);
+                send.begin_l = None;
+                send.end_l = None;
+                send.operator_l = None;
+                send.expression_l = expression_l;
+            }))
+        }
     }
 
     //
@@ -2744,7 +2743,7 @@ impl<'b> Builder<'b> {
         let end_l = self.maybe_loc(end_t);
 
         If::new_in(self.blob, |if_| {
-            if_.cond = Self::check_condition(cond);
+            if_.cond = self.check_condition(cond);
             if_.if_true = if_true;
             if_.if_false = if_false;
             if_.keyword_l = keyword_l;
@@ -2762,24 +2761,23 @@ impl<'b> Builder<'b> {
         cond_t: &'b Token<'b>,
         cond: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        // let pre = match (if_true.as_ref(), if_false.as_ref()) {
-        //     (None, None) => unreachable!("at least one of if_true/if_false is required"),
-        //     (None, Some(if_false)) => if_false,
-        //     (Some(if_true), None) => if_true,
-        //     (Some(_), Some(_)) => unreachable!("only one of if_true/if_false is required"),
-        // };
+        let pre = match (if_true.as_ref(), if_false.as_ref()) {
+            (None, None) => unreachable!("at least one of if_true/if_false is required"),
+            (None, Some(if_false)) => if_false,
+            (Some(if_true), None) => if_true,
+            (Some(_), Some(_)) => unreachable!("only one of if_true/if_false is required"),
+        };
 
-        // let expression_l = pre.expression().join(cond.expression());
-        // let keyword_l = self.loc(cond_t);
+        let expression_l = pre.expression().join(cond.expression());
+        let keyword_l = self.loc(cond_t);
 
-        // Box::new(Node::IfMod(IfMod {
-        //     cond: Self::check_condition(cond),
-        //     if_true,
-        //     if_false,
-        //     keyword_l,
-        //     expression_l,
-        // }))
-        todo!()
+        IfMod::new_in(self.blob, |if_mod| {
+            if_mod.cond = self.check_condition(cond);
+            if_mod.if_true = if_true;
+            if_mod.if_false = if_false;
+            if_mod.keyword_l = keyword_l;
+            if_mod.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn ternary(
@@ -2813,22 +2811,21 @@ impl<'b> Builder<'b> {
         then_t: &'b Token<'b>,
         body: Option<&'b Node<'b>>,
     ) -> &'b Node<'b> {
-        // let begin_l = self.loc(then_t);
+        let begin_l = self.loc(then_t);
 
-        // let expr_end_l = maybe_boxed_node_expr(body.as_deref())
-        //     .or_else(|| maybe_node_expr(patterns.last()))
-        //     .unwrap_or_else(|| self.loc(when_t));
-        // let when_l = self.loc(when_t);
-        // let expression_l = when_l.join(&expr_end_l);
+        let expr_end_l = maybe_boxed_node_expr(body.as_deref())
+            .or_else(|| maybe_node_expr(patterns.last()))
+            .unwrap_or_else(|| self.loc(when_t));
+        let when_l = self.loc(when_t);
+        let expression_l = when_l.join(expr_end_l);
 
-        // Box::new(Node::When(When {
-        //     patterns,
-        //     body,
-        //     keyword_l: when_l,
-        //     begin_l,
-        //     expression_l,
-        // }))
-        todo!()
+        When::new_in(self.blob, |when| {
+            when.patterns = patterns;
+            when.body = body;
+            when.keyword_l = when_l;
+            when.begin_l = begin_l;
+            when.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn case(
@@ -2872,7 +2869,7 @@ impl<'b> Builder<'b> {
         let end_l = self.loc(end_t);
         let expression_l = self.loc(keyword_t).join(end_l);
 
-        let cond = Self::check_condition(cond);
+        let cond = self.check_condition(cond);
 
         match loop_type {
             LoopType::While => While::new_in(self.blob, |while_| {
@@ -2901,42 +2898,41 @@ impl<'b> Builder<'b> {
         keyword_t: &'b Token<'b>,
         cond: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        // let expression_l = body.expression().join(cond.expression());
-        // let keyword_l = self.loc(keyword_t);
+        let expression_l = body.expression().join(cond.expression());
+        let keyword_l = self.loc(keyword_t);
 
-        // let cond = Self::check_condition(cond);
+        let cond = self.check_condition(cond);
 
-        // match (loop_type, &*body) {
-        //     (LoopType::While, Node::KwBegin(_)) => Box::new(Node::WhilePost(WhilePost {
-        //         cond,
-        //         body,
-        //         keyword_l,
-        //         expression_l,
-        //     })),
-        //     (LoopType::While, _) => Box::new(Node::While(While {
-        //         cond,
-        //         body: Some(body),
-        //         keyword_l,
-        //         begin_l: None,
-        //         end_l: None,
-        //         expression_l,
-        //     })),
-        //     (LoopType::Until, Node::KwBegin(_)) => Box::new(Node::UntilPost(UntilPost {
-        //         cond,
-        //         body,
-        //         keyword_l,
-        //         expression_l,
-        //     })),
-        //     (LoopType::Until, _) => Box::new(Node::Until(Until {
-        //         cond,
-        //         body: Some(body),
-        //         keyword_l,
-        //         begin_l: None,
-        //         end_l: None,
-        //         expression_l,
-        //     })),
-        // }
-        todo!()
+        match (loop_type, body) {
+            (LoopType::While, Node::KwBegin(_)) => WhilePost::new_in(self.blob, |while_post| {
+                while_post.cond = cond;
+                while_post.body = body;
+                while_post.keyword_l = keyword_l;
+                while_post.expression_l = expression_l;
+            }),
+            (LoopType::While, _) => While::new_in(self.blob, |while_| {
+                while_.cond = cond;
+                while_.body = Some(body);
+                while_.keyword_l = keyword_l;
+                while_.begin_l = None;
+                while_.end_l = None;
+                while_.expression_l = expression_l;
+            }),
+            (LoopType::Until, Node::KwBegin(_)) => UntilPost::new_in(self.blob, |until_post| {
+                until_post.cond = cond;
+                until_post.body = body;
+                until_post.keyword_l = keyword_l;
+                until_post.expression_l = expression_l;
+            }),
+            (LoopType::Until, _) => Until::new_in(self.blob, |until| {
+                until.cond = cond;
+                until.body = Some(body);
+                until.keyword_l = keyword_l;
+                until.begin_l = None;
+                until.end_l = None;
+                until.expression_l = expression_l;
+            }),
+        }
     }
 
     pub(crate) fn for_(
@@ -2949,23 +2945,22 @@ impl<'b> Builder<'b> {
         body: Option<&'b Node<'b>>,
         end_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let keyword_l = self.loc(for_t);
-        // let operator_l = self.loc(in_t);
-        // let begin_l = self.loc(do_t);
-        // let end_l = self.loc(end_t);
-        // let expression_l = keyword_l.join(&end_l);
+        let keyword_l = self.loc(for_t);
+        let operator_l = self.loc(in_t);
+        let begin_l = self.loc(do_t);
+        let end_l = self.loc(end_t);
+        let expression_l = keyword_l.join(end_l);
 
-        // Box::new(Node::For(For {
-        //     iterator,
-        //     iteratee,
-        //     body,
-        //     keyword_l,
-        //     operator_l,
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        For::new_in(self.blob, |for_| {
+            for_.iterator = iterator;
+            for_.iteratee = iteratee;
+            for_.body = body;
+            for_.keyword_l = keyword_l;
+            for_.operator_l = operator_l;
+            for_.begin_l = begin_l;
+            for_.end_l = end_l;
+            for_.expression_l = expression_l;
+        })
     }
 
     // Keywords
@@ -3063,19 +3058,18 @@ impl<'b> Builder<'b> {
         body: Option<&'b Node<'b>>,
         rbrace_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let keyword_l = self.loc(preexe_t);
-        // let begin_l = self.loc(lbrace_t);
-        // let end_l = self.loc(rbrace_t);
-        // let expression_l = keyword_l.join(&end_l);
+        let keyword_l = self.loc(preexe_t);
+        let begin_l = self.loc(lbrace_t);
+        let end_l = self.loc(rbrace_t);
+        let expression_l = keyword_l.join(end_l);
 
-        // Box::new(Node::Preexe(Preexe {
-        //     body,
-        //     keyword_l,
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Preexe::new_in(self.blob, |preexe| {
+            preexe.body = body;
+            preexe.keyword_l = keyword_l;
+            preexe.begin_l = begin_l;
+            preexe.end_l = end_l;
+            preexe.expression_l = expression_l;
+        })
     }
     pub(crate) fn postexe(
         &self,
@@ -3084,19 +3078,18 @@ impl<'b> Builder<'b> {
         body: Option<&'b Node<'b>>,
         rbrace_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let keyword_l = self.loc(postexe_t);
-        // let begin_l = self.loc(lbrace_t);
-        // let end_l = self.loc(rbrace_t);
-        // let expression_l = keyword_l.join(&end_l);
+        let keyword_l = self.loc(postexe_t);
+        let begin_l = self.loc(lbrace_t);
+        let end_l = self.loc(rbrace_t);
+        let expression_l = keyword_l.join(end_l);
 
-        // Box::new(Node::Postexe(Postexe {
-        //     body,
-        //     keyword_l,
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Postexe::new_in(self.blob, |postexe| {
+            postexe.body = body;
+            postexe.keyword_l = keyword_l;
+            postexe.begin_l = begin_l;
+            postexe.end_l = end_l;
+            postexe.expression_l = expression_l;
+        })
     }
 
     // Exception handling
@@ -3110,27 +3103,26 @@ impl<'b> Builder<'b> {
         then_t: Option<&'b Token<'b>>,
         body: Option<&'b Node<'b>>,
     ) -> &'b Node<'b> {
-        // let end_l = maybe_boxed_node_expr(body.as_deref())
-        //     .or_else(|| self.maybe_loc(then_t))
-        //     .or_else(|| maybe_boxed_node_expr(exc_var.as_deref()))
-        //     .or_else(|| maybe_boxed_node_expr(exc_list.as_deref()))
-        //     .unwrap_or_else(|| self.loc(rescue_t));
+        let end_l = maybe_boxed_node_expr(body.as_deref())
+            .or_else(|| self.maybe_loc(then_t))
+            .or_else(|| maybe_boxed_node_expr(exc_var.as_deref()))
+            .or_else(|| maybe_boxed_node_expr(exc_list.as_deref()))
+            .unwrap_or_else(|| self.loc(rescue_t));
 
-        // let expression_l = self.loc(rescue_t).join(&end_l);
-        // let keyword_l = self.loc(rescue_t);
-        // let assoc_l = self.maybe_loc(assoc_t);
-        // let begin_l = self.maybe_loc(then_t);
+        let expression_l = self.loc(rescue_t).join(end_l);
+        let keyword_l = self.loc(rescue_t);
+        let assoc_l = self.maybe_loc(assoc_t);
+        let begin_l = self.maybe_loc(then_t);
 
-        // Box::new(Node::RescueBody(RescueBody {
-        //     exc_list,
-        //     exc_var,
-        //     body,
-        //     keyword_l,
-        //     assoc_l,
-        //     begin_l,
-        //     expression_l,
-        // }))
-        todo!()
+        RescueBody::new_in(self.blob, |rescue_body| {
+            rescue_body.exc_list = exc_list;
+            rescue_body.exc_var = exc_var;
+            rescue_body.body = body;
+            rescue_body.keyword_l = keyword_l;
+            rescue_body.assoc_l = assoc_l;
+            rescue_body.begin_l = begin_l;
+            rescue_body.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn begin_body(
@@ -3140,114 +3132,119 @@ impl<'b> Builder<'b> {
         else_: Option<(&'b Token<'b>, Option<&'b Node<'b>>)>,
         ensure: Option<(&'b Token<'b>, Option<&'b Node<'b>>)>,
     ) -> Option<&'b Node<'b>> {
-        // let mut result: Option<&'b Node<'b>>;
+        let mut result: Option<&'b Node<'b>>;
 
-        // if !rescue_bodies.is_empty() {
-        //     if let Some((else_t, else_)) = else_ {
-        //         let begin_l = maybe_boxed_node_expr(compound_stmt.as_deref())
-        //             .or_else(|| maybe_node_expr(rescue_bodies.first()))
-        //             .unwrap_or_else(|| unreachable!("can't compute begin_l"));
+        if !rescue_bodies.is_empty() {
+            if let Some((else_t, else_)) = else_ {
+                let begin_l = maybe_boxed_node_expr(compound_stmt.as_deref())
+                    .or_else(|| maybe_node_expr(rescue_bodies.first()))
+                    .unwrap_or_else(|| unreachable!("can't compute begin_l"));
 
-        //         let end_l =
-        //             maybe_boxed_node_expr(else_.as_deref()).unwrap_or_else(|| self.loc(else_t));
+                let end_l =
+                    maybe_boxed_node_expr(else_.as_deref()).unwrap_or_else(|| self.loc(else_t));
 
-        //         let expression_l = begin_l.join(&end_l);
-        //         let else_l = self.loc(else_t);
+                let expression_l = begin_l.join(end_l);
+                let else_l = self.loc(else_t);
 
-        //         result = Some(Box::new(Node::Rescue(Rescue {
-        //             body: compound_stmt,
-        //             rescue_bodies,
-        //             else_,
-        //             else_l: Some(else_l),
-        //             expression_l,
-        //         })))
-        //     } else {
-        //         let begin_l = maybe_boxed_node_expr(compound_stmt.as_deref())
-        //             .or_else(|| maybe_node_expr(rescue_bodies.first()))
-        //             .unwrap_or_else(|| unreachable!("can't compute begin_l"));
+                result = Some(Rescue::new_in(self.blob, |rescue| {
+                    rescue.body = compound_stmt;
+                    rescue.rescue_bodies = rescue_bodies;
+                    rescue.else_ = else_;
+                    rescue.else_l = Some(else_l);
+                    rescue.expression_l = expression_l;
+                }))
+            } else {
+                let begin_l = maybe_boxed_node_expr(compound_stmt.as_deref())
+                    .or_else(|| maybe_node_expr(rescue_bodies.first()))
+                    .unwrap_or_else(|| unreachable!("can't compute begin_l"));
 
-        //         let end_l = maybe_node_expr(rescue_bodies.last())
-        //             .unwrap_or_else(|| unreachable!("can't compute end_l"));
+                let end_l = maybe_node_expr(rescue_bodies.last())
+                    .unwrap_or_else(|| unreachable!("can't compute end_l"));
 
-        //         let expression_l = begin_l.join(&end_l);
-        //         let else_l = self.maybe_loc(None);
+                let expression_l = begin_l.join(end_l);
+                let else_l = self.maybe_loc(None);
 
-        //         result = Some(Box::new(Node::Rescue(Rescue {
-        //             body: compound_stmt,
-        //             rescue_bodies,
-        //             else_: None,
-        //             else_l,
-        //             expression_l,
-        //         })))
-        //     }
-        // } else if let Some((else_t, else_)) = else_ {
-        //     let mut statements = vec![];
+                result = Some(Rescue::new_in(self.blob, |rescue| {
+                    rescue.body = compound_stmt;
+                    rescue.rescue_bodies = rescue_bodies;
+                    rescue.else_ = None;
+                    rescue.else_l = else_l;
+                    rescue.expression_l = expression_l;
+                }))
+            }
+        } else if let Some((else_t, else_)) = else_ {
+            let mut statements = self.blob.alloc_ref::<NodeList>();
 
-        //     if let Some(compound_stmt) = compound_stmt {
-        //         match *compound_stmt {
-        //             Node::Begin(Begin {
-        //                 statements: stmts, ..
-        //             }) => statements = stmts,
-        //             other => statements.push(other),
-        //         }
-        //     }
+            if let Some(compound_stmt) = compound_stmt {
+                match compound_stmt {
+                    Node::Begin(Begin {
+                        statements: stmts, ..
+                    }) => {
+                        statements = *stmts;
+                    }
+                    other => {
+                        statements.push(other);
+                    }
+                }
+            }
 
-        //     let parts = if else_.is_some() {
-        //         vec![*else_.unwrap()]
-        //     } else {
-        //         vec![]
-        //     };
-        //     let CollectionMap {
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     } = self.collection_map(Some(else_t.loc), &parts, None);
+            let parts = if let Some(else_) = else_ {
+                let list = self.blob.alloc_ref::<NodeList>();
+                list.push(else_);
+                list
+            } else {
+                self.blob.alloc_ref::<NodeList>()
+            };
+            let CollectionMap {
+                begin_l,
+                end_l,
+                expression_l,
+            } = self.collection_map(Some(else_t.loc), &parts, None);
 
-        //     statements.push(Node::Begin(Begin {
-        //         statements: parts,
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     }));
+            statements.push(Begin::new_in(self.blob, |begin| {
+                begin.statements = parts;
+                begin.begin_l = begin_l;
+                begin.end_l = end_l;
+                begin.expression_l = expression_l;
+            }));
 
-        //     let CollectionMap {
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     } = self.collection_map(None, &statements, None);
+            let CollectionMap {
+                begin_l,
+                end_l,
+                expression_l,
+            } = self.collection_map(None, &statements, None);
 
-        //     result = Some(Box::new(Node::Begin(Begin {
-        //         statements,
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     })))
-        // } else {
-        //     result = compound_stmt;
-        // }
+            result = Some(Begin::new_in(self.blob, |begin| {
+                begin.statements = statements;
+                begin.begin_l = begin_l;
+                begin.end_l = end_l;
+                begin.expression_l = expression_l;
+            }))
+        } else {
+            result = compound_stmt;
+        }
 
-        // if let Some((ensure_t, ensure)) = ensure {
-        //     let ensure_body = ensure;
-        //     let keyword_l = self.loc(ensure_t);
+        if let Some((ensure_t, ensure)) = ensure {
+            let ensure_body = ensure;
+            let keyword_l = self.loc(ensure_t);
 
-        //     let begin_l =
-        //         maybe_boxed_node_expr(result.as_deref()).unwrap_or_else(|| self.loc(ensure_t));
+            let begin_l =
+                maybe_boxed_node_expr(result.as_deref()).unwrap_or_else(|| self.loc(ensure_t));
 
-        //     let end_l =
-        //         maybe_node_expr(ensure_body.as_deref()).unwrap_or_else(|| self.loc(ensure_t));
+            let end_l =
+                maybe_node_expr(ensure_body.as_deref()).unwrap_or_else(|| self.loc(ensure_t));
 
-        //     let expression_l = begin_l.join(&end_l);
+            let expression_l = begin_l.join(end_l);
 
-        //     result = Some(Box::new(Node::Ensure(Ensure {
-        //         body: result,
-        //         ensure: ensure_body,
-        //         keyword_l,
-        //         expression_l,
-        //     })))
-        // }
+            result = Some(Ensure::new_in(self.blob, |ensure| {
+                ensure.body = result;
+                ensure.ensure = ensure_body;
+                ensure.keyword_l = keyword_l;
+                ensure.expression_l = expression_l;
+            }))
+        }
 
-        // result
-        todo!()
+        result
     }
 
     //
@@ -3341,42 +3338,39 @@ impl<'b> Builder<'b> {
         body: Option<&'b Node<'b>>,
         end_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let begin_l = self.loc(begin_t);
-        // let end_l = self.loc(end_t);
-        // let expression_l = begin_l.join(&end_l);
+        let begin_l = self.loc(begin_t);
+        let end_l = self.loc(end_t);
+        let expression_l = begin_l.join(end_l);
 
-        // let begin_l = Some(begin_l);
-        // let end_l = Some(end_l);
+        let begin_l = Some(begin_l);
+        let end_l = Some(end_l);
 
-        // if let Some(body) = body {
-        //     let body = *body;
-        //     match body {
-        //         Node::Begin(Begin { statements, .. }) => {
-        //             // Synthesized (begin) from compstmt "a; b".
-        //             Box::new(Node::KwBegin(KwBegin {
-        //                 statements,
-        //                 begin_l,
-        //                 end_l,
-        //                 expression_l,
-        //             }))
-        //         }
-        //         other => Box::new(Node::KwBegin(KwBegin {
-        //             statements: vec![other],
-        //             begin_l,
-        //             end_l,
-        //             expression_l,
-        //         })),
-        //     }
-        // } else {
-        //     // A nil expression: `begin end'.
-        //     Box::new(Node::KwBegin(KwBegin {
-        //         statements: vec![],
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     }))
-        // }
-        todo!()
+        if let Some(body) = body {
+            match body {
+                Node::Begin(Begin { statements, .. }) => {
+                    // Synthesized (begin) from compstmt "a; b".
+                    KwBegin::new_in(self.blob, |kwbegin| {
+                        kwbegin.statements = statements;
+                        kwbegin.begin_l = begin_l;
+                        kwbegin.end_l = end_l;
+                        kwbegin.expression_l = expression_l;
+                    })
+                }
+                other => KwBegin::new_in(self.blob, |kwbegin| {
+                    kwbegin.statements.push(other);
+                    kwbegin.begin_l = begin_l;
+                    kwbegin.end_l = end_l;
+                    kwbegin.expression_l = expression_l;
+                }),
+            }
+        } else {
+            // A nil expression: `begin end'.
+            KwBegin::new_in(self.blob, |kwbegin| {
+                kwbegin.begin_l = begin_l;
+                kwbegin.end_l = end_l;
+                kwbegin.expression_l = expression_l;
+            })
+        }
     }
 
     //
@@ -3392,28 +3386,27 @@ impl<'b> Builder<'b> {
         else_body: Option<&'b Node<'b>>,
         end_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let else_body = match (else_t.as_ref(), else_body.as_ref()) {
-        //     (Some(else_t), None) => Some(Box::new(Node::EmptyElse(EmptyElse {
-        //         expression_l: self.loc(else_t),
-        //     }))),
-        //     _ => else_body,
-        // };
+        let else_body = match (else_t.as_ref(), else_body.as_ref()) {
+            (Some(else_t), None) => Some(EmptyElse::new_in(self.blob, |empty_else| {
+                empty_else.expression_l = self.loc(else_t);
+            })),
+            _ => else_body,
+        };
 
-        // let keyword_l = self.loc(case_t);
-        // let else_l = self.maybe_loc(else_t);
-        // let end_l = self.loc(end_t);
-        // let expression_l = self.loc(case_t).join(&end_l);
+        let keyword_l = self.loc(case_t);
+        let else_l = self.maybe_loc(else_t);
+        let end_l = self.loc(end_t);
+        let expression_l = self.loc(case_t).join(end_l);
 
-        // Box::new(Node::CaseMatch(CaseMatch {
-        //     expr,
-        //     in_bodies,
-        //     else_body,
-        //     keyword_l,
-        //     else_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        CaseMatch::new_in(self.blob, |case_match| {
+            case_match.expr = expr;
+            case_match.in_bodies = in_bodies;
+            case_match.else_body = else_body;
+            case_match.keyword_l = keyword_l;
+            case_match.else_l = else_l;
+            case_match.end_l = end_l;
+            case_match.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn match_pattern(
@@ -3422,16 +3415,15 @@ impl<'b> Builder<'b> {
         assoc_t: &'b Token<'b>,
         pattern: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        // let operator_l = self.loc(assoc_t);
-        // let expression_l = join_exprs(&value, &pattern);
+        let operator_l = self.loc(assoc_t);
+        let expression_l = join_exprs(&value, &pattern);
 
-        // Box::new(Node::MatchPattern(MatchPattern {
-        //     value,
-        //     pattern,
-        //     operator_l,
-        //     expression_l,
-        // }))
-        todo!()
+        MatchPattern::new_in(self.blob, |match_pattern| {
+            match_pattern.value = value;
+            match_pattern.pattern = pattern;
+            match_pattern.operator_l = operator_l;
+            match_pattern.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn match_pattern_p(
@@ -3440,16 +3432,15 @@ impl<'b> Builder<'b> {
         in_t: &'b Token<'b>,
         pattern: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        // let operator_l = self.loc(in_t);
-        // let expression_l = join_exprs(&value, &pattern);
+        let operator_l = self.loc(in_t);
+        let expression_l = join_exprs(&value, &pattern);
 
-        // Box::new(Node::MatchPatternP(MatchPatternP {
-        //     value,
-        //     pattern,
-        //     operator_l,
-        //     expression_l,
-        // }))
-        todo!()
+        MatchPatternP::new_in(self.blob, |match_pattern_p| {
+            match_pattern_p.value = value;
+            match_pattern_p.pattern = pattern;
+            match_pattern_p.operator_l = operator_l;
+            match_pattern_p.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn in_pattern(
@@ -3460,46 +3451,43 @@ impl<'b> Builder<'b> {
         then_t: &'b Token<'b>,
         body: Option<&'b Node<'b>>,
     ) -> &'b Node<'b> {
-        // let keyword_l = self.loc(in_t);
-        // let begin_l = self.loc(then_t);
+        let keyword_l = self.loc(in_t);
+        let begin_l = self.loc(then_t);
 
-        // let expression_l = maybe_boxed_node_expr(body.as_deref())
-        //     .or_else(|| maybe_boxed_node_expr(guard.as_deref()))
-        //     .unwrap_or_else(|| *pattern.expression())
-        //     .join(&keyword_l);
+        let expression_l = maybe_boxed_node_expr(body.as_deref())
+            .or_else(|| maybe_boxed_node_expr(guard.as_deref()))
+            .unwrap_or_else(|| pattern.expression())
+            .join(keyword_l);
 
-        // Box::new(Node::InPattern(InPattern {
-        //     pattern,
-        //     guard,
-        //     body,
-        //     keyword_l,
-        //     begin_l,
-        //     expression_l,
-        // }))
-        todo!()
+        InPattern::new_in(self.blob, |in_pattern| {
+            in_pattern.pattern = pattern;
+            in_pattern.guard = guard;
+            in_pattern.body = body;
+            in_pattern.keyword_l = keyword_l;
+            in_pattern.begin_l = begin_l;
+            in_pattern.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn if_guard(&self, if_t: &'b Token<'b>, cond: &'b Node<'b>) -> &'b Node<'b> {
-        // let keyword_l = self.loc(if_t);
-        // let expression_l = keyword_l.join(cond.expression());
+        let keyword_l = self.loc(if_t);
+        let expression_l = keyword_l.join(cond.expression());
 
-        // Box::new(Node::IfGuard(IfGuard {
-        //     cond,
-        //     keyword_l,
-        //     expression_l,
-        // }))
-        todo!()
+        IfGuard::new_in(self.blob, |if_guard| {
+            if_guard.cond = cond;
+            if_guard.keyword_l = keyword_l;
+            if_guard.expression_l = expression_l;
+        })
     }
     pub(crate) fn unless_guard(&self, unless_t: &'b Token<'b>, cond: &'b Node<'b>) -> &'b Node<'b> {
         let keyword_l = self.loc(unless_t);
         let expression_l = keyword_l.join(cond.expression());
 
-        // Box::new(Node::UnlessGuard(UnlessGuard {
-        //     cond,
-        //     keyword_l,
-        //     expression_l,
-        // }))
-        todo!()
+        UnlessGuard::new_in(self.blob, |unless_guard| {
+            unless_guard.cond = cond;
+            unless_guard.keyword_l = keyword_l;
+            unless_guard.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn match_var(&self, name_t: &'b Token<'b>) -> Result<&'b Node<'b>, ()> {
@@ -3850,220 +3838,211 @@ impl<'b> Builder<'b> {
     // Verification
     //
 
-    pub(crate) fn check_condition(cond: &'b Node<'b>) -> &'b Node<'b> {
-        // let cond = cond;
-
-        // match *cond {
-        //     Node::Begin(Begin {
-        //         statements,
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     }) => {
-        //         if statements.len() == 1 {
-        //             let stmt = statements.into_iter().next().unwrap();
-        //             let stmt = *Self::check_condition(Box::new(stmt));
-        //             Box::new(Node::Begin(Begin {
-        //                 statements: vec![stmt],
-        //                 begin_l,
-        //                 end_l,
-        //                 expression_l,
-        //             }))
-        //         } else {
-        //             Box::new(Node::Begin(Begin {
-        //                 statements,
-        //                 begin_l,
-        //                 end_l,
-        //                 expression_l,
-        //             }))
-        //         }
-        //     }
-        //     Node::And(And {
-        //         lhs,
-        //         rhs,
-        //         operator_l,
-        //         expression_l,
-        //     }) => {
-        //         let lhs = Self::check_condition(lhs);
-        //         let rhs = Self::check_condition(rhs);
-        //         Box::new(Node::And(And {
-        //             lhs,
-        //             rhs,
-        //             operator_l,
-        //             expression_l,
-        //         }))
-        //     }
-        //     Node::Or(Or {
-        //         lhs,
-        //         rhs,
-        //         operator_l,
-        //         expression_l,
-        //     }) => {
-        //         let lhs = Self::check_condition(lhs);
-        //         let rhs = Self::check_condition(rhs);
-        //         Box::new(Node::Or(Or {
-        //             lhs,
-        //             rhs,
-        //             operator_l,
-        //             expression_l,
-        //         }))
-        //     }
-        //     Node::Irange(Irange {
-        //         left,
-        //         right,
-        //         operator_l,
-        //         expression_l,
-        //     }) => Box::new(Node::IFlipFlop(IFlipFlop {
-        //         left: left.map(Self::check_condition),
-        //         right: right.map(Self::check_condition),
-        //         operator_l,
-        //         expression_l,
-        //     })),
-        //     Node::Erange(Erange {
-        //         left,
-        //         right,
-        //         operator_l,
-        //         expression_l,
-        //     }) => Box::new(Node::EFlipFlop(EFlipFlop {
-        //         left: left.map(Self::check_condition),
-        //         right: right.map(Self::check_condition),
-        //         operator_l,
-        //         expression_l,
-        //     })),
-        //     regexp if matches!(regexp, Node::Regexp(_)) => {
-        //         let expression_l = *regexp.expression();
-
-        //         Box::new(Node::MatchCurrentLine(MatchCurrentLine {
-        //             re: Box::new(regexp),
-        //             expression_l,
-        //         }))
-        //     }
-        //     other => Box::new(other),
-        // }
-        todo!()
+    pub(crate) fn check_condition(&self, cond: &'b Node<'b>) -> &'b Node<'b> {
+        match cond {
+            Node::Begin(Begin {
+                statements,
+                begin_l,
+                end_l,
+                expression_l,
+                ..
+            }) => {
+                if statements.len() == 1 {
+                    let stmt = statements.last().unwrap();
+                    let stmt = self.check_condition(stmt);
+                    Begin::new_in(self.blob, |begin| {
+                        begin.statements.push(stmt);
+                        begin.begin_l = *begin_l;
+                        begin.end_l = *end_l;
+                        begin.expression_l = *expression_l;
+                    })
+                } else {
+                    cond
+                }
+            }
+            Node::And(And {
+                lhs,
+                rhs,
+                operator_l,
+                expression_l,
+                ..
+            }) => {
+                let lhs = self.check_condition(lhs);
+                let rhs = self.check_condition(rhs);
+                And::new_in(self.blob, |and| {
+                    and.lhs = lhs;
+                    and.rhs = rhs;
+                    and.operator_l = *operator_l;
+                    and.expression_l = *expression_l;
+                })
+            }
+            Node::Or(Or {
+                lhs,
+                rhs,
+                operator_l,
+                expression_l,
+                ..
+            }) => {
+                let lhs = self.check_condition(lhs);
+                let rhs = self.check_condition(rhs);
+                Or::new_in(self.blob, |or| {
+                    or.lhs = lhs;
+                    or.rhs = rhs;
+                    or.operator_l = *operator_l;
+                    or.expression_l = *expression_l;
+                })
+            }
+            Node::Irange(Irange {
+                left,
+                right,
+                operator_l,
+                expression_l,
+                ..
+            }) => IFlipFlop::new_in(self.blob, |iflip_flop| {
+                iflip_flop.left = left.map(|n| self.check_condition(n));
+                iflip_flop.right = right.map(|n| self.check_condition(n));
+                iflip_flop.operator_l = *operator_l;
+                iflip_flop.expression_l = *expression_l;
+            }),
+            Node::Erange(Erange {
+                left,
+                right,
+                operator_l,
+                expression_l,
+                ..
+            }) => EFlipFlop::new_in(self.blob, |eflip_flop| {
+                eflip_flop.left = left.map(|n| self.check_condition(n));
+                eflip_flop.right = right.map(|n| self.check_condition(n));
+                eflip_flop.operator_l = *operator_l;
+                eflip_flop.expression_l = *expression_l;
+            }),
+            Node::Regexp(Regexp { expression_l, .. }) => {
+                MatchCurrentLine::new_in(self.blob, |match_| {
+                    match_.re = cond;
+                    match_.expression_l = cond.expression();
+                })
+            }
+            other => other,
+        }
     }
 
-    pub(crate) fn check_duplicate_args<'a>(
+    pub(crate) fn check_duplicate_args(
         &self,
-        args: &'a NodeList<'a>,
-        map: &mut HashMap<String, &'a Node>,
+        args: &'b NodeList<'b>,
+        map: &mut HashMap<String, &'b Node<'b>>,
     ) {
-        // for arg in args {
-        //     match arg {
-        //         Node::Arg(_)
-        //         | Node::Optarg(_)
-        //         | Node::Restarg(_)
-        //         | Node::Kwarg(_)
-        //         | Node::Kwoptarg(_)
-        //         | Node::Kwrestarg(_)
-        //         | Node::Shadowarg(_)
-        //         | Node::Blockarg(_) => {
-        //             self.check_duplicate_arg(arg, map);
-        //         }
-        //         Node::Mlhs(Mlhs { items, .. }) => {
-        //             self.check_duplicate_args(items, map);
-        //         }
-        //         Node::Procarg0(Procarg0 { args, .. }) => {
-        //             self.check_duplicate_args(args, map);
-        //         }
-        //         Node::ForwardArg(_) | Node::Kwnilarg(_) => {
-        //             // ignore
-        //         }
-        //         _ => {
-        //             unreachable!("unsupported arg type {:?}", arg)
-        //         }
-        //     }
-        // }
-        todo!()
+        for arg in args.iter() {
+            match arg {
+                Node::Arg(_)
+                | Node::Optarg(_)
+                | Node::Restarg(_)
+                | Node::Kwarg(_)
+                | Node::Kwoptarg(_)
+                | Node::Kwrestarg(_)
+                | Node::Shadowarg(_)
+                | Node::Blockarg(_) => {
+                    self.check_duplicate_arg(arg, map);
+                }
+                Node::Mlhs(Mlhs { items, .. }) => {
+                    self.check_duplicate_args(items, map);
+                }
+                Node::Procarg0(Procarg0 { args, .. }) => {
+                    self.check_duplicate_args(args, map);
+                }
+                Node::ForwardArg(_) | Node::Kwnilarg(_) => {
+                    // ignore
+                }
+                _ => {
+                    unreachable!("unsupported arg type {:?}", arg)
+                }
+            }
+        }
     }
 
-    fn arg_name<'a>(&self, node: &'a Node) -> Option<&'a str> {
-        // match node {
-        //     Node::Arg(Arg { name, .. })
-        //     | Node::Optarg(Optarg { name, .. })
-        //     | Node::Kwarg(Kwarg { name, .. })
-        //     | Node::Kwoptarg(Kwoptarg { name, .. })
-        //     | Node::Shadowarg(Shadowarg { name, .. }) => Some(name.as_str()),
+    fn arg_name(&self, node: &'b Node) -> Option<&'b str> {
+        match node {
+            Node::Arg(Arg { name, .. })
+            | Node::Optarg(Optarg { name, .. })
+            | Node::Kwarg(Kwarg { name, .. })
+            | Node::Kwoptarg(Kwoptarg { name, .. })
+            | Node::Shadowarg(Shadowarg { name, .. }) => Some(name.as_whole_string().unwrap()),
 
-        //     Node::Restarg(Restarg { name, .. })
-        //     | Node::Kwrestarg(Kwrestarg { name, .. })
-        //     | Node::Blockarg(Blockarg { name, .. }) => name.as_ref().map(|s| s.as_str()),
-        //     _ => {
-        //         unreachable!("unsupported arg {:?}", node)
-        //     }
-        // }
-        todo!()
+            Node::Restarg(Restarg { name, .. })
+            | Node::Kwrestarg(Kwrestarg { name, .. })
+            | Node::Blockarg(Blockarg { name, .. }) => name.map(|s| s.as_whole_string().unwrap()),
+            _ => {
+                unreachable!("unsupported arg {:?}", node)
+            }
+        }
     }
 
     fn arg_name_loc(&self, node: &Node) -> Loc {
-        // match node {
-        //     Node::Arg(Arg {
-        //         expression_l: output_l,
-        //         ..
-        //     })
-        //     | Node::Optarg(Optarg {
-        //         name_l: output_l, ..
-        //     })
-        //     | Node::Kwarg(Kwarg {
-        //         name_l: output_l, ..
-        //     })
-        //     | Node::Kwoptarg(Kwoptarg {
-        //         name_l: output_l, ..
-        //     })
-        //     | Node::Shadowarg(Shadowarg {
-        //         expression_l: output_l,
-        //         ..
-        //     }) => *output_l,
-        //     Node::Blockarg(Blockarg {
-        //         name_l,
-        //         expression_l,
-        //         ..
-        //     })
-        //     | Node::Restarg(Restarg {
-        //         name_l,
-        //         expression_l,
-        //         ..
-        //     })
-        //     | Node::Kwrestarg(Kwrestarg {
-        //         name_l,
-        //         expression_l,
-        //         ..
-        //     }) => name_l.unwrap_or(*expression_l),
-        //     _ => unreachable!("unsupported arg {:?}", node),
-        // }
-        todo!()
+        match node {
+            Node::Arg(Arg {
+                expression_l: output_l,
+                ..
+            })
+            | Node::Optarg(Optarg {
+                name_l: output_l, ..
+            })
+            | Node::Kwarg(Kwarg {
+                name_l: output_l, ..
+            })
+            | Node::Kwoptarg(Kwoptarg {
+                name_l: output_l, ..
+            })
+            | Node::Shadowarg(Shadowarg {
+                expression_l: output_l,
+                ..
+            }) => *output_l,
+            Node::Blockarg(Blockarg {
+                name_l,
+                expression_l,
+                ..
+            })
+            | Node::Restarg(Restarg {
+                name_l,
+                expression_l,
+                ..
+            })
+            | Node::Kwrestarg(Kwrestarg {
+                name_l,
+                expression_l,
+                ..
+            }) => name_l.unwrap_or(*expression_l),
+            _ => unreachable!("unsupported arg {:?}", node),
+        }
     }
 
-    pub(crate) fn check_duplicate_arg<'a>(
+    pub(crate) fn check_duplicate_arg(
         &self,
-        this_arg: &'a Node<'b>,
-        // map: &mut HashMap<String, &'a Node<'b>>,
+        this_arg: &'b Node<'b>,
+        map: &mut HashMap<String, &'b Node<'b>>,
     ) {
-        // let this_name = match self.arg_name(this_arg) {
-        //     Some(name) => name,
-        //     None => return,
-        // };
+        let this_name = match self.arg_name(this_arg) {
+            Some(name) => name,
+            None => return,
+        };
 
-        // let that_arg = map.get(this_name);
+        let that_arg = map.get(this_name);
 
-        // match that_arg {
-        //     None => {
-        //         map.insert(this_name.to_string(), this_arg);
-        //     }
-        //     Some(that_arg) => {
-        //         let that_name = match self.arg_name(that_arg) {
-        //             Some(name) => name,
-        //             None => return,
-        //         };
-        //         if self.arg_name_collides(this_name, that_name) {
-        //             self.error(
-        //                 DiagnosticMessage::DuplicatedArgumentName {},
-        //                 self.arg_name_loc(this_arg),
-        //             )
-        //         }
-        //     }
-        // }
-        todo!()
+        match that_arg {
+            None => {
+                map.insert(this_name.to_string(), this_arg);
+            }
+            Some(that_arg) => {
+                let that_name = match self.arg_name(that_arg) {
+                    Some(name) => name,
+                    None => return,
+                };
+                if self.arg_name_collides(this_name, that_name) {
+                    self.error(
+                        DiagnosticMessage::DuplicatedArgumentName {},
+                        self.arg_name_loc(this_arg),
+                    )
+                }
+            }
+        }
     }
 
     pub(crate) fn check_assignment_to_numparam(&self, name: &str, loc: Loc) -> Result<(), ()> {
@@ -4428,7 +4407,7 @@ impl<'b> Builder<'b> {
 
         let last = args.last().unwrap();
 
-        if matches!(last, Node::Hash(_)) {
+        if self.is_kwargs(last) {
             last.change_hash_type_to_kwargs();
             return;
         }

@@ -181,7 +181,7 @@ impl<'s> Fixture<'s> {
 }
 
 pub(crate) fn test_file(fixture_path: &str) {
-    let mut mem = [0; 1000];
+    let mut mem = [0; 2000];
     let blob = Blob::from(&mut mem);
 
     let src = std::fs::read_to_string(fixture_path)
