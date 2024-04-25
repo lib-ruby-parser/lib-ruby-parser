@@ -3491,37 +3491,33 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn match_var(&self, name_t: &'b Token<'b>) -> Result<&'b Node<'b>, ()> {
-        // let name_l = self.loc(name_t);
-        // let expression_l = name_l;
+        let name_l = self.loc(name_t);
+        let expression_l = name_l;
 
-        // self.check_lvar_name(name_t.as_whole_str(), name_l)?;
-        // self.check_duplicate_pattern_variable(name_t.as_whole_str(), name_l)?;
-        // self.static_env.declare(name_t.as_whole_str(), self.blob);
+        self.check_lvar_name(name_t.as_whole_str(), name_l)?;
+        self.check_duplicate_pattern_variable(name_t.as_whole_str(), name_l)?;
+        self.static_env.declare(name_t.as_whole_str(), self.blob);
 
-        // Ok(Box::new(Node::MatchVar(MatchVar {
-        //     name: name_t.to_string().unwrap(),
-        //     name_l,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(MatchVar::new_in(self.blob, |match_var| {
+            match_var.name = name_t.token_value;
+            match_var.name_l = name_l;
+            match_var.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn match_hash_var(&self, name_t: &'b Token<'b>) -> Result<&'b Node<'b>, ()> {
-        // let expression_l = self.loc(name_t);
-        // let name_l = expression_l.adjust_end(-1);
+        let expression_l = self.loc(name_t);
+        let name_l = expression_l.adjust_end(-1);
 
-        // let name = value(name_t);
+        self.check_lvar_name(name_t.as_whole_str(), name_l)?;
+        self.check_duplicate_pattern_variable(name_t.as_whole_str(), name_l)?;
+        self.static_env.declare(name_t.as_whole_str(), self.blob);
 
-        // self.check_lvar_name(name_t.as_whole_str(), name_l)?;
-        // self.check_duplicate_pattern_variable(name_t.as_whole_str(), name_l)?;
-        // self.static_env.declare(name_t.as_whole_str(), self.blob);
-
-        // Ok(Box::new(Node::MatchVar(MatchVar {
-        //     name,
-        //     name_l,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(MatchVar::new_in(self.blob, |match_var| {
+            match_var.name = name_t.token_value;
+            match_var.name_l = name_l;
+            match_var.expression_l = expression_l;
+        }))
     }
     pub(crate) fn match_hash_var_from_str(
         &self,
@@ -3529,69 +3525,69 @@ impl<'b> Builder<'b> {
         strings: &'b NodeList<'b>,
         end_t: &'b Token<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        // if strings.len() != 1 {
-        //     self.error(
-        //         DiagnosticMessage::SymbolLiteralWithInterpolation {},
-        //         self.loc(begin_t).join(&self.loc(end_t)),
-        //     );
-        //     return Err(());
-        // }
+        if strings.len() != 1 {
+            self.error(
+                DiagnosticMessage::SymbolLiteralWithInterpolation {},
+                self.loc(begin_t).join(self.loc(end_t)),
+            );
+            return Err(());
+        }
 
-        // let string = strings.remove(0);
-        // let result = match string {
-        //     Node::Str(Str {
-        //         value,
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     }) => {
-        //         let name = value.to_string_lossy();
-        //         let mut name_l = expression_l;
+        let string = strings.first().unwrap();
+        let result = match string {
+            Node::Str(Str {
+                value,
+                begin_l,
+                end_l,
+                expression_l,
+                ..
+            }) => {
+                let name = value.as_whole_string().unwrap();
+                let mut name_l = *expression_l;
 
-        //         let name_s = self.blob.push_str(&name);
+                let name_s = value.as_whole_string().unwrap();
 
-        //         self.check_lvar_name(name_s, name_l)?;
-        //         self.check_duplicate_pattern_variable(name_s, name_l)?;
+                self.check_lvar_name(name_s, name_l)?;
+                self.check_duplicate_pattern_variable(name_s, name_l)?;
 
-        //         self.static_env.declare(name_s, self.blob);
+                self.static_env.declare(name_s, self.blob);
 
-        //         if let Some(begin_l) = begin_l.as_ref() {
-        //             let begin_d: i32 = begin_l
-        //                 .size()
-        //                 .try_into()
-        //                 .expect("failed to convert usize loc into i32, is it too big?");
-        //             name_l = name_l.adjust_begin(begin_d)
-        //         }
+                if let Some(begin_l) = begin_l.as_ref() {
+                    let begin_d: isize = begin_l
+                        .size()
+                        .try_into()
+                        .expect("failed to convert usize loc into i32, is it too big?");
+                    name_l = name_l.adjust_begin(begin_d)
+                }
 
-        //         if let Some(end_l) = end_l.as_ref() {
-        //             let end_d: i32 = end_l
-        //                 .size()
-        //                 .try_into()
-        //                 .expect("failed to convert usize loc into i32, is it too big?");
-        //             name_l = name_l.adjust_end(-end_d)
-        //         }
+                if let Some(end_l) = end_l.as_ref() {
+                    let end_d: isize = end_l
+                        .size()
+                        .try_into()
+                        .expect("failed to convert usize loc into i32, is it too big?");
+                    name_l = name_l.adjust_end(-end_d)
+                }
 
-        //         let expression_l = self.loc(begin_t).join(&expression_l).join(&self.loc(end_t));
-        //         Box::new(Node::MatchVar(MatchVar {
-        //             name,
-        //             name_l,
-        //             expression_l,
-        //         }))
-        //     }
-        //     Node::Begin(Begin { statements, .. }) => {
-        //         self.match_hash_var_from_str(begin_t, statements, end_t)?
-        //     }
-        //     _ => {
-        //         self.error(
-        //             DiagnosticMessage::SymbolLiteralWithInterpolation {},
-        //             self.loc(begin_t).join(&self.loc(end_t)),
-        //         );
-        //         return Err(());
-        //     }
-        // };
+                let expression_l = self.loc(begin_t).join(*expression_l).join(self.loc(end_t));
+                MatchVar::new_in(self.blob, |match_var| {
+                    match_var.name.append_borrowed(name_s, self.blob);
+                    match_var.name_l = name_l;
+                    match_var.expression_l = expression_l;
+                })
+            }
+            Node::Begin(Begin { statements, .. }) => {
+                self.match_hash_var_from_str(begin_t, statements, end_t)?
+            }
+            _ => {
+                self.error(
+                    DiagnosticMessage::SymbolLiteralWithInterpolation {},
+                    self.loc(begin_t).join(self.loc(end_t)),
+                );
+                return Err(());
+            }
+        };
 
-        // Ok(result)
-        todo!()
+        Ok(result)
     }
 
     pub(crate) fn match_rest(
@@ -3599,21 +3595,20 @@ impl<'b> Builder<'b> {
         star_t: &'b Token<'b>,
         name_t: Option<&'b Token<'b>>,
     ) -> Result<&'b Node<'b>, ()> {
-        // let name = if let Some(name_t) = name_t {
-        //     Some(self.match_var(name_t)?)
-        // } else {
-        //     None
-        // };
+        let name = if let Some(name_t) = name_t {
+            Some(self.match_var(name_t)?)
+        } else {
+            None
+        };
 
-        // let operator_l = self.loc(star_t);
-        // let expression_l = operator_l.maybe_join(&maybe_boxed_node_expr(name.as_deref()));
+        let operator_l = self.loc(star_t);
+        let expression_l = operator_l.maybe_join(maybe_boxed_node_expr(name.as_deref()));
 
-        // Ok(Box::new(Node::MatchRest(MatchRest {
-        //     name,
-        //     operator_l,
-        //     expression_l,
-        // })))
-        todo!()
+        Ok(MatchRest::new_in(self.blob, |match_rest| {
+            match_rest.name = name;
+            match_rest.operator_l = operator_l;
+            match_rest.expression_l = expression_l;
+        }))
     }
 
     pub(crate) fn hash_pattern(
@@ -3622,23 +3617,22 @@ impl<'b> Builder<'b> {
         kwargs: &'b NodeList<'b>,
         rbrace_t: Option<&'b Token<'b>>,
     ) -> &'b Node<'b> {
-        // let CollectionMap {
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // } = self.collection_map(
-        //     lbrace_t.as_ref().map(|t| t.loc),
-        //     &kwargs,
-        //     rbrace_t.as_ref().map(|t| t.loc),
-        // );
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(
+            lbrace_t.as_ref().map(|t| t.loc),
+            &kwargs,
+            rbrace_t.as_ref().map(|t| t.loc),
+        );
 
-        // Box::new(Node::HashPattern(HashPattern {
-        //     elements: kwargs,
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        HashPattern::new_in(self.blob, |hash_pattern| {
+            hash_pattern.elements = kwargs;
+            hash_pattern.begin_l = begin_l;
+            hash_pattern.end_l = end_l;
+            hash_pattern.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn array_pattern(
@@ -3648,39 +3642,37 @@ impl<'b> Builder<'b> {
         trailing_comma: Option<&'b Token<'b>>,
         rbrack_l: Option<Loc>,
     ) -> &'b Node<'b> {
-        // let CollectionMap {
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // } = self.collection_map(lbrack_l, &elements, rbrack_l);
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(lbrack_l, &elements, rbrack_l);
 
-        // let expression_l = expression_l.maybe_join(&self.maybe_loc(trailing_comma));
+        let expression_l = expression_l.maybe_join(self.maybe_loc(trailing_comma));
 
-        // if elements.is_empty() {
-        //     return Box::new(Node::ArrayPattern(ArrayPattern {
-        //         elements: vec![],
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     }));
-        // }
+        if elements.is_empty() {
+            return ArrayPattern::new_in(self.blob, |array_pattern| {
+                array_pattern.begin_l = begin_l;
+                array_pattern.end_l = end_l;
+                array_pattern.expression_l = expression_l;
+            });
+        }
 
-        // if trailing_comma.is_some() {
-        //     Box::new(Node::ArrayPatternWithTail(ArrayPatternWithTail {
-        //         elements,
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     }))
-        // } else {
-        //     Box::new(Node::ArrayPattern(ArrayPattern {
-        //         elements,
-        //         begin_l,
-        //         end_l,
-        //         expression_l,
-        //     }))
-        // }
-        todo!()
+        if trailing_comma.is_some() {
+            ArrayPatternWithTail::new_in(self.blob, |array_pattern_with_tail| {
+                array_pattern_with_tail.elements = elements;
+                array_pattern_with_tail.begin_l = begin_l;
+                array_pattern_with_tail.end_l = end_l;
+                array_pattern_with_tail.expression_l = expression_l;
+            })
+        } else {
+            ArrayPattern::new_in(self.blob, |array_pattern| {
+                array_pattern.elements = elements;
+                array_pattern.begin_l = begin_l;
+                array_pattern.end_l = end_l;
+                array_pattern.expression_l = expression_l;
+            })
+        }
     }
 
     pub(crate) fn find_pattern(
@@ -3689,19 +3681,18 @@ impl<'b> Builder<'b> {
         elements: &'b NodeList<'b>,
         rbrack_l: Option<Loc>,
     ) -> &'b Node<'b> {
-        // let CollectionMap {
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // } = self.collection_map(lbrack_l, &elements, rbrack_l);
+        let CollectionMap {
+            begin_l,
+            end_l,
+            expression_l,
+        } = self.collection_map(lbrack_l, &elements, rbrack_l);
 
-        // Box::new(Node::FindPattern(FindPattern {
-        //     elements,
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        FindPattern::new_in(self.blob, |find_pattern| {
+            find_pattern.elements = elements;
+            find_pattern.begin_l = begin_l;
+            find_pattern.end_l = end_l;
+            find_pattern.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn const_pattern(
@@ -3711,30 +3702,28 @@ impl<'b> Builder<'b> {
         pattern: &'b Node<'b>,
         rdelim_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let begin_l = self.loc(ldelim_t);
-        // let end_l = self.loc(rdelim_t);
-        // let expression_l = const_.expression().join(&self.loc(rdelim_t));
+        let begin_l = self.loc(ldelim_t);
+        let end_l = self.loc(rdelim_t);
+        let expression_l = const_.expression().join(self.loc(rdelim_t));
 
-        // Box::new(Node::ConstPattern(ConstPattern {
-        //     const_,
-        //     pattern,
-        //     begin_l,
-        //     end_l,
-        //     expression_l,
-        // }))
-        todo!()
+        ConstPattern::new_in(self.blob, |const_pattern| {
+            const_pattern.const_ = const_;
+            const_pattern.pattern = pattern;
+            const_pattern.begin_l = begin_l;
+            const_pattern.end_l = end_l;
+            const_pattern.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn pin(&self, pin_t: &'b Token<'b>, var: &'b Node<'b>) -> &'b Node<'b> {
-        // let operator_l = self.loc(pin_t);
-        // let expression_l = var.expression().join(&operator_l);
+        let operator_l = self.loc(pin_t);
+        let expression_l = var.expression().join(operator_l);
 
-        // Box::new(Node::Pin(Pin {
-        //     var,
-        //     selector_l: operator_l,
-        //     expression_l,
-        // }))
-        todo!()
+        Pin::new_in(self.blob, |pin| {
+            pin.var = var;
+            pin.selector_l = operator_l;
+            pin.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn match_alt(
@@ -3743,16 +3732,15 @@ impl<'b> Builder<'b> {
         pipe_t: &'b Token<'b>,
         rhs: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        // let operator_l = self.loc(pipe_t);
-        // let expression_l = join_exprs(&lhs, &rhs);
+        let operator_l = self.loc(pipe_t);
+        let expression_l = join_exprs(&lhs, &rhs);
 
-        // Box::new(Node::MatchAlt(MatchAlt {
-        //     lhs,
-        //     rhs,
-        //     operator_l,
-        //     expression_l,
-        // }))
-        todo!()
+        MatchAlt::new_in(self.blob, |match_alt| {
+            match_alt.lhs = lhs;
+            match_alt.rhs = rhs;
+            match_alt.operator_l = operator_l;
+            match_alt.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn match_as(
@@ -3761,16 +3749,15 @@ impl<'b> Builder<'b> {
         assoc_t: &'b Token<'b>,
         as_: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        // let operator_l = self.loc(assoc_t);
-        // let expression_l = join_exprs(&value, &as_);
+        let operator_l = self.loc(assoc_t);
+        let expression_l = join_exprs(&value, &as_);
 
-        // Box::new(Node::MatchAs(MatchAs {
-        //     value,
-        //     as_,
-        //     operator_l,
-        //     expression_l,
-        // }))
-        todo!()
+        MatchAs::new_in(self.blob, |match_as| {
+            match_as.value = value;
+            match_as.as_ = as_;
+            match_as.operator_l = operator_l;
+            match_as.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn match_nil_pattern(
@@ -3778,16 +3765,15 @@ impl<'b> Builder<'b> {
         dstar_t: &'b Token<'b>,
         nil_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        // let operator_l = self.loc(dstar_t);
-        // let name_l = self.loc(nil_t);
-        // let expression_l = operator_l.join(&name_l);
+        let operator_l = self.loc(dstar_t);
+        let name_l = self.loc(nil_t);
+        let expression_l = operator_l.join(name_l);
 
-        // Box::new(Node::MatchNilPattern(MatchNilPattern {
-        //     operator_l,
-        //     name_l,
-        //     expression_l,
-        // }))
-        todo!()
+        MatchNilPattern::new_in(self.blob, |match_nil_pattern| {
+            match_nil_pattern.operator_l = operator_l;
+            match_nil_pattern.name_l = name_l;
+            match_nil_pattern.expression_l = expression_l;
+        })
     }
 
     pub(crate) fn match_pair(
@@ -3795,43 +3781,43 @@ impl<'b> Builder<'b> {
         p_kw_label: PKwLabel<'b>,
         value: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        // let result = match p_kw_label {
-        //     PKwLabel::PlainLabel(label_t) => {
-        //         self.check_duplicate_pattern_key(label_t.as_whole_str(), self.loc(label_t))?;
-        //         self.pair_keyword(label_t, value)
-        //     }
-        //     PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
-        //         let label_loc = self.loc(begin_t).join(&self.loc(end_t));
+        let result = match p_kw_label {
+            PKwLabel::PlainLabel(label_t) => {
+                self.check_duplicate_pattern_key(label_t.as_whole_str(), self.loc(label_t))?;
+                self.pair_keyword(label_t, value)
+            }
+            PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
+                let label_loc = self.loc(begin_t).join(self.loc(end_t));
 
-        //         match Self::static_string(&parts) {
-        //             Some(var_name) => {
-        //                 let var_name = self.blob.push_str(&var_name);
-        //                 self.check_duplicate_pattern_key(var_name, label_loc)?
-        //             }
-        //             _ => {
-        //                 self.error(
-        //                     DiagnosticMessage::SymbolLiteralWithInterpolation {},
-        //                     label_loc,
-        //                 );
-        //                 return Err(());
-        //             }
-        //         }
+                match self.static_string(&parts) {
+                    Some(var_name) => self.check_duplicate_pattern_key(
+                        Bytes::compress(var_name, self.blob)
+                            .as_whole_string()
+                            .unwrap(),
+                        label_loc,
+                    )?,
+                    _ => {
+                        self.error(
+                            DiagnosticMessage::SymbolLiteralWithInterpolation {},
+                            label_loc,
+                        );
+                        return Err(());
+                    }
+                }
 
-        //         self.pair_quoted(begin_t, parts, end_t, value)
-        //     }
-        // };
-        // Ok(result)
-        todo!()
+                self.pair_quoted(begin_t, parts, end_t, value)
+            }
+        };
+        Ok(result)
     }
 
     pub(crate) fn match_label(&self, p_kw_label: PKwLabel<'b>) -> Result<&'b Node<'b>, ()> {
-        // match p_kw_label {
-        //     PKwLabel::PlainLabel(label_t) => self.match_hash_var(label_t),
-        //     PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
-        //         self.match_hash_var_from_str(begin_t, parts, end_t)
-        //     }
-        // }
-        todo!()
+        match p_kw_label {
+            PKwLabel::PlainLabel(label_t) => self.match_hash_var(label_t),
+            PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
+                self.match_hash_var_from_str(begin_t, parts, end_t)
+            }
+        }
     }
 
     //
@@ -4154,30 +4140,28 @@ impl<'b> Builder<'b> {
     // Helpers
     //
 
-    pub(crate) fn static_string(nodes: &NodeList<'b>) -> Option<&'b Bytes<'b>> {
-        // let mut result = String::from("");
+    pub(crate) fn static_string(&self, nodes: &NodeList<'b>) -> Option<&'b Bytes<'b>> {
+        let result = self.blob.alloc_ref::<Bytes>();
 
-        // for node in nodes.iter() {
-        //     match node {
-        //         Node::Str(Str { value, .. }) => {
-        //             let value = value.to_string_lossy();
-        //             result.push_str(value.as_str())
-        //         }
-        //         Node::Begin(Begin { statements, .. }) => {
-        //             if let Some(s) = Self::static_string(statements) {
-        //                 result.push_str(&s)
-        //             } else {
-        //                 return None;
-        //             }
-        //         }
-        //         _ => {
-        //             return None;
-        //         }
-        //     }
-        // }
+        for node in nodes.iter() {
+            match node {
+                Node::Str(Str { value, .. }) => {
+                    result.append_borrowed(value.as_whole_string().unwrap(), self.blob)
+                }
+                Node::Begin(Begin { statements, .. }) => {
+                    if let Some(s) = self.static_string(statements) {
+                        result.append_borrowed(s.as_whole_string().unwrap(), self.blob)
+                    } else {
+                        return None;
+                    }
+                }
+                _ => {
+                    return None;
+                }
+            }
+        }
 
-        // Some(result)
-        todo!()
+        Some(result)
     }
 
     #[cfg(feature = "onig")]
@@ -4187,7 +4171,7 @@ impl<'b> Builder<'b> {
         options: Option<&String>,
         loc: Loc,
     ) -> Option<Regex> {
-        let source = Self::static_string(parts)?;
+        let source = self.static_string(parts)?;
         let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
         reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
         if let Some(options_s) = options.as_ref().map(|s| s.as_str()) {
