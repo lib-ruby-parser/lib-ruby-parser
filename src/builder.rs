@@ -1378,27 +1378,27 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn const_op_assignable(&self, node: &'b Node<'b>) -> &'b Node<'b> {
-        // match *node {
-        //     Node::Const(Const {
-        //         scope,
-        //         name,
-        //         double_colon_l,
-        //         name_l,
-        //         expression_l,
-        //     }) => Box::new(Node::Casgn(Casgn {
-        //         scope,
-        //         name,
-        //         value: None,
-        //         double_colon_l,
-        //         name_l,
-        //         operator_l: None,
-        //         expression_l,
-        //     })),
-        //     other => {
-        //         unreachable!("unsupported const_op_assignable argument: {:?}", other)
-        //     }
-        // }
-        todo!()
+        match node {
+            Node::Const(Const {
+                scope,
+                name,
+                double_colon_l,
+                name_l,
+                expression_l,
+                ..
+            }) => Casgn::new_in(self.blob, |casgn| {
+                casgn.scope = *scope;
+                casgn.name = name;
+                casgn.value = None;
+                casgn.double_colon_l = *double_colon_l;
+                casgn.name_l = *name_l;
+                casgn.operator_l = None;
+                casgn.expression_l = *expression_l;
+            }),
+            other => {
+                unreachable!("unsupported const_op_assignable argument: {:?}", other)
+            }
+        }
     }
 
     pub(crate) fn assign(
@@ -1407,75 +1407,156 @@ impl<'b> Builder<'b> {
         eql_t: &'b Token<'b>,
         new_rhs: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        // let op_l = Some(self.loc(eql_t));
-        // let expr_l = join_exprs(&lhs, &new_rhs);
+        let op_l = Some(self.loc(eql_t));
+        let expr_l = join_exprs(&lhs, &new_rhs);
 
-        // match &mut *lhs {
-        //     Node::Cvasgn(Cvasgn {
-        //         expression_l,
-        //         operator_l,
-        //         value,
-        //         ..
-        //     })
-        //     | Node::Ivasgn(Ivasgn {
-        //         expression_l,
-        //         operator_l,
-        //         value,
-        //         ..
-        //     })
-        //     | Node::Gvasgn(Gvasgn {
-        //         expression_l,
-        //         operator_l,
-        //         value,
-        //         ..
-        //     })
-        //     | Node::Lvasgn(Lvasgn {
-        //         expression_l,
-        //         operator_l,
-        //         value,
-        //         ..
-        //     })
-        //     | Node::Casgn(Casgn {
-        //         expression_l,
-        //         operator_l,
-        //         value,
-        //         ..
-        //     })
-        //     | Node::IndexAsgn(IndexAsgn {
-        //         expression_l,
-        //         operator_l,
-        //         value,
-        //         ..
-        //     }) => {
-        //         *expression_l = expr_l;
-        //         *operator_l = op_l;
-        //         *value = Some(new_rhs);
-        //     }
-        //     Node::Send(Send {
-        //         expression_l,
-        //         operator_l,
-        //         args,
-        //         ..
-        //     })
-        //     | Node::CSend(CSend {
-        //         expression_l,
-        //         operator_l,
-        //         args,
-        //         ..
-        //     }) => {
-        //         *expression_l = expr_l;
-        //         *operator_l = op_l;
-        //         if args.is_empty() {
-        //             *args = vec![*new_rhs];
-        //         } else {
-        //             unreachable!("can't assign to method call with args")
-        //         }
-        //     }
-        //     other => unreachable!("{:?} can't be used in assignment", other),
-        // }
-
-        // lhs
-        todo!()
+        match lhs {
+            Node::Cvasgn(Cvasgn {
+                name,
+                value,
+                name_l,
+                expression_l,
+                operator_l,
+                ..
+            }) => Cvasgn::new_in(self.blob, |cvasgn| {
+                cvasgn.name = *name;
+                cvasgn.value = Some(new_rhs);
+                cvasgn.name_l = *name_l;
+                cvasgn.operator_l = op_l;
+                cvasgn.expression_l = expr_l;
+            }),
+            Node::Ivasgn(Ivasgn {
+                name,
+                value,
+                name_l,
+                expression_l,
+                operator_l,
+                ..
+            }) => Ivasgn::new_in(self.blob, |ivasgn| {
+                ivasgn.name = *name;
+                ivasgn.value = Some(new_rhs);
+                ivasgn.name_l = *name_l;
+                ivasgn.operator_l = op_l;
+                ivasgn.expression_l = expr_l;
+            }),
+            Node::Gvasgn(Gvasgn {
+                name,
+                value,
+                name_l,
+                expression_l,
+                operator_l,
+                ..
+            }) => Gvasgn::new_in(self.blob, |gvasgn| {
+                gvasgn.name = *name;
+                gvasgn.value = Some(new_rhs);
+                gvasgn.name_l = *name_l;
+                gvasgn.operator_l = op_l;
+                gvasgn.expression_l = expr_l;
+            }),
+            Node::Lvasgn(Lvasgn {
+                name,
+                value,
+                name_l,
+                expression_l,
+                operator_l,
+                ..
+            }) => Lvasgn::new_in(self.blob, |lvasgn| {
+                lvasgn.name = *name;
+                lvasgn.value = Some(new_rhs);
+                lvasgn.name_l = *name_l;
+                lvasgn.operator_l = op_l;
+                lvasgn.expression_l = expr_l;
+            }),
+            Node::Casgn(Casgn {
+                scope,
+                name,
+                value,
+                double_colon_l,
+                name_l,
+                operator_l,
+                expression_l,
+                ..
+            }) => Casgn::new_in(self.blob, |casgn| {
+                casgn.scope = *scope;
+                casgn.name = *name;
+                casgn.value = Some(new_rhs);
+                casgn.double_colon_l = *double_colon_l;
+                casgn.name_l = *name_l;
+                casgn.operator_l = op_l;
+                casgn.expression_l = expr_l;
+            }),
+            Node::IndexAsgn(IndexAsgn {
+                recv,
+                indexes,
+                value,
+                begin_l,
+                end_l,
+                operator_l,
+                expression_l,
+                ..
+            }) => IndexAsgn::new_in(self.blob, |index_asgn| {
+                index_asgn.recv = *recv;
+                index_asgn.indexes = *indexes;
+                index_asgn.value = Some(new_rhs);
+                index_asgn.begin_l = *begin_l;
+                index_asgn.end_l = *end_l;
+                index_asgn.operator_l = op_l;
+                index_asgn.expression_l = expr_l;
+            }),
+            Node::Send(Send {
+                recv,
+                method_name,
+                args,
+                dot_l,
+                selector_l,
+                begin_l,
+                end_l,
+                operator_l,
+                expression_l,
+                ..
+            }) => Send::new_in(self.blob, |send| {
+                send.recv = *recv;
+                send.method_name = *method_name;
+                if args.is_empty() {
+                    send.args.push(new_rhs);
+                } else {
+                    unreachable!("can't assign to method call with args")
+                }
+                send.dot_l = *dot_l;
+                send.selector_l = *selector_l;
+                send.begin_l = *begin_l;
+                send.end_l = *end_l;
+                send.operator_l = op_l;
+                send.expression_l = expr_l;
+            }),
+            Node::CSend(CSend {
+                recv,
+                method_name,
+                args,
+                dot_l,
+                selector_l,
+                begin_l,
+                end_l,
+                operator_l,
+                expression_l,
+                ..
+            }) => CSend::new_in(self.blob, |csend| {
+                csend.recv = *recv;
+                csend.method_name = *method_name;
+                if args.is_empty() {
+                    csend.args.push(new_rhs);
+                } else {
+                    unreachable!("can't assign to method call with args")
+                }
+                csend.dot_l = *dot_l;
+                csend.selector_l = *selector_l;
+                csend.begin_l = *begin_l;
+                csend.end_l = *end_l;
+                csend.operator_l = op_l;
+                csend.expression_l = expr_l;
+            }),
+            other => unreachable!("{:?} can't be used in assignment", other),
+        }
     }
 
     pub(crate) fn op_assign(
@@ -4344,7 +4425,7 @@ impl<'b> Builder<'b> {
         let last = args.last().unwrap();
 
         if matches!(last, Node::Hash(_)) {
-            last.change_type_to_kwargs();
+            last.change_hash_type_to_kwargs();
             return;
         }
 
@@ -4355,7 +4436,7 @@ impl<'b> Builder<'b> {
         let second_last = args.iter().nth(len - 2).unwrap();
 
         if matches!(last, Node::BlockPass(_)) && self.is_kwargs(second_last) {
-            second_last.change_type_to_kwargs()
+            second_last.change_hash_type_to_kwargs()
         }
     }
 

@@ -87,8 +87,8 @@ impl<'s> LocMatcher<'s> {
         }
     }
 
-    pub fn test<'b>(&self, root: &'b Node<'b>) -> Result<(), [u8; 200]> {
-        let mut err_buf = [0; 200];
+    pub fn test<'b>(&self, root: &'b Node<'b>) -> Result<(), [u8; 1000]> {
+        let mut err_buf = [0; 1000];
 
         match Finder::run(&self.pattern, root).unwrap() {
             Some(node) => match self.loc_name.get(&node).as_ref() {
