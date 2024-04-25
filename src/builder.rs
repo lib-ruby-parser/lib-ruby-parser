@@ -235,7 +235,7 @@ impl<'b> Builder<'b> {
                 heredoc_body_l,
                 heredoc_end_l,
                 expression_l,
-            } = self.heredoc_map(begin_t, &parts, end_t);
+            } = self.heredoc_map(begin_t, parts, end_t);
 
             Heredoc::new_in(self.blob, |heredoc| {
                 heredoc.parts = parts;
@@ -248,11 +248,7 @@ impl<'b> Builder<'b> {
                 begin_l,
                 end_l,
                 expression_l,
-            } = self.collection_map(
-                begin_t.as_ref().map(|t| t.loc),
-                &parts,
-                end_t.as_ref().map(|t| t.loc),
-            );
+            } = self.collection_map(begin_t.map(|t| t.loc), parts, end_t.map(|t| t.loc));
 
             Str::new_in(self.blob, |str_| {
                 str_.value = value;
@@ -309,7 +305,7 @@ impl<'b> Builder<'b> {
                 heredoc_body_l,
                 heredoc_end_l,
                 expression_l,
-            } = self.heredoc_map(begin_t, &parts, end_t);
+            } = self.heredoc_map(begin_t, parts, end_t);
 
             Heredoc::new_in(self.blob, |heredoc| {
                 heredoc.parts = parts;
@@ -322,11 +318,7 @@ impl<'b> Builder<'b> {
                 begin_l,
                 end_l,
                 expression_l,
-            } = self.collection_map(
-                begin_t.as_ref().map(|t| t.loc),
-                &parts,
-                end_t.as_ref().map(|t| t.loc),
-            );
+            } = self.collection_map(begin_t.map(|t| t.loc), parts, end_t.map(|t| t.loc));
 
             Dstr::new_in(self.blob, |dstr| {
                 dstr.parts = parts;
@@ -409,7 +401,7 @@ impl<'b> Builder<'b> {
                         Some(end_t.loc),
                     );
 
-                    self.validate_sym_value(&value, expression_l);
+                    self.validate_sym_value(value, expression_l);
 
                     return Sym::new_in(self.blob, |sym| {
                         sym.name = value;
@@ -426,7 +418,7 @@ impl<'b> Builder<'b> {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(Some(begin_t.loc), &parts, Some(end_t.loc));
+        } = self.collection_map(Some(begin_t.loc), parts, Some(end_t.loc));
         Dsym::new_in(self.blob, |dsym| {
             dsym.parts = parts;
             dsym.begin_l = begin_l;
@@ -447,7 +439,7 @@ impl<'b> Builder<'b> {
 
         let mut begin = begin_t.token_value.iter();
         if begin.len() >= 2 && begin.next() == Some(b'<') && begin.next() == Some(b'<') {
-            let heredoc_body_l = collection_expr(&parts).unwrap_or_else(|| self.loc(end_t));
+            let heredoc_body_l = collection_expr(parts).unwrap_or_else(|| self.loc(end_t));
             let heredoc_end_l = self.loc(end_t);
             let expression_l = begin_l;
 
@@ -631,20 +623,19 @@ impl<'b> Builder<'b> {
     ) -> &'b Node<'b> {
         let begin_l = self.loc(begin_t);
         let end_l = end_t_l.resize(1);
-        let expression_l =
-            begin_l.join(maybe_boxed_node_expr(options.as_deref()).unwrap_or(end_t_l));
+        let expression_l = begin_l.join(maybe_boxed_node_expr(options).unwrap_or(end_t_l));
 
-        match options.as_deref() {
+        match options {
             Some(Node::RegOpt(RegOpt {
                 options,
                 expression_l,
                 ..
             })) => self.validate_static_regexp(
-                &parts,
-                options.as_ref().and_then(|b| b.as_whole_string()),
+                parts,
+                options.and_then(|b| b.as_whole_string()),
                 *expression_l,
             ),
-            None => self.validate_static_regexp(&parts, None, expression_l),
+            None => self.validate_static_regexp(parts, None, expression_l),
             _ => unreachable!("must be Option<RegOpt>"),
         }
 
@@ -669,11 +660,7 @@ impl<'b> Builder<'b> {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(
-            begin_t.as_ref().map(|t| t.loc),
-            &elements,
-            end_t.as_ref().map(|t| t.loc),
-        );
+        } = self.collection_map(begin_t.map(|t| t.loc), elements, end_t.map(|t| t.loc));
 
         Array::new_in(self.blob, |array| {
             array.elements = elements;
@@ -685,7 +672,7 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn splat(&self, star_t: &'b Token<'b>, value: Option<&'b Node<'b>>) -> &'b Node<'b> {
         let operator_l = self.loc(star_t);
-        let expression_l = operator_l.maybe_join(maybe_boxed_node_expr(value.as_deref()));
+        let expression_l = operator_l.maybe_join(maybe_boxed_node_expr(value));
 
         Splat::new_in(self.blob, |splat| {
             splat.value = value;
@@ -706,7 +693,7 @@ impl<'b> Builder<'b> {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(None, &parts, None);
+        } = self.collection_map(None, parts, None);
 
         Dstr::new_in(self.blob, |dstr| {
             dstr.parts = parts;
@@ -749,7 +736,7 @@ impl<'b> Builder<'b> {
                     expression_l,
                     ..
                 }) => {
-                    self.validate_sym_value(&value, *expression_l);
+                    self.validate_sym_value(value, *expression_l);
                     composed.push(Sym::new_in(self.blob, |sym| {
                         sym.name = value;
                         sym.begin_l = *begin_l;
@@ -793,7 +780,7 @@ impl<'b> Builder<'b> {
         value: &'b Node<'b>,
     ) -> &'b Node<'b> {
         let operator_l = self.loc(assoc_t);
-        let expression_l = join_exprs(&key, &value);
+        let expression_l = join_exprs(key, value);
 
         Pair::new_in(self.blob, |pair| {
             pair.key = key;
@@ -991,11 +978,7 @@ impl<'b> Builder<'b> {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(
-            begin_t.as_ref().map(|t| t.loc),
-            &pairs,
-            end_t.as_ref().map(|t| t.loc),
-        );
+        } = self.collection_map(begin_t.map(|t| t.loc), pairs, end_t.map(|t| t.loc));
 
         Hash::new_in(self.blob, |hash| {
             hash.pairs = pairs;
@@ -1015,8 +998,8 @@ impl<'b> Builder<'b> {
     ) -> &'b Node<'b> {
         let operator_l = self.loc(dot2_t);
         let expression_l = operator_l
-            .maybe_join(maybe_boxed_node_expr(left.as_deref()))
-            .maybe_join(maybe_boxed_node_expr(right.as_deref()));
+            .maybe_join(maybe_boxed_node_expr(left))
+            .maybe_join(maybe_boxed_node_expr(right));
 
         Irange::new_in(self.blob, |irange| {
             irange.left = left;
@@ -1034,8 +1017,8 @@ impl<'b> Builder<'b> {
     ) -> &'b Node<'b> {
         let operator_l = self.loc(dot3_t);
         let expression_l = operator_l
-            .maybe_join(maybe_boxed_node_expr(left.as_deref()))
-            .maybe_join(maybe_boxed_node_expr(right.as_deref()));
+            .maybe_join(maybe_boxed_node_expr(left))
+            .maybe_join(maybe_boxed_node_expr(right));
 
         Erange::new_in(self.blob, |erange| {
             erange.left = left;
@@ -1411,7 +1394,7 @@ impl<'b> Builder<'b> {
         new_rhs: &'b Node<'b>,
     ) -> &'b Node<'b> {
         let op_l = Some(self.loc(eql_t));
-        let expr_l = join_exprs(&lhs, &new_rhs);
+        let expr_l = join_exprs(lhs, new_rhs);
 
         match lhs {
             Node::Cvasgn(Cvasgn {
@@ -1571,7 +1554,7 @@ impl<'b> Builder<'b> {
         let operator_l = self.loc(op_t);
         let operator = op_t.as_whole_str();
         let operator = &operator[..operator.len() - 1];
-        let expression_l = join_exprs(&lhs, &rhs);
+        let expression_l = join_exprs(lhs, rhs);
 
         match lhs {
             Node::Gvasgn(_)
@@ -1634,7 +1617,7 @@ impl<'b> Builder<'b> {
         let recv: &'b Node<'b> = lhs;
         let value: &'b Node<'b> = rhs;
 
-        let result = match &operator[..] {
+        let result = match operator {
             "&&" => AndAsgn::new_in(self.blob, |and_asgn| {
                 and_asgn.recv = recv;
                 and_asgn.value = value;
@@ -1669,11 +1652,7 @@ impl<'b> Builder<'b> {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(
-            begin_t.as_ref().map(|t| t.loc),
-            &items,
-            end_t.as_ref().map(|t| t.loc),
-        );
+        } = self.collection_map(begin_t.map(|t| t.loc), items, end_t.map(|t| t.loc));
 
         Mlhs::new_in(self.blob, |mlhs| {
             mlhs.items = items;
@@ -1690,7 +1669,7 @@ impl<'b> Builder<'b> {
         rhs: &'b Node<'b>,
     ) -> &'b Node<'b> {
         let operator_l = self.loc(eql_t);
-        let expression_l = join_exprs(&lhs, &rhs);
+        let expression_l = join_exprs(lhs, rhs);
 
         Masgn::new_in(self.blob, |masgn| {
             masgn.lhs = lhs;
@@ -1811,7 +1790,7 @@ impl<'b> Builder<'b> {
         assignment_t: &'b Token<'b>,
         body: Option<&'b Node<'b>>,
     ) -> Result<&'b Node<'b>, ()> {
-        let body_l = maybe_boxed_node_expr(body.as_deref())
+        let body_l = maybe_boxed_node_expr(body)
             .unwrap_or_else(|| unreachable!("endless method always has a body"));
 
         let keyword_l = self.loc(def_t);
@@ -1877,7 +1856,7 @@ impl<'b> Builder<'b> {
         assignment_t: &'b Token<'b>,
         body: Option<&'b Node<'b>>,
     ) -> Result<&'b Node<'b>, ()> {
-        let body_l = maybe_boxed_node_expr(body.as_deref())
+        let body_l = maybe_boxed_node_expr(body)
             .unwrap_or_else(|| unreachable!("endless method always has body"));
 
         let keyword_l = self.loc(def_t);
@@ -1909,7 +1888,7 @@ impl<'b> Builder<'b> {
         names: &'b NodeList<'b>,
     ) -> &'b Node<'b> {
         let keyword_l = self.loc(undef_t);
-        let expression_l = keyword_l.maybe_join(collection_expr(&names));
+        let expression_l = keyword_l.maybe_join(collection_expr(names));
         Undef::new_in(self.blob, |undef| {
             undef.names = names;
             undef.keyword_l = keyword_l;
@@ -1943,8 +1922,8 @@ impl<'b> Builder<'b> {
         args: &'b NodeList<'b>,
         end_t: Option<&'b Token<'b>>,
     ) -> Option<&'b Node<'b>> {
-        self.check_duplicate_args(&args, &mut HashMap::new());
-        self.validate_no_forward_arg_after_restarg(&args);
+        self.check_duplicate_args(args, &mut HashMap::new());
+        self.validate_no_forward_arg_after_restarg(args);
 
         if begin_t.is_none() && args.is_empty() && end_t.is_none() {
             return None;
@@ -1954,11 +1933,7 @@ impl<'b> Builder<'b> {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(
-            begin_t.as_ref().map(|t| t.loc),
-            &args,
-            end_t.as_ref().map(|t| t.loc),
-        );
+        } = self.collection_map(begin_t.map(|t| t.loc), args, end_t.map(|t| t.loc));
 
         Some(Args::new_in(self.blob, |args_node| {
             args_node.args = args;
@@ -2169,7 +2144,7 @@ impl<'b> Builder<'b> {
     //
 
     fn call_type_for_dot(&self, dot_t: Option<&'b Token<'b>>) -> MethodCallType {
-        match dot_t.as_ref() {
+        match dot_t {
             Some(token) if token.token_type == Lexer::tANDDOT => MethodCallType::CSend,
             _ => MethodCallType::Send,
         }
@@ -2190,7 +2165,7 @@ impl<'b> Builder<'b> {
         args: &'b NodeList<'b>,
         rparen_t: Option<&'b Token<'b>>,
     ) -> &'b Node<'b> {
-        let begin_l = maybe_boxed_node_expr(receiver.as_deref())
+        let begin_l = maybe_boxed_node_expr(receiver)
             .or_else(|| self.maybe_loc(selector_t))
             .unwrap_or_else(|| unreachable!("can't compute begin_l"));
         let end_l = self
@@ -2212,7 +2187,7 @@ impl<'b> Builder<'b> {
             bytes
         });
 
-        self.rewrite_hash_args_to_kwargs(&args);
+        self.rewrite_hash_args_to_kwargs(args);
 
         match self.call_type_for_dot(dot_t) {
             MethodCallType::Send => Send::new_in(self.blob, |send| {
@@ -2274,7 +2249,7 @@ impl<'b> Builder<'b> {
             }
         };
 
-        match &*method_call {
+        match method_call {
             Node::Yield(Yield { keyword_l, .. }) => {
                 self.error(DiagnosticMessage::BlockGivenToYield {}, *keyword_l);
                 return Err(());
@@ -2425,7 +2400,7 @@ impl<'b> Builder<'b> {
         value: Option<&'b Node<'b>>,
     ) -> &'b Node<'b> {
         let amper_l = self.loc(amper_t);
-        let expression_l = amper_l.maybe_join(value.as_ref().map(|node| node.expression()));
+        let expression_l = amper_l.maybe_join(value.map(|node| node.expression()));
 
         BlockPass::new_in(self.blob, |block_pass| {
             block_pass.value = value;
@@ -2485,7 +2460,7 @@ impl<'b> Builder<'b> {
         let end_l = self.loc(rbrack_t);
         let expression_l = recv.expression().join(end_l);
 
-        self.rewrite_hash_args_to_kwargs(&indexes);
+        self.rewrite_hash_args_to_kwargs(indexes);
 
         Index::new_in(self.blob, |index| {
             index.recv = recv;
@@ -2524,11 +2499,11 @@ impl<'b> Builder<'b> {
         operator_t: &'b Token<'b>,
         arg: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        self.value_expr(&receiver)?;
-        self.value_expr(&arg)?;
+        self.value_expr(receiver)?;
+        self.value_expr(arg)?;
 
         let selector_l = Some(self.loc(operator_t));
-        let expression_l = join_exprs(&receiver, &arg);
+        let expression_l = join_exprs(receiver, arg);
 
         Ok(Send::new_in(self.blob, |send| {
             send.recv = Some(receiver);
@@ -2549,13 +2524,13 @@ impl<'b> Builder<'b> {
         match_t: &'b Token<'b>,
         arg: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        self.value_expr(&receiver)?;
-        self.value_expr(&arg)?;
+        self.value_expr(receiver)?;
+        self.value_expr(arg)?;
 
         let selector_l = self.loc(match_t);
-        let expression_l = join_exprs(&receiver, &arg);
+        let expression_l = join_exprs(receiver, arg);
 
-        let result = match self.static_regexp_captures(&receiver) {
+        let result = match self.static_regexp_captures(receiver) {
             Some(captures) => {
                 for capture in captures {
                     self.static_env
@@ -2590,7 +2565,7 @@ impl<'b> Builder<'b> {
         op_t: &'b Token<'b>,
         receiver: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        self.value_expr(&receiver)?;
+        self.value_expr(receiver)?;
 
         let selector_l = self.loc(op_t);
         let expression_l = receiver.expression().join(selector_l);
@@ -2624,8 +2599,7 @@ impl<'b> Builder<'b> {
         end_t: Option<&'b Token<'b>>,
     ) -> Result<&'b Node<'b>, ()> {
         if let Some(receiver) = receiver {
-            let receiver = receiver;
-            self.value_expr(&receiver)?;
+            self.value_expr(receiver)?;
 
             let begin_l = self.loc(not_t);
             let end_l = self
@@ -2654,9 +2628,9 @@ impl<'b> Builder<'b> {
                 end_l,
                 expression_l,
             } = self.collection_map(
-                begin_t.as_ref().map(|t| t.loc),
+                begin_t.map(|t| t.loc),
                 self.blob.alloc_ref(),
-                end_t.as_ref().map(|t| t.loc),
+                end_t.map(|t| t.loc),
             );
 
             let nil_node = Begin::new_in(self.blob, |begin| {
@@ -2693,10 +2667,10 @@ impl<'b> Builder<'b> {
         op_t: &'b Token<'b>,
         rhs: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
-        self.value_expr(&lhs)?;
+        self.value_expr(lhs)?;
 
         let operator_l = self.loc(op_t);
-        let expression_l = join_exprs(&lhs, &rhs);
+        let expression_l = join_exprs(lhs, rhs);
         let lhs: &'b Node<'b> = lhs;
         let rhs: &'b Node<'b> = rhs;
 
@@ -2731,9 +2705,9 @@ impl<'b> Builder<'b> {
     ) -> &'b Node<'b> {
         let end_l = self
             .maybe_loc(end_t)
-            .or_else(|| maybe_boxed_node_expr(if_false.as_deref()))
+            .or_else(|| maybe_boxed_node_expr(if_false))
             .or_else(|| self.maybe_loc(else_t))
-            .or_else(|| maybe_boxed_node_expr(if_true.as_deref()))
+            .or_else(|| maybe_boxed_node_expr(if_true))
             .unwrap_or_else(|| self.loc(then_t));
 
         let expression_l = self.loc(cond_t).join(end_l);
@@ -2761,7 +2735,7 @@ impl<'b> Builder<'b> {
         cond_t: &'b Token<'b>,
         cond: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        let pre = match (if_true.as_ref(), if_false.as_ref()) {
+        let pre = match (if_true, if_false) {
             (None, None) => unreachable!("at least one of if_true/if_false is required"),
             (None, Some(if_false)) => if_false,
             (Some(if_true), None) => if_true,
@@ -2788,7 +2762,7 @@ impl<'b> Builder<'b> {
         colon_t: &'b Token<'b>,
         if_false: &'b Node<'b>,
     ) -> &'b Node<'b> {
-        let expression_l = join_exprs(&cond, &if_false);
+        let expression_l = join_exprs(cond, if_false);
         let question_l = self.loc(question_t);
         let colon_l = self.loc(colon_t);
 
@@ -2813,7 +2787,7 @@ impl<'b> Builder<'b> {
     ) -> &'b Node<'b> {
         let begin_l = self.loc(then_t);
 
-        let expr_end_l = maybe_boxed_node_expr(body.as_deref())
+        let expr_end_l = maybe_boxed_node_expr(body)
             .or_else(|| maybe_node_expr(patterns.last()))
             .unwrap_or_else(|| self.loc(when_t));
         let when_l = self.loc(when_t);
@@ -3103,10 +3077,10 @@ impl<'b> Builder<'b> {
         then_t: Option<&'b Token<'b>>,
         body: Option<&'b Node<'b>>,
     ) -> &'b Node<'b> {
-        let end_l = maybe_boxed_node_expr(body.as_deref())
+        let end_l = maybe_boxed_node_expr(body)
             .or_else(|| self.maybe_loc(then_t))
-            .or_else(|| maybe_boxed_node_expr(exc_var.as_deref()))
-            .or_else(|| maybe_boxed_node_expr(exc_list.as_deref()))
+            .or_else(|| maybe_boxed_node_expr(exc_var))
+            .or_else(|| maybe_boxed_node_expr(exc_list))
             .unwrap_or_else(|| self.loc(rescue_t));
 
         let expression_l = self.loc(rescue_t).join(end_l);
@@ -3136,12 +3110,11 @@ impl<'b> Builder<'b> {
 
         if !rescue_bodies.is_empty() {
             if let Some((else_t, else_)) = else_ {
-                let begin_l = maybe_boxed_node_expr(compound_stmt.as_deref())
+                let begin_l = maybe_boxed_node_expr(compound_stmt)
                     .or_else(|| maybe_node_expr(rescue_bodies.first()))
                     .unwrap_or_else(|| unreachable!("can't compute begin_l"));
 
-                let end_l =
-                    maybe_boxed_node_expr(else_.as_deref()).unwrap_or_else(|| self.loc(else_t));
+                let end_l = maybe_boxed_node_expr(else_).unwrap_or_else(|| self.loc(else_t));
 
                 let expression_l = begin_l.join(end_l);
                 let else_l = self.loc(else_t);
@@ -3154,7 +3127,7 @@ impl<'b> Builder<'b> {
                     rescue.expression_l = expression_l;
                 }))
             } else {
-                let begin_l = maybe_boxed_node_expr(compound_stmt.as_deref())
+                let begin_l = maybe_boxed_node_expr(compound_stmt)
                     .or_else(|| maybe_node_expr(rescue_bodies.first()))
                     .unwrap_or_else(|| unreachable!("can't compute begin_l"));
 
@@ -3199,7 +3172,7 @@ impl<'b> Builder<'b> {
                 begin_l,
                 end_l,
                 expression_l,
-            } = self.collection_map(Some(else_t.loc), &parts, None);
+            } = self.collection_map(Some(else_t.loc), parts, None);
 
             statements.push(Begin::new_in(self.blob, |begin| {
                 begin.statements = parts;
@@ -3212,7 +3185,7 @@ impl<'b> Builder<'b> {
                 begin_l,
                 end_l,
                 expression_l,
-            } = self.collection_map(None, &statements, None);
+            } = self.collection_map(None, statements, None);
 
             result = Some(Begin::new_in(self.blob, |begin| {
                 begin.statements = statements;
@@ -3228,11 +3201,9 @@ impl<'b> Builder<'b> {
             let ensure_body = ensure;
             let keyword_l = self.loc(ensure_t);
 
-            let begin_l =
-                maybe_boxed_node_expr(result.as_deref()).unwrap_or_else(|| self.loc(ensure_t));
+            let begin_l = maybe_boxed_node_expr(result).unwrap_or_else(|| self.loc(ensure_t));
 
-            let end_l =
-                maybe_node_expr(ensure_body.as_deref()).unwrap_or_else(|| self.loc(ensure_t));
+            let end_l = maybe_node_expr(ensure_body).unwrap_or_else(|| self.loc(ensure_t));
 
             let expression_l = begin_l.join(end_l);
 
@@ -3261,7 +3232,7 @@ impl<'b> Builder<'b> {
                 begin_l,
                 end_l,
                 expression_l,
-            } = self.collection_map(None, &statements, None);
+            } = self.collection_map(None, statements, None);
 
             Some(Begin::new_in(self.blob, |begin| {
                 begin.statements = statements;
@@ -3386,7 +3357,7 @@ impl<'b> Builder<'b> {
         else_body: Option<&'b Node<'b>>,
         end_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        let else_body = match (else_t.as_ref(), else_body.as_ref()) {
+        let else_body = match (else_t, else_body) {
             (Some(else_t), None) => Some(EmptyElse::new_in(self.blob, |empty_else| {
                 empty_else.expression_l = self.loc(else_t);
             })),
@@ -3416,7 +3387,7 @@ impl<'b> Builder<'b> {
         pattern: &'b Node<'b>,
     ) -> &'b Node<'b> {
         let operator_l = self.loc(assoc_t);
-        let expression_l = join_exprs(&value, &pattern);
+        let expression_l = join_exprs(value, pattern);
 
         MatchPattern::new_in(self.blob, |match_pattern| {
             match_pattern.value = value;
@@ -3433,7 +3404,7 @@ impl<'b> Builder<'b> {
         pattern: &'b Node<'b>,
     ) -> &'b Node<'b> {
         let operator_l = self.loc(in_t);
-        let expression_l = join_exprs(&value, &pattern);
+        let expression_l = join_exprs(value, pattern);
 
         MatchPatternP::new_in(self.blob, |match_pattern_p| {
             match_pattern_p.value = value;
@@ -3454,8 +3425,8 @@ impl<'b> Builder<'b> {
         let keyword_l = self.loc(in_t);
         let begin_l = self.loc(then_t);
 
-        let expression_l = maybe_boxed_node_expr(body.as_deref())
-            .or_else(|| maybe_boxed_node_expr(guard.as_deref()))
+        let expression_l = maybe_boxed_node_expr(body)
+            .or_else(|| maybe_boxed_node_expr(guard))
             .unwrap_or_else(|| pattern.expression())
             .join(keyword_l);
 
@@ -3552,7 +3523,7 @@ impl<'b> Builder<'b> {
 
                 self.static_env.declare(name_s, self.blob);
 
-                if let Some(begin_l) = begin_l.as_ref() {
+                if let Some(begin_l) = begin_l {
                     let begin_d: isize = begin_l
                         .size()
                         .try_into()
@@ -3560,7 +3531,7 @@ impl<'b> Builder<'b> {
                     name_l = name_l.adjust_begin(begin_d)
                 }
 
-                if let Some(end_l) = end_l.as_ref() {
+                if let Some(end_l) = end_l {
                     let end_d: isize = end_l
                         .size()
                         .try_into()
@@ -3602,7 +3573,7 @@ impl<'b> Builder<'b> {
         };
 
         let operator_l = self.loc(star_t);
-        let expression_l = operator_l.maybe_join(maybe_boxed_node_expr(name.as_deref()));
+        let expression_l = operator_l.maybe_join(maybe_boxed_node_expr(name));
 
         Ok(MatchRest::new_in(self.blob, |match_rest| {
             match_rest.name = name;
@@ -3621,11 +3592,7 @@ impl<'b> Builder<'b> {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(
-            lbrace_t.as_ref().map(|t| t.loc),
-            &kwargs,
-            rbrace_t.as_ref().map(|t| t.loc),
-        );
+        } = self.collection_map(lbrace_t.map(|t| t.loc), kwargs, rbrace_t.map(|t| t.loc));
 
         HashPattern::new_in(self.blob, |hash_pattern| {
             hash_pattern.elements = kwargs;
@@ -3646,7 +3613,7 @@ impl<'b> Builder<'b> {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(lbrack_l, &elements, rbrack_l);
+        } = self.collection_map(lbrack_l, elements, rbrack_l);
 
         let expression_l = expression_l.maybe_join(self.maybe_loc(trailing_comma));
 
@@ -3685,7 +3652,7 @@ impl<'b> Builder<'b> {
             begin_l,
             end_l,
             expression_l,
-        } = self.collection_map(lbrack_l, &elements, rbrack_l);
+        } = self.collection_map(lbrack_l, elements, rbrack_l);
 
         FindPattern::new_in(self.blob, |find_pattern| {
             find_pattern.elements = elements;
@@ -3733,7 +3700,7 @@ impl<'b> Builder<'b> {
         rhs: &'b Node<'b>,
     ) -> &'b Node<'b> {
         let operator_l = self.loc(pipe_t);
-        let expression_l = join_exprs(&lhs, &rhs);
+        let expression_l = join_exprs(lhs, rhs);
 
         MatchAlt::new_in(self.blob, |match_alt| {
             match_alt.lhs = lhs;
@@ -3750,7 +3717,7 @@ impl<'b> Builder<'b> {
         as_: &'b Node<'b>,
     ) -> &'b Node<'b> {
         let operator_l = self.loc(assoc_t);
-        let expression_l = join_exprs(&value, &as_);
+        let expression_l = join_exprs(value, as_);
 
         MatchAs::new_in(self.blob, |match_as| {
             match_as.value = value;
@@ -3789,7 +3756,7 @@ impl<'b> Builder<'b> {
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
                 let label_loc = self.loc(begin_t).join(self.loc(end_t));
 
-                match self.static_string(&parts) {
+                match self.static_string(parts) {
                     Some(var_name) => self.check_duplicate_pattern_key(
                         Bytes::compress(var_name, self.blob)
                             .as_whole_string()
@@ -4174,7 +4141,7 @@ impl<'b> Builder<'b> {
         let source = self.static_string(parts)?;
         let mut reg_options = RegexOptions::REGEX_OPTION_NONE;
         reg_options |= RegexOptions::REGEX_OPTION_CAPTURE_GROUP;
-        if let Some(options_s) = options.as_ref().map(|s| s.as_str()) {
+        if let Some(options_s) = options.map(|s| s.as_str()) {
             if options_s.as_bytes().contains(&b'x') {
                 reg_options |= RegexOptions::REGEX_OPTION_EXTEND;
             }
@@ -4225,7 +4192,7 @@ impl<'b> Builder<'b> {
         }) = node
         {
             let mut re_options = &None;
-            if let Some(Node::RegOpt(RegOpt { options, .. })) = options.as_ref().map(|b| &**b) {
+            if let Some(Node::RegOpt(RegOpt { options, .. })) = options.map(|b| *b) {
                 re_options = options;
             };
             let regex = self.build_static_regexp(parts, re_options, expression_l)?;
@@ -4276,7 +4243,7 @@ impl<'b> Builder<'b> {
     }
 
     pub(crate) fn is_heredoc(&self, begin_t: Option<&'b Token<'b>>) -> bool {
-        if let Some(begin_t) = begin_t.as_ref() {
+        if let Some(begin_t) = begin_t {
             let mut begin = begin_t.token_value.iter();
             if begin.len() >= 2 && begin.next() == Some(b'<') && begin.next() == Some(b'<') {
                 return true;
@@ -4291,8 +4258,8 @@ impl<'b> Builder<'b> {
         parts: &NodeList<'b>,
         end_t: Option<&'b Token<'b>>,
     ) -> HeredocMap {
-        let begin_t = begin_t.as_ref().expect("bug: begin_t must be Some");
-        let end_t = end_t.as_ref().expect("heredoc must have end_t");
+        let begin_t = begin_t.expect("bug: begin_t must be Some");
+        let end_t = end_t.expect("heredoc must have end_t");
 
         let heredoc_body_l = collection_expr(parts).unwrap_or_else(|| self.loc(end_t));
         let expression_l = self.loc(begin_t);
@@ -4346,8 +4313,7 @@ impl<'b> Builder<'b> {
 
         let check_maybe_condition =
             |if_true: &Option<&'b Node<'b>>, if_false: &Option<&'b Node<'b>>| match (
-                if_true.as_ref(),
-                if_false.as_ref(),
+                if_true, if_false,
             ) {
                 (None, None) | (None, Some(_)) | (Some(_), None) => None,
                 (Some(if_true), Some(if_false)) => check_condition(if_true, if_false),
@@ -4476,7 +4442,7 @@ pub(crate) fn maybe_boxed_node_expr(node: Option<&Node>) -> Option<Loc> {
     node.map(|node| node.expression())
 }
 
-pub(crate) fn collection_expr<'b>(nodes: &NodeList<'b>) -> Option<Loc> {
+pub(crate) fn collection_expr(nodes: &NodeList) -> Option<Loc> {
     join_maybe_exprs(nodes.first(), nodes.last())
 }
 
@@ -4493,11 +4459,11 @@ pub(crate) fn join_maybe_exprs(lhs: Option<&Node>, rhs: Option<&Node>) -> Option
 }
 
 pub(crate) fn join_maybe_locs(lhs: Option<Loc>, rhs: Option<Loc>) -> Option<Loc> {
-    match (lhs.as_ref(), rhs.as_ref()) {
+    match (lhs, rhs) {
         (None, None) => None,
-        (None, Some(rhs)) => Some(*rhs),
-        (Some(lhs), None) => Some(*lhs),
-        (Some(lhs), Some(rhs)) => Some(lhs.join(*rhs)),
+        (None, Some(rhs)) => Some(rhs),
+        (Some(lhs), None) => Some(lhs),
+        (Some(lhs), Some(rhs)) => Some(lhs.join(rhs)),
     }
 }
 

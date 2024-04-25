@@ -127,7 +127,7 @@ impl<'s> Fixture<'s> {
 
         match &self.locs {
             Some(locs) => {
-                let ast = if let Some(ast) = actual.ast.as_ref() {
+                let ast = if let Some(ast) = actual.ast {
                     ast
                 } else {
                     panic!("can't compare locs, ast is empty");

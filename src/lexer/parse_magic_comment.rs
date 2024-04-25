@@ -373,7 +373,7 @@ impl<'b> Lexer<'b> {
 
                     let magic_comment = self.blob.alloc_mut::<MagicComment>();
                     *magic_comment = MagicComment::new(*kind, key_l, value_l);
-                    self.magic_comments.push(&*magic_comment);
+                    self.magic_comments.push(magic_comment);
                 }
             }
         }

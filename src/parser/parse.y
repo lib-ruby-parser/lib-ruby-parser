@@ -631,7 +631,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                 | mlhs tEQL command_call
                     {
                         let command_call = $<Node>3;
-                        self.value_expr(&command_call)?;
+                        self.value_expr(command_call)?;
 
                         $$ = Value::Node(
                             self.builder.multi_assign(
@@ -648,7 +648,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                             $<NodeList>3,
                             None
                         );
-                        self.value_expr(&mrhs)?;
+                        self.value_expr(mrhs)?;
 
                         $$ = Value::Node(
                             self.builder.assign(
@@ -669,7 +669,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                             Some($<Node>5)
                         );
                         let mrhs_arg = $<Node>3;
-                        self.value_expr(&mrhs_arg)?;
+                        self.value_expr(mrhs_arg)?;
 
                         let begin_body = self.builder.begin_body(
                             Some(mrhs_arg),
@@ -936,13 +936,13 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
      command_rhs: command_call   %prec tOP_ASGN
                     {
                         let command_call = $<Node>1;
-                        self.value_expr(&command_call)?;
+                        self.value_expr(command_call)?;
                         $$ = Value::Node(command_call);
                     }
                 | command_call kRESCUE_MOD stmt
                     {
                         let command_call = $<Node>1;
-                        self.value_expr(&command_call)?;
+                        self.value_expr(command_call)?;
 
                         let rescue_body = self.builder.rescue_body(
                             $<Token>2,
@@ -1133,7 +1133,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
       expr_value: expr
                     {
                         let expr = $<Node>1;
-                        self.value_expr(&expr)?;
+                        self.value_expr(expr)?;
                         $$ = Value::Node(expr);
                     }
                 ;
@@ -2039,10 +2039,10 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                 | arg tDOT2 arg
                     {
                         let left = $<Node>1;
-                        self.value_expr(&left)?;
+                        self.value_expr(left)?;
 
                         let right = $<Node>3;
-                        self.value_expr(&right)?;
+                        self.value_expr(right)?;
 
                         $$ = Value::Node(
                             self.builder.range_inclusive(
@@ -2055,10 +2055,10 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                 | arg tDOT3 arg
                     {
                         let left = $<Node>1;
-                        self.value_expr(&left)?;
+                        self.value_expr(left)?;
 
                         let right = $<Node>3;
-                        self.value_expr(&right)?;
+                        self.value_expr(right)?;
 
                         $$ = Value::Node(
                             self.builder.range_exclusive(
@@ -2071,7 +2071,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                 | arg tDOT2
                     {
                         let left = $<Node>1;
-                        self.value_expr(&left)?;
+                        self.value_expr(left)?;
 
                         $$ = Value::Node(
                             self.builder.range_inclusive(
@@ -2084,7 +2084,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                 | arg tDOT3
                     {
                         let left = $<Node>1;
-                        self.value_expr(&left)?;
+                        self.value_expr(left)?;
 
                         $$ = Value::Node(
                             self.builder.range_exclusive(
@@ -2097,7 +2097,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                 | tBDOT2 arg
                     {
                         let right = $<Node>2;
-                        self.value_expr(&right)?;
+                        self.value_expr(right)?;
 
                         $$ = Value::Node(
                             self.builder.range_inclusive(
@@ -2110,7 +2110,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                 | tBDOT3 arg
                     {
                         let right = $<Node>2;
-                        self.value_expr(&right)?;
+                        self.value_expr(right)?;
 
                         $$ = Value::Node(
                             self.builder.range_exclusive(
@@ -2324,7 +2324,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                 | arg tEH arg opt_nl tCOLON arg
                     {
                         let expr = $<Node>1;
-                        self.value_expr(&expr)?;
+                        self.value_expr(expr)?;
 
                         $$ = Value::Node(
                             self.builder.ternary(
@@ -2508,7 +2508,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
        arg_value: arg
                     {
                         let arg = $<Node>1;
-                        self.value_expr(&arg)?;
+                        self.value_expr(arg)?;
                         $$ = Value::Node(arg);
                     }
                 ;
@@ -2550,13 +2550,13 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
          arg_rhs: arg   %prec tOP_ASGN
                     {
                         let arg = $<Node>1;
-                        self.value_expr(&arg)?;
+                        self.value_expr(arg)?;
                         $$ = Value::Node(arg);
                     }
                 | arg kRESCUE_MOD arg
                     {
                         let arg = $<Node>1;
-                        self.value_expr(&arg)?;
+                        self.value_expr(arg)?;
 
                         let rescue_body = self.builder.rescue_body(
                             $<Token>2,
@@ -2684,7 +2684,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
        call_args: command
                     {
                         let command = $<Node>1;
-                        self.value_expr(&command)?;
+                        self.value_expr(command)?;
                         $$ = Value::NodeList( self.new_node_list1(command) );
                     }
                 | args opt_block_arg
@@ -3443,7 +3443,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
    primary_value: primary
                     {
                         let primary = $<Node>1;
-                        self.value_expr(&primary)?;
+                        self.value_expr(primary)?;
                         $$ = Value::Node(primary);
                     }
                 ;
@@ -5171,10 +5171,10 @@ opt_block_args_tail:
                 | p_primitive tDOT2 p_primitive
                     {
                         let left = $<Node>1;
-                        self.value_expr(&left)?;
+                        self.value_expr(left)?;
 
                         let right = $<Node>3;
-                        self.value_expr(&right)?;
+                        self.value_expr(right)?;
 
                         $$ = Value::Node(
                             self.builder.range_inclusive(
@@ -5187,10 +5187,10 @@ opt_block_args_tail:
                 | p_primitive tDOT3 p_primitive
                     {
                         let left = $<Node>1;
-                        self.value_expr(&left)?;
+                        self.value_expr(left)?;
 
                         let right = $<Node>3;
-                        self.value_expr(&right)?;
+                        self.value_expr(right)?;
 
                         $$ = Value::Node(
                             self.builder.range_exclusive(
@@ -5203,7 +5203,7 @@ opt_block_args_tail:
                 | p_primitive tDOT2
                     {
                         let left = $<Node>1;
-                        self.value_expr(&left)?;
+                        self.value_expr(left)?;
 
                         $$ = Value::Node(
                             self.builder.range_inclusive(
@@ -5216,7 +5216,7 @@ opt_block_args_tail:
                 | p_primitive tDOT3
                     {
                         let left = $<Node>1;
-                        self.value_expr(&left)?;
+                        self.value_expr(left)?;
 
                         $$ = Value::Node(
                             self.builder.range_exclusive(
@@ -5241,7 +5241,7 @@ opt_block_args_tail:
                 | tBDOT2 p_primitive
                     {
                         let right = $<Node>2;
-                        self.value_expr(&right)?;
+                        self.value_expr(right)?;
 
                         $$ = Value::Node(
                             self.builder.range_inclusive(
@@ -5254,7 +5254,7 @@ opt_block_args_tail:
                 | tBDOT3 p_primitive
                     {
                         let right = $<Node>2;
-                        self.value_expr(&right)?;
+                        self.value_expr(right)?;
 
                         $$ = Value::Node(
                             self.builder.range_exclusive(
@@ -6573,14 +6573,14 @@ f_opt_paren_args: f_paren_args
        singleton: var_ref
                     {
                         let var_ref = $<Node>1;
-                        self.value_expr(&var_ref)?;
+                        self.value_expr(var_ref)?;
                         $$ = Value::Node(var_ref);
                     }
                 | tLPAREN2 { self.yylexer.lex_state.set(EXPR_BEG); $<None>$ = Value::None; } expr rparen
                     {
                         let expr = $<Node>3;
 
-                        match &*expr {
+                        match expr {
                             Node::Int(nodes::Int { expression_l, .. })
                             | Node::Float(nodes::Float { expression_l, .. })
                             | Node::Rational(nodes::Rational { expression_l, .. })
@@ -6963,7 +6963,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
 
     fn validate_endless_method_name(&mut self, name_t: &Token) -> Result<(), ()> {
         let name = name_t.as_whole_str();
-        match &name[..] {
+        match name {
             "==" | "===" | ">=" | "<=" | "!=" => Ok(()),
             other if other.ends_with('=') => {
                 self.yyerror(&name_t.loc, DiagnosticMessage::EndlessSetterDefinition {}).map(|_| ())
