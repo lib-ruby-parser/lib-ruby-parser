@@ -1270,7 +1270,11 @@ impl<'b> Lexer<'b> {
         let c1 = self.buffer.byte_at(ptr).as_option()?;
 
         let len = if c1 & 0x80 == 0 {
-            1
+            if c1.is_ascii() {
+                return Some(1);
+            } else {
+                return None;
+            }
         } else if c1 & 0xE0 == 0xC0 {
             2
         } else if c1 & 0xF0 == 0xE0 {
