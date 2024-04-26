@@ -46,42 +46,47 @@ fn test_magic_comment() {
 
     assert_eq!(
         iter.next(),
-        Some(&MagicComment::new(
+        Some(MagicComment::new(
             MagicCommentKind::Encoding,
             Loc::new(2, 10),
             Loc::new(12, 17),
+            &blob
         ))
     );
     assert_eq!(
         iter.next(),
-        Some(&MagicComment::new(
+        Some(MagicComment::new(
             MagicCommentKind::FrozenStringLiteral,
             Loc::new(20, 41),
             Loc::new(43, 47),
+            &blob
         ))
     );
     assert_eq!(
         iter.next(),
-        Some(&MagicComment::new(
+        Some(MagicComment::new(
             MagicCommentKind::Encoding,
             Loc::new(50, 56),
             Loc::new(58, 63),
+            &blob
         ))
     );
     assert_eq!(
         iter.next(),
-        Some(&MagicComment::new(
+        Some(MagicComment::new(
             MagicCommentKind::ShareableConstantValue,
             Loc::new(66, 90),
             Loc::new(92, 99),
+            &blob
         ))
     );
     assert_eq!(
         iter.next(),
-        Some(&MagicComment::new(
+        Some(MagicComment::new(
             MagicCommentKind::WarnIndent,
             Loc::new(102, 113),
             Loc::new(115, 119),
+            &blob
         ))
     );
     assert_eq!(iter.next(), None);

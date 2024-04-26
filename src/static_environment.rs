@@ -31,9 +31,9 @@ const ANONYMOUS_BLOCKARG: &str = "ANONYMOUS_BLOCKARG";
 
 impl<'b> StaticEnvironment<'b> {
     pub(crate) fn new(blob: &'b Blob<'b>) -> &'b Self {
-        let this = blob.alloc_mut::<Self>();
+        let this = blob.alloc_uninitialized_mut::<Self>();
         this.variables.set(IntrusiveStrHashMap::new_in(blob));
-        this.stack = blob.alloc_ref();
+        this.stack = DoubleLinkedIntrusiveList::new(blob);
         this
     }
 

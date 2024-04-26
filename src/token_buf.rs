@@ -1,15 +1,15 @@
-use lib_ruby_parser_ast::{Blob, Bytes};
+use lib_ruby_parser_ast::{Blob, ByteArray};
 
 #[derive(Debug)]
 pub(crate) struct TokenBuf<'b> {
-    pub(crate) bytes: &'b Bytes<'b>,
+    pub(crate) bytes: &'b ByteArray<'b>,
     blob: &'b Blob<'b>,
 }
 
 impl<'b> TokenBuf<'b> {
     pub(crate) fn empty(blob: &'b Blob<'b>) -> Self {
         Self {
-            bytes: blob.alloc_mut(),
+            bytes: ByteArray::new(blob),
             blob,
         }
     }
@@ -20,30 +20,24 @@ impl<'b> TokenBuf<'b> {
         result
     }
 
-    pub(crate) fn append_valid_escaped(&mut self, c: char) {
-        self.bytes.append_valid_escaped(c, self.blob);
+    pub(crate) fn push_char(&mut self, c: char) {
+        self.bytes.push_char(c, self.blob);
     }
 
-    pub(crate) fn append_invalid_escaped(&mut self, b: u8) {
-        self.bytes.append_invalid_escaped(b, self.blob);
+    pub(crate) fn push_byte(&mut self, b: u8) {
+        self.bytes.push_byte(b, self.blob);
     }
 
-    pub(crate) fn append_borrowed(&mut self, bytes: &'b [u8]) {
-        if bytes.is_empty() {
-            // FIXME: just strip out callers that make redundant pushes
-            return;
-        }
-        let s = core::str::from_utf8(bytes).unwrap();
-        self.bytes.append_borrowed(s, self.blob);
+    pub(crate) fn push_bytes(&mut self, bytes: &'b [u8]) {
+        self.bytes.push_bytes(bytes, self.blob);
     }
 
-    pub(crate) fn prepend_valid_escaped(&mut self, c: char) {
-        self.bytes.prepend_valid_escaped(c, self.blob);
+    pub(crate) fn prepend_byte(&mut self, b: u8) {
+        self.bytes.prepend_bytes(&[b], self.blob);
     }
 
     pub(crate) fn as_whole_string(&self) -> Option<&'b str> {
-        let bytes = self.blob.push_bytes_iter(self.bytes.iter());
-        core::str::from_utf8(bytes).ok()
+        self.bytes.try_as_str()
     }
 
     pub(crate) fn len(&self) -> usize {
@@ -51,6 +45,6 @@ impl<'b> TokenBuf<'b> {
     }
 
     pub(crate) fn clear(&mut self) {
-        self.bytes = self.blob.alloc_mut();
+        self.bytes = ByteArray::new(self.blob);
     }
 }

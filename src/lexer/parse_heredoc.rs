@@ -91,7 +91,7 @@ impl<'b> Lexer<'b> {
             .substr_at(self.buffer.ptok, self.buffer.pcur)
             .expect("failed to get heredoc id");
         let mut id = TokenBuf::empty(self.blob);
-        id.append_borrowed(id_bytes);
+        id.push_bytes(id_bytes);
         self.set_yylval_str(&mut id);
         self.lval_start = Some(self.buffer.ptok);
         self.lval_end = Some(self.buffer.pcur);
@@ -183,7 +183,7 @@ impl<'b> Lexer<'b> {
                 }
 
                 match self.buffer.substr_at(ptr, ptr_end) {
-                    Some(s) => str_.append_borrowed(s),
+                    Some(s) => str_.push_bytes(s),
                     _ => panic!(
                         "no substr {}..{} (len = {})",
                         ptr,
@@ -192,7 +192,7 @@ impl<'b> Lexer<'b> {
                     ),
                 };
                 if ptr_end < self.buffer.pend {
-                    str_.append_valid_escaped('\n')
+                    str_.push_char('\n')
                 }
                 self.buffer.goto_eol();
                 if self.buffer.heredoc_indent > 0 {
@@ -326,7 +326,7 @@ impl<'b> Lexer<'b> {
         self.lval_start = Some(heredoc_end.start);
         self.lval_end = Some(heredoc_end.end);
         let mut token_buf = TokenBuf::empty(self.blob);
-        token_buf.append_borrowed(heredoc_end.value);
+        token_buf.push_bytes(heredoc_end.value);
         self.set_yylval_str(&mut token_buf);
 
         self.heredoc_restore(here);

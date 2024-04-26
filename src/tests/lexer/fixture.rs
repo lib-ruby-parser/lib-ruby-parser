@@ -1,4 +1,5 @@
 use lib_ruby_parser_ast::Blob;
+use lib_ruby_parser_ast::ByteArray;
 
 use crate::lex_states::*;
 use crate::tests::test_helpers::InlineArray;
@@ -48,8 +49,9 @@ impl<'b> Fixture<'b> {
                 (b"--TOKENS", _) => current_section = TestSection::Tokens,
                 (_, &TestSection::Vars) => {
                     for var in line.split(' ') {
-                        let var = blob.push_str(var);
-                        vars.push(var);
+                        let var_b = ByteArray::new(blob);
+                        var_b.push_str(var, blob);
+                        vars.push(var_b.try_as_str().unwrap());
                     }
                 }
                 (_, &TestSection::State) => state = Some(line.to_string()),
@@ -102,12 +104,16 @@ pub(crate) fn test_file(fixture_path: &str) {
 
     let mut lexer = Lexer::new(
         fixture.input.as_bytes(),
-        blob.push_str(&buffer_name),
+        {
+            let name = ByteArray::new(&blob);
+            name.push_str(&buffer_name, &blob);
+            name.try_as_str().unwrap()
+        },
         None,
         &blob,
     );
     for var in fixture.vars.iter() {
-        lexer.static_env.declare(blob.push_str(&var), &blob);
+        lexer.static_env.declare(var, &blob);
     }
     if let Some(state) = fixture.state {
         lexer.lex_state.set(lex_state(&state).unwrap());
@@ -125,7 +131,7 @@ pub(crate) fn test_file(fixture_path: &str) {
             format!(
                 "{} {:?} [{}, {}]",
                 token.token_name(),
-                token.token_value.as_whole_string().unwrap_or_default(),
+                token.token_value.try_as_str().unwrap_or_default(),
                 token.loc.begin(),
                 token.loc.end()
             )

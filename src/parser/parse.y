@@ -2492,7 +2492,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                         self.warn(
                             @2,
                             DiagnosticMessage::ComparisonAfterComparison {
-                                comparison: op_t.as_whole_str()
+                                comparison: op_t.as_whole_str().unwrap()
                             }
                         );
                         $$ = Value::Node(
@@ -4042,7 +4042,7 @@ opt_block_args_tail:
             bvar: tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
-                        self.static_env.declare(ident_t.as_whole_str(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
                         $$ = Value::Node(
                             self.builder.shadowarg(ident_t)?
                         );
@@ -5323,7 +5323,7 @@ opt_block_args_tail:
        p_var_ref: tCARET tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        let ident_s = ident_t.as_whole_str();
+                        let ident_s = ident_t.as_whole_str().unwrap();
 
                         if !self.static_env.is_declared(ident_s) {
                             return self.yyerror(
@@ -6279,7 +6279,7 @@ f_opt_paren_args: f_paren_args
                 | tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
-                        self.static_env.declare(ident_t.as_whole_str(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
                         self.max_numparam_stack.set_has_ordinary_params();
                         $$ = Value::Token(ident_t);
                     }
@@ -6288,7 +6288,7 @@ f_opt_paren_args: f_paren_args
       f_arg_asgn: f_norm_arg
                     {
                         let arg_t = $<Token>1;
-                        self.current_arg_stack.set(Some(arg_t.as_whole_str()), self.blob);
+                        self.current_arg_stack.set(Some(arg_t.as_whole_str().unwrap()), self.blob);
                         $$ = Value::Token(arg_t);
                     }
                 ;
@@ -6330,11 +6330,11 @@ f_opt_paren_args: f_paren_args
                         let ident_t = $<Token>1;
                         self.check_kwarg_name(ident_t)?;
 
-                        self.static_env.declare(ident_t.as_whole_str(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
 
                         self.max_numparam_stack.set_has_ordinary_params();
 
-                        self.current_arg_stack.set(Some(ident_t.as_whole_str()), self.blob);
+                        self.current_arg_stack.set(Some(ident_t.as_whole_str().unwrap()), self.blob);
                         self.context.set_in_argdef(false);
 
                         $$ = Value::Token(ident_t);
@@ -6427,7 +6427,7 @@ f_opt_paren_args: f_paren_args
         f_kwrest: kwrest_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(ident_t.as_whole_str(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
                         $$ = Value::NodeList(
                             self.new_node_list1(
                                 self.builder.kwrestarg($<Token>1, Some(ident_t))?
@@ -6509,7 +6509,7 @@ f_opt_paren_args: f_paren_args
       f_rest_arg: restarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(ident_t.as_whole_str(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
 
                         $$ = Value::NodeList(
                             self.new_node_list1(
@@ -6540,7 +6540,7 @@ f_opt_paren_args: f_paren_args
      f_block_arg: blkarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(ident_t.as_whole_str(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
                         $$ = Value::Node(
                             self.builder.blockarg(
                                 $<Token>1,
@@ -6835,10 +6835,10 @@ impl<'b /*'*/> Parser<'b /*'*/> {
 
         let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
         let context = lexer.context;
-        let current_arg_stack = blob.alloc_ref::<CurrentArgStack>();
-        let max_numparam_stack = blob.alloc_ref::<MaxNumparamStack>();
-        let pattern_variables = blob.alloc_ref::<VariablesStack>();
-        let pattern_hash_keys = blob.alloc_ref::<VariablesStack>();
+        let current_arg_stack = CurrentArgStack::new(blob);
+        let max_numparam_stack = MaxNumparamStack::new(blob);
+        let pattern_variables = VariablesStack::new(blob);
+        let pattern_hash_keys = VariablesStack::new(blob);
         let static_env = lexer.static_env;
         let diagnostics = lexer.diagnostics;
 
@@ -6871,7 +6871,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
             pattern_hash_keys,
             static_env,
             last_token_type,
-            tokens: blob.alloc_ref(),
+            tokens: SingleLinkedIntrusiveList::new(blob),
             diagnostics,
             yylexer: lexer,
             record_tokens,
@@ -6943,7 +6943,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
     }
 
     fn check_kwarg_name(&self, ident_t: &Token) -> Result<(), ()> {
-        let name = ident_t.as_whole_str();
+        let name = ident_t.as_whole_str().unwrap();
         let first_char = name.chars().next().expect("kwarg name can't be empty");
         if first_char.is_lowercase() || first_char == '_' {
             Ok(())
@@ -6962,7 +6962,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
     }
 
     fn validate_endless_method_name(&mut self, name_t: &Token) -> Result<(), ()> {
-        let name = name_t.as_whole_str();
+        let name = name_t.as_whole_str().unwrap();
         match name {
             "==" | "===" | ">=" | "<=" | "!=" => Ok(()),
             other if other.ends_with('=') => {
@@ -7047,11 +7047,11 @@ impl<'b /*'*/> Parser<'b /*'*/> {
     }
 
     fn new_node_list(&self) -> &'b /*'*/ NodeList<'b /*'*/> {
-        self.blob.alloc_ref::<NodeList>()
+        NodeList::new(self.blob)
     }
 
     fn new_node_list1(&self, node: &'b /*'*/ Node<'b /*'*/>) -> &'b /*'*/ NodeList<'b /*'*/> {
-        let list = self.blob.alloc_ref::<NodeList>();
+        let list = self.new_node_list();
         list.push(node);
         list
     }

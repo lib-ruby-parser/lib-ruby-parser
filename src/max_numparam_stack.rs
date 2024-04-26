@@ -10,6 +10,20 @@ pub(crate) struct MaxNumparamStackItem {
     prev: Cell<Option<ConstNonNull<Self>>>,
     next: Cell<Option<ConstNonNull<Self>>>,
 }
+
+impl MaxNumparamStackItem {
+    fn new<'b>(value: i32, is_static: bool, blob: &Blob<'b>) -> &'b Self {
+        let this = blob.alloc_uninitialized_mut::<Self>();
+        *this = MaxNumparamStackItem {
+            value: Cell::new(value),
+            is_static,
+            prev: Cell::new(None),
+            next: Cell::new(None),
+        };
+        this
+    }
+}
+
 impl core::fmt::Debug for MaxNumparamStackItem {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("MaxNumparamStackItem")
@@ -42,6 +56,12 @@ pub(crate) struct MaxNumparamStack<'b>(DoubleLinkedIntrusiveList<'b, MaxNumparam
 impl<'b> MaxNumparamStack<'b> {
     const ORDINARY_PARAMS: i32 = -1;
 
+    pub(crate) fn new(blob: &Blob<'b>) -> &'b Self {
+        let this = blob.alloc_uninitialized_mut::<Self>();
+        this.0 = DoubleLinkedIntrusiveList::new_in_place();
+        this
+    }
+
     pub(crate) fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -67,14 +87,7 @@ impl<'b> MaxNumparamStack<'b> {
     }
 
     pub(crate) fn push(&self, is_static: bool, blob: &Blob<'b>) {
-        let item = blob.alloc_mut::<MaxNumparamStackItem>();
-        *item = MaxNumparamStackItem {
-            value: Cell::new(0),
-            is_static,
-            prev: Cell::new(None),
-            next: Cell::new(None),
-        };
-        self.0.push(item)
+        self.0.push(MaxNumparamStackItem::new(0, is_static, blob))
     }
 
     pub(crate) fn pop(&self) {

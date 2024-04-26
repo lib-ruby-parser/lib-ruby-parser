@@ -1,6 +1,6 @@
 use core::convert::TryInto;
 
-use lib_ruby_parser_ast::write_to;
+use lib_ruby_parser_ast::ByteArray;
 
 use crate::source::{MagicComment, MagicCommentKind};
 use crate::Lexer;
@@ -333,21 +333,13 @@ impl<'b> Lexer<'b> {
                         let encoding = match core::str::from_utf8(encoding_bytes) {
                             Ok(encoding) => encoding,
                             Err(err) => {
-                                let encoding_name =
-                                    core::str::from_utf8(&encoding_bytes[..err.valid_up_to()])
-                                        .unwrap();
-
-                                debug_assert!(encoding_name.len() < 20);
-                                let mut mem = [0; 50];
-                                let error = write_to(
-                                    &mut mem,
-                                    format_args!("unknown encoding name: {}", encoding_name),
-                                )
-                                .unwrap();
-                                let error = self.blob.push_str(error);
-
+                                let error = ByteArray::new(self.blob);
+                                error.push_str("unknown encoding name: ", self.blob);
+                                error.push_bytes(&encoding_bytes[..err.valid_up_to()], self.blob);
                                 self.yyerror1(
-                                    DiagnosticMessage::EncodingError { error },
+                                    DiagnosticMessage::EncodingError {
+                                        error: error.try_as_str().unwrap(),
+                                    },
                                     self.loc(vbeg, vend),
                                 );
 
@@ -371,9 +363,8 @@ impl<'b> Lexer<'b> {
                     let key_l = self.loc(beg, beg + n);
                     let value_l = self.loc(vbeg, vend);
 
-                    let magic_comment = self.blob.alloc_mut::<MagicComment>();
-                    *magic_comment = MagicComment::new(*kind, key_l, value_l);
-                    self.magic_comments.push(magic_comment);
+                    self.magic_comments
+                        .push(MagicComment::new(*kind, key_l, value_l, self.blob));
                 }
             }
         }

@@ -1,5 +1,5 @@
 use core::cell::Cell;
-use lib_ruby_parser_ast::ConstNonNull;
+use lib_ruby_parser_ast::{Blob, ConstNonNull};
 
 use crate::Loc;
 
@@ -72,12 +72,19 @@ impl lib_ruby_parser_ast::SingleLinkedIntrusiveListItem for MagicComment {
 }
 
 impl MagicComment {
-    pub(crate) fn new(kind: MagicCommentKind, key_l: Loc, value_l: Loc) -> Self {
-        Self {
+    pub(crate) fn new<'b>(
+        kind: MagicCommentKind,
+        key_l: Loc,
+        value_l: Loc,
+        blob: &Blob<'b>,
+    ) -> &'b Self {
+        let this = blob.alloc_uninitialized_mut::<Self>();
+        *this = Self {
             kind,
             key_l,
             value_l,
             next: Cell::new(None),
-        }
+        };
+        this
     }
 }

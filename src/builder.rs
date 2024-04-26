@@ -1,10 +1,9 @@
-use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, Writer};
+use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList};
 
 #[cfg(feature = "onig")]
 use onig::{Regex, RegexOptions};
 
 use core::convert::TryInto;
-use core::fmt::Write;
 
 use std::collections::HashMap;
 
@@ -12,8 +11,8 @@ use std::collections::HashMap;
 use crate::nodes::*;
 use crate::Loc;
 use crate::{
-    Bytes, CurrentArgStack, Lexer, MaxNumparamStack, Node, SharedContext, StaticEnvironment, Token,
-    VariablesStack,
+    ByteArray, CurrentArgStack, Lexer, MaxNumparamStack, Node, SharedContext, StaticEnvironment,
+    Token, VariablesStack,
 };
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 
@@ -157,20 +156,9 @@ impl<'b> Builder<'b> {
         let sign = unary_t.token_value;
 
         let join_sign_and_value_in =
-            |sign: &'b Bytes<'b>, value: &'b Bytes<'b>, out: &'b Bytes<'b>| -> &'b Bytes<'b> {
-                let mut mem = [0; 100];
-                let mut writer = Writer::new(&mut mem);
-                write!(
-                    &mut writer,
-                    "{}{}",
-                    sign.as_whole_string().unwrap(),
-                    value.as_whole_string().unwrap()
-                )
-                .unwrap();
-                let s = writer.as_str().unwrap();
-                let s = self.blob.push_str(s);
-                out.append_borrowed(s, self.blob);
-                out
+            |sign: &'b ByteArray<'b>, value: &'b ByteArray<'b>, out: &'b ByteArray<'b>| {
+                out.push_str(sign.try_as_str().unwrap(), self.blob);
+                out.push_str(value.try_as_str().unwrap(), self.blob);
             };
 
         match numeric {
@@ -226,7 +214,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn str_node(
         &self,
         begin_t: Option<&'b Token<'b>>,
-        value: &'b Bytes<'b>,
+        value: &'b ByteArray<'b>,
         parts: &'b NodeList<'b>,
         end_t: Option<&'b Token<'b>>,
     ) -> &'b Node<'b> {
@@ -276,7 +264,7 @@ impl<'b> Builder<'b> {
         end_t: Option<&'b Token<'b>>,
     ) -> &'b Node<'b> {
         if parts.is_empty() {
-            return self.str_node(begin_t, self.blob.alloc_ref(), parts, end_t);
+            return self.str_node(begin_t, ByteArray::new(self.blob), parts, end_t);
         }
         if parts.len() == 1 {
             let part = parts.iter().next().unwrap();
@@ -352,8 +340,8 @@ impl<'b> Builder<'b> {
 
     // Symbols
 
-    fn validate_sym_value(&self, value: &Bytes, loc: Loc) {
-        if !value.is_valid_utf8() {
+    fn validate_sym_value(&self, value: &ByteArray, loc: Loc) {
+        if core::str::from_utf8(value.as_slice()).is_err() {
             self.error(DiagnosticMessage::InvalidSymbol { symbol: "UTF-8" }, loc)
         }
     }
@@ -397,7 +385,7 @@ impl<'b> Builder<'b> {
                         expression_l,
                     } = self.collection_map(
                         Some(begin_t.loc),
-                        self.blob.alloc_ref(),
+                        NodeList::new(self.blob),
                         Some(end_t.loc),
                     );
 
@@ -437,8 +425,8 @@ impl<'b> Builder<'b> {
     ) -> &'b Node<'b> {
         let begin_l = self.loc(begin_t);
 
-        let mut begin = begin_t.token_value.iter();
-        if begin.len() >= 2 && begin.next() == Some(b'<') && begin.next() == Some(b'<') {
+        let begin = begin_t.token_value.iter();
+        if begin_t.token_value.get(0) == Some(b'<') && begin_t.token_value.get(1) == Some(b'<') {
             let heredoc_body_l = collection_expr(parts).unwrap_or_else(|| self.loc(end_t));
             let heredoc_end_l = self.loc(end_t);
             let expression_l = begin_l;
@@ -474,7 +462,7 @@ impl<'b> Builder<'b> {
             .expect("dedent_level must be positive");
 
         let dedent_heredoc_parts = |parts: &'b NodeList<'b>| -> &'b NodeList<'b> {
-            let out = self.blob.alloc_ref::<NodeList>();
+            let out = NodeList::new(self.blob);
 
             for part in parts.iter() {
                 match part {
@@ -549,7 +537,7 @@ impl<'b> Builder<'b> {
 
     const TAB_WIDTH: usize = 8;
 
-    pub(crate) fn dedent_string(&self, s: &'b Bytes<'b>, width: usize) -> &'b Bytes<'b> {
+    pub(crate) fn dedent_string(&self, s: &'b ByteArray<'b>, width: usize) -> &'b ByteArray<'b> {
         let mut col: usize = 0;
         let mut i: usize = 0;
         let len = s.len();
@@ -559,9 +547,9 @@ impl<'b> Builder<'b> {
                 break;
             }
 
-            if s.byte_at(i).unwrap() == b' ' {
+            if s.get(i).unwrap() == b' ' {
                 col += 1;
-            } else if s.byte_at(i).unwrap() == b'\t' {
+            } else if s.get(i).unwrap() == b'\t' {
                 let n = Self::TAB_WIDTH * (col / Self::TAB_WIDTH + 1);
                 if n > Self::TAB_WIDTH {
                     break;
@@ -574,11 +562,9 @@ impl<'b> Builder<'b> {
             i += 1;
         }
 
-        let dedented = self.blob.alloc_ref::<Bytes>();
-        for byte in s.iter().skip(i) {
-            dedented.append_invalid_escaped(byte, self.blob);
-        }
-        Bytes::compress(dedented, self.blob)
+        let dedented = ByteArray::new(self.blob);
+        dedented.push_bytes(&s.as_slice()[i..], self.blob);
+        dedented
     }
 
     // Regular expressions
@@ -603,10 +589,8 @@ impl<'b> Builder<'b> {
 
         Some(RegOpt::new_in(self.blob, |reg_opt| {
             if !options.is_empty() {
-                let options = core::str::from_utf8(options).unwrap();
-                let options = self.blob.push_str(options);
-                let bytes = self.blob.alloc_ref::<Bytes>();
-                bytes.append_borrowed(options, self.blob);
+                let bytes = ByteArray::new(self.blob);
+                bytes.push_bytes(options, self.blob);
 
                 reg_opt.options = Some(bytes);
             }
@@ -632,7 +616,7 @@ impl<'b> Builder<'b> {
                 ..
             })) => self.validate_static_regexp(
                 parts,
-                options.and_then(|b| b.as_whole_string()),
+                options.and_then(|b| b.try_as_str()),
                 *expression_l,
             ),
             None => self.validate_static_regexp(parts, None, expression_l),
@@ -726,7 +710,7 @@ impl<'b> Builder<'b> {
         parts: &'b NodeList<'b>,
         end_t: &'b Token<'b>,
     ) -> &'b Node<'b> {
-        let composed = self.blob.alloc_ref::<NodeList>();
+        let composed = NodeList::new(self.blob);
         for part in parts.iter() {
             match part {
                 Node::Str(Str {
@@ -915,7 +899,7 @@ impl<'b> Builder<'b> {
         //                     Some(Node::RegOpt(RegOpt { options: left, .. })),
         //                     Some(Node::RegOpt(RegOpt { options: right, .. })),
         //                 ) => {
-        //                     left.map(|b| b.as_whole_string()) == right.map(|b| b.as_whole_string())
+        //                     left.map(|b| b.try_as_str()) == right.map(|b| b.try_as_str())
         //                 }
         //                 _ => false,
         //             }
@@ -927,37 +911,37 @@ impl<'b> Builder<'b> {
         //                 (
         //                     Node::Sym(Sym { name: name1, .. }),
         //                     Node::Sym(Sym { name: name2, .. }),
-        //                 ) if name1.as_whole_string() == name2.as_whole_string() => true,
+        //                 ) if name1.try_as_str() == name2.try_as_str() => true,
 
         //                 // str
         //                 (
         //                     Node::Str(Str { value: value1, .. }),
         //                     Node::Str(Str { value: value2, .. }),
-        //                 ) if value1.as_whole_string() == value2.as_whole_string() => true,
+        //                 ) if value1.try_as_str() == value2.try_as_str() => true,
 
         //                 // int
         //                 (
         //                     Node::Int(Int { value: value1, .. }),
         //                     Node::Int(Int { value: value2, .. }),
-        //                 ) if value1.as_whole_string() == value2.as_whole_string() => true,
+        //                 ) if value1.try_as_str() == value2.try_as_str() => true,
 
         //                 // float
         //                 (
         //                     Node::Float(Float { value: value1, .. }),
         //                     Node::Float(Float { value: value2, .. }),
-        //                 ) if value1.as_whole_string() == value2.as_whole_string() => true,
+        //                 ) if value1.try_as_str() == value2.try_as_str() => true,
 
         //                 // rational
         //                 (
         //                     Node::Rational(Rational { value: value1, .. }),
         //                     Node::Rational(Rational { value: value2, .. }),
-        //                 ) if value1.as_whole_string() == value2.as_whole_string() => true,
+        //                 ) if value1.try_as_str() == value2.try_as_str() => true,
 
         //                 // complex
         //                 (
         //                     Node::Complex(Complex { value: value1, .. }),
         //                     Node::Complex(Complex { value: value2, .. }),
-        //                 ) if value1.as_whole_string() == value2.as_whole_string() => true,
+        //                 ) if value1.try_as_str() == value2.try_as_str() => true,
 
         //                 // regexp
         //                 (
@@ -1086,20 +1070,20 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn nth_ref(&self, token: &'b Token<'b>) -> &'b Node<'b> {
         let expression_l = self.loc(token);
-        let name = &token.as_whole_str()[1..];
-        let parsed = name.parse::<usize>();
+        let name_without_dollar = &token.as_whole_str().unwrap()[1..];
+        let parsed = name_without_dollar.parse::<usize>();
 
         if parsed.is_err() || parsed.map(|n| n > Self::MAX_NTH_REF) == Ok(true) {
             self.warn(
-                DiagnosticMessage::NthRefIsTooBig { nth_ref: name },
+                DiagnosticMessage::NthRefIsTooBig {
+                    nth_ref: name_without_dollar,
+                },
                 expression_l,
             )
         }
 
         NthRef::new_in(self.blob, |nth_ref| {
-            let name_without_dollar = self.blob.alloc_ref::<Bytes>();
-            name_without_dollar.append_borrowed(name, self.blob);
-            nth_ref.name = name_without_dollar;
+            nth_ref.name.push_str(name_without_dollar, self.blob);
             nth_ref.expression_l = expression_l;
         })
     }
@@ -1109,13 +1093,11 @@ impl<'b> Builder<'b> {
             Node::Lvar(Lvar {
                 name, expression_l, ..
             }) => {
-                let name_s = name.as_whole_string().unwrap();
+                let name_s = name.try_as_str().unwrap();
 
                 if name_s.ends_with('?') || name_s.ends_with('!') {
                     self.error(
-                        DiagnosticMessage::InvalidIdToGet {
-                            identifier: self.blob.push_str(name_s),
-                        },
+                        DiagnosticMessage::InvalidIdToGet { identifier: name_s },
                         *expression_l,
                     );
                 }
@@ -1279,7 +1261,7 @@ impl<'b> Builder<'b> {
             Node::Lvar(Lvar {
                 name, expression_l, ..
             }) => {
-                let name_s = name.as_whole_string().unwrap();
+                let name_s = name.try_as_str().unwrap();
                 self.check_assignment_to_numparam(name_s, *expression_l)?;
                 self.check_reserved_for_numparam(name_s, *expression_l)?;
 
@@ -1299,7 +1281,7 @@ impl<'b> Builder<'b> {
                 expression_l,
                 ..
             }) => {
-                let name_s = name.as_whole_string().unwrap();
+                let name_s = name.try_as_str().unwrap();
                 self.check_assignment_to_numparam(name_s, *name_l)?;
                 self.check_reserved_for_numparam(name_s, *name_l)?;
 
@@ -1342,7 +1324,7 @@ impl<'b> Builder<'b> {
             }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: name.as_whole_string().unwrap(),
+                        var_name: name.try_as_str().unwrap(),
                     },
                     *expression_l,
                 );
@@ -1351,11 +1333,12 @@ impl<'b> Builder<'b> {
             Node::NthRef(NthRef {
                 name, expression_l, ..
             }) => {
+                let var_name = ByteArray::new(self.blob);
+                var_name.push_byte(b'$', self.blob);
+                var_name.push_str(name.try_as_str().unwrap(), self.blob);
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: self
-                            .blob
-                            .push_str(&format!("${}", name.as_whole_string().unwrap())),
+                        var_name: var_name.try_as_str().unwrap(),
                     },
                     *expression_l,
                 );
@@ -1556,7 +1539,7 @@ impl<'b> Builder<'b> {
         rhs: &'b Node<'b>,
     ) -> Result<&'b Node<'b>, ()> {
         let operator_l = self.loc(op_t);
-        let operator = op_t.as_whole_str();
+        let operator = op_t.as_whole_str().unwrap();
         let operator = &operator[..operator.len() - 1];
         let expression_l = join_exprs(lhs, rhs);
 
@@ -1596,7 +1579,7 @@ impl<'b> Builder<'b> {
             }) => {
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: name.as_whole_string().unwrap(),
+                        var_name: name.try_as_str().unwrap(),
                     },
                     *expression_l,
                 );
@@ -1605,11 +1588,12 @@ impl<'b> Builder<'b> {
             Node::NthRef(NthRef {
                 name, expression_l, ..
             }) => {
+                let var_name = ByteArray::new(self.blob);
+                var_name.push_byte(b'$', self.blob);
+                var_name.push_str(name.try_as_str().unwrap(), self.blob);
                 self.error(
                     DiagnosticMessage::CantSetVariable {
-                        var_name: self
-                            .blob
-                            .push_str(&format!("${}", name.as_whole_string().unwrap())),
+                        var_name: var_name.try_as_str().unwrap(),
                     },
                     *expression_l,
                 );
@@ -1636,7 +1620,7 @@ impl<'b> Builder<'b> {
             }),
             _ => OpAsgn::new_in(self.blob, |op_asgn| {
                 op_asgn.recv = recv;
-                op_asgn.operator.append_borrowed(operator, self.blob);
+                op_asgn.operator.push_str(operator, self.blob);
                 op_asgn.value = value;
                 op_asgn.operator_l = operator_l;
                 op_asgn.expression_l = expression_l;
@@ -1772,7 +1756,7 @@ impl<'b> Builder<'b> {
         let end_l = self.loc(end_t);
         let expression_l = keyword_l.join(end_l);
 
-        self.check_reserved_for_numparam(name_t.as_whole_str(), name_l)?;
+        self.check_reserved_for_numparam(name_t.as_whole_str().unwrap(), name_l)?;
 
         Ok(Def::new_in(self.blob, |def| {
             def.name = name_t.token_value;
@@ -1803,7 +1787,7 @@ impl<'b> Builder<'b> {
         let assignment_l = self.loc(assignment_t);
 
         let name = name_t.token_value;
-        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+        self.check_reserved_for_numparam(name.try_as_str().unwrap(), name_l)?;
 
         Ok(Def::new_in(self.blob, |def| {
             def.name = name;
@@ -1834,7 +1818,7 @@ impl<'b> Builder<'b> {
         let expression_l = keyword_l.join(end_l);
 
         let name = name_t.token_value;
-        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+        self.check_reserved_for_numparam(name.try_as_str().unwrap(), name_l)?;
 
         Ok(Defs::new_in(self.blob, |defs| {
             defs.definee = definee;
@@ -1870,7 +1854,7 @@ impl<'b> Builder<'b> {
         let expression_l = keyword_l.join(body_l);
 
         let name = name_t.token_value;
-        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+        self.check_reserved_for_numparam(name.try_as_str().unwrap(), name_l)?;
 
         Ok(Defs::new_in(self.blob, |defs| {
             defs.definee = definee;
@@ -1956,7 +1940,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn arg(&self, name_t: &'b Token<'b>) -> Result<&'b Node<'b>, ()> {
         let name_l = self.loc(name_t);
 
-        self.check_reserved_for_numparam(name_t.as_whole_str(), name_l)?;
+        self.check_reserved_for_numparam(name_t.as_whole_str().unwrap(), name_l)?;
 
         Ok(Arg::new_in(self.blob, |arg| {
             arg.name = name_t.token_value;
@@ -1975,7 +1959,7 @@ impl<'b> Builder<'b> {
         let expression_l = self.loc(name_t).join(default.expression());
 
         let name = name_t.token_value;
-        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+        self.check_reserved_for_numparam(name.try_as_str().unwrap(), name_l)?;
 
         Ok(Optarg::new_in(self.blob, |optarg| {
             optarg.name = name;
@@ -1994,7 +1978,7 @@ impl<'b> Builder<'b> {
         let (name, name_l) = if let Some(name_t) = name_t {
             let name_l = self.loc(name_t);
             let name = name_t.token_value;
-            self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+            self.check_reserved_for_numparam(name.try_as_str().unwrap(), name_l)?;
             (Some(name), Some(name_l))
         } else {
             (None, None)
@@ -2014,7 +1998,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn kwarg(&self, name_t: &'b Token<'b>) -> Result<&'b Node<'b>, ()> {
         let name_l = self.loc(name_t);
         let name = name_t.token_value;
-        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+        self.check_reserved_for_numparam(name.try_as_str().unwrap(), name_l)?;
 
         let expression_l = name_l;
         let name_l = expression_l.adjust_end(-1);
@@ -2033,7 +2017,7 @@ impl<'b> Builder<'b> {
     ) -> Result<&'b Node<'b>, ()> {
         let name_l = self.loc(name_t);
         let name = name_t.token_value;
-        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+        self.check_reserved_for_numparam(name.try_as_str().unwrap(), name_l)?;
 
         let label_l = name_l;
         let name_l = label_l.adjust_end(-1);
@@ -2055,7 +2039,7 @@ impl<'b> Builder<'b> {
         let (name, name_l) = if let Some(name_t) = name_t {
             let name_l = self.loc(name_t);
             let name = name_t.token_value;
-            self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+            self.check_reserved_for_numparam(name.try_as_str().unwrap(), name_l)?;
             (Some(name), Some(name_l))
         } else {
             (None, None)
@@ -2085,7 +2069,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn shadowarg(&self, name_t: &'b Token<'b>) -> Result<&'b Node<'b>, ()> {
         let name_l = self.loc(name_t);
         let name = name_t.token_value;
-        self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+        self.check_reserved_for_numparam(name.try_as_str().unwrap(), name_l)?;
 
         Ok(Shadowarg::new_in(self.blob, |shadowarg| {
             shadowarg.name = name;
@@ -2101,7 +2085,7 @@ impl<'b> Builder<'b> {
         let name_l = self.maybe_loc(name_t);
         let name = maybe_value(name_t);
         if let (Some(name_l), Some(name)) = (name_l, name) {
-            self.check_reserved_for_numparam(name.as_whole_string().unwrap(), name_l)?;
+            self.check_reserved_for_numparam(name.try_as_str().unwrap(), name_l)?;
         }
 
         let operator_l = self.loc(amper_t);
@@ -2186,8 +2170,8 @@ impl<'b> Builder<'b> {
         let end_l = self.maybe_loc(rparen_t);
 
         let method_name = selector_t.map(|t| t.token_value).unwrap_or_else(|| {
-            let bytes = self.blob.alloc_ref::<Bytes>();
-            bytes.append_borrowed("call", self.blob);
+            let bytes = ByteArray::new(self.blob);
+            bytes.push_str("call", self.blob);
             bytes
         });
 
@@ -2303,7 +2287,7 @@ impl<'b> Builder<'b> {
                     }),
                 };
 
-                let new_args = self.blob.alloc_ref::<NodeList>();
+                let new_args = NodeList::new(self.blob);
                 new_args.push(block);
                 let new_expr_l = keyword_expression_l.join(block.expression());
 
@@ -2424,9 +2408,9 @@ impl<'b> Builder<'b> {
         let expression_l = receiver.expression().join(selector_l);
         let receiver: &'b Node<'b> = receiver;
 
-        let method_name = self.blob.alloc_ref::<Bytes>();
-        method_name.append_borrowed(selector_t.as_whole_str(), self.blob);
-        method_name.append_valid_escaped('=', self.blob);
+        let method_name = ByteArray::new(self.blob);
+        method_name.push_str(selector_t.as_whole_str().unwrap(), self.blob);
+        method_name.push_byte(b'=', self.blob);
 
         match self.call_type_for_dot(Some(dot_t)) {
             MethodCallType::Send => Send::new_in(self.blob, |send| {
@@ -2538,7 +2522,7 @@ impl<'b> Builder<'b> {
             Some(captures) => {
                 for capture in captures {
                     self.static_env
-                        .declare(capture.as_whole_string().unwrap(), self.blob);
+                        .declare(capture.try_as_str().unwrap(), self.blob);
                 }
 
                 MatchWithLvasgn::new_in(self.blob, |match_with_lvasgn| {
@@ -2550,7 +2534,7 @@ impl<'b> Builder<'b> {
             }
             None => Send::new_in(self.blob, |send| {
                 send.recv = Some(receiver);
-                send.method_name.append_borrowed("=~", self.blob);
+                send.method_name.push_str("=~", self.blob);
                 send.args.push(arg);
                 send.dot_l = None;
                 send.selector_l = Some(selector_l);
@@ -2574,11 +2558,11 @@ impl<'b> Builder<'b> {
         let selector_l = self.loc(op_t);
         let expression_l = receiver.expression().join(selector_l);
 
-        let op = op_t.as_whole_str();
+        let op = op_t.as_whole_str().unwrap();
         let method_name = if op == "+" || op == "-" {
-            let bytes = self.blob.alloc_ref::<Bytes>();
-            bytes.append_borrowed(op, self.blob);
-            bytes.append_borrowed("@", self.blob);
+            let bytes = ByteArray::new(self.blob);
+            bytes.push_str(op, self.blob);
+            bytes.push_byte(b'@', self.blob);
             bytes
         } else {
             op_t.token_value
@@ -2618,7 +2602,7 @@ impl<'b> Builder<'b> {
 
             Ok(Send::new_in(self.blob, |send| {
                 send.recv = Some(self.check_condition(receiver));
-                send.method_name.append_borrowed("!", self.blob);
+                send.method_name.push_byte(b'!', self.blob);
                 send.dot_l = None;
                 send.selector_l = Some(selector_l);
                 send.begin_l = begin_l;
@@ -2633,7 +2617,7 @@ impl<'b> Builder<'b> {
                 expression_l,
             } = self.collection_map(
                 begin_t.map(|t| t.loc),
-                self.blob.alloc_ref(),
+                NodeList::new(self.blob),
                 end_t.map(|t| t.loc),
             );
 
@@ -2647,7 +2631,7 @@ impl<'b> Builder<'b> {
             let expression_l = nil_node.expression().join(selector_l);
             Ok(Send::new_in(self.blob, |send| {
                 send.recv = Some(nil_node);
-                send.method_name.append_borrowed("!", self.blob);
+                send.method_name.push_byte(b'!', self.blob);
                 send.dot_l = None;
                 send.selector_l = Some(selector_l);
                 send.begin_l = None;
@@ -3150,7 +3134,7 @@ impl<'b> Builder<'b> {
                 }))
             }
         } else if let Some((else_t, else_)) = else_ {
-            let mut statements = self.blob.alloc_ref::<NodeList>();
+            let mut statements = NodeList::new(self.blob);
 
             if let Some(compound_stmt) = compound_stmt {
                 match compound_stmt {
@@ -3166,11 +3150,11 @@ impl<'b> Builder<'b> {
             }
 
             let parts = if let Some(else_) = else_ {
-                let list = self.blob.alloc_ref::<NodeList>();
+                let list = NodeList::new(self.blob);
                 list.push(else_);
                 list
             } else {
-                self.blob.alloc_ref::<NodeList>()
+                NodeList::new(self.blob)
             };
             let CollectionMap {
                 begin_l,
@@ -3469,9 +3453,10 @@ impl<'b> Builder<'b> {
         let name_l = self.loc(name_t);
         let expression_l = name_l;
 
-        self.check_lvar_name(name_t.as_whole_str(), name_l)?;
-        self.check_duplicate_pattern_variable(name_t.as_whole_str(), name_l)?;
-        self.static_env.declare(name_t.as_whole_str(), self.blob);
+        let name_s = name_t.as_whole_str().unwrap();
+        self.check_lvar_name(name_s, name_l)?;
+        self.check_duplicate_pattern_variable(name_s, name_l)?;
+        self.static_env.declare(name_s, self.blob);
 
         Ok(MatchVar::new_in(self.blob, |match_var| {
             match_var.name = name_t.token_value;
@@ -3484,9 +3469,10 @@ impl<'b> Builder<'b> {
         let expression_l = self.loc(name_t);
         let name_l = expression_l.adjust_end(-1);
 
-        self.check_lvar_name(name_t.as_whole_str(), name_l)?;
-        self.check_duplicate_pattern_variable(name_t.as_whole_str(), name_l)?;
-        self.static_env.declare(name_t.as_whole_str(), self.blob);
+        let name_s = name_t.as_whole_str().unwrap();
+        self.check_lvar_name(name_s, name_l)?;
+        self.check_duplicate_pattern_variable(name_s, name_l)?;
+        self.static_env.declare(name_s, self.blob);
 
         Ok(MatchVar::new_in(self.blob, |match_var| {
             match_var.name = name_t.token_value;
@@ -3517,10 +3503,10 @@ impl<'b> Builder<'b> {
                 expression_l,
                 ..
             }) => {
-                let name = value.as_whole_string().unwrap();
+                let name = value.try_as_str().unwrap();
                 let mut name_l = *expression_l;
 
-                let name_s = value.as_whole_string().unwrap();
+                let name_s = value.try_as_str().unwrap();
 
                 self.check_lvar_name(name_s, name_l)?;
                 self.check_duplicate_pattern_variable(name_s, name_l)?;
@@ -3545,7 +3531,7 @@ impl<'b> Builder<'b> {
 
                 let expression_l = self.loc(begin_t).join(*expression_l).join(self.loc(end_t));
                 MatchVar::new_in(self.blob, |match_var| {
-                    match_var.name.append_borrowed(name_s, self.blob);
+                    match_var.name.push_str(name_s, self.blob);
                     match_var.name_l = name_l;
                     match_var.expression_l = expression_l;
                 })
@@ -3754,19 +3740,19 @@ impl<'b> Builder<'b> {
     ) -> Result<&'b Node<'b>, ()> {
         let result = match p_kw_label {
             PKwLabel::PlainLabel(label_t) => {
-                self.check_duplicate_pattern_key(label_t.as_whole_str(), self.loc(label_t))?;
+                self.check_duplicate_pattern_key(
+                    label_t.as_whole_str().unwrap(),
+                    self.loc(label_t),
+                )?;
                 self.pair_keyword(label_t, value)
             }
             PKwLabel::QuotedLabel((begin_t, parts, end_t)) => {
                 let label_loc = self.loc(begin_t).join(self.loc(end_t));
 
                 match self.static_string(parts) {
-                    Some(var_name) => self.check_duplicate_pattern_key(
-                        Bytes::compress(var_name, self.blob)
-                            .as_whole_string()
-                            .unwrap(),
-                        label_loc,
-                    )?,
+                    Some(var_name) => {
+                        self.check_duplicate_pattern_key(var_name.try_as_str().unwrap(), label_loc)?
+                    }
                     _ => {
                         self.error(
                             DiagnosticMessage::SymbolLiteralWithInterpolation {},
@@ -3922,11 +3908,11 @@ impl<'b> Builder<'b> {
             | Node::Optarg(Optarg { name, .. })
             | Node::Kwarg(Kwarg { name, .. })
             | Node::Kwoptarg(Kwoptarg { name, .. })
-            | Node::Shadowarg(Shadowarg { name, .. }) => Some(name.as_whole_string().unwrap()),
+            | Node::Shadowarg(Shadowarg { name, .. }) => Some(name.try_as_str().unwrap()),
 
             Node::Restarg(Restarg { name, .. })
             | Node::Kwrestarg(Kwrestarg { name, .. })
-            | Node::Blockarg(Blockarg { name, .. }) => name.map(|s| s.as_whole_string().unwrap()),
+            | Node::Blockarg(Blockarg { name, .. }) => name.map(|s| s.try_as_str().unwrap()),
             _ => {
                 unreachable!("unsupported arg {:?}", node)
             }
@@ -4002,7 +3988,7 @@ impl<'b> Builder<'b> {
         }
     }
 
-    pub(crate) fn check_assignment_to_numparam(&self, name: &str, loc: Loc) -> Result<(), ()> {
+    pub(crate) fn check_assignment_to_numparam(&self, name: &'b str, loc: Loc) -> Result<(), ()> {
         let assigning_to_numparam = self.context.is_in_dynamic_block()
             && matches!(
                 name,
@@ -4012,9 +3998,7 @@ impl<'b> Builder<'b> {
 
         if assigning_to_numparam {
             self.error(
-                DiagnosticMessage::CantAssignToNumparam {
-                    numparam: self.blob.push_str(name),
-                },
+                DiagnosticMessage::CantAssignToNumparam { numparam: name },
                 loc,
             );
             return Err(());
@@ -4045,13 +4029,11 @@ impl<'b> Builder<'b> {
         }
     }
 
-    pub(crate) fn check_reserved_for_numparam(&self, name: &str, loc: Loc) -> Result<(), ()> {
+    pub(crate) fn check_reserved_for_numparam(&self, name: &'b str, loc: Loc) -> Result<(), ()> {
         match name {
             "_1" | "_2" | "_3" | "_4" | "_5" | "_6" | "_7" | "_8" | "_9" => {
                 self.error(
-                    DiagnosticMessage::ReservedForNumparam {
-                        numparam: self.blob.push_str(name),
-                    },
+                    DiagnosticMessage::ReservedForNumparam { numparam: name },
                     loc,
                 );
                 Err(())
@@ -4111,17 +4093,17 @@ impl<'b> Builder<'b> {
     // Helpers
     //
 
-    pub(crate) fn static_string(&self, nodes: &NodeList<'b>) -> Option<&'b Bytes<'b>> {
-        let result = self.blob.alloc_ref::<Bytes>();
+    pub(crate) fn static_string(&self, nodes: &NodeList<'b>) -> Option<&'b ByteArray<'b>> {
+        let result = ByteArray::new(self.blob);
 
         for node in nodes.iter() {
             match node {
                 Node::Str(Str { value, .. }) => {
-                    result.append_borrowed(value.as_whole_string().unwrap(), self.blob)
+                    result.push_str(value.try_as_str().unwrap(), self.blob)
                 }
                 Node::Begin(Begin { statements, .. }) => {
                     if let Some(s) = self.static_string(statements) {
-                        result.append_borrowed(s.as_whole_string().unwrap(), self.blob)
+                        result.push_str(s.try_as_str().unwrap(), self.blob)
                     } else {
                         return None;
                     }
@@ -4214,7 +4196,7 @@ impl<'b> Builder<'b> {
     }
 
     #[cfg(not(feature = "onig"))]
-    pub(crate) fn static_regexp_captures(&self, _node: &Node) -> Option<[&'b Bytes<'b>; 20]> {
+    pub(crate) fn static_regexp_captures(&self, _node: &Node) -> Option<[&'b ByteArray<'b>; 20]> {
         None
     }
 
@@ -4248,8 +4230,8 @@ impl<'b> Builder<'b> {
 
     pub(crate) fn is_heredoc(&self, begin_t: Option<&'b Token<'b>>) -> bool {
         if let Some(begin_t) = begin_t {
-            let mut begin = begin_t.token_value.iter();
-            if begin.len() >= 2 && begin.next() == Some(b'<') && begin.next() == Some(b'<') {
+            let begin = begin_t.token_value;
+            if begin.len() >= 2 && begin.get(0) == Some(b'<') && begin.get(1) == Some(b'<') {
                 return true;
             }
         }
@@ -4450,7 +4432,7 @@ pub(crate) fn collection_expr(nodes: &NodeList) -> Option<Loc> {
     join_maybe_exprs(nodes.first(), nodes.last())
 }
 
-pub(crate) fn maybe_value<'b>(token: Option<&'b Token<'b>>) -> Option<&'b Bytes<'b>> {
+pub(crate) fn maybe_value<'b>(token: Option<&'b Token<'b>>) -> Option<&'b ByteArray<'b>> {
     token.map(|t| t.token_value)
 }
 

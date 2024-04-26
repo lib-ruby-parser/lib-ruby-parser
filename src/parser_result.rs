@@ -64,10 +64,10 @@ fn test_fmt() {
             "{:?}",
             ParserResult {
                 ast: None,
-                tokens: blob.alloc_ref(),
-                diagnostics: blob.alloc_ref(),
-                comments: blob.alloc_ref(),
-                magic_comments: blob.alloc_ref(),
+                tokens: SingleLinkedIntrusiveList::new(&blob),
+                diagnostics: SingleLinkedIntrusiveList::new(&blob),
+                comments: SingleLinkedIntrusiveList::new(&blob),
+                magic_comments: SingleLinkedIntrusiveList::new(&blob),
                 input: DecodedInput::new("foo", b"", &blob)
             }
         ),

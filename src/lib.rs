@@ -18,7 +18,7 @@ Uses bison under the hood.
 // Re-exporting lib_ruby_parser_ast
 /// Module with all known node types
 pub use lib_ruby_parser_ast::nodes;
-pub use lib_ruby_parser_ast::Bytes;
+pub use lib_ruby_parser_ast::ByteArray;
 pub use lib_ruby_parser_ast::DiagnosticMessage;
 pub use lib_ruby_parser_ast::Loc;
 pub use lib_ruby_parser_ast::Node;

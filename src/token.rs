@@ -1,6 +1,6 @@
 use core::cell::Cell;
 
-use lib_ruby_parser_ast::{Blob, Bytes, ConstNonNull, SingleLinkedIntrusiveListItem};
+use lib_ruby_parser_ast::{Blob, ByteArray, ConstNonNull, SingleLinkedIntrusiveListItem};
 
 use crate::parser::token_name;
 use crate::Loc;
@@ -14,7 +14,7 @@ pub struct Token<'b> {
 
     /// Value of the token,
     /// e.g "42" for 42
-    pub token_value: &'b Bytes<'b>,
+    pub token_value: &'b ByteArray<'b>,
 
     /// Location of the token
     pub loc: Loc,
@@ -27,11 +27,11 @@ pub struct Token<'b> {
 impl<'b> Token<'b> {
     pub(crate) fn new(
         token_type: i32,
-        token_value: &'b Bytes<'b>,
+        token_value: &'b ByteArray<'b>,
         loc: Loc,
         blob: &'b Blob<'b>,
     ) -> &'b Self {
-        let this = blob.alloc_mut::<Self>();
+        let this = blob.alloc_uninitialized_mut::<Self>();
         *this = Self {
             token_type,
             token_value,
@@ -72,8 +72,8 @@ impl<'b> Token<'b> {
         token_name(self.token_type)
     }
 
-    pub(crate) fn as_whole_str(&self) -> &'b str {
-        self.token_value.as_whole_string().unwrap()
+    pub(crate) fn as_whole_str(&self) -> Option<&'b str> {
+        self.token_value.try_as_str()
     }
 }
 
@@ -83,7 +83,7 @@ impl core::fmt::Debug for Token<'_> {
             f,
             "[{}, {:?}, {:?}]",
             self.token_name(),
-            self.token_value.to_string_lossy(),
+            self.token_value.try_as_str().unwrap(),
             self.loc,
         )
     }
@@ -101,8 +101,8 @@ impl SingleLinkedIntrusiveListItem for Token<'_> {
 
 #[cfg(test)]
 fn new_token<'b>(blob: &'b Blob<'b>) -> &'b Token<'b> {
-    let bytes = blob.alloc_ref::<Bytes>();
-    bytes.append_invalid_escaped(42, blob);
+    let bytes = ByteArray::new(blob);
+    bytes.push_byte(42, blob);
     Token::new(crate::Lexer::tINTEGER, bytes, Loc::new(1, 2), blob)
 }
 

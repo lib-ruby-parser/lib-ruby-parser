@@ -23,7 +23,7 @@ impl<'b> DecodedInput<'b> {
     pub fn new(name: &'b str, bytes: &'b [u8], blob: &'b Blob<'b>) -> Self {
         let mut this = Self {
             name,
-            lines: blob.alloc_ref(),
+            lines: SingleLinkedIntrusiveList::new(blob),
             bytes: b"",
             blob,
         };
@@ -34,7 +34,8 @@ impl<'b> DecodedInput<'b> {
     /// Populates `Input` with a given byte array
     pub(crate) fn set_bytes(&mut self, bytes: &'b [u8]) {
         let mut line = SourceLine::new(0, 0, true, self.blob);
-        let lines: &'b SingleLinkedIntrusiveList<'b, SourceLine> = self.blob.alloc_ref();
+        let lines: &'b SingleLinkedIntrusiveList<'b, SourceLine> =
+            SingleLinkedIntrusiveList::new(self.blob);
 
         for (idx, c) in bytes.iter().enumerate() {
             line.end = idx + 1;

@@ -25,7 +25,7 @@ impl SourceLine {
         ends_with_eof: bool,
         blob: &'b Blob<'b>,
     ) -> &'b mut Self {
-        let this = blob.alloc_mut();
+        let this = blob.alloc_uninitialized_mut();
         *this = Self {
             start,
             end,

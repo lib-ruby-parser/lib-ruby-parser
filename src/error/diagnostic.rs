@@ -47,7 +47,7 @@ impl<'b> Diagnostic<'b> {
         loc: Loc,
         blob: &'b Blob<'b>,
     ) -> &'b Self {
-        let this = blob.alloc_mut();
+        let this = blob.alloc_uninitialized_mut::<Self>();
         *this = Self {
             level,
             message,

@@ -4,6 +4,12 @@ use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, IntrusiveStrHashMap};
 pub(crate) struct VariablesStack<'b>(DoubleLinkedIntrusiveList<'b, IntrusiveStrHashMap<'b, ()>>);
 
 impl<'b> VariablesStack<'b> {
+    pub(crate) fn new(blob: &Blob<'b>) -> &'b Self {
+        let this = blob.alloc_uninitialized_mut::<Self>();
+        this.0 = DoubleLinkedIntrusiveList::new_in_place();
+        this
+    }
+
     pub(crate) fn is_empty(&self) -> bool {
         self.0.is_empty()
     }

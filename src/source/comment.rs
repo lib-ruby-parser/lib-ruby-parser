@@ -81,7 +81,7 @@ impl Comment {
     }
 
     pub(crate) fn new<'b>(location: Loc, kind: CommentType, blob: &'b Blob<'b>) -> &'b Self {
-        let this = blob.alloc_mut();
+        let this = blob.alloc_uninitialized_mut();
         *this = Self {
             location,
             kind,

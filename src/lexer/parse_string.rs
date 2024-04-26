@@ -1,4 +1,4 @@
-use lib_ruby_parser_ast::write_to;
+use lib_ruby_parser_ast::{write_to, ByteArray};
 
 use crate::maybe_byte::*;
 use crate::source::buffer::*;
@@ -51,7 +51,7 @@ impl<'b> Lexer<'b> {
                     self.lval_start = Some(heredoc_end.start);
                     self.lval_end = Some(heredoc_end.end);
                     let mut token_buf = TokenBuf::empty(self.blob);
-                    token_buf.append_borrowed(heredoc_end.value);
+                    token_buf.push_bytes(heredoc_end.value);
                     self.set_yylval_str(&mut token_buf);
                 }
                 return Self::tSTRING_END;
@@ -460,7 +460,7 @@ impl<'b> Lexer<'b> {
             .buffer
             .substr_at(self.buffer.pcur - n, self.buffer.pcur)
             .unwrap_or_else(|| panic!("no substr {}..{}", self.buffer.pcur - n, self.buffer.pcur));
-        self.tokenbuf.append_borrowed(substr);
+        self.tokenbuf.push_bytes(substr);
     }
 
     fn tokaddmbc(&mut self, codepoint: u32) {
@@ -799,11 +799,14 @@ impl<'b> Lexer<'b> {
     }
 
     pub(crate) fn warn_space_char(&mut self, c: u8, prefix: &'static str) {
-        let mut mem = [0; 10];
-        let suggestion = write_to(&mut mem, format_args!("{}\\{}", prefix, c)).unwrap();
-        let suggestion = self.blob.push_str(suggestion);
+        let suggestion = ByteArray::new(self.blob);
+        suggestion.push_str(prefix, self.blob);
+        suggestion.push_byte(b'\\', self.blob);
+        suggestion.push_byte(c, self.blob);
         self.warn(
-            DiagnosticMessage::InvalidCharacterSyntax { suggestion },
+            DiagnosticMessage::InvalidCharacterSyntax {
+                suggestion: suggestion.try_as_str().unwrap(),
+            },
             self.current_loc(),
         )
     }

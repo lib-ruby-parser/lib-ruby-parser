@@ -21,6 +21,18 @@ struct CurrentArgStackItem<'b> {
     next: Cell<Option<ConstNonNull<Self>>>,
 }
 
+impl<'b> CurrentArgStackItem<'b> {
+    fn new(value: Option<&'b str>, blob: &Blob<'b>) -> &'b Self {
+        let this = blob.alloc_uninitialized_mut::<Self>();
+        *this = Self {
+            s: value,
+            prev: Cell::new(None),
+            next: Cell::new(None),
+        };
+        this
+    }
+}
+
 impl core::fmt::Debug for CurrentArgStackItem<'_> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("CurrentArgStackItem")
@@ -48,18 +60,18 @@ impl DoubleLinkedIntrusiveListItem for CurrentArgStackItem<'_> {
 }
 
 impl<'b> CurrentArgStack<'b> {
+    pub(crate) fn new(blob: &Blob<'b>) -> &'b Self {
+        let this = blob.alloc_uninitialized_mut::<Self>();
+        this.0 = DoubleLinkedIntrusiveList::new_in_place();
+        this
+    }
+
     pub(crate) fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
     pub(crate) fn push(&self, value: Option<&'b str>, blob: &Blob<'b>) {
-        let item = blob.alloc_mut::<CurrentArgStackItem>();
-        *item = CurrentArgStackItem {
-            s: value,
-            prev: Cell::new(None),
-            next: Cell::new(None),
-        };
-        self.0.push(item);
+        self.0.push(CurrentArgStackItem::new(value, blob));
     }
 
     pub(crate) fn set(&self, value: Option<&'b str>, blob: &Blob<'b>) {

@@ -719,13 +719,12 @@ impl<'b> ParseValue<'b> {
             ParseValue::Stolen => ParseValue::Stolen,
             ParseValue::Uninitialized => ParseValue::Uninitialized,
             ParseValue::None => ParseValue::None,
-            ParseValue::Token(token) => {
-                let out = blob.alloc_mut::<Token>();
-                out.token_type = token.token_type;
-                out.token_value = token.token_value;
-                out.loc = token.loc;
-                ParseValue::Token(out)
-            }
+            ParseValue::Token(token) => ParseValue::Token(Token::new(
+                token.token_type,
+                token.token_value,
+                token.loc,
+                blob,
+            )),
             ParseValue::TokenWithContext(_) => todo!(),
             ParseValue::Context(_) => todo!(),
             ParseValue::Node(_) => todo!(),

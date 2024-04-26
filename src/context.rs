@@ -1,5 +1,7 @@
 use core::cell::Cell;
 
+use lib_ruby_parser_ast::Blob;
+
 #[derive(Debug)]
 pub(crate) struct SharedContext {
     value: Cell<usize>,
@@ -50,6 +52,12 @@ context_flag!(IN_LAMBDA, in_lambda, set_in_lambda, 1 << 5);
 context_flag!(IN_BLOCK, in_block, set_in_block, 1 << 6);
 
 impl SharedContext {
+    pub(crate) fn new<'b>(blob: &Blob<'b>) -> &'b Self {
+        let this = blob.alloc_uninitialized_mut::<Self>();
+        this.value.set(0);
+        this
+    }
+
     pub(crate) fn dump(&self) -> Context {
         Context {
             value: self.value.get(),
@@ -90,9 +98,9 @@ impl SharedContext {
 #[test]
 fn test_context() {
     let mut mem = [0; 10];
-    let blob = lib_ruby_parser_ast::Blob::from(&mut mem);
+    let blob = Blob::from(&mut mem);
 
-    let context = blob.alloc_ref::<SharedContext>();
+    let context = SharedContext::new(&blob);
 
     context.set_in_def(true);
     context.set_in_class(true);
