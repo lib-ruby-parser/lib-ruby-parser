@@ -242,8 +242,26 @@ pub(crate) struct CmdBraceBlock<'b> {
     pub(crate) body: Option<&'b Node<'b>>,
     pub(crate) end_t: &'b Token<'b>,
 }
+impl<'b> CmdBraceBlock<'b> {
+    pub(crate) fn new(
+        begin_t: &'b Token<'b>,
+        args_type: ArgsType<'b>,
+        body: Option<&'b Node<'b>>,
+        end_t: &'b Token<'b>,
+        blob: &Blob<'b>,
+    ) -> &'b Self {
+        let this = blob.alloc_uninitialized_mut();
+        *this = Self {
+            begin_t,
+            args_type,
+            body,
+            end_t,
+        };
+        this
+    }
+}
 impl<'b> FromParseValue<'b> for CmdBraceBlock<'b> {
-    type Output = CmdBraceBlock<'b>;
+    type Output = &'b CmdBraceBlock<'b>;
 
     fn from_value(value: ParseValue<'b>) -> Self::Output {
         match value {
@@ -346,8 +364,26 @@ pub(crate) struct BraceBlock<'b> {
     pub(crate) body: Option<&'b Node<'b>>,
     pub(crate) end_t: &'b Token<'b>,
 }
+impl<'b> BraceBlock<'b> {
+    pub(crate) fn new(
+        begin_t: &'b Token<'b>,
+        args_type: ArgsType<'b>,
+        body: Option<&'b Node<'b>>,
+        end_t: &'b Token<'b>,
+        blob: &Blob<'b>,
+    ) -> &'b Self {
+        let this = blob.alloc_uninitialized_mut();
+        *this = Self {
+            begin_t,
+            args_type,
+            body,
+            end_t,
+        };
+        this
+    }
+}
 impl<'b> FromParseValue<'b> for BraceBlock<'b> {
-    type Output = BraceBlock<'b>;
+    type Output = &'b BraceBlock<'b>;
 
     fn from_value(value: ParseValue<'b>) -> Self::Output {
         match value {
@@ -570,7 +606,7 @@ pub(crate) enum ParseValue<'b> {
     BraceBody(BraceBody<'b>),
 
     /* For custom cmd_brace_block rule */
-    CmdBraceBlock(CmdBraceBlock<'b>),
+    CmdBraceBlock(&'b CmdBraceBlock<'b>),
 
     /* For custom paren_args rule  */
     ParenArgs(ParenArgs<'b>),
@@ -585,7 +621,7 @@ pub(crate) enum ParseValue<'b> {
     DoBlock(DoBlock<'b>),
 
     /* For custom brace_block rule  */
-    BraceBlock(BraceBlock<'b>),
+    BraceBlock(&'b BraceBlock<'b>),
 
     /* For custom defs_head rule */
     DefsHead(DefsHead<'b>),
@@ -660,7 +696,7 @@ impl<'b> ParseValue<'b> {
     pub(crate) fn new_brace_body(value: BraceBody<'b>) -> Self {
         Self::BraceBody(value)
     }
-    pub(crate) fn new_cmd_brace_block(value: CmdBraceBlock<'b>) -> Self {
+    pub(crate) fn new_cmd_brace_block(value: &'b CmdBraceBlock<'b>) -> Self {
         Self::CmdBraceBlock(value)
     }
     pub(crate) fn new_paren_args(value: ParenArgs<'b>) -> Self {
@@ -675,7 +711,7 @@ impl<'b> ParseValue<'b> {
     pub(crate) fn new_do_block(value: DoBlock<'b>) -> Self {
         Self::DoBlock(value)
     }
-    pub(crate) fn new_brace_block(value: BraceBlock<'b>) -> Self {
+    pub(crate) fn new_brace_block(value: &'b BraceBlock<'b>) -> Self {
         Self::BraceBlock(value)
     }
     pub(crate) fn new_defs_head(value: DefsHead<'b>) -> Self {

@@ -1195,12 +1195,13 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                         self.context.set_in_block($<Context>2.in_block());
                         let BraceBody { args_type, body } = $<BraceBody>3;
                         $$ = Value::new_cmd_brace_block(
-                            CmdBraceBlock {
-                                begin_t: $<Token>1,
+                            CmdBraceBlock::new(
+                                $<Token>1,
                                 args_type,
                                 body,
-                                end_t: $<Token>4
-                            }
+                                $<Token>4,
+                                self.blob,
+                            )
                         );
                     }
                 ;
@@ -1240,8 +1241,8 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args_type,
-                                body,
+                                *args_type,
+                                *body,
                                 end_t
                             )?
                         );
@@ -1275,8 +1276,8 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args_type,
-                                body,
+                                *args_type,
+                                *body,
                                 end_t
                             )?
                         );
@@ -1310,8 +1311,8 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args_type,
-                                body,
+                                *args_type,
+                                *body,
                                 end_t
                             )?
                         );
@@ -3090,8 +3091,8 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args_type,
-                                body,
+                                *args_type,
+                                *body,
                                 end_t
                             )?
                         );
@@ -3107,8 +3108,8 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                             self.builder.block(
                                 $<Node>1,
                                 begin_t,
-                                args_type,
-                                body,
+                                *args_type,
+                                *body,
                                 end_t
                             )?
                         );
@@ -4225,8 +4226,8 @@ opt_block_args_tail:
                             self.builder.block(
                                 method_call,
                                 begin_t,
-                                args_type,
-                                body,
+                                *args_type,
+                                *body,
                                 end_t
                             )?
                         );
@@ -4393,12 +4394,13 @@ opt_block_args_tail:
                         self.context.set_in_block($<Context>2.in_block());
 
                         $$ = Value::new_brace_block(
-                            BraceBlock {
-                                begin_t: $<Token>1,
+                            BraceBlock::new(
+                                $<Token>1,
                                 args_type,
                                 body,
-                                end_t: $<Token>4
-                            }
+                                $<Token>4,
+                                self.blob
+                            )
                         );
                     }
                 | k_do
@@ -4412,12 +4414,13 @@ opt_block_args_tail:
                         self.context.set_in_block($<Context>2.in_block());
 
                         $$ = Value::new_brace_block(
-                            BraceBlock {
-                                begin_t: $<Token>1,
+                            BraceBlock::new(
+                                $<Token>1,
                                 args_type,
                                 body,
-                                end_t: $<Token>4
-                            }
+                                $<Token>4,
+                                self.blob
+                            )
                         );
                     }
                 ;

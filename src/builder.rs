@@ -52,7 +52,7 @@ pub(crate) enum PKwLabel<'b> {
     QuotedLabel((&'b Token<'b>, &'b NodeList<'b>, &'b Token<'b>)),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) enum ArgsType<'b> {
     Args(Option<&'b Node<'b>>),
     Numargs(u8),
