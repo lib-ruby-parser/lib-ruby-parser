@@ -34,7 +34,7 @@ impl<'b> Lexer<'b> {
     }
 
     pub(crate) fn set_yylval_name(&mut self) {
-        println_if_debug_lexer!("set_yylval_name({:#?})", self.tokenbuf.bytes.as_bytes());
+        println_if_debug_lexer!("set_yylval_name({:#?})", self.tokenbuf.bytes.as_slice());
         // let lval = self.blob.alloc_mut::<Bytes>();
         // Bytes::shallow_copy(self.tokenbuf.bytes, lval);
         self.lval = Some(self.tokenbuf.bytes);

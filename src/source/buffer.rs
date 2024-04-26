@@ -1,20 +1,23 @@
 use core::convert::TryFrom;
 
 use lib_ruby_parser_ast::Blob;
+use lib_ruby_parser_ast::SingleLinkedIntrusiveListItem;
 
 use crate::maybe_byte::*;
 use crate::source::input::Input;
 use crate::source::Decoder;
 use crate::source::InputError;
+use crate::source::SourceLine;
 
 #[derive(Debug)]
 pub(crate) struct Buffer<'b> {
     pub(crate) input: Input<'b>,
 
     pub(crate) line_count: u32,
-    pub(crate) prevline: Option<u32>, // index
-    pub(crate) lastline: u32,         // index
-    pub(crate) nextline: u32,         // index
+    pub(crate) prevline: Option<&'b SourceLine>, // index
+    pub(crate) lastline: Option<&'b SourceLine>, // index
+    pub(crate) nextline: Option<&'b SourceLine>, // index
+    pub(crate) workline: Option<&'b SourceLine>, // index
     pub(crate) pbeg: u32,
     pub(crate) pcur: u32,
     pub(crate) pend: u32,
@@ -66,8 +69,9 @@ impl<'b> Buffer<'b> {
             input,
             line_count: 0,
             prevline: None,
-            lastline: 0,
-            nextline: 0,
+            lastline: None,
+            nextline: None,
+            workline: None,
             pbeg: 0,
             pcur: 0,
             pend: 0,
@@ -115,7 +119,7 @@ impl<'b> Buffer<'b> {
     }
 
     pub(crate) fn nextc(&mut self) -> MaybeByte {
-        if self.pcur == self.pend || self.eofp || self.nextline != 0 {
+        if self.pcur == self.pend || self.eofp || self.nextline.is_some() {
             let n = self.nextline();
             println_if_debug_buffer!("nextline = {:?}", n);
             if n.is_err() {
@@ -165,9 +169,9 @@ impl<'b> Buffer<'b> {
 
     pub(crate) fn nextline(&mut self) -> Result<(), ()> {
         let mut v = self.nextline;
-        self.nextline = 0;
+        self.nextline = None;
 
-        if v == 0 {
+        if v.is_none() {
             if self.eofp {
                 return Err(());
             }
@@ -179,7 +183,7 @@ impl<'b> Buffer<'b> {
             }
 
             match self.getline() {
-                Ok(line) => v = line,
+                Ok(line) => v = Some(line),
                 Err(_) => {
                     self.eofp = true;
                     self.goto_eol();
@@ -191,28 +195,38 @@ impl<'b> Buffer<'b> {
         }
         // TODO: after here-document without terminator
 
-        let line = self.input.line_at(v);
+        let line = v.unwrap();
 
         if self.heredoc_end > 0 {
             self.ruby_sourceline = self.heredoc_end;
             self.heredoc_end = 0;
         }
         self.ruby_sourceline += 1;
+        self.workline = Some(line);
         self.pbeg = line.start as u32;
         self.pcur = line.start as u32;
         self.pend = line.end as u32;
         self.token_flush();
-        self.prevline = Some(self.lastline);
+        self.prevline = self.lastline;
         self.lastline = v;
 
         Ok(())
     }
 
-    pub(crate) fn getline(&mut self) -> Result<u32, ()> {
+    pub(crate) fn getline(&mut self) -> Result<&'b SourceLine, ()> {
         if self.line_count < self.input.lines_count() {
             self.line_count += 1;
             println_if_debug_buffer!("line_count = {}", self.line_count);
-            Ok(self.line_count - 1)
+            if let Some(workline) = self.workline {
+                if let Some(next) = workline.next() {
+                    return Ok(next.as_ref());
+                }
+            }
+            if self.line_count == 1 {
+                Ok(self.input.decoded.lines.first().unwrap())
+            } else {
+                unreachable!("no lines")
+            }
         } else {
             Err(())
         }
@@ -327,11 +341,11 @@ impl<'b> Buffer<'b> {
     pub(crate) fn eof_no_decrement(&mut self) {
         if let Some(prevline) = self.prevline {
             if !self.eofp {
-                self.lastline = prevline;
+                self.lastline = Some(prevline);
             }
         }
-        self.pbeg = self.input.line_at(self.lastline).start as u32;
-        self.pend = self.pbeg + self.input.line_at(self.lastline).len() as u32;
+        self.pbeg = self.lastline.unwrap().start as u32;
+        self.pend = self.pbeg + self.lastline.unwrap().len() as u32;
         self.pcur = self.pend;
         self.pushback(1);
         self.set_ptok(self.pcur);

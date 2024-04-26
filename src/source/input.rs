@@ -1,7 +1,6 @@
 use lib_ruby_parser_ast::Blob;
 
 use crate::source::Decoder;
-use crate::source::SourceLine;
 use crate::source::{decode_input, DecodedInput, InputError};
 
 /// Representation of the source code.
@@ -58,10 +57,6 @@ impl<'b> Input<'b> {
     // pub(crate) fn is_empty(&self) -> bool {
     //     self.decoded.bytes.is_empty()
     // }
-
-    pub(crate) fn line_at(&self, idx: u32) -> &SourceLine {
-        self.decoded.line_at(idx)
-    }
 
     pub(crate) fn lines_count(&self) -> u32 {
         self.decoded.lines.len() as u32

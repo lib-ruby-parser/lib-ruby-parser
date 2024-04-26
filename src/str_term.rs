@@ -1,3 +1,5 @@
+use crate::source::SourceLine;
+
 pub(crate) mod str_types {
     pub(crate) const STR_FUNC_ESCAPE: u32 = 0x01;
     pub(crate) const STR_FUNC_EXPAND: u32 = 0x02;
@@ -64,20 +66,20 @@ impl<'b> StringLiteral<'b> {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub(crate) struct HeredocLiteral {
-    pub(crate) lastline: u32,   /* the string of line that contains `<<"END"` */
-    pub(crate) offset: u32,     /* the column of END in `<<"END"` */
-    pub(crate) sourceline: u32, /* lineno of the line that contains `<<"END"` */
-    pub(crate) length: u32,     /* the length of END in `<<"END"` */
+#[derive(Debug, Clone)]
+pub(crate) struct HeredocLiteral<'b> {
+    pub(crate) lastline: &'b SourceLine, /* the string of line that contains `<<"END"` */
+    pub(crate) offset: u32,              /* the column of END in `<<"END"` */
+    pub(crate) sourceline: u32,          /* lineno of the line that contains `<<"END"` */
+    pub(crate) length: u32,              /* the length of END in `<<"END"` */
 
     pub(crate) quote: u32,
     pub(crate) func: u32,
 }
 
-impl HeredocLiteral {
+impl<'b> HeredocLiteral<'b> {
     pub(crate) fn new(
-        lastline: u32,
+        lastline: &'b SourceLine,
         offset: u32,
         sourceline: u32,
         length: u32,
@@ -99,7 +101,7 @@ impl HeredocLiteral {
 pub(crate) enum StrTerm<'b> {
     // struct rb_strterm_struct
     StringLiteral(StringLiteral<'b>),
-    HeredocLiteral(HeredocLiteral),
+    HeredocLiteral(HeredocLiteral<'b>),
 }
 
 impl<'b> StrTerm<'b> {
@@ -107,7 +109,7 @@ impl<'b> StrTerm<'b> {
         Self::StringLiteral(literal)
     }
 
-    pub(crate) fn new_heredoc(heredoc: HeredocLiteral) -> Self {
+    pub(crate) fn new_heredoc(heredoc: HeredocLiteral<'b>) -> Self {
         Self::HeredocLiteral(heredoc)
     }
 }

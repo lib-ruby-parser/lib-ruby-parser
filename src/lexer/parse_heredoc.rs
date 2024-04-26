@@ -99,7 +99,7 @@ impl<'b> Lexer<'b> {
         self.buffer.goto_eol();
 
         self.strterm = Some(StrTerm::new_heredoc(HeredocLiteral::new(
-            self.buffer.lastline,
+            self.buffer.lastline.unwrap(),
             offset,
             self.buffer.ruby_sourceline,
             len,
@@ -126,7 +126,7 @@ impl<'b> Lexer<'b> {
 
         let heredoc_end: HeredocEnd;
 
-        let eos = self.buffer.input.line_at(here.lastline).start as u32 + here.offset;
+        let eos = here.lastline.start as u32 + here.offset;
         let len = here.length;
         let func = here.func;
         let indent = here.func & STR_FUNC_INDENT;
@@ -155,7 +155,7 @@ impl<'b> Lexer<'b> {
 
         if (func & STR_FUNC_EXPAND) == 0 {
             loop {
-                ptr = self.buffer.input.line_at(self.buffer.lastline).start as u32;
+                ptr = self.buffer.lastline.unwrap().start as u32;
                 ptr_end = self.buffer.pend;
                 if ptr_end > ptr {
                     match self.buffer.input.unchecked_byte_at(ptr_end - 1) {
@@ -303,7 +303,7 @@ impl<'b> Lexer<'b> {
         HeredocEnd { start, end, value }
     }
 
-    fn here_document_error(&mut self, here: &HeredocLiteral, eos: u32, len: u32) -> i32 {
+    fn here_document_error(&mut self, here: &HeredocLiteral<'b>, eos: u32, len: u32) -> i32 {
         self.heredoc_restore(here);
         let heredoc_id = core::str::from_utf8(
             self.buffer
@@ -321,7 +321,7 @@ impl<'b> Lexer<'b> {
         Self::tSTRING_END
     }
 
-    fn here_document_restore(&mut self, here: &HeredocLiteral) -> i32 {
+    fn here_document_restore(&mut self, here: &HeredocLiteral<'b>) -> i32 {
         let heredoc_end = self.compute_heredoc_end();
         self.lval_start = Some(heredoc_end.start);
         self.lval_end = Some(heredoc_end.end);
@@ -348,18 +348,18 @@ impl<'b> Lexer<'b> {
         self.heredoc_flush_str(&mut tokenbuf)
     }
 
-    fn heredoc_restore(&mut self, here: &HeredocLiteral) {
+    fn heredoc_restore(&mut self, here: &HeredocLiteral<'b>) {
         self.strterm = None;
         let line = here.lastline;
-        self.buffer.lastline = line;
-        self.buffer.pbeg = self.buffer.input.line_at(line).start as u32;
-        self.buffer.pend = self.buffer.pbeg + self.buffer.input.line_at(line).len() as u32;
+        self.buffer.lastline = Some(line);
+        self.buffer.pbeg = line.start as u32;
+        self.buffer.pend = self.buffer.pbeg + line.len() as u32;
         self.buffer.pcur = self.buffer.pbeg + here.offset + here.length + here.quote;
         self.buffer.ptok = self.buffer.pbeg + here.offset - here.quote;
         self.buffer.heredoc_end = self.buffer.ruby_sourceline;
         self.buffer.ruby_sourceline = here.sourceline;
         if self.buffer.eofp {
-            self.buffer.nextline = 0
+            self.buffer.nextline = None
         }
         self.buffer.eofp = false;
     }
