@@ -118,9 +118,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut mem = vec![0; 20_000_000];
 
-    for file in files {
+    for file in files.iter() {
         let blob = Blob::from(mem.as_mut_slice());
-        let result = parse(file, &blob, drop_tokens);
+        let result = parse(&file, &blob, drop_tokens);
         printer.print(&result);
     }
 

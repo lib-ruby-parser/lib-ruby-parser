@@ -3,7 +3,7 @@ use lib_ruby_parser::{ByteArray, Parser, ParserOptions, ParserResult};
 use lib_ruby_parser_ast::Blob;
 
 pub(crate) fn parse<'b>(
-    file: InputFile,
+    file: &InputFile,
     blob: &'b Blob<'b>,
     drop_tokens: bool,
 ) -> ParserResult<'b> {

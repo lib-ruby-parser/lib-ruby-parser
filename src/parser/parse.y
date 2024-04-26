@@ -3280,7 +3280,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                     {
                         let TokenWithContext { token: k_class, ctx } = $<TokenWithContext>1;
                         if self.context.in_def() {
-                            return self.yyerror(&k_class.loc, DiagnosticMessage::ClassDefinitionInMethodBody {});
+                            return self.yyerror(k_class.loc, DiagnosticMessage::ClassDefinitionInMethodBody {});
                         }
 
                         let Superclass { lt_t, value } = $<Superclass>3;
@@ -3336,7 +3336,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
                     {
                         let TokenWithContext { token: k_module, ctx } = $<TokenWithContext>1;
                         if self.context.in_def() {
-                            return self.yyerror(&k_module.loc, DiagnosticMessage::ModuleDefinitionInMethodBody {});
+                            return self.yyerror(k_module.loc, DiagnosticMessage::ModuleDefinitionInMethodBody {});
                         }
 
                         $$ = Value::Node(
@@ -6919,11 +6919,11 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         }
     }
 
-    fn warn(&mut self, loc: &Loc, message: DiagnosticMessage<'b /*'*/>) {
+    fn warn(&mut self, loc: Loc, message: DiagnosticMessage<'b /*'*/>) {
         let diagnostic = Diagnostic::new(
             ErrorLevel::Warning,
             message,
-            *loc,
+            loc,
             self.blob
         );
         self.diagnostics.push(diagnostic);
@@ -6969,16 +6969,16 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         match name {
             "==" | "===" | ">=" | "<=" | "!=" => Ok(()),
             other if other.ends_with('=') => {
-                self.yyerror(&name_t.loc, DiagnosticMessage::EndlessSetterDefinition {}).map(|_| ())
+                self.yyerror(name_t.loc, DiagnosticMessage::EndlessSetterDefinition {}).map(|_| ())
             }
             _ => Ok(())
         }
     }
 
-    fn yyerror(&mut self, loc: &Loc, message: DiagnosticMessage<'b /*'*/>) -> Result<i32, ()> {
+    fn yyerror(&mut self, loc: Loc, message: DiagnosticMessage<'b /*'*/>) -> Result<i32, ()> {
         self.yyerror1(
             message,
-            *loc
+            loc
         )
     }
 
@@ -6999,7 +6999,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         self.diagnostics.push(diagnostic);
     }
 
-    fn warn_eol(&mut self, loc: &Loc, tok: &'static /*'*/ str) {
+    fn warn_eol(&mut self, loc: Loc, tok: &'static /*'*/ str) {
         if self.yylexer.buffer.is_looking_at_eol() {
             self.warn(loc, DiagnosticMessage::TokAtEolWithoutExpression { token_name: tok });
         }
