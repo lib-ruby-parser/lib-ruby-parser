@@ -112,11 +112,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut files = input_to_parse.into_files();
     repeater.repeat(&mut files);
     let files_count = files.len();
+    let mut mem = vec![0; 15_000_000];
 
     profiler.start();
     timer.start();
-
-    let mut mem = vec![0; 20_000_000];
 
     for file in files.iter() {
         let blob = Blob::from(mem.as_mut_slice());
