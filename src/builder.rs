@@ -46,7 +46,7 @@ pub(crate) enum LogicalOp {
     Or,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) enum PKwLabel<'b> {
     PlainLabel(&'b Token<'b>),
     QuotedLabel((&'b Token<'b>, &'b NodeList<'b>, &'b Token<'b>)),

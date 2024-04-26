@@ -7,7 +7,7 @@ pub(crate) struct SharedContext {
     value: Cell<usize>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct Context {
     value: usize,
 }

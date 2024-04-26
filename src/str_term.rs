@@ -31,14 +31,14 @@ pub(crate) mod str_types {
     pub(crate) const str_dsym: u32 = STR_FUNC_SYMBOL | STR_FUNC_EXPAND;
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct HeredocEnd<'b> {
     pub(crate) start: u32,
     pub(crate) end: u32,
     pub(crate) value: &'b [u8],
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct StringLiteral<'b> {
     // struct rb_strterm_literal_struct
     pub(crate) nest: u32,
@@ -66,7 +66,7 @@ impl<'b> StringLiteral<'b> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct HeredocLiteral<'b> {
     pub(crate) lastline: &'b SourceLine, /* the string of line that contains `<<"END"` */
     pub(crate) offset: u32,              /* the column of END in `<<"END"` */
@@ -97,7 +97,7 @@ impl<'b> HeredocLiteral<'b> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) enum StrTerm<'b> {
     // struct rb_strterm_struct
     StringLiteral(StringLiteral<'b>),

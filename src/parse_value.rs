@@ -34,7 +34,7 @@ impl<'b> FromParseValue<'b> for Token<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct TokenWithContext<'b> {
     pub(crate) token: &'b Token<'b>,
     pub(crate) ctx: Context,
@@ -110,7 +110,7 @@ impl<'b> FromParseValue<'b> for Num {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct Superclass<'b> {
     pub(crate) lt_t: Option<&'b Token<'b>>,
     pub(crate) value: Option<&'b Node<'b>>,
@@ -126,7 +126,7 @@ impl<'b> FromParseValue<'b> for Superclass<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct Ensure<'b> {
     pub(crate) ensure_t: &'b Token<'b>,
     pub(crate) body: Option<&'b Node<'b>>,
@@ -143,7 +143,7 @@ impl<'b> FromParseValue<'b> for OptEnsure {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct Else<'b> {
     pub(crate) else_t: &'b Token<'b>,
     pub(crate) body: Option<&'b Node<'b>>,
@@ -160,7 +160,7 @@ impl<'b> FromParseValue<'b> for OptElse {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct ExcVar<'b> {
     pub(crate) assoc_t: Option<&'b Token<'b>>,
     pub(crate) exc_var: Option<&'b Node<'b>>,
@@ -176,7 +176,7 @@ impl<'b> FromParseValue<'b> for ExcVar<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct IfTail<'b> {
     pub(crate) keyword_t: Option<&'b Token<'b>>,
     pub(crate) body: Option<&'b Node<'b>>,
@@ -192,7 +192,7 @@ impl<'b> FromParseValue<'b> for IfTail<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct ExprValueDo<'b> {
     pub(crate) value: &'b Node<'b>,
     pub(crate) do_t: &'b Token<'b>,
@@ -219,7 +219,7 @@ impl<'b> FromParseValue<'b> for PKwLabel<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct BraceBody<'b> {
     pub(crate) args_type: ArgsType<'b>,
     pub(crate) body: Option<&'b Node<'b>>,
@@ -235,7 +235,7 @@ impl<'b> FromParseValue<'b> for BraceBody<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct CmdBraceBlock<'b> {
     pub(crate) begin_t: &'b Token<'b>,
     pub(crate) args_type: ArgsType<'b>,
@@ -271,7 +271,7 @@ impl<'b> FromParseValue<'b> for CmdBraceBlock<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct ParenArgs<'b> {
     pub(crate) begin_t: &'b Token<'b>,
     pub(crate) args: &'b NodeList<'b>,
@@ -288,7 +288,7 @@ impl<'b> FromParseValue<'b> for ParenArgs<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct OptParenArgs<'b> {
     pub(crate) begin_t: Option<&'b Token<'b>>,
     pub(crate) args: &'b NodeList<'b>,
@@ -305,7 +305,7 @@ impl<'b> FromParseValue<'b> for OptParenArgs<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct BeginBlock<'b> {
     pub(crate) begin_t: &'b Token<'b>,
     pub(crate) body: Option<&'b Node<'b>>,
@@ -322,7 +322,7 @@ impl<'b> FromParseValue<'b> for BeginBlock<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct LambdaBody<'b> {
     pub(crate) begin_t: &'b Token<'b>,
     pub(crate) body: Option<&'b Node<'b>>,
@@ -339,7 +339,7 @@ impl<'b> FromParseValue<'b> for LambdaBody<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct DoBlock<'b> {
     pub(crate) begin_t: &'b Token<'b>,
     pub(crate) args_type: ArgsType<'b>,
@@ -357,7 +357,7 @@ impl<'b> FromParseValue<'b> for DoBlock<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct BraceBlock<'b> {
     pub(crate) begin_t: &'b Token<'b>,
     pub(crate) args_type: ArgsType<'b>,
@@ -393,7 +393,7 @@ impl<'b> FromParseValue<'b> for BraceBlock<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct DefsHead<'b> {
     pub(crate) def_t: &'b Token<'b>,
     pub(crate) definee: &'b Node<'b>,
@@ -411,7 +411,7 @@ impl<'b> FromParseValue<'b> for DefsHead<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct DefnHead<'b> {
     pub(crate) def_t: &'b Token<'b>,
     pub(crate) name_t: TokenWithContext<'b>,
@@ -427,7 +427,7 @@ impl<'b> FromParseValue<'b> for DefnHead<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct Cases<'b> {
     pub(crate) when_bodies: &'b NodeList<'b>,
     pub(crate) opt_else: Option<Else<'b>>,
@@ -443,7 +443,7 @@ impl<'b> FromParseValue<'b> for Cases<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct CaseBody<'b> {
     pub(crate) when_bodies: &'b NodeList<'b>,
     pub(crate) opt_else: Option<Else<'b>>,
@@ -459,7 +459,7 @@ impl<'b> FromParseValue<'b> for CaseBody<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct PCases<'b> {
     pub(crate) in_bodies: &'b NodeList<'b>,
     pub(crate) opt_else: Option<Else<'b>>,
@@ -475,7 +475,7 @@ impl<'b> FromParseValue<'b> for PCases<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct PCaseBody<'b> {
     pub(crate) in_bodies: &'b NodeList<'b>,
     pub(crate) opt_else: Option<Else<'b>>,
@@ -503,7 +503,7 @@ impl<'b> FromParseValue<'b> for MaybeNode {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct DoBody<'b> {
     pub(crate) args_type: ArgsType<'b>,
     pub(crate) body: Option<&'b Node<'b>>,
@@ -519,7 +519,7 @@ impl<'b> FromParseValue<'b> for DoBody<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct PTopExpr<'b> {
     pub(crate) pattern: &'b Node<'b>,
     pub(crate) guard: Option<&'b Node<'b>>,
@@ -535,7 +535,7 @@ impl<'b> FromParseValue<'b> for PTopExpr<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct MatchPatternWithTrailingComma<'b> {
     pub(crate) elements: &'b NodeList<'b>,
     pub(crate) trailing_comma: Option<&'b Token<'b>>,
@@ -551,7 +551,7 @@ impl<'b> FromParseValue<'b> for MatchPatternWithTrailingComma<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct NoKwRest<'b> {
     pub(crate) kwrest_mark: &'b Token<'b>,
     pub(crate) k_nil: &'b Token<'b>,
@@ -567,7 +567,7 @@ impl<'b> FromParseValue<'b> for NoKwRest<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) enum ParseValue<'b> {
     Stolen,
     Uninitialized,
