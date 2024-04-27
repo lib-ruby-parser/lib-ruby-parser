@@ -114,9 +114,9 @@ impl<'b> Lexer<'b> {
     }
 
     pub(crate) fn here_document(&mut self) -> i32 {
-        let here = match self.strterm.as_ref().unwrap() {
+        let here = match self.strterm.unwrap() {
             StrTerm::StringLiteral(_) => unreachable!("strterm must be heredoc"),
-            StrTerm::HeredocLiteral(h) => h.clone(),
+            StrTerm::HeredocLiteral(h) => h,
         };
         self.lval_start = Some(self.buffer.pcur);
 

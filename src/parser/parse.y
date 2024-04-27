@@ -67,7 +67,7 @@ use crate::Node;
 use crate::nodes;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::Loc;
-use crate::parser::println_if_debug_parser;
+use crate::parser::{println_if_debug_parser, YYStack};
 use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
 
 }
