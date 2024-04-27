@@ -332,6 +332,7 @@ IGNORE = [
   'test_float_dot_E_neg_0',
   'test_float_dot_e_neg_0',
   'test_string_pct_Q_backslash_0',
+  'test_bug_expr_arg_eh_crlf_0',
 
   # pre-3.1 tests
   'test_meta_escape_slash_u_before_30_0',

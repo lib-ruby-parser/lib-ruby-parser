@@ -16,7 +16,7 @@ macro_rules! fixture_file {
     ($dir:literal, $fixture:ident) => {
         #[test]
         fn $fixture() {
-            let fixture_path = format!("{}/{}", $dir, stringify!($fixture));
+            let fixture_path = concat!($dir, "/", stringify!($fixture));
             test_file(&fixture_path);
         }
     };
@@ -41,12 +41,12 @@ fn parse<'b, 's: 'b>(
 
 #[test]
 fn test_magic_comment() {
-    let fixture = std::fs::read("src/tests/fixtures/magic_comments.rb").unwrap();
+    let fixture = include_bytes!("../../../src/tests/fixtures/magic_comments.rb");
     let mut stack = [YYStackItem::none(); 100];
     let mut mem = [0; 1000];
     let blob = Blob::from(&mut mem);
 
-    let ParserResult { magic_comments, .. } = parse(&fixture, &blob, &mut stack);
+    let ParserResult { magic_comments, .. } = parse(fixture, &blob, &mut stack);
     let mut iter = magic_comments.iter();
 
     assert_eq!(

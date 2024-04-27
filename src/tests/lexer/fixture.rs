@@ -1,11 +1,8 @@
 use lib_ruby_parser_ast::Blob;
-use lib_ruby_parser_ast::ByteArray;
 
 use crate::lex_states::*;
 use crate::tests::test_helpers::InlineArray;
 use crate::Lexer;
-use std::fs;
-use std::panic;
 
 enum TestSection {
     None,
@@ -16,28 +13,31 @@ enum TestSection {
 }
 
 #[derive(Debug)]
-struct Fixture<'b> {
+struct Fixture {
     cond: bool,
     cmdarg: bool,
-    vars: InlineArray<10, &'b str>,
-    state: Option<String>,
-    input: String,
-    tokens: String,
+    vars: InlineArray<10, &'static str>,
+    state: Option<&'static str>,
+    input: &'static str,
+    tokens: &'static str,
 }
-impl<'b> Fixture<'b> {
-    fn new(path: &str, blob: &'b Blob<'b>) -> Self {
-        let content =
-            fs::read_to_string(path).unwrap_or_else(|_| panic!("failed to read fixture {}", path));
 
+impl Fixture {
+    fn new(src: &'static str) -> Self {
         let mut vars = InlineArray::new();
-        let mut input: Vec<String> = vec![];
-        let mut tokens: Vec<String> = vec![];
-        let mut state: Option<String> = None;
+        let mut input_starts_at = None;
+        let mut input_ends_at = None;
+        let mut tokens_start_at = None;
+        let mut tokens_end_at = None;
+        let mut state = None;
         let mut current_section = TestSection::None;
         let mut cond = false;
         let mut cmdarg = false;
+        let mut pos = 0;
 
-        for line in content.lines() {
+        for line in src.lines() {
+            pos += line.len() + 1;
+
             match (line.as_bytes(), &current_section) {
                 (&[b'/', b'/', b' ', ..], _) => { /* skip comment */ }
 
@@ -45,26 +45,35 @@ impl<'b> Fixture<'b> {
                 (b"--CMDARG", _) => cmdarg = true,
                 (b"--VARS", _) => current_section = TestSection::Vars,
                 (b"--STATE", _) => current_section = TestSection::State,
-                (b"--INPUT", _) => current_section = TestSection::Input,
-                (b"--TOKENS", _) => current_section = TestSection::Tokens,
+                (b"--INPUT", _) => {
+                    current_section = TestSection::Input;
+                    input_starts_at = Some(pos);
+                }
+                (b"--TOKENS", _) => {
+                    current_section = TestSection::Tokens;
+                    tokens_start_at = Some(pos);
+                }
                 (_, &TestSection::Vars) => {
                     for var in line.split(' ') {
-                        let var_b = ByteArray::new(blob);
-                        var_b.push_str(var, blob);
-                        vars.push(var_b.try_as_str().unwrap());
+                        vars.push(var);
                     }
                 }
-                (_, &TestSection::State) => state = Some(line.to_string()),
-                (_, &TestSection::Input) => input.push(line.to_string()),
-                (_, &TestSection::Tokens) => tokens.push(line.to_string()),
+                (_, &TestSection::State) => state = Some(line),
+                (_, &TestSection::Input) => {
+                    input_ends_at = Some(pos - 1);
+                }
+                (_, &TestSection::Tokens) => {
+                    // tokens.push(line.to_string())
+                    tokens_end_at = Some(pos - 1);
+                }
                 (_, &TestSection::None) => {
                     panic!("empty state while parsing fixture on line {:#?}", line)
                 }
             }
         }
 
-        let input = input.join("\n");
-        let tokens = tokens.join("\n");
+        let input = &src[input_starts_at.unwrap()..input_ends_at.unwrap()];
+        let tokens = &src[tokens_start_at.unwrap()..tokens_end_at.unwrap()];
 
         Self {
             cond,
@@ -94,24 +103,13 @@ fn lex_state(state: &str) -> Result<i32, &'static str> {
     Ok(result)
 }
 
-pub(crate) fn test_file(fixture_path: &str) {
-    let mut mem = vec![0; 1000];
-    let blob = Blob::from(mem.as_mut_slice());
+pub(crate) fn test_file(test_name: &'static str, src: &'static str) {
+    let mut mem = [0; 1000];
+    let blob = Blob::from(&mut mem);
 
-    let fixture = Fixture::new(fixture_path, &blob);
+    let fixture = Fixture::new(src);
 
-    let buffer_name = format!("(test {})", fixture_path);
-
-    let mut lexer = Lexer::new(
-        fixture.input.as_bytes(),
-        {
-            let name = ByteArray::new(&blob);
-            name.push_str(&buffer_name, &blob);
-            name.try_as_str().unwrap()
-        },
-        None,
-        &blob,
-    );
+    let mut lexer = Lexer::new(fixture.input.as_bytes(), test_name, None, &blob);
     for var in fixture.vars.iter() {
         lexer.static_env.declare(var, &blob);
     }
