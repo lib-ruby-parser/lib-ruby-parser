@@ -9,7 +9,7 @@ mod manual;
 
 use crate::{
     source::{MagicComment, MagicCommentKind},
-    Loc, Parser, ParserOptions, ParserResult,
+    Loc, Parser, ParserOptions, ParserResult, YYStackItem,
 };
 
 macro_rules! fixture_file {
@@ -23,7 +23,11 @@ macro_rules! fixture_file {
 }
 pub(crate) use fixture_file;
 
-fn parse<'b>(input: &[u8], blob: &'b Blob<'b>) -> ParserResult<'b> {
+fn parse<'b, 's: 'b>(
+    input: &[u8],
+    blob: &'b Blob<'b>,
+    stack: &'s mut [YYStackItem],
+) -> ParserResult<'b> {
     let options = ParserOptions {
         buffer_name: "(eval)".into(),
         record_tokens: false,
@@ -31,17 +35,18 @@ fn parse<'b>(input: &[u8], blob: &'b Blob<'b>) -> ParserResult<'b> {
     };
     let input = blob.push_bytes(input);
     let parser = Parser::new(input, options, &blob);
-    let result = parser.do_parse();
+    let result = parser.do_parse(stack);
     result
 }
 
 #[test]
 fn test_magic_comment() {
     let fixture = std::fs::read("src/tests/fixtures/magic_comments.rb").unwrap();
+    let mut stack = [YYStackItem::none(); 100];
     let mut mem = [0; 1000];
     let blob = Blob::from(&mut mem);
 
-    let ParserResult { magic_comments, .. } = parse(&fixture, &blob);
+    let ParserResult { magic_comments, .. } = parse(&fixture, &blob, &mut stack);
     let mut iter = magic_comments.iter();
 
     assert_eq!(

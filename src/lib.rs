@@ -47,7 +47,7 @@ mod parser_result;
 pub use parser_result::ParserResult;
 
 mod parser;
-pub use parser::Parser;
+pub use parser::{Parser, YYStackItem};
 
 #[allow(dead_code, unused_variables)]
 mod builder;

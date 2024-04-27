@@ -2,7 +2,7 @@ use core::fmt::Write;
 use lib_ruby_parser_ast::{Blob, Writer};
 
 use crate::tests::test_helpers::{render_diagnostic_for_testing, InlineArray, LocMatcher};
-use crate::{Parser, ParserOptions, ParserResult};
+use crate::{Parser, ParserOptions, ParserResult, YYStackItem};
 
 enum TestSection {
     None,
@@ -181,6 +181,7 @@ impl<'s> Fixture<'s> {
 }
 
 pub(crate) fn test_file(fixture_path: &str) {
+    let mut stack = vec![YYStackItem::none(); 1_000];
     let mut mem = [0; 2000];
     let blob = Blob::from(&mut mem);
 
@@ -217,9 +218,9 @@ pub(crate) fn test_file(fixture_path: &str) {
     parser.static_env.declare("baz", &blob);
 
     let result = if fixture.diagnostics.is_some() {
-        parser.do_parse()
+        parser.do_parse(&mut stack)
     } else {
-        parser.do_parse_with_state_validation()
+        parser.do_parse_with_state_validation(&mut stack)
     };
 
     fixture.compare(&result);

@@ -1,6 +1,7 @@
 mod helpers;
 
 use helpers::{parse, print_build_info, InputToParse, Printer, Profiler, Repeater, Timer};
+use lib_ruby_parser::YYStackItem;
 use lib_ruby_parser_ast::Blob;
 
 #[cfg(not(windows))]
@@ -112,6 +113,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut files = input_to_parse.into_files();
     repeater.repeat(&mut files);
     let files_count = files.len();
+    let mut stack = vec![YYStackItem::none(); 10_000];
     let mut mem = vec![0; 15_000_000];
 
     profiler.start();
@@ -119,8 +121,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for file in files.iter() {
         let blob = Blob::from(mem.as_mut_slice());
-        let result = parse(&file, &blob, drop_tokens);
+        let result = parse(&file, &blob, &mut stack, drop_tokens);
         printer.print(&result);
+        drop(blob);
     }
 
     timer.stop(files_count);

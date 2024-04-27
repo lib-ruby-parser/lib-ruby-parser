@@ -3,7 +3,6 @@
 %define api.parser.struct { Parser }
 %define api.value.type { Value }
 %define api.parser.check_debug { self.is_debug() }
-%define api.parser.generic {<'b /*'*/>}
 
 %define parse.error custom
 %define parse.trace
@@ -67,7 +66,7 @@ use crate::Node;
 use crate::nodes;
 use crate::{Diagnostic, DiagnosticMessage, ErrorLevel};
 use crate::Loc;
-use crate::parser::{println_if_debug_parser, YYStack};
+use crate::parser::{println_if_debug_parser, YYStack, YYStackItem};
 use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
 
 }
@@ -6895,8 +6894,8 @@ impl<'b /*'*/> Parser<'b /*'*/> {
     /// 3. diagnostics
     /// 4. comments
     /// 5. magic comments
-    pub fn do_parse(mut self) -> ParserResult<'b /*'*/> {
-        self.parse();
+    pub fn do_parse<'s /*'*/: 'b /*'*/>(mut self, stack: &'s /*'*/ mut [YYStackItem]) -> ParserResult<'b /*'*/> {
+        self.parse(stack);
 
         ParserResult {
             ast: self.result,
@@ -6909,8 +6908,8 @@ impl<'b /*'*/> Parser<'b /*'*/> {
     }
 
     #[doc(hidden)]
-    pub fn do_parse_with_state_validation(mut self) -> ParserResult<'b /*'*/> {
-        self.parse();
+    pub fn do_parse_with_state_validation<'s /*'*/: 'b /*'*/>(mut self, stack: &'s /*'*/ mut [YYStackItem]) -> ParserResult<'b /*'*/> {
+        self.parse(stack);
 
         self.assert_state_is_final();
 
@@ -6993,7 +6992,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         Err(())
     }
 
-    fn report_syntax_error(&mut self, _stack: &YYStack, yytoken: &SymbolKind, loc: YYLoc) {
+    fn report_syntax_error(&mut self, yytoken: &SymbolKind, loc: YYLoc) {
         let id: usize = yytoken.code().try_into().expect("failed to convert token code into i32, is it too big?");
         let diagnostic = Diagnostic::new(
             ErrorLevel::Error,

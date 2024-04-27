@@ -1,10 +1,11 @@
 use super::InputFile;
-use lib_ruby_parser::{ByteArray, Parser, ParserOptions, ParserResult};
+use lib_ruby_parser::{ByteArray, Parser, ParserOptions, ParserResult, YYStackItem};
 use lib_ruby_parser_ast::Blob;
 
-pub(crate) fn parse<'b>(
+pub(crate) fn parse<'b, 's: 'b>(
     file: &InputFile,
     blob: &'b Blob<'b>,
+    stack: &'s mut [YYStackItem],
     drop_tokens: bool,
 ) -> ParserResult<'b> {
     let code = blob.push_bytes(file.code.as_slice());
@@ -15,5 +16,5 @@ pub(crate) fn parse<'b>(
         record_tokens: !drop_tokens,
         ..Default::default()
     };
-    Parser::new(code, options, &blob).do_parse()
+    Parser::new(code, options, &blob).do_parse(stack)
 }
