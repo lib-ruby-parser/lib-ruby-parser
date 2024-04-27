@@ -10,26 +10,26 @@ const PUNCT: [u8; 21] = [
 ];
 
 impl MaybeByte {
-    pub(crate) fn is_eof(&self) -> bool {
-        self == &MaybeByte::EndOfInput
+    pub(crate) fn is_eof(self) -> bool {
+        self == MaybeByte::EndOfInput
     }
 
-    pub(crate) fn is_some(&self) -> bool {
-        self != &MaybeByte::EndOfInput
+    pub(crate) fn is_some(self) -> bool {
+        self != MaybeByte::EndOfInput
     }
 
-    pub(crate) fn expect(&self, msg: &str) -> u8 {
+    pub(crate) fn expect(self, msg: &str) -> u8 {
         self.as_option().expect(msg)
     }
 
-    pub(crate) fn as_option(&self) -> Option<u8> {
+    pub(crate) fn as_option(self) -> Option<u8> {
         match self {
-            MaybeByte::Some(c) => Some(*c),
+            MaybeByte::Some(c) => Some(c),
             _ => None,
         }
     }
 
-    pub(crate) fn is_ascii(&self) -> bool {
+    pub(crate) fn is_ascii(self) -> bool {
         if let Some(c) = self.as_option() {
             c.is_ascii()
         } else {
@@ -37,7 +37,7 @@ impl MaybeByte {
         }
     }
 
-    pub(crate) fn is_alpha(&self) -> bool {
+    pub(crate) fn is_alpha(self) -> bool {
         if let Some(c) = self.as_option() {
             c.is_ascii_alphabetic()
         } else {
@@ -45,7 +45,7 @@ impl MaybeByte {
         }
     }
 
-    pub(crate) fn is_digit(&self) -> bool {
+    pub(crate) fn is_digit(self) -> bool {
         if let Some(c) = self.as_option() {
             c.is_ascii_digit()
         } else {
@@ -53,7 +53,7 @@ impl MaybeByte {
         }
     }
 
-    pub(crate) fn is_alnum(&self) -> bool {
+    pub(crate) fn is_alnum(self) -> bool {
         if let Some(c) = self.as_option() {
             c.is_ascii_alphanumeric()
         } else {
@@ -61,7 +61,7 @@ impl MaybeByte {
         }
     }
 
-    pub(crate) fn is_hexdigit(&self) -> bool {
+    pub(crate) fn is_hexdigit(self) -> bool {
         if let Some(c) = self.as_option() {
             c.is_ascii_hexdigit()
         } else {
@@ -69,7 +69,7 @@ impl MaybeByte {
         }
     }
 
-    pub(crate) fn is_space(&self) -> bool {
+    pub(crate) fn is_space(self) -> bool {
         if let Some(c) = self.as_option() {
             c == b' ' || (b'\t'..=b'\r').contains(&c)
         } else {
@@ -77,7 +77,7 @@ impl MaybeByte {
         }
     }
 
-    pub(crate) fn is_global_name_punct(&self) -> bool {
+    pub(crate) fn is_global_name_punct(self) -> bool {
         if let Some(c) = self.as_option() {
             PUNCT.contains(&c)
         } else {
@@ -85,7 +85,7 @@ impl MaybeByte {
         }
     }
 
-    pub(crate) fn is_control(&self) -> bool {
+    pub(crate) fn is_control(self) -> bool {
         if let Some(c) = self.as_option() {
             (c as char).is_control()
         } else {
@@ -93,30 +93,30 @@ impl MaybeByte {
         }
     }
 
-    pub(crate) fn map<F: FnOnce(u8) -> MaybeByte>(&self, f: F) -> MaybeByte {
+    pub(crate) fn map<F: FnOnce(u8) -> MaybeByte>(self, f: F) -> MaybeByte {
         match self.as_option() {
             Some(c) => f(c),
             _ => MaybeByte::EndOfInput,
         }
     }
 
-    pub(crate) fn escaped_control_code(&self) -> Option<u8> {
-        if *self == b' ' {
+    pub(crate) fn escaped_control_code(self) -> Option<u8> {
+        if self == b' ' {
             return Some(b's');
         }
-        if *self == b'\n' {
+        if self == b'\n' {
             return Some(b'n');
         }
-        if *self == b'\t' {
+        if self == b'\t' {
             return Some(b't');
         }
-        if *self == 0x0b {
+        if self == 0x0b {
             return Some(b'v');
         }
-        if *self == b'\r' {
+        if self == b'\r' {
             return Some(b'r');
         }
-        if *self == 0x0c {
+        if self == 0x0c {
             return Some(b'f');
         }
         None
