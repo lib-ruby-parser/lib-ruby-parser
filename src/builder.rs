@@ -1,11 +1,9 @@
-use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList};
+use lib_ruby_parser_ast::{Blob, IntrusiveHashMap, SingleLinkedIntrusiveList};
 
 #[cfg(feature = "onig")]
 use onig::{Regex, RegexOptions};
 
 use core::convert::TryInto;
-
-use std::collections::HashMap;
 
 #[allow(unused_imports)]
 use crate::nodes::*;
@@ -1910,7 +1908,8 @@ impl<'b> Builder<'b> {
         args: &'b NodeList<'b>,
         end_t: Option<&'b Token<'b>>,
     ) -> Option<&'b Node<'b>> {
-        self.check_duplicate_args(args, &mut HashMap::new());
+        let mut map = IntrusiveHashMap::new_in(self.blob);
+        self.check_duplicate_args(args, &mut map);
         self.validate_no_forward_arg_after_restarg(args);
 
         if begin_t.is_none() && args.is_empty() && end_t.is_none() {
@@ -3872,7 +3871,7 @@ impl<'b> Builder<'b> {
     pub(crate) fn check_duplicate_args(
         &self,
         args: &'b NodeList<'b>,
-        map: &mut HashMap<String, &'b Node<'b>>,
+        map: &mut &IntrusiveHashMap<&'b str, &'b Node<'b>>,
     ) {
         for arg in args.iter() {
             match arg {
@@ -3960,18 +3959,18 @@ impl<'b> Builder<'b> {
     pub(crate) fn check_duplicate_arg(
         &self,
         this_arg: &'b Node<'b>,
-        map: &mut HashMap<String, &'b Node<'b>>,
+        map: &mut &IntrusiveHashMap<&'b str, &'b Node<'b>>,
     ) {
         let this_name = match self.arg_name(this_arg) {
             Some(name) => name,
             None => return,
         };
 
-        let that_arg = map.get(this_name);
+        let that_arg = map.find_member(this_name);
 
         match that_arg {
             None => {
-                map.insert(this_name.to_string(), this_arg);
+                IntrusiveHashMap::insert(map, this_name, this_arg, self.blob);
             }
             Some(that_arg) => {
                 let that_name = match self.arg_name(that_arg) {
