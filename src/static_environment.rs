@@ -1,5 +1,5 @@
 use core::cell::Cell;
-use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, IntrusiveStrHashMap};
+use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, IntrusiveHashMap};
 
 /// Stack of local variables in nested scopes
 ///
@@ -22,8 +22,8 @@ use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, IntrusiveStrHashMap};
 /// and it's popped when exit it.
 #[derive(Debug)]
 pub struct StaticEnvironment<'b> {
-    variables: Cell<&'b IntrusiveStrHashMap<'b, ()>>,
-    stack: &'b DoubleLinkedIntrusiveList<'b, IntrusiveStrHashMap<'b, ()>>,
+    variables: Cell<&'b IntrusiveHashMap<'b, &'b str, ()>>,
+    stack: &'b DoubleLinkedIntrusiveList<'b, IntrusiveHashMap<'b, &'b str, ()>>,
 }
 
 const FORWARD_ARGS: &str = "FORWARD_ARGS";
@@ -32,7 +32,7 @@ const ANONYMOUS_BLOCKARG: &str = "ANONYMOUS_BLOCKARG";
 impl<'b> StaticEnvironment<'b> {
     pub(crate) fn new(blob: &'b Blob<'b>) -> &'b Self {
         let this = blob.alloc_uninitialized_mut::<Self>();
-        this.variables.set(IntrusiveStrHashMap::new_in(blob));
+        this.variables.set(IntrusiveHashMap::new_in(blob));
         this.stack = DoubleLinkedIntrusiveList::new(blob);
         this
     }
@@ -46,7 +46,7 @@ impl<'b> StaticEnvironment<'b> {
     /// Handles class/module scopes
     pub fn extend_static(&self, blob: &'b Blob<'b>) {
         self.stack.push(self.variables.get().shallow_copy(blob));
-        self.variables.set(IntrusiveStrHashMap::new_in(blob));
+        self.variables.set(IntrusiveHashMap::new_in(blob));
     }
 
     /// Performs a push, inherits previously declared variables in the new scope
@@ -69,12 +69,12 @@ impl<'b> StaticEnvironment<'b> {
     /// Declares a new variable in the current scope
     pub fn declare(&self, name: &'b str, blob: &'b Blob<'b>) {
         let mut variables = self.variables.get();
-        IntrusiveStrHashMap::insert(&mut variables, name, (), blob);
+        IntrusiveHashMap::insert(&mut variables, name, (), blob);
         self.variables.set(variables)
     }
 
     /// Returns `true` if variable with a given `name` is declared in the current scope
-    pub fn is_declared(&self, name: &str) -> bool {
+    pub fn is_declared(&self, name: &'b str) -> bool {
         self.variables.get().has_member(name)
     }
 

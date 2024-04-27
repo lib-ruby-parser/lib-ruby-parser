@@ -1303,7 +1303,7 @@ impl<'b> Lexer<'b> {
         self.buffer.peek_n(b':', n) && !self.buffer.peek_n(b':', n + 1)
     }
 
-    pub(crate) fn is_lvar_defined(&self, name: &str) -> bool {
+    pub(crate) fn is_lvar_defined(&self, name: &'b str) -> bool {
         self.static_env.is_declared(name)
     }
 }

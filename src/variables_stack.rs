@@ -1,7 +1,9 @@
-use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, IntrusiveStrHashMap};
+use lib_ruby_parser_ast::{Blob, DoubleLinkedIntrusiveList, IntrusiveHashMap};
 
 #[derive(Debug)]
-pub(crate) struct VariablesStack<'b>(DoubleLinkedIntrusiveList<'b, IntrusiveStrHashMap<'b, ()>>);
+pub(crate) struct VariablesStack<'b>(
+    DoubleLinkedIntrusiveList<'b, IntrusiveHashMap<'b, &'b str, ()>>,
+);
 
 impl<'b> VariablesStack<'b> {
     pub(crate) fn new(blob: &Blob<'b>) -> &'b Self {
@@ -15,7 +17,7 @@ impl<'b> VariablesStack<'b> {
     }
 
     pub(crate) fn push(&self, blob: &'b Blob<'b>) {
-        let new_map = IntrusiveStrHashMap::new_in(blob);
+        let new_map = IntrusiveHashMap::new_in(blob);
         self.0.push(new_map)
     }
 
@@ -29,11 +31,11 @@ impl<'b> VariablesStack<'b> {
             .last()
             .expect("expected variables_stack to have at least 1 layer");
         self.pop();
-        IntrusiveStrHashMap::insert(&mut top, name, (), blob);
+        IntrusiveHashMap::insert(&mut top, name, (), blob);
         self.0.push(top);
     }
 
-    pub(crate) fn is_declared(&self, name: &str) -> bool {
+    pub(crate) fn is_declared(&self, name: &'b str) -> bool {
         self.0
             .last()
             .expect("expected variables_stack to have at least 1 layer")
