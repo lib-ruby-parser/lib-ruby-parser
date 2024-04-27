@@ -6830,7 +6830,11 @@ impl<'b /*'*/> Parser<'b /*'*/> {
     /// Constructs a parser with given `input` and `options`.
     ///
     /// Returns an error if given `input` is invalid.
-    pub fn new(input: &'b /*'*/ [u8], options: ParserOptions<'b /*'*/>, blob: &'b Blob<'b /*'*/>) -> Self {
+    pub fn new(
+        input: &'b /*'*/ [u8],
+        options: ParserOptions<'b /*'*/>,
+        blob: &'b Blob<'b /*'*/>,
+    ) -> Self {
         let ParserOptions {
             buffer_name,
             decoder,
