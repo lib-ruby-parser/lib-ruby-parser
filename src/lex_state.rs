@@ -117,89 +117,37 @@ impl core::fmt::Debug for LexState {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut is_first = true;
 
-        macro_rules! write_pipe_if_not_first {
-            () => {{
-                #[allow(unused_assignments)]
-                {
-                    if !is_first {
-                        write!(f, "|")?;
-                    }
-                    is_first = false
+        let mut write_flag = |flag: i32, printable: &str| -> core::fmt::Result {
+            if self.is_some(flag) {
+                if !is_first {
+                    write!(f, "|")?;
                 }
-            }};
-        }
+                is_first = false;
+                write!(f, "{}", printable)?;
+            }
+            Ok(())
+        };
 
-        if self.is_some(EXPR_BEG) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_BEG")?
-        }
-        if self.is_some(EXPR_END) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_END")?
-        }
-        if self.is_some(EXPR_ENDARG) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_ENDARG")?
-        }
-        if self.is_some(EXPR_ENDFN) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_ENDFN")?
-        }
-        if self.is_some(EXPR_ARG) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_ARG")?
-        }
-        if self.is_some(EXPR_CMDARG) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_CMDARG")?
-        }
-        if self.is_some(EXPR_MID) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_MID")?
-        }
-        if self.is_some(EXPR_FNAME) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_FNAME")?
-        }
-        if self.is_some(EXPR_DOT) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_DOT")?
-        }
-        if self.is_some(EXPR_CLASS) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_CLASS")?
-        }
-        if self.is_some(EXPR_LABEL) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_LABEL")?
-        }
-        if self.is_some(EXPR_FITEM) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_FITEM")?
-        }
-        if self.is_some(EXPR_NONE) {
-            write_pipe_if_not_first!();
-            write!(f, "EXPR_NONE")?
-        }
+        write_flag(EXPR_BEG, "EXPR_BEG")?;
+        write_flag(EXPR_END, "EXPR_END")?;
+        write_flag(EXPR_ENDARG, "EXPR_ENDARG")?;
+        write_flag(EXPR_ENDFN, "EXPR_ENDFN")?;
+        write_flag(EXPR_ARG, "EXPR_ARG")?;
+        write_flag(EXPR_CMDARG, "EXPR_CMDARG")?;
+        write_flag(EXPR_MID, "EXPR_MID")?;
+        write_flag(EXPR_FNAME, "EXPR_FNAME")?;
+        write_flag(EXPR_DOT, "EXPR_DOT")?;
+        write_flag(EXPR_CLASS, "EXPR_CLASS")?;
+        write_flag(EXPR_LABEL, "EXPR_LABEL")?;
+        write_flag(EXPR_FITEM, "EXPR_FITEM")?;
+        write_flag(EXPR_NONE, "EXPR_NONE")?;
 
-        if self.is_some(EXPR_VALUE) {
-            write_pipe_if_not_first!();
-            write!(f, "Also(EXPR_VALUE)")?
-        }
-        if self.is_some(EXPR_BEG_ANY) {
-            write_pipe_if_not_first!();
-            write!(f, "Also(EXPR_BEG_ANY)")?
-        }
-        if self.is_some(EXPR_END_ANY) {
-            write_pipe_if_not_first!();
-            write!(f, "Also(EXPR_END_ANY)")?
-        }
-        if self.is_some(EXPR_END_ANY) {
-            write_pipe_if_not_first!();
-            write!(f, "Also(EXPR_END_ANY)")?
-        }
+        write_flag(EXPR_VALUE, "Also(EXPR_VALUE)")?;
+        write_flag(EXPR_BEG_ANY, "Also(EXPR_BEG_ANY)")?;
+        write_flag(EXPR_END_ANY, "Also(EXPR_END_ANY)")?;
+        write_flag(EXPR_END_ANY, "Also(EXPR_END_ANY)")?;
 
-        write!(f, "")
+        Ok(())
     }
 }
 

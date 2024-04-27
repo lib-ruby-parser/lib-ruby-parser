@@ -1,12 +1,19 @@
 #[cfg(feature = "debug-lexer")]
 macro_rules! println_if_debug_lexer {
-    ($fmt_string:expr, $( $arg:expr ),*) => {
-        eprintln!($fmt_string, $( $arg ),*);
+    () => {
+        println!("");
     };
+    ($($arg:tt)*) => {{
+        use std::io::Write;
+        let mut stderr = std::io::stderr();
+        stderr.write_fmt(core::format_args!($($arg)*)).unwrap();
+        stderr.write(b"\n").unwrap();
+    }};
 }
 #[cfg(not(feature = "debug-lexer"))]
 macro_rules! println_if_debug_lexer {
-    ($fmt_string:expr, $( $arg:expr ),*) => {};
+    () => {};
+    ($($arg:tt)*) => {{}};
 }
 
 pub(crate) use println_if_debug_lexer;
