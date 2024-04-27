@@ -14,17 +14,17 @@ enum TestSection {
 }
 
 #[derive(Debug)]
-struct Fixture<'s> {
-    input: &'s str,
-    ast: Option<&'s str>,
-    locs: Option<InlineArray<50, &'s str>>,
-    diagnostics: Option<InlineArray<50, &'s str>>,
-    depends_on_features: Option<InlineArray<5, &'s str>>,
+struct Fixture {
+    input: &'static str,
+    ast: Option<&'static str>,
+    locs: Option<InlineArray<50, &'static str>>,
+    diagnostics: Option<InlineArray<50, &'static str>>,
+    depends_on_features: Option<InlineArray<5, &'static str>>,
 }
 
-fn none_if_empty<'s, const MAX: usize>(
-    v: InlineArray<MAX, &'s str>,
-) -> Option<InlineArray<MAX, &'s str>> {
+fn none_if_empty<const MAX: usize>(
+    v: InlineArray<MAX, &'static str>,
+) -> Option<InlineArray<MAX, &'static str>> {
     if v.len == 0 || (v.len == 1 && v.iter().next().unwrap() == "") {
         None
     } else {
@@ -32,8 +32,8 @@ fn none_if_empty<'s, const MAX: usize>(
     }
 }
 
-impl<'s> Fixture<'s> {
-    fn new(content: &'s str) -> Self {
+impl Fixture {
+    fn new(content: &'static str) -> Self {
         let mut input_start_at = None;
         let mut input_ends_at = None;
 
@@ -180,14 +180,12 @@ impl<'s> Fixture<'s> {
     }
 }
 
-pub(crate) fn test_file(fixture_path: &str) {
-    let mut stack = vec![YYStackItem::none(); 1_000];
+pub(crate) fn test_file(test_name: &'static str, src: &'static str) {
+    let mut stack = [YYStackItem::none(); 100];
     let mut mem = [0; 2000];
     let blob = Blob::from(&mut mem);
 
-    let src = std::fs::read_to_string(fixture_path)
-        .unwrap_or_else(|_| panic!("failed to read file {:?}", fixture_path));
-    let fixture = Fixture::new(&src);
+    let fixture = Fixture::new(src);
 
     if let Some(depends_on_features) = &fixture.depends_on_features {
         for feature in depends_on_features.iter() {
@@ -206,7 +204,7 @@ pub(crate) fn test_file(fixture_path: &str) {
     }
 
     let options = ParserOptions {
-        buffer_name: &format!("(test {})", fixture_path),
+        buffer_name: test_name,
         record_tokens: false,
         ..Default::default()
     };

@@ -16,8 +16,9 @@ macro_rules! fixture_file {
     ($dir:literal, $fixture:ident) => {
         #[test]
         fn $fixture() {
-            let fixture_path = concat!($dir, "/", stringify!($fixture));
-            test_file(&fixture_path);
+            let test_name = concat!("(test ", $dir, "/", stringify!($fixture), ")");
+            let src = include_str!(concat!("../../../", $dir, "/", stringify!($fixture)));
+            test_file(test_name, src);
         }
     };
 }

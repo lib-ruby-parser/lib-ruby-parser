@@ -123,20 +123,25 @@ pub(crate) fn test_file(test_name: &'static str, src: &'static str) {
         lexer.cmdarg.push(true)
     }
     let tokens = lexer.tokenize_until_eof();
-    let tokens = tokens
-        .iter()
-        .map(|token| {
-            format!(
-                "{} {:?} [{}, {}]",
-                token.token_name(),
-                token.token_value.try_as_str().unwrap_or_default(),
-                token.loc.begin(),
-                token.loc.end()
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
 
+    let mut buf = [0; 1000];
+    let mut writer = lib_ruby_parser_ast::Writer::new(&mut buf);
+    for (idx, token) in tokens.iter().enumerate() {
+        use core::fmt::Write;
+        if idx != 0 {
+            write!(&mut writer, "\n").unwrap();
+        }
+        write!(
+            &mut writer,
+            "{} {:?} [{}, {}]",
+            token.token_name(),
+            token.token_value.try_as_str().unwrap_or_default(),
+            token.loc.begin(),
+            token.loc.end()
+        )
+        .unwrap();
+    }
+    let tokens = writer.as_str().unwrap();
     assert_eq!(
         tokens, fixture.tokens,
         "actual:\n{}\nexpected:\n{}\n",
