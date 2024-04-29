@@ -47,8 +47,9 @@ bin-parse = ["lexopt", "pprof", "glob"]
 
 [dependencies]
 onig = { version = "6", optional = true }
-lib-ruby-parser-ast = { version = "0.55.0", path = "../ast", package = "lib-ruby-parser-ast", features = [
+lib-ruby-parser-ast = { version = "0.55.0", git = "https://github.com/lib-ruby-parser/ast.git", branch = "arena-fixes", features = [
     "std",
+    "codegen", # TODO: this should be removed before releasing
 ] }
 
 # Used for src/bin/*.rs executables
@@ -56,13 +57,10 @@ lexopt = { optional = true, version = "0.3.0" }
 glob = { optional = true, version = "0.3" }
 [target.'cfg(not(windows))'.dependencies]
 jemallocator = { optional = true, version = "0.5" }
-# a fix from https://github.com/tikv/pprof-rs/pull/194
-pprof = { optional = true, git = "https://github.com/YangKeao/pprof-rs.git", branch = "fix-null-slice-construction", features = [
-    "flamegraph",
-] }
+pprof = { version = "0.13", optional = true, features = ["flamegraph"] }
 
 [build-dependencies]
-rust-bison-skeleton = { version = "0.41.0", optional = true, path = "../rust-bison-skeleton/rust-bison-skeleton" }
+rust-bison-skeleton = { version = "0.41.0", optional = true, git = "https://github.com/iliabylich/rust-bison-skeleton.git", branch = "arena-fixes" }
 
 [profile.dev]
 debug-assertions = false

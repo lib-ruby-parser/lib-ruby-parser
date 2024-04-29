@@ -29,8 +29,6 @@ impl core::fmt::Display for InputError<'_> {
     }
 }
 
-// impl std::error::Error for InputError<'_> {}
-
 /// Result that is returned from decoding function
 #[repr(C)]
 #[derive(Debug, PartialEq, Eq, Clone)]
