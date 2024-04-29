@@ -184,8 +184,8 @@ pub(crate) fn test_file(test_name: &'static str, src: &'static str) {
     let mut stack = [YYStackItem::none(); 100];
     let mut mem = [0; 2000];
     let blob = Blob::from(&mut mem);
-    let mut scratch = [0; 2000];
-    let scratch = Blob::from(&mut scratch);
+    let mut scratch_mem = [0; 2000];
+    let scratch = Blob::from(&mut scratch_mem);
 
     let fixture = Fixture::new(src);
 
@@ -213,9 +213,9 @@ pub(crate) fn test_file(test_name: &'static str, src: &'static str) {
 
     let parser = Parser::new(fixture.input.as_bytes(), options, &blob, &scratch);
 
-    parser.static_env.declare("foo", &blob);
-    parser.static_env.declare("bar", &blob);
-    parser.static_env.declare("baz", &blob);
+    parser.static_env.declare("foo", &scratch);
+    parser.static_env.declare("bar", &scratch);
+    parser.static_env.declare("baz", &scratch);
 
     let result = if fixture.diagnostics.is_some() {
         parser.do_parse(&mut stack)

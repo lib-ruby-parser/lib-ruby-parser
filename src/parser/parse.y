@@ -4044,7 +4044,7 @@ opt_block_args_tail:
             bvar: tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
-                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.scratch);
                         $$ = Value::Node(
                             self.builder.shadowarg(ident_t)?
                         );
@@ -4057,7 +4057,7 @@ opt_block_args_tail:
 
           lambda: tLAMBDA
                     {
-                        self.static_env.extend_dynamic(self.blob);
+                        self.static_env.extend_dynamic(self.scratch);
                         self.max_numparam_stack.push(false, self.blob);
                         $<Num>$ = Value::Num(self.yylexer.lpar_beg);
                         self.yylexer.lpar_beg = self.yylexer.paren_nest;
@@ -4427,7 +4427,7 @@ opt_block_args_tail:
                 ;
 
       brace_body:   {
-                        self.static_env.extend_dynamic(self.blob);
+                        self.static_env.extend_dynamic(self.scratch);
                         self.max_numparam_stack.push(false, self.blob);
                         $<None>$ = Value::None;
                     }
@@ -4452,7 +4452,7 @@ opt_block_args_tail:
                 ;
 
          do_body:   {
-                        self.static_env.extend_dynamic(self.blob);
+                        self.static_env.extend_dynamic(self.scratch);
                         self.max_numparam_stack.push(false, self.blob);
                         self.yylexer.cmdarg.push(false);
                         $<None>$ = Value::None;
@@ -6084,7 +6084,7 @@ f_opt_paren_args: f_paren_args
                 | args_forward
                     {
                         let forward_arg = self.builder.forward_arg($<Token>1);
-                        self.static_env.declare_forward_args(self.blob);
+                        self.static_env.declare_forward_args(self.scratch);
                         $$ = Value::NodeList( self.new_node_list1(forward_arg) );
                     }
                 ;
@@ -6283,7 +6283,7 @@ f_opt_paren_args: f_paren_args
                 | tIDENTIFIER
                     {
                         let ident_t = $<Token>1;
-                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.scratch);
                         self.max_numparam_stack.set_has_ordinary_params();
                         $$ = Value::Token(ident_t);
                     }
@@ -6334,7 +6334,7 @@ f_opt_paren_args: f_paren_args
                         let ident_t = $<Token>1;
                         self.check_kwarg_name(ident_t)?;
 
-                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.scratch);
 
                         self.max_numparam_stack.set_has_ordinary_params();
 
@@ -6431,7 +6431,7 @@ f_opt_paren_args: f_paren_args
         f_kwrest: kwrest_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.scratch);
                         $$ = Value::NodeList(
                             self.new_node_list1(
                                 self.builder.kwrestarg($<Token>1, Some(ident_t))?
@@ -6513,7 +6513,7 @@ f_opt_paren_args: f_paren_args
       f_rest_arg: restarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.scratch);
 
                         $$ = Value::NodeList(
                             self.new_node_list1(
@@ -6544,7 +6544,7 @@ f_opt_paren_args: f_paren_args
      f_block_arg: blkarg_mark tIDENTIFIER
                     {
                         let ident_t = $<Token>2;
-                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.blob);
+                        self.static_env.declare(ident_t.as_whole_str().unwrap(), self.scratch);
                         $$ = Value::Node(
                             self.builder.blockarg(
                                 $<Token>1,
@@ -6554,7 +6554,7 @@ f_opt_paren_args: f_paren_args
                     }
                 | blkarg_mark
                     {
-                        self.static_env.declare_anonymous_blockarg(self.blob);
+                        self.static_env.declare_anonymous_blockarg(self.scratch);
                         $$ = Value::Node(
                             self.builder.blockarg(
                                 $<Token>1,
@@ -7042,7 +7042,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
     }
 
     fn local_push(&mut self) {
-        self.static_env.extend_static(self.blob);
+        self.static_env.extend_static(self.scratch);
         self.yylexer.cmdarg.push(false);
         self.yylexer.cond.push(false);
         self.max_numparam_stack.push(true, self.blob);

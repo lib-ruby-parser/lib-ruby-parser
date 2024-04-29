@@ -113,7 +113,7 @@ pub(crate) fn test_file(test_name: &'static str, src: &'static str) {
 
     let mut lexer = Lexer::new(fixture.input.as_bytes(), test_name, None, &blob, &scratch);
     for var in fixture.vars.iter() {
-        lexer.static_env.declare(var, &blob);
+        lexer.static_env.declare(var, &scratch);
     }
     if let Some(state) = fixture.state {
         lexer.lex_state.set(lex_state(&state).unwrap());

@@ -1266,7 +1266,7 @@ impl<'b> Builder<'b> {
                 self.check_assignment_to_numparam(name_s, *expression_l)?;
                 self.check_reserved_for_numparam(name_s, *expression_l)?;
 
-                self.static_env.declare(name_s, self.blob);
+                self.static_env.declare(name_s, self.scratch);
 
                 Lvasgn::new_in(self.blob, |lvasgn| {
                     lvasgn.name = name;
@@ -2524,7 +2524,7 @@ impl<'b> Builder<'b> {
             Some(captures) => {
                 for capture in captures {
                     self.static_env
-                        .declare(capture.try_as_str().unwrap(), self.blob);
+                        .declare(capture.try_as_str().unwrap(), self.scratch);
                 }
 
                 MatchWithLvasgn::new_in(self.blob, |match_with_lvasgn| {
@@ -3458,7 +3458,7 @@ impl<'b> Builder<'b> {
         let name_s = name_t.as_whole_str().unwrap();
         self.check_lvar_name(name_s, name_l)?;
         self.check_duplicate_pattern_variable(name_s, name_l)?;
-        self.static_env.declare(name_s, self.blob);
+        self.static_env.declare(name_s, self.scratch);
 
         Ok(MatchVar::new_in(self.blob, |match_var| {
             match_var.name = name_t.token_value;
@@ -3474,7 +3474,7 @@ impl<'b> Builder<'b> {
         let name_s = name_t.as_whole_str().unwrap();
         self.check_lvar_name(name_s, name_l)?;
         self.check_duplicate_pattern_variable(name_s, name_l)?;
-        self.static_env.declare(name_s, self.blob);
+        self.static_env.declare(name_s, self.scratch);
 
         Ok(MatchVar::new_in(self.blob, |match_var| {
             match_var.name = name_t.token_value;
@@ -3513,7 +3513,7 @@ impl<'b> Builder<'b> {
                 self.check_lvar_name(name_s, name_l)?;
                 self.check_duplicate_pattern_variable(name_s, name_l)?;
 
-                self.static_env.declare(name_s, self.blob);
+                self.static_env.declare(name_s, self.scratch);
 
                 if let Some(begin_l) = begin_l {
                     let begin_d: isize = begin_l
@@ -4409,7 +4409,7 @@ impl<'b> Builder<'b> {
                         }
                     }
 
-                    self.static_env.declare(name, self.blob);
+                    self.static_env.declare(name, self.scratch);
                     self.max_numparam_stack.register((n - b'0') as i32);
 
                     true

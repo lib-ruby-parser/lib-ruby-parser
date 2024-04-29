@@ -115,7 +115,7 @@ impl<'b> Lexer<'b> {
             context: SharedContext::new(blob),
             command_start: false,
             token_seen: false,
-            static_env: StaticEnvironment::new(blob),
+            static_env: StaticEnvironment::new(scratch),
             diagnostics: SingleLinkedIntrusiveList::new(blob),
             comments: SingleLinkedIntrusiveList::new(blob),
             magic_comments: SingleLinkedIntrusiveList::new(blob),
