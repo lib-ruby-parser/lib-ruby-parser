@@ -5,6 +5,7 @@ use lib_ruby_parser_ast::Blob;
 pub(crate) fn parse<'b, 's: 'b>(
     file: &InputFile,
     blob: &'b Blob<'b>,
+    scratch: &'b Blob<'b>,
     stack: &'s mut [YYStackItem],
     drop_tokens: bool,
 ) -> ParserResult<'b> {
@@ -16,5 +17,5 @@ pub(crate) fn parse<'b, 's: 'b>(
         record_tokens: !drop_tokens,
         ..Default::default()
     };
-    Parser::new(code, options, &blob).do_parse(stack)
+    Parser::new(code, options, blob, scratch).do_parse(stack)
 }

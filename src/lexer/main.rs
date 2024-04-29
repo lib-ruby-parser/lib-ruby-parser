@@ -81,6 +81,7 @@ pub struct Lexer<'b> {
 
     #[doc(hidden)]
     pub(crate) blob: &'b Blob<'b>,
+    pub(crate) scratch: &'b Blob<'b>,
 }
 
 impl<'b> Lexer<'b> {
@@ -96,6 +97,7 @@ impl<'b> Lexer<'b> {
         name: &'b str,
         decoder: Option<Decoder<'b>>,
         blob: &'b Blob<'b>,
+        scratch: &'b Blob<'b>,
     ) -> Self {
         Self {
             cond: StackState::new("cond"),
@@ -118,6 +120,7 @@ impl<'b> Lexer<'b> {
             comments: SingleLinkedIntrusiveList::new(blob),
             magic_comments: SingleLinkedIntrusiveList::new(blob),
             blob,
+            scratch,
         }
     }
 

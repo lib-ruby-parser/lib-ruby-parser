@@ -184,6 +184,8 @@ pub(crate) fn test_file(test_name: &'static str, src: &'static str) {
     let mut stack = [YYStackItem::none(); 100];
     let mut mem = [0; 2000];
     let blob = Blob::from(&mut mem);
+    let mut scratch = [0; 2000];
+    let scratch = Blob::from(&mut scratch);
 
     let fixture = Fixture::new(src);
 
@@ -209,7 +211,7 @@ pub(crate) fn test_file(test_name: &'static str, src: &'static str) {
         ..Default::default()
     };
 
-    let parser = Parser::new(fixture.input.as_bytes(), options, &blob);
+    let parser = Parser::new(fixture.input.as_bytes(), options, &blob, &scratch);
 
     parser.static_env.declare("foo", &blob);
     parser.static_env.declare("bar", &blob);

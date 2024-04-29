@@ -47,6 +47,7 @@
     record_tokens: bool,
 
     blob: &'b /*'*/ Blob<'b /*'*/>,
+    scratch: &'b /*'*/ Blob<'b /*'*/>,
 
     #[allow(dead_code)]
     input: &'b /*'*/ [u8],
@@ -6833,6 +6834,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         input: &'b /*'*/ [u8],
         options: ParserOptions<'b /*'*/>,
         blob: &'b Blob<'b /*'*/>,
+        scratch: &'b Blob<'b /*'*/>,
     ) -> Self {
         let ParserOptions {
             buffer_name,
@@ -6840,7 +6842,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
             record_tokens,
         } = options;
 
-        let mut lexer = Lexer::new(input, buffer_name, decoder, blob);
+        let mut lexer = Lexer::new(input, buffer_name, decoder, blob, scratch);
         let context = lexer.context;
         let current_arg_stack = CurrentArgStack::new(blob);
         let max_numparam_stack = MaxNumparamStack::new(blob);
@@ -6848,8 +6850,6 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         let pattern_hash_keys = VariablesStack::new(blob);
         let static_env = lexer.static_env;
         let diagnostics = lexer.diagnostics;
-
-        lexer.context = context;
 
         let builder = Builder::new(
             static_env,
@@ -6860,6 +6860,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
             pattern_hash_keys,
             diagnostics,
             blob,
+            scratch,
         );
 
         let last_token_type = 0;
@@ -6884,6 +6885,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
             record_tokens,
             blob,
             input,
+            scratch,
         }
     }
 

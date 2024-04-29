@@ -27,6 +27,7 @@ pub(crate) use fixture_file;
 fn parse<'b, 's: 'b>(
     input: &[u8],
     blob: &'b Blob<'b>,
+    scratch: &'b Blob<'b>,
     stack: &'s mut [YYStackItem],
 ) -> ParserResult<'b> {
     let options = ParserOptions {
@@ -35,7 +36,7 @@ fn parse<'b, 's: 'b>(
         ..Default::default()
     };
     let input = blob.push_bytes(input);
-    let parser = Parser::new(input, options, &blob);
+    let parser = Parser::new(input, options, blob, scratch);
     let result = parser.do_parse(stack);
     result
 }
@@ -46,8 +47,10 @@ fn test_magic_comment() {
     let mut stack = [YYStackItem::none(); 100];
     let mut mem = [0; 1000];
     let blob = Blob::from(&mut mem);
+    let mut scratch = [0; 1000];
+    let scratch = Blob::from(&mut scratch);
 
-    let ParserResult { magic_comments, .. } = parse(fixture, &blob, &mut stack);
+    let ParserResult { magic_comments, .. } = parse(fixture, &blob, &scratch, &mut stack);
     let mut iter = magic_comments.iter();
 
     assert_eq!(

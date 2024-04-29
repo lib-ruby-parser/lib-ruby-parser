@@ -66,6 +66,7 @@ pub(crate) struct Builder<'b> {
     pattern_hash_keys: &'b VariablesStack<'b>,
     diagnostics: &'b SingleLinkedIntrusiveList<'b, Diagnostic<'b>>,
     blob: &'b Blob<'b>,
+    scratch: &'b Blob<'b>,
 }
 
 impl<'b> Builder<'b> {
@@ -78,6 +79,7 @@ impl<'b> Builder<'b> {
         pattern_hash_keys: &'b VariablesStack<'b>,
         diagnostics: &'b SingleLinkedIntrusiveList<'b, Diagnostic<'b>>,
         blob: &'b Blob<'b>,
+        scratch: &'b Blob<'b>,
     ) -> Self {
         Self {
             static_env,
@@ -88,6 +90,7 @@ impl<'b> Builder<'b> {
             pattern_hash_keys,
             diagnostics,
             blob,
+            scratch,
         }
     }
 

@@ -115,13 +115,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let files_count = files.len();
     let mut stack = vec![YYStackItem::none(); 10_000];
     let mut mem = vec![0; 15_000_000];
+    let mut scratch = vec![0; 15_000_000];
 
     profiler.start();
     timer.start();
 
     for file in files.iter() {
         let blob = Blob::from(mem.as_mut_slice());
-        let result = parse(&file, &blob, &mut stack, drop_tokens);
+        let scratch = Blob::from(scratch.as_mut_slice());
+        let result = parse(&file, &blob, &scratch, &mut stack, drop_tokens);
         printer.print(&result);
         drop(blob);
     }
