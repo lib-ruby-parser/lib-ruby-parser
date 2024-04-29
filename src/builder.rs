@@ -4077,7 +4077,7 @@ impl<'b> Builder<'b> {
             return Err(());
         }
 
-        self.pattern_variables.declare(name, self.blob);
+        self.pattern_variables.declare(name, self.scratch);
         Ok(())
     }
 
@@ -4087,7 +4087,7 @@ impl<'b> Builder<'b> {
             return Err(());
         }
 
-        self.pattern_hash_keys.declare(name, self.blob);
+        self.pattern_hash_keys.declare(name, self.scratch);
         Ok(())
     }
 

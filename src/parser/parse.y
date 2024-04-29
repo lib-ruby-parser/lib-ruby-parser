@@ -348,7 +348,7 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
          program:   {
                         self.yylexer.lex_state.set(EXPR_BEG);
                         self.current_arg_stack.push(None, self.scratch);
-                        self.max_numparam_stack.push(true, self.blob);
+                        self.max_numparam_stack.push(true, self.scratch);
 
                         $<None>$ = Value::None;
                     }
@@ -1027,8 +1027,8 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
 
                         self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.command_start = false;
-                        self.pattern_variables.push(self.blob);
-                        self.pattern_hash_keys.push(self.blob);
+                        self.pattern_variables.push(self.scratch);
+                        self.pattern_hash_keys.push(self.scratch);
 
                         $<Bool>$ = Value::Bool(self.context.in_kwarg());
                         self.context.set_in_kwarg(true);
@@ -1057,8 +1057,8 @@ use lib_ruby_parser_ast::{Blob, SingleLinkedIntrusiveList, NodeList};
 
                         self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.command_start = false;
-                        self.pattern_variables.push(self.blob);
-                        self.pattern_hash_keys.push(self.blob);
+                        self.pattern_variables.push(self.scratch);
+                        self.pattern_hash_keys.push(self.scratch);
 
                         $<Bool>$ = Value::Bool(self.context.in_kwarg());
                         self.context.set_in_kwarg(true);
@@ -4058,7 +4058,7 @@ opt_block_args_tail:
           lambda: tLAMBDA
                     {
                         self.static_env.extend_dynamic(self.scratch);
-                        self.max_numparam_stack.push(false, self.blob);
+                        self.max_numparam_stack.push(false, self.scratch);
                         $<Num>$ = Value::Num(self.yylexer.lpar_beg);
                         self.yylexer.lpar_beg = self.yylexer.paren_nest;
                     }
@@ -4428,7 +4428,7 @@ opt_block_args_tail:
 
       brace_body:   {
                         self.static_env.extend_dynamic(self.scratch);
-                        self.max_numparam_stack.push(false, self.blob);
+                        self.max_numparam_stack.push(false, self.scratch);
                         $<None>$ = Value::None;
                     }
                   opt_block_param compstmt
@@ -4453,7 +4453,7 @@ opt_block_args_tail:
 
          do_body:   {
                         self.static_env.extend_dynamic(self.scratch);
-                        self.max_numparam_stack.push(false, self.blob);
+                        self.max_numparam_stack.push(false, self.scratch);
                         self.yylexer.cmdarg.push(false);
                         $<None>$ = Value::None;
                     }
@@ -4535,8 +4535,8 @@ opt_block_args_tail:
                     {
                         self.yylexer.lex_state.set(EXPR_BEG|EXPR_LABEL);
                         self.yylexer.command_start = false;
-                        self.pattern_variables.push(self.blob);
-                        self.pattern_hash_keys.push(self.blob);
+                        self.pattern_variables.push(self.scratch);
+                        self.pattern_hash_keys.push(self.scratch);
 
                         $<Bool>$ = Value::Bool(self.context.in_kwarg());
                         self.context.set_in_kwarg(true);
@@ -4685,14 +4685,14 @@ opt_block_args_tail:
         p_lparen: tLPAREN2
                     {
                         $$ = $1;
-                        self.pattern_hash_keys.push(self.blob);
+                        self.pattern_hash_keys.push(self.scratch);
                     }
                 ;
 
       p_lbracket: tLBRACK2
                     {
                         $$ = $1;
-                        self.pattern_hash_keys.push(self.blob);
+                        self.pattern_hash_keys.push(self.scratch);
                     }
                 ;
 
@@ -4857,7 +4857,7 @@ opt_block_args_tail:
                     }
                 | tLBRACE
                     {
-                        self.pattern_hash_keys.push(self.blob);
+                        self.pattern_hash_keys.push(self.scratch);
                         $<Bool>$ = Value::Bool(self.context.in_kwarg());
                         self.context.set_in_kwarg(false);
                     }
@@ -4885,7 +4885,7 @@ opt_block_args_tail:
                     }
                 | tLPAREN
                     {
-                        self.pattern_hash_keys.push(self.blob);
+                        self.pattern_hash_keys.push(self.scratch);
                         $<None>$ = Value::None;
                     }
                   p_expr rparen
@@ -6842,12 +6842,12 @@ impl<'b /*'*/> Parser<'b /*'*/> {
             record_tokens,
         } = options;
 
-        let mut lexer = Lexer::new(input, buffer_name, decoder, blob, scratch);
+        let lexer = Lexer::new(input, buffer_name, decoder, blob, scratch);
         let context = lexer.context;
         let current_arg_stack = CurrentArgStack::new(scratch);
-        let max_numparam_stack = MaxNumparamStack::new(blob);
-        let pattern_variables = VariablesStack::new(blob);
-        let pattern_hash_keys = VariablesStack::new(blob);
+        let max_numparam_stack = MaxNumparamStack::new(scratch);
+        let pattern_variables = VariablesStack::new(scratch);
+        let pattern_hash_keys = VariablesStack::new(scratch);
         let static_env = lexer.static_env;
         let diagnostics = lexer.diagnostics;
 
@@ -7045,7 +7045,7 @@ impl<'b /*'*/> Parser<'b /*'*/> {
         self.static_env.extend_static(self.scratch);
         self.yylexer.cmdarg.push(false);
         self.yylexer.cond.push(false);
-        self.max_numparam_stack.push(true, self.blob);
+        self.max_numparam_stack.push(true, self.scratch);
     }
 
     fn local_pop(&mut self) {
