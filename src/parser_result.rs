@@ -56,6 +56,8 @@ impl core::fmt::Debug for ParserResult<'_> {
 fn test_fmt() {
     let mut mem = [0; 100];
     let blob = lib_ruby_parser_ast::Blob::from(&mut mem);
+    let mut scratch = [0; 100];
+    let scratch = lib_ruby_parser_ast::Blob::from(&mut scratch);
 
     let mut tmp = [0; 100];
     let formatted = lib_ruby_parser_ast::write_to(
@@ -68,7 +70,7 @@ fn test_fmt() {
                 diagnostics: SingleLinkedIntrusiveList::new(&blob),
                 comments: SingleLinkedIntrusiveList::new(&blob),
                 magic_comments: SingleLinkedIntrusiveList::new(&blob),
-                input: DecodedInput::new("foo", b"", &blob)
+                input: DecodedInput::new("foo", b"", &scratch)
             }
         ),
     )

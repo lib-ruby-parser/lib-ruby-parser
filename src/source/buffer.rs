@@ -62,8 +62,9 @@ impl<'b> Buffer<'b> {
         bytes: &'b [u8],
         decoder: Option<Decoder<'b>>,
         blob: &'b Blob<'b>,
+        scratch: &'b Blob<'b>,
     ) -> Self {
-        let input = Input::new(name, bytes, decoder, blob);
+        let input = Input::new(name, bytes, decoder, blob, scratch);
 
         let mut this = Self {
             input,

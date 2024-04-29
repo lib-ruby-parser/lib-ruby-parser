@@ -133,7 +133,9 @@ fn test_renders() {
     let source = "line 1\nvery long line 2\n";
     let mut mem = [0; 1000];
     let blob = Blob::from(&mut mem);
-    let input = DecodedInput::new("(test_render)", source.as_bytes(), &blob);
+    let mut scratch = [0; 1000];
+    let scratch = Blob::from(&mut scratch);
+    let input = DecodedInput::new("(test_render)", source.as_bytes(), &scratch);
 
     let error = Diagnostic::new(
         ErrorLevel::Warning,

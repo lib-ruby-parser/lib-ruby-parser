@@ -19,9 +19,10 @@ impl<'b> Input<'b> {
         bytes: &'b [u8],
         decoder: Option<Decoder<'b>>,
         blob: &'b Blob<'b>,
+        scratch: &'b Blob<'b>,
     ) -> Self {
         Self {
-            decoded: DecodedInput::new(name, bytes, blob),
+            decoded: DecodedInput::new(name, bytes, scratch),
             decoder,
             blob,
         }

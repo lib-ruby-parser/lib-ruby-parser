@@ -81,6 +81,7 @@ pub struct Lexer<'b> {
 
     #[doc(hidden)]
     pub(crate) blob: &'b Blob<'b>,
+    #[allow(dead_code)]
     pub(crate) scratch: &'b Blob<'b>,
 }
 
@@ -103,7 +104,7 @@ impl<'b> Lexer<'b> {
             cond: StackState::new("cond"),
             cmdarg: StackState::new("cmdarg"),
             lpar_beg: -1, /* make lambda_beginning_p() == FALSE at first */
-            buffer: Buffer::new(name, bytes, decoder, blob),
+            buffer: Buffer::new(name, bytes, decoder, blob, scratch),
             lval: None,
             lval_start: None,
             lval_end: None,
@@ -112,7 +113,7 @@ impl<'b> Lexer<'b> {
             paren_nest: 0,
             brace_nest: 0,
             tokenbuf: TokenBuf::empty(blob),
-            context: SharedContext::new(blob),
+            context: SharedContext::new(scratch),
             command_start: false,
             token_seen: false,
             static_env: StaticEnvironment::new(scratch),

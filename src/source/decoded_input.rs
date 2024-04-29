@@ -15,17 +15,17 @@ pub struct DecodedInput<'b> {
     /// Decoded bytes
     pub bytes: &'b [u8],
 
-    pub(crate) blob: &'b Blob<'b>,
+    pub(crate) scratch: &'b Blob<'b>,
 }
 
 impl<'b> DecodedInput<'b> {
     /// Constructs empty DecodedInput with given name
-    pub fn new(name: &'b str, bytes: &'b [u8], blob: &'b Blob<'b>) -> Self {
+    pub fn new(name: &'b str, bytes: &'b [u8], scratch: &'b Blob<'b>) -> Self {
         let mut this = Self {
             name,
-            lines: SingleLinkedIntrusiveList::new(blob),
+            lines: SingleLinkedIntrusiveList::new(scratch),
             bytes: b"",
-            blob,
+            scratch,
         };
         this.set_bytes(bytes);
         this
@@ -33,16 +33,16 @@ impl<'b> DecodedInput<'b> {
 
     /// Populates `Input` with a given byte array
     pub(crate) fn set_bytes(&mut self, bytes: &'b [u8]) {
-        let mut line = SourceLine::new(0, 0, true, self.blob);
+        let mut line = SourceLine::new(0, 0, true, self.scratch);
         let lines: &'b SingleLinkedIntrusiveList<'b, SourceLine> =
-            SingleLinkedIntrusiveList::new(self.blob);
+            SingleLinkedIntrusiveList::new(self.scratch);
 
         for (idx, c) in bytes.iter().enumerate() {
             line.end = idx + 1;
             if *c == b'\n' {
                 line.ends_with_eof = false;
                 lines.push(line);
-                line = SourceLine::new(idx + 1, 0, true, self.blob)
+                line = SourceLine::new(idx + 1, 0, true, self.scratch)
             }
         }
         line.end = bytes.len();
