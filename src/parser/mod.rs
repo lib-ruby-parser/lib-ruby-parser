@@ -41,7 +41,7 @@ impl YYStackItem {
         Self {
             state: 0,
             value: ParseValue::None.to_words(),
-            loc: Loc::new(0, 0),
+            loc: Loc::default(),
         }
     }
 }

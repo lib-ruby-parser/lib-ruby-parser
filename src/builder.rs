@@ -2280,7 +2280,7 @@ impl<'b> Builder<'b> {
                         numblock.numargs = numargs;
                         numblock.body = block_body.unwrap_or_else(|| {
                             Nil::new_in(self.blob, |nil| {
-                                nil.expression_l = Loc::new(0, 0);
+                                nil.expression_l = Loc::default();
                             })
                         });
                         numblock.begin_l = begin_l;
@@ -2321,7 +2321,7 @@ impl<'b> Builder<'b> {
                         numblock.numargs = numargs;
                         numblock.body = block_body.unwrap_or_else(|| {
                             Nil::new_in(self.blob, |nil| {
-                                nil.expression_l = Loc::new(0, 0);
+                                nil.expression_l = Loc::default();
                             })
                         });
                         numblock.begin_l = begin_l;
